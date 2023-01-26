@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+  <head>
+    <title>Registre d'affrètement maritime</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="../lib/auth-guard.js" type="module"></script>
+    <link rel="shortcut icon" href="../favicon.ico" type="image/x-icon" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="./index.css" />
+    <script src="../lib/commun.js" type="module"></script>
+    <script src="./index.js" type="module"></script>
+    <script src="./filtre.js" type="module"></script>
+  </head>
+
+  <body>
+    <include src="../menu/menu.html">
+      { "nouveau": { "rubrique": "chartering", "title": "Nouvel affrètement",
+      "href": "./charter.html" } }
+    </include>
+
+    <!-- Filtre par date/client -->
+    <div id="bandeau-filtre">
+      <form id="filtre" class="pure-form pure-form-stacked">
+        <fieldset>
+          <legend>Filtre</legend>
+          <!-- Checkbox cachée pour affichage des champs -->
+          <input hidden type="checkbox" id="checkbox-filtre" />
+          <div class="champs-filtre">
+            <div class="pure-g">
+              <!-- Dates -->
+              <div class="filtre_bloc pure-u-1 pure-u-lg-3-24">
+                <div class="pure-control-group">
+                  <label for="date_debut">Du</label>
+                  <input
+                    type="date"
+                    id="date_debut"
+                    class="datepicker pure-input-1"
+                    name="date_debut"
+                  />
+                </div>
+                <div class="pure-control-group">
+                  <label for="date_fin">Au</label>
+                  <input
+                    type="date"
+                    id="date_fin"
+                    class="datepicker pure-input-1"
+                    name="date_fin"
+                  />
+                </div>
+              </div>
+
+              <div class="filtre_bloc pure-u-1 pure-u-lg-5-24">
+                <!-- Filtre affréteur -->
+                <div class="pure-control-group">
+                  <label>Affréteur</label>
+                  <input id="filtre_affreteur_user" class="pure-input-1" />
+                  <input hidden id="filtre_affreteur_value" />
+                </div>
+
+                <!-- Filtre armateur -->
+                <div class="pure-control-group">
+                  <label>Armateur</label>
+                  <input id="filtre_armateur_user" class="pure-input-1" />
+                  <input hidden id="filtre_armateur_value" />
+                </div>
+              </div>
+
+              <div class="filtre_bloc pure-u-1 pure-u-lg-5-24">
+                <!-- Filtre courtier -->
+                <div class="pure-control-group">
+                  <label>Courtier</label>
+                  <input id="filtre_courtier_user" class="pure-input-1" />
+                  <input hidden id="filtre_courtier_value" />
+                </div>
+
+                <!-- Filtre statut -->
+                <div class="pure-control-group">
+                  <label>Statut</label>
+                  <select id="filtre_statut">
+                    <option value="">Tous</option>
+                    <option value="0">Plannifié (pas confirmé)</option>
+                    <option value="1">Confirmé par l'affréteur</option>
+                    <option value="2">Affrété</option>
+                    <option value="3">Chargement effectué</option>
+                    <option value="4">Voyage terminé</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="filtre_bloc pure-u-1 pure-u-lg-3-24">
+                <!-- Boutons filtre -->
+                <div>
+                  <button
+                    name="filtrer"
+                    class="bouton pure-button pure-input-1"
+                  >
+                    Filtrer
+                  </button>
+                </div>
+                <div>
+                  <button
+                    name="supprimer_filtre"
+                    class="bouton pure-button pure-input-1"
+                  >
+                    Supprimer le filtre
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+      </form>
+    </div>
+
+    <!-- Bandeau des messages importants - Partie fixe -->
+    <div id="bandeau-info"></div>
+
+    <main>
+      <!-- Les affrètements viennent ici -->
+    </main>
+
+    <template id="ligne-charter">
+      <div class="charter pure-g">
+        <!-- Navire / Armateur -->
+        <div class="navire-armateur bloc pure-u-lg-4-24 pure-u-1">
+          <div class="navire"></div>
+          <div class="armateur"></div>
+          <div class="affreteur"></div>
+          <div class="courtier"></div>
+        </div>
+
+        <!-- Dates -->
+        <div class="etx bloc pure-u-lg-4-24 pure-u-1">
+          <!-- Laycan début -->
+          <div class="etx">
+            <span>LC début :</span>
+            <span class="lc_debut date"></span>
+          </div>
+          <!-- Laycan fin -->
+          <div class="etx">
+            <span>LC fin :</span>
+            <span class="lc_fin date"></span>
+          </div>
+          <!-- C/P -->
+          <div class="etx">
+            <span>C/P :</span>
+            <span class="cp date"></span>
+          </div>
+        </div>
+
+        <!-- Legs -->
+        <div class="legs bloc pure-u-lg-12-24 pure-u-1"></div>
+
+        <!-- Copie / Modification / Suppression -->
+        <div
+          class="copie-modif-suppr"
+          data-rubrique="chartering"
+          data-rolemini="edit"
+        >
+          <a href="charter.html" title="Modifier"
+            ><i class="material-icons crayon">edit</i></a
+          >
+        </div>
+
+        <!-- Commentaire -->
+        <div class="commentaire pure-u-1"></div>
+        <hr />
+      </div>
+    </template>
+
+    <template id="ligne-detail">
+      <div class="leg pure-u-1">
+        <div>
+          <span class="marchandise"></span>
+          <span class="quantite"></span>
+          <span class="ports"></span>
+        </div>
+        <div class="commentaire"></div>
+      </div>
+    </template>
+  </body>
+</html>

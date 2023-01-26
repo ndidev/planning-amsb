@@ -1,0 +1,559 @@
+<?php
+
+namespace Api\Models\Chartering;
+
+use Api\Utils\DatabaseConnector as DB;
+
+class CharterModel
+{
+  private $db;
+
+  public function __construct()
+  {
+    $this->db = (new DB)->getConnection();
+  }
+
+  /**
+   * Récupère tous les affrètements maritimes.
+   * 
+   * @param array $filtre
+   * 
+   * @return array Tous les affrètements récupérés
+   */
+  public function readAll(array $filtre = [])
+  {
+    // Filtre
+    $date_debut = isset($filtre["date_debut"]) ? $filtre['date_debut'] : "0001-01-01";
+    $date_fin = isset($filtre["date_fin"]) ? $filtre['date_fin'] : "9999-12-31";
+    $filtre_statut = $filtre["statut"] ?? "";
+    $filtre_affreteur = preg_replace("/,$/", "", $filtre['affreteur'] ?? "");
+    $filtre_armateur = preg_replace("/,$/", "", $filtre['armateur'] ?? "");
+    $filtre_courtier = preg_replace("/,$/", "", $filtre['courtier'] ?? "");
+
+    $filtre_sql_affreteur = $filtre_affreteur === "" ? "" : " AND r.affreteur IN ($filtre_affreteur)";
+    $filtre_sql_armateur = $filtre_armateur === "" ? "" : " AND r.armateur IN ($filtre_armateur)";
+    $filtre_sql_courtier = $filtre_courtier === "" ? "" : " AND r.courtier IN ($filtre_courtier)";
+    $filtre_sql_statut = $filtre_statut === "" ? "" : " AND r.statut = $filtre_statut";
+
+    $filtre_sql =
+      $filtre_sql_affreteur
+      . $filtre_sql_armateur
+      . $filtre_sql_courtier
+      . $filtre_sql_statut;
+
+    if (array_key_exists("archives", $filtre)) {
+      $statement_charters =
+        "SELECT
+            r.id,
+            r.statut,
+            -- Laycan
+            r.lc_debut,
+            r.lc_fin,
+            -- C/P
+            r.cp_date,
+            -- Navire
+            r.navire,
+            -- Tiers
+            r.affreteur,
+            af.nom_court AS affreteur_nom,
+            r.armateur,
+            ar.nom_court AS armateur_nom,
+            r.courtier,
+            c.nom_court AS courtier_nom,
+            -- Montants
+            r.fret_achat,
+            r.fret_vente,
+            r.surestaries_achat,
+            r.surestaries_vente,
+            -- Divers
+            r.commentaire,
+            r.archive
+          FROM chartering_registre r
+          LEFT JOIN tiers af ON r.affreteur = af.id
+          LEFT JOIN tiers ar ON r.armateur = ar.id
+          LEFT JOIN tiers c ON r.courtier = c.id
+          WHERE archive = 1
+          AND (lc_debut <= :date_fin OR lc_debut IS NULL)
+          AND (lc_fin >= :date_debut OR lc_fin IS NULL)
+          $filtre_sql
+          ORDER BY
+            -lc_debut ASC,
+            -lc_fin ASC";
+    } else {
+      $statement_charters =
+        "SELECT
+            r.id,
+            r.statut,
+            -- Laycan
+            r.lc_debut,
+            r.lc_fin,
+            -- C/P
+            r.cp_date,
+            -- Navire
+            r.navire,
+            -- Tiers
+            r.affreteur,
+            af.nom_court AS affreteur_nom,
+            r.armateur,
+            ar.nom_court AS armateur_nom,
+            r.courtier,
+            c.nom_court AS courtier_nom,
+            -- Montants
+            r.fret_achat,
+            r.fret_vente,
+            r.surestaries_achat,
+            r.surestaries_vente,
+            -- Divers
+            r.commentaire,
+            r.archive
+          FROM chartering_registre r
+          LEFT JOIN tiers af ON r.affreteur = af.id
+          LEFT JOIN tiers ar ON r.armateur = ar.id
+          LEFT JOIN tiers c ON r.courtier = c.id
+          WHERE archive = 0
+          AND (lc_debut <= :date_fin OR lc_debut IS NULL)
+          AND (lc_fin >= :date_debut OR lc_fin IS NULL)
+          $filtre_sql
+          ORDER BY
+            -lc_debut DESC,
+            -lc_fin DESC";
+    }
+
+    $statement_details =
+      "SELECT *
+        FROM chartering_detail
+        WHERE charter = :id";
+
+    $statement_ports =
+      "SELECT nom_affichage
+        FROM utils_ports
+        WHERE locode = :locode";
+
+    // Charters
+    $requete_charters = $this->db->prepare($statement_charters);
+    $requete_charters->execute([
+      "date_debut" => $date_debut,
+      "date_fin" => $date_fin
+    ]);
+    $charters = $requete_charters->fetchAll();
+
+    $requete_details = $this->db->prepare($statement_details);
+    $requete_ports = $this->db->prepare($statement_ports);
+
+    foreach ($charters as &$charter) {
+      $charter["id"] = (int) $charter["id"];
+      $charter["statut"] = (int) $charter["statut"];
+      $charter["affreteur"] = (int) $charter["affreteur"] ?: NULL;
+      $charter["armateur"] = (int) $charter["armateur"] ?: NULL;
+      $charter["courtier"] = (int) $charter["courtier"] ?: NULL;
+      $charter["archive"] = (int) $charter["archive"];
+      $charter["fret_achat"] = (float) $charter["fret_achat"];
+      $charter["fret_vente"] = (float) $charter["fret_vente"];
+      $charter["surestaries_achat"] = (float) $charter["surestaries_achat"];
+      $charter["surestaries_vente"] = (float) $charter["surestaries_vente"];
+
+      // Détails
+      $requete_details->execute(["id" => $charter["id"]]);
+      $details = $requete_details->fetchAll();
+      foreach ($details as &$detail) {
+        $detail["id"] = (int) $detail["id"];
+        $detail["charter"] = (int) $detail["charter"];
+
+        // Ports
+        $detail["pol_nom"] = NULL;
+        $detail["pod_nom"] = NULL;
+
+        if ($detail["pol"]) {
+          $requete_ports->execute(["locode" => $detail["pol"]]);
+          $detail["pol_nom"] = $requete_ports->fetch()["nom_affichage"] ?? NULL;
+        }
+
+        if ($detail["pod"]) {
+          $requete_ports->execute(["locode" => $detail["pod"]]);
+          $detail["pod_nom"] = $requete_ports->fetch()["nom_affichage"] ?? NULL;
+        }
+      }
+
+      $charter["details"] = $details;
+    }
+
+
+    $donnees = $charters;
+
+    return $donnees;
+  }
+
+  /**
+   * Récupère un affrètement maritime.
+   * 
+   * @param int $id ID de l'affrètement à récupérer
+   * 
+   * @return array Rendez-vous récupéré
+   */
+  public function read($id)
+  {
+    $statement_charter =
+      "SELECT
+          r.id,
+          r.statut,
+          -- Laycan
+          r.lc_debut,
+          r.lc_fin,
+          -- C/P
+          r.cp_date,
+          -- Navire
+          r.navire,
+          -- Tiers
+          r.affreteur,
+          af.nom_court AS affreteur_nom,
+          r.armateur,
+          ar.nom_court AS armateur_nom,
+          r.courtier,
+          c.nom_court AS courtier_nom,
+          -- Montants
+          r.fret_achat,
+          r.fret_vente,
+          r.surestaries_achat,
+          r.surestaries_vente,
+          -- Divers
+          r.commentaire,
+          r.archive
+        FROM chartering_registre r
+        LEFT JOIN tiers af ON r.affreteur = af.id
+        LEFT JOIN tiers ar ON r.armateur = ar.id
+        LEFT JOIN tiers c ON r.courtier = c.id
+        WHERE r.id = :id";
+
+    $statement_details =
+      "SELECT *
+        FROM chartering_detail
+        WHERE charter = :id";
+
+    $statement_ports =
+      "SELECT nom_affichage
+        FROM utils_ports
+        WHERE locode = :locode";
+
+    // Charters
+    $requete_charter = $this->db->prepare($statement_charter);
+    $requete_charter->execute(["id" => $id]);
+    $charter = $requete_charter->fetch();
+
+    // Détails
+    $requete_details = $this->db->prepare($statement_details);
+    $requete_details->execute(["id" => $id]);
+    $details = $requete_details->fetchAll();
+
+    $requete_ports = $this->db->prepare($statement_ports);
+
+    if ($charter) {
+      $charter["id"] = (int) $charter["id"];
+      $charter["statut"] = (int) $charter["statut"];
+      $charter["affreteur"] = (int) $charter["affreteur"] ?: NULL;
+      $charter["armateur"] = (int) $charter["armateur"] ?: NULL;
+      $charter["courtier"] = (int) $charter["courtier"] ?: NULL;
+      $charter["archive"] = (int) $charter["archive"];
+      $charter["fret_achat"] = (float) $charter["fret_achat"];
+      $charter["fret_vente"] = (float) $charter["fret_vente"];
+      $charter["surestaries_achat"] = (float) $charter["surestaries_achat"];
+      $charter["surestaries_vente"] = (float) $charter["surestaries_vente"];
+
+      foreach ($details as &$detail) {
+        $detail["id"] = (int) $detail["id"];
+        $detail["charter"] = (int) $detail["charter"];
+
+        // Ports
+        $detail["pol_nom"] = NULL;
+        $detail["pod_nom"] = NULL;
+
+        if ($detail["pol"]) {
+          $requete_ports->execute(["locode" => $detail["pol"]]);
+          $detail["pol_nom"] = $requete_ports->fetch()["nom_affichage"] ?? NULL;
+        }
+
+        if ($detail["pod"]) {
+          $requete_ports->execute(["locode" => $detail["pod"]]);
+          $detail["pod_nom"] = $requete_ports->fetch()["nom_affichage"] ?? NULL;
+        }
+      }
+
+      $charter["details"] = $details;
+    }
+
+    $donnees = $charter;
+
+    return $donnees;
+  }
+
+  /**
+   * Crée un affrètement maritime.
+   * 
+   * @param array $input Eléments de l'affrètement à créer
+   * 
+   * @return array Affrètement créé
+   */
+  public function create(array $input)
+  {
+    // Champs dates
+    $input["lc_debut"] = $input["lc_debut"] ?: NULL;
+    $input["lc_fin"] = $input["lc_fin"] ?: NULL;
+    $input["cp_date"] = $input["cp_date"] ?: NULL;
+
+    // Champ navire vide
+    $input["navire"] = $input["navire"] ?: "TBN";
+
+    $statement_charter =
+      "INSERT INTO chartering_registre
+        VALUES(
+          NULL,
+          :statut,
+          -- Laycan
+          :lc_debut,
+          :lc_fin,
+          -- C/P
+          :cp_date,
+          -- Navire
+          :navire,
+          -- Tiers
+          :affreteur,
+          :armateur,
+          :courtier,
+          -- Montants
+          :fret_achat,
+          :fret_vente,
+          :surestaries_achat,
+          :surestaries_vente,
+          -- Divers
+          :commentaire,
+          :archive
+        )";
+
+    $statement_details =
+      "INSERT INTO chartering_detail
+        VALUES(
+          NULL,
+          :charter,
+          :bl_date,
+          :pol,
+          :pod,
+          :marchandise,
+          :quantite,
+          :commentaire
+        )";
+
+    $requete = $this->db->prepare($statement_charter);
+
+    $this->db->beginTransaction();
+    $requete->execute([
+      "statut" => $input["statut"],
+      // Laycan
+      "lc_debut" => $input["lc_debut"],
+      "lc_fin" => $input["lc_fin"],
+      // C/P
+      "cp_date" => $input["cp_date"],
+      // Navire
+      "navire" => $input["navire"],
+      // Tiers
+      "affreteur" => $input["affreteur"],
+      "armateur" => $input["armateur"],
+      "courtier" => $input["courtier"],
+      // Montants
+      "fret_achat" => $input["fret_achat"],
+      "fret_vente" => $input["fret_vente"],
+      "surestaries_achat" => $input["surestaries_achat"],
+      "surestaries_vente" => $input["surestaries_vente"],
+      // Divers
+      "commentaire" => $input["commentaire"],
+      "archive" => $input["archive"],
+    ]);
+
+    $last_id = $this->db->lastInsertId();
+    $this->db->commit();
+
+    // Détails
+    $requete_details = $this->db->prepare($statement_details);
+    $details = $input["details"] ?? [];
+    foreach ($details as $detail) {
+      $requete_details->execute([
+        "charter" => $last_id,
+        "bl_date" => $detail["bl_date"],
+        "marchandise" => $detail["marchandise"],
+        "quantite" => $detail["quantite"],
+        "pol" => $detail["pol"],
+        "pod" => $detail["pod"],
+        "commentaire" => $detail["commentaire"],
+      ]);
+    }
+
+    return $this->read($last_id);
+  }
+
+  /**
+   * Met à jour un affrètement maritime.
+   * 
+   * @param int   $id     ID de l'affrètement à modifier
+   * @param array $input  Eléments de l'affrètement à modifier
+   * 
+   * @return array Affretement modifié
+   */
+  public function update($id, array $input)
+  {
+    // Champs dates
+    $input["lc_debut"] = $input["lc_debut"] ?: NULL;
+    $input["lc_fin"] = $input["lc_fin"] ?: NULL;
+    $input["cp_date"] = $input["cp_date"] ?: NULL;
+
+    // Champ navire vide
+    $input["navire"] = $input["navire"] ?: "TBN";
+
+    $statement_charter =
+      "UPDATE chartering_registre
+        SET
+          statut = :statut,
+          -- Laycan
+          lc_debut = :lc_debut,
+          lc_fin = :lc_fin,
+          -- C/P
+          cp_date = :cp_date,
+          -- Navire
+          navire = :navire,
+          -- Tiers
+          affreteur = :affreteur,
+          armateur = :armateur,
+          courtier = :courtier,
+          -- Montants
+          fret_achat = :fret_achat,
+          fret_vente = :fret_vente,
+          surestaries_achat = :surestaries_achat,
+          surestaries_vente = :surestaries_vente,
+          -- Divers
+          commentaire = :commentaire,
+          archive = :archive
+        WHERE id = :id";
+
+    $statement_details_ajout =
+      "INSERT INTO chartering_detail
+          VALUES(
+            NULL,
+            :charter,
+            :bl_date,
+            :pol,
+            :pod,
+            :marchandise,
+            :quantite,
+            :commentaire
+          )";
+
+    $statement_details_modif =
+      "UPDATE chartering_detail
+        SET
+          bl_date = :bl_date,
+          pol = :pol,
+          pod = :pod,
+          marchandise = :marchandise,
+          quantite = :quantite,
+          commentaire = :commentaire
+        WHERE id = :id";
+
+    $requete = $this->db->prepare($statement_charter);
+    $requete->execute([
+      "statut" => $input["statut"],
+      // Laycan
+      "lc_debut" => $input["lc_debut"],
+      "lc_fin" => $input["lc_fin"],
+      // C/P
+      "cp_date" => $input["cp_date"],
+      // Navire
+      "navire" => $input["navire"],
+      // Tiers
+      "affreteur" => $input["affreteur"],
+      "armateur" => $input["armateur"],
+      "courtier" => $input["courtier"],
+      // Montants
+      "fret_achat" => $input["fret_achat"],
+      "fret_vente" => $input["fret_vente"],
+      "surestaries_achat" => $input["surestaries_achat"],
+      "surestaries_vente" => $input["surestaries_vente"],
+      // Divers
+      "commentaire" => $input["commentaire"],
+      "archive" => $input["archive"],
+      'id' => $id,
+    ]);
+
+    // DETAILS
+    // Suppression details
+    // !! SUPPRESSION A LAISSER *AVANT* L'AJOUT DE detail POUR EVITER SUPPRESSION IMMEDIATE APRES AJOUT !!
+    // Comparaison du tableau transmis par POST avec la liste existante des details pour le produit concerné
+    $requete_details = $this->db->prepare(
+      "SELECT id
+          FROM chartering_detail
+          WHERE charter = :charter_id"
+    );
+    $requete_details->execute(['charter_id' => $id]);
+    $ids_details_existantes = [];
+    while ($detail = $requete_details->fetch()) {
+      $ids_details_existantes[] = $detail['id'];
+    }
+
+    $ids_details_transmises = [];
+    if (isset($input['details'])) {
+      foreach ($input["details"] as $detail) {
+        $ids_details_transmises[] = $detail["id"];
+      }
+    }
+    $ids_details_a_supprimer = array_diff($ids_details_existantes, $ids_details_transmises);
+
+    $requete_supprimer = $this->db->prepare(
+      "DELETE FROM chartering_detail
+          WHERE id = :id"
+    );
+    foreach ($ids_details_a_supprimer as $id_suppr) {
+      $requete_supprimer->execute(['id' => $id_suppr]);
+    }
+
+    // Ajout et modification details
+    $requete_details_ajout = $this->db->prepare($statement_details_ajout);
+    $requete_details_modif = $this->db->prepare($statement_details_modif);
+    $details = $input["details"] ?? [];
+    foreach ($details as $detail) {
+      if ($detail["id"]) {
+        $requete_details_modif->execute([
+          "bl_date" => $detail["bl_date"],
+          "pol" => $detail["pol"],
+          "pod" => $detail["pod"],
+          "marchandise" => $detail["marchandise"],
+          "quantite" => $detail["quantite"],
+          "commentaire" => $detail["commentaire"],
+          "id" => $detail["id"],
+        ]);
+      } else {
+        $requete_details_ajout->execute([
+          'charter' => $id,
+          "bl_date" => $detail["bl_date"],
+          "pol" => $detail["pol"],
+          "pod" => $detail["pod"],
+          "marchandise" => $detail["marchandise"],
+          "quantite" => $detail["quantite"],
+          "commentaire" => $detail["commentaire"],
+        ]);
+      }
+    }
+
+    return $this->read($id);
+  }
+
+  /**
+   * Supprime un affrètement maritime.
+   * 
+   * @param int $id ID de l'affrètement à supprimer
+   * 
+   * @return bool TRUE si succès, FALSE si erreur
+   */
+  public function delete(int $id)
+  {
+    $requete = $this->db->prepare("DELETE FROM chartering_registre WHERE id = :id");
+    $succes = $requete->execute(["id" => $id]);
+
+    return $succes;
+  }
+}

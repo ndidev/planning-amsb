@@ -1,0 +1,21 @@
+@import "../css/awesomplete.css";
+@import "../css/commun.css";
+
+@import "../css/formulaire.css";
+
+.icone-suggestions {
+  cursor: pointer;
+}
+
+.suggestions {
+  padding-left: 5%;
+}
+
+.suggestion {
+  list-style-type: none;
+  padding-top: 2px;
+}
+
+.suggestion-transporteur {
+  font-weight: bold;
+}

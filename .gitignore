@@ -1,0 +1,10 @@
+.DS_Store
+node_modules/
+vendor/
+.parcel-cache/
+dist/
+logos/
+.env
+.env.*
+!.env.example
+backup/

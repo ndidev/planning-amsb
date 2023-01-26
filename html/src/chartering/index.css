@@ -1,0 +1,182 @@
+@import "../css/commun.css";
+@import "../css/awesomplete.css";
+
+/* GENERAL */
+
+:root {
+  --plannifie: hsla(0, 0%, 80%, 1);
+  --confirme: hsl(210, 100%, 50%);
+  --affrete: hsla(270, 100%, 50%, 1);
+  --charge: hsla(30, 100%, 50%, 1);
+  --termine: hsla(120, 100%, 50%, 1);
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* FILTRE */
+
+#bandeau-filtre {
+  position: sticky;
+  top: 0;
+  left: 0;
+  padding-left: 100px;
+  background-color: white;
+  z-index: 2;
+}
+
+#bandeau-filtre legend {
+  cursor: pointer;
+}
+
+.champs-filtre {
+  display: none;
+}
+
+#checkbox-filtre:checked + .champs-filtre {
+  display: block;
+}
+
+#bandeau-filtre .filtre_actif {
+  background-color: rgb(255, 210, 210);
+}
+
+#bandeau-filtre .filtre_actif .awesomplete {
+  background-color: rgb(255, 255, 255);
+}
+
+#bandeau-filtre .filtre_bloc:not(:first-child) {
+  margin-left: 2%;
+}
+
+#bandeau-filtre .bouton {
+  margin: 25px 0 5px 0;
+}
+
+form[name="filtre"] {
+  padding: 10px;
+}
+
+/* BANDEAU INFO */
+
+.bandeau-info {
+  position: sticky;
+  top: 0px;
+  z-index: 1;
+  margin-left: 90px;
+  font-size: 1.2em;
+}
+
+.ligne-bandeau-info {
+  padding: 5px;
+}
+
+/* PLANNING */
+
+.charter:first-child {
+  padding-top: 40px;
+}
+
+.charter {
+  padding: 10px 0px 0px 20px;
+  align-items: center;
+}
+
+.charter:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.charter .bloc {
+  margin-left: 10px;
+}
+
+.charter .navire {
+  font-size: 1.5em;
+  margin-bottom: 10px;
+  width: auto;
+}
+
+.charter .etx .date {
+  margin-left: 5px;
+}
+
+.charter .leg .marchandise {
+  font-weight: bold;
+}
+
+.charter .leg .quantite {
+  margin-left: 10px;
+}
+
+.charter .leg .ports {
+  margin-left: 10px;
+}
+
+.charter .commentaire {
+  margin-top: 10px;
+  margin-left: 30px;
+}
+
+.charter .leg {
+  margin-bottom: 10px;
+}
+
+.charter .leg .commentaire {
+  margin: 5px 0 0 10px;
+}
+
+hr {
+  border: 1px solid #ddd;
+  border-top: none;
+  margin: 10px 0px 0px -20px;
+  width: 100vw;
+}
+
+.charter:last-child hr {
+  visibility: hidden;
+}
+
+/* Copie-modif-suppr */
+.charter:hover .copie-modif-suppr {
+  visibility: visible;
+}
+
+/* STATUT AFFRÈTEMENT */
+.charter {
+  border-left: 10px solid transparent;
+}
+
+.charter.plannifie {
+  border-color: var(--plannifie);
+}
+
+.charter.confirme {
+  border-color: var(--confirme);
+}
+
+.charter.affrete {
+  border-color: var(--affrete);
+}
+
+.charter.charge {
+  border-color: var(--charge);
+}
+
+.charter.termine {
+  border-color: var(--termine);
+}
+
+@media screen and (max-width: 480px) {
+  .charter {
+    align-items: flex-start;
+  }
+
+  .bloc {
+    margin: 3px 5px;
+  }
+
+  .commentaire {
+    margin-left: 0;
+  }
+}

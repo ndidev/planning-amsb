@@ -1,0 +1,187 @@
+<?php
+
+require_once __DIR__ . "/../bootstrap.php";
+
+use Api\Utils\User;
+use Api\Utils\HTTPResponse;
+use Api\Utils\Exceptions\Auth\AuthException;
+use Api\Utils\Exceptions\Auth\AdminException;
+use Api\Utils\Exceptions\Auth\AccountPendingException;
+use Api\Utils\Exceptions\Auth\AccessException;
+
+// Méthodes supportées
+$supported_methods = [
+  "OPTIONS",
+  "HEAD",
+  "GET",
+  "POST",
+  "PUT",
+  "PATCH",
+  "DELETE"
+];
+if (array_search($_SERVER["REQUEST_METHOD"], $supported_methods) === FALSE) {
+  (new HTTPResponse(501))->send();
+}
+
+
+// Décomposition du chemin
+$url = parse_url($_SERVER['REQUEST_URI']);
+$path = $url["path"] ?? null;
+$endpoint = makeEndpoint($path);
+$query = [];
+parse_str($url["query"] ?? "", $query);
+
+/**
+ * Liste des endoints.
+ */
+try {
+  switch ($endpoint) {
+      /** AFFICHAGE GENERAL */
+    case null:
+    case "":
+      switch ($_SERVER["REQUEST_METHOD"]) {
+        case "OPTIONS":
+          (new HTTPResponse)
+            ->setCode(204)
+            ->addHeader("Access-Control-Allow-Methods", "OPTIONS, HEAD, GET")
+            ->send();
+          break;
+
+        case "GET":
+        case "HEAD":
+          break;
+
+        default:
+          (new HTTPResponse)
+            ->setCode(405)
+            ->addHeader("Allow", "OPTIONS, HEAD, GET")
+            ->send();
+          break;
+      }
+
+
+    case 'login':
+      if (!isset($_POST["login"]) || !isset($_POST["password"])) {
+        (new HTTPResponse(400))->send();
+      }
+
+      // Authentification et envoi du cookie
+      try {
+        $user = (new User)->login($_POST["login"], $_POST["password"]);
+
+        (new HTTPResponse(200))
+          ->setType("json")
+          ->setBody(json_encode([
+            "login" => $user->login,
+            "nom" => $user->nom,
+            "roles" => $user->roles,
+            "statut" => $user->statut,
+          ]))
+          ->send();
+      } catch (AccountPendingException $e) {
+        (new HTTPResponse(200))
+          ->setType("json")
+          ->setBody(json_encode([
+            "message" => $e->getMessage(),
+            "statut" => $e->getStatut()
+          ]))
+          ->send();
+      }
+      break;
+
+
+    case 'logout':
+      // Suppression de la session et suppression du cookie
+      (new User)->logout();
+      break;
+
+
+    case 'check':
+      // Bypass pour développement
+      if ($_ENV["AUTH"] === "OFF") {
+        (new HTTPResponse(200))
+          ->setType("html")
+          ->setBody("Auth OFF")
+          ->send();
+      }
+
+      $user = (new User)->from_session();
+
+      // Vérification du rôle associé à la rubrique
+      if ($user->can_access($query["rubrique"] ?? NULL) === false) {
+        throw new AccessException();
+      }
+
+      // Vérification de l'accès administrateur si nécessaire
+      if (
+        strpos($_SERVER["HTTP_REFERER"], "/admin")
+        && $user->is_admin === false
+      ) {
+        throw new AdminException();
+      }
+
+      (new HTTPResponse(200))
+        ->setType("json")
+        ->setBody(json_encode([
+          "login" => $user->login,
+          "nom" => $user->nom,
+          "roles" => $user->roles,
+          "statut" => $user->statut,
+        ]))
+        ->send();
+      break;
+
+
+    case 'first-login':
+      if (!isset($_POST["login"]) || !isset($_POST["password"])) {
+        (new HTTPResponse(400))->send();
+      }
+
+      (new User)->first_login($_POST["login"], $_POST["password"]);
+
+      (new HTTPResponse(200))->send();
+      break;
+
+
+      /** DEFAUT */
+    default:
+      (new HTTPResponse(404))->send();
+      break;
+  }
+} catch (AuthException $e) {
+  (new HTTPResponse($e->http_status))
+    ->setType("json")
+    ->setBody(json_encode([
+      "message" => $e->getMessage()
+    ]))
+    ->send();
+} catch (Throwable $e) {
+  error_logger($e);
+  (new HTTPResponse(500))
+    ->setBody(json_encode(["message" => "Erreur serveur"]))
+    ->send();
+}
+
+
+/** === Fonctions === */
+
+/**
+ * Crée l'endpoint à partir du path.
+ * 
+ * @param string $path Path obtenu de parse_url()
+ * 
+ * @return string Endpoint au format "path/to/endpoint"
+ */
+function makeEndpoint(string $path): ?string
+{
+  if (!$path) {
+    return null;
+  }
+
+  // Suppression du chemin de l'auth dans la requête
+  // ex : "/planning-amsb/auth/login" => "login"
+  $auth_path = $_ENV["AUTH_PATH"];
+  $endpoint = substr_replace($path, "", 0, strlen($auth_path));
+
+  return $endpoint;
+}

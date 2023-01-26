@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+  <head>
+    <title>Planning vrac - Ajout/Modification produit</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="../lib/auth-guard.js" type="module"></script>
+    <link rel="shortcut icon" href="../favicon.ico" type="image/x-icon" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="./produits.css" />
+    <script src="../lib/commun.js" type="module"></script>
+    <script src="./produits.js" type="module"></script>
+    <style>
+      form #unite {
+        width: 8em;
+      }
+    </style>
+  </head>
+
+  <body>
+    <include src="../menu/menu.html">
+      { "nouveau": { "rubrique": "vrac", "title": "Nouveau RDV", "href":
+      "./rdv.html" } }
+    </include>
+
+    <main class="formulaire">
+      <h1>Produit</h1>
+
+      <form class="pure-form pure-form-aligned">
+        <!-- Liste déroulante -->
+        <div class="pure-control-group">
+          <label></label>
+          <select id="id" name="id">
+            <option value="">Nouveau...</option>
+          </select>
+        </div>
+
+        <!-- Nom produit -->
+        <div class="pure-control-group">
+          <label for="nom">Nom Produit</label>
+          <input
+            type="text"
+            id="nom"
+            name="nom"
+            placeholder="Nom du produit"
+            maxlength="255"
+            data-nom="Nom du produit"
+            required
+          />
+        </div>
+
+        <!-- Couleur produit -->
+        <div class="pure-control-group">
+          <label for="couleur">Couleur</label>
+          <input
+            type="color"
+            id="couleur"
+            name="couleur"
+            value="#000000"
+            class="couleur"
+            required
+          />
+        </div>
+
+        <!-- Unité -->
+        <div class="pure-control-group">
+          <label for="unite">Unité</label>
+          <input
+            type="text"
+            id="unite"
+            name="unite"
+            maxlength="10"
+            data-nom="Unité"
+          />
+        </div>
+
+        <!-- Qualités -->
+        <div class="pure-controls">
+          <fieldset>
+            <legend>Qualités</legend>
+            <!-- <div class="pure-control-group"> -->
+            <div class="input">
+              <ul id="qualites">
+                <!-- Liste des qualités dynamique en fonction du produit choisi -->
+              </ul>
+              <div>
+                <i
+                  class="material-icons"
+                  id="ajouter-qualite"
+                  title="Ajouter une qualité"
+                  >add</i
+                >
+              </div>
+            </div>
+            <!-- </div> -->
+          </fieldset>
+        </div>
+      </form>
+
+      <!-- Validation/Annulation/Suppression -->
+      <div id="boutonsAMS">
+        <div class="boutons">
+          <!-- Bouton "Ajouter" si nouveau -->
+          <button class="pure-button bouton bouton-ajouter">Ajouter</button>
+          <!-- Bouton "Modifier" si modidification -->
+          <button class="pure-button bouton bouton-modifier">Modifier</button>
+          <!-- Bouton "Supprimer" si suppression -->
+          <button class="pure-button bouton bouton-supprimer">Supprimer</button>
+          <!-- Bouton "Annuler" -->
+          <button class="pure-button bouton bouton-annuler">Annuler</button>
+        </div>
+      </div>
+    </main>
+
+    <template id="ligne-qualite">
+      <li class="ligne-qualite">
+        <input hidden name="id" />
+
+        <label
+          >Nom* :
+          <input
+            type="text"
+            name="nom"
+            maxlength="255"
+            data-nom="Nom de la qualité"
+            required
+          />
+        </label>
+
+        <label
+          >Couleur* :
+          <input
+            type="color"
+            name="couleur"
+            value="#000000"
+            class="couleur"
+            required
+          />
+        </label>
+
+        <div class="poubelle">
+          <a title="Supprimer la qualité"
+            ><i class="material-icons">delete</i></a
+          >
+        </div>
+      </li>
+    </template>
+  </body>
+</html>

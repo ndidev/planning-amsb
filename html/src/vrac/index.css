@@ -1,0 +1,205 @@
+@import "../css/commun.css";
+
+body {
+  position: relative;
+}
+
+/* FILTRE */
+
+/* .filtre-barre {
+  height: 50px;
+  width: 100%;
+  position: sticky;
+  top: 0px;
+  z-index: 1;
+  background: beige;
+} */
+
+/* BANDEAU INFO */
+
+.bandeau-info {
+  position: sticky;
+  top: 0px;
+  z-index: 1;
+  margin-left: 90px;
+  font-size: 1.2em;
+}
+
+.ligne-bandeau-info {
+  padding: 5px;
+}
+
+/* PLACEHOLDERS */
+
+.placeholder-date {
+  margin-top: 30px;
+  margin-bottom: 15px;
+}
+
+.placeholder-date div {
+  display: inline-block;
+  height: 1.3em;
+  background-color: #ddd;
+  margin-right: 1%;
+}
+
+.placeholder-rdv {
+  padding: 5px 0 0 5px;
+}
+
+.placeholder-rdv div {
+  display: inline-block;
+  height: 1.2em;
+  background-color: #eee;
+  margin-right: 1%;
+}
+
+/* LISTE RDV */
+
+main {
+  width: 90%;
+  margin: auto;
+}
+
+.bloc-date:last-child {
+  margin-bottom: 50px;
+}
+
+.ligne-date {
+  font-size: 1.3em;
+  margin-top: 30px;
+  margin-bottom: 15px;
+}
+
+.date {
+  color: #58c85f;
+}
+
+.marees,
+.navires {
+  visibility: hidden;
+  display: inline;
+  position: relative;
+  margin-left: 10px;
+  font-weight: bold;
+  color: red;
+  cursor: help;
+}
+
+.texte-navires {
+  display: none;
+  position: absolute;
+  width: auto;
+  height: auto;
+  top: 0px;
+  left: 30px;
+  padding: 5px;
+  border: 2px solid black;
+  background-color: beige;
+  font-size: 0.5em;
+  color: red;
+  white-space: nowrap;
+}
+
+.navires:hover .texte-navires {
+  display: block;
+}
+
+.rdv {
+  font-size: 1.2em;
+  padding: 5px 0 0 5px;
+}
+
+.rdv:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.rdv:hover > .copie-modif-suppr {
+  visibility: visible;
+}
+
+.heure,
+.produit-qualite,
+.quantite-unite,
+.client,
+.transporteur,
+.num_commande {
+  display: inline-block;
+}
+
+.qualite,
+.unite,
+.max {
+  margin-left: 0.3em;
+}
+
+.heure {
+  font-weight: bold;
+  color: #d91ffa;
+}
+
+.produit-qualite {
+  font-weight: bold;
+}
+
+.quantite {
+  font-weight: bold;
+}
+
+.transporteur {
+  font-weight: bold;
+}
+
+.produit-qualite,
+.client,
+.transporteur,
+.num_commande,
+.commentaire {
+  margin-left: 10px;
+}
+
+hr {
+  border: 1px solid #999;
+  border-top: none;
+  margin: 5px 0px 0px -5px;
+  width: 100vw;
+}
+
+.rdv:last-child hr {
+  visibility: hidden;
+}
+
+@media screen and (max-width: 480px) {
+  .date,
+  .rdv {
+    font-size: 1em;
+  }
+
+  .bandeau {
+    margin-left: 65px;
+    font-size: 0.8em;
+  }
+
+  .rdv {
+    padding: 0;
+  }
+
+  .produit-qualite {
+    margin-left: 0;
+  }
+
+  .quantite-unite {
+    text-align: right;
+  }
+
+  .client,
+  .transporteur,
+  .num_commande,
+  .commentaire {
+    margin-left: 16.667%;
+  }
+
+  .quantite-unite {
+    margin-left: auto;
+  }
+}

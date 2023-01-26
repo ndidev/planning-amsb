@@ -1,0 +1,19 @@
+GenericException:
+  DBException:
+    DBConnectionException:
+
+  AuthException:
+    UnauthorizedException:
+      SessionException:
+      LoginException:
+      InvalidApiKeyException:
+      InvalidAccountException:
+    ForbiddenException:
+      AccessException:
+      AdminException:
+      AccountStatusException:
+        AccountPendingException:
+        AccountLockedException:
+          AccountLockedException:
+            MaxLoginAttemptsException:
+        AccountInactiveException:

@@ -1,0 +1,37 @@
+{
+  "name": "planning-amsb",
+  "version": "1.0.0",
+  "description": "",
+  "author": "Nicolas DENIS",
+  "license": "ISC",
+  "scripts": {
+    "serve": "parcel serve 'src/**/*.html'",
+    "watch": "rm -rf dist && parcel watch 'src/**/*.html'",
+    "build:prod": "rm -rf dist && parcel build 'src/**/*.html' --no-source-maps",
+    "build:dev": "rm -rf dist && parcel build 'src/**/*.html' --no-optimize",
+    "build:staging": "rm -rf dist && parcel build 'src/**/*.html'",
+    "build:local": "rm -rf dist && parcel build 'src/**/*.html' --no-optimize"
+  },
+  "devDependencies": {
+    "@tsconfig/svelte": "^3.0.0",
+    "@types/autosize": "^4.0.1",
+    "parcel": "^2.3.2",
+    "parcel-transformer-svelte3-plus": "^0.2.8",
+    "posthtml-expressions": "^1.9.0",
+    "posthtml-include": "^1.7.4",
+    "svelte": "^3.55.0",
+    "svelte-preprocess": "^5.0.0",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "autosize": "^5.0.1",
+    "chart.js": "^3.7.1",
+    "cookie": "^0.5.0",
+    "material-icons": "^1.13.1",
+    "notiflix": "^3.2.5",
+    "purecss": "^3.0.0"
+  },
+  "workspaces": [
+    "src/lib/**"
+  ]
+}

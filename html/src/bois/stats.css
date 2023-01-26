@@ -1,0 +1,112 @@
+@import "../css/awesomplete.css";
+@import "../css/commun.css";
+
+main {
+  width: calc(95% - 200px); /* 200px = largeur du menu */
+  margin-left: 200px;
+}
+
+h1 {
+  margin: 20px 0;
+  text-align: center;
+}
+
+/* input, */
+select {
+  padding: 5px;
+}
+
+/* FILTRE */
+
+#bandeau-filtre .filtre_bloc:not(:first-child) {
+  margin-left: 2%;
+}
+
+#bandeau-filtre .bouton {
+  margin: 25px 0 5px 0;
+}
+
+form[name="filtre"] {
+  padding: 10px;
+}
+
+/* STATS */
+
+#statistiques {
+  overflow-x: auto;
+}
+
+#statistiques dt {
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+#statistiques table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#statistiques :is(table, th, td) {
+  border: 1px solid black;
+}
+
+#statistiques :is(th, tfoot) {
+  font-weight: bold;
+}
+
+#statistiques :is(th, td) {
+  padding: 3px;
+  width: calc(100% / 14);
+}
+
+#statistiques th[scope="col"] {
+  background-color: lightblue;
+}
+
+#statistiques th[scope="row"] {
+  background-color: lightcyan;
+}
+
+#statistiques td.total {
+  background-color: hsl(170, 100%, 80%);
+  font-weight: bold;
+}
+
+#statistiques tfoot {
+  background-color: lightyellow;
+}
+
+#statistiques td {
+  text-align: right;
+  padding-right: 5px;
+}
+
+#statistiques tr:nth-child(even) {
+  background-color: #eee;
+}
+
+@supports not selector(:is(a, b)) {
+  #statistiques table,
+  #statistiques th,
+  #statistiques td {
+    border: 1px solid black;
+  }
+
+  #statistiques th,
+  #statistiques tfoot {
+    font-weight: bold;
+  }
+
+  #statistiques th,
+  #statistiques td {
+    padding: 2px;
+    width: calc(100% / 14);
+  }
+}
+
+@media screen and (max-width: 480px) {
+  main {
+    width: calc(95%);
+    margin: auto;
+  }
+}

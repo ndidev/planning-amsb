@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+  <head>
+    <title>Planning vrac</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="./tv.css" />
+    <script src="./tv.js" type="module"></script>
+  </head>
+
+  <body>
+    <!-- Bandeau des messages importants - Partie fixe -->
+    <!-- <section
+      id="bandeau-info"
+      class="bandeau-info"
+      data-module="vrac"
+      data-tv="1"
+    ></section> -->
+    <div id="bandeau-info"></div>
+
+    <main>
+      <!-- Le planning vient ici -->
+    </main>
+
+    <template id="ligne-date">
+      <div class="ligne-date pure-u-1">
+        <span class="date"></span>
+      </div>
+    </template>
+
+    <template id="ligne-rdv">
+      <div class="rdv pure-g">
+        <div class="produit-qualite pure-u-4-24">
+          <span class="produit"></span>
+          <span class="qualite"></span>
+        </div>
+        <div class="heure pure-u-1-24"></div>
+        <div class="quantite-unite pure-u-2-24">
+          <span class="quantite"></span>
+          <span class="unite"></span>
+          <span class="max"></span>
+        </div>
+        <div class="client pure-u-9-24"></div>
+        <div class="transporteur pure-u-3-24"></div>
+        <div class="num_commande pure-u-3-24"></div>
+        <div class="pure-u-5-24">
+          <!-- Espacement -->
+        </div>
+        <div class="commentaire pure-u-18-24"></div>
+        <hr />
+      </div>
+    </template>
+  </body>
+</html>

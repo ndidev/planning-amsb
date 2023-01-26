@@ -1,0 +1,75 @@
+@import "npm:purecss/build/pure-min.css";
+@import "npm:purecss/build/grids-responsive-min.css";
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: sans-serif;
+  overflow-x: hidden;
+}
+
+main {
+  display: block; /* IE */
+}
+
+template {
+  display: none !important; /* IE */
+}
+
+/* Ensemble "modifier-supprimer" des lignes de RDV */
+
+.copie-modif-suppr {
+  min-width: 52px;
+  margin-left: auto;
+  visibility: hidden;
+}
+
+.copie,
+.crayon,
+.poubelle {
+  color: rgb(160, 160, 160);
+}
+
+.material-icons,
+.copie,
+.crayon,
+.poubelle,
+.sof {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.copie:hover,
+.sof:hover {
+  color: rgb(40, 190, 230);
+}
+
+.crayon:hover {
+  color: rgb(255, 210, 100);
+}
+
+.poubelle:hover {
+  color: rgb(255, 85, 73);
+  cursor: pointer; /* Pour les lignes 'qualité' */
+}
+
+/* ------------------------------- */
+
+/* Notiflix Block */
+.notiflix-block-position {
+  min-height: initial !important;
+}
+
+[class^="notiflix"] {
+  letter-spacing: normal;
+}
+
+@media screen and (max-width: 768px) {
+  .material-icons {
+    font-size: 24px !important;
+  }
+}

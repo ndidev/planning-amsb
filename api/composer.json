@@ -1,0 +1,19 @@
+{
+  "require": {
+    "phpmailer/phpmailer": "^6.2",
+    "setasign/tfpdf": "^1.32",
+    "vlucas/phpdotenv": "^5.3"
+  },
+  "require-dev": {
+    "symfony/var-dumper": "^6.1",
+    "phpunit/phpunit": "^9.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "Api\\": "src/"
+    }
+  },
+  "scripts": {
+    "test": "./vendor/bin/phpunit tests"
+  }
+}
