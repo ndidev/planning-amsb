@@ -16,47 +16,102 @@
 <script lang="ts">
   import "material-icons/iconfont/material-icons.css";
 
+  type Preset = {
+    name:
+      | "ajouter"
+      | "modifier"
+      | "copier"
+      | "supprimer"
+      | "annuler"
+      | "default";
+    icon: string;
+    text: string;
+    color: string;
+  };
+
+  const presets: Map<Preset["name"], Omit<Preset, "name">> = new Map([
+    [
+      "ajouter",
+      {
+        icon: "add",
+        text: "Ajouter",
+        color: "green",
+      },
+    ],
+    [
+      "modifier",
+      {
+        icon: "edit",
+        text: "Modifier",
+        color: "yellow",
+      },
+    ],
+    [
+      "copier",
+      {
+        icon: "content_copy",
+        text: "Copier",
+        color: "blue",
+      },
+    ],
+    [
+      "supprimer",
+      {
+        icon: "delete",
+        text: "Supprimer",
+        color: "red",
+      },
+    ],
+    [
+      "annuler",
+      {
+        icon: "cancel",
+        text: "Annuler",
+        color: "default",
+      },
+    ],
+    [
+      "default",
+      {
+        icon: null,
+        text: "",
+        color: "default",
+      },
+    ],
+  ]);
+
+  /**
+   * Type de bouton prédéfini.
+   */
+  export let preset: Preset["name"] = "default";
+
+  let params: Omit<Preset, "name"> =
+    presets.get(preset) || presets.get("default");
+
   /**
    * Code de l'icône.
    */
-  export let icon: string = "";
+  export let icon: string = params.icon;
 
   /**
    * Texte de l'attribut "title".
    */
-  export let title: string = "";
+  export let title: string = params.text;
 
   /**
    * Couleur de l'icône.
    */
-  export let color: string = "rgb(160, 160, 160)";
+  export let color: string = `var(--${params.color}-color)`;
 
   /**
    * Couleur de l'icône lors du survol.
    */
-  export let hoverColor: string | undefined = undefined;
-
-  // Modification de la couleur de survol
-  // en fonction des icônes couramment utilisées
-  if (!hoverColor) {
-    switch (icon) {
-      case "delete":
-        hoverColor = "rgb(255, 85, 73)";
-        break;
-      case "edit":
-        hoverColor = "rgb(255, 210, 100)";
-        break;
-      case "copy":
-        hoverColor = "rgb(40, 190, 230)";
-        break;
-      default:
-        hoverColor = "rgba(0, 0, 0, 0.8)";
-        break;
-    }
-  }
+  export let hoverColor:
+    | string
+    | undefined = `var(--${params.color}-hover-color)`;
 
   /**
-   * Taille de l'icône (format "XXpx").
+   * Taille de l'icône.
    */
   export let fontSize = "24px";
 </script>
@@ -70,19 +125,60 @@
   {title}
   on:click
 >
-  {icon}
+  <slot>{icon}</slot>
 </button>
 
 <style>
   button {
+    /* Green */
+    --green-hover-color: hsl(0, 0%, 0%);
+
+    /* Yellow */
+    --yellow-hover-color: hsl(45, 85%, 56%);
+
+    /* Blue */
+    --blue-hover-color: hsl(193, 79%, 53%);
+
+    /* Red */
+    --red-hover-color: hsl(4, 100%, 64%);
+
+    /* Default */
+    --default-color: hsl(0, 0%, 63%);
+    --default-hover-color: hsla(0, 0%, 0%, 0.8);
+
+    --transition-time: 100ms;
+
     background-color: transparent;
     border: none;
     cursor: pointer;
-    color: var(--color);
+    color: var(--color, var(--default-color));
     font-size: var(--font-size);
+    position: relative;
+    isolation: isolate;
+    transition: color var(--transition-time) linear;
   }
 
   button:is(:hover, :focus) {
-    color: var(--hover-color);
+    color: var(--hover-color, var(--default-hover-color));
+  }
+
+  button::before {
+    --scale: 1.5;
+    content: "";
+    position: absolute;
+    top: calc(50% - 50%);
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform: scale(var(--scale, 1));
+    border-radius: 50%;
+    background-color: var(--hover-color, var(--default-hover-color));
+    opacity: 0;
+    z-index: -1;
+    transition: opacity var(--transition-time) linear;
+  }
+
+  button:is(:hover)::before {
+    opacity: 0.15;
   }
 </style>

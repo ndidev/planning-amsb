@@ -2,15 +2,15 @@
 
 namespace Api\Models\Vrac;
 
-use Api\Utils\DatabaseConnector as DB;
+use Api\Utils\BaseModel;
 
-class RdvModel
+class RdvModel extends BaseModel
 {
-  private $db;
+  private string $redis_ns = "vrac:rdvs";
 
   public function __construct()
   {
-    $this->db = (new DB)->getConnection();
+    parent::__construct();
   }
 
   /**
@@ -18,153 +18,38 @@ class RdvModel
    * 
    * @return array Tous les RDV récupérés
    */
-  public function readAll($query = null)
+  public function readAll($query = null): array
   {
-    $tri = $query["tri"] ?? NULL;
+    $statement =
+      "SELECT
+          id,
+          date_rdv,
+          SUBSTRING(heure, 1, 5) AS heure,
+          produit,
+          qualite,
+          quantite,
+          max,
+          fournisseur,
+          client,
+          transporteur,
+          num_commande,
+          commentaire
+        FROM vrac_planning
+        ORDER BY date_rdv";
 
-    switch ($tri) {
-      case 'produit':
-        // Tri par produit pour affichage TV
-        $statement =
-          "SELECT
-            pl.id,
-            pl.date_rdv,
-            SUBSTRING(pl.heure, 1, 5) AS heure,
-            p.nom AS produit_nom,
-            p.couleur AS produit_couleur,
-            p.unite,
-            q.nom AS qualite_nom,
-            q.couleur AS qualite_couleur,
-            pl.quantite,
-            pl.max,
-            f.nom_court AS fournisseur_nom,
-            c.nom_court AS client_nom,
-            c.ville AS client_ville,
-            t.nom_court AS transporteur_nom,
-            pl.num_commande,
-            pl.commentaire
-          FROM vrac_planning pl
-          LEFT JOIN vrac_produits p ON p.id = pl.produit
-          LEFT JOIN vrac_qualites q ON q.id = pl.qualite
-          LEFT JOIN tiers c ON c.id = pl.client
-          LEFT JOIN tiers t ON t.id = pl.transporteur
-          LEFT JOIN tiers f ON f.id = pl.fournisseur
-          ORDER BY date_rdv, produit_nom, -heure DESC";
-        break;
-
-      default:
-        // Tri par heure pour affichage PC
-        $statement =
-          "SELECT
-            pl.id,
-            pl.date_rdv,
-            SUBSTRING(pl.heure, 1, 5) AS heure,
-            p.nom AS produit_nom,
-            p.couleur AS produit_couleur,
-            p.unite,
-            q.nom AS qualite_nom,
-            q.couleur AS qualite_couleur,
-            pl.quantite,
-            pl.max,
-            f.nom_court AS fournisseur_nom,
-            c.nom_court AS client_nom,
-            c.ville AS client_ville,
-            t.nom_court AS transporteur_nom,
-            pl.num_commande,
-            pl.commentaire
-          FROM vrac_planning pl
-          LEFT JOIN vrac_produits p ON p.id = pl.produit
-          LEFT JOIN vrac_qualites q ON q.id = pl.qualite
-          LEFT JOIN tiers c ON c.id = pl.client
-          LEFT JOIN tiers t ON t.id = pl.transporteur
-          LEFT JOIN tiers f ON f.id = pl.fournisseur
-          ORDER BY date_rdv, -heure DESC, produit_nom, qualite_nom";
-        break;
-    }
 
     $requete = $this->db->query($statement);
     $rdvs = $requete->fetchAll();
 
-    // Rétablissement des types INT
+    // Rétablissement des types bool
     array_walk_recursive($rdvs, function (&$value, $key) {
       $value = match ($key) {
-        "id",
-        "produit",
-        "qualite",
-        "quantite",
-        "max",
-        "fournisseur",
-        "client",
-        "transporteur" => $value === NULL ? NULL : (int) $value,
+        "max" => $value = (bool) $value,
         default => $value,
       };
     });
 
-    $rdvs_ordonnes = $rdvs;
-
-
-    /**
-     * Regroupement
-     */
-    $groupe = $query["groupe"] ?? NULL;
-    // Regroupement des RDVs par date
-    if ($groupe === "date") {
-      $rdvs_ordonnes = [];
-
-      foreach ($rdvs as $rdv) {
-        $rdvs_ordonnes[$rdv["date_rdv"]]["rdvs"][] = $rdv;
-      }
-    }
-
-
-    /**
-     * Navires à quai
-     */
-    $navires = $query["navires"] ?? NULL;
-
-    if ($groupe === "date" && $navires) {
-      $statement_navires =
-        "SELECT navire
-          FROM consignation_planning
-          WHERE ops_date <= :date
-          AND etc_date >= :date";
-
-      $requete_navires = $this->db->prepare($statement_navires);
-
-      foreach ($rdvs_ordonnes as $date => $rdvs) {
-        $requete_navires->execute(["date" => $date]);
-        $reponse_navires = $requete_navires->fetchAll();
-        $rdvs_ordonnes[$date]["navires"] = [];
-        foreach ($reponse_navires as $navire) {
-          array_push($rdvs_ordonnes[$date]["navires"], $navire["navire"]);
-        }
-      }
-    }
-
-    /**
-     * Marées
-     */
-    $marees = $query["marees"] ?? NULL;
-
-    if ($groupe === "date" && $marees) {
-      $statement_marees =
-        "SELECT MAX(te_cesson) AS te
-          FROM marees
-          WHERE date = :date";
-
-      $requete_marees = $this->db->prepare($statement_marees);
-
-      foreach ($rdvs_ordonnes as $date => $rdvs) {
-        $requete_marees->execute(["date" => $date]);
-        $reponse_marees = $requete_marees->fetchAll();
-        foreach ($reponse_marees as $maree) {
-          $rdvs_ordonnes[$date]["te"] = (float) $maree["te"] ?: NULL;
-        }
-      }
-    }
-
-
-    $donnees = $rdvs_ordonnes;
+    $donnees = $rdvs;
 
     return $donnees;
   }
@@ -176,55 +61,38 @@ class RdvModel
    * 
    * @return array Rendez-vous récupéré
    */
-  public function read($id)
+  public function read($id): ?array
   {
     $statement =
       "SELECT
-          pl.id,
-          pl.date_rdv,
-          pl.heure,
-          pl.produit,
-          pl.qualite,
-          pl.quantite,
-          pl.max,
-          pl.fournisseur,
-          f.nom_court AS fournisseur_nom,
-          pl.client,
-          c.nom_court AS client_nom,
-          c.ville AS client_ville,
-          pl.transporteur,
-          t.nom_court AS transporteur_nom,
-          pl.num_commande,
-          pl.commentaire
-        FROM vrac_planning pl
-        LEFT JOIN tiers c ON c.id = pl.client
-        LEFT JOIN tiers t ON t.id = pl.transporteur
-        LEFT JOIN tiers f ON f.id = pl.fournisseur
-        WHERE pl.id = :id";
+            id,
+            date_rdv,
+            SUBSTRING(heure, 1, 5) AS heure,
+            produit,
+            qualite,
+            quantite,
+            max,
+            fournisseur,
+            client,
+            transporteur,
+            num_commande,
+            commentaire
+          FROM vrac_planning
+          WHERE id = :id";
 
     $requete = $this->db->prepare($statement);
     $requete->execute(["id" => $id]);
     $rdv = $requete->fetch();
 
-    // Suppression des secondes de l'heure (hh:mm)
-    if ($rdv) {
-      $rdv["heure"] = substr($rdv["heure"] ?? "", 0, -3);
+    if (!$rdv) return null;
 
-      // Rétablissement des types INT
-      array_walk_recursive($rdv, function (&$value, $key) {
-        $value = match ($key) {
-          "id",
-          "produit",
-          "qualite",
-          "quantite",
-          "max",
-          "fournisseur",
-          "client",
-          "transporteur" => $value === NULL ? NULL : (int) $value,
-          default => $value,
-        };
-      });
-    }
+    // Rétablissement des types bool
+    array_walk_recursive($rdv, function (&$value, $key) {
+      $value = match ($key) {
+        "max" => $value = (bool) $value,
+        default => $value,
+      };
+    });
 
     $donnees = $rdv;
 
@@ -238,7 +106,7 @@ class RdvModel
    * 
    * @return array Rendez-vous créé
    */
-  public function create(array $input)
+  public function create(array $input): array
   {
     $statement = "INSERT INTO vrac_planning
     VALUES(
@@ -265,7 +133,7 @@ class RdvModel
       'produit' => $input["produit"],
       'qualite' => $input["qualite"] ?? NULL,
       'quantite' => $input["quantite"],
-      'max' => isset($input["max"]) ? 1 : 0,
+      'max' => (int) $input["max"],
       'fournisseur' => $input["fournisseur"],
       'client' => $input["client"],
       'transporteur' => $input["transporteur"] ?: NULL,
@@ -287,7 +155,7 @@ class RdvModel
    * 
    * @return array RDV modifié
    */
-  public function update($id, array $input)
+  public function update($id, array $input): array
   {
     $statement = "UPDATE vrac_planning
       SET
@@ -311,7 +179,7 @@ class RdvModel
       'produit' => $input["produit"],
       'qualite' => $input["qualite"] ?? NULL,
       'quantite' => $input["quantite"],
-      'max' => isset($input["max"]) ? 1 : 0,
+      'max' => (int) $input["max"],
       'fournisseur' => $input["fournisseur"],
       'client' => $input["client"],
       'transporteur' => $input["transporteur"] ?: NULL,
@@ -330,7 +198,7 @@ class RdvModel
    * 
    * @return bool TRUE si succès, FALSE si erreur
    */
-  public function delete(int $id)
+  public function delete(int $id): bool
   {
     $requete = $this->db->prepare("DELETE FROM vrac_planning WHERE id = :id");
     $succes = $requete->execute(["id" => $id]);

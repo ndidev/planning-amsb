@@ -11,11 +11,15 @@
   ```
  -->
 <script lang="ts">
-  import { cotes } from "@app/stores";
+  import { configCotes } from "@app/stores";
 
   import { luminance } from "@app/utils";
 
-  $: coteCesson = $cotes?.filter((cote: Cote) => cote.cote === "cesson")
+  import type { Cote } from "@app/types";
+
+  export let tv: boolean = false;
+
+  $: coteCesson = $configCotes?.find((cote: Cote) => cote.cote === "cesson")
     .valeur as number;
 
   $: bgColor = calculerCouleurLigne(coteCesson);
@@ -24,11 +28,11 @@
   /**
    * Calcule la couleur d'arrière-plan en fonction de la valeur de la côte.
    *
-   * @param {number} cote Valeur de la côte
+   * @param cote Valeur de la côte
    *
-   * @returns {string} Couleur d'arrière-plan au format HSL
+   * @returns Couleur d'arrière-plan au format HSL
    */
-  function calculerCouleurLigne(cote: number) {
+  function calculerCouleurLigne(cote: number): string {
     const valeur = cote;
 
     // Couleur d'arrière-plan
@@ -51,7 +55,7 @@
 </script>
 
 {#if coteCesson}
-  <section class="bandeau-info">
+  <section class="bandeau-info" style:--margin-left={tv ? "0px" : "90px"}>
     <div
       class="ligne-bandeau-info"
       style:background-color={bgColor}
@@ -63,4 +67,22 @@
 {/if}
 
 <style>
+  .bandeau-info {
+    position: sticky;
+    top: 0px;
+    z-index: 1;
+    margin-left: var(--margin-left, 0px);
+    font-size: 1.2em;
+  }
+
+  .ligne-bandeau-info {
+    padding: 5px;
+  }
+
+  @media screen and (max-width: 480px) {
+    .bandeau-info {
+      margin-left: 65px;
+      font-size: 0.8em;
+    }
+  }
 </style>

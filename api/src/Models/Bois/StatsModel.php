@@ -2,15 +2,13 @@
 
 namespace Api\Models\Bois;
 
-use Api\Utils\DatabaseConnector as DB;
+use Api\Utils\BaseModel;
 
-class StatsModel
+class StatsModel extends BaseModel
 {
-  private $db;
-
   public function __construct()
   {
-    $this->db = (new DB)->getConnection();
+    parent::__construct();
   }
 
   /**
@@ -18,7 +16,7 @@ class StatsModel
    * 
    * @param array $filtre Filtre qui contient...
    */
-  public function readAll(array $filtre)
+  public function readAll(array $filtre): array
   {
     // Filtre
     $date_debut = isset($filtre['date_debut']) ? ($filtre['date_debut'] ?: date("Y-m-d")) : date("Y-m-d");

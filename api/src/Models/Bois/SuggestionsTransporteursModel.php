@@ -2,15 +2,13 @@
 
 namespace Api\Models\Bois;
 
-use Api\Utils\DatabaseConnector as DB;
+use Api\Utils\BaseModel;
 
-class SuggestionsTransporteursModel
+class SuggestionsTransporteursModel extends BaseModel
 {
-  private $db;
-
   public function __construct()
   {
-    $this->db = (new DB)->getConnection();
+    parent::__construct();
   }
 
   /**
@@ -19,7 +17,7 @@ class SuggestionsTransporteursModel
    * 
    * @param array $filtre Filtre qui contient chargement et livraison
    */
-  public function readAll(array $filtre)
+  public function readAll(array $filtre): array
   {
     $chargement_id = $filtre["chargement"];
     $livraison_id = $filtre["livraison"];

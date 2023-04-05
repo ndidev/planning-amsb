@@ -5,89 +5,77 @@
 
   Usage :
   ```tsx
-  <Menu />
+  <Menu module?: string />
   ```
  -->
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { url, beforeUrlChange } from "@roxi/routify";
 
   import { MaterialButton } from "@app/components";
+  import AddButton from "./AddButton.svelte";
   import UserFooter from "./UserFooter.svelte";
 
   import { currentUser } from "@app/stores";
 
-  import { sitemap } from "@app/utils";
+  import { sitemap, Device } from "@app/utils";
 
-  type Nouveau =
-    | {
-        rubrique: string;
-        title: string;
-        href: string;
-      }
-    | undefined;
+  import type { ModuleId } from "@app/types";
 
   /**
-   * Si défini, affiche une icône pour un nouveau RDV.
+   * Module de l'application.
    */
-  export let nouveau: Nouveau = undefined;
+  export let module: ModuleId;
 
   let nav: HTMLElement;
 
-  function toggleDisplay() {
-    const affichageMenu = JSON.parse(sessionStorage.getItem("menu") || "true");
-    nav.style.display = !affichageMenu ? "block" : "none";
-    sessionStorage.setItem("menu", JSON.stringify(!affichageMenu));
-  }
+  let affichageMenu = false;
 
-  onMount(() => {
-    /**
-     * Utilisation de sessionStorage pour enregistrer l'affichage du menu.
-     * Si sessionStorage absent, affichage du menu.
-     */
-    {
-      const affichageMenu = JSON.parse(
-        sessionStorage.getItem("menu") || "true"
-      );
-      nav.style.display = affichageMenu ? "block" : "none";
+  $beforeUrlChange((event, route) => {
+    if (nav.offsetWidth >= document.body.offsetWidth) {
+      affichageMenu = false;
     }
+
+    return true;
   });
 </script>
 
-<div id="menu-toggle-add">
+<div class="menu-toggle-add">
+  <!-- Affichage/masquage du menu -->
   <MaterialButton
     icon="menu"
     title="Menu"
-    fontSize="36px"
-    on:click={toggleDisplay}
+    fontSize={Device.isSmallerThan("desktop") ? "24px" : "36px"}
+    on:click={() => {
+      affichageMenu = !affichageMenu;
+    }}
   />
-  {#if nouveau && $currentUser.canEdit(nouveau.rubrique)}
-    <MaterialButton
-      icon="add"
-      title={nouveau.title}
-      fontSize="36px"
-      on:click={() => (location.href = nouveau.href)}
-    />
+
+  <!-- Nouveau RDV -->
+  {#if $currentUser.canEdit(module)}
+    <AddButton rubrique={module} />
   {/if}
 </div>
 
-<nav class="menu-nav" bind:this={nav}>
+<nav bind:this={nav} style="display: {affichageMenu ? 'flex' : 'none'};">
   <ul>
-    {#each [...sitemap] as [module, { affichage, tree: { href, children } }]}
-      {#if $currentUser.canAccess(module)}
+    {#each [...sitemap] as [module, { affichage, tree: { href, children, devices } }]}
+      {@const deviceMatches = devices?.includes(Device.type) ?? true}
+      {#if $currentUser.canAccess(module) && deviceMatches}
         <li>
           {#if href}
-            <a {href} title={affichage} class="menu-rubrique menu-link"
+            <a href={$url(href)} title={affichage} class="rubrique link"
               >{affichage}</a
             >
           {:else}
-            <span class="menu-rubrique">{affichage}</span>
+            <span class="rubrique">{affichage}</span>
           {/if}
           {#if children}
             <ul>
-              {#each children as { affichage, roleMini, href }}
-                {#if $currentUser.getRole(module) >= roleMini}
+              {#each children as { affichage, roleMini, href, devices }}
+                {#if $currentUser.getRole(module) >= roleMini && deviceMatches}
                   <li>
-                    <a {href} title={affichage} class="menu-link">{affichage}</a
+                    <a href={$url(href)} title={affichage} class="link"
+                      >{affichage}</a
                     >
                   </li>
                 {/if}
@@ -99,71 +87,108 @@
     {/each}
   </ul>
 
-  <UserFooter />
+  <div class="user-footer" style="display: {affichageMenu ? 'block' : 'none'};">
+    <UserFooter />
+  </div>
 </nav>
 
 <style>
-  :root {
+  * {
     --couleur-texte-menu: rgb(100, 100, 100);
     --menu-font-family: Arial, Helvetica, sans-serif;
+    --bg-color: rgb(240, 240, 240);
   }
 
-  #menu-toggle-add {
+  .menu-toggle-add {
     position: fixed;
-    top: 10px;
-    left: 10px;
-    z-index: 8;
+    top: 0;
+    left: 0;
+    margin: 10px;
+    z-index: 25;
   }
 
   /******************/
 
-  .menu-nav {
+  nav {
+    display: flex;
+    flex-direction: column;
     position: fixed;
     top: 0;
     left: 0;
-    width: 180px;
+    width: 100vw;
     height: 100vh;
+    z-index: 20;
     margin: 0;
     padding: 0;
-    z-index: 7;
+    background: rgb(240, 240, 240);
     color: var(--couleur-texte-menu);
     font-family: var(--menu-font-family);
     text-transform: uppercase;
-    font-size: 12px;
-    background: rgb(240, 240, 240);
-    display: none;
+    text-align: center;
   }
 
-  .menu-nav > ul:first-child {
+  nav > ul {
     margin-top: 60px;
   }
 
-  .menu-nav ul {
-    margin-left: 0px;
-    padding-left: 10px;
-  }
-
-  .menu-nav li {
+  nav li {
     list-style: none;
-    margin-left: 0;
-    padding: 0;
   }
 
-  .menu-rubrique {
+  .rubrique {
     display: inline-block;
     font-weight: bold;
-    height: 25px;
+    margin-top: 1rem;
+    margin-bottom: 0.4rem;
   }
 
-  .menu-link {
+  .link {
     display: inline-block;
-    height: 25px;
+    height: 1.5em;
     padding: 0;
     color: var(--couleur-texte-menu);
     text-decoration: none;
   }
 
-  .menu-link:hover {
+  .link:not(.rubrique) {
+    text-transform: none;
+    font-variant: small-caps;
+  }
+
+  .link:hover {
     text-decoration: underline;
+  }
+
+  .user-footer {
+    align-self: center;
+    margin-top: auto;
+    margin-bottom: 10px;
+    color: var(--couleur-texte-menu);
+    font-family: var(--menu-font-family);
+  }
+
+  /* Desktop */
+  @media screen and (min-width: 768px) {
+    nav {
+      width: 200px;
+      text-align: initial;
+      font-size: 0.8rem;
+    }
+
+    nav ul {
+      margin-left: 0px;
+      padding-left: 10px;
+    }
+
+    nav li {
+      margin-left: 0;
+      padding: 0;
+    }
+
+    .user-footer {
+      align-self: flex-start;
+      padding-left: 10px;
+      font-size: 0.8rem;
+    }
   }
 </style>

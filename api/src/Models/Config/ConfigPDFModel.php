@@ -2,15 +2,13 @@
 
 namespace Api\Models\Config;
 
-use Api\Utils\DatabaseConnector as DB;
+use Api\Utils\BaseModel;
 
-class ConfigPDFModel
+class ConfigPDFModel extends BaseModel
 {
-  private $db;
-
   public function __construct()
   {
-    $this->db = (new DB)->getConnection();
+    parent::__construct();
   }
 
   /**
@@ -18,29 +16,28 @@ class ConfigPDFModel
    * 
    * @return array Toutes les configurations PDF récupérées
    */
-  public function readAll()
+  public function readAll(): array
   {
     $statement =
       "SELECT
-          pdf.id,
-          pdf.module,
-          pdf.fournisseur,
-          t.nom_court AS fournisseur_nom,
-          pdf.envoi_auto,
-          pdf.liste_emails,
-          pdf.jours_avant,
-          pdf.jours_apres
-        FROM config_pdf pdf
-        LEFT JOIN tiers t ON pdf.fournisseur = t.id";
+          id,
+          module,
+          fournisseur,
+          envoi_auto,
+          liste_emails,
+          jours_avant,
+          jours_apres
+        FROM config_pdf";
 
     $requete = $this->db->query($statement);
 
     $configs = $requete->fetchAll();
 
-    // Rétablissement des types INT
+    // Rétablissement des types INT et bool
     array_walk_recursive($configs, function (&$value, $key) {
       $value = match ($key) {
-        "id", "fournisseur", "envoi_auto", "jours_avant", "jours_apres" => (int) $value,
+        "id", "fournisseur", "jours_avant", "jours_apres" => (int) $value,
+        "envoi_auto" => (bool) $value,
         default => $value,
       };
     });
@@ -57,21 +54,19 @@ class ConfigPDFModel
    * 
    * @return array Configuration récupérée.
    */
-  public function read(int $id)
+  public function read(int $id): ?array
   {
     $statement =
       "SELECT
-          pdf.id,
-          pdf.module,
-          pdf.fournisseur,
-          t.nom_court AS fournisseur_nom,
-          pdf.envoi_auto,
-          pdf.liste_emails,
-          pdf.jours_avant,
-          pdf.jours_apres
-        FROM config_pdf pdf
-        LEFT JOIN tiers t ON pdf.fournisseur = t.id
-        WHERE pdf.id = :id";
+          id,
+          module,
+          fournisseur,
+          envoi_auto,
+          liste_emails,
+          jours_avant,
+          jours_apres
+        FROM config_pdf
+        WHERE id = :id";
 
     $requete = $this->db->prepare($statement);
 
@@ -79,15 +74,16 @@ class ConfigPDFModel
 
     $config = $requete->fetch();
 
-    if ($config) {
-      // Rétablissement des types INT
-      array_walk_recursive($config, function (&$value, $key) {
-        $value = match ($key) {
-          "id", "fournisseur", "envoi_auto", "jours_avant", "jours_apres" => (int) $value,
-          default => $value,
-        };
-      });
-    }
+    if (!$config) return null;
+
+    // Rétablissement des types INT et bool
+    array_walk_recursive($config, function (&$value, $key) {
+      $value = match ($key) {
+        "id", "fournisseur", "jours_avant", "jours_apres" => (int) $value,
+        "envoi_auto" => (bool) $value,
+        default => $value,
+      };
+    });
 
     $donnees = $config;
 
@@ -101,7 +97,7 @@ class ConfigPDFModel
    * 
    * @return array Configuration PDF créée.
    */
-  public function create(array $input)
+  public function create(array $input): array
   {
     $statement =
       "INSERT INTO config_pdf
@@ -141,7 +137,7 @@ class ConfigPDFModel
    * 
    * @return array Configuration PDF modifiée.
    */
-  public function update(int $id, array $input)
+  public function update(int $id, array $input): array
   {
     $statement =
       "UPDATE config_pdf
@@ -176,7 +172,7 @@ class ConfigPDFModel
    * 
    * @return bool TRUE si succès, FALSE si erreur
    */
-  public function delete(int $id)
+  public function delete(int $id): bool
   {
     $requete = $this->db->prepare("DELETE FROM config_pdf WHERE id = :id");
     $succes = $requete->execute(["id" => $id]);

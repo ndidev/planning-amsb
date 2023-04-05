@@ -9,9 +9,10 @@ use Api\Utils\ETag;
 class PortsController extends BaseController
 {
   private $model;
+  private $sse_event = "ports";
 
   public function __construct(
-    private string $locode,
+    private ?string $locode,
   ) {
     parent::__construct();
     $this->model = new PortsModel;
@@ -120,12 +121,16 @@ class PortsController extends BaseController
 
     $donnees = $this->model->create($input);
 
-    $this->headers["Location"] = $_ENV["API_URL"] . "/ports/" . $donnees["locode"];
+    $locode = $donnees["locode"];
+
+    $this->headers["Location"] = $_ENV["API_URL"] . "/ports/$locode";
 
     $this->response
       ->setCode(201)
       ->setBody(json_encode($donnees))
       ->setHeaders($this->headers);
+
+    notify_sse($this->sse_event, __FUNCTION__, $locode, $donnees);
   }
 
   /**
@@ -147,6 +152,8 @@ class PortsController extends BaseController
     $this->response
       ->setBody(json_encode($donnees))
       ->setHeaders($this->headers);
+
+    notify_sse($this->sse_event, __FUNCTION__, $locode, $donnees);
   }
 
   /**
@@ -165,6 +172,7 @@ class PortsController extends BaseController
 
     if ($succes) {
       $this->response->setCode(204);
+      notify_sse($this->sse_event, __FUNCTION__, $locode);
     } else {
       throw new \Exception("Erreur lors de la suppression");
     }

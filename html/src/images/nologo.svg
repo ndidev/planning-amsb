@@ -1,0 +1,14 @@
+<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="100%" height="100%" fill="#ccc" />
+  <text
+    x="50%"
+    y="50%"
+    textLength="65%"
+    font-family="sans-serif"
+    text-anchor="middle"
+    dominant-baseline="central"
+    lengthAdjust="spacingAndGlyphs"
+  >
+    Aucun logo
+  </text>
+</svg>

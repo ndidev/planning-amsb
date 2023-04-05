@@ -9,7 +9,10 @@ use Api\Utils\Exceptions\Auth\AdminException;
 use Api\Utils\Exceptions\Auth\AccountPendingException;
 use Api\Utils\Exceptions\Auth\AccessException;
 
-// Méthodes supportées
+/**
+ * Méthodes HTTP supportées.
+ * @var string[]
+ */
 $supported_methods = [
   "OPTIONS",
   "HEAD",
@@ -19,6 +22,13 @@ $supported_methods = [
   "PATCH",
   "DELETE"
 ];
+
+// Pre-flight request
+if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
+  (new HTTPResponse())->sendCorsPreflight();
+}
+
+// Méthode non supportée
 if (array_search($_SERVER["REQUEST_METHOD"], $supported_methods) === FALSE) {
   (new HTTPResponse(501))->send();
 }
@@ -93,6 +103,7 @@ try {
     case 'logout':
       // Suppression de la session et suppression du cookie
       (new User)->logout();
+      (new HTTPResponse(204))->send();
       break;
 
 
@@ -150,15 +161,14 @@ try {
   }
 } catch (AuthException $e) {
   (new HTTPResponse($e->http_status))
-    ->setType("json")
-    ->setBody(json_encode([
-      "message" => $e->getMessage()
-    ]))
+    ->setType("text")
+    ->setBody($e->getMessage())
     ->send();
 } catch (Throwable $e) {
   error_logger($e);
   (new HTTPResponse(500))
-    ->setBody(json_encode(["message" => "Erreur serveur"]))
+    ->setType("text")
+    ->setBody("Erreur serveur")
     ->send();
 }
 

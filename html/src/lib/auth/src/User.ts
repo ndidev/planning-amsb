@@ -1,5 +1,6 @@
-import { env, sitemap } from "@app/utils";
+import { sitemap, fetcher } from "@app/utils";
 import { UserRoles, AccountStatus } from "@app/auth";
+import type { Roles, ModuleId } from "@app/types";
 
 /**
  * Classe utilitaire permettant de vérifier les permissions d'un utilisateur.
@@ -26,12 +27,7 @@ export class User {
   statut: AccountStatus;
 
   constructor(
-    user: {
-      login: string;
-      nom: string;
-      roles: Roles;
-      statut: AccountStatus;
-    } = {
+    user: UserInfo = {
       login: "",
       nom: "",
       roles: {},
@@ -53,11 +49,18 @@ export class User {
   }
 
   /**
+   * Retourne `true` si l'utilisateur est connecté et le compte est activé.
+   */
+  get canUseApp() {
+    return this.login !== "" && this.statut === AccountStatus.ACTIVE;
+  }
+
+  /**
    * Vérifie si l'utilisateur peut accéder à une rubrique.
    *
    * @param rubrique Rubrique à laquelle accéder
    */
-  canAccess(rubrique: string): boolean {
+  canAccess(rubrique: ModuleId) {
     return (this.#roles[rubrique] || -1) >= UserRoles.ACCESS;
   }
 
@@ -66,7 +69,7 @@ export class User {
    *
    * @param rubrique Rubrique à modifier
    */
-  canEdit(rubrique: string): boolean {
+  canEdit(rubrique: ModuleId) {
     return (this.#roles[rubrique] || -1) >= UserRoles.EDIT;
   }
 
@@ -76,14 +79,14 @@ export class User {
    * @param rubrique Nom (code) de la rubrique
    * @returns Niveau d'accès de la rubrique ou -1 si la rubrique n'existe pas
    */
-  getRole(rubrique: string): -1 | 0 | 1 | 2 {
+  getRole(rubrique: ModuleId): -1 | 0 | 1 | 2 {
     return this.#roles[rubrique] || -1;
   }
 
   /**
    * Vérifie si l'utilisateur est administrateur.
    */
-  get isAdmin(): boolean {
+  get isAdmin() {
     return (this.#roles.admin || -1) >= UserRoles.ACCESS;
   }
 
@@ -93,16 +96,30 @@ export class User {
    * Envoie une requête à l'API pour _logout_ et supprime `localStorage`.
    */
   async logout() {
-    const url = new URL(env.auth);
-    url.pathname += "logout";
-
-    const reponse = await fetch(url);
-
-    if (!reponse.ok) {
-      throw new Error(`${reponse.status}, ${reponse.statusText}`);
-    }
+    await fetcher("logout", { prefix: "auth" });
 
     localStorage.clear();
-    location.pathname = env.prefix + "/";
   }
 }
+
+export type UserInfo = {
+  /**
+   * Login de l'utilisateur.
+   */
+  login: string;
+
+  /**
+   * Nom de l'utilisateur.
+   */
+  nom: string;
+
+  /**
+   * Rôles de l'utilisateur.
+   */
+  roles: Roles;
+
+  /**
+   * Statut du compte.
+   */
+  statut: AccountStatus;
+};

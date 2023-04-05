@@ -13,6 +13,7 @@ class CharterController extends BaseController
 {
   private $model;
   private $module = "chartering";
+  private $sse_event = "chartering/charters";
 
   public function __construct(
     private ?int $id
@@ -146,7 +147,7 @@ class CharterController extends BaseController
       ->setHeaders($this->headers)
       ->flush();
 
-    notify_sse($this->module, __FUNCTION__, $id);
+    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
   }
 
   /**
@@ -174,7 +175,7 @@ class CharterController extends BaseController
       ->setHeaders($this->headers)
       ->flush();
 
-    notify_sse($this->module, __FUNCTION__, $id);
+    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
   }
 
   /**
@@ -197,7 +198,7 @@ class CharterController extends BaseController
 
     if ($succes) {
       $this->response->setCode(204)->flush();
-      notify_sse($this->module, __FUNCTION__, $id);
+      notify_sse($this->sse_event, __FUNCTION__, $id);
     } else {
       throw new Exception("Erreur lors de la suppression");
     }

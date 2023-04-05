@@ -6,11 +6,13 @@ use Api\Models\Bois\RdvModel;
 use Api\Utils\BaseController;
 use Api\Utils\ETag;
 use Api\Utils\Exceptions\Auth\AccessException;
+use PDOException;
 
 class RdvController extends BaseController
 {
   private $model;
   private $module = "bois";
+  private $sse_event = "bois/rdvs";
 
   public function __construct(
     private ?int $id
@@ -24,7 +26,7 @@ class RdvController extends BaseController
   {
     switch ($this->request->method) {
       case 'OPTIONS':
-        $this->response->setCode(204)->addHeader("Access-Control-Allow-Methods", "OPTIONS, HEAD, GET, POST, PUT, DELETE");
+        $this->response->setCode(204)->addHeader("Access-Control-Allow-Methods", "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE");
         break;
 
       case 'GET':
@@ -44,12 +46,16 @@ class RdvController extends BaseController
         $this->update($this->id);
         break;
 
+      case 'PATCH':
+        $this->patch($this->id);
+        break;
+
       case 'DELETE':
         $this->delete($this->id);
         break;
 
       default:
-        $this->response->setCode(405)->addHeader("Allow", "OPTIONS, HEAD, GET, POST, PUT, DELETE");
+        $this->response->setCode(405)->addHeader("Allow", "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE");
         break;
     }
 
@@ -151,7 +157,7 @@ class RdvController extends BaseController
       ->setHeaders($this->headers)
       ->flush();
 
-    notify_sse($this->module, __FUNCTION__, $id);
+    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
   }
 
   /**
@@ -179,7 +185,35 @@ class RdvController extends BaseController
       ->setHeaders($this->headers)
       ->flush();
 
-    notify_sse($this->module, __FUNCTION__, $id);
+    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
+  }
+
+  /**
+   * Met à jour certaines proriétés d'un RDV bois.
+   * 
+   * @param int $id id du RDV à modifier.
+   */
+  public function patch(int $id)
+  {
+    if (!$this->user->can_edit($this->module)) {
+      throw new AccessException();
+    }
+
+    if (!$this->read($id, true)) {
+      $this->response->setCode(404);
+      return;
+    }
+
+    $input = $this->request->body;
+
+    $donnees = $this->model->patch($id, $input);
+
+    $this->response
+      ->setBody(json_encode($donnees))
+      ->setHeaders($this->headers)
+      ->flush();
+
+    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
   }
 
   /**
@@ -205,7 +239,7 @@ class RdvController extends BaseController
 
     if ($succes) {
       $this->response->setCode(204)->flush();
-      notify_sse($this->module, __FUNCTION__, $id);
+      notify_sse($this->sse_event, __FUNCTION__, $id);
     } else {
       throw new \Exception("Erreur lors de la suppression");
     }

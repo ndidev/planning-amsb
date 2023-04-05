@@ -10,6 +10,7 @@ class MareesController extends BaseController
 {
   private $model;
   private $module = "marees";
+  private $sse_event = "marees";
 
   public function __construct(
     private ?int $annee
@@ -142,11 +143,14 @@ class MareesController extends BaseController
 
     $this->headers["Location"] = $_ENV["API_URL"] . "/marees/$annee";
 
+    $donnees = json_encode(["annee" => $annee]);
+
     $this->response
       ->setCode(201)
-      ->setHeaders($this->headers);
+      ->setHeaders($this->headers)
+      ->setBody(json_encode($donnees));
 
-    notify_sse($this->module, __FUNCTION__, "");
+    notify_sse($this->sse_event, __FUNCTION__, $annee, $donnees);
   }
 
   /**
@@ -165,7 +169,7 @@ class MareesController extends BaseController
 
     if ($succes) {
       $this->response->setCode(204);
-      notify_sse($this->module, __FUNCTION__, $annee);
+      notify_sse($this->sse_event, __FUNCTION__, $annee);
     } else {
       throw new \Exception("Erreur lors de la suppression");
     }

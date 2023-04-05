@@ -77,10 +77,15 @@ class User
 
   private Redis $redis;
 
-  public function __construct(?string $uid = null)
+  public function __construct(?string $uid = null, ?Redis $redis = null)
   {
-    $this->redis = new Redis();
-    $this->redis->connect($_ENV["REDIS_HOST"], $_ENV["REDIS_PORT"]);
+    if ($redis) {
+      // Utilisé pour les tests, une connexion Redis est directement passée en paramètre
+      $this->redis = $redis;
+    } else {
+      $this->redis = new Redis();
+      $this->redis->pconnect($_ENV["REDIS_HOST"], $_ENV["REDIS_PORT"]);
+    }
 
     if ($uid) {
       $this->uid = $uid;
@@ -176,7 +181,7 @@ class User
       ->getConnection()
       ->query("UPDATE admin_users SET last_connection = '{$now}' WHERE uid = '{$this->uid}'");
 
-    $this->redis->hSet("users:{$this->uid}", "last_connection", $now);
+    $this->redis->hSet("admin:users:{$this->uid}", "last_connection", $now);
 
     $sid = bin2hex(random_bytes(10));
     $this->register_session($sid);
@@ -227,7 +232,7 @@ class User
       ->execute([
         "uid" => $this->uid,
         "password" => password_hash($password, PASSWORD_DEFAULT),
-        "statut" => AccountStatus::ACTIVE // ? TODO Vérifier fonctionnement
+        "statut" => AccountStatus::ACTIVE->value
       ]);
 
     $this->update_redis();
@@ -295,15 +300,15 @@ class User
     $api_key_hash = md5($api_key);
 
     $key_info =
-      $this->redis->hGetAll("apikeys:{$api_key_hash}")
+      $this->redis->hGetAll("admin:apikeys:{$api_key_hash}")
       ?: (new DB)
       ->getConnection()
       ->query("SELECT `uid`, `status`, expiration FROM admin_api_keys WHERE `key` = '{$api_key_hash}'")
       ->fetch();
 
     if ($key_info) {
-      $this->redis->hMSet("apikeys:{$api_key_hash}", $key_info);
-      $this->redis->expire("apikeys:{$api_key_hash}", UNE_SEMAINE);
+      $this->redis->hMSet("admin:apikeys:{$api_key_hash}", $key_info);
+      $this->redis->expire("admin:apikeys:{$api_key_hash}", UNE_SEMAINE);
     }
 
     [
@@ -373,9 +378,39 @@ class User
       ->fetch();
 
     // Copie des infos dans Redis (hash)
-    foreach ($user as $key => $value) {
-      $this->redis->hSet("users:{$this->uid}", $key, $value);
+    $this->redis->hMSet("admin:users:{$this->uid}", $user);
+  }
+
+  /**
+   * Supprimer les sessions de l'utilisateur dans Redis.
+   */
+  public function clear_sessions(): void
+  {
+    // Obtenir toutes les sessions en cours
+    $sessions = [];
+    do {
+      $batch = $this->redis->scan($iterator, "admin:sessions:*");
+      if ($batch) $sessions = array_merge($sessions, $batch);
+    } while ($iterator);
+
+    // Obtenir les utilisateurs pour chaque session
+    $this->redis->pipeline();
+    foreach ($sessions as $session) {
+      $this->redis->get($session);
     }
+    $uids = $this->redis->exec();
+
+    // Combiner sessions et utilisateurs
+    $sessions = array_combine($sessions, $uids);
+
+    // Supprimer les sessions de l'utilisateur
+    $this->redis->pipeline();
+    foreach ($sessions as $session => $uid) {
+      if ($uid === $this->uid) {
+        $this->redis->del($session);
+      }
+    }
+    $this->redis->exec();
   }
 
 
@@ -422,7 +457,7 @@ class User
 
     // Identification grâce à l'identifiant de session
     if ($sid) {
-      $uid = $this->redis->get("sessions:{$sid}");
+      $uid = $this->redis->get("admin:sessions:{$sid}");
       if ($uid === false) {
         throw new SessionException();
       }
@@ -446,14 +481,14 @@ class User
     }
 
     // Tentative Redis
-    if (!$this->redis->exists("users:{$this->uid}")) {
+    if (!$this->redis->exists("admin:users:{$this->uid}")) {
       $this->update_redis();
     }
 
-    $user = $this->redis->hGetAll("users:{$this->uid}");
+    $user = $this->redis->hGetAll("admin:users:{$this->uid}");
 
     // Prolongation cache
-    $this->redis->expire("users:{$this->uid}", $_ENV["SESSION_EXPIRATION"]);
+    $this->redis->expire("admin:users:{$this->uid}", $_ENV["SESSION_EXPIRATION"]);
 
     $this->login = $user["login"];
     $this->password = $user["password"];
@@ -477,13 +512,15 @@ class User
    */
   private function register_session(string $sid): void
   {
-    $this->redis->setex("sessions:{$sid}", $_ENV["SESSION_EXPIRATION"], $this->uid);
+    $this->redis->setex("admin:sessions:{$sid}", $_ENV["SESSION_EXPIRATION"], $this->uid);
 
     setcookie($_ENV["SESSION_COOKIE_NAME"], $sid, [
       "expires" => time() + $_ENV["SESSION_EXPIRATION"],
       "path" => $_ENV["SESSION_COOKIE_PATH"],
+      // "samesite" => str_starts_with($_SERVER['HTTP_HOST'], "localhost") ? "None" : "Strict",
       "samesite" => "Strict",
       "secure" => $_ENV["ENVIRONNEMENT"] !== "development",
+      // "secure" => true,
       "httponly" => true
     ]);
   }
@@ -498,7 +535,7 @@ class User
    */
   private function delete_session(string $sid): void
   {
-    $this->redis->del("sessions:{$sid}");
+    $this->redis->del("admin:sessions:{$sid}");
 
     setcookie($_ENV["SESSION_COOKIE_NAME"], false, [
       "path" => $_ENV["SESSION_COOKIE_PATH"]
@@ -523,7 +560,7 @@ class User
           WHERE uid = '{$this->uid}'"
       );
 
-    $login_attempts = $this->redis->hIncrBy("users:{$this->uid}", "login_attempts", 1);
+    $login_attempts = $this->redis->hIncrBy("admin:users:{$this->uid}", "login_attempts", 1);
 
     return $login_attempts;
   }
@@ -540,7 +577,7 @@ class User
       ->getConnection()
       ->query("UPDATE admin_users SET login_attempts = 0 WHERE uid = '{$this->uid}'");
 
-    $this->redis->hSet("users:{$this->uid}", "login_attempts", 0);
+    $this->redis->hSet("admin:users:{$this->uid}", "login_attempts", 0);
   }
 
   /**
@@ -563,17 +600,22 @@ class User
           WHERE uid = :uid"
       )
       ->execute([
-        "statut" => AccountStatus::LOCKED, // ? TODO Vérifier fonctionnement
+        "statut" => AccountStatus::LOCKED->value,
         "raison" => $raison,
         "uid" => $this->uid
       ]);
 
     $this->redis->hMSet(
-      "users:{$this->uid}",
+      "admin:users:{$this->uid}",
       [
-        "statut" => AccountStatus::LOCKED, // ? TODO Vérifier fonctionnement
-        "historique" => $this->redis->hGet("users:{$this->uid}", "historique") . PHP_EOL . $raison
+        "statut" => AccountStatus::LOCKED->value,
+        "historique" => $this->redis->hGet("admin:users:{$this->uid}", "historique") . PHP_EOL . $raison
       ]
     );
+  }
+
+  public function __destruct()
+  {
+    $this->redis->close();
   }
 }

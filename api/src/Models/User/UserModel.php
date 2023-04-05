@@ -64,6 +64,8 @@ class UserModel extends BaseModel
 
     $this->user->update_redis();
 
+    $this->user->nom = $input["nom"];
+
     return $this->read();
   }
 }

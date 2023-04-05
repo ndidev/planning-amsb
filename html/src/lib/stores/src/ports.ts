@@ -1,28 +1,40 @@
 import { writable } from "svelte/store";
-import type { Writable } from "svelte/store";
+
+import Notiflix from "notiflix";
 
 import { fetcher } from "@app/utils";
+import { HTTP } from "@app/errors";
+import type { Port } from "@app/types";
 
-const localStorageKey = "stores/ports";
+const endpoint = "ports";
 
-const initial =
-  JSON.parse(localStorage.getItem(localStorageKey) || "false") || [];
+const initial = [];
 
-// Config - ports
-export const ports: Writable<Port[]> = writable(initial, () => {
-  async function recupererInfos() {
-    const lignes: Port[] = await fetcher("ports");
+// Config - Ports
+export const ports = writable<Port[]>(initial, () => {
+  fetchAll();
 
-    ports.set(lignes);
-
-    localStorage.setItem(localStorageKey, JSON.stringify(lignes));
-  }
-
-  recupererInfos();
-
-  document.addEventListener("planning:ports", recupererInfos);
+  document.addEventListener(`planning:${endpoint}`, fetchAll);
 
   return () => {
-    document.removeEventListener("planning:ports", recupererInfos);
+    document.removeEventListener(`planning:${endpoint}`, fetchAll);
   };
 });
+
+// FONCTIONS
+
+async function fetchAll() {
+  try {
+    const lignes: Port[] = await fetcher(endpoint);
+
+    ports.set(lignes);
+  } catch (err: unknown) {
+    const error = err as HTTP.Error | Error;
+    if (error instanceof HTTP.ResponseError) {
+      Notiflix.Notify.failure(error.message);
+    } else {
+      Notiflix.Notify.failure("Erreur");
+      console.error(error);
+    }
+  }
+}

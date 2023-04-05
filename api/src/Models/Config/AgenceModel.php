@@ -2,15 +2,13 @@
 
 namespace Api\Models\Config;
 
-use Api\Utils\DatabaseConnector as DB;
+use Api\Utils\BaseModel;
 
-class AgenceModel
+class AgenceModel extends BaseModel
 {
-  private $db;
-
   public function __construct()
   {
-    $this->db = (new DB)->getConnection();
+    parent::__construct();
   }
 
   /**
@@ -18,7 +16,7 @@ class AgenceModel
    * 
    * @return array Données de l'agence
    */
-  public function readAll()
+  public function readAll(): array
   {
     $requete = $this->db->query("SELECT * FROM config_agence");
     $donnees = $requete->fetchAll();
@@ -33,11 +31,16 @@ class AgenceModel
    * 
    * @return array Données du service
    */
-  public function read(string $service)
+  public function read(string $service): ?array
   {
     $requete = $this->db->prepare("SELECT * FROM config_agence WHERE service = :service");
     $requete->execute(["service" => $service]);
-    $donnees = $requete->fetch();
+    $service = $requete->fetch();
+
+    if (!$service) return null;
+
+
+    $donnees = $service;
 
     return $donnees;
   }
@@ -49,7 +52,7 @@ class AgenceModel
    * 
    * @return array Données du service
    */
-  public function update(string $service, array  $input)
+  public function update(string $service, array  $input): array
   {
     $statement =
       "UPDATE config_agence

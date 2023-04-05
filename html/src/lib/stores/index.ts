@@ -3,40 +3,40 @@
  */
 
 // User
-export { currentUser } from "./src/currentUser";
+export { currentUser } from "./src/user";
 
-// Bois - Planning
-// export { planningBois } from "./src/planningBois";
+// Bois
+export { boisRdvs } from "./src/bois";
 
-// Vrac - Planning
-// export { planningVrac } from "./src/planningVrac";
+// Vrac
+export { vracRdvs, vracProduits } from "./src/vrac";
 
-// Consignation - Planning
-// export { planningConsignation } from "./src/planningConsignation";
+// Consignation
+export { consignationEscales } from "./src/consignation";
 
-// Chartering - Planning
-// export { planningChartering } from "./src/planningChartering";
+// Chartering
+export { charteringCharters } from "./src/chartering";
 
 // Tiers
-export { tiers, tiersModifiables } from "./src/tiers";
+export { tiers } from "./src/tiers";
 
 // Config - BandeauInfo
-export { lignesBandeauInfo } from "./src/lignesBandeauInfo";
+export { configBandeauInfo } from "./src/configBandeauInfo";
 
 // Config - PDF
-export { configsPdf } from "./src/configsPdf";
+export { configPdf } from "./src/configPdf";
 
-// Config - RdvRapides
-export { rdvRapides } from "./src/rdvRapides";
+// Config - AjoutsRapides
+export { configAjoutsRapides } from "./src/configAjoutsRapides";
 
 // Config - Agence
-export { servicesAgence } from "./src/servicesAgence";
+export { configAgence } from "./src/configAgence";
 
 // Config - Cotes
-export { cotes } from "./src/cotes";
+export { configCotes } from "./src/configCotes";
 
-// Admin - Comptes
-export { comptesUtilisateurs } from "./src/comptesUtilisateurs";
+// Admin - Utilisateurs
+export { adminUsers } from "./src/adminUsers";
 
 // Ports
 export { ports } from "./src/ports";
@@ -45,8 +45,4 @@ export { ports } from "./src/ports";
 export { pays } from "./src/pays";
 
 // Marées
-export { marees } from "./src/marees";
-export { mareesAnnees } from "./src/mareesAnnees";
-
-// Awesomplete
-export { AwesompleteAffichage } from "./src/AwesompleteAffichage";
+export { marees, mareesAnnees } from "./src/marees";

@@ -19,18 +19,18 @@ class UserAccountModel extends BaseModel
   /**
    * Récupère tous les comptes utilisateurs.
    */
-  public function readAll()
+  public function readAll(): array
   {
     $statement = "SELECT * FROM admin_users ORDER BY login";
 
     $comptes = $this->db->query($statement)->fetchAll();
 
     // Update Redis
+    $this->redis->pipeline();
     foreach ($comptes as $compte) {
-      foreach ($compte as $key => $value) {
-        $this->redis->hSet("users:{$compte["uid"]}", $key, $value);
-      }
+      $this->redis->hMSet("admin:users:{$compte["uid"]}", $compte);
     }
+    $this->redis->exec();
 
     // Suppression des comptes TV
     $comptes = array_values(array_filter($comptes, function ($compte) {
@@ -66,10 +66,10 @@ class UserAccountModel extends BaseModel
    * 
    * @return array Compte utilisateur récupéré
    */
-  public function read(string $uid): array|null
+  public function read(string $uid): ?array
   {
     // Tentative Redis
-    $compte = $this->redis->hGetAll("users:{$uid}");
+    $compte = $this->redis->hGetAll("admin:users:{$uid}");
 
     // MariaDB
     if (!$compte) {
@@ -79,14 +79,10 @@ class UserAccountModel extends BaseModel
       $requete->execute(["uid" => $uid]);
       $compte = $requete->fetch();
 
-      if (!$compte) {
-        return NULL;
-      }
+      if (!$compte) return null;
 
       // Update Redis
-      foreach ($compte as $key => $value) {
-        $this->redis->hSet("users:{$compte["uid"]}", $key, $value);
-      }
+      $this->redis->hMSet("admin:users:{$compte["uid"]}", $compte);
     }
 
 
@@ -225,6 +221,7 @@ class UserAccountModel extends BaseModel
     ]);
 
     (new User($uid))->update_redis();
+    (new User($uid))->clear_sessions();
 
     return $succes;
   }

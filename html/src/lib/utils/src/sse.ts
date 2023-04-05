@@ -1,35 +1,42 @@
-import { env } from "./environment";
+import { appURLs } from "@app/utils";
+import { v4 as uuid } from "uuid";
+import type { DBEventData } from "@app/types";
 
 /**
  * Établit une connexion au server SSE.
  *
  * Lorsqu'une mise à jour de la base de données est efectuée par un client,
  * un message est envoyé par le serveur SSE à tous les clients
- * ayant souscrits au module concerné (`{{module},{type},{id_ressource_modifiee}}`).
+ * ayant souscrits au module concerné (`{{name},{type},{id_ressource_modifiee},{data_ressource}}`).
  * Cette fonction envoie un événement correspondant au message reçu,
- * de la forme `planning:{module}`, sur l'élément `document`.
+ * de la forme `planning:{name}`, sur l'élément `document`.
  *
  * Exemple :
- * message reçu : `{"module":"bois","type":"update","id":34125}`
- * événement envoyé : `new Event("planning:bois")`
+ * message reçu : `{"name":"bois/rdvs","type":"update","id":34125,"data":{data}}`
+ * événement envoyé : `new CustomEvent("planning:bois/rdvs")`
  *
  * @param subscriptions Liste des modules souscrits
  */
-export function demarrerConnexionSSE(subscriptions: string[]): EventSource {
-  /**
-   * @type {Set<string>}
-   */
-  let pendingUpdates: Set<string> = new Set();
+export async function demarrerConnexionSSE(
+  subscriptions: string[]
+): Promise<EventSource> {
+  // Création d'un identifiant unique pour la connexion
+  const id = uuid();
+  sessionStorage.setItem("sseId", id);
 
-  const url = new URL(env.sse);
+  let pendingUpdates = new Set<string>();
 
-  const params = {
+  const url = new URL(appURLs.sse);
+
+  const params: Record<string, string> = {
+    id,
     subs: subscriptions.join(","),
+    apiKey: new URLSearchParams(location.search).get("api_key") || "",
   };
 
   url.search = new URLSearchParams(params).toString();
 
-  const source = new EventSource(url);
+  const source = new EventSource(url, { withCredentials: true });
 
   source.onopen = (event) => {
     console.log("SSE : Connexion établie");
@@ -46,28 +53,26 @@ export function demarrerConnexionSSE(subscriptions: string[]): EventSource {
     console.warn("SSE : connexion fermée à la demande du serveur");
   });
 
-  source.addEventListener("db", (dbEvent) => {
-    const data: {
-      module: string;
-      type: string;
-      id: number | string;
-    } = JSON.parse(dbEvent.data);
+  source.addEventListener("db", (dbEvent: MessageEvent<string>) => {
+    const data: DBEventData<any> = JSON.parse(dbEvent.data);
 
     // N'envoyer l'événement que si la page est visible actuellement,
     // sinon, mettre l'événement en attente
     if (document.visibilityState === "visible") {
-      document.dispatchEvent(new Event(`planning:${data.module}`));
+      document.dispatchEvent(
+        new CustomEvent(`planning:${data.name}`, { detail: data })
+      );
     } else {
-      pendingUpdates.add(data.module);
+      pendingUpdates.add(data.name);
     }
   });
 
   // Envoi des événements en attente lorsque la page redevient visible
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
-      pendingUpdates.forEach((module) => {
-        document.dispatchEvent(new Event(`planning:${module}`));
-        pendingUpdates.delete(module);
+      pendingUpdates.forEach((name) => {
+        document.dispatchEvent(new CustomEvent(`planning:${name}`));
+        pendingUpdates.delete(name);
       });
     }
   });

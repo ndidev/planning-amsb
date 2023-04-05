@@ -2,16 +2,15 @@
 
 namespace Api\Models\Vrac;
 
-use Api\Utils\DatabaseConnector as DB;
-use Api\Models\Vrac\QualiteModel as Qualite;
+use Api\Utils\BaseModel;
 
-class ProduitModel
+class ProduitModel extends BaseModel
 {
-  private $db;
+  private string $redis_ns = "vrac:produits";
 
   public function __construct()
   {
-    $this->db = (new DB)->getConnection();
+    parent::__construct();
   }
 
   /**
@@ -19,7 +18,7 @@ class ProduitModel
    * 
    * @return array Liste des produits vrac
    */
-  public function readAll()
+  public function readAll(): array
   {
     $statement_produits =
       "SELECT
@@ -60,7 +59,7 @@ class ProduitModel
    * 
    * @return array Produit récupéré
    */
-  public function read($id)
+  public function read($id): ?array
   {
     $statement_produit =
       "SELECT
@@ -82,12 +81,12 @@ class ProduitModel
     $requete_produit->execute(["id" => $id]);
     $produit = $requete_produit->fetch();
 
+    if (!$produit) return null;
+
     // Qualités
     $requete_qualites = $this->db->prepare($statement_qualites);
-    if ($produit) {
-      $requete_qualites->execute(["produit" => $id]);
-      $produit["qualites"] = $requete_qualites->fetchAll();
-    }
+    $requete_qualites->execute(["produit" => $id]);
+    $produit["qualites"] = $requete_qualites->fetchAll();
 
     $donnees = $produit;
 
@@ -101,7 +100,7 @@ class ProduitModel
    * 
    * @return array Produit créé
    */
-  public function create(array $input)
+  public function create(array $input): array
   {
     $statement_produit =
       "INSERT INTO vrac_produits
@@ -154,7 +153,7 @@ class ProduitModel
    * 
    * @return array Produit modifié
    */
-  public function update($id, array $input)
+  public function update($id, array $input): array
   {
     $statement_produit =
       "UPDATE vrac_produits
@@ -242,7 +241,7 @@ class ProduitModel
    * 
    * @return bool TRUE si succès, FALSE si erreur
    */
-  public function delete(int $id)
+  public function delete(int $id): bool
   {
     $requete = $this->db->prepare("DELETE FROM vrac_produits WHERE id = :id");
     $succes = $requete->execute(["id" => $id]);

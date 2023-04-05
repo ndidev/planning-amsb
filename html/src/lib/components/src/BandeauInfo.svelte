@@ -15,14 +15,16 @@
   ```
  -->
 <script lang="ts">
-  import { lignesBandeauInfo } from "@app/stores";
+  import { configBandeauInfo } from "@app/stores";
 
   import { luminance } from "@app/utils";
+
+  import type { ModuleId } from "@app/types";
 
   /**
    * Module des lignes à afficher.
    */
-  export let module: string;
+  export let module: ModuleId;
 
   /**
    * Afficher les lignes actives sur PC.
@@ -34,13 +36,13 @@
    */
   export let tv = false;
 
-  $: lignes = $lignesBandeauInfo[module]?.filter(
-    (ligne: LigneBandeauInfo) =>
-      (pc === true && ligne.pc === 1) || (tv === true && ligne.tv === 1)
-  ) as LigneBandeauInfo[];
+  $: lignes = [...$configBandeauInfo[module].values()].filter(
+    (ligne) =>
+      (pc === true && ligne.pc === true) || (tv === true && ligne.tv === true)
+  );
 </script>
 
-<section class="bandeau-info">
+<section class="bandeau-info" style:--margin-left={tv ? "0px" : "90px"}>
   {#each lignes as ligne}
     <div
       class="ligne-bandeau-info"
@@ -53,4 +55,22 @@
 </section>
 
 <style>
+  .bandeau-info {
+    position: sticky;
+    top: 0px;
+    z-index: 1;
+    margin-left: var(--margin-left, 0px);
+    font-size: 1.2em;
+  }
+
+  .ligne-bandeau-info {
+    padding: 5px;
+  }
+
+  @media screen and (max-width: 480px) {
+    .bandeau-info {
+      margin-left: 65px;
+      font-size: 0.8em;
+    }
+  }
 </style>

@@ -27,6 +27,11 @@ class BaseModel
   {
     $this->db = (new DB)->getConnection();
     $this->redis = new Redis();
-    $this->redis->connect($_ENV["REDIS_HOST"], $_ENV["REDIS_PORT"]);
+    $this->redis->pconnect($_ENV["REDIS_HOST"], $_ENV["REDIS_PORT"]);
+  }
+
+  public function __destruct()
+  {
+    $this->redis->close();
   }
 }

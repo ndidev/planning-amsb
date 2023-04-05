@@ -2,15 +2,13 @@
 
 namespace Api\Models\Chartering;
 
-use Api\Utils\DatabaseConnector as DB;
+use Api\Utils\BaseModel;
 
-class CharterModel
+class CharterModel extends BaseModel
 {
-  private $db;
-
   public function __construct()
   {
-    $this->db = (new DB)->getConnection();
+    parent::__construct();
   }
 
   /**
@@ -20,7 +18,7 @@ class CharterModel
    * 
    * @return array Tous les affrètements récupérés
    */
-  public function readAll(array $filtre = [])
+  public function readAll(array $filtre = []): array
   {
     // Filtre
     $date_debut = isset($filtre["date_debut"]) ? $filtre['date_debut'] : "0001-01-01";
@@ -30,10 +28,10 @@ class CharterModel
     $filtre_armateur = preg_replace("/,$/", "", $filtre['armateur'] ?? "");
     $filtre_courtier = preg_replace("/,$/", "", $filtre['courtier'] ?? "");
 
-    $filtre_sql_affreteur = $filtre_affreteur === "" ? "" : " AND r.affreteur IN ($filtre_affreteur)";
-    $filtre_sql_armateur = $filtre_armateur === "" ? "" : " AND r.armateur IN ($filtre_armateur)";
-    $filtre_sql_courtier = $filtre_courtier === "" ? "" : " AND r.courtier IN ($filtre_courtier)";
-    $filtre_sql_statut = $filtre_statut === "" ? "" : " AND r.statut = $filtre_statut";
+    $filtre_sql_affreteur = $filtre_affreteur === "" ? "" : " AND affreteur IN ($filtre_affreteur)";
+    $filtre_sql_armateur = $filtre_armateur === "" ? "" : " AND armateur IN ($filtre_armateur)";
+    $filtre_sql_courtier = $filtre_courtier === "" ? "" : " AND courtier IN ($filtre_courtier)";
+    $filtre_sql_statut = $filtre_statut === "" ? "" : " AND statut IN ($filtre_statut)";
 
     $filtre_sql =
       $filtre_sql_affreteur
@@ -41,93 +39,42 @@ class CharterModel
       . $filtre_sql_courtier
       . $filtre_sql_statut;
 
-    if (array_key_exists("archives", $filtre)) {
-      $statement_charters =
-        "SELECT
-            r.id,
-            r.statut,
+    $filtre_archives = (int) array_key_exists("archives", $filtre);
+
+    $statement_charters =
+      "SELECT
+            id,
+            statut,
             -- Laycan
-            r.lc_debut,
-            r.lc_fin,
+            lc_debut,
+            lc_fin,
             -- C/P
-            r.cp_date,
+            cp_date,
             -- Navire
-            r.navire,
+            navire,
             -- Tiers
-            r.affreteur,
-            af.nom_court AS affreteur_nom,
-            r.armateur,
-            ar.nom_court AS armateur_nom,
-            r.courtier,
-            c.nom_court AS courtier_nom,
+            affreteur,
+            armateur,
+            courtier,
             -- Montants
-            r.fret_achat,
-            r.fret_vente,
-            r.surestaries_achat,
-            r.surestaries_vente,
+            fret_achat,
+            fret_vente,
+            surestaries_achat,
+            surestaries_vente,
             -- Divers
-            r.commentaire,
-            r.archive
-          FROM chartering_registre r
-          LEFT JOIN tiers af ON r.affreteur = af.id
-          LEFT JOIN tiers ar ON r.armateur = ar.id
-          LEFT JOIN tiers c ON r.courtier = c.id
-          WHERE archive = 1
+            commentaire,
+            archive
+          FROM chartering_registre
+          WHERE archive = $filtre_archives
           AND (lc_debut <= :date_fin OR lc_debut IS NULL)
           AND (lc_fin >= :date_debut OR lc_fin IS NULL)
           $filtre_sql
-          ORDER BY
-            -lc_debut ASC,
-            -lc_fin ASC";
-    } else {
-      $statement_charters =
-        "SELECT
-            r.id,
-            r.statut,
-            -- Laycan
-            r.lc_debut,
-            r.lc_fin,
-            -- C/P
-            r.cp_date,
-            -- Navire
-            r.navire,
-            -- Tiers
-            r.affreteur,
-            af.nom_court AS affreteur_nom,
-            r.armateur,
-            ar.nom_court AS armateur_nom,
-            r.courtier,
-            c.nom_court AS courtier_nom,
-            -- Montants
-            r.fret_achat,
-            r.fret_vente,
-            r.surestaries_achat,
-            r.surestaries_vente,
-            -- Divers
-            r.commentaire,
-            r.archive
-          FROM chartering_registre r
-          LEFT JOIN tiers af ON r.affreteur = af.id
-          LEFT JOIN tiers ar ON r.armateur = ar.id
-          LEFT JOIN tiers c ON r.courtier = c.id
-          WHERE archive = 0
-          AND (lc_debut <= :date_fin OR lc_debut IS NULL)
-          AND (lc_fin >= :date_debut OR lc_fin IS NULL)
-          $filtre_sql
-          ORDER BY
-            -lc_debut DESC,
-            -lc_fin DESC";
-    }
+          ORDER BY " . ($filtre_archives ? "-lc_debut ASC, -lc_fin ASC" : "-lc_debut DESC, -lc_fin DESC");
 
     $statement_details =
       "SELECT *
         FROM chartering_detail
         WHERE charter = :id";
-
-    $statement_ports =
-      "SELECT nom_affichage
-        FROM utils_ports
-        WHERE locode = :locode";
 
     // Charters
     $requete_charters = $this->db->prepare($statement_charters);
@@ -138,15 +85,12 @@ class CharterModel
     $charters = $requete_charters->fetchAll();
 
     $requete_details = $this->db->prepare($statement_details);
-    $requete_ports = $this->db->prepare($statement_ports);
 
     foreach ($charters as &$charter) {
-      $charter["id"] = (int) $charter["id"];
-      $charter["statut"] = (int) $charter["statut"];
+      $charter["archive"] = (bool) $charter["archive"];
       $charter["affreteur"] = (int) $charter["affreteur"] ?: NULL;
       $charter["armateur"] = (int) $charter["armateur"] ?: NULL;
       $charter["courtier"] = (int) $charter["courtier"] ?: NULL;
-      $charter["archive"] = (int) $charter["archive"];
       $charter["fret_achat"] = (float) $charter["fret_achat"];
       $charter["fret_vente"] = (float) $charter["fret_vente"];
       $charter["surestaries_achat"] = (float) $charter["surestaries_achat"];
@@ -155,26 +99,8 @@ class CharterModel
       // Détails
       $requete_details->execute(["id" => $charter["id"]]);
       $details = $requete_details->fetchAll();
-      foreach ($details as &$detail) {
-        $detail["id"] = (int) $detail["id"];
-        $detail["charter"] = (int) $detail["charter"];
 
-        // Ports
-        $detail["pol_nom"] = NULL;
-        $detail["pod_nom"] = NULL;
-
-        if ($detail["pol"]) {
-          $requete_ports->execute(["locode" => $detail["pol"]]);
-          $detail["pol_nom"] = $requete_ports->fetch()["nom_affichage"] ?? NULL;
-        }
-
-        if ($detail["pod"]) {
-          $requete_ports->execute(["locode" => $detail["pod"]]);
-          $detail["pod_nom"] = $requete_ports->fetch()["nom_affichage"] ?? NULL;
-        }
-      }
-
-      $charter["details"] = $details;
+      $charter["legs"] = $details;
     }
 
 
@@ -190,95 +116,62 @@ class CharterModel
    * 
    * @return array Rendez-vous récupéré
    */
-  public function read($id)
+  public function read($id): ?array
   {
     $statement_charter =
       "SELECT
-          r.id,
-          r.statut,
+          id,
+          statut,
           -- Laycan
-          r.lc_debut,
-          r.lc_fin,
+          lc_debut,
+          lc_fin,
           -- C/P
-          r.cp_date,
+          cp_date,
           -- Navire
-          r.navire,
+          navire,
           -- Tiers
-          r.affreteur,
-          af.nom_court AS affreteur_nom,
-          r.armateur,
-          ar.nom_court AS armateur_nom,
-          r.courtier,
-          c.nom_court AS courtier_nom,
+          affreteur,
+          armateur,
+          courtier,
           -- Montants
-          r.fret_achat,
-          r.fret_vente,
-          r.surestaries_achat,
-          r.surestaries_vente,
+          fret_achat,
+          fret_vente,
+          surestaries_achat,
+          surestaries_vente,
           -- Divers
-          r.commentaire,
-          r.archive
-        FROM chartering_registre r
-        LEFT JOIN tiers af ON r.affreteur = af.id
-        LEFT JOIN tiers ar ON r.armateur = ar.id
-        LEFT JOIN tiers c ON r.courtier = c.id
-        WHERE r.id = :id";
+          commentaire,
+          archive
+        FROM chartering_registre
+        WHERE id = :id";
 
     $statement_details =
       "SELECT *
         FROM chartering_detail
         WHERE charter = :id";
 
-    $statement_ports =
-      "SELECT nom_affichage
-        FROM utils_ports
-        WHERE locode = :locode";
-
     // Charters
     $requete_charter = $this->db->prepare($statement_charter);
     $requete_charter->execute(["id" => $id]);
     $charter = $requete_charter->fetch();
+
+    if (!$charter) return null;
 
     // Détails
     $requete_details = $this->db->prepare($statement_details);
     $requete_details->execute(["id" => $id]);
     $details = $requete_details->fetchAll();
 
-    $requete_ports = $this->db->prepare($statement_ports);
 
-    if ($charter) {
-      $charter["id"] = (int) $charter["id"];
-      $charter["statut"] = (int) $charter["statut"];
-      $charter["affreteur"] = (int) $charter["affreteur"] ?: NULL;
-      $charter["armateur"] = (int) $charter["armateur"] ?: NULL;
-      $charter["courtier"] = (int) $charter["courtier"] ?: NULL;
-      $charter["archive"] = (int) $charter["archive"];
-      $charter["fret_achat"] = (float) $charter["fret_achat"];
-      $charter["fret_vente"] = (float) $charter["fret_vente"];
-      $charter["surestaries_achat"] = (float) $charter["surestaries_achat"];
-      $charter["surestaries_vente"] = (float) $charter["surestaries_vente"];
+    $charter["archive"] = (bool) $charter["archive"];
+    $charter["affreteur"] = (int) $charter["affreteur"] ?: NULL;
+    $charter["armateur"] = (int) $charter["armateur"] ?: NULL;
+    $charter["courtier"] = (int) $charter["courtier"] ?: NULL;
+    $charter["fret_achat"] = (float) $charter["fret_achat"];
+    $charter["fret_vente"] = (float) $charter["fret_vente"];
+    $charter["surestaries_achat"] = (float) $charter["surestaries_achat"];
+    $charter["surestaries_vente"] = (float) $charter["surestaries_vente"];
 
-      foreach ($details as &$detail) {
-        $detail["id"] = (int) $detail["id"];
-        $detail["charter"] = (int) $detail["charter"];
-
-        // Ports
-        $detail["pol_nom"] = NULL;
-        $detail["pod_nom"] = NULL;
-
-        if ($detail["pol"]) {
-          $requete_ports->execute(["locode" => $detail["pol"]]);
-          $detail["pol_nom"] = $requete_ports->fetch()["nom_affichage"] ?? NULL;
-        }
-
-        if ($detail["pod"]) {
-          $requete_ports->execute(["locode" => $detail["pod"]]);
-          $detail["pod_nom"] = $requete_ports->fetch()["nom_affichage"] ?? NULL;
-        }
-      }
-
-      $charter["details"] = $details;
-    }
+    $charter["legs"] = $details;
 
     $donnees = $charter;
 
@@ -292,7 +185,7 @@ class CharterModel
    * 
    * @return array Affrètement créé
    */
-  public function create(array $input)
+  public function create(array $input): array
   {
     // Champs dates
     $input["lc_debut"] = $input["lc_debut"] ?: NULL;
@@ -364,7 +257,7 @@ class CharterModel
       "surestaries_vente" => $input["surestaries_vente"],
       // Divers
       "commentaire" => $input["commentaire"],
-      "archive" => $input["archive"],
+      "archive" => (int) $input["archive"],
     ]);
 
     $last_id = $this->db->lastInsertId();
@@ -372,7 +265,7 @@ class CharterModel
 
     // Détails
     $requete_details = $this->db->prepare($statement_details);
-    $details = $input["details"] ?? [];
+    $details = $input["legs"] ?? [];
     foreach ($details as $detail) {
       $requete_details->execute([
         "charter" => $last_id,
@@ -396,7 +289,7 @@ class CharterModel
    * 
    * @return array Affretement modifié
    */
-  public function update($id, array $input)
+  public function update($id, array $input): array
   {
     // Champs dates
     $input["lc_debut"] = $input["lc_debut"] ?: NULL;
@@ -476,7 +369,7 @@ class CharterModel
       "surestaries_vente" => $input["surestaries_vente"],
       // Divers
       "commentaire" => $input["commentaire"],
-      "archive" => $input["archive"],
+      "archive" => (int) $input["archive"],
       'id' => $id,
     ]);
 
@@ -496,8 +389,8 @@ class CharterModel
     }
 
     $ids_details_transmises = [];
-    if (isset($input['details'])) {
-      foreach ($input["details"] as $detail) {
+    if (isset($input["legs"])) {
+      foreach ($input["legs"] as $detail) {
         $ids_details_transmises[] = $detail["id"];
       }
     }
@@ -514,9 +407,9 @@ class CharterModel
     // Ajout et modification details
     $requete_details_ajout = $this->db->prepare($statement_details_ajout);
     $requete_details_modif = $this->db->prepare($statement_details_modif);
-    $details = $input["details"] ?? [];
+    $details = $input["legs"] ?? [];
     foreach ($details as $detail) {
-      if ($detail["id"]) {
+      if ((int) $detail["id"]) {
         $requete_details_modif->execute([
           "bl_date" => $detail["bl_date"],
           "pol" => $detail["pol"],
@@ -549,7 +442,7 @@ class CharterModel
    * 
    * @return bool TRUE si succès, FALSE si erreur
    */
-  public function delete(int $id)
+  public function delete(int $id): bool
   {
     $requete = $this->db->prepare("DELETE FROM chartering_registre WHERE id = :id");
     $succes = $requete->execute(["id" => $id]);

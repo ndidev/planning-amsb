@@ -1,27 +1,26 @@
 import { writable } from "svelte/store";
-import type { Writable } from "svelte/store";
 
 import { fetcher } from "@app/utils";
+import type { Pays } from "@app/types";
 
-const localStorageKey = "stores/pays";
+const endpoint = "pays";
 
-const initial = JSON.parse(localStorage.getItem(localStorageKey) || "false");
+const initial = [];
 
-// Config - pays
-export const pays: Writable<Pays[]> = writable(initial, () => {
-  async function recupererInfos() {
-    const lignes: Pays[] = await fetcher("pays");
+export const pays = writable<Pays[]>(initial, () => {
+  fetchAll();
 
-    pays.set(lignes);
-
-    localStorage.setItem(localStorageKey, JSON.stringify(lignes));
-  }
-
-  recupererInfos();
-
-  document.addEventListener("planning:pays", recupererInfos);
+  document.addEventListener(`planning:${endpoint}`, fetchAll);
 
   return () => {
-    document.removeEventListener("planning:pays", recupererInfos);
+    document.removeEventListener(`planning:${endpoint}`, fetchAll);
   };
 });
+
+// FONCTIONS
+
+async function fetchAll() {
+  const lignes: Pays[] = await fetcher(endpoint);
+
+  pays.set(lignes);
+}

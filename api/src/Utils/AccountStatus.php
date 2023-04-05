@@ -12,7 +12,7 @@ enum AccountStatus: string
    * 
    * Le compte peut être utilisé normalement.
    */
-  case ACTIVE = "actif";
+  case ACTIVE = "active";
 
   /**
    * Compte en attente d'activation.
@@ -31,7 +31,7 @@ enum AccountStatus: string
    * 
    * Seul un administrateur peur le réactiver.
    */
-  case INACTIVE = "désactivé";
+  case INACTIVE = "inactive";
 
   /**
    * Compte bloqué.
@@ -41,5 +41,5 @@ enum AccountStatus: string
    * 
    * Seul un administrateur peur le débloquer.
    */
-  case LOCKED = "bloqué";
+  case LOCKED = "locked";
 }

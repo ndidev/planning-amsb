@@ -10,7 +10,8 @@ use Api\Utils\Exceptions\Auth\AdminException;
 class UserAccountController extends BaseController
 {
   private $model;
-  private $module = "admin/users";
+  private $module = "admin";
+  private $sse_event = "admin/users";
 
   public function __construct(
     private ?string $uid
@@ -141,7 +142,7 @@ class UserAccountController extends BaseController
       ->setBody(json_encode($donnees))
       ->setHeaders($this->headers);
 
-    notify_sse($this->module, __FUNCTION__, $uid);
+    notify_sse($this->sse_event, __FUNCTION__, $uid, $donnees);
   }
 
   /**
@@ -164,7 +165,7 @@ class UserAccountController extends BaseController
       ->setBody(json_encode($donnees))
       ->setHeaders($this->headers);
 
-    notify_sse($this->module, __FUNCTION__, $uid);
+    notify_sse($this->sse_event, __FUNCTION__, $uid, $donnees);
   }
 
   /**
@@ -183,7 +184,7 @@ class UserAccountController extends BaseController
 
     if ($succes) {
       $this->response->setCode(204);
-      notify_sse($this->module, __FUNCTION__, $uid);
+      notify_sse($this->sse_event, __FUNCTION__, $uid);
     } else {
       throw new \Exception("Erreur lors de la suppression");
     }

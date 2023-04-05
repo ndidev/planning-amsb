@@ -10,7 +10,8 @@ use Api\Utils\ETag;
 class CoteController extends BaseController
 {
   private $model;
-  private $module = "config/cotes";
+  private $module = "config";
+  private $sse_event = "config/cotes";
 
   public function __construct(
     private ?string $cote
@@ -112,7 +113,7 @@ class CoteController extends BaseController
       return;
     }
 
-    $input = (array) json_decode(file_get_contents("php://input"), TRUE);
+    $input = $this->request->body;
 
     $donnees = $this->model->update($cote, $input);
 
@@ -121,6 +122,6 @@ class CoteController extends BaseController
       ->setHeaders($this->headers)
       ->flush();
 
-    notify_sse($this->module, __FUNCTION__, $cote);
+    notify_sse($this->sse_event, __FUNCTION__, $cote, $donnees);
   }
 }

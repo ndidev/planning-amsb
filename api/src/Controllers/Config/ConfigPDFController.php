@@ -10,7 +10,8 @@ use Api\Utils\Exceptions\Auth\AccessException;
 class ConfigPDFController extends BaseController
 {
   private $model;
-  private $module = "config/pdf";
+  private $module = "config";
+  private $sse_event = "config/pdf";
 
   public function __construct(
     private ?int $id
@@ -132,7 +133,7 @@ class ConfigPDFController extends BaseController
     $input = $this->request->body;
 
     if (
-      !$this->user->can_access("config")
+      !$this->user->can_access($this->module)
       || !$this->user->can_edit($input["module"])
     ) {
       throw new AccessException();
@@ -149,7 +150,7 @@ class ConfigPDFController extends BaseController
       ->setBody(json_encode($donnees))
       ->setHeaders($this->headers);
 
-    notify_sse($this->module, __FUNCTION__, $id);
+    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
   }
 
   /**
@@ -169,7 +170,7 @@ class ConfigPDFController extends BaseController
     $input = $this->request->body;
 
     if (
-      !$this->user->can_access("config")
+      !$this->user->can_access($this->module)
       || !$this->user->can_edit($current["module"])
       || !$this->user->can_edit($input["module"])
     ) {
@@ -182,7 +183,7 @@ class ConfigPDFController extends BaseController
       ->setBody(json_encode($donnees))
       ->setHeaders($this->headers);
 
-    notify_sse($this->module, __FUNCTION__, $id);
+    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
   }
 
   /**
@@ -200,7 +201,7 @@ class ConfigPDFController extends BaseController
     }
 
     if (
-      !$this->user->can_access("config")
+      !$this->user->can_access($this->module)
       || !$this->user->can_edit($current["module"])
     ) {
       throw new AccessException();
@@ -210,7 +211,7 @@ class ConfigPDFController extends BaseController
 
     if ($succes) {
       $this->response->setCode(204);
-      notify_sse($this->module, __FUNCTION__, $id);
+      notify_sse($this->sse_event, __FUNCTION__, $id);
     } else {
       throw new \Exception("Erreur lors de la suppression");
     }

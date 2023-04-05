@@ -1,14 +1,10 @@
 :root {
   --error-color: rgba(255, 85, 73, 1);
-  --error-color-light: rgba(255, 85, 73, 0.7);
-  --warning-color: rgba(238, 191, 49, 1);
-  --warning-color-light: rgba(238, 191, 49, 0.7);
-  --success-color: rgba(50, 198, 130, 1);
-  --success-color-light: rgba(50, 198, 130, 0.7);
+  --input-width: 300px;
 }
 
 .formulaire {
-  width: 70%;
+  width: 80%;
   margin: auto;
 }
 
@@ -25,8 +21,9 @@ select {
 input[type="text"],
 input[type="password"],
 input:not([type]),
-select {
-  width: 300px;
+select,
+textarea {
+  width: var(--input-width);
 }
 
 input:invalid {
@@ -37,18 +34,14 @@ label.requis::after {
   content: "*";
 }
 
-input.recherche {
-  background-image: url("../images/searchicon.png");
-  background-size: 15px;
-  background-position: 5px 50%;
-  background-repeat: no-repeat;
-  padding-left: 25px !important;
-  width: 120px;
-  transition: width 0.4s;
+.svelecte-control {
+  display: inline-block;
+  width: var(--input-width);
 }
 
-input.recherche:focus {
-  width: 300px;
+.pure-form .svelecte-control input[type="text"] {
+  border: none;
+  box-shadow: none;
 }
 
 /* Boutons ajouter/modifier/supprimer des formulaires */
@@ -59,101 +52,19 @@ input.recherche:focus {
   text-align: center;
 }
 
-.bouton {
-  line-height: 1.4;
-}
-
-.bouton-ajouter {
-  background-color: var(--success-color-light);
-}
-
-.bouton-ajouter:hover,
-.bouton-ajouter:focus {
-  background-color: var(--success-color);
-  color: white;
-}
-
-.bouton-modifier {
-  background-color: var(--warning-color-light);
-}
-
-.bouton-modifier:hover,
-.bouton-modifier:focus {
-  background-color: var(--warning-color);
-  color: white;
-}
-
-.bouton-supprimer {
-  background-color: var(--error-color-light);
-}
-
-.bouton-supprimer:hover,
-.bouton-supprimer:focus {
-  background-color: var(--error-color);
-  color: white;
-}
-
 /* ------------------------------- */
 
-/* Info-bulle en cas de suppression client/transporteur/affréteur/fournisseur impossible */
-.tooltip {
-  display: inline;
-  position: relative;
+/* Mobile */
+@media screen and (max-width: 767px) {
+  :root {
+    --input-width: 100%;
+  }
 }
 
-.tooltip-supprimer {
-  position: absolute;
-  visibility: hidden;
-  display: inline-block;
-  left: 50%;
-  transform: translate(-50%);
-  top: 180%;
-  padding: 5px;
-  border-radius: 6px;
-  z-index: 1;
-  white-space: pre;
-  color: white;
-  background-color: black;
-}
-
-.tooltip-supprimer::after /* Flêche du tooltip */ {
-  content: " ";
-  white-space: nowrap;
-  position: absolute;
-  bottom: 100%; /* At the top of the tooltip */
-  left: 50%;
-  margin-left: -5px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: transparent transparent black transparent;
-}
-/* --------------- */
-
-@media screen and (max-width: 768px) {
+/* Desktop */
+@media screen and (min-width: 768px) {
   .formulaire {
-    width: 80%;
+    width: 70%;
     margin: auto;
-    /* font-size: 0.8em; */
-    /* font-family: Arial, Helvetica, sans-serif; */
-  }
-
-  input.recherche,
-  input.recherche:focus {
-    width: 100%;
-  }
-
-  input[type="text"],
-  select,
-  textarea {
-    width: 100%;
-  }
-
-  .bouton {
-    width: 100%;
-    margin: 2px 0;
-  }
-
-  .awesomplete {
-    display: block;
   }
 }

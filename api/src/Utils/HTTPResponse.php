@@ -219,6 +219,18 @@ class HTTPResponse
     return $this;
   }
 
+  /**
+   * Envoyer une réponse à la requête preflight.
+   */
+  public function sendCorsPreflight(): void
+  {
+    $this->setCode(204);
+    $this->applyStatusCode();
+    $this->addCorsHeaders();
+    $this->applyHeaders();
+    exit;
+  }
+
 
   /**
    * Compression du corps de la réponse HTTP.
@@ -328,6 +340,60 @@ class HTTPResponse
     }
   }
 
+  /**
+   * Ajouter les en-têtes relatifs à CORS.
+   */
+  private function addCorsHeaders(): void
+  {
+    /**
+     * Méthodes HTTP supportées.
+     * @var string[]
+     */
+    $supported_methods = [
+      "OPTIONS",
+      "HEAD",
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE"
+    ];
+
+    // Pre-flight request
+    if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
+      header("Access-Control-Allow-Methods: " . join(",", $supported_methods));
+      header("Access-Control-Allow-Headers: Content-Type, X-API-Key, X-SSE-Connection");
+      // header("Access-Control-Max-Age: 3600");
+    }
+
+    /**
+     * Origines acceptées pour CORS.
+     * @var string[]
+     */
+    $allowedOrigins = [
+      "https://planning.amsb-mk.com",
+      "http://planning.amsb-mk.local",
+      "https://amsb.ndi.dev",
+      "https://localhost",
+      "http://localhost",
+    ];
+
+    $serverOrigin = $_SERVER["HTTP_ORIGIN"] ?? "";
+    $origin = "*";
+
+    foreach ($allowedOrigins as $allowOrigin) {
+      if (str_starts_with($serverOrigin, $allowOrigin)) {
+        $origin = $serverOrigin;
+        break;
+      }
+    }
+
+    // All requests
+    header("Access-Control-Allow-Origin:" . $origin);
+    header("Access-Control-Allow-Credentials: true");
+    header("Vary: Origin");
+  }
+
 
   /**
    * Construction des en-têtes de la réponse HTTP.
@@ -339,11 +405,9 @@ class HTTPResponse
   {
     // En-têtes de base par défaut
     // header("Date: " . gmdate("D, d M Y H:i:s T")); // Temps GMT, désactivé car ajouté par défaut par le serveur web
-    header("Access-Control-Allow-Origin: *");
     header("Content-Security-Policy: default-src 'self' 'unsafe-inline'");
-    header("Access-Control-Max-Age: 3600");
     header("Cache-control: no-cache");
-    header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, X-API-Key");
+    $this->addCorsHeaders();
 
     // ! FIXME : Se conformer à la RFC 7230 https://datatracker.ietf.org/doc/html/rfc7230#section-3.3.2
     if (!($this->code < 200 || $this->code === 204)) {

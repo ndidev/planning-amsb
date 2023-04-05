@@ -8,3 +8,8 @@ logos/
 .env.*
 !.env.example
 backup/
+.routify
+
+# Temp
+_src
+_html

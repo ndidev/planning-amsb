@@ -7,7 +7,7 @@ export enum AccountStatus {
    *
    * Le compte peut être utilisé normalement.
    */
-  ACTIVE = "actif",
+  ACTIVE = "active",
 
   /**
    * Compte en attente d'activation.
@@ -26,7 +26,7 @@ export enum AccountStatus {
    *
    * Seul un administrateur peur le réactiver.
    */
-  INACTIVE = "désactivé",
+  INACTIVE = "inactive",
 
   /**
    * Compte bloqué.
@@ -36,5 +36,5 @@ export enum AccountStatus {
    *
    * Seul un administrateur peur le débloquer.
    */
-  LOCKED = "bloqué",
+  LOCKED = "locked",
 }

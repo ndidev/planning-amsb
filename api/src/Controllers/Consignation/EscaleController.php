@@ -13,6 +13,7 @@ class EscaleController extends BaseController
 {
   private $model;
   private $module = "consignation";
+  private $sse_event = "consignation/escales";
 
   public function __construct(
     private ?int $id
@@ -146,7 +147,7 @@ class EscaleController extends BaseController
       ->setHeaders($this->headers)
       ->flush();
 
-    notify_sse($this->module, __FUNCTION__, $id);
+    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
   }
 
   /**
@@ -174,7 +175,7 @@ class EscaleController extends BaseController
       ->setHeaders($this->headers)
       ->flush();
 
-    notify_sse($this->module, __FUNCTION__, $id);
+    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
   }
 
   /**
@@ -197,7 +198,7 @@ class EscaleController extends BaseController
 
     if ($succes) {
       $this->response->setCode(204)->flush();
-      notify_sse($this->module, __FUNCTION__, $id);
+      notify_sse($this->sse_event, __FUNCTION__, $id);
     } else {
       throw new Exception("Erreur lors de la suppression");
     }

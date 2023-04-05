@@ -2,15 +2,13 @@
 
 namespace Api\Models\Utils;
 
-use Api\Utils\DatabaseConnector as DB;
+use Api\Utils\BaseModel;
 
-class PaysModel
+class PaysModel extends BaseModel
 {
-  private $db;
-
   public function __construct()
   {
-    $this->db = (new DB)->getConnection();
+    parent::__construct();
   }
 
   /**
@@ -18,7 +16,7 @@ class PaysModel
    * 
    * @return array Tous les pays récupérés.
    */
-  public function readAll()
+  public function readAll(): array
   {
     $statement =
       "SELECT *
@@ -37,7 +35,7 @@ class PaysModel
    * 
    * @return array Pays récupéré
    */
-  public function read($iso)
+  public function read($iso): ?array
   {
     $statement =
       "SELECT *
@@ -47,6 +45,8 @@ class PaysModel
     $requete = $this->db->prepare($statement);
     $requete->execute(["iso" => $iso]);
     $pays = $requete->fetch();
+
+    if (!$pays) return null;
 
 
     $donnees = $pays;
@@ -61,7 +61,7 @@ class PaysModel
    * 
    * @return array Pays créé
    */
-  public function create(array $input)
+  public function create(array $input): array
   {
     $statement =
       "INSERT INTO utils_pays
@@ -92,7 +92,7 @@ class PaysModel
    * 
    * @return array Pays modifié
    */
-  public function update($iso, array $input)
+  public function update($iso, array $input): array
   {
     $statement =
       "UPDATE utils_pays
@@ -115,7 +115,7 @@ class PaysModel
    * 
    * @return bool TRUE si succès, FALSE si erreur
    */
-  public function delete($iso)
+  public function delete($iso): bool
   {
     $requete = $this->db->prepare("DELETE FROM utils_pays WHERE iso = :iso");
     $succes = $requete->execute(["iso" => $iso]);

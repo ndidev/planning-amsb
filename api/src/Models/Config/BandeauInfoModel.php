@@ -2,15 +2,13 @@
 
 namespace Api\Models\Config;
 
-use Api\Utils\DatabaseConnector as DB;
+use Api\Utils\BaseModel;
 
-class BandeauInfoModel
+class BandeauInfoModel extends BaseModel
 {
-  private $db;
-
   public function __construct()
   {
-    $this->db = (new DB)->getConnection();
+    parent::__construct();
   }
 
   /**
@@ -18,7 +16,7 @@ class BandeauInfoModel
    * 
    * @return array Lignes du bandeau d'infos
    */
-  public function readAll(array $filtre)
+  public function readAll(array $filtre): array
   {
     // Filtre
     $module = $filtre['module'] ?? "";
@@ -45,10 +43,11 @@ class BandeauInfoModel
     $requete = $this->db->query($statement);
     $infos = $requete->fetchAll();
 
-    // Rétablissement des types INT
+    // Rétablissement des types INT et bool
     array_walk_recursive($infos, function (&$value, $key) {
       $value = match ($key) {
-        "id", "pc", "tv" => (int) $value,
+        "id" => (int) $value,
+        "pc", "tv" => (bool) $value,
         default => $value,
       };
     });
@@ -65,7 +64,7 @@ class BandeauInfoModel
    * 
    * @return array Ligne récupérée
    */
-  public function read($id)
+  public function read($id): ?array
   {
     $statement = "SELECT * FROM bandeau_info WHERE id = :id";
 
@@ -73,15 +72,16 @@ class BandeauInfoModel
     $requete->execute(["id" => $id]);
     $infos = $requete->fetch();
 
-    if ($infos) {
-      // Rétablissement des types INT
-      array_walk_recursive($infos, function (&$value, $key) {
-        $value = match ($key) {
-          "id", "pc", "tv" => (int) $value,
-          default => $value,
-        };
-      });
-    }
+    if (!$infos) return null;
+
+    // Rétablissement des types INT et bool
+    array_walk_recursive($infos, function (&$value, $key) {
+      $value = match ($key) {
+        "id" => (int) $value,
+        "pc", "tv" => (bool) $value,
+        default => $value,
+      };
+    });
 
     $donnees = $infos;
 
@@ -95,7 +95,7 @@ class BandeauInfoModel
    * 
    * @return array Ligne créée
    */
-  public function create(array $input)
+  public function create(array $input): array
   {
     $statement = "INSERT INTO bandeau_info VALUES(
       NULL,
@@ -114,7 +114,7 @@ class BandeauInfoModel
       'pc' => (int) $input["pc"],
       'tv' => (int) $input["tv"],
       'couleur' => $input["couleur"],
-      'message' => $input["message"]
+      'message' => substr($input["message"], 0, 255),
     ]);
 
     $last_id = $this->db->lastInsertId();
@@ -131,7 +131,7 @@ class BandeauInfoModel
    * 
    * @return array Ligne modifiée
    */
-  public function update($id, array $input)
+  public function update($id, array $input): array
   {
     $statement = "UPDATE bandeau_info
       SET
@@ -148,7 +148,7 @@ class BandeauInfoModel
       'pc' => (int) $input["pc"],
       'tv' => (int) $input["tv"],
       'couleur' => $input["couleur"],
-      'message' => $input["message"],
+      'message' => substr($input["message"], 0, 255),
       'id' => $id
     ]);
 
@@ -162,7 +162,7 @@ class BandeauInfoModel
    * 
    * @return bool TRUE si succès, FALSE si erreur
    */
-  public function delete(int $id)
+  public function delete(int $id): bool
   {
     $requete = $this->db->prepare("DELETE FROM bandeau_info WHERE id = :id");
     $succes = $requete->execute(["id" => $id]);

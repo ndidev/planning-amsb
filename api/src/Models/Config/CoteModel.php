@@ -2,15 +2,13 @@
 
 namespace Api\Models\Config;
 
-use Api\Utils\DatabaseConnector as DB;
+use Api\Utils\BaseModel;
 
-class CoteModel
+class CoteModel extends BaseModel
 {
-  private $db;
-
   public function __construct()
   {
-    $this->db = (new DB)->getConnection();
+    parent::__construct();
   }
 
   /**
@@ -18,7 +16,7 @@ class CoteModel
    * 
    * @return array Toutes les côtes récupérées.
    */
-  public function readAll()
+  public function readAll(): array
   {
     $statement = "SELECT * FROM config_cotes";
 
@@ -38,7 +36,7 @@ class CoteModel
    * 
    * @return array Côte récupérée
    */
-  public function read(string $nom_cote)
+  public function read(string $nom_cote): ?array
   {
     $statement = "SELECT *
       FROM config_cotes
@@ -47,6 +45,8 @@ class CoteModel
     $requete = $this->db->prepare($statement);
     $requete->execute(["cote" => $nom_cote]);
     $cote = $requete->fetch();
+
+    if (!$cote) return null;
 
     $cote["valeur"] = (float) $cote["valeur"];
 
@@ -63,7 +63,7 @@ class CoteModel
    * 
    * @return array Côte modifiée
    */
-  public function update(string $cote, array $input)
+  public function update(string $cote, array $input): array
   {
     $statement = "UPDATE config_cotes
       SET valeur = :valeur

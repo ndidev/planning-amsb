@@ -13,6 +13,7 @@ class ProduitController extends BaseController
 {
   private $model;
   private $module = "vrac";
+  private $sse_event = "vrac/produits";
 
   public function __construct(
     private ?int $id
@@ -144,7 +145,7 @@ class ProduitController extends BaseController
       ->setHeaders($this->headers)
       ->flush();
 
-    notify_sse($this->module, __FUNCTION__, $id);
+    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
   }
 
   /**
@@ -172,7 +173,7 @@ class ProduitController extends BaseController
       ->setHeaders($this->headers)
       ->flush();
 
-    notify_sse($this->module, __FUNCTION__, $id);
+    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
   }
 
   /**
@@ -195,7 +196,7 @@ class ProduitController extends BaseController
 
     if ($succes) {
       $this->response->setCode(204)->flush();
-      notify_sse($this->module, __FUNCTION__, $id);
+      notify_sse($this->sse_event, __FUNCTION__, $id);
     } else {
       throw new Exception("Erreur lors de la suppression");
     }

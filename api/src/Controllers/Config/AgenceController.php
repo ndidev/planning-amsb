@@ -10,7 +10,8 @@ use Api\Utils\ETag;
 class AgenceController extends BaseController
 {
   private $model;
-  private $module = "config/agence";
+  private $module = "config";
+  private $sse_event = "config/agence";
 
   public function __construct(
     private ?string $service,
@@ -121,8 +122,9 @@ class AgenceController extends BaseController
 
     $this->response
       ->setBody(json_encode($donnees))
-      ->setHeaders($this->headers);
+      ->setHeaders($this->headers)
+      ->flush();
 
-    notify_sse($this->module, __FUNCTION__, $service);
+    notify_sse($this->sse_event, __FUNCTION__, $service, $donnees);
   }
 }

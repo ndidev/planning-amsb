@@ -78,6 +78,9 @@ export function formatDecimal(context: HTMLElement | Document = document) {
 
     /* User input check */
     input.onkeydown = (event) => {
+      // Allow non-printable keystrokes and ctrl combinations
+      if (event.key.length > 1 || event.ctrlKey) return;
+
       // Preventing default keystroke
       event.preventDefault();
 

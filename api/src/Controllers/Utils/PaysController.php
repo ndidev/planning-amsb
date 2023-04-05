@@ -11,9 +11,10 @@ use Exception;
 class PaysController extends BaseController
 {
   private $model;
+  private $sse_event = "pays";
 
   public function __construct(
-    private string $iso
+    private ?string $iso
   ) {
     parent::__construct();
     $this->model = new PaysModel;
@@ -125,12 +126,16 @@ class PaysController extends BaseController
 
     $donnees = $this->model->create($input);
 
-    $this->headers["Location"] = $_ENV["API_URL"] . "/consignation/escales/" . $donnees["iso"];
+    $iso = $donnees["iso"];
+
+    $this->headers["Location"] = $_ENV["API_URL"] . "/consignation/escales/$iso";
 
     $this->response
       ->setCode(201)
       ->setBody(json_encode($donnees))
       ->setHeaders($this->headers);
+
+    notify_sse($this->sse_event, __FUNCTION__, $iso, $donnees);
   }
 
   /**
@@ -145,13 +150,15 @@ class PaysController extends BaseController
       return;
     }
 
-    $input = (array) json_decode(file_get_contents("php://input"), TRUE);
+    $input = $this->request->body;
 
     $donnees = $this->model->update($iso, $input);
 
     $this->response
       ->setBody(json_encode($donnees))
       ->setHeaders($this->headers);
+
+    notify_sse($this->sse_event, __FUNCTION__, $iso, $donnees);
   }
 
   /**
@@ -170,6 +177,7 @@ class PaysController extends BaseController
 
     if ($succes) {
       $this->response->setCode(204);
+      notify_sse($this->sse_event, __FUNCTION__, $iso);
     } else {
       throw new Exception("Erreur lors de la suppression");
     }

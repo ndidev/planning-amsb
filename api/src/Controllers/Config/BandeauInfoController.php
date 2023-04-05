@@ -10,7 +10,8 @@ use Api\Utils\Exceptions\Auth\AccessException;
 class BandeauInfoController extends BaseController
 {
   private $model;
-  private $module = "config/bandeau-info";
+  private $module = "config";
+  private $sse_event = "config/bandeau-info";
 
   public function __construct(
     private ?int $id
@@ -24,7 +25,7 @@ class BandeauInfoController extends BaseController
   {
     switch ($this->request->method) {
       case 'OPTIONS':
-        $this->response->setCode(204)->addHeader("Access-Control-Allow-Methods", "OPTIONS, HEAD, GET, POST, PUT, DELETE");
+        $this->response->setCode(204)->addHeader("Access-Control-Allow-Methods", "OPTIONS, HEAD, GET, POST, PUT, DELETE")->send();
         break;
 
       case 'GET':
@@ -49,7 +50,7 @@ class BandeauInfoController extends BaseController
         break;
 
       default:
-        $this->response->setCode(405)->addHeader("Allow", "OPTIONS, HEAD, GET, POST, PUT, DELETE");
+        $this->response->setCode(405)->addHeader("Allow", "OPTIONS, HEAD, GET, POST, PUT, DELETE")->send();
         break;
     }
 
@@ -76,7 +77,7 @@ class BandeauInfoController extends BaseController
     $etag = ETag::get($donnees);
 
     if ($this->request->etag === $etag) {
-      $this->response->setCode(304);
+      $this->response->setCode(304)->send();
       return;
     }
 
@@ -84,7 +85,8 @@ class BandeauInfoController extends BaseController
 
     $this->response
       ->setBody(json_encode($donnees))
-      ->setHeaders($this->headers);
+      ->setHeaders($this->headers)
+      ->send();
   }
 
   /**
@@ -98,7 +100,7 @@ class BandeauInfoController extends BaseController
     $donnees = $this->model->read($id);
 
     if (!$donnees && !$dry_run) {
-      $this->response->setCode(404);
+      $this->response->setCode(404)->send();
       return;
     }
 
@@ -115,7 +117,7 @@ class BandeauInfoController extends BaseController
     $etag = ETag::get($donnees);
 
     if ($this->request->etag === $etag) {
-      $this->response->setCode(304);
+      $this->response->setCode(304)->send();
       return;
     }
 
@@ -123,7 +125,8 @@ class BandeauInfoController extends BaseController
 
     $this->response
       ->setBody(json_encode($donnees))
-      ->setHeaders($this->headers);
+      ->setHeaders($this->headers)
+      ->send();
   }
 
   /**
@@ -134,7 +137,7 @@ class BandeauInfoController extends BaseController
     $input = $this->request->body;
 
     if (
-      !$this->user->can_access("config")
+      !$this->user->can_access($this->module)
       || !$this->user->can_edit($input["module"])
     ) {
       throw new AccessException();
@@ -152,7 +155,7 @@ class BandeauInfoController extends BaseController
       ->setHeaders($this->headers)
       ->flush();
 
-    notify_sse($this->module, __FUNCTION__, $id);
+    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
   }
 
   /**
@@ -175,7 +178,7 @@ class BandeauInfoController extends BaseController
     $input = $this->request->body;
 
     if (
-      !$this->user->can_access("config")
+      !$this->user->can_access($this->module)
       || !$this->user->can_edit($current["module"])
       || !$this->user->can_edit($input["module"])
     ) {
@@ -189,7 +192,7 @@ class BandeauInfoController extends BaseController
       ->setHeaders($this->headers)
       ->flush();
 
-    notify_sse($this->module, __FUNCTION__, $id);
+    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
   }
 
   /**
@@ -210,7 +213,7 @@ class BandeauInfoController extends BaseController
     }
 
     if (
-      !$this->user->can_access("config")
+      !$this->user->can_access($this->module)
       || !$this->user->can_edit($current["module"])
     ) {
       throw new AccessException();
@@ -220,7 +223,7 @@ class BandeauInfoController extends BaseController
 
     if ($succes) {
       $this->response->setCode(204)->flush();
-      notify_sse($this->module, __FUNCTION__, $id);
+      notify_sse($this->sse_event, __FUNCTION__, $id);
     } else {
       throw new \Exception("Erreur lors de la suppression");
     }

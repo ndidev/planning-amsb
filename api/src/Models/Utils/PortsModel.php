@@ -2,15 +2,13 @@
 
 namespace Api\Models\Utils;
 
-use Api\Utils\DatabaseConnector as DB;
+use Api\Utils\BaseModel;
 
-class PortsModel
+class PortsModel extends BaseModel
 {
-  private $db;
-
   public function __construct()
   {
-    $this->db = (new DB)->getConnection();
+    parent::__construct();
   }
 
   /**
@@ -18,7 +16,7 @@ class PortsModel
    * 
    * @return array Tous les ports récupérés.
    */
-  public function readAll()
+  public function readAll(): array
   {
     $statement = "SELECT * FROM utils_ports ORDER BY SUBSTRING(locode, 1, 2), nom";
 
@@ -34,7 +32,7 @@ class PortsModel
    * 
    * @return array Port récupéré
    */
-  public function read($locode)
+  public function read($locode): ?array
   {
     $statement = "SELECT *
       FROM utils_ports
@@ -43,6 +41,8 @@ class PortsModel
     $requete = $this->db->prepare($statement);
     $requete->execute(["locode" => $locode]);
     $port = $requete->fetch();
+
+    if (!$port) return null;
 
 
     $donnees = $port;
@@ -57,7 +57,7 @@ class PortsModel
    * 
    * @return array Port créé
    */
-  public function create(array $input)
+  public function create(array $input): array
   {
     $statement = "INSERT INTO utils_ports
       VALUES(
@@ -87,7 +87,7 @@ class PortsModel
    * 
    * @return array Port modifié
    */
-  public function update($locode, array $input)
+  public function update($locode, array $input): array
   {
     $statement = "UPDATE utils_ports
       SET nom = :nom
@@ -109,7 +109,7 @@ class PortsModel
    * 
    * @return bool TRUE si succès, FALSE si erreur
    */
-  public function delete($locode)
+  public function delete($locode): bool
   {
     $requete = $this->db->prepare("DELETE FROM utils_ports WHERE locode = :locode");
     $succes = $requete->execute(["locode" => $locode]);

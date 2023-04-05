@@ -1,48 +1,25 @@
 import { UserRoles } from "@app/auth";
-
-type Module = {
-  /**
-   * Nom d'affichage du module.
-   */
-  affichage: string;
-
-  /**
-   * Type de module (accès/modification).
-   */
-  type: string;
-  tree: Tree;
-};
-
-type Tree = {
-  affichage?: string;
-  href?: string;
-  roleMini?: 0 | 1 | 2;
-  children?: Tree[];
-};
+import type { ModuleId, Module } from "@app/types";
 
 /**
  * Types de modules.
  */
-export class TypesModules {
+export enum TypesModules {
   /**
    * Le module est de type "Accès/Pas accès".
    */
-  static get ACCESS() {
-    return "access";
-  }
+  ACCESS = "access",
 
   /**
    * Le module est de type "Aucun/Voir/Modifier".
    */
-  static get EDIT() {
-    return "edit";
-  }
+  EDIT = "edit",
 }
 
 /**
  * Modules (rubriques) de l'application.
  */
-export const sitemap: Map<string, Module> = new Map([
+export const sitemap: Map<ModuleId, Module> = new Map([
   [
     "bois",
     {
@@ -53,12 +30,14 @@ export const sitemap: Map<string, Module> = new Map([
           {
             affichage: "Planning",
             roleMini: UserRoles.ACCESS,
-            href: "/bois/",
+            href: "/bois/rdvs",
+            devices: ["mobile", "tablet", "desktop"],
           },
           {
             affichage: "Statistiques",
             roleMini: UserRoles.ACCESS,
-            href: "/bois/stats/",
+            href: "/bois/stats",
+            devices: ["tablet", "desktop"],
           },
         ],
       },
@@ -74,12 +53,14 @@ export const sitemap: Map<string, Module> = new Map([
           {
             affichage: "Planning",
             roleMini: UserRoles.ACCESS,
-            href: "/vrac/",
+            href: "/vrac/rdvs",
+            devices: ["mobile", "tablet", "desktop"],
           },
           {
             affichage: "Produits",
             roleMini: UserRoles.EDIT,
-            href: "/vrac/produits/",
+            href: "/vrac/produits",
+            devices: ["mobile", "tablet", "desktop"],
           },
         ],
       },
@@ -95,17 +76,20 @@ export const sitemap: Map<string, Module> = new Map([
           {
             affichage: "Planning",
             roleMini: UserRoles.ACCESS,
-            href: "/consignation/",
+            href: "/consignation/escales",
+            devices: ["mobile", "tablet", "desktop"],
           },
           {
             affichage: "Archives",
             roleMini: UserRoles.ACCESS,
-            href: "/consignation/?archives",
+            href: "/consignation/escales?archives",
+            devices: ["mobile", "tablet", "desktop"],
           },
           {
             affichage: "Tirants d'eau",
             roleMini: UserRoles.ACCESS,
-            href: "/consignation/te/",
+            href: "/consignation/te",
+            devices: ["tablet", "desktop"],
           },
         ],
       },
@@ -121,12 +105,14 @@ export const sitemap: Map<string, Module> = new Map([
           {
             affichage: "Planning",
             roleMini: UserRoles.ACCESS,
-            href: "/chartering/",
+            href: "/chartering/charters",
+            devices: ["mobile", "tablet", "desktop"],
           },
           {
             affichage: "Archives",
             roleMini: UserRoles.ACCESS,
-            href: "/chartering/?archives",
+            href: "/chartering/charters?archives",
+            devices: ["mobile", "tablet", "desktop"],
           },
         ],
       },
@@ -138,7 +124,8 @@ export const sitemap: Map<string, Module> = new Map([
       affichage: "Tiers",
       type: TypesModules.ACCESS,
       tree: {
-        href: "/tiers/",
+        href: "/tiers",
+        devices: ["mobile", "tablet", "desktop"],
       },
     },
   ],
@@ -148,7 +135,8 @@ export const sitemap: Map<string, Module> = new Map([
       affichage: "Configuration",
       type: TypesModules.ACCESS,
       tree: {
-        href: "/config/",
+        href: "/config",
+        devices: ["tablet", "desktop"],
       },
     },
   ],
@@ -158,7 +146,8 @@ export const sitemap: Map<string, Module> = new Map([
       affichage: "Administration",
       type: TypesModules.ACCESS,
       tree: {
-        href: "/admin/",
+        href: "/admin",
+        devices: ["mobile", "tablet", "desktop"],
       },
     },
   ],

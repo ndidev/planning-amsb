@@ -17,3 +17,5 @@ GenericException:
           AccountLockedException:
             MaxLoginAttemptsException:
         AccountInactiveException:
+
+  ClientException:

@@ -58,6 +58,7 @@ class UserAccountResetModel extends BaseModel
     ]);
 
     (new User($uid))->update_redis();
+    (new User($uid))->clear_sessions();
 
     return $this->read($uid);
   }

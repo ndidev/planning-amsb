@@ -2,17 +2,15 @@
 
 namespace Api\Models\Bois;
 
-use Api\Utils\DatabaseConnector as DB;
+use Api\Utils\BaseModel;
 use Api\Utils\DateUtils;
 use \DateTime;
 
-class RegistreModel
+class RegistreModel extends BaseModel
 {
-  private $db;
-
   public function __construct()
   {
-    $this->db = (new DB)->getConnection();
+    parent::__construct();
   }
 
   /**
@@ -20,7 +18,7 @@ class RegistreModel
    * 
    * @param array $filtre Filtre qui contient...
    */
-  public function readAll(array $filtre)
+  public function readAll(array $filtre): array
   {
     $date_debut_defaut = DateUtils::format(DateUtils::SQL_DATE, DateUtils::jourOuvrePrecedent(new DateTime()));
     $date_fin_defaut = date("Y-m-d");

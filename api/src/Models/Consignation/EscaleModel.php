@@ -3,7 +3,6 @@
 namespace Api\Models\Consignation;
 
 use Api\Utils\DatabaseConnector as DB;
-use Api\Utils\DateUtils;
 use DateInterval;
 use DateTime;
 
@@ -21,42 +20,39 @@ class EscaleModel
    * 
    * @return array Toutes les escale récupérés
    */
-  public function readAll(array $filtre = [])
+  public function readAll(array $filtre = []): array
   {
-
     $hier = (new DateTime())->sub(new DateInterval("P1D"))->format("Y-m-d");
 
     if (array_key_exists("archives", $filtre)) {
       $statement_escales =
         "SELECT
-            p.id,
-            p.navire,
-            p.voyage,
-            p.armateur,
-            a.nom_court AS armateur_nom,
-            p.eta_date,
-            p.eta_heure,
-            p.nor_date,
-            p.nor_heure,
-            p.pob_date,
-            p.pob_heure,
-            p.etb_date,
-            p.etb_heure,
-            p.ops_date,
-            p.ops_heure,
-            p.etc_date,
-            p.etc_heure,
-            p.etd_date,
-            p.etd_heure,
-            p.te_arrivee,
-            p.te_depart,
-            p.last_port,
-            p.next_port,
-            p.call_port,
-            p.quai,
-            p.commentaire
-          FROM consignation_planning p
-          LEFT JOIN tiers a ON p.armateur = a.id
+            id,
+            navire,
+            voyage,
+            armateur,
+            eta_date,
+            eta_heure,
+            nor_date,
+            nor_heure,
+            pob_date,
+            pob_heure,
+            etb_date,
+            etb_heure,
+            ops_date,
+            ops_heure,
+            etc_date,
+            etc_heure,
+            etd_date,
+            etd_heure,
+            te_arrivee,
+            te_depart,
+            last_port,
+            next_port,
+            call_port,
+            quai,
+            commentaire
+          FROM consignation_planning
           WHERE etd_date <= '$hier'
           ORDER BY
             -eta_date ASC,
@@ -66,34 +62,32 @@ class EscaleModel
     } else {
       $statement_escales =
         "SELECT
-            p.id,
-            p.navire,
-            p.voyage,
-            p.armateur,
-            a.nom_court AS armateur_nom,
-            p.eta_date,
-            p.eta_heure,
-            p.nor_date,
-            p.nor_heure,
-            p.pob_date,
-            p.pob_heure,
-            p.etb_date,
-            p.etb_heure,
-            p.ops_date,
-            p.ops_heure,
-            p.etc_date,
-            p.etc_heure,
-            p.etd_date,
-            p.etd_heure,
-            p.te_arrivee,
-            p.te_depart,
-            p.last_port,
-            p.next_port,
-            p.call_port,
-            p.quai,
-            p.commentaire
-          FROM consignation_planning p
-          LEFT JOIN tiers a ON p.armateur = a.id
+            id,
+            navire,
+            voyage,
+            armateur,
+            eta_date,
+            eta_heure,
+            nor_date,
+            nor_heure,
+            pob_date,
+            pob_heure,
+            etb_date,
+            etb_heure,
+            ops_date,
+            ops_heure,
+            etc_date,
+            etc_heure,
+            etd_date,
+            etd_heure,
+            te_arrivee,
+            te_depart,
+            last_port,
+            next_port,
+            call_port,
+            quai,
+            commentaire
+          FROM consignation_planning
           WHERE etd_date >= '$hier'
           OR etd_date IS NULL
           ORDER BY
@@ -105,34 +99,26 @@ class EscaleModel
 
     $statement_marchandises =
       "SELECT
-          m.id,
-          m.escale_id,
-          m.marchandise,
-          m.client,
-          c.nom_court AS client_nom,
-          m.operation,
-          m.environ,
-          m.tonnage_bl,
-          m.cubage_bl,
-          m.nombre_bl,
-          m.tonnage_outturn,
-          m.cubage_outturn,
-          m.nombre_outturn
-        FROM consignation_escales_marchandises m
-        LEFT JOIN tiers c ON c.id = m.client
-        WHERE m.escale_id = :id";
-
-    $statement_ports =
-      "SELECT nom_affichage
-        FROM utils_ports
-        WHERE locode = :locode";
+          id,
+          escale_id,
+          marchandise,
+          client,
+          operation,
+          environ,
+          tonnage_bl,
+          cubage_bl,
+          nombre_bl,
+          tonnage_outturn,
+          cubage_outturn,
+          nombre_outturn
+        FROM consignation_escales_marchandises
+        WHERE escale_id = :id";
 
     // Escales
     $requete_escales = $this->db->query($statement_escales);
     $escales = $requete_escales->fetchAll();
 
     $requete_marchandises = $this->db->prepare($statement_marchandises);
-    $requete_ports = $this->db->prepare($statement_ports);
 
     foreach ($escales as &$escale) {
       $id = $escale["id"];
@@ -143,20 +129,6 @@ class EscaleModel
       // TE
       $escale["te_arrivee"] = $escale["te_arrivee"] !== NULL ? (float) $escale["te_arrivee"] : NULL;
       $escale["te_depart"] = $escale["te_depart"] !== NULL ? (float) $escale["te_depart"] : NULL;
-
-      // Ports
-      $escale["last_port_nom"] = NULL;
-      $escale["next_port_nom"] = NULL;
-
-      if ($escale["last_port"]) {
-        $requete_ports->execute(["locode" => $escale["last_port"]]);
-        $escale["last_port_nom"] = $requete_ports->fetch()["nom_affichage"] ?? NULL;
-      }
-
-      if ($escale["next_port"]) {
-        $requete_ports->execute(["locode" => $escale["next_port"]]);
-        $escale["next_port_nom"] = $requete_ports->fetch()["nom_affichage"] ?? NULL;
-      }
 
       // Marchandises
       $requete_marchandises->execute(["id" => $id]);
@@ -187,68 +159,61 @@ class EscaleModel
    * 
    * @return array Rendez-vous récupéré
    */
-  public function read($id)
+  public function read($id): ?array
   {
     $statement_escale =
       "SELECT
-          p.id,
-          p.navire,
-          p.voyage,
-          p.armateur,
-          a.nom_court AS armateur_nom,
-          p.eta_date,
-          p.eta_heure,
-          p.nor_date,
-          p.nor_heure,
-          p.pob_date,
-          p.pob_heure,
-          p.etb_date,
-          p.etb_heure,
-          p.ops_date,
-          p.ops_heure,
-          p.etc_date,
-          p.etc_heure,
-          p.etd_date,
-          p.etd_heure,
-          p.te_arrivee,
-          p.te_depart,
-          p.last_port,
-          p.next_port,
-          p.call_port,
-          p.quai,
-          p.commentaire
-        FROM consignation_planning p
-        LEFT JOIN tiers a ON p.armateur = a.id
-        WHERE p.id = :id";
+          id,
+          navire,
+          voyage,
+          armateur,
+          eta_date,
+          eta_heure,
+          nor_date,
+          nor_heure,
+          pob_date,
+          pob_heure,
+          etb_date,
+          etb_heure,
+          ops_date,
+          ops_heure,
+          etc_date,
+          etc_heure,
+          etd_date,
+          etd_heure,
+          te_arrivee,
+          te_depart,
+          last_port,
+          next_port,
+          call_port,
+          quai,
+          commentaire
+        FROM consignation_planning 
+        WHERE id = :id";
 
     $statement_marchandises =
       "SELECT
-          m.id,
-          m.escale_id,
-          m.marchandise,
-          m.client,
-          c.nom_court AS client_nom,
-          m.operation,
-          m.environ,
-          m.tonnage_bl,
-          m.cubage_bl,
-          m.nombre_bl,
-          m.tonnage_outturn,
-          m.cubage_outturn,
-          m.nombre_outturn
-        FROM consignation_escales_marchandises m
-        LEFT JOIN tiers c ON c.id = m.client
-        WHERE m.escale_id = :id";
-
-    $statement_ports =
-      "SELECT nom_affichage
-        FROM utils_ports
-        WHERE locode = :locode";
+          id,
+          escale_id,
+          marchandise,
+          client,
+          operation,
+          environ,
+          tonnage_bl,
+          cubage_bl,
+          nombre_bl,
+          tonnage_outturn,
+          cubage_outturn,
+          nombre_outturn
+        FROM consignation_escales_marchandises
+        WHERE escale_id = :id";
 
     // Escales
     $requete_escale = $this->db->prepare($statement_escale);
     $requete_escale->execute(["id" => $id]);
     $escale = $requete_escale->fetch();
+
+    if (!$escale) return null;
 
     // ETA
     $escale["eta_heure"] = eta_vers_lettres($escale["eta_heure"]);
@@ -256,23 +221,6 @@ class EscaleModel
     // TE
     $escale["te_arrivee"] = $escale["te_arrivee"] !== NULL ? (float) $escale["te_arrivee"] : NULL;
     $escale["te_depart"] = $escale["te_depart"] !== NULL ? (float) $escale["te_depart"] : NULL;
-
-
-    // Ports
-    $requete_ports = $this->db->prepare($statement_ports);
-
-    $escale["last_port_nom"] = NULL;
-    $escale["next_port_nom"] = NULL;
-
-    if ($escale["last_port"]) {
-      $requete_ports->execute(["locode" => $escale["last_port"]]);
-      $escale["last_port_nom"] = $requete_ports->fetch()["nom_affichage"] ?? NULL;
-    }
-
-    if ($escale["next_port"]) {
-      $requete_ports->execute(["locode" => $escale["next_port"]]);
-      $escale["next_port_nom"] = $requete_ports->fetch()["nom_affichage"] ?? NULL;
-    }
 
 
     // Marchandises
@@ -307,7 +255,7 @@ class EscaleModel
    * 
    * @return array Rendez-vous créé
    */
-  public function create(array $input)
+  public function create(array $input): array
   {
     // Champs dates et TE
     $input["eta_date"] = $input["eta_date"] ?: NULL;
@@ -390,8 +338,8 @@ class EscaleModel
       'etd_heure' => $input["etd_heure"],
       'te_arrivee' => $input["te_arrivee"],
       'te_depart' => $input["te_depart"],
-      'last_port' => $input["last_port"],
-      'next_port' => $input["next_port"],
+      'last_port' => $input["last_port"] ?? "",
+      'next_port' => $input["next_port"] ?? "",
       'call_port' => $input["call_port"],
       'quai' => $input["quai"],
       'commentaire' => $input["commentaire"],
@@ -430,7 +378,7 @@ class EscaleModel
    * 
    * @return array escale modifié
    */
-  public function update($id, array $input)
+  public function update($id, array $input): array
   {
     // Champs dates et TE
     $input["eta_date"] = $input["eta_date"] ?: NULL;
@@ -525,8 +473,8 @@ class EscaleModel
       'etd_heure' => $input["etd_heure"],
       'te_arrivee' => $input["te_arrivee"],
       'te_depart' => $input["te_depart"],
-      'last_port' => $input["last_port"],
-      'next_port' => $input["next_port"],
+      'last_port' => $input["last_port"] ?? "",
+      'next_port' => $input["next_port"] ?? "",
       'call_port' => $input["call_port"],
       'quai' => $input["quai"],
       'commentaire' => $input["commentaire"],
@@ -569,7 +517,7 @@ class EscaleModel
     $requete_marchandises_modif = $this->db->prepare($statement_marchandises_modif);
     $marchandises = $input["marchandises"] ?? [];
     foreach ($marchandises as $marchandise) {
-      if ($marchandise["id"]) {
+      if ((int) $marchandise["id"]) {
         $requete_marchandises_modif->execute([
           'marchandise' => $marchandise["marchandise"],
           'client' => $marchandise["client"],
@@ -610,7 +558,7 @@ class EscaleModel
    * 
    * @return bool TRUE si succès, FALSE si erreur
    */
-  public function delete(int $id)
+  public function delete(int $id): bool
   {
     $requete = $this->db->prepare("DELETE FROM consignation_planning WHERE id = :id");
     $succes = $requete->execute(["id" => $id]);

@@ -9,7 +9,8 @@ use Api\Utils\Exceptions\Auth\AdminException;
 class UserAccountResetController extends BaseController
 {
   private $model;
-  private $module = "admin/users";
+  private $module = "admin";
+  private $sse_event = "admin/users";
 
   public function __construct(
     private ?string $uid,
@@ -64,6 +65,6 @@ class UserAccountResetController extends BaseController
       ->setBody(json_encode($donnees))
       ->setHeaders($this->headers);
 
-    notify_sse($this->module, __FUNCTION__, $uid);
+    notify_sse($this->sse_event, __FUNCTION__, $uid, $donnees);
   }
 }

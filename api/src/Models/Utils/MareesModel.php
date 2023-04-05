@@ -2,15 +2,13 @@
 
 namespace Api\Models\Utils;
 
-use Api\Utils\DatabaseConnector as DB;
+use Api\Utils\BaseModel;
 
-class MareesModel
+class MareesModel extends BaseModel
 {
-  private $db;
-
   public function __construct()
   {
-    $this->db = (new DB)->getConnection();
+    parent::__construct();
   }
 
   /**
@@ -90,7 +88,7 @@ class MareesModel
   /**
    * Ajoute des marées pour une année.
    */
-  public function create(array $marees)
+  public function create(array $marees): void
   {
     $statement = "INSERT INTO utils_marees_shom
       VALUES(
