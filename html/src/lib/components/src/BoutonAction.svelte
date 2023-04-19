@@ -20,6 +20,8 @@
 
   import Notiflix from "notiflix";
 
+  import { online } from "@app/utils";
+
   type Preset = {
     name:
       | "ajouter"
@@ -30,6 +32,7 @@
       | "default";
     text: string;
     color: string;
+    needsOnline: boolean;
   };
 
   const presets: Map<Preset["name"], Omit<Preset, "name">> = new Map([
@@ -38,6 +41,7 @@
       {
         text: "Ajouter",
         color: "green",
+        needsOnline: true,
       },
     ],
     [
@@ -45,6 +49,7 @@
       {
         text: "Modifier",
         color: "yellow",
+        needsOnline: true,
       },
     ],
     [
@@ -52,6 +57,7 @@
       {
         text: "Copier",
         color: "blue",
+        needsOnline: true,
       },
     ],
     [
@@ -59,6 +65,7 @@
       {
         text: "Supprimer",
         color: "red",
+        needsOnline: true,
       },
     ],
     [
@@ -66,6 +73,7 @@
       {
         text: "Annuler",
         color: "default",
+        needsOnline: false,
       },
     ],
     [
@@ -73,6 +81,7 @@
       {
         text: "",
         color: "default",
+        needsOnline: false,
       },
     ],
   ]);
@@ -91,6 +100,7 @@
   export let title = params.text;
   export let disabled = false;
   export let type: "button" | "reset" | "submit" = "button";
+  export let needsOnline = params.needsOnline;
 
   /**
    * Contrôle l'état Notiflix "Block" du bouton.
@@ -116,7 +126,7 @@
   style:--color="var(--{color}-color)"
   style:--hover-color="var(--{color}-hover-color)"
   {title}
-  {disabled}
+  disabled={(needsOnline && !$online) || disabled}
   on:click|preventDefault
 >
   <slot>{params.text}</slot>

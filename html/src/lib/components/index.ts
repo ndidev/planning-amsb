@@ -10,6 +10,7 @@ import InputDecimal from "./src/InputDecimal.svelte";
 import MaterialButton from "./src/MaterialButton.svelte";
 import Menu from "./src/Menu/Menu.svelte";
 import Modal from "./src/Modal.svelte";
+import OfflineBanner from "./src/OfflineBanner.svelte";
 import Svelecte from "./src/Svelecte.svelte";
 
 export {
@@ -21,5 +22,6 @@ export {
   MaterialButton,
   Menu,
   Modal,
+  OfflineBanner,
   Svelecte,
 };

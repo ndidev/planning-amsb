@@ -2,7 +2,7 @@
 <script lang="ts">
   import { page, metatags, goto } from "@roxi/routify";
 
-  import { Menu } from "@app/components";
+  import { Menu, OfflineBanner } from "@app/components";
 
   import { currentUser } from "@app/stores";
 
@@ -17,6 +17,8 @@
 
 {#if $currentUser.canUseApp}
   <div class="container">
+    <OfflineBanner />
+
     <div class="page">
       <Menu {module} />
 
