@@ -7,6 +7,7 @@
  */
 export class DateUtils {
   date: Date;
+  locale = "fr-FR" as const;
 
   constructor(date = new Date()) {
     this.date = date;
@@ -218,7 +219,7 @@ export class DateUtils {
   /**
    * Retourne la date au format `yyyy-mm-dd`.
    */
-  toLocaleISODateString() {
-    return this.date.toLocaleDateString().split("/").reverse().join("-");
+  toLocaleISODateString(locale: Intl.LocalesArgument = this.locale) {
+    return this.date.toLocaleDateString(locale).split("/").reverse().join("-");
   }
 }
