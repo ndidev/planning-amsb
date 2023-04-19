@@ -16,7 +16,7 @@
 
   import { MaterialButton, Modal, BoutonAction } from "@app/components";
 
-  import { Device } from "@app/utils";
+  import { device } from "@app/utils";
 
   import type { EscaleConsignation, Stores } from "@app/types";
 
@@ -115,7 +115,7 @@
   onMount(() => {
     mc = new Hammer(ligne);
     mc.on("press", () => {
-      if (Device.is("mobile")) {
+      if ($device.is("mobile")) {
         afficherModal = true;
       }
     });

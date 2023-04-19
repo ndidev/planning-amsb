@@ -9,7 +9,7 @@
   ```
  -->
 <script lang="ts">
-  import { onMount, onDestroy, getContext } from "svelte";
+  import { getContext } from "svelte";
   import { goto } from "@roxi/routify";
 
   // import Hammer from "hammerjs";
@@ -17,7 +17,7 @@
   import { MaterialButton } from "@app/components";
   import AjoutsRapidesBois from "./AjoutsRapidesBois.svelte";
 
-  import { Device } from "@app/utils";
+  import { device } from "@app/utils";
 
   import type { Stores, ModuleId } from "@app/types";
 
@@ -62,7 +62,7 @@
   // onMount(() => {
   //   mc = new Hammer(addButton);
   //   mc.on("press", () => {
-  //     if (Device.is("mobile")) {
+  //     if ($device.is("mobile")) {
   //       afficherAjoutsRapides = true;
   //     }
   //   });
@@ -78,7 +78,7 @@
     <MaterialButton
       icon="add"
       title={nouveau.title}
-      fontSize={Device.isSmallerThan("desktop") ? "24px" : "36px"}
+      fontSize={$device.isSmallerThan("desktop") ? "24px" : "36px"}
       on:click={() => $goto(nouveau.href)}
     />
 

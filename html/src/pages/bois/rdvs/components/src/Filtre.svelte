@@ -13,7 +13,7 @@
   import type { Writable } from "svelte/store";
 
   import { Svelecte } from "@app/components";
-  import { Filtre, Device } from "@app/utils";
+  import { Filtre, device } from "@app/utils";
 
   import type { FiltreBois } from "@app/types";
 
@@ -25,7 +25,7 @@
     Object.values({ ...$filtre.data }).filter((value) =>
       Array.isArray(value) ? (value.length > 0 ? value : undefined) : value
     ).length > 0;
-  $: filtreAffiche = filtreActif && Device.is("desktop");
+  $: filtreAffiche = filtreActif && $device.is("desktop");
 
   /**
    * Enregistrer le filtre.

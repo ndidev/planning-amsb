@@ -1,3 +1,5 @@
+import { readable } from "svelte/store";
+
 /**
  * Classe permettant de connaître le type d'appareil utilisé pour la navigation.
  */
@@ -18,11 +20,23 @@ export class Device {
   /**
    * Renvoie le type d'appareil en se basant sur la taille de l'écran.
    */
+  get type() {
+    return Device.breakpoints.find((breakpoint) => {
+      return (
+        window.innerWidth >= breakpoint.lowerBound &&
+        window.innerWidth <= breakpoint.upperBound
+      );
+    }).type;
+  }
+
+  /**
+   * Renvoie le type d'appareil en se basant sur la taille de l'écran.
+   */
   static get type() {
     return this.breakpoints.find((breakpoint) => {
       return (
-        document.body.offsetWidth >= breakpoint.lowerBound &&
-        document.body.offsetWidth <= breakpoint.upperBound
+        window.innerWidth >= breakpoint.lowerBound &&
+        window.innerWidth <= breakpoint.upperBound
       );
     }).type;
   }
@@ -32,7 +46,7 @@ export class Device {
    *
    * @param type Type d'appareil
    */
-  static is(type: typeof Device.type) {
+  is(type: typeof this.type) {
     return this.type === type;
   }
 
@@ -41,12 +55,12 @@ export class Device {
    *
    * @param type Type d'appareil
    */
-  static isSmallerThan(type: typeof Device.type) {
-    return this.breakpoints
+  isSmallerThan(type: typeof this.type) {
+    return Device.breakpoints
       .filter(
         (breakpoint) =>
           breakpoint.upperBound <
-          this.breakpoints.find((breakpoint) => breakpoint.type === type)
+          Device.breakpoints.find((breakpoint) => breakpoint.type === type)
             .lowerBound
       )
       .map((breakpoint) => breakpoint.type)
@@ -58,15 +72,32 @@ export class Device {
    *
    * @param type Type d'appareil
    */
-  static isLargerThan(type: typeof Device.type) {
-    return this.breakpoints
+  isLargerThan(type: typeof this.type) {
+    return Device.breakpoints
       .filter(
         (breakpoint) =>
           breakpoint.lowerBound >
-          this.breakpoints.find((breakpoint) => breakpoint.type === type)
+          Device.breakpoints.find((breakpoint) => breakpoint.type === type)
             .upperBound
       )
       .map((breakpoint) => breakpoint.type)
       .includes(this.type);
   }
 }
+
+export const device = readable(new Device(), (set) => {
+  let currentType = Device.type;
+
+  window.addEventListener("resize", updateDeviceSize);
+
+  return () => {
+    window.removeEventListener("resize", updateDeviceSize);
+  };
+
+  function updateDeviceSize() {
+    if (Device.type !== currentType) {
+      set(new Device());
+      currentType = Device.type;
+    }
+  }
+});

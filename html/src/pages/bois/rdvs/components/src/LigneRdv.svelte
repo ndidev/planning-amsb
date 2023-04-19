@@ -17,7 +17,7 @@
 
   import { MaterialButton, BoutonAction, Modal } from "@app/components";
 
-  import { notiflixOptions, Device } from "@app/utils";
+  import { notiflixOptions, device } from "@app/utils";
   import { HTTP } from "@app/errors";
   import type { Stores, RdvBois, Tiers } from "@app/types";
 
@@ -161,7 +161,7 @@
   onMount(() => {
     mc = new Hammer(ligne);
     mc.on("press", () => {
-      if (Device.is("mobile")) {
+      if ($device.is("mobile")) {
         afficherModal = true;
       }
     });

@@ -1,7 +1,7 @@
 export { appURLs } from "./src/appURLs";
 export { DateUtils } from "./src/DateUtils";
 export { demarrerConnexionSSE } from "./src/sse";
-export { Device } from "./src/Device";
+export { device } from "./src/device";
 export { fetcher } from "./src/fetcher";
 export { Filtre } from "./src/Filtre";
 export { formatDecimal } from "./src/formatDecimal";

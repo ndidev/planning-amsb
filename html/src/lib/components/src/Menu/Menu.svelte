@@ -17,7 +17,7 @@
 
   import { currentUser } from "@app/stores";
 
-  import { sitemap, Device } from "@app/utils";
+  import { sitemap, device } from "@app/utils";
 
   import type { ModuleId } from "@app/types";
 
@@ -29,6 +29,8 @@
   let nav: HTMLElement;
 
   let affichageMenu = false;
+
+  $: menuButtonFontSize = $device.isSmallerThan("desktop") ? "24px" : "36px";
 
   $beforeUrlChange((event, route) => {
     if (nav.offsetWidth >= document.body.offsetWidth) {
@@ -44,7 +46,7 @@
   <MaterialButton
     icon="menu"
     title="Menu"
-    fontSize={Device.isSmallerThan("desktop") ? "24px" : "36px"}
+    fontSize={menuButtonFontSize}
     on:click={() => {
       affichageMenu = !affichageMenu;
     }}
@@ -59,7 +61,7 @@
 <nav bind:this={nav} style="display: {affichageMenu ? 'flex' : 'none'};">
   <ul>
     {#each [...sitemap] as [module, { affichage, tree: { href, children, devices } }]}
-      {@const deviceMatches = devices?.includes(Device.type) ?? true}
+      {@const deviceMatches = devices?.includes($device.type) ?? true}
       {#if $currentUser.canAccess(module) && deviceMatches}
         <li>
           {#if href}
