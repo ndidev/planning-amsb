@@ -281,7 +281,7 @@ class HTTPResponse
     $server_supported_methods = [
       "gzip" => true,
       "deflate" => true,
-      "compress" => true,
+      "compress" => false, // La fonction ne prend en charge que les 255 premiers caractères
       "br" => false, // Voir ci-dessous pour implémentation
       "identity" => true
     ];
