@@ -102,7 +102,7 @@
   export let labelAsValue = false;
   export let valueAsObject = config.valueAsObject;
 
-  export let selectFirstDropdownItem = true;
+  export let highlightFirstItem = true;
 
   let isInvalid = false;
   $: svelecteClass = `${className} ${required && !value ? "invalid" : ""}`;
@@ -112,7 +112,7 @@
   // =================
   selectOnTab = multiple ? true : TAB_SELECT_NAVIGATE;
   collapseSelection = multiple;
-  selectFirstDropdownItem = required ? true : false;
+  highlightFirstItem = required ? true : false;
 
   i18n = {
     empty: "Aucune donnée",
@@ -276,7 +276,7 @@
     {valueAsObject}
     on:input
     on:change
-    {selectFirstDropdownItem}
+    {highlightFirstItem}
     {...$$restProps}
   />
 {:else}
