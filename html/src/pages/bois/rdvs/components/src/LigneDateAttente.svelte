@@ -18,7 +18,7 @@
 </script>
 
 <div>
-  <div class="date">En attente</div>
+  <div class="date">En attente de confirmation</div>
 
   <div class="camions-stats">
     <div class="total">

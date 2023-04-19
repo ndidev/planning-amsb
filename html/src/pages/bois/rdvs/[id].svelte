@@ -268,7 +268,7 @@
 
         <!-- En attente -->
         <div class="pure-control-group">
-          <label for="attente">En attente</label>
+          <label for="attente">En attente de confirmation</label>
           <input
             type="checkbox"
             name="attente"

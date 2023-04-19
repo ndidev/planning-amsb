@@ -112,6 +112,8 @@ class PDFBois extends PDFPlanning
       $this->AucunRDV($this->date_debut, $this->date_fin);
     }
 
+    $this->AddHeaderAttente();
+
     /**
      * Vérification de la présence de rendez-vous en attente
      * S'il y a des RDV sur la période, peuplement des lignes
@@ -249,6 +251,14 @@ class PDFBois extends PDFPlanning
     $this->Cell(0, 4, '', 0, 1); // Espace avant le prochain rdv pour la lisibilité
   }
 
+  function AddHeaderAttente()
+  {
+    $this->SetFont('Roboto', '', 12);
+    $this->SetTextColor(0, 0, 0);
+    $this->Cell(0, 10, '', 0, 1); // Espace avant la ligne pour la lisibilité
+    $this->Cell(0, 10, 'Rendez-vous en attente de confirmation', 0, 1, 'C');
+  }
+
   function AddLineAttente(
     string $date_mise_en_forme,
     string $client_id,
@@ -302,7 +312,7 @@ class PDFBois extends PDFPlanning
   function AucunRDVAttente(): void
   {
     $this->SetFont('Roboto', '', 12);
-    $this->SetTextColor(0, 0, 0);
-    $this->Cell(0, 30, 'Aucun rendez-vous en attente', 0, 0, 'C');
+    $this->SetTextColor(100, 100, 100);
+    $this->Cell(0, 6, 'Aucun rendez-vous en attente de confirmation', 0, 0, 'C');
   }
 }
