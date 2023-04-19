@@ -376,6 +376,7 @@ class HTTPResponse
       "https://amsb.ndi.dev",
       "https://localhost",
       "http://localhost",
+      ($_SERVER["REQUEST_SCHEME"] ?? "") . "://" . explode(":", $_SERVER["HTTP_HOST"])[0],
     ];
 
     $serverOrigin = $_SERVER["HTTP_ORIGIN"] ?? "";

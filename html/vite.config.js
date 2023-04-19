@@ -11,7 +11,4 @@ export default defineConfig({
       preprocess: [preprocess()],
     }),
   ],
-  optimizeDeps: {
-    disabled: true,
-  },
 });

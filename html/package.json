@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "run-p dev:*",
     "dev:routify": "routify",
-    "dev:vite": "vite",
+    "dev:vite": "vite --host",
     "preview": "vite preview",
     "build:dev": "run-s build:dev:*",
     "build:dev:routify": "routify -b",
