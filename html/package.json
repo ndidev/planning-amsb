@@ -20,7 +20,7 @@
   "devDependencies": {
     "@roxi/routify": "^2.18.11",
     "@sveltejs/vite-plugin-svelte": "^1.0.5",
-    "@tsconfig/svelte": "^3.0.0",
+    "@tsconfig/svelte": "^4.0.0",
     "@types/autosize": "^4.0.1",
     "@types/hammerjs": "^2.0.41",
     "@types/uuid": "^9.0.0",
@@ -29,12 +29,13 @@
     "sass": "^1.60.0",
     "svelte": "^3.55.0",
     "svelte-preprocess": "^4.10.7",
-    "typescript": "^4.9.4",
+    "typescript": "^4.9.5",
     "vite": "^3.1.0"
   },
   "dependencies": {
     "autosize": "^5.0.1",
     "chart.js": "^4.2.1",
+    "flatpickr": "^4.6.13",
     "hammerjs": "^2.0.8",
     "material-icons": "^1.13.1",
     "notiflix": "^3.2.5",
