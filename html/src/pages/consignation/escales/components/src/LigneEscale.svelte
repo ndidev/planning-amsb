@@ -16,7 +16,7 @@
 
   import { MaterialButton, Modal, BoutonAction } from "@app/components";
 
-  import { device } from "@app/utils";
+  import { device, locale } from "@app/utils";
 
   import type { EscaleConsignation, Stores } from "@app/types";
 
@@ -162,7 +162,9 @@
     <div class="eta etx" class:actif={statutEscale === "atsea"}>
       <span class="nom">ETA :</span>
       <span class="date">
-        {escale.eta_date ? new Date(escale.eta_date).toLocaleDateString() : ""}
+        {escale.eta_date
+          ? new Date(escale.eta_date).toLocaleDateString(locale)
+          : ""}
       </span>
       <span class="heure">{escale.eta_heure}</span>
     </div>
@@ -171,7 +173,9 @@
     <div class="etb etx" class:actif={statutEscale === "arrived"}>
       <span class="nom">ETB :</span>
       <span class="date">
-        {escale.etb_date ? new Date(escale.etb_date).toLocaleDateString() : ""}
+        {escale.etb_date
+          ? new Date(escale.etb_date).toLocaleDateString(locale)
+          : ""}
       </span>
       <span class="heure">{escale.etb_heure}</span>
     </div>
@@ -180,7 +184,9 @@
     <div class="ops etx" class:actif={statutEscale === "berthed"}>
       <span class="nom">Ops :</span>
       <span class="date">
-        {escale.ops_date ? new Date(escale.ops_date).toLocaleDateString() : ""}
+        {escale.ops_date
+          ? new Date(escale.ops_date).toLocaleDateString(locale)
+          : ""}
       </span>
       <span class="heure">{escale.ops_heure}</span>
     </div>
@@ -189,7 +195,9 @@
     <div class="etc etx" class:actif={statutEscale === "inops"}>
       <span class="nom">ETC :</span>
       <span class="date">
-        {escale.etc_date ? new Date(escale.etc_date).toLocaleDateString() : ""}
+        {escale.etc_date
+          ? new Date(escale.etc_date).toLocaleDateString(locale)
+          : ""}
       </span>
       <span class="heure">{escale.etc_heure}</span>
     </div>
@@ -198,7 +206,9 @@
     <div class="etd etx" class:actif={statutEscale === "completed"}>
       <span class="nom">ETD :</span>
       <span class="date">
-        {escale.etd_date ? new Date(escale.etd_date).toLocaleDateString() : ""}
+        {escale.etd_date
+          ? new Date(escale.etd_date).toLocaleDateString(locale)
+          : ""}
       </span>
       <span class="heure">{escale.etd_heure}</span>
     </div>

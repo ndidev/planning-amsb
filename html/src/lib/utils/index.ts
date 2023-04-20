@@ -6,6 +6,7 @@ export { fetcher } from "./src/fetcher";
 export { Filtre } from "./src/Filtre";
 export { formatDecimal } from "./src/formatDecimal";
 export { jsonify, mapify } from "./src/mapUtils";
+export { locale } from "./src/locale";
 export { luminance } from "./src/luminance";
 export { notiflixOptions } from "./src/notiflixOptions";
 export { online } from "./src/online";

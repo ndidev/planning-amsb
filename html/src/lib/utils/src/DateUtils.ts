@@ -1,3 +1,5 @@
+import { locale as defaultLocale } from "@app/utils";
+
 /**
  * Bibliothèque de fonctions permettant de :
  *  - vérifier les jours ouvrés
@@ -7,7 +9,6 @@
  */
 export class DateUtils {
   date: Date;
-  locale = "fr-FR" as const;
 
   constructor(date = new Date()) {
     this.date = date;
@@ -219,7 +220,7 @@ export class DateUtils {
   /**
    * Retourne la date au format `yyyy-mm-dd`.
    */
-  toLocaleISODateString(locale: Intl.LocalesArgument = this.locale) {
+  toLocaleISODateString(locale: Intl.LocalesArgument = defaultLocale) {
     return this.date.toLocaleDateString(locale).split("/").reverse().join("-");
   }
 }

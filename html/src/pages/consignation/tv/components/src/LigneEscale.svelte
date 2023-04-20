@@ -1,6 +1,8 @@
 <script lang="ts">
   import { getContext } from "svelte";
 
+  import { locale } from "@app/utils";
+
   import type { EscaleConsignation, Stores } from "@app/types";
 
   const { ports } = getContext<Stores>("stores");
@@ -122,7 +124,7 @@
       <div class="eta">
         <span class="date">
           {escale.eta_date
-            ? new Date(escale.eta_date).toLocaleDateString()
+            ? new Date(escale.eta_date).toLocaleDateString(locale)
             : ""}
         </span>
         <span class="heure">{escale.eta_heure}</span>

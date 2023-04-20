@@ -10,6 +10,7 @@
     notiflixOptions,
     validerFormulaire,
     preventFormSubmitOnEnterKeydown,
+    locale,
   } from "@app/utils";
 
   import type { Stores, RdvVrac, ProduitVrac } from "@app/types";
@@ -23,7 +24,11 @@
 
   const nouveauRdv: RdvVrac = {
     id: null,
-    date_rdv: new Date().toLocaleDateString().split("/").reverse().join("-"),
+    date_rdv: new Date()
+      .toLocaleDateString(locale)
+      .split("/")
+      .reverse()
+      .join("-"),
     heure: "",
     produit: null,
     qualite: null,

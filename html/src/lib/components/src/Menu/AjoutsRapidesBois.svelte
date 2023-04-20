@@ -2,6 +2,8 @@
   import { onDestroy, getContext } from "svelte";
   import Notiflix from "notiflix";
 
+  import { locale } from "@app/utils";
+
   import type { Stores, AjoutRapideBois, Tiers } from "@app/types";
 
   const { configAjoutsRapides, boisRdvs, tiers } = getContext<Stores>("stores");
@@ -51,7 +53,7 @@
       await boisRdvs.create({
         id: null,
         date_rdv: new Date()
-          .toLocaleDateString()
+          .toLocaleDateString(locale)
           .split("/")
           .reverse()
           .join("-"),

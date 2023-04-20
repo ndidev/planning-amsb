@@ -12,7 +12,7 @@
 
   Chart.register(ScatterController, PointElement, LinearScale, Tooltip);
 
-  import { fetcher, demarrerConnexionSSE } from "@app/utils";
+  import { fetcher, demarrerConnexionSSE, locale } from "@app/utils";
 
   let source: EventSource;
 
@@ -68,7 +68,7 @@
                 let label: string[] = [];
                 label.push((context.raw as TE).navire);
                 label.push(
-                  new Date((context.raw as TE).date).toLocaleDateString()
+                  new Date((context.raw as TE).date).toLocaleDateString(locale)
                 );
                 label.push((context.raw as TE).tonnage + " T");
                 label.push((context.raw as TE).te + " m");

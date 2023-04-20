@@ -16,7 +16,7 @@
 
   import { MaterialButton, Modal, BoutonAction } from "@app/components";
 
-  import { device } from "@app/utils";
+  import { device, locale } from "@app/utils";
 
   import type { Charter, Stores } from "@app/types";
 
@@ -106,7 +106,7 @@
       <span>LC début :</span>
       <span class="lc_debut date">
         {charter.lc_debut
-          ? new Date(charter.lc_debut).toLocaleDateString()
+          ? new Date(charter.lc_debut).toLocaleDateString(locale)
           : ""}
       </span>
     </div>
@@ -114,14 +114,18 @@
     <div class="etx">
       <span>LC fin :</span>
       <span class="lc_fin date">
-        {charter.lc_fin ? new Date(charter.lc_fin).toLocaleDateString() : ""}
+        {charter.lc_fin
+          ? new Date(charter.lc_fin).toLocaleDateString(locale)
+          : ""}
       </span>
     </div>
     <!-- C/P -->
     <div class="etx">
       <span>C/P :</span>
       <span class="cp date">
-        {charter.cp_date ? new Date(charter.cp_date).toLocaleDateString() : ""}
+        {charter.cp_date
+          ? new Date(charter.cp_date).toLocaleDateString(locale)
+          : ""}
       </span>
     </div>
   </div>

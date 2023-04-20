@@ -11,12 +11,15 @@
     Chargement,
     BoutonAction,
   } from "@app/components";
+
   import {
     fetcher,
     notiflixOptions,
     validerFormulaire,
     preventFormSubmitOnEnterKeydown,
+    locale,
   } from "@app/utils";
+
   import { HTTP } from "@app/errors";
 
   import type { RdvBois, Stores } from "@app/types";
@@ -31,7 +34,11 @@
   const nouveauRdv: RdvBois = {
     id: null,
     attente: false,
-    date_rdv: new Date().toLocaleDateString().split("/").reverse().join("-"),
+    date_rdv: new Date()
+      .toLocaleDateString(locale)
+      .split("/")
+      .reverse()
+      .join("-"),
     heure_arrivee: null,
     heure_depart: null,
     fournisseur: null,
