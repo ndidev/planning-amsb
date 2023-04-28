@@ -1,4 +1,5 @@
-import type { Device } from "@app/utils";
+import type { breakpoints } from "@app/utils";
+import type { TypesModules } from "@app/auth";
 
 /**
  * Identifiants des modules de l'application.
@@ -62,7 +63,7 @@ export type Module = {
   /**
    * Type de module (accès/modification).
    */
-  type: string;
+  type: TypesModules;
   tree: Tree;
 };
 
@@ -85,7 +86,7 @@ type Tree = {
   /**
    * Appareils sur lesquels afficher le lien.
    */
-  devices?: Array<typeof Device.type>;
+  devices?: Array<(typeof breakpoints)[number]["type"]>;
 
   /**
    * Enfants de la rubrique.

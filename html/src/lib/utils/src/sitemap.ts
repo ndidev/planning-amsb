@@ -1,20 +1,5 @@
-import { UserRoles } from "@app/auth";
+import { UserRoles, TypesModules } from "@app/auth";
 import type { ModuleId, Module } from "@app/types";
-
-/**
- * Types de modules.
- */
-export enum TypesModules {
-  /**
-   * Le module est de type "Accès/Pas accès".
-   */
-  ACCESS = "access",
-
-  /**
-   * Le module est de type "Aucun/Voir/Modifier".
-   */
-  EDIT = "edit",
-}
 
 /**
  * Modules (rubriques) de l'application.
@@ -31,13 +16,13 @@ export const sitemap: Map<ModuleId, Module> = new Map([
             affichage: "Planning",
             roleMini: UserRoles.ACCESS,
             href: "/bois/rdvs",
-            devices: ["mobile", "tablet", "desktop"],
+            devices: ["mobile", "desktop"],
           },
           {
             affichage: "Statistiques",
             roleMini: UserRoles.ACCESS,
             href: "/bois/stats",
-            devices: ["tablet", "desktop"],
+            devices: ["desktop"],
           },
         ],
       },
@@ -54,13 +39,13 @@ export const sitemap: Map<ModuleId, Module> = new Map([
             affichage: "Planning",
             roleMini: UserRoles.ACCESS,
             href: "/vrac/rdvs",
-            devices: ["mobile", "tablet", "desktop"],
+            devices: ["mobile", "desktop"],
           },
           {
             affichage: "Produits",
             roleMini: UserRoles.EDIT,
             href: "/vrac/produits",
-            devices: ["mobile", "tablet", "desktop"],
+            devices: ["mobile", "desktop"],
           },
         ],
       },
@@ -77,19 +62,19 @@ export const sitemap: Map<ModuleId, Module> = new Map([
             affichage: "Planning",
             roleMini: UserRoles.ACCESS,
             href: "/consignation/escales",
-            devices: ["mobile", "tablet", "desktop"],
+            devices: ["mobile", "desktop"],
           },
           {
             affichage: "Archives",
             roleMini: UserRoles.ACCESS,
             href: "/consignation/escales?archives",
-            devices: ["mobile", "tablet", "desktop"],
+            devices: ["mobile", "desktop"],
           },
           {
             affichage: "Tirants d'eau",
             roleMini: UserRoles.ACCESS,
             href: "/consignation/te",
-            devices: ["tablet", "desktop"],
+            devices: ["desktop"],
           },
         ],
       },
@@ -106,13 +91,13 @@ export const sitemap: Map<ModuleId, Module> = new Map([
             affichage: "Planning",
             roleMini: UserRoles.ACCESS,
             href: "/chartering/charters",
-            devices: ["mobile", "tablet", "desktop"],
+            devices: ["mobile", "desktop"],
           },
           {
             affichage: "Archives",
             roleMini: UserRoles.ACCESS,
             href: "/chartering/charters?archives",
-            devices: ["mobile", "tablet", "desktop"],
+            devices: ["mobile", "desktop"],
           },
         ],
       },
@@ -125,7 +110,7 @@ export const sitemap: Map<ModuleId, Module> = new Map([
       type: TypesModules.ACCESS,
       tree: {
         href: "/tiers",
-        devices: ["mobile", "tablet", "desktop"],
+        devices: ["mobile", "desktop"],
       },
     },
   ],
@@ -136,7 +121,7 @@ export const sitemap: Map<ModuleId, Module> = new Map([
       type: TypesModules.ACCESS,
       tree: {
         href: "/config",
-        devices: ["tablet", "desktop"],
+        devices: ["desktop"],
       },
     },
   ],
@@ -147,7 +132,7 @@ export const sitemap: Map<ModuleId, Module> = new Map([
       type: TypesModules.ACCESS,
       tree: {
         href: "/admin",
-        devices: ["mobile", "tablet", "desktop"],
+        devices: ["mobile", "desktop"],
       },
     },
   ],

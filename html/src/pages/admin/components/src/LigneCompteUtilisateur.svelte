@@ -21,11 +21,11 @@
   import {
     fetcher,
     sitemap,
-    TypesModules,
     notiflixOptions,
     validerFormulaire,
   } from "@app/utils";
-  import { AccountStatus, UserRoles } from "@app/auth";
+
+  import { AccountStatus, UserRoles, TypesModules } from "@app/auth";
 
   import type { CompteUtilisateur } from "@app/types";
 
