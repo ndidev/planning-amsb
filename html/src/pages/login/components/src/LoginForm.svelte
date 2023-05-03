@@ -51,12 +51,12 @@
           JSON.stringify({ login, nom, roles, statut })
         );
 
-        $screen = "loginMenu";
+        screen.set("loginMenu");
       }
 
       // Initialisation du mot de passe
       if (statut === AccountStatus.PENDING) {
-        $screen = "firstLogin";
+        screen.set("firstLogin");
       }
     } catch (erreur) {
       loginMessage = erreur.message;

@@ -147,7 +147,7 @@
 
       Notiflix.Notify.success("Le mot de passe a été initialisé");
 
-      $screen = "loginForm";
+      screen.set("loginForm");
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
     } finally {

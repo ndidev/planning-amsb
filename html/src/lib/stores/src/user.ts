@@ -49,6 +49,7 @@ function handleDBEvent(event: CustomEvent<DBEventData<UserInfo>>) {
       break;
 
     case "delete":
+      currentUser.set(new User());
       localStorage.clear();
       break;
 
