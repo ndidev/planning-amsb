@@ -20,6 +20,12 @@
 
   const screen: Writable<string> = getContext("screen");
 
+  currentUser.subscribe((user) => {
+    if (!user.canUseApp) {
+      screen.set("loginForm");
+    }
+  });
+
   onMount(async () => {
     source = await demarrerConnexionSSE([]);
   });
@@ -29,19 +35,15 @@
   });
 </script>
 
-{#if $currentUser.canUseApp}
-  <div class="choix-conteneur pure-g">
-    {#each [...sitemap] as [module, { affichage, tree: { href, children } }]}
-      {#if $currentUser.canAccess(module)}
-        <div class="choix pure-u-1">
-          <a href={href || children[0].href}>{affichage}</a>
-        </div>
-      {/if}
-    {/each}
-  </div>
-{:else}
-  {screen.set("loginForm")}
-{/if}
+<div class="choix-conteneur pure-g">
+  {#each [...sitemap] as [module, { affichage, tree: { href, children } }]}
+    {#if $currentUser.canAccess(module)}
+      <div class="choix pure-u-1">
+        <a href={href || children[0].href}>{affichage}</a>
+      </div>
+    {/if}
+  {/each}
+</div>
 
 <style>
   .choix-conteneur {
