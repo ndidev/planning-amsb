@@ -25,8 +25,8 @@
 
   import { currentUser, tiers } from "@app/stores";
 
-  import AUCUN_LOGO from "/src/images/nologo.svg";
-  import ERREUR_LOGO from "/src/images/erreurlogo.svg";
+  import AUCUN_LOGO from "/src/images/nologo.min.svg";
+  import ERREUR_LOGO from "/src/images/erreurlogo.min.svg";
 
   import {
     fetcher,

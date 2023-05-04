@@ -8,7 +8,7 @@
   import { LoginForm, LoginMenu, FirstLogin } from "./components";
   import { Chargement } from "@app/components";
 
-  import logo from "/src/images/amsb.svg";
+  import logo from "/src/images/amsb.min.svg";
 
   let login: string;
 
@@ -100,8 +100,8 @@
     display: block;
     margin: auto;
     margin-top: 5vh;
-    width: 70%;
-    height: 20vh;
+    max-width: 70%;
+    max-height: 20vh;
   }
 
   main {
