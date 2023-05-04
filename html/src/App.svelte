@@ -4,8 +4,10 @@
   import { routes } from "../.routify/routes";
 
   import Notiflix from "notiflix";
+  import Hammer from "hammerjs";
 
   import * as stores from "@app/stores";
+  import { device } from "@app/utils";
   import type { Stores } from "@app/types";
 
   setContext<Stores>("stores", {
@@ -47,7 +49,21 @@
     backOverlay: true,
     backOverlayClickToClose: true,
   });
-  /* ---------------------------------------- */
+  /* ---------------------------------- */
+
+  /**
+   * Hammer
+   *
+   * Autoriser la sélection du texte (désactivée par défaut).
+   */
+  device.subscribe((type) => {
+    if (type.is("desktop")) {
+      delete Hammer.defaults.cssProps.userSelect;
+    } else {
+      Hammer.defaults.cssProps.userSelect = "none";
+    }
+  });
+  /* ---------------------------------- */
 </script>
 
 <Router {routes} />
