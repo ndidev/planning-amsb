@@ -42,7 +42,7 @@
   <!-- Pictogramme + nom des navires à quai si applicable -->
   {#if navires.length > 0}
     <div class="navires">
-      <i class="material-icons">directions_boat</i>
+      <i class="material-symbols-outlined icone-navire">directions_boat</i>
       <div class="texte-navires">{@html navires.join("<br />")}</div>
     </div>
   {/if}
@@ -67,6 +67,10 @@
     font-weight: bold;
     color: red;
     cursor: help;
+  }
+
+  .icone-navire {
+    font-variation-settings: "FILL" 1;
   }
 
   .texte-navires {

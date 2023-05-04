@@ -29,7 +29,7 @@
   {#if fonctionAjout}
     <button title="Ajouter une ligne" on:click={() => fonctionAjout()}>
       Ajouter une ligne
-      <i class="material-icons" title="Ajouter une ligne">add</i>
+      <i class="material-symbols-outlined" title="Ajouter une ligne">add</i>
     </button>
   {/if}
 </h3>

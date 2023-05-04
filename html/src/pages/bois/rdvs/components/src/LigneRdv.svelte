@@ -501,9 +501,13 @@
     position: relative;
   }
 
+  .confirmation_affretement :global(button):hover {
+    font-variation-settings: "FILL" 1;
+  }
+
   .confirmation_affretement :global(button::after) {
     position: absolute;
-    font-family: "Material Icons";
+    font-family: "Material Symbols Outlined";
     content: "close";
     color: red;
     font-size: 24px;
@@ -512,7 +516,7 @@
 
   .confirmation_affretement[data-confirme="1"] :global(button::after) {
     position: absolute;
-    font-family: "Material Icons";
+    font-family: "Material Symbols Outlined";
     content: "check";
     color: green;
     font-size: 24px;

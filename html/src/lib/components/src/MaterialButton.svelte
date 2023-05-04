@@ -14,8 +14,6 @@
   ```
  -->
 <script lang="ts">
-  import "material-icons/iconfont/material-icons.css";
-
   type Preset = {
     name:
       | "ajouter"
@@ -118,7 +116,7 @@
 
 <button
   type="button"
-  class="material-icons"
+  class="material-symbols-outlined"
   style:--color={color}
   style:--hover-color={hoverColor}
   style:--font-size={fontSize}
@@ -160,6 +158,7 @@
 
   button:is(:hover, :focus) {
     color: var(--hover-color, var(--default-hover-color));
+    font-variation-settings: "FILL" 1;
   }
 
   button::before {
