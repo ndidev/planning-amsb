@@ -483,10 +483,6 @@
       margin-left: 0.3em;
     }
 
-    .escale.departed {
-      display: none;
-    }
-
     .ports.bloc {
       text-align: center;
     }

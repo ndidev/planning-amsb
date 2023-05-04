@@ -11,12 +11,12 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
+  import Notiflix from "notiflix";
+  import autosize from "autosize";
+
   import { MaterialButton } from "@app/components";
 
   import { adminUsers } from "@app/stores";
-
-  import Notiflix from "notiflix";
-  import autosize from "autosize";
 
   import {
     fetcher,
@@ -33,7 +33,7 @@
 
   // Vérification que toutes les rubriques ont une valeur de rôle
   // Sinon, mettre à zéro
-  // FIXME: n'est pas reflété sur la page.... ??
+  // BUG: n'est pas reflété sur la page.... ??
   for (const module of sitemap.keys()) {
     if (compte.roles[module] === undefined) {
       compte.roles[module] = UserRoles.NONE;

@@ -281,7 +281,7 @@ class HTTPResponse
     $server_supported_methods = [
       "gzip" => true,
       "deflate" => true,
-      "compress" => false, // La fonction ne prend en charge que les 255 premiers caractères
+      "compress" => false, // La fonction ne prend en charge que la table ASCII
       "br" => false, // Voir ci-dessous pour implémentation
       "identity" => true
     ];
@@ -304,7 +304,7 @@ class HTTPResponse
     $this->headers["Content-Encoding"] = $compression_method;
 
     // Méthodes de compression
-    // TODO: gérer les erreurs de compression ? (vraiment nécessaire ?)
+    // ? IDEA: gérer les erreurs de compression ? (vraiment nécessaire ?)
     switch ($compression_method) {
       case 'gzip':
         // GZIP (== PHP gzencode)

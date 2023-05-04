@@ -49,9 +49,6 @@
   /** Élément d'affichage du logo. */
   let thumbnail: HTMLImageElement;
 
-  /** Champ "Commentaire". */
-  let inputCommentaire: HTMLTextAreaElement;
-
   let boutonAjouter: BoutonAction;
   let boutonModifier: BoutonAction;
   let boutonSupprimer: BoutonAction;
@@ -430,7 +427,6 @@
         <textarea
           id="commentaire"
           name="commentaire"
-          bind:this={inputCommentaire}
           bind:value={selectedTiers.commentaire}
           rows="5"
           cols="30"
