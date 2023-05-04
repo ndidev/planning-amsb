@@ -15,7 +15,12 @@
   import Notiflix from "notiflix";
   import Hammer from "hammerjs";
 
-  import { MaterialButton, Modal, BoutonAction } from "@app/components";
+  import {
+    MaterialButton,
+    Modal,
+    BoutonAction,
+    IconText,
+  } from "@app/components";
 
   import { notiflixOptions, device } from "@app/utils";
   import type { Stores, RdvBois, Tiers } from "@app/types";
@@ -48,6 +53,114 @@
   $: transporteur = $tiers?.get(rdv.transporteur) || tiersVierge;
   $: fournisseur = $tiers?.get(rdv.fournisseur) || tiersVierge;
   $: affreteur = $tiers?.get(rdv.affreteur) || tiersVierge;
+
+  $: adresses = {
+    client: [
+      client.nom_court,
+      client.pays.toLowerCase() === "fr" ? client.cp.substring(0, 2) : "",
+      client.ville,
+      ["fr", "zz"].includes(client.pays.toLowerCase())
+        ? ""
+        : `(${
+            $pays?.find(({ iso }) => client.pays === iso)?.nom || client.pays
+          })`,
+    ]
+      .filter((champ) => champ)
+      .join(" "),
+
+    tootipClient: !client.id
+      ? "Pas de client renseigné"
+      : [
+          "Client :",
+          client.nom_complet,
+          client.adresse_ligne_1,
+          client.adresse_ligne_2,
+          [client.cp || "", client.ville || ""]
+            .filter((champ) => champ)
+            .join(" "),
+          $pays?.find(({ iso }) => client.pays === iso)?.nom || client.pays,
+          client.telephone,
+          client.commentaire ? " " : "",
+          client.commentaire,
+        ]
+          .filter((champ) => champ)
+          .join("\n"),
+
+    chargement: [
+      chargement.nom_court,
+      chargement.pays?.toLowerCase() === "fr"
+        ? chargement.cp?.substring(0, 2)
+        : "",
+      chargement.ville,
+      ["fr", "zz"].includes(chargement.pays?.toLowerCase())
+        ? ""
+        : `(${
+            $pays?.find(({ iso }) => chargement.pays === iso)?.nom ||
+            chargement.pays
+          })`,
+    ]
+      .filter((champ) => champ)
+      .join(" "),
+
+    tooltipChargement: !chargement.id
+      ? "Pas de lieu de chargement renseigné"
+      : [
+          "Chargement :",
+          chargement.nom_complet,
+          chargement.adresse_ligne_1,
+          chargement.adresse_ligne_2,
+          [chargement.cp || "", chargement.ville || ""]
+            .filter((champ) => champ)
+            .join(" "),
+          chargement.pays.toLowerCase() === "zz"
+            ? ""
+            : $pays?.find(({ iso }) => chargement.pays === iso)?.nom ||
+              chargement.pays,
+          chargement.telephone,
+          chargement.commentaire ? " " : "",
+          chargement.commentaire,
+        ]
+          .filter((champ) => champ)
+          .join("\n"),
+
+    livraison: [
+      livraison.nom_court,
+      livraison.pays.toLowerCase() === "fr" ? livraison.cp.substring(0, 2) : "",
+      livraison.ville,
+      ["fr", "zz"].includes(livraison.pays.toLowerCase())
+        ? ""
+        : `(${
+            $pays?.find(({ iso }) => livraison.pays === iso)?.nom ||
+            livraison.pays
+          })`,
+    ]
+      .filter((champ) => champ)
+      .join(" "),
+
+    tooltipLivraison: !livraison.id
+      ? "Pas de lieu de livraison renseigné"
+      : [
+          "Livraison :",
+          livraison.nom_complet,
+          livraison.adresse_ligne_1,
+          livraison.adresse_ligne_2,
+          [livraison.cp || "", livraison.ville || ""]
+            .filter((champ) => champ)
+            .join(" "),
+          livraison.pays.toLowerCase() === "zz"
+            ? ""
+            : $pays?.find(({ iso }) => livraison.pays === iso)?.nom ||
+              livraison.pays,
+          livraison.telephone,
+          livraison.commentaire ? " " : "",
+          livraison.commentaire,
+        ]
+          .filter((champ) => champ)
+          .join("\n"),
+  };
+
+  $: chargementAffiche = rdv.chargement && rdv.chargement !== 1;
+  $: livraisonAffiche = rdv.livraison && rdv.client !== rdv.livraison;
 
   const formattedDate = rdv.date_rdv
     ? new Date(rdv.date_rdv).toLocaleDateString("fr-FR", {
@@ -116,101 +229,57 @@
   </Modal>
 {/if}
 
-<div class="rdv-attente pure-g" bind:this={ligne}>
+<div class="rdv pure-g" bind:this={ligne}>
   <div class="date-rdv pure-u-1 pure-u-lg-4-24">{formattedDate}</div>
 
-  <div class="chargement-client-livraison pure-u-1 pure-u-lg-4-24">
-    {#if rdv.chargement && rdv.chargement !== 1}
+  <div class="adresses-tiers pure-u-1 pure-u-lg-5-24">
+    {#if chargementAffiche}
       <div class="chargement">
-        <span class="role">chargement</span>
-        <span class="adresse">
-          {[
-            chargement.nom_court,
-            chargement.pays?.toLowerCase() === "fr"
-              ? chargement.cp?.substring(0, 2)
-              : "",
-            chargement.ville,
-            chargement.pays?.toLowerCase() === "fr"
-              ? ""
-              : `(${chargement.pays})`,
-          ]
-            .filter((champ) => champ)
-            .join(" ")}
-        </span>
+        <IconText>
+          <span slot="icon" title="Chargement">line_start_diamond</span>
+          <span slot="text">{adresses.chargement}</span>
+          <span slot="tooltip">{adresses.tooltipChargement}</span>
+        </IconText>
       </div>
     {/if}
 
     <div class="client">
-      {#if rdv.chargement !== 1 && rdv.client !== rdv.livraison}
-        <span class="role">client</span>
-      {/if}
-      <span class="adresse">
-        {[
-          client.nom_court,
-          client.pays.toLowerCase() === "fr" ? client.cp.substring(0, 2) : "",
-          client.ville,
-          client.pays.toLowerCase() === "fr"
-            ? ""
-            : `(${
-                $pays?.find(({ iso }) => client.pays === iso)?.nom ||
-                client.pays
-              })`,
-        ]
-          .filter((champ) => champ)
-          .join(" ")}
-      </span>
+      <IconText>
+        <span slot="icon" title="Client">
+          {#if chargementAffiche || livraisonAffiche}
+            person
+          {/if}
+        </span>
+        <span slot="text">{adresses.client}</span>
+        <span slot="tooltip">{adresses.tootipClient}</span>
+      </IconText>
     </div>
 
-    {#if rdv.livraison && rdv.client !== rdv.livraison}
+    {#if livraisonAffiche}
       <div class="livraison">
-        <span class="role">livraison</span>
-        <span class="adresse">
-          {[
-            livraison.nom_court,
-            livraison.pays.toLowerCase() === "fr"
-              ? livraison.cp.substring(0, 2)
-              : "",
-            livraison.ville,
-            livraison.pays.toLowerCase() === "fr"
-              ? ""
-              : `(${
-                  $pays?.find(({ iso }) => livraison.pays === iso)?.nom ||
-                  livraison.pays
-                })`,
-          ]
-            .filter((champ) => champ)
-            .join(" ")}
-        </span>
+        <IconText>
+          <span slot="icon" title="Livraison">line_end_circle</span>
+          <span slot="text">{adresses.livraison}</span>
+          <span slot="tooltip">{adresses.tooltipLivraison}</span>
+        </IconText>
       </div>
     {/if}
-
-    <div class="tooltip tooltip-livraison">
-      {!livraison.id
-        ? "Pas de lieu de livraison renseigné"
-        : [
-            livraison.nom_complet,
-            livraison.adresse_ligne_1,
-            livraison.adresse_ligne_2,
-            [livraison.cp || "", livraison.ville || ""]
-              .filter((champ) => champ)
-              .join(" "),
-            $pays?.find(({ iso }) => livraison.pays === iso)?.nom ||
-              livraison.pays,
-            livraison.telephone,
-            livraison.commentaire,
-          ]
-            .filter((champ) => champ)
-            .join("\n")}
-    </div>
   </div>
 
   <div class="transporteur pure-u-1 pure-u-lg-2-24">
-    <span class="transporteur-nom">{transporteur.nom_court}</span>
-    {#if rdv.transporteur >= 11}
-      <!-- Transporteur non "spécial" -->
-      <div class="tooltip tooltip-transporteur">
-        {transporteur.telephone || "Téléphone non renseigné"}
-      </div>
+    {#if rdv.transporteur}
+      <IconText hideIcon={["desktop"]}>
+        <span slot="icon" title="Transporteur">local_shipping</span>
+        <span slot="text" style:font-weight="bold"
+          >{transporteur.nom_court}</span
+        >
+        <span slot="tooltip">
+          {#if rdv.transporteur >= 11}
+            <!-- Transporteur non "spécial" -->
+            {transporteur.telephone || "Téléphone non renseigné"}
+          {/if}
+        </span>
+      </IconText>
     {/if}
   </div>
 
@@ -221,14 +290,45 @@
     {affreteur.nom_court}
   </div>
 
-  <div class="fournisseur pure-u-1 pure-u-lg-2-24">{fournisseur.nom_court}</div>
-
-  <div class="commentaire commentaire_public pure-u-1 pure-u-lg-4-24">
-    {rdv.commentaire_public.replace(/(?:\r\n|\r|\n)/g, "<br>")}
+  <div class="fournisseur pure-u-1 pure-u-lg-2-24">
+    <IconText iconType="text" hideIcon={["desktop"]}>
+      <span slot="icon" title="Fournisseur">F</span>
+      <span slot="text">{fournisseur.nom_court}</span>
+    </IconText>
   </div>
 
-  <div class="commentaire commentaire_cache pure-u-1 pure-u-lg-4-24">
-    {rdv.commentaire_cache.replace(/(?:\r\n|\r|\n)/g, "<br>")}
+  <div class="commentaires pure-u-1 pure-u-lg-6-24">
+    {#if rdv.commentaire_public}
+      <div class="commentaire-public">
+        <IconText hideIcon={["desktop"]}>
+          <span slot="icon" title="Commentaire public">comment</span>
+          <span slot="text"
+            >{@html rdv.commentaire_public.replace(
+              /(?:\r\n|\r|\n)/g,
+              "<br>"
+            )}</span
+          >
+        </IconText>
+      </div>
+    {/if}
+
+    {#if rdv.commentaire_public && rdv.commentaire_cache}
+      <div class="separateur" />
+    {/if}
+
+    {#if rdv.commentaire_cache}
+      <div class="commentaire_cache">
+        <IconText hideIcon={["desktop"]}>
+          <span slot="icon" title="Commentaire caché">comments_disabled</span>
+          <span slot="text"
+            >{@html rdv.commentaire_cache.replace(
+              /(?:\r\n|\r|\n)/g,
+              "<br>"
+            )}</span
+          >
+        </IconText>
+      </div>
+    {/if}
   </div>
 
   {#if $currentUser.canEdit("bois")}
@@ -251,78 +351,64 @@
 </div>
 
 <style>
-  .rdv-attente {
+  .rdv {
     color: #555;
     padding: 8px 0 8px 5px;
     border-bottom: 1px solid #999;
     align-items: baseline;
   }
 
-  .rdv-attente:last-child {
+  .rdv:last-child {
     border-bottom: none;
   }
 
-  .rdv-attente:hover {
+  .rdv:hover {
     background-color: rgba(0, 0, 0, 0.1);
   }
 
-  .rdv-attente:hover .copie-modif-suppr {
-    visibility: visible;
-  }
-
-  .rdv-attente .date-rdv {
+  .rdv .date-rdv {
     margin-left: 5px;
   }
 
-  .tooltip {
-    visibility: hidden;
-    font-weight: normal;
-    white-space: pre;
-    background-color: black;
-    color: white;
-    padding: 5px;
-    border-radius: 6px;
-    position: absolute;
-    z-index: 1;
-  }
-
-  /* .heure, */
-  /* .horloge, */
-  .chargement-client-livraison,
+  .adresses-tiers,
   .transporteur,
   .affreteur,
   .fournisseur,
-  .commentaire {
+  .commentaires {
     margin-left: 5px;
   }
 
-  .chargement-client-livraison:hover .tooltip-livraison {
-    visibility: visible;
-    font-size: 0.8em;
-  }
-
-  .role {
-    color: rgb(100, 100, 100);
-    margin-right: 0.4em;
-  }
-
-  .transporteur {
-    font-weight: bold;
-  }
-
-  .tooltip-transporteur {
-    font-size: 0.8em;
-  }
-
-  .transporteur:hover .tooltip-transporteur {
-    visibility: visible;
-  }
-
-  :global(.affreteur.lie-agence) {
-    color: blue;
+  .commentaires .separateur {
+    height: 10px;
   }
 
   .commentaire_cache {
-    color: rgb(100, 100, 100);
+    --commentaire-cache-color: hsl(0, 0%, 70%);
+    color: var(--commentaire-cache-color);
+  }
+
+  /* Mobile */
+  @media screen and (max-width: 767px) {
+    .transporteur,
+    .commentaires {
+      margin-top: 10px;
+    }
+  }
+
+  /* Desktop */
+  @media screen and (min-width: 768px) {
+    /* Affichage des horloges */
+    .rdv:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .rdv:hover .copie-modif-suppr {
+      visibility: visible;
+      margin-right: 10px;
+    }
+
+    .commentaire_cache {
+      border-left: 1px dotted var(--commentaire-cache-color);
+    }
   }
 </style>

@@ -51,7 +51,9 @@
 
   $: if (rdvsBois) {
     dates = new Set(
-      [...rdvsBois.values()].map(({ date_rdv }) => date_rdv).sort()
+      [...rdvsBois.values()]
+        .map(({ date_rdv, attente }) => (attente ? null : date_rdv))
+        .sort()
     );
 
     rdvsGroupes = ($tiers, grouperRdvs([...rdvsBois.values()]));
@@ -216,7 +218,7 @@
     {#if rdvsBois}
       <!-- RDVs plannifiés -->
       {#each [...rdvsGroupes] as [date, rdvs] (date)}
-        {#if date !== "attente"}
+        {#if date !== "attente" && date !== null}
           <LigneDate {date} camions={camions.get(date)} />
           <div>
             {#each rdvs as rdv (rdv.id)}

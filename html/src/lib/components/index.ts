@@ -6,6 +6,7 @@ import BandeauInfo from "./src/BandeauInfo.svelte";
 import BoutonAction from "./src/BoutonAction.svelte";
 import Chargement from "./src/Chargement.svelte";
 import CoteCesson from "./src/CoteCesson.svelte";
+import IconText from "./src/IconText.svelte"
 import InputDecimal from "./src/InputDecimal.svelte";
 import MaterialButton from "./src/MaterialButton.svelte";
 import Menu from "./src/Menu/Menu.svelte";
@@ -18,6 +19,7 @@ export {
   BoutonAction,
   Chargement,
   CoteCesson,
+  IconText,
   InputDecimal,
   MaterialButton,
   Menu,

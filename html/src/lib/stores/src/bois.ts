@@ -14,17 +14,19 @@ function satisfiesParams(rdv: RdvBois, params: URLSearchParams) {
     Object.fromEntries(params);
 
   return (
-    (filtre.date_debut ?? new DateUtils().toLocaleISODateString()) <=
+    rdv.attente ||
+    ((filtre.date_debut ?? new DateUtils().toLocaleISODateString()) <=
       rdv.date_rdv &&
-    (filtre.date_fin ?? "9") >= rdv.date_rdv &&
-    (filtre.fournisseur?.split(",").includes(rdv.fournisseur.toString()) ??
-      true) &&
-    (filtre.client?.split(",").includes(rdv.client.toString()) ?? true) &&
-    (filtre.chargement?.split(",").includes(rdv.chargement.toString()) ??
-      true) &&
-    (filtre.livraison?.split(",").includes(rdv.livraison.toString()) ?? true) &&
-    (filtre.transporteur?.split(",").includes(rdv.transporteur.toString()) ??
-      true) &&
-    (filtre.affreteur?.split(",").includes(rdv.affreteur.toString()) ?? true)
+      (filtre.date_fin ?? "9") >= rdv.date_rdv &&
+      (filtre.fournisseur?.split(",").includes(rdv.fournisseur.toString()) ??
+        true) &&
+      (filtre.client?.split(",").includes(rdv.client.toString()) ?? true) &&
+      (filtre.chargement?.split(",").includes(rdv.chargement.toString()) ??
+        true) &&
+      (filtre.livraison?.split(",").includes(rdv.livraison.toString()) ??
+        true) &&
+      (filtre.transporteur?.split(",").includes(rdv.transporteur.toString()) ??
+        true) &&
+      (filtre.affreteur?.split(",").includes(rdv.affreteur.toString()) ?? true))
   );
 }
