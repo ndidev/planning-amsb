@@ -24,7 +24,7 @@
 
   import type { RdvBois, Stores } from "@app/types";
 
-  const { currentUser, boisRdvs } = getContext<Stores>("stores");
+  const { boisRdvs, tiers } = getContext<Stores>("stores");
 
   let formulaire: HTMLFormElement;
   let boutonAjouter: BoutonAction;
@@ -249,236 +249,236 @@
 <!-- routify:options param-is-page -->
 <!-- routify:options guard="bois/edit" -->
 
-  <main class="formulaire">
-    <h1>Rendez-vous</h1>
+<main class="formulaire">
+  <h1>Rendez-vous</h1>
 
-    {#if !rdv}
-      <Chargement />
-    {:else}
-      <form
-        class="pure-form pure-form-aligned"
-        bind:this={formulaire}
-        use:preventFormSubmitOnEnterKeydown
-      >
-        <!-- Date -->
-        <div class="pure-control-group">
-          <label for="date_rdv">Date (jj/mm/aaaa)</label>
-          <input
-            type="date"
-            id="date_rdv"
-            name="date_rdv"
-            data-nom="Date"
-            bind:value={rdv.date_rdv}
-            required={!rdv.attente}
-          />
-        </div>
-
-        <!-- En attente -->
-        <div class="pure-control-group">
-          <label for="attente">En attente de confirmation</label>
-          <input
-            type="checkbox"
-            name="attente"
-            id="attente"
-            bind:checked={rdv.attente}
-          />
-        </div>
-
-        <!-- Heure arrivée -->
-        <div class="pure-control-group">
-          <label for="heure_arrivee">Heure arrivée (hh:mm)</label>
-          <input
-            type="time"
-            name="heure_arrivee"
-            id="heure_arrivee"
-            bind:value={rdv.heure_arrivee}
-            placeholder="hh:mm"
-          />
-        </div>
-
-        <!-- Heure départ -->
-        <div class="pure-control-group">
-          <label for="heure_depart">Heure départ (hh:mm)</label>
-          <input
-            type="time"
-            name="heure_depart"
-            id="heure_depart"
-            bind:value={rdv.heure_depart}
-            placeholder="hh:mm"
-          />
-        </div>
-
-        <!-- Fournisseur -->
-        <div class="pure-control-group">
-          <label for="fournisseur">Fournisseur</label>
-          <Svelecte
-            inputId="fournisseur"
-            type="tiers"
-            role="bois_fournisseur"
-            bind:value={rdv.fournisseur}
-            name="Fournisseur"
-            required
-          />
-        </div>
-
-        <!-- Chargement -->
-        <div class="pure-control-group">
-          <label for="chargement">Chargement</label>
-          <Svelecte
-            inputId="chargement"
-            type="tiers"
-            role="bois_client"
-            bind:value={rdv.chargement}
-            name="Chargement"
-            required
-          />
-        </div>
-
-        <!-- Client -->
-        <div class="pure-control-group">
-          <label for="client">Client</label>
-          <Svelecte
-            inputId="client"
-            type="tiers"
-            role="bois_client"
-            bind:value={rdv.client}
-            name="Client"
-            on:change={remplirLivraisonAuto}
-            required
-          />
-        </div>
-
-        <!-- Livraison -->
-        <div class="pure-control-group">
-          <label for="livraison">Livraison</label>
-          <Svelecte
-            inputId="livraison"
-            type="tiers"
-            role="bois_client"
-            bind:value={rdv.livraison}
-            name="Livraison"
-            required
-          />
-        </div>
-
-        <!-- Transporteur -->
-        <div class="pure-control-group">
-          <label for="transporteur"
-            >Transporteur {#if rdv.affreteur === 1 || rdv.affreteur === null}
-              <MaterialButton
-                icon="tips_and_updates"
-                title="Suggestions de transporteurs"
-                on:click={afficherSuggestionsTransporteurs}
-              />
-            {/if}</label
-          >
-          <Svelecte
-            inputId="transporteur"
-            type="tiers"
-            role="bois_transporteur"
-            bind:value={rdv.transporteur}
-            name="Transporteur"
-          />
-        </div>
-
-        <!-- Affréteur -->
-        <div class="pure-control-group">
-          <label for="affreteur">Affréteur</label>
-          <Svelecte
-            inputId="affreteur"
-            type="tiers"
-            role="bois_affreteur"
-            bind:value={rdv.affreteur}
-            name="Affréteur"
-          />
-        </div>
-
-        <!-- Confirmation d'affrètement -->
-        <div class="pure-control-group">
-          <label for="confirmation_affretement"
-            >Confirmation d'affrètement</label
-          >
-          <input
-            type="checkbox"
-            name="confirmation_affretement"
-            id="confirmation_affretement"
-            bind:checked={rdv.confirmation_affretement}
-          />
-        </div>
-
-        <!-- Numéro BL -->
-        <div class="pure-control-group">
-          <label for="numero_bl">Numéro BL</label>
-          <input
-            type="text"
-            name="numero_bl"
-            id="numero_bl"
-            bind:value={numero_bl}
-            on:change={verifierNumeroBL}
-          />
-        </div>
-
-        <!-- Commentaire public -->
-        <div class="pure-control-group">
-          <label for="commentaire_public">Commentaire public</label>
-          <textarea
-            class="rdv_commentaire"
-            name="commentaire_public"
-            id="commentaire_public"
-            rows="3"
-            cols="30"
-            bind:value={rdv.commentaire_public}
-          />
-        </div>
-
-        <!-- Commentaire caché -->
-        <div class="pure-control-group">
-          <label for="commentaire_cache">Commentaire caché</label>
-          <textarea
-            class="rdv_commentaire"
-            name="commentaire_cache"
-            id="commentaire_cache"
-            rows="3"
-            cols="30"
-            bind:value={rdv.commentaire_cache}
-          />
-        </div>
-      </form>
-
-      <!-- Validation/Annulation/Suppression -->
-      <div class="boutons">
-        {#if isNew}
-          <!-- Bouton "Ajouter" -->
-          <BoutonAction
-            preset="ajouter"
-            on:click={ajouterRdv}
-            bind:this={boutonAjouter}
-          />
-        {:else}
-          <!-- Bouton "Modifier" -->
-          <BoutonAction
-            preset="modifier"
-            on:click={modifierRdv}
-            bind:this={boutonModifier}
-          />
-          <!-- Bouton "Supprimer" -->
-          <BoutonAction
-            preset="supprimer"
-            on:click={supprimerRdv}
-            bind:this={boutonSupprimer}
-          />
-        {/if}
-
-        <!-- Bouton "Annuler" -->
-        <BoutonAction
-          preset="annuler"
-          on:click={() => {
-            $goto("./");
-          }}
+  {#if !rdv}
+    <Chargement />
+  {:else}
+    <form
+      class="pure-form pure-form-aligned"
+      bind:this={formulaire}
+      use:preventFormSubmitOnEnterKeydown
+    >
+      <!-- Date -->
+      <div class="pure-control-group">
+        <label for="date_rdv">Date (jj/mm/aaaa)</label>
+        <input
+          type="date"
+          id="date_rdv"
+          name="date_rdv"
+          data-nom="Date"
+          bind:value={rdv.date_rdv}
+          required={!rdv.attente}
         />
       </div>
-    {/if}
-  </main>
+
+      <!-- En attente -->
+      <div class="pure-control-group">
+        <label for="attente">En attente de confirmation</label>
+        <input
+          type="checkbox"
+          name="attente"
+          id="attente"
+          bind:checked={rdv.attente}
+        />
+      </div>
+
+      <!-- Heure arrivée -->
+      <div class="pure-control-group">
+        <label for="heure_arrivee">Heure arrivée (hh:mm)</label>
+        <input
+          type="time"
+          name="heure_arrivee"
+          id="heure_arrivee"
+          bind:value={rdv.heure_arrivee}
+          placeholder="hh:mm"
+        />
+      </div>
+
+      <!-- Heure départ -->
+      <div class="pure-control-group">
+        <label for="heure_depart">Heure départ (hh:mm)</label>
+        <input
+          type="time"
+          name="heure_depart"
+          id="heure_depart"
+          bind:value={rdv.heure_depart}
+          placeholder="hh:mm"
+        />
+      </div>
+
+      <!-- Fournisseur -->
+      <div class="pure-control-group">
+        <label for="fournisseur">Fournisseur</label>
+        <Svelecte
+          inputId="fournisseur"
+          type="tiers"
+          role="bois_fournisseur"
+          bind:value={rdv.fournisseur}
+          name="Fournisseur"
+          required
+        />
+      </div>
+
+      <!-- Chargement -->
+      <div class="pure-control-group">
+        <label for="chargement">Chargement</label>
+        <Svelecte
+          inputId="chargement"
+          type="tiers"
+          role="bois_client"
+          bind:value={rdv.chargement}
+          name="Chargement"
+          required
+        />
+      </div>
+
+      <!-- Client -->
+      <div class="pure-control-group">
+        <label for="client">Client</label>
+        <Svelecte
+          inputId="client"
+          type="tiers"
+          role="bois_client"
+          bind:value={rdv.client}
+          name="Client"
+          on:change={remplirLivraisonAuto}
+          required
+        />
+      </div>
+
+      <!-- Livraison -->
+      <div class="pure-control-group">
+        <label for="livraison">Livraison</label>
+        <Svelecte
+          inputId="livraison"
+          type="tiers"
+          role="bois_client"
+          bind:value={rdv.livraison}
+          name="Livraison"
+          required
+        />
+      </div>
+
+      <!-- Transporteur -->
+      <div class="pure-control-group">
+        <label for="transporteur"
+          >Transporteur {#if rdv.affreteur === 1 || rdv.affreteur === null}
+            <MaterialButton
+              icon="tips_and_updates"
+              title="Suggestions de transporteurs"
+              on:click={afficherSuggestionsTransporteurs}
+            />
+          {/if}</label
+        >
+        <Svelecte
+          inputId="transporteur"
+          type="tiers"
+          role="bois_transporteur"
+          bind:value={rdv.transporteur}
+          name="Transporteur"
+        />
+      </div>
+
+      <!-- Affréteur -->
+      <div class="pure-control-group">
+        <label for="affreteur">Affréteur</label>
+        <Svelecte
+          inputId="affreteur"
+          type="tiers"
+          role="bois_affreteur"
+          bind:value={rdv.affreteur}
+          name="Affréteur"
+        />
+      </div>
+
+      <!-- Confirmation d'affrètement -->
+      <div class="pure-control-group">
+        <label for="confirmation_affretement">Confirmation d'affrètement</label>
+        <input
+          type="checkbox"
+          name="confirmation_affretement"
+          id="confirmation_affretement"
+          bind:checked={rdv.confirmation_affretement}
+          disabled={$tiers.get(rdv.affreteur)?.lie_agence === false ||
+            !rdv.transporteur}
+        />
+      </div>
+
+      <!-- Numéro BL -->
+      <div class="pure-control-group">
+        <label for="numero_bl">Numéro BL</label>
+        <input
+          type="text"
+          name="numero_bl"
+          id="numero_bl"
+          bind:value={numero_bl}
+          on:change={verifierNumeroBL}
+        />
+      </div>
+
+      <!-- Commentaire public -->
+      <div class="pure-control-group">
+        <label for="commentaire_public">Commentaire public</label>
+        <textarea
+          class="rdv_commentaire"
+          name="commentaire_public"
+          id="commentaire_public"
+          rows="3"
+          cols="30"
+          bind:value={rdv.commentaire_public}
+        />
+      </div>
+
+      <!-- Commentaire caché -->
+      <div class="pure-control-group">
+        <label for="commentaire_cache">Commentaire caché</label>
+        <textarea
+          class="rdv_commentaire"
+          name="commentaire_cache"
+          id="commentaire_cache"
+          rows="3"
+          cols="30"
+          bind:value={rdv.commentaire_cache}
+        />
+      </div>
+    </form>
+
+    <!-- Validation/Annulation/Suppression -->
+    <div class="boutons">
+      {#if isNew}
+        <!-- Bouton "Ajouter" -->
+        <BoutonAction
+          preset="ajouter"
+          on:click={ajouterRdv}
+          bind:this={boutonAjouter}
+        />
+      {:else}
+        <!-- Bouton "Modifier" -->
+        <BoutonAction
+          preset="modifier"
+          on:click={modifierRdv}
+          bind:this={boutonModifier}
+        />
+        <!-- Bouton "Supprimer" -->
+        <BoutonAction
+          preset="supprimer"
+          on:click={supprimerRdv}
+          bind:this={boutonSupprimer}
+        />
+      {/if}
+
+      <!-- Bouton "Annuler" -->
+      <BoutonAction
+        preset="annuler"
+        on:click={() => {
+          $goto("./");
+        }}
+      />
+    </div>
+  {/if}
+</main>
 
 <style>
   :global(.notiflix-report .suggestions) {

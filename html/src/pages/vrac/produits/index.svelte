@@ -61,8 +61,6 @@
    * Supprimer une qualité.
    */
   function supprimerQualite(qualiteASupprimer: QualiteVrac) {
-    console.log(qualiteASupprimer);
-
     if (qualiteASupprimer.id !== null) {
       Notiflix.Confirm.show(
         "Suppression produit",
@@ -194,120 +192,120 @@
 
 <!-- routify:options guard="vrac/edit" -->
 
-  <main class="formulaire">
-    <h1>Produit</h1>
+<main class="formulaire">
+  <h1>Produit</h1>
 
-    <form class="pure-form pure-form-aligned">
-      <!-- Liste déroulante -->
-      <div class="pure-control-group">
-        <label />
-        <select id="id" name="id" bind:value={selected}>
-          <option value="">Nouveau...</option>
-          {#if $vracProduits}
-            {#each [...$vracProduits.values()].sort( (a, b) => a.nom.localeCompare(b.nom) ) as produit}
-              <option value={produit.id}>{produit.nom}</option>
-            {/each}
-          {/if}
-        </select>
-      </div>
-
-      <!-- Nom produit -->
-      <div class="pure-control-group">
-        <label for="nom">Nom Produit</label>
-        <input
-          type="text"
-          id="nom"
-          name="nom"
-          placeholder="Nom du produit"
-          maxlength="255"
-          data-nom="Nom du produit"
-          bind:value={produit.nom}
-          required
-        />
-      </div>
-
-      <!-- Couleur produit -->
-      <div class="pure-control-group">
-        <label for="couleur">Couleur</label>
-        <input
-          type="color"
-          id="couleur"
-          name="couleur"
-          bind:value={produit.couleur}
-          class="couleur"
-          required
-        />
-      </div>
-
-      <!-- Unité -->
-      <div class="pure-control-group">
-        <label for="unite">Unité</label>
-        <input
-          type="text"
-          id="unite"
-          name="unite"
-          maxlength="10"
-          data-nom="Unité"
-          bind:value={produit.unite}
-        />
-      </div>
-
-      <!-- Qualités -->
-      <div class="pure-controls">
-        <fieldset>
-          <legend>
-            Qualités
-            <MaterialButton
-              icon="add"
-              title="Ajouter une qualité"
-              on:click={ajouterQualite}
-            />
-          </legend>
-          <!-- <div class="pure-control-group"> -->
-          <div class="input">
-            <ul id="qualites">
-              <!-- Liste des qualités dynamique en fonction du produit choisi -->
-              {#each produit.qualites as qualite}
-                <LigneQualite {qualite} {supprimerQualite} />
-              {/each}
-            </ul>
-            <div />
-          </div>
-          <!-- </div> -->
-        </fieldset>
-      </div>
-    </form>
-
-    <!-- Validation/Annulation/Suppression -->
-    <div class="boutons">
-      {#if !produit.id}
-        <!-- Bouton "Ajouter" -->
-        <BoutonAction
-          preset="ajouter"
-          on:click={ajouterProduit}
-          bind:this={boutonAjouter}
-        />
-      {/if}
-
-      {#if produit.id}
-        <!-- Bouton "Modifier" -->
-        <BoutonAction
-          preset="modifier"
-          on:click={modifierProduit}
-          bind:this={boutonModifier}
-        />
-        <!-- Bouton "Supprimer" -->
-        <BoutonAction
-          preset="supprimer"
-          on:click={supprimerProduit}
-          bind:this={boutonSupprimer}
-        />
-      {/if}
-
-      <!-- Bouton "Annuler" -->
-      <BoutonAction preset="annuler" on:click={() => $goto("../")} />
+  <form class="pure-form pure-form-aligned">
+    <!-- Liste déroulante -->
+    <div class="pure-control-group">
+      <label />
+      <select id="id" name="id" bind:value={selected}>
+        <option value="">Nouveau...</option>
+        {#if $vracProduits}
+          {#each [...$vracProduits.values()].sort( (a, b) => a.nom.localeCompare(b.nom) ) as produit}
+            <option value={produit.id}>{produit.nom}</option>
+          {/each}
+        {/if}
+      </select>
     </div>
-  </main>
+
+    <!-- Nom produit -->
+    <div class="pure-control-group">
+      <label for="nom">Nom Produit</label>
+      <input
+        type="text"
+        id="nom"
+        name="nom"
+        placeholder="Nom du produit"
+        maxlength="255"
+        data-nom="Nom du produit"
+        bind:value={produit.nom}
+        required
+      />
+    </div>
+
+    <!-- Couleur produit -->
+    <div class="pure-control-group">
+      <label for="couleur">Couleur</label>
+      <input
+        type="color"
+        id="couleur"
+        name="couleur"
+        bind:value={produit.couleur}
+        class="couleur"
+        required
+      />
+    </div>
+
+    <!-- Unité -->
+    <div class="pure-control-group">
+      <label for="unite">Unité</label>
+      <input
+        type="text"
+        id="unite"
+        name="unite"
+        maxlength="10"
+        data-nom="Unité"
+        bind:value={produit.unite}
+      />
+    </div>
+
+    <!-- Qualités -->
+    <div class="pure-controls">
+      <fieldset>
+        <legend>
+          Qualités
+          <MaterialButton
+            icon="add"
+            title="Ajouter une qualité"
+            on:click={ajouterQualite}
+          />
+        </legend>
+        <!-- <div class="pure-control-group"> -->
+        <div class="input">
+          <ul id="qualites">
+            <!-- Liste des qualités dynamique en fonction du produit choisi -->
+            {#each produit.qualites as qualite}
+              <LigneQualite {qualite} {supprimerQualite} />
+            {/each}
+          </ul>
+          <div />
+        </div>
+        <!-- </div> -->
+      </fieldset>
+    </div>
+  </form>
+
+  <!-- Validation/Annulation/Suppression -->
+  <div class="boutons">
+    {#if !produit.id}
+      <!-- Bouton "Ajouter" -->
+      <BoutonAction
+        preset="ajouter"
+        on:click={ajouterProduit}
+        bind:this={boutonAjouter}
+      />
+    {/if}
+
+    {#if produit.id}
+      <!-- Bouton "Modifier" -->
+      <BoutonAction
+        preset="modifier"
+        on:click={modifierProduit}
+        bind:this={boutonModifier}
+      />
+      <!-- Bouton "Supprimer" -->
+      <BoutonAction
+        preset="supprimer"
+        on:click={supprimerProduit}
+        bind:this={boutonSupprimer}
+      />
+    {/if}
+
+    <!-- Bouton "Annuler" -->
+    <BoutonAction preset="annuler" on:click={() => $goto("../")} />
+  </div>
+</main>
 
 <style>
   main {

@@ -9,7 +9,7 @@
   ```
  -->
 <script lang="ts">
-  import { getContext } from "svelte";
+  import { onDestroy, getContext } from "svelte";
   import type { Writable } from "svelte/store";
 
   import { Svelecte } from "@app/components";
@@ -24,7 +24,9 @@
 
   let listeTiers: Tiers[] = [];
 
-  tiers.subscribe((tiers) => (listeTiers = tiers ? [...tiers.values()] : []));
+  const unsubscribe = tiers.subscribe(
+    (tiers) => (listeTiers = tiers ? [...tiers.values()] : [])
+  );
 
   /**
    * Enregistrer le filtre.
@@ -44,6 +46,10 @@
     filtre.set(new Filtre({}));
     _filtre = {};
   }
+
+  onDestroy(() => {
+    unsubscribe();
+  });
 </script>
 
 <div id="bandeau-filtre">
