@@ -1,7 +1,7 @@
-<!-- routify:options query-params-is-page -->
+<!-- routify:options title="Planning AMSB - Consignation" -->
 <script lang="ts">
   import { onMount, onDestroy, getContext, setContext } from "svelte";
-  import { params, goto } from "@roxi/routify";
+  import { params } from "@roxi/routify";
 
   import { BandeauInfo, CoteCesson, Chargement } from "@app/components";
   import { LigneEscale } from "./components";
@@ -11,7 +11,7 @@
 
   let source: EventSource;
 
-  const { currentUser, consignationEscales } = getContext<Stores>("stores");
+  const { consignationEscales } = getContext<Stores>("stores");
 
   let escales: typeof $consignationEscales;
 
@@ -44,24 +44,21 @@
   });
 </script>
 
-<!-- routify:options title="Planning AMSB - Consignation" -->
+<!-- routify:options query-params-is-page -->
+<!-- routify:options guard="consignation" -->
 
-{#if $currentUser.canAccess("consignation")}
-  <CoteCesson />
-  <BandeauInfo module="consignation" pc />
+<CoteCesson />
+<BandeauInfo module="consignation" pc />
 
-  <main>
-    {#if escales}
-      {#each [...escales.values()] as escale (escale.id)}
-        <LigneEscale {escale} />
-      {/each}
-    {:else}
-      <Chargement />
-    {/if}
-  </main>
-{:else}
-  {$goto("/")}
-{/if}
+<main>
+  {#if escales}
+    {#each [...escales.values()] as escale (escale.id)}
+      <LigneEscale {escale} />
+    {/each}
+  {:else}
+    <Chargement />
+  {/if}
+</main>
 
 <style>
   main {

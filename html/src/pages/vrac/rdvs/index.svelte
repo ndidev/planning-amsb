@@ -2,12 +2,11 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
   import { derived } from "svelte/store";
-  import { goto } from "@roxi/routify";
 
   import { LigneDate, LigneRdv, Placeholder } from "./components";
   import { BandeauInfo } from "@app/components";
 
-  import { currentUser, vracRdvs, vracProduits, marees } from "@app/stores";
+  import { vracRdvs, vracProduits, marees } from "@app/stores";
 
   import { fetcher, demarrerConnexionSSE } from "@app/utils";
 
@@ -172,31 +171,29 @@
   });
 </script>
 
-{#if $currentUser.canAccess("vrac")}
-  <BandeauInfo module="vrac" pc />
+<!-- routify:options guard="vrac" -->
 
-  <main>
-    {#if $vracRdvs && $vracProduits}
-      {#each [...rdvsGroupes] as [date, rdvs] (date)}
-        <LigneDate
-          {date}
-          maree={$datesMareesSup4m.has(date)}
-          navires={naviresParDate.get(date) || []}
-        />
-        <div>
-          {#each rdvs as rdv (rdv.id)}
-            <LigneRdv {rdv} />
-          {/each}
-        </div>
-      {/each}
-    {:else}
-      <!-- Chargement des données -->
-      <Placeholder />
-    {/if}
-  </main>
-{:else}
-  {$goto("/login")}
-{/if}
+<BandeauInfo module="vrac" pc />
+
+<main>
+  {#if $vracRdvs && $vracProduits}
+    {#each [...rdvsGroupes] as [date, rdvs] (date)}
+      <LigneDate
+        {date}
+        maree={$datesMareesSup4m.has(date)}
+        navires={naviresParDate.get(date) || []}
+      />
+      <div>
+        {#each rdvs as rdv (rdv.id)}
+          <LigneRdv {rdv} />
+        {/each}
+      </div>
+    {/each}
+  {:else}
+    <!-- Chargement des données -->
+    <Placeholder />
+  {/if}
+</main>
 
 <style>
   main {

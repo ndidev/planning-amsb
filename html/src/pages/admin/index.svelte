@@ -1,7 +1,6 @@
 <!-- routify:options title="Planning AMSB - Administration" -->
 <script lang="ts">
   import { onMount, onDestroy, getContext } from "svelte";
-  import { goto } from "@roxi/routify";
 
   import { LigneCompteUtilisateur } from "./components";
   import { Chargement } from "@app/components";
@@ -10,7 +9,7 @@
 
   import type { Stores } from "@app/types";
 
-  const { currentUser, adminUsers } = getContext<Stores>("stores");
+  const { adminUsers } = getContext<Stores>("stores");
 
   let source: EventSource;
 
@@ -23,27 +22,25 @@
   });
 </script>
 
-{#if $currentUser.isAdmin}
-  <main class="formulaire">
-    <h1>Administration</h1>
+<!-- routify:options guard="admin" -->
 
-    <div class="ajouter-compte">
-      <button on:click={() => adminUsers.new()}>Ajouter un compte</button>
-    </div>
+<main class="formulaire">
+  <h1>Administration</h1>
 
-    {#if $adminUsers.size === 0}
-      <Chargement />
-    {:else}
-      <ul>
-        {#each [...$adminUsers.values()] as compte (compte.uid)}
-          <LigneCompteUtilisateur {compte} />
-        {/each}
-      </ul>
-    {/if}
-  </main>
-{:else}
-  {$goto("/")}
-{/if}
+  <div class="ajouter-compte">
+    <button on:click={() => adminUsers.new()}>Ajouter un compte</button>
+  </div>
+
+  {#if $adminUsers.size === 0}
+    <Chargement />
+  {:else}
+    <ul>
+      {#each [...$adminUsers.values()] as compte (compte.uid)}
+        <LigneCompteUtilisateur {compte} />
+      {/each}
+    </ul>
+  {/if}
+</main>
 
 <style>
   ul {

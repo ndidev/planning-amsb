@@ -1,4 +1,4 @@
-<!-- routify:options param-is-page -->
+<!-- routify:options title="Planning AMSB - RDV vrac" -->
 <script lang="ts">
   import { tick, getContext } from "svelte";
   import { params, goto, redirect } from "@roxi/routify";
@@ -15,7 +15,7 @@
 
   import type { Stores, RdvVrac, ProduitVrac } from "@app/types";
 
-  const { currentUser, vracRdvs, vracProduits } = getContext<Stores>("stores");
+  const { vracRdvs, vracProduits } = getContext<Stores>("stores");
 
   let formulaire: HTMLFormElement;
   let boutonAjouter: BoutonAction;
@@ -151,212 +151,209 @@
   }
 </script>
 
-<!-- routify:options title="Planning AMSB - RDV vrac" -->
+<!-- routify:options param-is-page -->
+<!-- routify:options guard="vrac/edit" -->
 
-{#if $currentUser.canEdit("vrac")}
-  <main class="formulaire">
-    <h1>Rendez-vous</h1>
+<main class="formulaire">
+  <h1>Rendez-vous</h1>
 
-    {#if !rdv}
-      <Chargement />
-    {:else}
-      <form
-        class="pure-form pure-form-aligned"
-        bind:this={formulaire}
-        use:preventFormSubmitOnEnterKeydown
-      >
-        <!-- Produit -->
-        <div class="pure-control-group form-control">
-          <label for="produit">Produit</label>
-          <select
-            id="produit"
-            name="produit"
-            data-nom="Produit"
-            bind:value={rdv.produit}
-            on:change={selectionnerPremiereQualite}
-            required
-          >
-            <option value="">Sélectionnez</option>
-            {#if $vracProduits}
-              {#each [...$vracProduits.values()] as _produit}
-                <option value={_produit.id}>{_produit.nom}</option>
-              {/each}
-            {/if}
-          </select>
-        </div>
-
-        <!-- Qualité -->
-        <div class="pure-control-group form-control">
-          <label for="qualite">Qualité</label>
-          <select
-            id="qualite"
-            name="qualite"
-            data-nom="Qualité"
-            bind:value={rdv.qualite}
-            disabled={produit.qualites.length === 0}
-          >
-            {#each produit.qualites as qualite}
-              <option value={qualite.id}>{qualite.nom}</option>
+  {#if !rdv}
+    <Chargement />
+  {:else}
+    <form
+      class="pure-form pure-form-aligned"
+      bind:this={formulaire}
+      use:preventFormSubmitOnEnterKeydown
+    >
+      <!-- Produit -->
+      <div class="pure-control-group form-control">
+        <label for="produit">Produit</label>
+        <select
+          id="produit"
+          name="produit"
+          data-nom="Produit"
+          bind:value={rdv.produit}
+          on:change={selectionnerPremiereQualite}
+          required
+        >
+          <option value="">Sélectionnez</option>
+          {#if $vracProduits}
+            {#each [...$vracProduits.values()] as _produit}
+              <option value={_produit.id}>{_produit.nom}</option>
             {/each}
-          </select>
-        </div>
+          {/if}
+        </select>
+      </div>
 
-        <!-- Date -->
-        <div class="pure-control-group form-control">
-          <label for="date_rdv">Date (jj/mm/aaaa)</label>
-          <input
-            type="date"
-            name="date_rdv"
-            id="date_rdv"
-            data-nom="Date"
-            bind:value={rdv.date_rdv}
-            required
-          />
-        </div>
+      <!-- Qualité -->
+      <div class="pure-control-group form-control">
+        <label for="qualite">Qualité</label>
+        <select
+          id="qualite"
+          name="qualite"
+          data-nom="Qualité"
+          bind:value={rdv.qualite}
+          disabled={produit.qualites.length === 0}
+        >
+          {#each produit.qualites as qualite}
+            <option value={qualite.id}>{qualite.nom}</option>
+          {/each}
+        </select>
+      </div>
 
-        <!-- Heure -->
-        <div class="pure-control-group form-control">
-          <label for="heure">Heure RDV (hh:mm)</label>
-          <input
-            type="time"
-            name="heure"
-            id="heure"
-            step="60"
-            data-nom="Heure"
-            bind:value={rdv.heure}
-          />
-        </div>
-
-        <!-- Quantité + unité -->
-        <div class="pure-control-group form-control">
-          <label for="quantite">
-            Quantité
-            {#if produit.unite}
-              (<span id="unite">{produit.unite}</span>)
-            {/if}
-          </label>
-          <input
-            type="number"
-            min="0"
-            name="quantite"
-            id="quantite"
-            data-nom="Quantité"
-            bind:value={rdv.quantite}
-            required
-          />
-          <span class="pure-form-message-inline">
-            <label class="pure-checkbox"
-              ><input
-                type="checkbox"
-                name="max"
-                id="max"
-                bind:checked={rdv.max}
-              /> Max</label
-            >
-          </span>
-        </div>
-
-        <!-- Fournisseur -->
-        <div class="pure-control-group">
-          <label for="fournisseur">Fournisseur</label>
-          <Svelecte
-            inputId="fournisseur"
-            type="tiers"
-            role="vrac_fournisseur"
-            name="Fournisseur"
-            bind:value={rdv.fournisseur}
-            required
-          />
-        </div>
-
-        <!-- Client -->
-        <div class="pure-control-group">
-          <label for="client">Client</label>
-          <Svelecte
-            inputId="client"
-            type="tiers"
-            role="vrac_client"
-            name="Fournisseur"
-            bind:value={rdv.client}
-            required
-          />
-        </div>
-
-        <!-- Transporteur -->
-        <div class="pure-control-group">
-          <label for="transporteur">Transporteur</label>
-          <Svelecte
-            inputId="transporteur"
-            type="tiers"
-            role="vrac_transporteur"
-            name="Fournisseur"
-            bind:value={rdv.transporteur}
-          />
-        </div>
-
-        <!-- Numéro commande -->
-        <div class="pure-control-group form-control">
-          <label for="num_commande">Numéro commande</label>
-          <input
-            type="text"
-            name="num_commande"
-            id="num_commande"
-            bind:value={rdv.num_commande}
-            data-nom="Numéro commande"
-          />
-        </div>
-
-        <!-- Commentaire -->
-        <div class="pure-control-group form-control">
-          <label for="commentaire">Commentaire</label>
-          <textarea
-            class="rdv_commentaire"
-            name="commentaire"
-            id="commentaire"
-            bind:value={rdv.commentaire}
-            rows="3"
-            cols="30"
-          />
-        </div>
-      </form>
-
-      <!-- Validation/Annulation/Suppression -->
-      <div class="boutons">
-        {#if isNew}
-          <!-- Bouton "Ajouter" -->
-          <BoutonAction
-            preset="ajouter"
-            on:click={ajouterRdv}
-            bind:this={boutonAjouter}
-          />
-        {:else}
-          <!-- Bouton "Modifier" -->
-          <BoutonAction
-            preset="modifier"
-            on:click={modifierRdv}
-            bind:this={boutonModifier}
-          />
-          <!-- Bouton "Supprimer" -->
-          <BoutonAction
-            preset="supprimer"
-            on:click={supprimerRdv}
-            bind:this={boutonSupprimer}
-          />
-        {/if}
-
-        <!-- Bouton "Annuler" -->
-        <BoutonAction
-          preset="annuler"
-          on:click={() => {
-            $goto("./");
-          }}
+      <!-- Date -->
+      <div class="pure-control-group form-control">
+        <label for="date_rdv">Date (jj/mm/aaaa)</label>
+        <input
+          type="date"
+          name="date_rdv"
+          id="date_rdv"
+          data-nom="Date"
+          bind:value={rdv.date_rdv}
+          required
         />
       </div>
-    {/if}
-  </main>
-{:else}
-  {$goto("/")}
-{/if}
+
+      <!-- Heure -->
+      <div class="pure-control-group form-control">
+        <label for="heure">Heure RDV (hh:mm)</label>
+        <input
+          type="time"
+          name="heure"
+          id="heure"
+          step="60"
+          data-nom="Heure"
+          bind:value={rdv.heure}
+        />
+      </div>
+
+      <!-- Quantité + unité -->
+      <div class="pure-control-group form-control">
+        <label for="quantite">
+          Quantité
+          {#if produit.unite}
+            (<span id="unite">{produit.unite}</span>)
+          {/if}
+        </label>
+        <input
+          type="number"
+          min="0"
+          name="quantite"
+          id="quantite"
+          data-nom="Quantité"
+          bind:value={rdv.quantite}
+          required
+        />
+        <span class="pure-form-message-inline">
+          <label class="pure-checkbox"
+            ><input
+              type="checkbox"
+              name="max"
+              id="max"
+              bind:checked={rdv.max}
+            /> Max</label
+          >
+        </span>
+      </div>
+
+      <!-- Fournisseur -->
+      <div class="pure-control-group">
+        <label for="fournisseur">Fournisseur</label>
+        <Svelecte
+          inputId="fournisseur"
+          type="tiers"
+          role="vrac_fournisseur"
+          name="Fournisseur"
+          bind:value={rdv.fournisseur}
+          required
+        />
+      </div>
+
+      <!-- Client -->
+      <div class="pure-control-group">
+        <label for="client">Client</label>
+        <Svelecte
+          inputId="client"
+          type="tiers"
+          role="vrac_client"
+          name="Fournisseur"
+          bind:value={rdv.client}
+          required
+        />
+      </div>
+
+      <!-- Transporteur -->
+      <div class="pure-control-group">
+        <label for="transporteur">Transporteur</label>
+        <Svelecte
+          inputId="transporteur"
+          type="tiers"
+          role="vrac_transporteur"
+          name="Fournisseur"
+          bind:value={rdv.transporteur}
+        />
+      </div>
+
+      <!-- Numéro commande -->
+      <div class="pure-control-group form-control">
+        <label for="num_commande">Numéro commande</label>
+        <input
+          type="text"
+          name="num_commande"
+          id="num_commande"
+          bind:value={rdv.num_commande}
+          data-nom="Numéro commande"
+        />
+      </div>
+
+      <!-- Commentaire -->
+      <div class="pure-control-group form-control">
+        <label for="commentaire">Commentaire</label>
+        <textarea
+          class="rdv_commentaire"
+          name="commentaire"
+          id="commentaire"
+          bind:value={rdv.commentaire}
+          rows="3"
+          cols="30"
+        />
+      </div>
+    </form>
+
+    <!-- Validation/Annulation/Suppression -->
+    <div class="boutons">
+      {#if isNew}
+        <!-- Bouton "Ajouter" -->
+        <BoutonAction
+          preset="ajouter"
+          on:click={ajouterRdv}
+          bind:this={boutonAjouter}
+        />
+      {:else}
+        <!-- Bouton "Modifier" -->
+        <BoutonAction
+          preset="modifier"
+          on:click={modifierRdv}
+          bind:this={boutonModifier}
+        />
+        <!-- Bouton "Supprimer" -->
+        <BoutonAction
+          preset="supprimer"
+          on:click={supprimerRdv}
+          bind:this={boutonSupprimer}
+        />
+      {/if}
+
+      <!-- Bouton "Annuler" -->
+      <BoutonAction
+        preset="annuler"
+        on:click={() => {
+          $goto("./");
+        }}
+      />
+    </div>
+  {/if}
+</main>
 
 <style>
 </style>

@@ -41,9 +41,9 @@ export class User {
 
     // En cas de manque d'un module dans les caractéristiques de l'utilisateur
     // le mettre à zéro par défaut
-    for (const module of sitemap.keys()) {
-      if (this.#roles[module] === undefined) {
-        this.#roles[module] = UserRoles.NONE;
+    for (const rubrique of sitemap.keys()) {
+      if (this.#roles[rubrique] === undefined) {
+        this.#roles[rubrique] = UserRoles.NONE;
       }
     }
   }
@@ -61,7 +61,7 @@ export class User {
    * @param rubrique Rubrique à laquelle accéder
    */
   canAccess(rubrique: ModuleId) {
-    return (this.#roles[rubrique] || -1) >= UserRoles.ACCESS;
+    return (this.#roles[rubrique] ?? -1) >= UserRoles.ACCESS;
   }
 
   /**
@@ -70,7 +70,7 @@ export class User {
    * @param rubrique Rubrique à modifier
    */
   canEdit(rubrique: ModuleId) {
-    return (this.#roles[rubrique] || -1) >= UserRoles.EDIT;
+    return (this.#roles[rubrique] ?? -1) >= UserRoles.EDIT;
   }
 
   /**
@@ -80,14 +80,14 @@ export class User {
    * @returns Niveau d'accès de la rubrique ou -1 si la rubrique n'existe pas
    */
   getRole(rubrique: ModuleId): -1 | 0 | 1 | 2 {
-    return this.#roles[rubrique] || -1;
+    return this.#roles[rubrique] ?? -1;
   }
 
   /**
    * Vérifie si l'utilisateur est administrateur.
    */
   get isAdmin() {
-    return (this.#roles.admin || -1) >= UserRoles.ACCESS;
+    return (this.#roles.admin ?? -1) >= UserRoles.ACCESS;
   }
 
   /**

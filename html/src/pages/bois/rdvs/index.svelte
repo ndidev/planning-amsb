@@ -2,7 +2,6 @@
 <script lang="ts">
   import { onMount, onDestroy, setContext, getContext } from "svelte";
   import { writable } from "svelte/store";
-  import { goto } from "@roxi/routify";
 
   import Notiflix from "notiflix";
 
@@ -21,7 +20,7 @@
 
   let source: EventSource;
 
-  const { boisRdvs, tiers, currentUser } = getContext<Stores>("stores");
+  const { boisRdvs, tiers } = getContext<Stores>("stores");
 
   type DateString = string;
   type GroupesRdv = Map<DateString, RdvBois[]>;
@@ -198,48 +197,46 @@
   });
 </script>
 
-{#if $currentUser.canAccess("bois")}
-  <BandeauInfo module="bois" pc />
+<!-- routify:options guard="bois" -->
 
-  <div class="filtre">
-    <BandeauFiltre />
-  </div>
+<BandeauInfo module="bois" pc />
 
-  <!-- Filtre SQL pour registre affrètement -->
-  <div id="bouton-registre">
-    <MaterialButton
-      icon="assignment"
-      title="Extraire registre d'affrètement"
-      on:click={extraireRegistreAffretement}
-    />
-  </div>
+<div class="filtre">
+  <BandeauFiltre />
+</div>
 
-  <main>
-    {#if rdvsBois}
-      <!-- RDVs plannifiés -->
-      {#each [...rdvsGroupes] as [date, rdvs] (date)}
-        {#if date !== "attente" && date !== null}
-          <LigneDate {date} camions={camions.get(date)} />
-          <div>
-            {#each rdvs as rdv (rdv.id)}
-              <LigneRdv {rdv} />
-            {/each}
-          </div>
-        {/if}
-      {/each}
-      <!-- RDVs en attente -->
-      <LigneDateAttente camions={camions.get("attente")} />
-      {#each [...rdvsGroupes.get("attente")] as rdv (rdv.id)}
-        <LigneRdvAttente {rdv} />
-      {/each}
-    {:else}
-      <!-- Chargement des données -->
-      <Placeholder />
-    {/if}
-  </main>
-{:else}
-  {$goto("/login")}
-{/if}
+<!-- Filtre SQL pour registre affrètement -->
+<div id="bouton-registre">
+  <MaterialButton
+    icon="assignment"
+    title="Extraire registre d'affrètement"
+    on:click={extraireRegistreAffretement}
+  />
+</div>
+
+<main>
+  {#if rdvsBois}
+    <!-- RDVs plannifiés -->
+    {#each [...rdvsGroupes] as [date, rdvs] (date)}
+      {#if date !== "attente" && date !== null}
+        <LigneDate {date} camions={camions.get(date)} />
+        <div>
+          {#each rdvs as rdv (rdv.id)}
+            <LigneRdv {rdv} />
+          {/each}
+        </div>
+      {/if}
+    {/each}
+    <!-- RDVs en attente -->
+    <LigneDateAttente camions={camions.get("attente")} />
+    {#each [...rdvsGroupes.get("attente")] as rdv (rdv.id)}
+      <LigneRdvAttente {rdv} />
+    {/each}
+  {:else}
+    <!-- Chargement des données -->
+    <Placeholder />
+  {/if}
+</main>
 
 <style>
   * {

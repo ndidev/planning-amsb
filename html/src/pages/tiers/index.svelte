@@ -17,13 +17,12 @@
 
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { goto } from "@roxi/routify";
 
   import Notiflix from "notiflix";
 
   import { MaterialButton, Svelecte, BoutonAction } from "@app/components";
 
-  import { currentUser, tiers } from "@app/stores";
+  import { tiers } from "@app/stores";
 
   import AUCUN_LOGO from "/src/images/nologo.min.svg";
   import ERREUR_LOGO from "/src/images/erreurlogo.min.svg";
@@ -290,365 +289,363 @@
   });
 </script>
 
-{#if $currentUser.canAccess("tiers")}
-  <main class="formulaire">
-    <h1>Tiers</h1>
+<!-- routify:options guard="tiers" -->
 
-    <!-- Liste déroulante -->
-    <div class="liste-deroulante">
-      <Svelecte
-        options={listeDeroulanteTiers}
-        bind:value={selectedId}
-        valueField="id"
-        searchField="texteRecherche"
-        labelField="texte"
-        placeholder="Nouveau..."
-        renderer="select"
+<main class="formulaire">
+  <h1>Tiers</h1>
+
+  <!-- Liste déroulante -->
+  <div class="liste-deroulante">
+    <Svelecte
+      options={listeDeroulanteTiers}
+      bind:value={selectedId}
+      valueField="id"
+      searchField="texteRecherche"
+      labelField="texte"
+      placeholder="Nouveau..."
+      renderer="select"
+    />
+  </div>
+
+  <form
+    class="pure-form pure-form-aligned"
+    bind:this={form}
+    use:preventFormSubmitOnEnterKeydown
+  >
+    <!-- Nom complet -->
+    <div class="pure-control-group">
+      <label for="nom_complet">Nom complet</label>
+      <input
+        type="text"
+        id="nom_complet"
+        name="nom_complet"
+        data-nom="Nom complet"
+        placeholder="Nom complet"
+        maxlength="255"
+        bind:value={selectedTiers.nom_complet}
+        required
       />
     </div>
 
-    <form
-      class="pure-form pure-form-aligned"
-      bind:this={form}
-      use:preventFormSubmitOnEnterKeydown
-    >
-      <!-- Nom complet -->
-      <div class="pure-control-group">
-        <label for="nom_complet">Nom complet</label>
-        <input
-          type="text"
-          id="nom_complet"
-          name="nom_complet"
-          data-nom="Nom complet"
-          placeholder="Nom complet"
-          maxlength="255"
-          bind:value={selectedTiers.nom_complet}
-          required
-        />
-      </div>
+    <!-- Nom abbrégé -->
+    <div class="pure-control-group">
+      <label for="nom_court">Nom abbrégé</label>
+      <input
+        type="text"
+        id="nom_court"
+        name="nom_court"
+        placeholder="Nom abbrégé"
+        maxlength="255"
+        bind:value={selectedTiers.nom_court}
+      />
+    </div>
 
-      <!-- Nom abbrégé -->
-      <div class="pure-control-group">
-        <label for="nom_court">Nom abbrégé</label>
-        <input
-          type="text"
-          id="nom_court"
-          name="nom_court"
-          placeholder="Nom abbrégé"
-          maxlength="255"
-          bind:value={selectedTiers.nom_court}
-        />
-      </div>
+    <!-- Adresse ligne 1 -->
+    <div class="pure-control-group">
+      <label for="adresse_ligne_1">Adresse (ligne 1)</label>
+      <input
+        type="text"
+        id="adresse_ligne_1"
+        name="adresse_ligne_1"
+        placeholder="Adresse (ligne 1)"
+        maxlength="255"
+        bind:value={selectedTiers.adresse_ligne_1}
+      />
+    </div>
 
-      <!-- Adresse ligne 1 -->
-      <div class="pure-control-group">
-        <label for="adresse_ligne_1">Adresse (ligne 1)</label>
-        <input
-          type="text"
-          id="adresse_ligne_1"
-          name="adresse_ligne_1"
-          placeholder="Adresse (ligne 1)"
-          maxlength="255"
-          bind:value={selectedTiers.adresse_ligne_1}
-        />
-      </div>
+    <!-- Adresse ligne 2 -->
+    <div class="pure-control-group">
+      <label for="adresse_ligne_2">Adresse (ligne 2)</label>
+      <input
+        type="text"
+        id="adresse_ligne_2"
+        name="adresse_ligne_2"
+        placeholder="Adresse (ligne 2)"
+        maxlength="255"
+        bind:value={selectedTiers.adresse_ligne_2}
+      />
+    </div>
 
-      <!-- Adresse ligne 2 -->
-      <div class="pure-control-group">
-        <label for="adresse_ligne_2">Adresse (ligne 2)</label>
-        <input
-          type="text"
-          id="adresse_ligne_2"
-          name="adresse_ligne_2"
-          placeholder="Adresse (ligne 2)"
-          maxlength="255"
-          bind:value={selectedTiers.adresse_ligne_2}
-        />
-      </div>
+    <!-- Code postal -->
+    <div class="pure-control-group">
+      <label for="cp">Code Postal</label>
+      <input
+        type="text"
+        id="cp"
+        name="cp"
+        placeholder="Code postal"
+        maxlength="20"
+        data-nom="Code postal"
+        bind:value={selectedTiers.cp}
+      />
+    </div>
 
-      <!-- Code postal -->
-      <div class="pure-control-group">
-        <label for="cp">Code Postal</label>
-        <input
-          type="text"
-          id="cp"
-          name="cp"
-          placeholder="Code postal"
-          maxlength="20"
-          data-nom="Code postal"
-          bind:value={selectedTiers.cp}
-        />
-      </div>
+    <!-- Ville -->
+    <div class="pure-control-group">
+      <label for="ville">Ville</label>
+      <input
+        type="text"
+        id="ville"
+        name="ville"
+        placeholder="Ville"
+        maxlength="255"
+        data-nom="Ville"
+        bind:value={selectedTiers.ville}
+        required
+      />
+    </div>
 
-      <!-- Ville -->
-      <div class="pure-control-group">
-        <label for="ville">Ville</label>
-        <input
-          type="text"
-          id="ville"
-          name="ville"
-          placeholder="Ville"
-          maxlength="255"
-          data-nom="Ville"
-          bind:value={selectedTiers.ville}
-          required
-        />
-      </div>
+    <!-- Pays -->
+    <div class="pure-control-group">
+      <label for="pays">Pays</label>
+      <Svelecte
+        type="pays"
+        bind:value={selectedTiers.pays}
+        inputId="pays"
+        name="Pays"
+        required
+      />
+    </div>
 
-      <!-- Pays -->
-      <div class="pure-control-group">
-        <label for="pays">Pays</label>
-        <Svelecte
-          type="pays"
-          bind:value={selectedTiers.pays}
-          inputId="pays"
-          name="Pays"
-          required
-        />
-      </div>
+    <!-- Téléphone -->
+    <div class="pure-control-group">
+      <label for="telephone">Téléphone</label>
+      <input
+        type="text"
+        id="telephone"
+        name="telephone"
+        placeholder="Téléphone"
+        maxlength="255"
+        data-nom="Téléphone"
+        bind:value={selectedTiers.telephone}
+      />
+    </div>
 
-      <!-- Téléphone -->
-      <div class="pure-control-group">
-        <label for="telephone">Téléphone</label>
-        <input
-          type="text"
-          id="telephone"
-          name="telephone"
-          placeholder="Téléphone"
-          maxlength="255"
-          data-nom="Téléphone"
-          bind:value={selectedTiers.telephone}
-        />
-      </div>
+    <!-- Commentaire -->
+    <div class="pure-control-group">
+      <label for="commentaire">Commentaire</label>
+      <textarea
+        id="commentaire"
+        name="commentaire"
+        bind:value={selectedTiers.commentaire}
+        rows="5"
+        cols="30"
+        placeholder="Horaires, indications diverses..."
+        maxlength="65535"
+      />
+    </div>
 
-      <!-- Commentaire -->
-      <div class="pure-control-group">
-        <label for="commentaire">Commentaire</label>
-        <textarea
-          id="commentaire"
-          name="commentaire"
-          bind:value={selectedTiers.commentaire}
-          rows="5"
-          cols="30"
-          placeholder="Horaires, indications diverses..."
-          maxlength="65535"
+    <!-- Logo -->
+    <div class="pure-control-group">
+      <label for="logo">Logo</label>
+      <input
+        type="file"
+        accept="image/jpeg, image/png, image/webp, image/gif, image/bmp"
+        id="logo"
+        bind:this={inputLogo}
+        on:change={afficherPreviewLogo}
+      />
+      {#if selectedTiers.logo && typeof selectedTiers.logo === "object"}
+        <MaterialButton
+          icon="cancel"
+          title="Annuler le choix de fichier"
+          on:click={retablirLogoExistant}
+          color="hsla(0, 100%, 50%, 0.5)"
+          hoverColor="hsla(0, 100%, 50%, 1)"
         />
-      </div>
-
-      <!-- Logo -->
-      <div class="pure-control-group">
-        <label for="logo">Logo</label>
-        <input
-          type="file"
-          accept="image/jpeg, image/png, image/webp, image/gif, image/bmp"
-          id="logo"
-          bind:this={inputLogo}
-          on:change={afficherPreviewLogo}
-        />
-        {#if selectedTiers.logo && typeof selectedTiers.logo === "object"}
+      {/if}
+    </div>
+    <div class="pure-control-group">
+      <label>
+        {#if typeof selectedTiers.logo === "string"}
           <MaterialButton
-            icon="cancel"
-            title="Annuler le choix de fichier"
-            on:click={retablirLogoExistant}
-            color="hsla(0, 100%, 50%, 0.5)"
-            hoverColor="hsla(0, 100%, 50%, 1)"
+            preset="supprimer"
+            title="Supprimer le logo existant"
+            on:click={supprimerLogoExistant}
           />
         {/if}
-      </div>
-      <div class="pure-control-group">
-        <label>
-          {#if typeof selectedTiers.logo === "string"}
-            <MaterialButton
-              preset="supprimer"
-              title="Supprimer le logo existant"
-              on:click={supprimerLogoExistant}
-            />
-          {/if}
-          {#if selectedTiers.logo === null && $tiers?.get(selectedTiers.id)?.logo}
-            <MaterialButton
-              icon="undo"
-              title="Rétablir le logo existant"
-              on:click={retablirLogoExistant}
-            />
-          {/if}
-        </label>
-        <img
-          id="thumbnail"
-          bind:this={thumbnail}
-          src={(typeof selectedTiers.logo === "string"
-            ? selectedTiers.logo
-            : selectedTiers.logo?.data) || AUCUN_LOGO}
-          alt="Logo"
-          width="auto"
-          height="100"
-        />
-      </div>
-
-      <!-- Rôles -->
-      <div class="pure-controls">
-        <fieldset>
-          <div class="roles">
-            <div class="grid__container">
-              <legend>Bois</legend>
-              <!-- Bois -->
-              <label class="pure-checkbox">
-                <input
-                  type="checkbox"
-                  name="bois_fournisseur"
-                  bind:checked={selectedTiers.bois_fournisseur}
-                />
-                Fournisseur
-              </label>
-              <label class="pure-checkbox">
-                <input
-                  type="checkbox"
-                  name="bois_client"
-                  bind:checked={selectedTiers.bois_client}
-                />
-                Client
-              </label>
-              <label class="pure-checkbox">
-                <input
-                  type="checkbox"
-                  name="bois_transporteur"
-                  bind:checked={selectedTiers.bois_transporteur}
-                />
-                Transporteur
-              </label>
-              <label class="pure-checkbox">
-                <input
-                  type="checkbox"
-                  name="bois_affreteur"
-                  bind:checked={selectedTiers.bois_affreteur}
-                />
-                Affréteur
-              </label>
-            </div>
-            <div class="grid__container">
-              <legend>Vrac</legend>
-              <!-- Vrac -->
-              <label class="pure-checkbox">
-                <input
-                  type="checkbox"
-                  name="vrac_fournisseur"
-                  bind:checked={selectedTiers.vrac_fournisseur}
-                />
-                Fournisseur
-              </label>
-              <label class="pure-checkbox">
-                <input
-                  type="checkbox"
-                  name="vrac_client"
-                  bind:checked={selectedTiers.vrac_client}
-                />
-                Client
-              </label>
-              <label class="pure-checkbox">
-                <input
-                  type="checkbox"
-                  name="vrac_transporteur"
-                  bind:checked={selectedTiers.vrac_transporteur}
-                />
-                Transporteur
-              </label>
-            </div>
-            <div class="grid__container">
-              <legend>Maritime</legend>
-              <!-- Maritime -->
-              <label class="pure-checkbox">
-                <input
-                  type="checkbox"
-                  name="maritime_armateur"
-                  bind:checked={selectedTiers.maritime_armateur}
-                />
-                Armateur
-              </label>
-              <label class="pure-checkbox">
-                <input
-                  type="checkbox"
-                  name="maritime_courtier"
-                  bind:checked={selectedTiers.maritime_courtier}
-                />
-                Courtier
-              </label>
-              <label class="pure-checkbox">
-                <input
-                  type="checkbox"
-                  name="maritime_affreteur"
-                  bind:checked={selectedTiers.maritime_affreteur}
-                />
-                Affréteur
-              </label>
-            </div>
-          </div>
-        </fieldset>
-      </div>
-
-      <!-- Actif -->
-      <div class="pure-control-group">
-        <label for="actif">Actif</label>
-        <input
-          type="checkbox"
-          name="actif"
-          id="actif"
-          bind:checked={selectedTiers.actif}
-        />
-      </div>
-    </form>
-
-    <!-- Validation/Annulation/Suppression -->
-
-    <div class="boutons">
-      <!-- Bouton "Ajouter" -->
-      {#if !selectedTiers.id}
-        <BoutonAction
-          preset="ajouter"
-          bind:this={boutonAjouter}
-          on:click={ajouterTiers}
-        />
-      {/if}
-
-      <!-- Bouton "Modifier" -->
-      {#if selectedTiers.id}
-        <BoutonAction
-          preset="modifier"
-          bind:this={boutonModifier}
-          on:click={modifierTiers}
-        />
-      {/if}
-
-      <!-- Bouton "Supprimer" -->
-      {#if selectedTiers.id}
-        <div class="tooltip">
-          <BoutonAction
-            preset="supprimer"
-            bind:this={boutonSupprimer}
-            on:click={supprimerTiers}
-            disabled={selectedTiers.nombre_rdv > 0 ||
-              selectedTiers.nombre_rdv === undefined}
+        {#if selectedTiers.logo === null && $tiers?.get(selectedTiers.id)?.logo}
+          <MaterialButton
+            icon="undo"
+            title="Rétablir le logo existant"
+            on:click={retablirLogoExistant}
           />
-          <!-- Affichage info-bulle si impossibilité de supprimer -->
-          {#if selectedTiers.nombre_rdv > 0}
-            <div class="tooltip-supprimer">
-              Le tiers est concerné par {selectedTiers.nombre_rdv} rdv.<br
-              />Impossible de le supprimer.
-            </div>
-          {/if}
-          {#if selectedTiers.nombre_rdv === undefined}
-            <div class="tooltip-supprimer">
-              Récupération du nombre de RDV en cours...
-            </div>
-          {/if}
-        </div>
-      {/if}
-
-      <!-- Bouton "Annuler" -->
-      <BoutonAction preset="annuler" on:click={annulerModification} />
+        {/if}
+      </label>
+      <img
+        id="thumbnail"
+        bind:this={thumbnail}
+        src={(typeof selectedTiers.logo === "string"
+          ? selectedTiers.logo
+          : selectedTiers.logo?.data) || AUCUN_LOGO}
+        alt="Logo"
+        width="auto"
+        height="100"
+      />
     </div>
-  </main>
-{:else}
-  {$goto("/")}
-{/if}
+
+    <!-- Rôles -->
+    <div class="pure-controls">
+      <fieldset>
+        <div class="roles">
+          <div class="grid__container">
+            <legend>Bois</legend>
+            <!-- Bois -->
+            <label class="pure-checkbox">
+              <input
+                type="checkbox"
+                name="bois_fournisseur"
+                bind:checked={selectedTiers.bois_fournisseur}
+              />
+              Fournisseur
+            </label>
+            <label class="pure-checkbox">
+              <input
+                type="checkbox"
+                name="bois_client"
+                bind:checked={selectedTiers.bois_client}
+              />
+              Client
+            </label>
+            <label class="pure-checkbox">
+              <input
+                type="checkbox"
+                name="bois_transporteur"
+                bind:checked={selectedTiers.bois_transporteur}
+              />
+              Transporteur
+            </label>
+            <label class="pure-checkbox">
+              <input
+                type="checkbox"
+                name="bois_affreteur"
+                bind:checked={selectedTiers.bois_affreteur}
+              />
+              Affréteur
+            </label>
+          </div>
+          <div class="grid__container">
+            <legend>Vrac</legend>
+            <!-- Vrac -->
+            <label class="pure-checkbox">
+              <input
+                type="checkbox"
+                name="vrac_fournisseur"
+                bind:checked={selectedTiers.vrac_fournisseur}
+              />
+              Fournisseur
+            </label>
+            <label class="pure-checkbox">
+              <input
+                type="checkbox"
+                name="vrac_client"
+                bind:checked={selectedTiers.vrac_client}
+              />
+              Client
+            </label>
+            <label class="pure-checkbox">
+              <input
+                type="checkbox"
+                name="vrac_transporteur"
+                bind:checked={selectedTiers.vrac_transporteur}
+              />
+              Transporteur
+            </label>
+          </div>
+          <div class="grid__container">
+            <legend>Maritime</legend>
+            <!-- Maritime -->
+            <label class="pure-checkbox">
+              <input
+                type="checkbox"
+                name="maritime_armateur"
+                bind:checked={selectedTiers.maritime_armateur}
+              />
+              Armateur
+            </label>
+            <label class="pure-checkbox">
+              <input
+                type="checkbox"
+                name="maritime_courtier"
+                bind:checked={selectedTiers.maritime_courtier}
+              />
+              Courtier
+            </label>
+            <label class="pure-checkbox">
+              <input
+                type="checkbox"
+                name="maritime_affreteur"
+                bind:checked={selectedTiers.maritime_affreteur}
+              />
+              Affréteur
+            </label>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+
+    <!-- Actif -->
+    <div class="pure-control-group">
+      <label for="actif">Actif</label>
+      <input
+        type="checkbox"
+        name="actif"
+        id="actif"
+        bind:checked={selectedTiers.actif}
+      />
+    </div>
+  </form>
+
+  <!-- Validation/Annulation/Suppression -->
+
+  <div class="boutons">
+    <!-- Bouton "Ajouter" -->
+    {#if !selectedTiers.id}
+      <BoutonAction
+        preset="ajouter"
+        bind:this={boutonAjouter}
+        on:click={ajouterTiers}
+      />
+    {/if}
+
+    <!-- Bouton "Modifier" -->
+    {#if selectedTiers.id}
+      <BoutonAction
+        preset="modifier"
+        bind:this={boutonModifier}
+        on:click={modifierTiers}
+      />
+    {/if}
+
+    <!-- Bouton "Supprimer" -->
+    {#if selectedTiers.id}
+      <div class="tooltip">
+        <BoutonAction
+          preset="supprimer"
+          bind:this={boutonSupprimer}
+          on:click={supprimerTiers}
+          disabled={selectedTiers.nombre_rdv > 0 ||
+            selectedTiers.nombre_rdv === undefined}
+        />
+        <!-- Affichage info-bulle si impossibilité de supprimer -->
+        {#if selectedTiers.nombre_rdv > 0}
+          <div class="tooltip-supprimer">
+            Le tiers est concerné par {selectedTiers.nombre_rdv} rdv.<br
+            />Impossible de le supprimer.
+          </div>
+        {/if}
+        {#if selectedTiers.nombre_rdv === undefined}
+          <div class="tooltip-supprimer">
+            Récupération du nombre de RDV en cours...
+          </div>
+        {/if}
+      </div>
+    {/if}
+
+    <!-- Bouton "Annuler" -->
+    <BoutonAction preset="annuler" on:click={annulerModification} />
+  </div>
+</main>
 
 <style>
   .liste-deroulante {

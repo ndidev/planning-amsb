@@ -1,8 +1,8 @@
-<!-- routify:options query-params-is-page -->
+<!-- routify:options title="Planning AMSB - Affrètement maritime" -->
 <script lang="ts">
   import { onMount, onDestroy, getContext, setContext } from "svelte";
   import { writable } from "svelte/store";
-  import { params, goto } from "@roxi/routify";
+  import { params } from "@roxi/routify";
 
   import { Chargement, BandeauInfo } from "@app/components";
   import { Filtre as BandeauFiltre, LigneCharter } from "./components";
@@ -12,7 +12,7 @@
 
   let source: EventSource;
 
-  const { currentUser, charteringCharters } = getContext<Stores>("stores");
+  const { charteringCharters } = getContext<Stores>("stores");
 
   // Stores Filtre et affrètements
   let filtre = new Filtre<FiltreCharter>(
@@ -56,27 +56,24 @@
   });
 </script>
 
-<!-- routify:options title="Planning AMSB - Affrètement maritime" -->
+<!-- routify:options query-params-is-page -->
+<!-- routify:options guard="chartering" -->
 
-{#if $currentUser.canAccess("chartering")}
-  <BandeauInfo module="chartering" pc />
+<BandeauInfo module="chartering" pc />
 
-  <div class="filtre">
-    <BandeauFiltre />
-  </div>
+<div class="filtre">
+  <BandeauFiltre />
+</div>
 
-  <main>
-    {#if charters}
-      {#each [...charters.values()] as charter (charter.id)}
-        <LigneCharter {charter} />
-      {/each}
-    {:else}
-      <Chargement />
-    {/if}
-  </main>
-{:else}
-  {$goto("/")}
-{/if}
+<main>
+  {#if charters}
+    {#each [...charters.values()] as charter (charter.id)}
+      <LigneCharter {charter} />
+    {/each}
+  {:else}
+    <Chargement />
+  {/if}
+</main>
 
 <style>
   .filtre {

@@ -20,7 +20,7 @@
 
   const screen: Writable<string> = getContext("screen");
 
-  currentUser.subscribe((user) => {
+  const unsubscribe = currentUser.subscribe((user) => {
     if (!user.canUseApp) {
       screen.set("loginForm");
     }
@@ -31,13 +31,14 @@
   });
 
   onDestroy(() => {
-    source.close();
+    source?.close();
+    unsubscribe();
   });
 </script>
 
 <div class="choix-conteneur pure-g">
-  {#each [...sitemap] as [module, { affichage, tree: { href, children } }]}
-    {#if $currentUser.canAccess(module)}
+  {#each [...sitemap] as [rubrique, { affichage, tree: { href, children } }]}
+    {#if $currentUser.canAccess(rubrique)}
       <div class="choix pure-u-1">
         <a href={href || children[0].href}>{affichage}</a>
       </div>

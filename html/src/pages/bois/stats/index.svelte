@@ -63,6 +63,8 @@
   });
 </script>
 
+<!-- routify:options guard="bois" -->
+
 <main class="formulaire">
   <h1>Statistiques</h1>
 

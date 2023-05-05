@@ -1,26 +1,38 @@
 <!-- routify:options preload="proximity" -->
 <script lang="ts">
-  import { page, metatags, goto } from "@roxi/routify";
+  import { onMount, onDestroy } from "svelte";
+  import { page, metatags } from "@roxi/routify";
 
   import { Menu, OfflineBanner } from "@app/components";
 
-  import { currentUser } from "@app/stores";
+  import { Guard } from "@app/auth";
+  import { demarrerConnexionSSE } from "@app/utils";
 
   import type { ModuleId } from "@app/types";
 
+  let source: EventSource;
+
   $: metatags.title = $page.title;
 
-  $: module = $page.path.split("/")[1] as ModuleId;
+  $: rubrique = $page.path.split("/")[1] as ModuleId;
 
   const afficherFooterMode = import.meta.env.MODE !== "production";
+
+  onMount(async () => {
+    source = await demarrerConnexionSSE([]);
+  });
+
+  onDestroy(() => {
+    source.close();
+  });
 </script>
 
-{#if $currentUser.canUseApp}
+<Guard>
   <div class="container">
     <OfflineBanner />
 
     <div class="page">
-      <Menu {module} />
+      <Menu module={rubrique} />
 
       <slot />
     </div>
@@ -31,9 +43,7 @@
       </footer>
     {/if}
   </div>
-{:else}
-  {$goto("/login")}
-{/if}
+</Guard>
 
 <style>
   @import "/src/css/commun.css";

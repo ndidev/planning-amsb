@@ -87,6 +87,8 @@
   });
 </script>
 
+<!-- routify:options guard="consignation" -->
+
 <main>
   <div id="canvas">
     <canvas bind:this={canvas} />

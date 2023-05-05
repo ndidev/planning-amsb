@@ -73,29 +73,27 @@
   });
 </script>
 
-{#if $currentUser.canAccess("config")}
-  <main>
-    <h1>Configuration</h1>
+<!-- routify:options guard="config" -->
 
-    <div id="select">
-      <select bind:value={selected}>
-        {#each configs as config}
-          {#if !config.module || (config.module && $currentUser.canEdit(config.module))}
-            <option value={config}>
-              {config.affichage}
-            </option>
-          {/if}
-        {/each}
-      </select>
-    </div>
+<main>
+  <h1>Configuration</h1>
 
-    <h2 class="titre-section">{selected.affichage}</h2>
+  <div id="select">
+    <select bind:value={selected}>
+      {#each configs as config}
+        {#if !config.module || (config.module && $currentUser.canEdit(config.module))}
+          <option value={config}>
+            {config.affichage}
+          </option>
+        {/if}
+      {/each}
+    </select>
+  </div>
 
-    <svelte:component this={selected.component} />
-  </main>
-{:else}
-  {$goto("/login/")}
-{/if}
+  <h2 class="titre-section">{selected.affichage}</h2>
+
+  <svelte:component this={selected.component} />
+</main>
 
 <style>
   main {

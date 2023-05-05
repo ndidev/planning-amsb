@@ -7,7 +7,7 @@
   import { MaterialButton, BoutonAction } from "@app/components";
   import { LigneQualite } from "./components";
 
-  import { vracProduits, currentUser } from "@app/stores";
+  import { vracProduits } from "@app/stores";
   import { notiflixOptions } from "@app/utils";
 
   import type { ProduitVrac, QualiteVrac } from "@app/types";
@@ -192,7 +192,8 @@
   }
 </script>
 
-{#if $currentUser.canEdit("vrac")}
+<!-- routify:options guard="vrac/edit" -->
+
   <main class="formulaire">
     <h1>Produit</h1>
 
@@ -307,9 +308,6 @@
       <BoutonAction preset="annuler" on:click={() => $goto("../")} />
     </div>
   </main>
-{:else}
-  {$goto("/")}
-{/if}
 
 <style>
   main {

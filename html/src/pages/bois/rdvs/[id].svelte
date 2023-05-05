@@ -1,4 +1,4 @@
-<!-- routify:options param-is-page -->
+<!-- routify:options title="Planning AMSB - RDV bois" -->
 <script lang="ts">
   import { getContext } from "svelte";
   import { params, goto, redirect } from "@roxi/routify";
@@ -246,9 +246,9 @@
   }
 </script>
 
-<!-- routify:options title="Planning AMSB - RDV bois" -->
+<!-- routify:options param-is-page -->
+<!-- routify:options guard="bois/edit" -->
 
-{#if $currentUser.canEdit("bois")}
   <main class="formulaire">
     <h1>Rendez-vous</h1>
 
@@ -479,9 +479,6 @@
       </div>
     {/if}
   </main>
-{:else}
-  {$goto("/")}
-{/if}
 
 <style>
   :global(.notiflix-report .suggestions) {
