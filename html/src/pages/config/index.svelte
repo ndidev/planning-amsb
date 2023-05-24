@@ -1,8 +1,5 @@
 <!-- routify:options title="Planning AMSB - Configuration" -->
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
-  import { goto } from "@roxi/routify";
-
   import {
     BandeauInfo,
     ConfigsPDF,
@@ -14,11 +11,9 @@
 
   import { currentUser } from "@app/stores";
 
-  import { demarrerConnexionSSE } from "@app/utils";
+  import { ConnexionSSE } from "@app/components";
 
   import type { ModuleId } from "@app/types";
-
-  let source: EventSource;
 
   const configs = [
     {
@@ -56,24 +51,20 @@
   ];
 
   let selected = configs[0];
-
-  onMount(async () => {
-    source = await demarrerConnexionSSE([
-      "config/bandeau-info",
-      "config/pdf",
-      "config/ajouts-rapides",
-      "config/agence",
-      "config/cotes",
-      "marees",
-    ]);
-  });
-
-  onDestroy(() => {
-    source.close();
-  });
 </script>
 
 <!-- routify:options guard="config" -->
+
+<ConnexionSSE
+  subscriptions={[
+    "config/bandeau-info",
+    "config/pdf",
+    "config/ajouts-rapides",
+    "config/agence",
+    "config/cotes",
+    "marees",
+  ]}
+/>
 
 <main>
   <h1>Configuration</h1>

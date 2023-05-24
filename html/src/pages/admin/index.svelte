@@ -1,28 +1,13 @@
 <!-- routify:options title="Planning AMSB - Administration" -->
 <script lang="ts">
-  import { onMount, onDestroy, getContext } from "svelte";
-
   import { LigneCompteUtilisateur } from "./components";
-  import { Chargement } from "@app/components";
-
-  import { demarrerConnexionSSE } from "@app/utils";
-
-  import type { Stores } from "@app/types";
-
-  const { adminUsers } = getContext<Stores>("stores");
-
-  let source: EventSource;
-
-  onMount(async () => {
-    source = await demarrerConnexionSSE(["admin/users"]);
-  });
-
-  onDestroy(() => {
-    source.close();
-  });
+  import { Chargement, ConnexionSSE } from "@app/components";
+  import { adminUsers } from "@app/stores";
 </script>
 
 <!-- routify:options guard="admin" -->
+
+<ConnexionSSE subscriptions={["admin/users"]} />
 
 <main class="formulaire">
   <h1>Administration</h1>

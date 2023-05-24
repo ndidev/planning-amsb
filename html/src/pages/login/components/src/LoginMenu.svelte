@@ -9,32 +9,28 @@
   ```
  -->
 <script lang="ts">
-  import { onMount, onDestroy, getContext } from "svelte";
+  import { onDestroy, getContext } from "svelte";
   import type { Writable } from "svelte/store";
 
   import { currentUser } from "@app/stores";
 
-  import { demarrerConnexionSSE, sitemap } from "@app/utils";
-
-  let source: EventSource;
+  import { sitemap } from "@app/utils";
+  import { ConnexionSSE } from "@app/components";
 
   const screen: Writable<string> = getContext("screen");
 
-  const unsubscribe = currentUser.subscribe((user) => {
+  const unsubscribeUser = currentUser.subscribe((user) => {
     if (!user.canUseApp) {
       screen.set("loginForm");
     }
   });
 
-  onMount(async () => {
-    source = await demarrerConnexionSSE([]);
-  });
-
   onDestroy(() => {
-    source?.close();
-    unsubscribe();
+    unsubscribeUser();
   });
 </script>
+
+<ConnexionSSE />
 
 <div class="choix-conteneur pure-g">
   {#each [...sitemap] as [rubrique, { affichage, tree: { href, children } }]}

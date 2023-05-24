@@ -1,11 +1,11 @@
 <!-- routify:options title="Planning AMSB - Bois" -->
 <script lang="ts">
-  import { onMount, onDestroy, setContext, getContext } from "svelte";
+  import { onDestroy, setContext, getContext } from "svelte";
   import { writable } from "svelte/store";
 
   import Notiflix from "notiflix";
 
-  import { BandeauInfo, MaterialButton } from "@app/components";
+  import { BandeauInfo, MaterialButton, ConnexionSSE } from "@app/components";
   import {
     Filtre as BandeauFiltre,
     Placeholder,
@@ -15,10 +15,8 @@
     LigneRdvAttente,
   } from "./components";
 
-  import { fetcher, demarrerConnexionSSE, Filtre } from "@app/utils";
+  import { fetcher, Filtre } from "@app/utils";
   import type { Stores, RdvBois, FiltreBois, CamionsParDate } from "@app/types";
-
-  let source: EventSource;
 
   const { boisRdvs, tiers } = getContext<Stores>("stores");
 
@@ -181,23 +179,22 @@
     }
   }
 
-  onMount(async () => {
-    source = await demarrerConnexionSSE([
-      "bois/rdvs",
-      "tiers",
-      "config/bandeau-info",
-      "config/ajouts-rapides",
-    ]);
-  });
-
   onDestroy(() => {
-    source.close();
     unsubscribeRdvs();
     unsubscribeFiltre();
   });
 </script>
 
 <!-- routify:options guard="bois" -->
+
+<ConnexionSSE
+  subscriptions={[
+    "bois/rdvs",
+    "tiers",
+    "config/bandeau-info",
+    "config/ajouts-rapides",
+  ]}
+/>
 
 <BandeauInfo module="bois" pc />
 

@@ -1,6 +1,5 @@
 export { appURLs } from "./src/appURLs";
 export { DateUtils } from "./src/DateUtils";
-export { demarrerConnexionSSE } from "./src/sse";
 export { device, breakpoints } from "./src/device";
 export { fetcher } from "./src/fetcher";
 export { Filtre } from "./src/Filtre";

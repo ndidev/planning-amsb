@@ -20,7 +20,12 @@
 
   import Notiflix from "notiflix";
 
-  import { MaterialButton, Svelecte, BoutonAction } from "@app/components";
+  import {
+    MaterialButton,
+    Svelecte,
+    BoutonAction,
+    ConnexionSSE,
+  } from "@app/components";
 
   import { tiers } from "@app/stores";
 
@@ -31,13 +36,10 @@
     fetcher,
     validerFormulaire,
     notiflixOptions,
-    demarrerConnexionSSE,
     preventFormSubmitOnEnterKeydown,
   } from "@app/utils";
 
   import type { Tiers } from "@app/types";
-
-  let source: EventSource;
 
   /** Formulaire. */
   let form: HTMLFormElement;
@@ -275,9 +277,7 @@
     );
   }
 
-  onMount(async () => {
-    source = await demarrerConnexionSSE(["tiers"]);
-
+  onMount(() => {
     thumbnail.onerror = () => {
       thumbnail.src = ERREUR_LOGO;
     };
@@ -285,11 +285,12 @@
 
   onDestroy(() => {
     unsubscribeTiers();
-    source.close();
   });
 </script>
 
 <!-- routify:options guard="tiers" -->
+
+<ConnexionSSE subscriptions={["tiers"]} />
 
 <main class="formulaire">
   <h1>Tiers</h1>

@@ -1,17 +1,11 @@
 <!-- routify:options title="Planning AMSB - Vrac" -->
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
-
   import { LigneDate, LigneRdv } from "./components";
-  import { BandeauInfo } from "@app/components";
+  import { BandeauInfo, ConnexionSSE } from "@app/components";
 
   import { vracRdvs, vracProduits, currentUser } from "@app/stores";
 
-  import { demarrerConnexionSSE } from "@app/utils";
-
   import type { RdvVrac } from "@app/types";
-
-  let source: EventSource;
 
   type GroupesRdv = Map<string, RdvVrac[]>;
 
@@ -80,22 +74,18 @@
       );
     }
   }
+</script>
 
-  onMount(async () => {
-    source = await demarrerConnexionSSE([
+{#if $currentUser.canUseApp && $currentUser.canAccess("vrac")}
+  <ConnexionSSE
+    subscriptions={[
       "vrac/rdvs",
       "vrac/produits",
       "tiers",
       "config/bandeau-info",
-    ]);
-  });
+    ]}
+  />
 
-  onDestroy(() => {
-    source.close();
-  });
-</script>
-
-{#if $currentUser.canUseApp && $currentUser.canAccess("vrac")}
   <BandeauInfo module="vrac" tv />
 
   <main>
