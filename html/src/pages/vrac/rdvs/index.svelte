@@ -4,15 +4,13 @@
   import { derived } from "svelte/store";
 
   import { LigneDate, LigneRdv, Placeholder } from "./components";
-  import { BandeauInfo } from "@app/components";
+  import { BandeauInfo, ConnexionSSE } from "@app/components";
 
   import { vracRdvs, vracProduits, marees } from "@app/stores";
 
-  import { fetcher, demarrerConnexionSSE } from "@app/utils";
+  import { fetcher } from "@app/utils";
 
   import type { RdvVrac } from "@app/types";
-
-  let source: EventSource;
 
   type DateString = string;
   type GroupesRdv = Map<DateString, RdvVrac[]>;
@@ -146,16 +144,7 @@
     );
   };
 
-  onMount(async () => {
-    source = await demarrerConnexionSSE([
-      "vrac/rdvs",
-      "vrac/produits",
-      "consignation/escales",
-      "tiers",
-      "config/bandeau-info",
-      "marees",
-    ]);
-
+  onMount(() => {
     document.addEventListener(
       "planning:consignation/escales",
       updateNaviresParDate
@@ -163,7 +152,6 @@
   });
 
   onDestroy(() => {
-    source.close();
     document.removeEventListener(
       "planning:consignation/escales",
       updateNaviresParDate
@@ -172,6 +160,17 @@
 </script>
 
 <!-- routify:options guard="vrac" -->
+
+<ConnexionSSE
+  subscriptions={[
+    "vrac/rdvs",
+    "vrac/produits",
+    "consignation/escales",
+    "tiers",
+    "config/bandeau-info",
+    "marees",
+  ]}
+/>
 
 <BandeauInfo module="vrac" pc />
 

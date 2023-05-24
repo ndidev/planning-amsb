@@ -12,9 +12,8 @@
 
   Chart.register(ScatterController, PointElement, LinearScale, Tooltip);
 
-  import { fetcher, demarrerConnexionSSE, locale } from "@app/utils";
-
-  let source: EventSource;
+  import { fetcher, locale } from "@app/utils";
+  import { ConnexionSSE } from "@app/components";
 
   type TE = {
     navire: string;
@@ -41,8 +40,6 @@
   }
 
   onMount(async () => {
-    source = await demarrerConnexionSSE(["consignation/escales"]);
-
     document.addEventListener("planning:consignation/escales", fetchTE);
 
     // Chart
@@ -82,12 +79,13 @@
   });
 
   onDestroy(() => {
-    source.close();
     document.removeEventListener("planning:consignation/escales", fetchTE);
   });
 </script>
 
 <!-- routify:options guard="consignation" -->
+
+<ConnexionSSE subscriptions={["consignation/escales"]} />
 
 <main>
   <div id="canvas">

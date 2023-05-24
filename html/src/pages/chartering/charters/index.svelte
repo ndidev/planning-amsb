@@ -1,16 +1,14 @@
 <!-- routify:options title="Planning AMSB - Affrètement maritime" -->
 <script lang="ts">
-  import { onMount, onDestroy, getContext, setContext } from "svelte";
+  import { onDestroy, getContext, setContext } from "svelte";
   import { writable } from "svelte/store";
   import { params } from "@roxi/routify";
 
-  import { Chargement, BandeauInfo } from "@app/components";
+  import { Chargement, BandeauInfo, ConnexionSSE } from "@app/components";
   import { Filtre as BandeauFiltre, LigneCharter } from "./components";
 
-  import { demarrerConnexionSSE, Filtre } from "@app/utils";
+  import { Filtre } from "@app/utils";
   import type { Stores, FiltreCharter } from "@app/types";
-
-  let source: EventSource;
 
   const { charteringCharters } = getContext<Stores>("stores");
 
@@ -41,16 +39,7 @@
 
   setContext("filtre", storeFiltre);
 
-  onMount(async () => {
-    source = await demarrerConnexionSSE([
-      "chartering/charters",
-      "tiers",
-      "config/bandeau-info",
-    ]);
-  });
-
   onDestroy(() => {
-    source.close();
     unsubscribeCharters();
     unsubscribeFiltre();
   });
@@ -58,6 +47,10 @@
 
 <!-- routify:options query-params-is-page -->
 <!-- routify:options guard="chartering" -->
+
+<ConnexionSSE
+  subscriptions={["chartering/charters", "tiers", "config/bandeau-info"]}
+/>
 
 <BandeauInfo module="chartering" pc />
 

@@ -1,31 +1,22 @@
 <!-- routify:options preload="proximity" -->
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
   import { page, metatags } from "@roxi/routify";
 
-  import { Menu, OfflineBanner } from "@app/components";
+  import { Menu, OfflineBanner, ConnexionSSE } from "@app/components";
 
   import { Guard } from "@app/auth";
-  import { demarrerConnexionSSE } from "@app/utils";
 
   import type { ModuleId } from "@app/types";
-
-  let source: EventSource;
 
   $: metatags.title = $page.title;
 
   $: rubrique = $page.path.split("/")[1] as ModuleId;
 
   const afficherFooterMode = import.meta.env.MODE !== "production";
-
-  onMount(async () => {
-    source = await demarrerConnexionSSE([]);
-  });
-
-  onDestroy(() => {
-    source.close();
-  });
 </script>
+
+<!-- Connexion SSE pour les infos utilisateur -->
+<ConnexionSSE />
 
 <Guard>
   <div class="container">
