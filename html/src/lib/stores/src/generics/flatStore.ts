@@ -169,6 +169,8 @@ export function createFlatStore<T extends { id: string | number }>(
     _params = new URLSearchParams(_params);
 
     if (params.toString() !== _params.toString()) {
+      set(initial);
+      current = initial;
       params = _params;
       fetchAll();
     }
