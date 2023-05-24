@@ -1,3 +1,1 @@
-import LigneCompteUtilisateur from "./src/LigneCompteUtilisateur.svelte";
-
-export { LigneCompteUtilisateur };
+export { default as LigneCompteUtilisateur } from "./src/LigneCompteUtilisateur.svelte";

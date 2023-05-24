@@ -31,9 +31,9 @@
   <div class="container">
     <OfflineBanner />
 
-    <div class="page">
-      <Menu module={rubrique} />
+    <Menu module={rubrique} />
 
+    <div class="page">
       <slot />
     </div>
 
@@ -62,7 +62,6 @@
     bottom: 0;
     height: var(--footer-height);
     line-height: var(--footer-height);
-    z-index: 10;
     background-color: lightpink;
     color: black;
     text-align: center;

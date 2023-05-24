@@ -32,6 +32,7 @@
 
   $: menuButtonFontSize = $device.isSmallerThan("desktop") ? "24px" : "36px";
 
+  // Cacher le menu lors le la navigation sur mobile
   $beforeUrlChange((event, route) => {
     if (nav.offsetWidth >= document.body.offsetWidth) {
       affichageMenu = false;

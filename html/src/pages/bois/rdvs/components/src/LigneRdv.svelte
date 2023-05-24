@@ -173,7 +173,9 @@
   let numero_bl = rdv.numero_bl;
 
   const unsubscribe = boisRdvs.subscribe((rdvs) => {
-    numero_bl = rdvs.get(rdv.id)?.numero_bl;
+    if (rdvs) {
+      numero_bl = rdvs.get(rdv.id)?.numero_bl;
+    }
   });
 
   /**

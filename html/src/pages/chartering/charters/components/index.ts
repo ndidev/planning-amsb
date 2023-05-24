@@ -1,4 +1,2 @@
-import LigneCharter from "./src/LigneCharter.svelte";
-import Filtre from "./src/Filtre.svelte";
-
-export { LigneCharter, Filtre };
+export { default as LigneCharter } from "./src/LigneCharter.svelte";
+export { default as Filtre } from "./src/Filtre.svelte";

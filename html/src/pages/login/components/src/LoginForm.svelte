@@ -5,7 +5,9 @@
 
   import { appURLs } from "@app/utils";
 
-  import { AccountStatus } from "@app/auth";
+  import { currentUser } from "@app/stores";
+
+  import { AccountStatus, User } from "@app/auth";
 
   const screen: Writable<string> = getContext("screen");
   const login: Writable<string> = getContext("login");
@@ -50,6 +52,7 @@
           "user",
           JSON.stringify({ login, nom, roles, statut })
         );
+        currentUser.set(new User({ login, nom, roles, statut }));
 
         screen.set("loginMenu");
       }

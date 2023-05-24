@@ -1,3 +1,1 @@
-import LigneEscale from "./src/LigneEscale.svelte";
-
-export { LigneEscale };
+export { default as LigneEscale } from "./src/LigneEscale.svelte";

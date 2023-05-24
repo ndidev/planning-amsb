@@ -42,7 +42,7 @@ export class Device {
   }
 
   /**
-   * Renvoie `true` si le type d'appareil passé en paramètre est correct.
+   * Renvoie `true` si l'appareil est du même type que le type d'appareil passé en paramètre.
    *
    * @param type Type d'appareil
    */
@@ -51,11 +51,10 @@ export class Device {
   }
 
   /**
-   * Renvoie `true` si le type d'appareil passé en paramètre est correct.
+   * Renvoie `true` si l'appareil est plus petit que le type d'appareil passé en paramètre.
    *
    * @param type Type d'appareil
    */
-  // isSmallerThan(type: typeof this.type) {
   isSmallerThan(type: typeof this.type) {
     return breakpoints
       .filter(
@@ -68,7 +67,7 @@ export class Device {
   }
 
   /**
-   * Renvoie `true` si le type d'appareil passé en paramètre est correct.
+   * Renvoie `true` si l'appareil est plus grand que le type d'appareil passé en paramètre.
    *
    * @param type Type d'appareil
    */

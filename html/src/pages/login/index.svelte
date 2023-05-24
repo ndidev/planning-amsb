@@ -3,10 +3,12 @@
   import { onMount, onDestroy, setContext } from "svelte";
   import { writable } from "svelte/store";
 
-  import { appURLs } from "@app/utils";
+  import { currentUser } from "@app/stores";
 
-  import { LoginForm, LoginMenu, FirstLogin } from "./components";
   import { Chargement } from "@app/components";
+  import { LoginForm, LoginMenu, FirstLogin } from "./components";
+  import { appURLs } from "@app/utils";
+  import { User } from "@app/auth";
 
   import logo from "/src/images/amsb.min.svg";
 
@@ -50,6 +52,7 @@
           // Session active : affichage du menu
           const user = await reponse.json();
           localStorage.setItem("user", JSON.stringify(user));
+          currentUser.set(new User(user));
           screenStore.set("loginMenu");
           break;
 

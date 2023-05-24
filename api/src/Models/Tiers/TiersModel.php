@@ -269,6 +269,11 @@ class TiersModel extends BaseModel
    */
   public function delete(int $id): bool
   {
+    $nombre_rdv = (new NombreRdvModel())->read($id)["nombre_rdv"];
+    if ($nombre_rdv > 0) {
+      throw new Exception("Le tiers est concerné par $nombre_rdv rdv. Impossible de le supprimer.");
+    }
+
     $requete = $this->db->prepare("DELETE FROM tiers WHERE id = :id");
     $succes = $requete->execute(["id" => $id]);
 

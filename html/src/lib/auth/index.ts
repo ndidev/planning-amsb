@@ -5,5 +5,4 @@ export { TypesModules } from "./src/TypesModules";
 
 export type { UserInfo } from "./src/User";
 
-import Guard from "./src/Guard.svelte";
-export { Guard };
+export { default as Guard } from "./src/Guard.svelte";

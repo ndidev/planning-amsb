@@ -2,28 +2,14 @@
  * Svelte components
  */
 
-import BandeauInfo from "./src/BandeauInfo.svelte";
-import BoutonAction from "./src/BoutonAction.svelte";
-import Chargement from "./src/Chargement.svelte";
-import CoteCesson from "./src/CoteCesson.svelte";
-import IconText from "./src/IconText.svelte"
-import InputDecimal from "./src/InputDecimal.svelte";
-import MaterialButton from "./src/MaterialButton.svelte";
-import Menu from "./src/Menu/Menu.svelte";
-import Modal from "./src/Modal.svelte";
-import OfflineBanner from "./src/OfflineBanner.svelte";
-import Svelecte from "./src/Svelecte.svelte";
-
-export {
-  BandeauInfo,
-  BoutonAction,
-  Chargement,
-  CoteCesson,
-  IconText,
-  InputDecimal,
-  MaterialButton,
-  Menu,
-  Modal,
-  OfflineBanner,
-  Svelecte,
-};
+export { default as BandeauInfo } from "./src/BandeauInfo.svelte";
+export { default as BoutonAction } from "./src/BoutonAction.svelte";
+export { default as Chargement } from "./src/Chargement.svelte";
+export { default as CoteCesson } from "./src/CoteCesson.svelte";
+export { default as IconText } from "./src/IconText.svelte";
+export { default as InputDecimal } from "./src/InputDecimal.svelte";
+export { default as MaterialButton } from "./src/MaterialButton.svelte";
+export { default as Menu } from "./src/Menu";
+export { default as Modal } from "./src/Modal.svelte";
+export { default as OfflineBanner } from "./src/OfflineBanner.svelte";
+export { default as Svelecte } from "./src/Svelecte.svelte";

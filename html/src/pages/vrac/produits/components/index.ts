@@ -1,3 +1,1 @@
-import LigneQualite from "./src/LigneQualite.svelte";
-
-export { LigneQualite };
+export { default as LigneQualite } from "./src/LigneQualite.svelte";

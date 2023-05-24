@@ -133,7 +133,10 @@
       style:padding="20px"
       style:border-radius="20px"
     >
-      <BoutonAction preset="modifier" on:click={$goto(`./${escale.id}`)} />
+      <BoutonAction
+        preset="modifier"
+        on:click={$goto(`./${escale.id}${archives ? "?archives" : ""}`)}
+      />
       <BoutonAction preset="annuler" on:click={() => (afficherModal = false)} />
     </div>
   </Modal>
