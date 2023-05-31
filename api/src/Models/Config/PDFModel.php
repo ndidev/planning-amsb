@@ -2,7 +2,7 @@
 
 namespace Api\Models\Config;
 
-use Api\Utils\PDFUtils;
+use Api\Utils\PDF\PDFUtils;
 use Api\Utils\DateUtils;
 
 class PDFModel

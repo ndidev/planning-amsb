@@ -4,7 +4,7 @@ namespace Api\Controllers\Tiers;
 
 use Api\Models\Tiers\TiersModel;
 use Api\Utils\BaseController;
-use Api\Utils\ETag;
+use Api\Utils\HTTP\ETag;
 use Api\Utils\Exceptions\Auth\AccessException;
 
 class TiersController extends BaseController

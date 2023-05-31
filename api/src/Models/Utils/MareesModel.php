@@ -3,90 +3,128 @@
 namespace Api\Models\Utils;
 
 use Api\Utils\BaseModel;
+use RedisException;
 
 class MareesModel extends BaseModel
 {
+  private $redis_ns = "marees";
+
   public function __construct()
   {
     parent::__construct();
   }
 
   /**
-   * Récupère toutes les marées.
+   * Récupère les marées en fonction du filtre.
    * 
    * @return array Toutes les marées récupérées.
    */
-  public function readAll(array $filtre = []): array
+  public function read(array $filtre = []): array
   {
     $debut = $filtre["debut"] ?? "0001-01-01";
     $fin = $filtre["fin"] ?? "9999-12-31";
-    $annees = isset($filtre["annees"]);
 
-    $statement_full =
-      "SELECT *
-        FROM marees m
-        WHERE m.date BETWEEN :debut AND :fin";
+    $request_hash = md5($debut . $fin);
 
-    $statement_annees =
-      "SELECT DISTINCT SUBSTRING(date, 1, 4) AS annee
-        FROM `utils_marees_shom` m
-        WHERE m.date BETWEEN :debut AND :fin";
+    // Redis
+    $marees = json_decode($this->redis->get($this->redis_ns . ":" . $request_hash));
 
-    $statement = $annees ? $statement_annees : $statement_full;
+    if (!$marees) {
+      $statement =
+        "SELECT *
+          FROM marees m
+          WHERE m.date BETWEEN :debut AND :fin";
 
-    $requete = $this->db->prepare($statement);
-    $requete->execute([
-      "debut" => $debut,
-      "fin" => $fin
-    ]);
-    $donnees = $requete->fetchAll();
+      $requete = $this->db->prepare($statement);
+      $requete->execute([
+        "debut" => $debut,
+        "fin" => $fin
+      ]);
+      $marees = $requete->fetchAll();
+
+      for ($i = 0; $i < count($marees); $i++) {
+        $marees[$i]["heure"] = substr($marees[$i]["heure"], 0, -3);
+        $marees[$i]["te_cesson"] = (float) $marees[$i]["te_cesson"];
+        $marees[$i]["te_bassin"] = (float) $marees[$i]["te_bassin"];
+      }
+
+      if (!empty($marees)) {
+        $this->redis->setex($this->redis_ns . ":" . $request_hash, UNE_SEMAINE, json_encode($marees));
+      }
+    }
+
+    $donnees = $marees;
+
+    return $donnees;
+  }
+
+  /**
+   * Récupère les marées d'une année.
+   * 
+   * @return array Les marées de l'année.
+   */
+  public function readYear(int $annee): array
+  {
+    // Redis
+    $marees = json_decode($this->redis->get($this->redis_ns . ":" . $annee));
+
+    if (!$marees) {
+      $statement =
+        "SELECT *
+          FROM marees
+          WHERE SUBSTRING(date, 1, 4) = :annee";
+
+      $requete = $this->db->prepare($statement);
+      $requete->execute(["annee" => $annee]);
+      $marees = $requete->fetchAll();
+
+      for ($i = 0; $i < count($marees); $i++) {
+        $marees[$i]["heure"] = substr($marees[$i]["heure"], 0, -3);
+        $marees[$i]["te_cesson"] = (float) $marees[$i]["te_cesson"];
+        $marees[$i]["te_bassin"] = (float) $marees[$i]["te_bassin"];
+      }
+
+      if (!empty($marees)) {
+        $this->redis->set($this->redis_ns . ":" . $annee, json_encode($marees));
+      }
+    }
+
+    $donnees = $marees;
+
+    return $donnees;
+  }
+
+  /**
+   * Récupère toutes les années des marées.
+   * 
+   * @return array Toutes les années récupérées.
+   */
+  public function readYears(): array
+  {
+    // Redis
+    $annees = json_decode($this->redis->get($this->redis_ns . ":annees"));
 
     if (!$annees) {
-      for ($i = 0; $i < count($donnees); $i++) {
-        $donnees[$i]["heure"] = substr($donnees[$i]["heure"], 0, -3);
-        $donnees[$i]["te_cesson"] = (float) $donnees[$i]["te_cesson"];
-        $donnees[$i]["te_bassin"] = (float) $donnees[$i]["te_bassin"];
+      $statement =
+        "SELECT DISTINCT SUBSTRING(date, 1, 4) AS annee
+          FROM `utils_marees_shom`";
+
+      $annees = $this->db->query($statement)->fetchAll();
+
+      for ($i = 0; $i < count($annees); $i++) {
+        $annees[$i] = $annees[$i]["annee"];
       }
+
+      $this->redis->set($this->redis_ns . ":annees", json_encode($annees));
     }
 
-    if ($annees) {
-      for ($i = 0; $i < count($donnees); $i++) {
-        $donnees[$i] = $donnees[$i]["annee"];
-      }
-    }
+    $donnees = $annees;
 
     return $donnees;
   }
 
   /**
-   * Récupère les marées pour une année.
-   * 
-   * @return array Toutes les marées récupérées.
-   */
-  public function read(int $annee): array
-  {
-    $statement =
-      "SELECT *
-        FROM marees m
-        WHERE SUBSTRING(date, 1, 4) = :annee";
-
-    $requete = $this->db->prepare($statement);
-    $requete->execute([
-      "annee" => $annee,
-    ]);
-    $donnees = $requete->fetchAll();
-
-    for ($i = 0; $i < count($donnees); $i++) {
-      $donnees[$i]["heure"] = substr($donnees[$i]["heure"], 0, -3);
-      $donnees[$i]["te_cesson"] = (float) $donnees[$i]["te_cesson"];
-      $donnees[$i]["te_bassin"] = (float) $donnees[$i]["te_bassin"];
-    }
-
-    return $donnees;
-  }
-
-  /**
-   * Ajoute des marées pour une année.
+   * Ajoute des marées.
    */
   public function create(array $marees): void
   {
@@ -109,6 +147,8 @@ class MareesModel extends BaseModel
       ]);
     }
     $this->db->commit();
+
+    $this->invalidate_redis();
   }
 
   /**
@@ -123,6 +163,26 @@ class MareesModel extends BaseModel
     $requete = $this->db->prepare("DELETE FROM utils_marees_shom WHERE SUBSTRING(date, 1, 4) = :annee");
     $succes = $requete->execute(["annee" => $annee]);
 
+    $this->invalidate_redis();
+
     return $succes;
+  }
+
+  /**
+   * Supprime les données des marées de Redis.
+   * 
+   * @throws RedisException 
+   */
+  private function invalidate_redis()
+  {
+    $keys = $this->redis->keys($this->redis_ns . ":*");
+
+    $this->redis->multi();
+
+    foreach ($keys as $key) {
+      $this->redis->del($key);
+    }
+
+    $this->redis->exec();
   }
 }

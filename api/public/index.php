@@ -2,9 +2,9 @@
 require __DIR__ . "/../bootstrap.php";
 
 use Api\Utils\Router;
-use Api\Utils\HTTPResponse;
-use Api\Utils\ETag;
-use Api\Utils\User;
+use Api\Utils\HTTP\HTTPResponse;
+use Api\Utils\HTTP\ETag;
+use Api\Utils\Auth\User;
 use Api\Controllers\Bois\RdvController as RdvBois;
 use Api\Controllers\Bois\RegistreController as RegistreBois;
 use Api\Controllers\Bois\StatsController as StatsBois;
@@ -106,6 +106,7 @@ $routes = [
   ["/ports/[a:locode]?", fn ($locode = null) => new Ports($locode)],
   ["/pays/[a:iso]?", fn ($iso = null) => new Pays($iso)],
   ["/marees/[i:annee]?", fn ($annee = null) => new Marees($annee)],
+  ["/marees/annees", fn () => new Marees(annees: true)],
 
   // Config
   ["/config/agence/[a:service]?", fn ($service = null) => new Agence($service)],
@@ -187,6 +188,7 @@ function buildIndex(): array
     "pays" => "pays/{iso}",
     "ports" => "ports/{locode}",
     "marees" => "marees/{annee}{?debut={jj/mm/aaaa}&fin={jj/mm/aaaa}",
+    "marees_annees" => "marees/annees",
     // Config
     "modules" => "config/modules",
     "bandeau-info" => "config/bandeau/{id}",

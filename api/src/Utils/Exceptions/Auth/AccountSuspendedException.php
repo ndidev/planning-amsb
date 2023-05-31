@@ -2,7 +2,7 @@
 
 namespace Api\Utils\Exceptions\Auth;
 
-use Api\Utils\AccountStatus;
+use Api\Utils\Auth\AccountStatus;
 
 /**
  * Exception lancée lorsque le compte de l'utilisateur est suspendu/désactivé.

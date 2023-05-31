@@ -4,7 +4,7 @@ namespace Api\Controllers\Bois;
 
 use Api\Models\Bois\RegistreModel;
 use Api\Utils\BaseController;
-use Api\Utils\ETag;
+use Api\Utils\HTTP\ETag;
 
 use Api\Utils\DateUtils;
 use DateTime;

@@ -4,7 +4,7 @@ namespace Api\Controllers\Utils;
 
 use Api\Models\Utils\MareesModel;
 use Api\Utils\BaseController;
-use Api\Utils\ETag;
+use Api\Utils\HTTP\ETag;
 
 class MareesController extends BaseController
 {
@@ -13,7 +13,8 @@ class MareesController extends BaseController
   private $sse_event = "marees";
 
   public function __construct(
-    private ?int $annee
+    private ?int $annee = 0,
+    private bool $annees = false
   ) {
     parent::__construct();
     $this->model = new MareesModel;
@@ -29,10 +30,12 @@ class MareesController extends BaseController
 
       case 'GET':
       case 'HEAD':
-        if ($this->annee) {
-          $this->read($this->annee);
+        if ($this->annees) {
+          $this->readYears();
+        } else if ($this->annee) {
+          $this->readYear($this->annee);
         } else {
-          $this->readAll($this->request->query);
+          $this->read($this->request->query);
         }
         break;
 
@@ -54,13 +57,13 @@ class MareesController extends BaseController
   }
 
   /**
-   * Récupère toutes les marées.
+   * Récupère les marées.
    * 
    * @param array $filtre
    */
-  public function readAll(?array $filtre = null)
+  public function read(?array $filtre = null)
   {
-    $donnees = $this->model->readAll($filtre);
+    $donnees = $this->model->read($filtre);
 
     $etag = ETag::get($donnees);
 
@@ -77,17 +80,34 @@ class MareesController extends BaseController
   }
 
   /**
-   * Récupère les marées pour une année.
+   * Récupère les marées d'une année.
    * 
    * @param int $annee
    */
-  public function read(int $annee, bool $dry_run = false)
+  public function readYear(int $annee)
   {
-    $donnees = $this->model->read($annee);
+    $donnees = $this->model->readYear($annee);
 
-    if ($dry_run) {
-      return $donnees;
+    $etag = ETag::get($donnees);
+
+    if ($this->request->etag === $etag) {
+      $this->response->setCode(304);
+      return;
     }
+
+    $this->headers["ETag"] = $etag;
+
+    $this->response
+      ->setBody(json_encode($donnees))
+      ->setHeaders($this->headers);
+  }
+
+  /**
+   * Récupère les années.
+   */
+  public function readYears()
+  {
+    $donnees = $this->model->readYears();
 
     $etag = ETag::get($donnees);
 
@@ -124,12 +144,14 @@ class MareesController extends BaseController
       // Supprimer le carriage return produit par Windows
       $line = str_replace("\r", "", $line);
 
+      $separator = ";";
+
       // Ne pas prendre en compte les lignes non conformes
-      if (strpos($line, ";") === false) continue;
+      if (strpos($line, $separator) === false) continue;
       if (strlen($line) <= 2) continue;
 
       // Enregistrer chaque ligne dans le tableau $marees
-      [$date, $heure, $hauteur] = str_getcsv($line, ";");
+      [$date, $heure, $hauteur] = str_getcsv($line, $separator);
       array_push($marees, [
         $date,
         $heure,
@@ -143,7 +165,7 @@ class MareesController extends BaseController
 
     $this->headers["Location"] = $_ENV["API_URL"] . "/marees/$annee";
 
-    $donnees = json_encode(["annee" => $annee]);
+    $donnees = ["annee" => (int) $annee];
 
     $this->response
       ->setCode(201)
@@ -160,11 +182,6 @@ class MareesController extends BaseController
    */
   public function delete(int $annee)
   {
-    if (!$this->read($annee, true)) {
-      $this->response->setCode(404);
-      return;
-    }
-
     $succes = $this->model->delete($annee);
 
     if ($succes) {

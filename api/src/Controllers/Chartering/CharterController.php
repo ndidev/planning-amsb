@@ -4,7 +4,7 @@ namespace Api\Controllers\Chartering;
 
 use Api\Models\Chartering\CharterModel;
 use Api\Utils\BaseController;
-use Api\Utils\ETag;
+use Api\Utils\HTTP\ETag;
 
 use Exception;
 use Api\Utils\Exceptions\Auth\AccessException;

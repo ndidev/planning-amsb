@@ -4,7 +4,7 @@ namespace Api\Controllers\Tiers;
 
 use Api\Models\Tiers\NombreRdvModel;
 use Api\Utils\BaseController;
-use Api\Utils\ETag;
+use Api\Utils\HTTP\ETag;
 
 
 class NombreRdvController extends BaseController

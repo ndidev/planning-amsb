@@ -4,7 +4,7 @@ namespace Api\Controllers\Utils;
 
 use Api\Models\Utils\PaysModel;
 use Api\Utils\BaseController;
-use Api\Utils\ETag;
+use Api\Utils\HTTP\ETag;
 
 use Exception;
 

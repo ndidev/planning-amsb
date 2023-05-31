@@ -2,8 +2,8 @@
 
 require_once __DIR__ . "/../bootstrap.php";
 
-use Api\Utils\User;
-use Api\Utils\HTTPResponse;
+use Api\Utils\Auth\User;
+use Api\Utils\HTTP\HTTPResponse;
 use Api\Utils\Exceptions\Auth\AuthException;
 use Api\Utils\Exceptions\Auth\AdminException;
 use Api\Utils\Exceptions\Auth\AccountPendingException;

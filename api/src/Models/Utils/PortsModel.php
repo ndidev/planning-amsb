@@ -6,6 +6,8 @@ use Api\Utils\BaseModel;
 
 class PortsModel extends BaseModel
 {
+  private $redis_ns = "ports";
+
   public function __construct()
   {
     parent::__construct();
@@ -18,9 +20,18 @@ class PortsModel extends BaseModel
    */
   public function readAll(): array
   {
-    $statement = "SELECT * FROM utils_ports ORDER BY SUBSTRING(locode, 1, 2), nom";
+    // Redis
+    $ports = json_decode($this->redis->get($this->redis_ns));
 
-    $donnees = $this->db->query($statement)->fetchAll();
+    if (!$ports) {
+      $statement = "SELECT * FROM utils_ports ORDER BY SUBSTRING(locode, 1, 2), nom";
+
+      $ports = $this->db->query($statement)->fetchAll();
+
+      $this->redis->set($this->redis_ns, json_encode($ports));
+    }
+
+    $donnees = $ports;
 
     return $donnees;
   }
@@ -76,6 +87,8 @@ class PortsModel extends BaseModel
     $last_id = $this->db->lastInsertId();
     $this->db->commit();
 
+    $this->redis->del($this->redis_ns);
+
     return $this->read($last_id);
   }
 
@@ -99,6 +112,8 @@ class PortsModel extends BaseModel
       'locode' => $locode
     ]);
 
+    $this->redis->del($this->redis_ns);
+
     return $this->read($locode);
   }
 
@@ -113,6 +128,8 @@ class PortsModel extends BaseModel
   {
     $requete = $this->db->prepare("DELETE FROM utils_ports WHERE locode = :locode");
     $succes = $requete->execute(["locode" => $locode]);
+
+    $this->redis->del($this->redis_ns);
 
     return $succes;
   }

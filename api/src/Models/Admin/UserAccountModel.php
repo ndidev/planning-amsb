@@ -3,8 +3,8 @@
 namespace Api\Models\Admin;
 
 use Api\Utils\BaseModel;
-use Api\Utils\AccountStatus;
-use Api\Utils\User;
+use Api\Utils\Auth\AccountStatus;
+use Api\Utils\Auth\User;
 
 class UserAccountModel extends BaseModel
 {

@@ -2,9 +2,9 @@
 
 namespace Api\Utils;
 
-use Api\Utils\User;
-use Api\Utils\HTTPRequest;
-use Api\Utils\HTTPResponse;
+use Api\Utils\Auth\User;
+use Api\Utils\HTTP\HTTPRequest;
+use Api\Utils\HTTP\HTTPResponse;
 
 /**
  * Classe servant de base aux contrôleurs.

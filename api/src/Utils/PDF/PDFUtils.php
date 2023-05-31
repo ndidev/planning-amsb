@@ -1,10 +1,12 @@
 <?php
 
-namespace Api\Utils;
+namespace Api\Utils\PDF;
 
 use Api\Utils\DatabaseConnector as DB;
+use Api\Utils\DateUtils;
+use Api\Utils\PDF\PDFVrac;
 use \DateTime;
-use Exception;
+use \Exception;
 use \tFPDF;
 
 class PDFUtils
@@ -27,7 +29,7 @@ class PDFUtils
     DateTime $date_fin
   ): tFPDF {
 
-    $db = (new DatabaseConnector)->getConnection();
+    $db = (new DB)->getConnection();
 
     /**
      * Récupération données fournisseur et agence
@@ -266,7 +268,7 @@ class PDFUtils
       $resultat["adresses"] = $adresses_envoyees;
     } catch (\Throwable $e) {
       $resultat["statut"] = "echec";
-      $resultat["message"] = "Erreur : " . $mail->error_info;
+      $resultat["message"] = "Erreur : " . $mail->ErrorInfo;
       $resultat["erreur"] = error_info($e);
     } finally {
       unset($mail);

@@ -3,7 +3,7 @@
 namespace Api\Models\User;
 
 use Api\Utils\BaseModel;
-use Api\Utils\User;
+use Api\Utils\Auth\User;
 
 class UserModel extends BaseModel
 {

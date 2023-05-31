@@ -4,7 +4,7 @@ namespace Api\Controllers\Config;
 
 use Api\Models\Config\AgenceModel;
 use Api\Utils\BaseController;
-use Api\Utils\ETag;
+use Api\Utils\HTTP\ETag;
 
 
 class AgenceController extends BaseController

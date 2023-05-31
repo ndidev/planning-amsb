@@ -1,16 +1,18 @@
 <?php
 
-namespace Api\Utils;
+namespace Api\Utils\PDF;
 
-use Exception;
+use \Exception;
 use \tFPDF;
 
 define("_SYSTEM_TTFONTS", UNIFONTS . "/");
 
 class PDFPlanning extends tFPDF
 {
-  public function __construct()
-  {
+  public function __construct(
+    protected array $fournisseur,
+    protected array $agence
+  ) {
     parent::__construct('P', 'mm', 'A4');
 
     // Ajout d'une police compatible UTF-8

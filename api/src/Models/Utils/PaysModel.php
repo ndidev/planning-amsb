@@ -6,6 +6,8 @@ use Api\Utils\BaseModel;
 
 class PaysModel extends BaseModel
 {
+  private $redis_ns = "pays";
+
   public function __construct()
   {
     parent::__construct();
@@ -18,12 +20,21 @@ class PaysModel extends BaseModel
    */
   public function readAll(): array
   {
-    $statement =
-      "SELECT *
-        FROM utils_pays
-        ORDER BY nom";
+    // Redis
+    $pays = json_decode($this->redis->get($this->redis_ns));
 
-    $donnees = $this->db->query($statement)->fetchAll();
+    if (!$pays) {
+      $statement =
+        "SELECT *
+          FROM utils_pays
+          ORDER BY nom";
+
+      $pays = $this->db->query($statement)->fetchAll();
+
+      $this->redis->set($this->redis_ns, json_encode($pays));
+    }
+
+    $donnees = $pays;
 
     return $donnees;
   }
@@ -81,6 +92,8 @@ class PaysModel extends BaseModel
     $last_id = $this->db->lastInsertId();
     $this->db->commit();
 
+    $this->redis->del($this->redis_ns);
+
     return $this->read($last_id);
   }
 
@@ -105,6 +118,8 @@ class PaysModel extends BaseModel
       'iso' => $iso
     ]);
 
+    $this->redis->del($this->redis_ns);
+
     return $this->read($iso);
   }
 
@@ -119,6 +134,8 @@ class PaysModel extends BaseModel
   {
     $requete = $this->db->prepare("DELETE FROM utils_pays WHERE iso = :iso");
     $succes = $requete->execute(["iso" => $iso]);
+
+    $this->redis->del($this->redis_ns);
 
     return $succes;
   }

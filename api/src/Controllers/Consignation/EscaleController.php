@@ -4,7 +4,7 @@ namespace Api\Controllers\Consignation;
 
 use Api\Models\Consignation\EscaleModel;
 use Api\Utils\BaseController;
-use Api\Utils\ETag;
+use Api\Utils\HTTP\ETag;
 
 use Exception;
 use Api\Utils\Exceptions\Auth\AccessException;

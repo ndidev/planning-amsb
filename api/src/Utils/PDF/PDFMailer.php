@@ -1,6 +1,6 @@
 <?php
 
-namespace Api\Utils;
+namespace Api\Utils\PDF;
 
 use PHPMailer\PHPMailer\PHPMailer;
 use Api\Utils\DateUtils;

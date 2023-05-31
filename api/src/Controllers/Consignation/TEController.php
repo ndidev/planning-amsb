@@ -4,7 +4,7 @@ namespace Api\Controllers\Consignation;
 
 use Api\Models\Consignation\TEModel;
 use Api\Utils\BaseController;
-use Api\Utils\ETag;
+use Api\Utils\HTTP\ETag;
 
 
 

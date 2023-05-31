@@ -4,7 +4,7 @@ namespace Api\Controllers\Vrac;
 
 use Api\Models\Vrac\ProduitModel;
 use Api\Utils\BaseController;
-use Api\Utils\ETag;
+use Api\Utils\HTTP\ETag;
 
 use Exception;
 use Api\Utils\Exceptions\Auth\AccessException;

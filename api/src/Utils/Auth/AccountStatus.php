@@ -1,6 +1,6 @@
 <?php
 
-namespace Api\Utils;
+namespace Api\Utils\Auth;
 
 /**
  * Statuts des comptes utilisateurs.

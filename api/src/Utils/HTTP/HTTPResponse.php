@@ -1,8 +1,8 @@
 <?php
 
-namespace Api\Utils;
+namespace Api\Utils\HTTP;
 
-require_once __DIR__ . "/../../utils/lzw.inc.php";
+require_once __DIR__ . "/../../../utils/lzw.inc.php";
 
 /**
  * Réponses HTTP.
@@ -248,8 +248,10 @@ class HTTPResponse
       return;
     }
 
-    // Vérification que la compression est acceptée par le client
-    // Enregistrement des méthodes acceptées
+    /**
+     * Méthodes de compression acceptées par le client.
+     * @var string
+     */
     $client_accept_encoding = $_SERVER["HTTP_ACCEPT_ENCODING"] ?? null;
 
     // Si pas de compression acceptée, renvoi de la réponse intacte
@@ -257,12 +259,19 @@ class HTTPResponse
       return;
     }
 
-    // Tableau des méthodes accpetées,
-    // dans l'ordre de priorité envoyé par le client
+    /**
+     * Tableau des méthodes accpetées par le client, par ordre de priorité.
+     * @var string[]
+     */
     $client_accepted_methods = explode(",", $client_accept_encoding);
 
-    // Création d'un tableau des priorités de compression
-    // de la forme ["(string) method" => (number) priority]
+    /**
+     * Tableau des priorités de compression.  
+     * ```
+     * [(string) $method => (float) $priority]
+     * ```
+     * @var float[]
+     */
     $client_compression_priority = [];
 
     foreach ($client_accepted_methods as $method) {
@@ -277,7 +286,10 @@ class HTTPResponse
     arsort($client_compression_priority);
 
 
-    // Méthodes supportées par le serveur
+    /**
+     * Méthodes de compression supportées par le serveur.
+     * @var bool[]
+     */
     $server_supported_methods = [
       "gzip" => true,
       "deflate" => true,
@@ -286,7 +298,10 @@ class HTTPResponse
       "identity" => true
     ];
 
-    // Méthode utilisée ("identity" par défaut, modifié ci-dessous)
+    /**
+     * Méthode de compression utilisée ("identity" par défaut, modifié ci-dessous).
+     * @var string
+     */
     $compression_method = "identity";
 
     // Enregistrement de la première méthode acceptée par le client

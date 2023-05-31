@@ -4,7 +4,7 @@ namespace Api\Controllers\Config\PDF;
 
 use Api\Models\Config\PDFModel;
 use Api\Utils\BaseController;
-use Api\Utils\ETag;
+use Api\Utils\HTTP\ETag;
 
 
 class EnvoiPDFController extends BaseController

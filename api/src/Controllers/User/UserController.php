@@ -4,7 +4,7 @@ namespace Api\Controllers\User;
 
 use Api\Models\User\UserModel;
 use Api\Utils\BaseController;
-use Api\Utils\ETag;
+use Api\Utils\HTTP\ETag;
 use Api\Utils\Exceptions\Auth\AuthException;
 
 class UserController extends BaseController

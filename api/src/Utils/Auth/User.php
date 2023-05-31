@@ -1,14 +1,16 @@
 <?php
 
-namespace Api\Utils;
+namespace Api\Utils\Auth;
 
-use DateTime;
-use PDOException;
-use Redis;
+use \DateTime;
+use \PDOException;
+use \Redis;
+use \RedisException;
 use Api\Utils\DatabaseConnector as DB;
-use Api\Utils\UserRoles;
-use Api\Utils\AccountStatus;
-use Api\Utils\ApiKeyStatus;
+use Api\Utils\Auth\UserRoles;
+use Api\Utils\Auth\AccountStatus;
+use Api\Utils\Auth\ApiKeyStatus;
+use Api\Utils\DateUtils;
 use Api\Utils\Exceptions\Auth\LoginException;
 use Api\Utils\Exceptions\Auth\SessionException;
 use Api\Utils\Exceptions\Auth\AccountLockedException;
@@ -19,7 +21,6 @@ use Api\Utils\Exceptions\Auth\InvalidApiKeyException;
 use Api\Utils\Exceptions\Auth\AccountInactiveException;
 use Api\Utils\Exceptions\Auth\AuthException;
 use Api\Utils\Exceptions\Auth\MaxLoginAttemptsException;
-use RedisException;
 
 
 /**

@@ -4,7 +4,7 @@ namespace Api\Controllers\Admin;
 
 use Api\Models\Admin\UserAccountModel;
 use Api\Utils\BaseController;
-use Api\Utils\ETag;
+use Api\Utils\HTTP\ETag;
 use Api\Utils\Exceptions\Auth\AdminException;
 
 class UserAccountController extends BaseController

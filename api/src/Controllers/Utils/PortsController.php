@@ -4,7 +4,7 @@ namespace Api\Controllers\Utils;
 
 use Api\Models\Utils\PortsModel;
 use Api\Utils\BaseController;
-use Api\Utils\ETag;
+use Api\Utils\HTTP\ETag;
 
 class PortsController extends BaseController
 {

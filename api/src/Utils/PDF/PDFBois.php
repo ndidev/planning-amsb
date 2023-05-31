@@ -1,10 +1,10 @@
 <?php
 
-namespace Api\Utils;
+namespace Api\Utils\PDF;
 
 use Api\Utils\DateUtils;
-use Api\Utils\PDFPlanning;
-use DateTime;
+use Api\Utils\PDF\PDFPlanning;
+use \DateTime;
 
 class PDFBois extends PDFPlanning
 {
@@ -27,7 +27,10 @@ class PDFBois extends PDFPlanning
     protected DateTime $date_fin,
     protected array $agence
   ) {
-    parent::__construct();
+    parent::__construct(
+      $fournisseur,
+      $agence
+    );
 
     $this->genererPDF();
   }
