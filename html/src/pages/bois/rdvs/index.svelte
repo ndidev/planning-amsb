@@ -105,6 +105,7 @@
     return (
       comparerHeureArrivee(a, b) ||
       comparerHeureDepart(a, b) ||
+      comparerFournisseur(a, b) ||
       comparerClient(a, b) ||
       comparerNumeroBL(a, b)
     );
@@ -142,6 +143,14 @@
 
       return ($tiers.get(a.client)?.nom_court || "").localeCompare(
         $tiers.get(b.client)?.nom_court || ""
+      );
+    }
+
+    function comparerFournisseur(a: RdvBois, b: RdvBois): number {
+      if (!$tiers) return 0;
+
+      return ($tiers.get(a.fournisseur)?.nom_court || "").localeCompare(
+        $tiers.get(b.fournisseur)?.nom_court || ""
       );
     }
 
