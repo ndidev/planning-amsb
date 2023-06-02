@@ -54,7 +54,7 @@
 <!-- Filtre par date/client -->
 <div
   id="bandeau-filtre"
-  style:--background-color={filtreActif ? "rgb(255, 210, 210)" : "white"}
+  style:background-color={filtreActif ? "rgb(255, 210, 210)" : "white"}
 >
   <button
     id="toggle-filtre"

@@ -146,7 +146,7 @@
   bind:this={ligne}
   class={`escale pure-g ${statutEscale}`}
   class:treguier={escale.call_port === "Tréguier"}
-  style:--bg-color={`var(--bg-${statutEscale})`}
+  style:background-color={`var(--bg-${statutEscale}, white)`}
 >
   <!-- Navire / Armateur -->
   <div class="navire-armateur bloc pure-u-lg-4-24 pure-u-1">
@@ -355,7 +355,6 @@
   .escale {
     padding: 10px 0px 10px 20px;
     border-bottom: 1px solid #ddd;
-    background-color: var(--bg-color, "white");
   }
 
   .escale:last-child {

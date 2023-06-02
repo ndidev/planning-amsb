@@ -42,13 +42,9 @@
 
 <div class="rdv pure-g">
   <div class="produit-qualite pure-u-lg-4-24 pure-u-12-24">
-    <span class="produit" style:--produit-couleur={produit.couleur}
-      >{produit.nom}</span
-    >
+    <span class="produit" style:color={produit.couleur}>{produit.nom}</span>
     {#if rdv.qualite}
-      <span class="qualite" style:--qualite-couleur={qualite.couleur}
-        >{qualite.nom}</span
-      >
+      <span class="qualite" style:color={qualite.couleur}>{qualite.nom}</span>
     {/if}
   </div>
 
@@ -98,14 +94,6 @@
 
   .produit-qualite {
     font-weight: bold;
-  }
-
-  .produit {
-    color: var(--produit-couleur, black);
-  }
-
-  .qualite {
-    color: var(--qualite-couleur, black);
   }
 
   .quantite {

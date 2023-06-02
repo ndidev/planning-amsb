@@ -128,19 +128,11 @@
 
 <style>
   button {
-    /* Green */
     --green-hover-color: hsl(0, 0%, 0%);
-
-    /* Yellow */
     --yellow-hover-color: hsl(45, 85%, 56%);
-
-    /* Blue */
     --blue-hover-color: hsl(193, 79%, 53%);
-
-    /* Red */
     --red-hover-color: hsl(4, 100%, 64%);
 
-    /* Default */
     --default-color: hsl(0, 0%, 63%);
     --default-hover-color: hsla(0, 0%, 0%, 0.8);
 
@@ -161,6 +153,7 @@
     font-variation-settings: "FILL" 1;
   }
 
+  /* Cercle au survol */
   button::before {
     --scale: 1.5;
     content: "";

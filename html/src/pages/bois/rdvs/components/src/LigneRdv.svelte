@@ -314,9 +314,9 @@
 {/if}
 
 <div
-  class="rdv pure-g"
-  style:--bg-color={`var(--bg-${statut})`}
   bind:this={ligne}
+  class="rdv pure-g"
+  style:background-color={`var(--bg-${statut}, none)`}
 >
   <div class="heures pure-u-3-24 pure-u-lg-2-24">
     {#if rdv.heure_arrivee}
@@ -520,7 +520,6 @@
   .rdv {
     --bg-arrive: rgb(255, 225, 140);
     --bg-parti: rgb(215, 255, 200);
-    background-color: var(--bg-color, none);
     padding: 8px 0 8px 5px;
     border-bottom: 1px solid hsl(0, 0%, 60%);
     align-items: baseline;

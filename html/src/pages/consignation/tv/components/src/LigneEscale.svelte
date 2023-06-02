@@ -119,7 +119,7 @@
 <div
   class={`escale pure-g ${statutEscale}`}
   class:treguier={escale.call_port === "Tréguier"}
-  style:--bg-color={`var(--bg-${statutEscale})`}
+  style:background-color={`var(--bg-${statutEscale}, white)`}
 >
   <!-- Navire / Armateur -->
   <div class="navire-armateur bloc pure-u-5-24">
@@ -267,7 +267,6 @@
     font-size: 1.2em;
     padding: 20px 0px 20px 20px;
     border-bottom: 1px solid #999;
-    background-color: var(--bg-color, "white");
   }
 
   .escale:last-child {

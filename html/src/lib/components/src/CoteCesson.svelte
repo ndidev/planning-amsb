@@ -55,7 +55,7 @@
 </script>
 
 {#if coteCesson}
-  <section class="bandeau-info" style:--margin-left={tv ? "0px" : "90px"}>
+  <section class="bandeau-info" style:margin-left={tv ? "0px" : "90px"}>
     <div
       class="ligne-bandeau-info"
       style:background-color={bgColor}
@@ -71,7 +71,6 @@
     position: sticky;
     top: 0px;
     z-index: 1;
-    margin-left: var(--margin-left, 0px);
     font-size: 1.2em;
   }
 
