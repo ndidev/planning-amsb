@@ -69,7 +69,12 @@ export const adminUsers = (function () {
       set(updated);
     } catch (err: unknown) {
       const error = err as HTTP.Error | Error;
-      if (error instanceof HTTP.ResponseError) {
+      console.error(error);
+
+      if (
+        error instanceof HTTP.ResponseError &&
+        !(error instanceof HTTP.Unauthorized)
+      ) {
         Notiflix.Notify.failure(error.message);
       } else {
         Notiflix.Notify.failure("Erreur");
