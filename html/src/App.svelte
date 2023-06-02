@@ -23,7 +23,7 @@
     configAjoutsRapides: stores.configAjoutsRapides,
     configAgence: stores.configAgence,
     configCotes: stores.configCotes,
-    marees: stores.marees,
+    marees: stores.marees(),
     mareesAnnees: stores.mareesAnnees,
     ports: stores.ports,
     pays: stores.pays,

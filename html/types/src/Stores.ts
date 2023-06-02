@@ -13,7 +13,7 @@ export type Stores = {
   configAjoutsRapides: typeof stores.configAjoutsRapides;
   configAgence: typeof stores.configAgence;
   configCotes: typeof stores.configCotes;
-  marees: typeof stores.marees;
+  marees: ReturnType<typeof stores.marees>;
   mareesAnnees: typeof stores.mareesAnnees;
   ports: typeof stores.ports;
   pays: typeof stores.pays;

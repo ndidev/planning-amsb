@@ -9,11 +9,11 @@
   ```
  -->
 <script lang="ts">
-  import { onMount } from "svelte";
-
   import { MaterialButton } from "@app/components";
 
   import Notiflix from "notiflix";
+
+  import { marees } from "@app/stores";
 
   import { fetcher, notiflixOptions } from "@app/utils";
 
@@ -38,17 +38,14 @@
           Notiflix.Block.dots([ligne], notiflixOptions.texts.suppression);
           ligne.style.minHeight = "initial";
 
-          await fetcher(`marees/${annee}`, {
-            requestInit: {
-              method: "DELETE",
-            },
-          });
+          await marees().delete(Number(annee));
 
           Notiflix.Notify.success(
             `Les marées de l'année ${annee} ont été supprimées`
           );
         } catch (erreur) {
           Notiflix.Notify.failure(erreur.message);
+          console.error(erreur);
           Notiflix.Block.remove([ligne]);
         }
       },
@@ -56,10 +53,6 @@
       notiflixOptions.themes.red
     );
   }
-
-  onMount(() => {
-    ligne.id = "config_marees_" + annee;
-  });
 </script>
 
 <li class="ligne" bind:this={ligne}>

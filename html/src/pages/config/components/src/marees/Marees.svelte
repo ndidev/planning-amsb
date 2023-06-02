@@ -12,7 +12,7 @@
   import { LigneMarees, TitreSousSection } from "../../";
   import { Chargement } from "@app/components";
 
-  import { mareesAnnees as annees } from "@app/stores";
+  import { marees, mareesAnnees as annees } from "@app/stores";
 
   import Notiflix from "notiflix";
 
@@ -38,16 +38,12 @@
     formData.append("csv", csv);
 
     try {
-      await fetcher("marees", {
-        requestInit: {
-          method: "POST",
-          body: formData,
-        },
-      });
+      await marees().create(formData);
 
       Notiflix.Notify.success("Les marées ont été ajoutées");
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
+      console.error(erreur);
     } finally {
       ajouterBtn.disabled = false;
     }
@@ -60,7 +56,7 @@
     <Chargement />
   {:else}
     <ul id="marees-existantes">
-      {#each [...$annees] as annee}
+      {#each [...$annees] as annee (annee)}
         <LigneMarees {annee} />
       {:else}
         <li class="ligne-vide">Aucune donnée de marées trouvées</li>

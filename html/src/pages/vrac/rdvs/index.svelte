@@ -1,14 +1,13 @@
 <!-- routify:options title="Planning AMSB - Vrac" -->
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { derived } from "svelte/store";
 
   import { LigneDate, LigneRdv, Placeholder } from "./components";
   import { BandeauInfo, ConnexionSSE } from "@app/components";
 
-  import { vracRdvs, vracProduits, marees } from "@app/stores";
-
   import { fetcher } from "@app/utils";
+
+  import { vracRdvs, vracProduits, marees as mareesStore } from "@app/stores";
 
   import type { RdvVrac } from "@app/types";
 
@@ -17,6 +16,8 @@
 
   let dates: Set<DateString>;
   let rdvsGroupes: GroupesRdv;
+  let datesMareesSup4m = new Set<string>();
+  let marees: ReturnType<typeof mareesStore>;
 
   $: if ($vracRdvs && $vracProduits) {
     dates = new Set(
@@ -26,7 +27,14 @@
     rdvsGroupes = grouperRdvs([...$vracRdvs.values()]);
 
     updateNaviresParDate();
+    updateMarees();
   }
+
+  $: datesMareesSup4m = new Set(
+    ($marees || [])
+      .filter((maree) => maree.te_cesson > 4)
+      .map((maree) => maree.date)
+  );
 
   /**
    * Grouper et trier les RDVs.
@@ -83,19 +91,6 @@
   }
 
   /**
-   * Dates pour lesquelles il y a une marée supérieure à 4m (pour le point d'exclamation).
-   */
-  const datesMareesSup4m = derived(
-    marees,
-    ($marees) =>
-      new Set(
-        ($marees || [])
-          .filter((maree) => maree.te_cesson > 4)
-          .map((maree) => maree.date)
-      )
-  );
-
-  /**
    * Navires à quai par date.
    */
   let naviresParDate = new Map<string, string[]>();
@@ -144,6 +139,19 @@
     );
   };
 
+  const updateMarees = async () => {
+    const params: Parameters<typeof mareesStore>[0] = {
+      debut: [...dates][0],
+      fin: [...dates][dates.size - 1],
+    };
+
+    if (!marees) {
+      marees = mareesStore(params);
+    } else {
+      marees.setParams(params);
+    }
+  };
+
   onMount(() => {
     document.addEventListener(
       "planning:consignation/escales",
@@ -179,7 +187,7 @@
     {#each [...rdvsGroupes] as [date, rdvs] (date)}
       <LigneDate
         {date}
-        maree={$datesMareesSup4m.has(date)}
+        maree={datesMareesSup4m.has(date)}
         navires={naviresParDate.get(date) || []}
       />
       <div>
