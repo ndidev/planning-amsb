@@ -54,6 +54,14 @@
    * afin de mettre en forme le planning
    */
   function obtenirStatutEscale() {
+    let statut:
+      | "atsea"
+      | "arrived"
+      | "berthed"
+      | "inops"
+      | "completed"
+      | "departed" = "atsea";
+
     let eta = creerDateDepuisETX("eta");
     let etb = creerDateDepuisETX("etb");
     let ops = creerDateDepuisETX("ops");
@@ -61,21 +69,27 @@
     let etd = creerDateDepuisETX("etd");
     let maintenant = new Date();
 
-    if (eta.getTime() == new Date("2000-01-01T00:00").getTime()) {
-      // ETA non renseigné, ne rien faire
-    } else if (eta > maintenant) {
-      return "atsea";
-    } else if (etb > maintenant) {
-      return "arrived";
-    } else if (ops > maintenant) {
-      return "berthed";
-    } else if (etc > maintenant) {
-      return "inops";
-    } else if (etd > maintenant) {
-      return "completed";
-    } else if (etd < maintenant) {
-      return "departed";
+    if (eta && eta < maintenant) {
+      statut = "arrived";
     }
+
+    if (etb && etb < maintenant) {
+      statut = "berthed";
+    }
+
+    if (ops && ops < maintenant) {
+      statut = "inops";
+    }
+
+    if (etc && etc < maintenant) {
+      statut = "completed";
+    }
+
+    if (etd && etd < maintenant) {
+      statut = "departed";
+    }
+
+    return statut;
   }
 
   /**
@@ -86,27 +100,26 @@
    * @return Date au format 'YYYY-MM-DDTHH:MM'
    */
   function creerDateDepuisETX(etx: "eta" | "etb" | "ops" | "etc" | "etd") {
-    let date = escale[`${etx}_date`] || "2000-01-01"; // Date mise au format 'YYYY-MM-DD'
+    if (!escale[`${etx}_date`]) return null;
+
+    let date = escale[`${etx}_date`]; // Date mise au format 'YYYY-MM-DD'
     let heure = escale[`${etx}_heure`];
     let regexp_heure = /^((([01][0-9]|[2][0-3]):[0-5][0-9])|24:00)/;
+
     if (!regexp_heure.test(heure)) {
       heure = "00:00"; // Si heure non renseignée
     } else {
       heure = heure.substring(0, 5);
     }
-    return new Date(date + "T" + heure); // Date au format 'YYYY-MM-DDTHH:MM' ('T' pour compatibilité IE11)
+
+    return new Date(date + "T" + heure);
   }
 </script>
 
 <div
-  class="escale pure-g"
-  class:atsea={statutEscale === "atsea"}
-  class:arrived={statutEscale === "arrived"}
-  class:berthed={statutEscale === "berthed"}
-  class:inops={statutEscale === "inops"}
-  class:completed={statutEscale === "completed"}
-  class:departed={statutEscale === "departed"}
+  class={`escale pure-g ${statutEscale}`}
   class:treguier={escale.call_port === "Tréguier"}
+  style:--bg-color={`var(--bg-${statutEscale})`}
 >
   <!-- Navire / Armateur -->
   <div class="navire-armateur bloc pure-u-5-24">
@@ -241,6 +254,11 @@
     --etx-actif-size: 1.3rem;
     --etx-actif-weight: normal;
     --etx-actif-transform: uppercase;
+    --bg-arrived: rgba(255, 255, 0, 0.6);
+    --bg-berthed: rgba(160, 0, 200, 0.8);
+    --bg-inops: rgba(60, 250, 255, 0.6);
+    --bg-completed: rgba(0, 255, 0, 0.6);
+    --bg-departed: rgba(0, 80, 255, 0.8);
   }
 
   /* PLANNING */
@@ -249,6 +267,7 @@
     font-size: 1.2em;
     padding: 20px 0px 20px 20px;
     border-bottom: 1px solid #999;
+    background-color: var(--bg-color, "white");
   }
 
   .escale:last-child {
@@ -331,29 +350,9 @@
     text-transform: var(--etx-actif-transform);
   }
 
-  .escale.arrived {
-    background-color: rgba(255, 255, 0, 0.8);
-  }
-
-  .escale.berthed {
-    background-color: rgba(160, 0, 200, 0.8);
-  }
-
   .escale.berthed,
   .escale.berthed .voyage {
     color: #fff;
-  }
-
-  .escale.inops {
-    background-color: rgba(60, 250, 255, 0.8);
-  }
-
-  .escale.completed {
-    background-color: rgba(0, 255, 0, 0.8);
-  }
-
-  .escale.departed {
-    background-color: rgba(0, 80, 255, 0.8);
   }
 
   .escale.departed,
