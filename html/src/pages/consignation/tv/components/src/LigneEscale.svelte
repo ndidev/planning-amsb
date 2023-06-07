@@ -274,10 +274,6 @@
     border-bottom: none;
   }
 
-  .escale:hover {
-    background-color: rgba(0, 0, 0, 0.1);
-  }
-
   .escale.treguier {
     color: #0d74ba;
   }

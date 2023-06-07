@@ -236,10 +236,6 @@
       padding: 8px 0 8px 5px;
     }
 
-    .rdv:hover {
-      background-color: rgba(0, 0, 0, 0.1);
-    }
-
     .rdv:hover > .copie-modif-suppr {
       visibility: visible;
       margin-right: 10px;

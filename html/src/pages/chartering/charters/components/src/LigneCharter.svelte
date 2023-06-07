@@ -197,14 +197,6 @@
     border-bottom: none;
   }
 
-  .charter:hover {
-    background-color: rgba(0, 0, 0, 0.1);
-  }
-
-  .charter:hover .copie-modif-suppr {
-    visibility: visible;
-  }
-
   .bloc {
     margin: 3px 5px;
   }
@@ -270,6 +262,10 @@
   @media screen and (min-width: 768px) {
     .charter {
       align-items: center;
+    }
+
+    .charter:hover .copie-modif-suppr {
+      visibility: visible;
     }
 
     .bloc {

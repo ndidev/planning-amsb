@@ -605,11 +605,6 @@
 
   /* Desktop */
   @media screen and (min-width: 768px) {
-    /* Affichage des horloges */
-    .rdv:hover {
-      background-color: rgba(0, 0, 0, 0.1);
-    }
-
     .rdv:hover .copie-modif-suppr {
       visibility: visible;
       margin-right: 10px;

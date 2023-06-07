@@ -83,10 +83,6 @@
     border-bottom: none;
   }
 
-  .rdv:hover {
-    background-color: rgba(0, 0, 0, 0.1);
-  }
-
   .heure {
     font-weight: bold;
     color: #d91ffa;

@@ -473,10 +473,6 @@
       align-items: center;
     }
 
-    .escale:hover {
-      background-color: rgba(0, 0, 0, 0.1);
-    }
-
     .escale:hover .copie-modif-suppr {
       visibility: visible;
     }
