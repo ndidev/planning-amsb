@@ -4,7 +4,7 @@ require_once __DIR__ . '/bootstrap.php';
 
 use Api\Utils\DatabaseConnector;
 use Api\Utils\DateUtils;
-use Api\Utils\PDFUtils;
+use Api\Utils\PDF\PDFUtils;
 
 const AUJOURDHUI = new DateTime();
 
@@ -82,8 +82,18 @@ foreach ($configs as $config) {
   $rapport .= "  Dates : du " . DateUtils::format(DateUtils::DATE_FULL, $date_debut) . " au " . DateUtils::format(DateUtils::DATE_FULL, $date_fin) . PHP_EOL;
   if ($resultat["statut"] === "succes") {
     $rapport .= "  Adresses : " . PHP_EOL;
-    foreach ($resultat["adresses"] as $adresse) {
-      $rapport .= "   $adresse" . PHP_EOL;
+    $rapport .= "    From : " . $resultat["adresses"]["from"] . PHP_EOL;
+    $rapport .= "    To : " . PHP_EOL;
+    foreach ($resultat["adresses"]["to"] as $adresse) {
+      $rapport .= "      $adresse" . PHP_EOL;
+    }
+    $rapport .= "    Cc : " . PHP_EOL;
+    foreach ($resultat["adresses"]["cc"] as $adresse) {
+      $rapport .= "      $adresse" . PHP_EOL;
+    }
+    $rapport .= "    Bcc : " . PHP_EOL;
+    foreach ($resultat["adresses"]["bcc"] as $adresse) {
+      $rapport .= "      $adresse" . PHP_EOL;
     }
   }
   if ($resultat["statut"] === "echec") {

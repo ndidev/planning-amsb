@@ -5,8 +5,9 @@ namespace Api\Utils\PDF;
 use Api\Utils\DatabaseConnector as DB;
 use Api\Utils\DateUtils;
 use Api\Utils\PDF\PDFVrac;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception as PHPMailerException;
 use \DateTime;
-use \Exception;
 use \tFPDF;
 
 class PDFUtils
@@ -216,60 +217,36 @@ class PDFUtils
       "erreur" => null
     ];
 
-    // Mise en forme des dates
-    $date_debut_mise_en_forme = DateUtils::format("dd MMMM yyyy", $date_debut);
-    $date_fin_mise_en_forme = DateUtils::format("dd MMMM yyyy", $date_fin);
-
-    // Création e-mail
-    $mail = new PDFMailer(true);  // Passing `true` enables exceptions
-
     // Infos agence
     $agence = (new DB)->getConnection()->query("SELECT * FROM config_agence WHERE service = 'transit'")->fetch();
 
-    // Sujet du message
-    $sujet_message = "[{$agence['ville']}] Planning du $date_debut_mise_en_forme au $date_fin_mise_en_forme";
-
-    // Corps du message
-    $corps_message = $mail->ajouterCorpsMessage($date_debut, $date_fin, $agence);
-
     try {
-      // Office 365 server settings
-      // $mail->SMTPDebug = SMTP::DEBUG_SERVER;                 // Enable verbose debug output
-      $mail->isSMTP();                                       // Send using SMTP
-      $mail->SMTPAuth   = true;                              // Enable SMTP authentication
-      $mail->SMTPSecure = PDFMailer::ENCRYPTION_STARTTLS;    // Enable TLS encryption; `PHPMailer::ENCRYPTION_SMTPS` also accepted
-      $mail->Host       = $_ENV["MAIL_HOST"];                // Set the SMTP server to send through
-      $mail->Port       = $_ENV["MAIL_PORT"];                // TCP port to connect to
-      $mail->Username   = $_ENV["MAIL_USER"];                // SMTP username
-      $mail->Password   = $_ENV["MAIL_PASS"];                // SMTP password
+      // Création e-mail
+      $mail = new PDFMailer(
+        $pdf,
+        $date_debut,
+        $date_fin,
+        $agence
+      );
 
-      $mail->setLanguage('fr', API . '/vendor/phpmailer/phpmailer/language/');
-
-      //Recipients
-      $mail->setFrom($_ENV["MAIL_USER"], '=?utf-8?B?' . base64_encode($_ENV["MAIL_FROM"]) . '?=');
-      $adresses_envoyees = $mail->ajouterAdresses($liste_emails);
-      $mail->addBCC('contact@ndi.dev');
-
-      //Attachments
-      $mail->addStringAttachment($pdf->Output('S'), $sujet_message . '.pdf', 'base64', 'application/pdf'); // Ajout du planning PDF en pièce jointe
-      $mail->AddEmbeddedImage(API . '/images/amsb_mini.png', 'logoimg', 'AMSB'); // Image appelée par Content ID (cid:logoimg) dans le corps du message
-
-      //Content
-      $mail->isHTML(true);   // Set email format to HTML
-      $mail->CharSet = 'UTF-8';
-      $mail->Subject = $sujet_message;
-      $mail->Body    = $corps_message;
+      // Adresses
+      $mail->ajouterAdresses(to: explode(PHP_EOL, $liste_emails));
 
       $mail->send();
       $mail->smtpClose();
 
       $resultat["statut"] = "succes";
       $resultat["message"] = "Le PDF a été envoyé avec succès.";
-      $resultat["adresses"] = $adresses_envoyees;
-    } catch (\Throwable $e) {
+      $resultat["adresses"] = $mail->getAllAddresses();
+    } catch (PHPMailerException $e) {
       $resultat["statut"] = "echec";
       $resultat["message"] = "Erreur : " . $mail->ErrorInfo;
-      $resultat["erreur"] = error_info($e);
+      $resultat["erreur"] = $e->errorMessage();
+      error_logger($e);
+    } catch (\Exception $e) {
+      $resultat["statut"] = "echec";
+      $resultat["message"] = "Erreur : " . $mail->ErrorInfo;
+      error_logger($e);
     } finally {
       unset($mail);
 
