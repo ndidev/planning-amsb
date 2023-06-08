@@ -51,6 +51,14 @@
   ];
 
   let selected = configs[0];
+
+  // Si l'utilisateur voit son autorisation modifiée en temps réel,
+  // afficher l'écran par défaut (bandeau info = non soumis à un module)
+  $: {
+    if (selected.module && !$currentUser.canEdit(selected.module)) {
+      selected = configs[0];
+    }
+  }
 </script>
 
 <!-- routify:options guard="config" -->
