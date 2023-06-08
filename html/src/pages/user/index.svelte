@@ -144,10 +144,7 @@
 <main class="formulaire">
   <h1>Utilisateur</h1>
 
-  <form
-    class="pure-form pure-form-aligned"
-    on:submit|preventDefault={submitForm}
-  >
+  <form class="pure-form pure-form-aligned">
     <!-- Nom -->
     <div class="pure-control-group">
       <label for="nom">Nom</label>
@@ -210,10 +207,15 @@
       </span>
     </div>
 
-    <!-- Validation/Annulation/Suppression -->
+    <!-- Validation/Annulation -->
     <div class="boutons">
-      <!-- Bouton "Valider" si modidification -->
-      <BoutonAction preset="ajouter" bind:this={validerButton} type="submit">
+      <!-- Bouton "Valider" -->
+      <BoutonAction
+        preset="ajouter"
+        type="submit"
+        on:click={submitForm}
+        bind:this={validerButton}
+      >
         Valider
       </BoutonAction>
 
