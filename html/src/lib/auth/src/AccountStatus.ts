@@ -37,4 +37,13 @@ export enum AccountStatus {
    * Seul un administrateur peur le débloquer.
    */
   LOCKED = "locked",
+
+  /**
+   * Compte supprimé.
+   *
+   * Le compte a été supprimé.
+   *
+   * Il est conservé pour l'historique des opérations mais n'est pas récupérable.
+   */
+  DELETED = "deleted",
 }

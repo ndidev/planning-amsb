@@ -2,8 +2,6 @@
 
 namespace Api\Utils\Auth;
 
-use ReflectionClass;
-
 /**
  * Statuts des clés d'API.
  */
@@ -25,16 +23,4 @@ final class ApiKeyStatus
    * Clé révoquée.
    */
   public const REVOKED = "revoked";
-
-
-  /**
-   * Renvoie les constantes de la présente classe.
-   * 
-   * @return array 
-   */
-  public static function getConstants()
-  {
-    $reflect = new ReflectionClass(__CLASS__);
-    return $reflect->getConstants();
-  }
 }

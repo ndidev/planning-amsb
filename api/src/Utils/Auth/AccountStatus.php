@@ -42,4 +42,13 @@ enum AccountStatus: string
    * Seul un administrateur peur le débloquer.
    */
   case LOCKED = "locked";
+
+  /**
+   * Compte supprimé.
+   * 
+   * Le compte a été supprimé.
+   * 
+   * Il est conservé pour l'historique des opérations mais n'est pas récupérable.
+   */
+  case DELETED = "deleted";
 }

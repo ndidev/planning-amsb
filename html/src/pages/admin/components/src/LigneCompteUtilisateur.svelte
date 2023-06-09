@@ -5,11 +5,11 @@
 
   Usage :
   ```tsx
-  <Compte compte: CompteUtilisateur={compte} />
+  <Compte id: number|string />
   ```
  -->
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
 
   import Notiflix from "notiflix";
   import autosize from "autosize";
@@ -18,18 +18,24 @@
 
   import { adminUsers } from "@app/stores";
 
-  import {
-    fetcher,
-    sitemap,
-    notiflixOptions,
-    validerFormulaire,
-  } from "@app/utils";
+  import { sitemap, notiflixOptions, validerFormulaire } from "@app/utils";
 
   import { AccountStatus, UserRoles, TypesModules } from "@app/auth";
 
   import type { CompteUtilisateur } from "@app/types";
 
-  export let compte: CompteUtilisateur;
+  export let id: CompteUtilisateur["uid"];
+
+  let isNew: boolean = id?.startsWith("new");
+  let compte: CompteUtilisateur;
+  let compteInitital: CompteUtilisateur;
+
+  let inputLogin: HTMLInputElement;
+
+  const unsubscribeAdminUsers = adminUsers.subscribe((users) => {
+    compte = structuredClone(users.get(id));
+    compteInitital = structuredClone(compte);
+  });
 
   // Vérification que toutes les rubriques ont une valeur de rôle
   // Sinon, mettre à zéro
@@ -39,10 +45,6 @@
       compte.roles[module] = UserRoles.NONE;
     }
   }
-
-  let compteInitital: CompteUtilisateur = structuredClone(compte);
-
-  let isNew: boolean = compte.uid?.startsWith("new");
 
   /**
    * Ce composant.
@@ -148,6 +150,22 @@
         },
       },
     },
+    [AccountStatus.DELETED]: {
+      titre: "Compte supprimé",
+      texte:
+        "Le compte a été supprimé.<br/>" +
+        "Il est conservé pour l'historique mais ne peut pas être récupéré.",
+      notiflix: {
+        type: "failure",
+        options: {
+          failure: {
+            backOverlayColor: "hsla(0, 60%, 50%, 0.2)",
+            svgColor: "hsl(0, 60%, 50%)",
+            buttonBackground: "hsl(0, 60%, 50%)",
+          },
+        },
+      },
+    },
   };
 
   /**
@@ -179,6 +197,27 @@
         messageMaxLength: Infinity,
       }
     );
+  }
+
+  /**
+   * Vérifier si le login n'est pas déjà utilisé.
+   *
+   * Si c'est le cas, mettre le champ invalide.
+   */
+  function verifierLogin() {
+    inputLogin.value = inputLogin.value.toLowerCase();
+
+    const newLogin = inputLogin.value;
+
+    const loginList = [...$adminUsers.values()]
+      .map((user) => user.login)
+      .filter((login) => login !== compteInitital.login);
+
+    if (loginList.includes(newLogin)) {
+      inputLogin.setCustomValidity("L'identifiant existe déjà.");
+    } else {
+      inputLogin.setCustomValidity("");
+    }
   }
 
   /**
@@ -288,13 +327,7 @@
           Notiflix.Block.dots([ligne], "Désactivation en cours...");
           ligne.style.minHeight = "initial";
 
-          await fetcher(`admin/users/${compte.uid}`, {
-            requestInit: {
-              method: "DELETE",
-            },
-          });
-
-          compte.statut = AccountStatus.INACTIVE;
+          await adminUsers.deactivate(compte.uid);
 
           Notiflix.Notify.success("Le compte a été désactivé");
         } catch (erreur: any) {
@@ -308,9 +341,38 @@
     );
   }
 
-  onMount(() => {
-    ligne.id = "_" + compte.uid;
+  /**
+   * Désactiver le compte.
+   */
+  function supprimerCompte() {
+    // Demande de confirmation
+    Notiflix.Confirm.show(
+      "Suppression du compte",
+      "Voulez-vous vraiment supprimer le compte ?<br/>" +
+        "L'utilisateur ne pourra plus se connecter.<br/>" +
+        "Le compte ne pourra pas être récupéré.<br/>" +
+        "Pour une désactivation temporaire (ex: stagiaire), il est préférable de désactiver le compte pour pouvoir le réactiver plus tard.",
+      "Supprimer",
+      "Annuler",
+      async function () {
+        try {
+          Notiflix.Block.dots([ligne], "Suppression en cours...");
+          ligne.style.minHeight = "initial";
 
+          await adminUsers.delete(compte.uid);
+
+          Notiflix.Notify.success("Le compte a été supprimé");
+        } catch (erreur: any) {
+          Notiflix.Notify.failure(erreur.message);
+          Notiflix.Block.remove([ligne]);
+        }
+      },
+      null,
+      notiflixOptions.themes.red
+    );
+  }
+
+  onMount(() => {
     // Si changement d'une ligne, activation de la classe "modificationEnCours"
     ligne
       .querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
@@ -324,6 +386,10 @@
     // Autosize
     const inputCommentaire = ligne.querySelector("textarea");
     if (inputCommentaire) autosize(inputCommentaire);
+  });
+
+  onDestroy(() => {
+    unsubscribeAdminUsers();
   });
 </script>
 
@@ -370,6 +436,7 @@
             name="nom"
             data-nom="Nom"
             bind:value={compte.nom}
+            maxlength="255"
             required
           />
         </div>
@@ -378,12 +445,16 @@
         <div class="champ pure-control-group">
           <label for={"login_" + compte.uid}>Login</label>
           <input
+            bind:this={inputLogin}
             type="text"
             class="login"
             id={"login_" + compte.uid}
             name="login"
             data-nom="Login"
             bind:value={compte.login}
+            on:input={verifierLogin}
+            pattern="[a-z0-9_-]+"
+            maxlength="255"
             required
           />
         </div>
@@ -417,19 +488,22 @@
       <!-- Rôles -->
       <div class="roles">
         {#each [...sitemap] as [module, { affichage, type }]}
-          <fieldset name={module} class="rubrique">
+          <fieldset
+            name={module}
+            class="rubrique"
+            disabled={/* Désactivé si admin : un administrateur ne peut pas se retirer lui-même le privilège */ module ===
+              "admin" && compte.self}
+          >
             <legend>{affichage}</legend>
 
             <!-- Module de type "Accès" -->
             {#if type === TypesModules.ACCESS}
               <label class="pure-radio">
-                <!-- Désactivé si admin : un administrateur ne peut pas se retirer lui-même le privilège -->
                 <input
                   type="radio"
                   bind:group={compte.roles[module]}
                   name={module}
                   value={UserRoles.NONE}
-                  disabled={module === "admin" && compte.self}
                 />
                 Pas accès
               </label>
@@ -496,6 +570,15 @@
               disabled={compte.statut === AccountStatus.INACTIVE}
             >
               Désactiver le compte
+            </button>
+          </div>
+
+          <div class="action red">
+            <button
+              on:click|preventDefault={supprimerCompte}
+              disabled={compte.statut === AccountStatus.DELETED}
+            >
+              Supprimer le compte
             </button>
           </div>
         </div>
@@ -570,6 +653,10 @@
     margin-left: 1%;
   }
 
+  fieldset:disabled {
+    color: darkgray;
+  }
+
   .compte textarea {
     padding: 5px;
   }
@@ -612,6 +699,10 @@
 
   .action > button:disabled {
     cursor: auto;
+  }
+
+  .action.red > button:not(:disabled) {
+    color: var(--statut-locked);
   }
 
   /* Notiflix */

@@ -3,6 +3,10 @@
   import { LigneCompteUtilisateur } from "./components";
   import { Chargement, ConnexionSSE } from "@app/components";
   import { adminUsers } from "@app/stores";
+
+  $: comptes = [...$adminUsers.values()].sort((a, b) =>
+    a.login < b.login ? -1 : 1
+  );
 </script>
 
 <!-- routify:options guard="admin" -->
@@ -20,8 +24,8 @@
     <Chargement />
   {:else}
     <ul>
-      {#each [...$adminUsers.values()] as compte (compte.uid)}
-        <LigneCompteUtilisateur {compte} />
+      {#each comptes as compte (compte.uid)}
+        <LigneCompteUtilisateur id={compte.uid} />
       {/each}
     </ul>
   {/if}

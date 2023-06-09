@@ -13,14 +13,15 @@ use Api\Utils\Auth\ApiKeyStatus;
 use Api\Utils\DateUtils;
 use Api\Utils\Exceptions\Auth\LoginException;
 use Api\Utils\Exceptions\Auth\SessionException;
-use Api\Utils\Exceptions\Auth\AccountLockedException;
 use Api\Utils\Exceptions\Auth\AccountStatusException;
 use Api\Utils\Exceptions\Auth\AccountPendingException;
+use Api\Utils\Exceptions\Auth\AccountInactiveException;
+use Api\Utils\Exceptions\Auth\AccountLockedException;
+use Api\Utils\Exceptions\Auth\AccountDeletedException;
 use Api\Utils\Exceptions\Auth\InvalidAccountException;
 use Api\Utils\Exceptions\Auth\InvalidApiKeyException;
-use Api\Utils\Exceptions\Auth\AccountInactiveException;
-use Api\Utils\Exceptions\Auth\AuthException;
 use Api\Utils\Exceptions\Auth\MaxLoginAttemptsException;
+use Api\Utils\Exceptions\Auth\AuthException;
 
 
 /**
@@ -90,6 +91,7 @@ class User
 
     if ($uid) {
       $this->uid = $uid;
+      $this->populate();
     }
   }
 
@@ -162,6 +164,10 @@ class User
 
       case AccountStatus::LOCKED:
         throw new AccountLockedException();
+        break;
+
+      case AccountStatus::DELETED:
+        throw new AccountDeletedException();
         break;
 
       default:
@@ -335,7 +341,12 @@ class User
 
     $this->uid = $uid;
 
+    // Renseignement des infos de l'utilisateur
     $this->populate();
+
+    if ($this->statut !== AccountStatus::ACTIVE) {
+      throw new AccountStatusException($this->statut);
+    }
 
     return $this;
   }
