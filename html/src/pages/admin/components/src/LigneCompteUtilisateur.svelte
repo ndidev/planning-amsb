@@ -205,7 +205,9 @@
    * Si c'est le cas, mettre le champ invalide.
    */
   function verifierLogin() {
-    inputLogin.value = inputLogin.value.toLowerCase();
+    inputLogin.value = inputLogin.value
+      .toLowerCase()
+      .replaceAll(/[^a-z0-9_-]/g, "");
 
     const newLogin = inputLogin.value;
 

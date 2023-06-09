@@ -5,6 +5,7 @@ namespace Api\Models\Admin;
 use Api\Utils\BaseModel;
 use Api\Utils\Auth\AccountStatus;
 use Api\Utils\Auth\User;
+use Api\Utils\Exceptions\Auth\ForbiddenException;
 
 class UserAccountModel extends BaseModel
 {
@@ -260,6 +261,13 @@ class UserAccountModel extends BaseModel
    */
   public function delete(string $uid): bool
   {
+    $user = new User($uid);
+
+    // Un utilisateur ne peut pas se supprimer lui-même
+    if ($user->uid === $this->admin->uid) {
+      throw new ForbiddenException("Un administrateur ne peut pas supprimer son propre compte.");
+    }
+
     $statement = "UPDATE admin_users
       SET
         login = CONCAT(login, '_del-', DATE(NOW()), 'T', TIME(NOW())),
@@ -276,8 +284,8 @@ class UserAccountModel extends BaseModel
       "uid" => $uid
     ]);
 
-    (new User($uid))->update_redis();
-    (new User($uid))->clear_sessions();
+    $user->update_redis();
+    $user->clear_sessions();
 
     return $succes;
   }

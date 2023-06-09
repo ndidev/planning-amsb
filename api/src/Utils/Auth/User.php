@@ -22,14 +22,14 @@ use Api\Utils\Exceptions\Auth\InvalidAccountException;
 use Api\Utils\Exceptions\Auth\InvalidApiKeyException;
 use Api\Utils\Exceptions\Auth\MaxLoginAttemptsException;
 use Api\Utils\Exceptions\Auth\AuthException;
-
+use Stringable;
 
 /**
  * Classe contenant toutes les propriétés d'un compte utilisateur.
  * 
  * @package Api\Utils
  */
-class User
+class User implements Stringable
 {
   /**
    * UID de l'utilisateur.
@@ -602,6 +602,11 @@ class User
    */
   private function lock_account(string $raison = ""): void
   {
+    // Si le compte est déjà bloqué, ne rien faire
+    if ($this->statut === AccountStatus::LOCKED) {
+      return;
+    }
+
     (new DB)
       ->getConnection()
       ->prepare(
@@ -624,6 +629,24 @@ class User
         "historique" => $this->redis->hGet("admin:users:{$this->uid}", "historique") . PHP_EOL . $raison
       ]
     );
+
+    notify_sse("admin/users", "update", $this->uid,);
+  }
+
+  public function __toString(): string
+  {
+    return json_encode([
+      "uid" => $this->uid,
+      "login" => $this->login,
+      "nom" => $this->nom,
+      // "created_at" => $this->created_at,
+      // "last_connection" => $this->last_connection,
+      "statut" => $this->statut->value,
+      "roles" => $this->roles,
+      // "commentaire" => $this->commentaire,
+      // "historique" => $this->historique,
+      // "self" => false
+    ]);
   }
 
   public function __destruct()
