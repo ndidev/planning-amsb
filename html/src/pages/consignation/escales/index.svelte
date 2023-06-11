@@ -1,6 +1,6 @@
 <!-- routify:options title="Planning AMSB - Consignation" -->
 <script lang="ts">
-  import { getContext, setContext } from "svelte";
+  import { onDestroy, getContext, setContext } from "svelte";
   import { params } from "@roxi/routify";
 
   import {
@@ -24,6 +24,16 @@
   } else {
     consignationEscales.setParams({});
   }
+
+  let escales: typeof $consignationEscales;
+
+  const unsubscribeEscales = consignationEscales.subscribe((value) => {
+    escales = value;
+  });
+
+  onDestroy(() => {
+    unsubscribeEscales();
+  });
 </script>
 
 <!-- routify:options query-params-is-page -->
@@ -42,8 +52,8 @@
 <BandeauInfo module="consignation" pc />
 
 <main>
-  {#if $consignationEscales}
-    {#each [...$consignationEscales.values()] as escale (escale.id)}
+  {#if escales}
+    {#each [...escales.values()] as escale (escale.id)}
       <LigneEscale {escale} />
     {/each}
   {:else}
