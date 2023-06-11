@@ -33,7 +33,7 @@ export function createFlatStore<T extends { id: string | number }>(
   let current: Map<T["id"], T> = initial;
 
   const { subscribe, set, update } = writable<Map<T["id"], T>>(initial, () => {
-    if (!current) fetchAll();
+    fetchAll();
 
     document.addEventListener(`planning:${endpoint}`, handleDBEvent);
     for (const event of additionalEvents) {
