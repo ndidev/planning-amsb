@@ -3,7 +3,7 @@
  */
 
 // User
-export { currentUser } from "./src/user";
+export { currentUser } from "./src/currentUser";
 
 // Bois
 export { boisRdvs } from "./src/bois";

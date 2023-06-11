@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { writable, get } from "svelte/store";
 
 import Notiflix from "notiflix";
 
@@ -50,8 +50,9 @@ export const adminUsers = (function () {
     cancel: _cancel,
     create: _dbCreate,
     update: _dbUpdate,
-    deactivate: _dbDelete,
     reset: _dbReset,
+    deactivate: _dbDeactivate,
+    delete: _dbDelete,
     endpoint,
   };
 
@@ -120,16 +121,18 @@ export const adminUsers = (function () {
       },
     });
 
-    update((comptes) => {
-      // Suppression du compte temporaire
-      comptes.delete(data.uid);
+    _delete(data.uid);
+    _create(nouveauCompte);
+    // update((comptes) => {
+    //   // Suppression du compte temporaire
+    //   comptes.delete(data.uid);
 
-      const arrComptes = [...comptes.values()];
-      arrComptes.push(nouveauCompte);
-      arrComptes.sort((a, b) => (a.login < b.login ? -1 : 1));
+    //   const arrComptes = [...comptes.values()];
+    //   arrComptes.push(nouveauCompte);
+    //   arrComptes.sort((a, b) => (a.login < b.login ? -1 : 1));
 
-      return new Map(arrComptes.map((compte) => [compte.uid, compte]));
-    });
+    //   return new Map(arrComptes.map((compte) => [compte.uid, compte]));
+    // });
   }
 
   /**
@@ -153,14 +156,12 @@ export const adminUsers = (function () {
    *
    * @param id Identifiant du compte
    */
-  async function _dbDelete(id: CompteUtilisateur["uid"]) {
-    await fetcher(`${endpoint}/${id}`, {
-      requestInit: {
-        method: "DELETE",
-      },
-    });
+  async function _dbDeactivate(id: CompteUtilisateur["uid"]) {
+    const compte: CompteUtilisateur = structuredClone(get(adminUsers).get(id));
 
-    _delete(id);
+    compte.statut = AccountStatus.INACTIVE;
+
+    _dbUpdate(compte);
   }
 
   /**
@@ -169,21 +170,26 @@ export const adminUsers = (function () {
    * @param id Identifiant du compte
    */
   async function _dbReset(id: CompteUtilisateur["uid"]) {
-    await fetcher(`${endpoint}/${id}/reset`, {
+    const compte: CompteUtilisateur = structuredClone(get(adminUsers).get(id));
+
+    compte.statut = AccountStatus.PENDING;
+
+    _dbUpdate(compte);
+  }
+
+  /**
+   * Supprimer un compte.
+   *
+   * @param id Identifiant du compte
+   */
+  async function _dbDelete(id: CompteUtilisateur["uid"]) {
+    await fetcher(`${endpoint}/${id}`, {
       requestInit: {
-        method: "PUT",
+        method: "DELETE",
       },
     });
 
-    update((comptes) => {
-      if (!comptes.has(id)) throw new Error();
-
-      const compte = comptes.get(id);
-      compte.statut = AccountStatus.PENDING;
-      comptes.set(id, compte);
-
-      return comptes;
-    });
+    _delete(id);
   }
 
   /**
@@ -266,11 +272,7 @@ export const adminUsers = (function () {
    */
   function _delete(id: CompteUtilisateur["uid"]) {
     update((comptes) => {
-      if (!comptes.has(id)) throw new Error();
-
-      const compte = comptes.get(id);
-      compte.statut = AccountStatus.INACTIVE;
-      comptes.set(id, compte);
+      comptes.delete(id);
 
       return comptes;
     });

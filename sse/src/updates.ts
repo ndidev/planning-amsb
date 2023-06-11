@@ -1,6 +1,7 @@
 import http from "node:http";
 import { env } from "node:process";
 import { connections } from "./stores";
+import type { DBEvent } from "../types";
 
 const UPDATES_PORT = parseInt(env["UPDATES_PORT"] as string);
 
@@ -36,7 +37,7 @@ function dbEventsListener(
   });
 
   request.on("end", () => {
-    const event: DBEventData = JSON.parse(body);
+    const event: DBEvent = JSON.parse(body);
     response.end();
 
     const origin = event.origin;
@@ -60,6 +61,7 @@ function dbEventsListener(
       event.name = "user";
       if (event.data) {
         const data = {
+          uid: event.id,
           login: event.data.login,
           nom: event.data.nom,
           roles: event.data.roles,
@@ -74,6 +76,32 @@ function dbEventsListener(
           connection.response.write(`event: db\n`);
           connection.response.write(`data: ${JSON.stringify(event)}\n\n`);
         });
+    }
+
+    // En cas de déconnexion (ex: utilisateur désactivé/bloqué), clôturer la connexion
+    if (event.name === "admin/sessions") {
+      if (event.type === "close") {
+        if (String(event.id).startsWith("uid:")) {
+          const uid = String(event.id).substring(4);
+          [...connections].forEach((connection) => {
+            if (connection.userId === uid) {
+              connection.request.destroy();
+              connections.delete(connection);
+            }
+          });
+        }
+
+        if (String(event.id).startsWith("sid:")) {
+          const sid = String(event.id).substring(4);
+          const connection = [...connections].find(
+            ({ sessionId }) => sid === sessionId
+          );
+          if (connection) {
+            connection.request.destroy();
+            connections.delete(connection);
+          }
+        }
+      }
     }
   });
 }

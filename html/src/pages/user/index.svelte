@@ -183,7 +183,6 @@
         autocomplete="new-password"
         bind:value={password}
         minlength={LONGUEUR_MINI_PASSWORD}
-        maxlength="255"
       />
       <span class="pure-form-message-inline">
         {passwordMessage}
@@ -199,8 +198,6 @@
         placeholder="Retaper le mot de passe"
         autocomplete="new-password"
         bind:value={passwordConfirm}
-        minlength={LONGUEUR_MINI_PASSWORD}
-        maxlength="255"
       />
       <span class="pure-form-message-inline">
         {passwordConfirmMessage}

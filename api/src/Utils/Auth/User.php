@@ -13,15 +13,15 @@ use Api\Utils\Auth\ApiKeyStatus;
 use Api\Utils\DateUtils;
 use Api\Utils\Exceptions\Auth\LoginException;
 use Api\Utils\Exceptions\Auth\SessionException;
-use Api\Utils\Exceptions\Auth\AccountLockedException;
 use Api\Utils\Exceptions\Auth\AccountStatusException;
 use Api\Utils\Exceptions\Auth\AccountPendingException;
+use Api\Utils\Exceptions\Auth\AccountInactiveException;
+use Api\Utils\Exceptions\Auth\AccountLockedException;
+use Api\Utils\Exceptions\Auth\AccountDeletedException;
 use Api\Utils\Exceptions\Auth\InvalidAccountException;
 use Api\Utils\Exceptions\Auth\InvalidApiKeyException;
-use Api\Utils\Exceptions\Auth\AccountInactiveException;
-use Api\Utils\Exceptions\Auth\AuthException;
 use Api\Utils\Exceptions\Auth\MaxLoginAttemptsException;
-
+use Api\Utils\Exceptions\Auth\AuthException;
 
 /**
  * Classe contenant toutes les propriétés d'un compte utilisateur.
@@ -90,6 +90,7 @@ class User
 
     if ($uid) {
       $this->uid = $uid;
+      $this->populate();
     }
   }
 
@@ -132,7 +133,10 @@ class User
     $password_is_valid = password_verify($password, $this->password ?? "");
 
     if (!$password_is_valid) {
-      $login_attempts = $this->increment_login_attempts();
+      // Si le compte est désactivé, ne pas incrémenter les tentatives
+      if ($this->statut !== AccountStatus::INACTIVE) {
+        $login_attempts = $this->increment_login_attempts();
+      }
 
       if ($login_attempts >= $_ENV["AUTH_MAX_LOGIN_ATTEMPTS"]) {
         // Si le compte n'est pas déjà bloqué, le bloquer
@@ -162,6 +166,10 @@ class User
 
       case AccountStatus::LOCKED:
         throw new AccountLockedException();
+        break;
+
+      case AccountStatus::DELETED:
+        throw new AccountDeletedException();
         break;
 
       default:
@@ -335,7 +343,12 @@ class User
 
     $this->uid = $uid;
 
+    // Renseignement des infos de l'utilisateur
     $this->populate();
+
+    if ($this->statut !== AccountStatus::ACTIVE) {
+      throw new AccountStatusException($this->statut);
+    }
 
     return $this;
   }
@@ -412,6 +425,9 @@ class User
       }
     }
     $this->redis->exec();
+
+    // Clôturer les connexions SSE
+    notify_sse("admin/sessions", "close", "uid:{$this->uid}");
   }
 
 
@@ -440,6 +456,7 @@ class User
     // Si déjà identifié, ne pas exécuter la fonction
     if ($this->uid) return;
 
+    $uid = NULL;
     $user = false;
 
     // Identification grâce au login
@@ -541,6 +558,8 @@ class User
     setcookie($_ENV["SESSION_COOKIE_NAME"], false, [
       "path" => $_ENV["SESSION_COOKIE_PATH"]
     ]);
+
+    notify_sse("admin/sessions", "close", "sid:{$sid}");
   }
 
   /**
@@ -591,6 +610,11 @@ class User
    */
   private function lock_account(string $raison = ""): void
   {
+    // Si le compte est déjà bloqué, ne rien faire
+    if ($this->statut === AccountStatus::LOCKED) {
+      return;
+    }
+
     (new DB)
       ->getConnection()
       ->prepare(
@@ -613,7 +637,27 @@ class User
         "historique" => $this->redis->hGet("admin:users:{$this->uid}", "historique") . PHP_EOL . $raison
       ]
     );
+
+    // Notification SSE
+    $user = $this->redis->hGetAll("admin:users:{$this->uid}");
+    unset($user["password"]);
+    unset($user["can_login"]);
+    unset($user["login_attempts"]);
+    // Rétablissement des types int pour les rôles
+    $user["roles"] = json_decode($user["roles"]);
+    foreach ($user["roles"] as $role => &$value) {
+      $value = (int) $value;
+    }
+    notify_sse("admin/users", "update", $this->uid, $user);
+
+    $this->clear_sessions();
   }
+
+  /**
+   * ===========================================
+   *            MÉTHODES MAGIQUES
+   * ===========================================
+   */
 
   public function __destruct()
   {

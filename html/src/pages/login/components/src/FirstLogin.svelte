@@ -189,6 +189,7 @@
           bind:this={passwordInput}
           autocomplete="new-password"
           placeholder="Mot de passe"
+          minlength={LONGUEUR_MINI_PASSWORD}
         />
       </div>
 

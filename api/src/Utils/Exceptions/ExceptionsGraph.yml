@@ -13,9 +13,10 @@ GenericException:
       AdminException:
       AccountStatusException:
         AccountPendingException:
+        AccountInactiveException:
         AccountLockedException:
           AccountLockedException:
             MaxLoginAttemptsException:
-        AccountInactiveException:
+        AccountDeletedException:
 
   ClientException:

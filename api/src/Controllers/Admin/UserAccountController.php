@@ -65,8 +65,6 @@ class UserAccountController extends BaseController
 
   /**
    * Récupère tous comptes utilisateurs.
-   * 
-   * @param array $filtre
    */
   public function readAll()
   {
@@ -169,9 +167,9 @@ class UserAccountController extends BaseController
   }
 
   /**
-   * Désactive un compte utilisateur.
+   * Supprime un compte utilisateur.
    * 
-   * @param string $uid UID du compte à désactiver.
+   * @param string $uid UID du compte à supprimer.
    */
   public function delete(string $uid)
   {

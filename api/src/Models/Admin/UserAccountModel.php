@@ -5,6 +5,7 @@ namespace Api\Models\Admin;
 use Api\Utils\BaseModel;
 use Api\Utils\Auth\AccountStatus;
 use Api\Utils\Auth\User;
+use Api\Utils\Exceptions\Auth\ForbiddenException;
 
 class UserAccountModel extends BaseModel
 {
@@ -32,9 +33,11 @@ class UserAccountModel extends BaseModel
     }
     $this->redis->exec();
 
-    // Suppression des comptes TV
+    // Suppression des comptes ne pouvant pas se connecter
     $comptes = array_values(array_filter($comptes, function ($compte) {
-      return $compte["can_login"] == 1;
+      return ($compte["can_login"] == 1 // comptes TV
+        && $compte["statut"] !== AccountStatus::DELETED->value // comptes supprimés
+      );
     }));
 
     foreach ($comptes as &$compte) {
@@ -48,9 +51,6 @@ class UserAccountModel extends BaseModel
       foreach ($compte["roles"] as $role => &$value) {
         $value = (int) $value;
       }
-
-      // Ajout d'une clé "self" pour désigner l'utilisateur effectuant la requête
-      $compte["self"] = $compte["uid"] === $this->admin->uid;
     }
     unset($compte);
 
@@ -97,9 +97,6 @@ class UserAccountModel extends BaseModel
       $value = (int) $value;
     }
 
-    // Ajout d'une clé "self" pour désigner l'utilisateur effectuant la requête
-    $compte["self"] = $compte["uid"] === $this->admin->uid;
-
     $donnees = $compte;
 
     return $donnees;
@@ -145,8 +142,8 @@ class UserAccountModel extends BaseModel
 
     $requete->execute([
       "uid" => $uid,
-      "login" => $input["login"],
-      "nom" => $input["nom"],
+      "login" => substr($input["login"], 0, 255),
+      "nom" => substr($input["nom"], 0, 255),
       "statut" => AccountStatus::PENDING->value,
       "roles" => json_encode($input["roles"]),
       "commentaire" => $input["commentaire"],
@@ -170,58 +167,119 @@ class UserAccountModel extends BaseModel
    */
   public function update(string $uid, array $input): array
   {
-    $statement = "UPDATE admin_users
-      SET
-        nom = :nom,
-        login = :login,
-        roles = :roles,
-        commentaire = :commentaire
-      WHERE uid = :uid";
+    $user = new User($uid);
+    $current_status = $user->statut;
+    $new_status = AccountStatus::tryFrom($input["statut"]) ?? $user->statut;
 
-    // Rétablissement des types int pour les rôles
-    foreach ($input["roles"] as $role => &$value) {
-      $value = (int) $value;
+    // Pas de changement de statut
+    if ($current_status === $new_status) {
+      $statement = "UPDATE admin_users
+        SET
+          nom = :nom,
+          login = :login,
+          roles = :roles,
+          commentaire = :commentaire
+        WHERE uid = :uid";
+
+      // Rétablissement des types int pour les rôles
+      foreach ($input["roles"] as $role => &$value) {
+        $value = (int) $value;
+      }
+
+      // Conservation du rôle admin : un admin ne peut pas changer lui-même osn statut admin
+      if ($user->uid === $this->admin->uid) {
+        $input["roles"]["admin"] = $user->roles->admin ?? 0;
+      }
+
+      $requete = $this->db->prepare($statement);
+      $requete->execute([
+        "login" => substr($input["login"], 0, 255),
+        "nom" => substr($input["nom"], 0, 255),
+        "commentaire" => $input["commentaire"],
+        "roles" => json_encode($input["roles"]),
+        "uid" => $uid,
+      ]);
     }
 
-    $requete = $this->db->prepare($statement);
-    $requete->execute([
-      "nom" => $input["nom"],
-      "login" => $input["login"],
-      "commentaire" => $input["commentaire"],
-      "roles" => json_encode($input["roles"]),
-      "uid" => $uid
-    ]);
+    // Passage au statut "PENDING" (réinitialisation)
+    if ($current_status !== AccountStatus::PENDING && $new_status === AccountStatus::PENDING) {
+      $statement = "UPDATE admin_users
+        SET
+          password = NULL,
+          statut = :statut,
+          login_attempts = 0,
+          historique = CONCAT(historique, '\n', '(', NOW(), ') Compte réinitialisé par ', :admin)
+        WHERE uid = :uid";
 
-    (new User($uid))->update_redis();
+      $requete = $this->db->prepare($statement);
+      $requete->execute([
+        "statut" => AccountStatus::PENDING->value,
+        "admin" => $this->admin->nom,
+        "uid" => $uid
+      ]);
+
+      $user->clear_sessions();
+    }
+
+    // Passage au statut "INACTIVE" (désactivation)
+    if ($current_status !== AccountStatus::INACTIVE && $new_status === AccountStatus::INACTIVE) {
+      $statement = "UPDATE admin_users
+        SET
+          password = NULL,
+          statut = :statut,
+          login_attempts = 0,
+          historique = CONCAT(historique, '\n', '(', NOW(), ') Compte désactivé par ', :admin)
+        WHERE uid = :uid";
+
+      $requete = $this->db->prepare($statement);
+      $requete->execute([
+        "statut" => AccountStatus::INACTIVE->value,
+        "admin" => $this->admin->nom,
+        "uid" => $uid
+      ]);
+
+      $user->clear_sessions();
+    }
+
+    $user->update_redis();
 
     return $this->read($uid);
   }
 
   /**
-   * Désactive un compte utilisateur.
+   * Supprime un compte utilisateur.
    * 
-   * @param string $uid UID du compte à désactiver
+   * @param string $uid UID du compte à supprimer
    * 
    * @return bool TRUE si succès, FALSE si erreur
    */
   public function delete(string $uid): bool
   {
+    $user = new User($uid);
+
+    // Un utilisateur ne peut pas se supprimer lui-même
+    if ($user->uid === $this->admin->uid) {
+      throw new ForbiddenException("Un administrateur ne peut pas supprimer son propre compte.");
+    }
+
     $statement = "UPDATE admin_users
       SET
-        statut = :statut,
+        login = CONCAT(login, '_del-', DATE(NOW()), 'T', TIME(NOW())),
         password = NULL,
-        historique = CONCAT(historique, '\n', '(', NOW(), ') Compte désactivé par ', :admin)
+        statut = :statut,
+        login_attempts = 0,
+        historique = CONCAT(historique, '\n', '(', NOW(), ') Compte supprimé par ', :admin)
       WHERE uid = :uid";
 
     $requete = $this->db->prepare($statement);
     $succes = $requete->execute([
-      "statut" => AccountStatus::INACTIVE->value,
-      "uid" => $uid,
-      "admin" => $this->admin->nom
+      "statut" => AccountStatus::DELETED->value,
+      "admin" => $this->admin->nom,
+      "uid" => $uid
     ]);
 
-    (new User($uid))->update_redis();
-    (new User($uid))->clear_sessions();
+    $user->update_redis();
+    $user->clear_sessions();
 
     return $succes;
   }

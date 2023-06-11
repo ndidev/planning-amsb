@@ -18,6 +18,7 @@ class UserModel extends BaseModel
   public function read()
   {
     $donnees = [
+      "uid" => $this->user->uid,
       "login" => $this->user->login,
       "nom" => $this->user->nom,
       "roles" => $this->user->roles,
@@ -50,7 +51,7 @@ class UserModel extends BaseModel
 
     $requete = $this->db->prepare($statement_nom);
     $requete->execute([
-      "nom" => $input["nom"],
+      "nom" => substr($input["nom"], 0, 255),
       "uid" => $uid
     ]);
 
@@ -64,7 +65,7 @@ class UserModel extends BaseModel
 
     $this->user->update_redis();
 
-    $this->user->nom = $input["nom"];
+    $this->user->nom = substr($input["nom"], 0, 255);
 
     return $this->read();
   }

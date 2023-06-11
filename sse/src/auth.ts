@@ -42,7 +42,7 @@ setInterval(async () => {
  */
 export async function authenticate(
   request: http.IncomingMessage
-): Promise<string | false> {
+): Promise<{ userId: string; sessionId: string | undefined } | false> {
   let userId: string | null = null;
   let sessionUserId: string | null = null;
   let sessionOK: boolean = false;
@@ -72,7 +72,7 @@ export async function authenticate(
   if (sessionOK || apiKeyOK) {
     // Si l'authentification a réussi
     userId = (sessionUserId || apiKeyUserId) as string;
-    return userId;
+    return { userId, sessionId };
   } else {
     // Si l'authentification a échoué
     return false;
@@ -107,7 +107,7 @@ async function getUserIdFromApiKey(apiKey: string): Promise<string | null> {
       return null;
     }
   } catch (err) {
-    console.error("Erreur redis.get", err);
+    console.error("Erreur redis.hGetAll", err);
     return null;
   }
 }

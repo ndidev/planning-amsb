@@ -30,7 +30,6 @@ use Api\Controllers\Config\AjoutRapideController as AjoutRapide;
 use Api\Controllers\Config\CoteController as Cote;
 use Api\Controllers\User\UserController as UserManagement;
 use Api\Controllers\Admin\UserAccountController as UserAccount;
-use Api\Controllers\Admin\UserAccountResetController as UserAccountReset;
 use Api\Utils\Exceptions\Auth\AuthException;
 use Api\Utils\Exceptions\ClientException;
 
@@ -123,7 +122,6 @@ $routes = [
 
   // Admin
   ["/admin/users/[a:uid]?", fn ($uid = null) => new UserAccount($uid)],
-  ["/admin/users/[a:uid]/reset", fn ($uid) => new UserAccountReset($uid)],
 
   // Utilisateur
   ["/user", fn () => new UserManagement()],

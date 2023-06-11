@@ -3,6 +3,7 @@
 namespace Api\Utils;
 
 use Api\Utils\Exceptions\DB\DBConnectionException;
+use Api\Utils\HTTP\HTTPResponse;
 
 /**
  * Connexion à la base de données.

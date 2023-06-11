@@ -23,13 +23,15 @@
 
   $: guard = $page.meta.guard as string;
 
-  $: if (guard) {
-    let [rubrique, roleMini] = guard.split("/") as [ModuleId, string];
+  $: {
+    if (guard) {
+      let [rubrique, roleMini] = guard.split("/") as [ModuleId, string];
 
-    canDisplay =
-      $currentUser.canUseApp &&
-      UserRoles[roleMini?.toUpperCase() || "ACCESS"] <=
-        $currentUser.getRole(rubrique);
+      canDisplay =
+        $currentUser.canUseApp &&
+        UserRoles[roleMini?.toUpperCase() || "ACCESS"] <=
+          $currentUser.getRole(rubrique);
+    }
 
     if (!canDisplay) {
       $goto("/login");

@@ -21,14 +21,21 @@ export function validerFormulaire(context: HTMLElement) {
     if (!input.checkValidity()) {
       valide = false;
       if (input.dataset.nom || input.name) {
-        champsInvalides.push(input.dataset.nom || input.name);
+        champsInvalides.push(
+          (input.dataset.nom || input.name) +
+            (input.validationMessage ? " : " + input.validationMessage : "")
+        );
       }
     }
   }
 
   if (!valide) {
     Notiflix.Notify.failure(
-      "Certains champs sont invalides : " + champsInvalides.join(", ")
+      "Certains champs sont invalides :<br/>" + champsInvalides.join("<br/>"),
+      {
+        plainText: false,
+        timeout: 6000,
+      }
     );
   }
 

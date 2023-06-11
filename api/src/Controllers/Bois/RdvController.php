@@ -6,7 +6,6 @@ use Api\Models\Bois\RdvModel;
 use Api\Utils\BaseController;
 use Api\Utils\HTTP\ETag;
 use Api\Utils\Exceptions\Auth\AccessException;
-use PDOException;
 
 class RdvController extends BaseController
 {
