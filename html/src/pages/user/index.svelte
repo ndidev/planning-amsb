@@ -173,36 +173,39 @@
     </div>
 
     <!-- Mot de passe -->
-    <div class="pure-control-group">
-      <label for="password">Mot de passe</label>
-      <input
-        type="password"
-        id="password"
-        name="password"
-        placeholder="Mot de passe"
-        autocomplete="new-password"
-        bind:value={password}
-        minlength={LONGUEUR_MINI_PASSWORD}
-      />
-      <span class="pure-form-message-inline">
-        {passwordMessage}
-      </span>
-    </div>
+    <details>
+      <summary>Modifier le mot de passe</summary>
+      <div class="pure-control-group">
+        <label for="password">Mot de passe</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          placeholder="Mot de passe"
+          autocomplete="new-password"
+          bind:value={password}
+          minlength={LONGUEUR_MINI_PASSWORD}
+        />
+        <span class="pure-form-message-inline">
+          {passwordMessage}
+        </span>
+      </div>
 
-    <!-- Confirmation mot de passe -->
-    <div class="pure-control-group">
-      <label for="passwordConfirm">Confirmation mot de passe</label>
-      <input
-        type="password"
-        id="passwordConfirm"
-        placeholder="Retaper le mot de passe"
-        autocomplete="new-password"
-        bind:value={passwordConfirm}
-      />
-      <span class="pure-form-message-inline">
-        {passwordConfirmMessage}
-      </span>
-    </div>
+      <!-- Confirmation mot de passe -->
+      <div class="pure-control-group">
+        <label for="passwordConfirm">Confirmation mot de passe</label>
+        <input
+          type="password"
+          id="passwordConfirm"
+          placeholder="Retaper le mot de passe"
+          autocomplete="new-password"
+          bind:value={passwordConfirm}
+        />
+        <span class="pure-form-message-inline">
+          {passwordConfirmMessage}
+        </span>
+      </div>
+    </details>
 
     <!-- Validation/Annulation -->
     <div class="boutons">
@@ -227,4 +230,9 @@
 </main>
 
 <style>
+  details > summary {
+    margin-top: 10px;
+    margin-left: 50px;
+    padding: 10px;
+  }
 </style>
