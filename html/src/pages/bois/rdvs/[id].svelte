@@ -101,6 +101,8 @@
           }),
         },
       });
+
+      rdv.numero_bl = numero_bl;
     } catch (err: unknown) {
       const error = err as HTTP.Error | Error;
       if (error instanceof HTTP.BadRequest) {
