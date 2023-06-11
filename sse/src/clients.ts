@@ -28,9 +28,9 @@ async function clientsListener(
   request: http.IncomingMessage,
   response: http.ServerResponse
 ) {
-  const userId = await authenticate(request);
+  const authInfo = await authenticate(request);
 
-  if (!userId) {
+  if (!authInfo) {
     response.statusCode = 401;
     response.setHeader(
       "Access-Control-Allow-Origin",
@@ -50,7 +50,8 @@ async function clientsListener(
    */
   const connection: Connection = {
     id,
-    userId,
+    userId: authInfo.userId,
+    sessionId: authInfo.sessionId,
     request,
     response,
     subscriptions,

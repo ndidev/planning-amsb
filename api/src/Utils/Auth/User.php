@@ -425,6 +425,9 @@ class User
       }
     }
     $this->redis->exec();
+
+    // Clôturer les connexions SSE
+    notify_sse("admin/sessions", "close", "uid:{$this->uid}");
   }
 
 
@@ -555,6 +558,8 @@ class User
     setcookie($_ENV["SESSION_COOKIE_NAME"], false, [
       "path" => $_ENV["SESSION_COOKIE_PATH"]
     ]);
+
+    notify_sse("admin/sessions", "close", "sid:{$sid}");
   }
 
   /**
@@ -644,6 +649,8 @@ class User
       $value = (int) $value;
     }
     notify_sse("admin/users", "update", $this->uid, $user);
+
+    $this->clear_sessions();
   }
 
   /**
