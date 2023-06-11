@@ -22,14 +22,13 @@ use Api\Utils\Exceptions\Auth\InvalidAccountException;
 use Api\Utils\Exceptions\Auth\InvalidApiKeyException;
 use Api\Utils\Exceptions\Auth\MaxLoginAttemptsException;
 use Api\Utils\Exceptions\Auth\AuthException;
-use Stringable;
 
 /**
  * Classe contenant toutes les propriétés d'un compte utilisateur.
  * 
  * @package Api\Utils
  */
-class User implements Stringable
+class User
 {
   /**
    * UID de l'utilisateur.
@@ -134,7 +133,10 @@ class User implements Stringable
     $password_is_valid = password_verify($password, $this->password ?? "");
 
     if (!$password_is_valid) {
-      $login_attempts = $this->increment_login_attempts();
+      // Si le compte est désactivé, ne pas incrémenter les tentatives
+      if ($this->statut !== AccountStatus::INACTIVE) {
+        $login_attempts = $this->increment_login_attempts();
+      }
 
       if ($login_attempts >= $_ENV["AUTH_MAX_LOGIN_ATTEMPTS"]) {
         // Si le compte n'est pas déjà bloqué, le bloquer
@@ -451,6 +453,7 @@ class User implements Stringable
     // Si déjà identifié, ne pas exécuter la fonction
     if ($this->uid) return;
 
+    $uid = NULL;
     $user = false;
 
     // Identification grâce au login
@@ -630,24 +633,24 @@ class User implements Stringable
       ]
     );
 
-    notify_sse("admin/users", "update", $this->uid,);
+    // Notification SSE
+    $user = $this->redis->hGetAll("admin:users:{$this->uid}");
+    unset($user["password"]);
+    unset($user["can_login"]);
+    unset($user["login_attempts"]);
+    // Rétablissement des types int pour les rôles
+    $user["roles"] = json_decode($user["roles"]);
+    foreach ($user["roles"] as $role => &$value) {
+      $value = (int) $value;
+    }
+    notify_sse("admin/users", "update", $this->uid, $user);
   }
 
-  public function __toString(): string
-  {
-    return json_encode([
-      "uid" => $this->uid,
-      "login" => $this->login,
-      "nom" => $this->nom,
-      // "created_at" => $this->created_at,
-      // "last_connection" => $this->last_connection,
-      "statut" => $this->statut->value,
-      "roles" => $this->roles,
-      // "commentaire" => $this->commentaire,
-      // "historique" => $this->historique,
-      // "self" => false
-    ]);
-  }
+  /**
+   * ===========================================
+   *            MÉTHODES MAGIQUES
+   * ===========================================
+   */
 
   public function __destruct()
   {

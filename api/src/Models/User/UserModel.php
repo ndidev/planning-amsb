@@ -18,6 +18,7 @@ class UserModel extends BaseModel
   public function read()
   {
     $donnees = [
+      "uid" => $this->user->uid,
       "login" => $this->user->login,
       "nom" => $this->user->nom,
       "roles" => $this->user->roles,

@@ -51,9 +51,6 @@ class UserAccountModel extends BaseModel
       foreach ($compte["roles"] as $role => &$value) {
         $value = (int) $value;
       }
-
-      // Ajout d'une clé "self" pour désigner l'utilisateur effectuant la requête
-      $compte["self"] = $compte["uid"] === $this->admin->uid;
     }
     unset($compte);
 
@@ -99,9 +96,6 @@ class UserAccountModel extends BaseModel
     foreach ($compte["roles"] as $role => &$value) {
       $value = (int) $value;
     }
-
-    // Ajout d'une clé "self" pour désigner l'utilisateur effectuant la requête
-    $compte["self"] = $compte["uid"] === $this->admin->uid;
 
     $donnees = $compte;
 

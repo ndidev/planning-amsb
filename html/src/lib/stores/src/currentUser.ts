@@ -68,7 +68,7 @@ async function fetchAll() {
     localStorage.setItem(endpoint, JSON.stringify(user));
   } catch (err: unknown) {
     const error = err as HTTP.Error | Error;
-    if (error instanceof HTTP.Unauthorized || error instanceof HTTP.Forbidden) {
+    if (error instanceof HTTP.Unauthorized) {
       localStorage.clear();
       currentUser.set(new User());
     } else {

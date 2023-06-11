@@ -65,8 +65,6 @@ class UserAccountController extends BaseController
 
   /**
    * Récupère tous comptes utilisateurs.
-   * 
-   * @param array $filtre
    */
   public function readAll()
   {

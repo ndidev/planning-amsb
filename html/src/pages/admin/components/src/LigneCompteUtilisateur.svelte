@@ -16,7 +16,7 @@
 
   import { MaterialButton } from "@app/components";
 
-  import { adminUsers } from "@app/stores";
+  import { adminUsers, currentUser } from "@app/stores";
 
   import { sitemap, notiflixOptions, validerFormulaire } from "@app/utils";
 
@@ -26,7 +26,6 @@
 
   export let id: CompteUtilisateur["uid"];
 
-  let isNew: boolean = id?.startsWith("new");
   let compte: CompteUtilisateur;
   let compteInitital: CompteUtilisateur;
 
@@ -39,7 +38,6 @@
 
   // Vérification que toutes les rubriques ont une valeur de rôle
   // Sinon, mettre à zéro
-  // BUG: n'est pas reflété sur la page.... ??
   for (const module of sitemap.keys()) {
     if (compte.roles[module] === undefined) {
       compte.roles[module] = UserRoles.NONE;
@@ -52,14 +50,24 @@
   let ligne: HTMLLIElement;
 
   /**
+   * La ligne est un compte en cours de création.
+   */
+  let isNew: boolean = id?.startsWith("new");
+
+  /**
    * État de modification du composant.
    */
-  let modificationEnCours: boolean = isNew; // Modification en cours par défaut si nouveau compte uniquement;
+  let modificationEnCours = isNew; // Modification en cours par défaut si nouveau compte uniquement;
 
   /**
    * État d'affichage des détails du compte.
    */
-  let afficherDetails: boolean = isNew; // Afficher par défaut si nouveau compte uniquement
+  let afficherDetails = isNew; // Afficher par défaut si nouveau compte uniquement
+
+  /**
+   * La ligne du compte est celle de l'utilisateur courant.
+   */
+  let self = compte.uid === $currentUser.uid;
 
   /**
    * @type {Explication}
@@ -396,197 +404,198 @@
 </script>
 
 <li class="compte" class:modificationEnCours bind:this={ligne}>
-  <!-- Nom + statut -->
-  {#if !isNew}
-    <div class="nom-statut">
-      <button
-        class="nom"
-        style:color={`var(--statut-${compte.statut})`}
-        title="Cliquer pour afficher/masquer les détails"
-        on:click={() => {
-          afficherDetails = !afficherDetails;
-        }}
-      >
-        {compteInitital.nom}
-      </button>
-      <MaterialButton
-        icon="help"
-        title="Statut du compte"
-        on:click={afficherExplications}
-      />
-      <MaterialButton
-        icon="history"
-        title="Historique du compte"
-        on:click={afficherHistorique}
-      />
-      {#if compteInitital.roles.admin}
-        <span class="admin">Administrateur</span>
+  <details bind:open={afficherDetails}>
+    <!-- Nom + statut -->
+    <summary class="nom-statut">
+      {#if !isNew}
+        <button
+          class="nom"
+          style:color={`var(--statut-${compte.statut})`}
+          title="Cliquer pour afficher/masquer les détails"
+          on:click={() => {
+            afficherDetails = !afficherDetails;
+          }}
+        >
+          {compteInitital.nom}
+        </button>
+        <MaterialButton
+          icon="help"
+          title="Statut du compte"
+          on:click={afficherExplications}
+        />
+        <MaterialButton
+          icon="history"
+          title="Historique du compte"
+          on:click={afficherHistorique}
+        />
+        {#if compteInitital.roles.admin}
+          <span class="admin">Administrateur</span>
+        {/if}
       {/if}
-    </div>
-  {/if}
+    </summary>
 
-  <form class="pure-form">
-    <div class="details" hidden={!afficherDetails}>
-      <div class="nom-login">
-        <!-- Nom -->
-        <div class="champ pure-control-group">
-          <label for={"nom_" + compte.uid}>Nom</label>
-          <input
-            type="text"
-            class="nom"
-            id={"nom_" + compte.uid}
-            name="nom"
-            data-nom="Nom"
-            bind:value={compte.nom}
-            maxlength="255"
-            required
+    <form class="pure-form">
+      <div class="details">
+        <div class="nom-login">
+          <!-- Nom -->
+          <div class="champ pure-control-group">
+            <label for={"nom_" + compte.uid}>Nom</label>
+            <input
+              type="text"
+              class="nom"
+              id={"nom_" + compte.uid}
+              name="nom"
+              data-nom="Nom"
+              bind:value={compte.nom}
+              maxlength="255"
+              required
+            />
+          </div>
+
+          <!-- Login -->
+          <div class="champ pure-control-group">
+            <label for={"login_" + compte.uid}>Login</label>
+            <input
+              bind:this={inputLogin}
+              type="text"
+              class="login"
+              id={"login_" + compte.uid}
+              name="login"
+              data-nom="Login"
+              bind:value={compte.login}
+              on:input={verifierLogin}
+              maxlength="255"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Commentaire -->
+        <div class="champ commentaire">
+          <label for={"commentaire_" + compte.uid}>Commentaire</label>
+          <textarea
+            id={"commentaire_" + compte.uid}
+            name="commentaire"
+            rows="3"
+            bind:value={compte.commentaire}
           />
         </div>
 
-        <!-- Login -->
-        <div class="champ pure-control-group">
-          <label for={"login_" + compte.uid}>Login</label>
-          <input
-            bind:this={inputLogin}
-            type="text"
-            class="login"
-            id={"login_" + compte.uid}
-            name="login"
-            data-nom="Login"
-            bind:value={compte.login}
-            on:input={verifierLogin}
-            pattern="[a-z0-9_-]+"
-            maxlength="255"
-            required
+        <!-- Boutons modification-->
+        <div class="modif-suppr">
+          <MaterialButton
+            icon="done"
+            title="Valider"
+            on:click={isNew ? validerAjout : validerModification}
+          />
+          <MaterialButton
+            icon="close"
+            title="Annuler"
+            on:click={isNew ? annulerAjout : annulerModification}
           />
         </div>
-      </div>
 
-      <!-- Commentaire -->
-      <div class="champ commentaire">
-        <label for={"commentaire_" + compte.uid}>Commentaire</label>
-        <textarea
-          id={"commentaire_" + compte.uid}
-          name="commentaire"
-          rows="3"
-          bind:value={compte.commentaire}
-        />
-      </div>
-
-      <!-- Boutons modification-->
-      <div class="modif-suppr">
-        <MaterialButton
-          icon="done"
-          title="Valider"
-          on:click={isNew ? validerAjout : validerModification}
-        />
-        <MaterialButton
-          icon="close"
-          title="Annuler"
-          on:click={isNew ? annulerAjout : annulerModification}
-        />
-      </div>
-
-      <!-- Rôles -->
-      <div class="roles">
-        {#each [...sitemap] as [module, { affichage, type }]}
-          <fieldset
-            name={module}
-            class="rubrique"
-            disabled={/* Désactivé si admin : un administrateur ne peut pas se retirer lui-même le privilège */ module ===
-              "admin" && compte.self}
-          >
-            <legend>{affichage}</legend>
-
-            <!-- Module de type "Accès" -->
-            {#if type === TypesModules.ACCESS}
-              <label class="pure-radio">
-                <input
-                  type="radio"
-                  bind:group={compte.roles[module]}
-                  name={module}
-                  value={UserRoles.NONE}
-                />
-                Pas accès
-              </label>
-              <label class="pure-radio">
-                <input
-                  type="radio"
-                  bind:group={compte.roles[module]}
-                  name={module}
-                  value={UserRoles.ACCESS}
-                />
-                Accès
-              </label>
-            {/if}
-
-            <!-- Module de type "Modifier" -->
-            {#if type === TypesModules.EDIT}
-              <label class="pure-radio">
-                <input
-                  type="radio"
-                  bind:group={compte.roles[module]}
-                  name={module}
-                  value={UserRoles.NONE}
-                />
-                Aucun
-              </label>
-              <label class="pure-radio">
-                <input
-                  type="radio"
-                  bind:group={compte.roles[module]}
-                  name={module}
-                  value={UserRoles.ACCESS}
-                />
-                Voir
-              </label>
-              <label class="pure-radio">
-                <input
-                  type="radio"
-                  bind:group={compte.roles[module]}
-                  name={module}
-                  value={UserRoles.EDIT}
-                />
-                Modifier
-              </label>
-            {/if}
-          </fieldset>
-        {/each}
-      </div>
-
-      <!-- Boutons -->
-      {#if !compte.self && !isNew}
-        <div class="boutons-action">
-          <div class="action">
-            <button
-              on:click|preventDefault={reinitialiserCompte}
-              disabled={compte.statut === AccountStatus.PENDING}
+        <!-- Rôles -->
+        <div class="roles">
+          {#each [...sitemap] as [module, { affichage, type }]}
+            <fieldset
+              name={module}
+              class="rubrique"
+              disabled={/* Désactivé si admin : un administrateur ne peut pas se retirer lui-même le privilège */ module ===
+                "admin" && self}
             >
-              Réinitialiser le compte
-            </button>
-          </div>
+              <legend>{affichage}</legend>
 
-          <div class="action">
-            <button
-              on:click|preventDefault={desactiverCompte}
-              disabled={compte.statut === AccountStatus.INACTIVE}
-            >
-              Désactiver le compte
-            </button>
-          </div>
+              <!-- Module de type "Accès" -->
+              {#if type === TypesModules.ACCESS}
+                <label class="pure-radio">
+                  <input
+                    type="radio"
+                    bind:group={compte.roles[module]}
+                    name={module}
+                    value={UserRoles.NONE}
+                  />
+                  Pas accès
+                </label>
+                <label class="pure-radio">
+                  <input
+                    type="radio"
+                    bind:group={compte.roles[module]}
+                    name={module}
+                    value={UserRoles.ACCESS}
+                  />
+                  Accès
+                </label>
+              {/if}
 
-          <div class="action red">
-            <button
-              on:click|preventDefault={supprimerCompte}
-              disabled={compte.statut === AccountStatus.DELETED}
-            >
-              Supprimer le compte
-            </button>
-          </div>
+              <!-- Module de type "Modifier" -->
+              {#if type === TypesModules.EDIT}
+                <label class="pure-radio">
+                  <input
+                    type="radio"
+                    bind:group={compte.roles[module]}
+                    name={module}
+                    value={UserRoles.NONE}
+                  />
+                  Aucun
+                </label>
+                <label class="pure-radio">
+                  <input
+                    type="radio"
+                    bind:group={compte.roles[module]}
+                    name={module}
+                    value={UserRoles.ACCESS}
+                  />
+                  Voir
+                </label>
+                <label class="pure-radio">
+                  <input
+                    type="radio"
+                    bind:group={compte.roles[module]}
+                    name={module}
+                    value={UserRoles.EDIT}
+                  />
+                  Modifier
+                </label>
+              {/if}
+            </fieldset>
+          {/each}
         </div>
-      {/if}
-    </div>
-  </form>
+
+        <!-- Boutons -->
+        {#if !self && !isNew}
+          <div class="boutons-action">
+            <div class="action">
+              <button
+                on:click|preventDefault={reinitialiserCompte}
+                disabled={compte.statut === AccountStatus.PENDING}
+              >
+                Réinitialiser le compte
+              </button>
+            </div>
+
+            <div class="action">
+              <button
+                on:click|preventDefault={desactiverCompte}
+                disabled={compte.statut === AccountStatus.INACTIVE}
+              >
+                Désactiver le compte
+              </button>
+            </div>
+
+            <div class="action red">
+              <button
+                on:click|preventDefault={supprimerCompte}
+                disabled={compte.statut === AccountStatus.DELETED}
+              >
+                Supprimer le compte
+              </button>
+            </div>
+          </div>
+        {/if}
+      </div>
+    </form>
+  </details>
 </li>
 
 <style>
@@ -605,6 +614,10 @@
     border: 2px solid #ddd;
     background-color: #eee;
     list-style-type: none;
+  }
+
+  details > summary {
+    list-style: none;
   }
 
   /* GRID STRUCTURE */

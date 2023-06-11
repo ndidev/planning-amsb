@@ -1,20 +1,25 @@
 import { sitemap, fetcher } from "@app/utils";
 import { UserRoles, AccountStatus } from "@app/auth";
-import type { Roles, ModuleId } from "@app/types";
+import type { Roles, ModuleId, CompteUtilisateur } from "@app/types";
 
 /**
  * Classe utilitaire permettant de vérifier les permissions d'un utilisateur.
  */
 export class User {
   /**
+   * Identifiant unique de l'utilisateur.
+   */
+  uid: CompteUtilisateur["uid"];
+
+  /**
    * Login de l'utilisateur.
    */
-  login: string;
+  login: CompteUtilisateur["login"];
 
   /**
    * Nom de l'utilisateur.
    */
-  nom: string;
+  nom: CompteUtilisateur["nom"];
 
   /**
    * Rôles de l'utilisateur.
@@ -28,12 +33,14 @@ export class User {
 
   constructor(
     user: UserInfo = {
+      uid: "",
       login: "",
       nom: "",
       roles: {},
       statut: AccountStatus.INACTIVE,
     }
   ) {
+    this.uid = user.uid;
     this.login = user.login;
     this.nom = user.nom;
     this.#roles = user.roles;
@@ -104,14 +111,19 @@ export class User {
 
 export type UserInfo = {
   /**
+   * Identifiant unique de l'utilisateur.
+   */
+  uid: CompteUtilisateur["uid"];
+
+  /**
    * Login de l'utilisateur.
    */
-  login: string;
+  login: CompteUtilisateur["login"];
 
   /**
    * Nom de l'utilisateur.
    */
-  nom: string;
+  nom: CompteUtilisateur["nom"];
 
   /**
    * Rôles de l'utilisateur.
