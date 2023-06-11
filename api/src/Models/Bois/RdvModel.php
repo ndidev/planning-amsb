@@ -65,7 +65,7 @@ class RdvModel extends BaseModel
           transporteur
         FROM bois_planning
         WHERE 
-          (date_rdv BETWEEN :date_debut AND :date_fin OR date_rdv IS NULL)
+          (date_rdv BETWEEN :date_debut AND :date_fin OR date_rdv IS NULL OR attente = 1)
         $filtre_sql
         ORDER BY date_rdv";
 
