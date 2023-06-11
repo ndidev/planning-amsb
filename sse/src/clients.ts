@@ -2,6 +2,7 @@ import http from "node:http";
 import { env } from "node:process";
 import { authenticate } from "./auth";
 import { connections } from "./stores";
+import type { Connection } from "../types";
 
 const CLIENTS_PORT = parseInt(env["CLIENTS_PORT"] as string);
 

@@ -1,3 +1,5 @@
+import type { Connection } from "../types";
+
 /**
  * Connexions clients.
  */

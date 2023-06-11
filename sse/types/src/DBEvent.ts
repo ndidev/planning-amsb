@@ -2,7 +2,7 @@
  * Données d'une notification de modification de la base de données
  * par le serveur PHP.
  */
-declare type DBEventData = {
+export type DBEvent = {
   /**
    * Nom de l'événement.
    */

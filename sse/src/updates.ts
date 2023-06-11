@@ -1,6 +1,7 @@
 import http from "node:http";
 import { env } from "node:process";
 import { connections } from "./stores";
+import type { DBEvent } from "../types";
 
 const UPDATES_PORT = parseInt(env["UPDATES_PORT"] as string);
 
@@ -36,7 +37,7 @@ function dbEventsListener(
   });
 
   request.on("end", () => {
-    const event: DBEventData = JSON.parse(body);
+    const event: DBEvent = JSON.parse(body);
     response.end();
 
     const origin = event.origin;

@@ -1,7 +1,9 @@
+import type http from "node:http";
+
 /**
  * Connexion d'un client.
  */
-declare type Connection = {
+export type Connection = {
   /**
    * Identifiant unique de la connexion.
    */
@@ -11,6 +13,11 @@ declare type Connection = {
    * UID de l'utilisateur.
    */
   userId: string;
+
+  /**
+   * Identifiant de la session utilisateur.
+   */
+  sessionId: string | undefined;
 
   /**
    * Requête HTTP.
