@@ -19,7 +19,7 @@
 
   import { luminance } from "@app/utils";
 
-  import type { ModuleId } from "@app/types";
+  import type { ModuleId, ConfigBandeauInfo } from "@app/types";
 
   /**
    * Module des lignes à afficher.
@@ -39,7 +39,7 @@
   $: lignes = [...$configBandeauInfo[module].values()].filter(
     (ligne) =>
       (pc === true && ligne.pc === true) || (tv === true && ligne.tv === true)
-  );
+  ) as ConfigBandeauInfo[];
 </script>
 
 <section class="bandeau-info" style:margin-left={tv ? "0px" : "90px"}>
@@ -49,7 +49,7 @@
       style:background-color={ligne.couleur}
       style:color={luminance.getTextColor(ligne.couleur)}
     >
-      {ligne.message}
+      {@html ligne.message.replace(/\r\n|\r|\n/g, "<br/>")}
     </div>
   {/each}
 </section>

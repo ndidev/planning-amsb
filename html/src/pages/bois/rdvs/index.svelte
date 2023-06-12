@@ -232,16 +232,6 @@
     z-index: 2;
   }
 
-  /* BOUTON REGISTRE */
-
-  #bouton-registre {
-    display: none;
-    position: fixed;
-    right: 50px;
-    top: 15px;
-    z-index: 3;
-  }
-
   /* LISTE RDV */
 
   main {
@@ -250,10 +240,33 @@
     margin-bottom: 6rem;
   }
 
+  /* Mobile */
+  @media screen and (max-width: 767px) {
+    #bouton-registre {
+      display: none;
+    }
+  }
+
   /* Desktop */
   @media screen and (min-width: 768px) {
     #bouton-registre {
-      display: inline-block;
+      --size: 50px;
+
+      display: grid;
+      position: fixed;
+      right: 30px;
+      top: 15px;
+      width: var(--size);
+      height: var(--size);
+      z-index: 3;
+
+      background: radial-gradient(
+        circle at center,
+        white 0,
+        white 50%,
+        transparent 100%
+      );
+      border-radius: 50%;
     }
   }
 </style>

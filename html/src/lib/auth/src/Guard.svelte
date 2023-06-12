@@ -34,7 +34,7 @@
     }
 
     if (!canDisplay) {
-      $goto("/login");
+      $goto("/");
     }
   }
 </script>

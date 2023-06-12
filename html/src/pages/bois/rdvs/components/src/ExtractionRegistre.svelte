@@ -15,22 +15,55 @@
   import Notiflix from "notiflix";
 
   import { MaterialButton } from "@app/components";
-  import { type Filtre, fetcher } from "@app/utils";
+  import { type Filtre, fetcher, notiflixOptions, DateUtils } from "@app/utils";
   import type { FiltreBois } from "@app/types";
 
   const filtre = getContext<Writable<Filtre<FiltreBois>>>("filtre");
+
+  /**
+   * Afficher la fenêtre de choix des dates.
+   */
+  function afficherChoixDates() {
+    let date_debut: string =
+      $filtre.data.date_debut ??
+      new DateUtils(new Date()).jourOuvrePrecedent().toLocaleISODateString();
+    let date_fin: string =
+      $filtre.data.date_fin ??
+      new DateUtils(new Date()).toLocaleISODateString();
+
+    Notiflix.Confirm.show(
+      "Extraire le registre d'affrètement",
+      `<div class="pure-form pdf-form-notiflix">
+          <div class="pdf-champ-notiflix">
+            <label>Date début : <input type="date" class="date_debut" value="${date_debut}"></label>
+          </div>
+          <div class="pdf-champ-notiflix">
+            <label>Date fin : <input type="date" class="date_fin" value="${date_fin}"></label>
+          </div>
+        </div>`,
+      "Extraire",
+      "Annuler",
+      () =>
+        extraireRegistreAffretement(
+          document.querySelector<HTMLInputElement>(".date_debut").value,
+          document.querySelector<HTMLInputElement>(".date_fin").value
+        ),
+      null,
+      notiflixOptions.themes.green
+    );
+  }
 
   /**
    * Bouton registre
    *
    * Extraction du registre d'affrètement
    */
-  async function extraireRegistreAffretement() {
+  async function extraireRegistreAffretement(
+    date_debut: string,
+    date_fin: string
+  ) {
     try {
-      const params: { date_debut?: string; date_fin?: string } = {};
-      if ($filtre.data.date_debut) params.date_debut = $filtre.data.date_debut;
-      if ($filtre.data.date_fin) params.date_fin = $filtre.data.date_fin;
-      console.log({ params });
+      const params = { date_debut, date_fin };
 
       const blob = await fetcher<Blob>("bois/registre", {
         params,
@@ -52,5 +85,5 @@
 <MaterialButton
   icon="assignment"
   title="Extraire registre d'affrètement"
-  on:click={extraireRegistreAffretement}
+  on:click={afficherChoixDates}
 />
