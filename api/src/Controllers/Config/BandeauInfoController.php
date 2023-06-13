@@ -17,7 +17,7 @@ class BandeauInfoController extends BaseController
     private ?int $id
   ) {
     parent::__construct();
-    $this->model = new BandeauInfoModel($this->user);
+    $this->model = new BandeauInfoModel();
     $this->processRequest();
   }
 
@@ -68,11 +68,12 @@ class BandeauInfoController extends BaseController
     $donnees = $this->model->readAll($filtre);
 
     // Filtre sur les catégories autorisées pour l'utilisateur
-    foreach ($donnees as $key => $ligne) {
-      if ($this->user->can_access($ligne["module"]) === false) {
-        unset($donnees[$key]);
-      }
-    }
+    $donnees =
+      array_values(
+        array_filter($donnees, function ($ligne) {
+          return $this->user->can_access($ligne["module"]);
+        })
+      );
 
     $etag = ETag::get($donnees);
 
