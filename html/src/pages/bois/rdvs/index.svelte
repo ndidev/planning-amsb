@@ -3,8 +3,6 @@
   import { onDestroy, setContext, getContext } from "svelte";
   import { writable } from "svelte/store";
 
-  import Notiflix from "notiflix";
-
   import { BandeauInfo, ConnexionSSE } from "@app/components";
   import {
     ExtractionRegistre,
@@ -16,7 +14,7 @@
     LigneRdvAttente,
   } from "./components";
 
-  import { fetcher, Filtre } from "@app/utils";
+  import { Filtre } from "@app/utils";
   import type { Stores, RdvBois, FiltreBois, CamionsParDate } from "@app/types";
 
   const { boisRdvs, tiers } = getContext<Stores>("stores");

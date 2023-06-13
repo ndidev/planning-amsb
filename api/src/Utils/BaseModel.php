@@ -3,15 +3,15 @@
 namespace Api\Utils;
 
 use Api\Utils\DatabaseConnector as DB;
-use PDO;
-use Redis;
+use \PDO;
+use \Redis;
 
 /**
  * Classe servant de base aux modèles.
  * 
  * @package Api\Utils
  */
-class BaseModel
+abstract class BaseModel
 {
   /**
    * Connexion à la base MariaDB.
