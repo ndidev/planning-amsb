@@ -1,4 +1,3 @@
-<!-- routify:options preload="proximity" -->
 <script lang="ts">
   import { page, metatags } from "@roxi/routify";
 

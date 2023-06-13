@@ -1,3 +1,5 @@
+<!-- routify:options reset=true -->
+<!-- routify:options bundle=true -->
 <script lang="ts">
   const afficherFooterMode = import.meta.env.MODE !== "production";
 </script>
