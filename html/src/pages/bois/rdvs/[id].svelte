@@ -63,6 +63,8 @@
 
   let rdv: RdvBois = isNew && !copie ? { ...nouveauRdv } : null;
   let numero_bl = rdv?.numero_bl;
+  let heure_arrivee = rdv?.heure_arrivee?.substring(0, 5) ?? "";
+  let heure_depart = rdv?.heure_depart?.substring(0, 5) ?? "";
 
   (async () => {
     try {
@@ -70,11 +72,44 @@
         rdv = structuredClone(await boisRdvs.get(id || copie));
         if (!rdv) throw new Error();
         numero_bl = rdv.numero_bl;
+        heure_arrivee = rdv.heure_arrivee?.substring(0, 5) ?? "";
+        heure_depart = rdv.heure_depart?.substring(0, 5) ?? "";
       }
     } catch (error) {
       $redirect("./new");
     }
   })();
+
+  /**
+   * Ajouter les secondes à l'heure d'arrivée/départ.
+   *
+   * Pour ne pas afficher les secondes dans l'input,
+   * l'heure du formulaire est tronquée (hh:mm).
+   *
+   * Pour ne pas perdre les informations sur les secondes,
+   * celles-ci sont rajoutée lors de la soumission du formulaire.
+   *
+   * @param heure
+   * @param type
+   */
+  function ajouterSecondes(
+    heure: string,
+    type: "arrivee" | "depart"
+  ): string | null {
+    if (!heure) {
+      return null;
+    }
+
+    // Si l'heure n'a pas changé, conserver les secondes
+    if (heure === (rdv["heure_" + type] as string).substring(0, 5)) {
+      return rdv["heure_" + type] as string;
+    }
+
+    // Si l'heure a changé, mettre les secondes à zéro
+    if (heure !== (rdv["heure_" + type] as string).substring(0, 5)) {
+      return heure + ":00";
+    }
+  }
 
   /**
    * Remplissage automatique de la livraison
@@ -188,6 +223,9 @@
     boutonAjouter.$set({ disabled: true });
 
     try {
+      rdv.heure_arrivee = ajouterSecondes(heure_arrivee, "arrivee");
+      rdv.heure_depart = ajouterSecondes(heure_depart, "depart");
+
       await boisRdvs.create(rdv);
 
       Notiflix.Notify.success("Le RDV a été ajouté");
@@ -207,6 +245,9 @@
     boutonModifier.$set({ disabled: true });
 
     try {
+      rdv.heure_arrivee = ajouterSecondes(heure_arrivee, "arrivee");
+      rdv.heure_depart = ajouterSecondes(heure_depart, "depart");
+
       await boisRdvs.update(rdv);
 
       Notiflix.Notify.success("Le RDV a été modifié");
@@ -293,7 +334,7 @@
           type="time"
           name="heure_arrivee"
           id="heure_arrivee"
-          bind:value={rdv.heure_arrivee}
+          bind:value={heure_arrivee}
           placeholder="hh:mm"
         />
       </div>
@@ -305,7 +346,7 @@
           type="time"
           name="heure_depart"
           id="heure_depart"
-          bind:value={rdv.heure_depart}
+          bind:value={heure_depart}
           placeholder="hh:mm"
         />
       </div>
@@ -403,7 +444,7 @@
           name="confirmation_affretement"
           id="confirmation_affretement"
           bind:checked={rdv.confirmation_affretement}
-          disabled={$tiers.get(rdv.affreteur)?.lie_agence === false ||
+          disabled={$tiers?.get(rdv.affreteur)?.lie_agence === false ||
             !rdv.transporteur}
         />
       </div>

@@ -321,7 +321,7 @@
   <div class="heures pure-u-3-24 pure-u-lg-2-24">
     {#if rdv.heure_arrivee}
       <div class="heure heure-arrivee pure-u-1 pure-u-lg-11-24">
-        {rdv.heure_arrivee}
+        {rdv.heure_arrivee.substring(0, 5)}
       </div>
     {/if}
 
@@ -337,7 +337,7 @@
 
     {#if rdv.heure_depart}
       <div class="heure heure-depart pure-u-1 pure-u-lg-11-24">
-        {rdv.heure_depart}
+        {rdv.heure_depart.substring(0, 5)}
       </div>
     {/if}
 
