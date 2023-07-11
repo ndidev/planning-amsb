@@ -559,7 +559,7 @@
   }
 
   .commentaire_cache {
-    --commentaire-cache-color: hsl(0, 0%, 70%);
+    --commentaire-cache-color: hsl(0, 0%, 50%);
     color: var(--commentaire-cache-color);
   }
 
@@ -574,20 +574,17 @@
 
   .confirmation_affretement :global(button::after) {
     position: absolute;
-    font-family: "Material Symbols Outlined";
-    content: "close";
+    left: 0.6em;
+  }
+
+  .confirmation_affretement[data-confirme="0"] :global(button::after) {
+    content: "✘";
     color: red;
-    font-size: 24px;
-    left: 15px;
   }
 
   .confirmation_affretement[data-confirme="1"] :global(button::after) {
-    position: absolute;
-    font-family: "Material Symbols Outlined";
-    content: "check";
+    content: "✔︎";
     color: green;
-    font-size: 24px;
-    left: 15px;
   }
 
   /* Mobile */

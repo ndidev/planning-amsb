@@ -191,17 +191,18 @@
 <main>
   {#if rdvsBois}
     <!-- RDVs en attente -->
-    <LigneDateAttente camions={camions.get("attente")} />
-    {#each [...rdvsGroupes.get("attente")] as rdv (rdv.id)}
-      <div>
+    <div>
+      <LigneDateAttente camions={camions.get("attente")} />
+      {#each [...rdvsGroupes.get("attente")] as rdv (rdv.id)}
         <LigneRdvAttente {rdv} />
-      </div>
-    {/each}
+      {/each}
+    </div>
+
     <!-- RDVs plannifiés -->
     {#each [...rdvsGroupes] as [date, rdvs] (date)}
       {#if date !== "attente" && date !== null}
-        <LigneDate {date} camions={camions.get(date)} />
         <div>
+          <LigneDate {date} camions={camions.get(date)} />
           {#each rdvs as rdv (rdv.id)}
             <LigneRdv {rdv} />
           {/each}
@@ -216,10 +217,10 @@
 
 <style>
   * {
-    --couleur-total: rgb(0, 0, 0);
-    --couleur-attendus: rgb(80, 80, 80);
-    --couleur-parc: rgb(255, 185, 120);
-    --couleur-charges: rgb(100, 200, 80);
+    --couleur-total: hsl(0, 0%, 0%);
+    --couleur-attendus: hsl(0, 0%, 31%);
+    --couleur-parc: hsl(29, 100%, 74%);
+    --couleur-charges: hsl(110, 52%, 55%);
   }
 
   .filtre {
