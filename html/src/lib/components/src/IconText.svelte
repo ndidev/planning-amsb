@@ -1,3 +1,16 @@
+<!-- 
+  @component
+  
+  Bloc de texte accompagné d'une icône.
+
+  Usage :
+  ```tsx
+  <IconText
+    iconType: "icon" | "text" = "icon"
+    hideIcon: ("mobile" | "desktop")[] = []
+  />
+  ```
+ -->
 <script lang="ts">
   import type { breakpoints } from "@app/utils";
 
