@@ -150,13 +150,13 @@
 
   :global(.valider-annuler) {
     margin-left: auto;
-    color: rgba(0, 0, 0, 0.3);
+    color: hsla(0, 0%, 0%, 0.3);
     display: none;
   }
 
   :global(.actions) {
     margin-left: auto;
-    color: rgba(0, 0, 0, 0.3);
+    color: hsla(0, 0%, 0%, 0.3);
     display: inline;
   }
 
@@ -170,7 +170,7 @@
   :global(.envoyer:hover),
   :global(.valider:hover),
   :global(.annuler:hover) {
-    color: rgba(0, 0, 0, 0.8);
+    color: hsla(0, 0%, 0%, 0.8);
   }
 
   @media screen and (max-width: 480px) {

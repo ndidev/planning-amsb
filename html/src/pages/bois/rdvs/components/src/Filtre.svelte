@@ -49,7 +49,7 @@
 
 <div
   id="bandeau-filtre"
-  style:background={filtreActif ? "rgb(255, 210, 210)" : "white"}
+  style:background={filtreActif ? "hsl(0, 100%, 92%)" : "white"}
 >
   <button
     id="toggle-filtre"

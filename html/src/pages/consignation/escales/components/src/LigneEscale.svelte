@@ -343,11 +343,11 @@
   * {
     --etx-actif-size: 1.1em;
     --etx-actif-weight: bold;
-    --bg-arrived: rgba(255, 255, 0, 0.6);
-    --bg-berthed: rgba(160, 0, 200, 0.8);
-    --bg-inops: rgba(60, 250, 255, 0.6);
-    --bg-completed: rgba(0, 255, 0, 0.6);
-    --bg-departed: rgba(0, 80, 255, 0.8);
+    --bg-arrived: hsla(60, 100%, 50%, 0.6);
+    --bg-berthed: hsla(288, 100%, 39%, 0.8);
+    --bg-inops: hsla(182, 100%, 62%, 0.6);
+    --bg-completed: hsla(120, 100%, 50%, 0.6);
+    --bg-departed: hsla(221, 100%, 50%, 0.8);
   }
 
   /* PLANNING */
@@ -383,7 +383,7 @@
   }
 
   .voyage {
-    color: rgb(100, 100, 100);
+    color: hsl(0, 0%, 39%);
   }
 
   .ports.bloc {

@@ -518,8 +518,8 @@
 
 <style>
   .rdv {
-    --bg-arrive: rgb(255, 225, 140);
-    --bg-parti: rgb(215, 255, 200);
+    --bg-arrive: hsl(44, 100%, 79%);
+    --bg-parti: hsl(104, 100%, 89%);
     padding: 8px 0 8px 5px;
     border-bottom: 1px solid hsl(0, 0%, 60%);
     align-items: baseline;

@@ -1,5 +1,5 @@
 :root {
-  --error-color: rgba(255, 85, 73, 1);
+  --error-color: hsl(4, 100%, 64%);
   --input-width: 300px;
 }
 

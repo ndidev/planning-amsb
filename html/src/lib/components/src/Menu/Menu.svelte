@@ -97,9 +97,9 @@
 
 <style>
   * {
-    --couleur-texte-menu: rgb(100, 100, 100);
+    --couleur-texte-menu: hsl(0, 0%, 39%);
     --menu-font-family: Arial, Helvetica, sans-serif;
-    --bg-color: rgb(240, 240, 240);
+    --bg-color: hsl(0, 0%, 94%);
   }
 
   .menu-toggle-add {
@@ -123,7 +123,7 @@
     z-index: 20;
     margin: 0;
     padding: 0;
-    background: rgb(240, 240, 240);
+    background: hsl(0, 0%, 94%);
     color: var(--couleur-texte-menu);
     font-family: var(--menu-font-family);
     text-transform: uppercase;
