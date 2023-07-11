@@ -14,16 +14,16 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^24.0.1",
+    "@rollup/plugin-commonjs": "^25.0.1",
     "@rollup/plugin-node-resolve": "^15.0.1",
     "@rollup/plugin-typescript": "^11.0.0",
-    "@tsconfig/node-lts-strictest": "^18.12.1",
+    "@tsconfig/node-lts": "^18.12.1",
     "@types/cookie": "^0.5.1",
     "@types/md5": "^2.3.2",
     "@types/node": "^18.11.18",
     "@types/uuid": "^9.0.0",
     "rollup": "^3.12.0",
     "tslib": "^2.5.0",
-    "typescript": "^4.9.4"
+    "typescript": "^5.0.0"
   }
 }
