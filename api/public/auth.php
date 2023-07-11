@@ -119,17 +119,17 @@ try {
       $user = (new User)->from_session();
 
       // Vérification du rôle associé à la rubrique
-      if ($user->can_access($query["rubrique"] ?? NULL) === false) {
-        throw new AccessException();
-      }
+      // if ($user->can_access($query["rubrique"] ?? NULL) === false) {
+      //   throw new AccessException();
+      // }
 
       // Vérification de l'accès administrateur si nécessaire
-      if (
-        strpos($_SERVER["HTTP_REFERER"], "/admin")
-        && $user->is_admin === false
-      ) {
-        throw new AdminException();
-      }
+      // if (
+      //   strpos($_SERVER["HTTP_REFERER"], "/admin")
+      //   && $user->is_admin === false
+      // ) {
+      //   throw new AdminException();
+      // }
 
       (new HTTPResponse(200))
         ->setType("json")

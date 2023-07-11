@@ -6,3 +6,4 @@ export { TypesModules } from "./src/TypesModules";
 export type { UserInfo } from "./src/User";
 
 export { default as Guard } from "./src/Guard.svelte";
+export { default as SessionChecker } from "./src/SessionChecker.svelte";

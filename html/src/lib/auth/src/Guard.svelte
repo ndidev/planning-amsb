@@ -35,6 +35,7 @@
 
     if (!canDisplay) {
       $goto("/");
+      window.location.reload();
     }
   }
 </script>

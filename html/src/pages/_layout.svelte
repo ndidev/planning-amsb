@@ -3,7 +3,7 @@
 
   import { Menu, OfflineBanner, ConnexionSSE } from "@app/components";
 
-  import { Guard } from "@app/auth";
+  import { Guard, SessionChecker } from "@app/auth";
 
   import type { ModuleId } from "@app/types";
 
@@ -16,6 +16,8 @@
 
 <!-- Connexion SSE pour les infos utilisateur -->
 <ConnexionSSE />
+
+<SessionChecker />
 
 <Guard>
   <div class="container">
