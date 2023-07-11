@@ -215,6 +215,19 @@
   }
 
   /**
+   * Afficher les explications pour le commentaire caché.
+   */
+  function afficherExplicationsCommentaireCache() {
+    Notiflix.Report.info(
+      "Commentaire caché",
+      "Ce commentaire ne sera pas visible dans le planning envoyé au client." +
+        "<br/>" +
+        "Utile pour ajouter des informations sur les tarifs d'affrètement, l'état de préparation de la commande, etc.",
+      "Fermer"
+    );
+  }
+
+  /**
    * Créer le RDV.
    */
   async function ajouterRdv() {
@@ -476,7 +489,12 @@
 
       <!-- Commentaire caché -->
       <div class="pure-control-group">
-        <label for="commentaire_cache">Commentaire caché</label>
+        <label for="commentaire_cache"
+          >Commentaire caché<br /><MaterialButton
+            icon="help"
+            on:click={afficherExplicationsCommentaireCache}
+          /></label
+        >
         <textarea
           class="rdv_commentaire"
           name="commentaire_cache"
