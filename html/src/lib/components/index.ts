@@ -7,6 +7,7 @@ export { default as BoutonAction } from "./src/BoutonAction.svelte";
 export { default as Chargement } from "./src/Chargement.svelte";
 export { default as ConnexionSSE } from "./src/ConnexionSSE.svelte";
 export { default as CoteCesson } from "./src/CoteCesson.svelte";
+export { default as EnvFooter } from "./src/EnvFooter.svelte";
 export { default as IconText } from "./src/IconText.svelte";
 export { default as InputDecimal } from "./src/InputDecimal.svelte";
 export { default as MaterialButton } from "./src/MaterialButton.svelte";

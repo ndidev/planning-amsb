@@ -154,6 +154,17 @@ try {
       break;
 
 
+    case 'info':
+      (new HTTPResponse(200))
+        ->setType("json")
+        ->setBody(json_encode([
+          "MAX_LOGIN_ATTEMPTS" => (int) $_ENV["AUTH_MAX_LOGIN_ATTEMPTS"],
+          "LONGUEUR_MINI_PASSWORD" => (int) $_ENV["AUTH_LONGUEUR_MINI_PASSWORD"],
+        ]))
+        ->send();
+      break;
+
+
       /** DEFAUT */
     default:
       (new HTTPResponse(404))->send();

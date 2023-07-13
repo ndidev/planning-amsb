@@ -1,7 +1,12 @@
 <script lang="ts">
   import { page, metatags } from "@roxi/routify";
 
-  import { Menu, OfflineBanner, ConnexionSSE } from "@app/components";
+  import {
+    Menu,
+    OfflineBanner,
+    ConnexionSSE,
+    EnvFooter,
+  } from "@app/components";
 
   import { Guard, SessionChecker } from "@app/auth";
 
@@ -10,8 +15,6 @@
   $: metatags.title = $page.title;
 
   $: rubrique = $page.path.split("/")[1] as ModuleId;
-
-  const afficherFooterMode = import.meta.env.MODE !== "production";
 </script>
 
 <!-- Connexion SSE pour les infos utilisateur -->
@@ -29,11 +32,7 @@
       <slot />
     </div>
 
-    {#if afficherFooterMode}
-      <footer>
-        Mode <strong>{import.meta.env.MODE}</strong>
-      </footer>
-    {/if}
+    <EnvFooter />
   </div>
 </Guard>
 
@@ -41,21 +40,7 @@
   @import "/src/css/commun.css";
   @import "/src/css/formulaire.css";
 
-  * {
-    --footer-height: 50px;
-  }
-
   .page {
     min-height: calc(100svh - var(--footer-height));
-  }
-
-  footer {
-    position: sticky;
-    bottom: 0;
-    height: var(--footer-height);
-    line-height: var(--footer-height);
-    background-color: lightpink;
-    color: black;
-    text-align: center;
   }
 </style>

@@ -7,7 +7,7 @@
 
   import { currentUser } from "@app/stores";
 
-  import { AccountStatus, User } from "@app/auth";
+  import { AccountStatus, User, type UserInfo } from "@app/auth";
 
   const screen: Writable<string> = getContext("screen");
   const login: Writable<string> = getContext("login");
@@ -44,15 +44,13 @@
         throw new Error(await response.text());
       }
 
-      const { login, nom, roles, statut } = await response.json();
+      const user: UserInfo = await response.json();
+      const statut = user.statut;
 
       // Affichage du menu
       if (statut === AccountStatus.ACTIVE) {
-        localStorage.setItem(
-          "user",
-          JSON.stringify({ login, nom, roles, statut })
-        );
-        currentUser.set(new User({ login, nom, roles, statut }));
+        localStorage.setItem("user", JSON.stringify(user));
+        currentUser.set(new User(user));
 
         screen.set("loginMenu");
       }

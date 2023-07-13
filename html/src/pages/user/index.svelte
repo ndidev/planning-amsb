@@ -6,7 +6,7 @@
 
   import { BoutonAction } from "@app/components";
 
-  import { currentUser } from "@app/stores";
+  import { currentUser, authInfo } from "@app/stores";
 
   import { fetcher } from "@app/utils";
   import { User, type UserInfo } from "@app/auth";
@@ -16,9 +16,7 @@
   /**
    * Longueur minimum du mot de passe.
    */
-  const LONGUEUR_MINI_PASSWORD: number = parseInt(
-    import.meta.env.VITE_LONGUEUR_MINI_PASSWORD
-  );
+  const { LONGUEUR_MINI_PASSWORD } = $authInfo;
 
   let password: string = "";
   let passwordConfirm: string = "";
