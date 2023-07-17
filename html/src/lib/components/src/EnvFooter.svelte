@@ -9,14 +9,7 @@
   ```
  -->
 <script lang="ts">
-  const { MODE, PROD, DEV } = import.meta.env;
-  console.log({
-    MODE,
-    PROD,
-    DEV,
-  });
-
-  const afficherFooter = MODE !== "production";
+  const afficherFooter = import.meta.env.MODE !== "production";
 </script>
 
 {#if afficherFooter}
