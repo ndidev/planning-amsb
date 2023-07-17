@@ -22,7 +22,7 @@ function notify_sse(string $name, string $type, int|string $id, mixed $data = nu
     "type" => $type,
     "id" => $id,
     "data" => $data,
-    "origin" => $_SERVER["HTTP_X_SSE_CONNECTION"] ?: NULL,
+    "origin" => $_SERVER["HTTP_X_SSE_CONNECTION"] ?? NULL,
   ];
 
   $options = [
