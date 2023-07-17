@@ -109,7 +109,7 @@
     display: none;
     position: absolute;
     z-index: 9;
-    background-color: rgb(230, 230, 230);
+    background-color: hsl(0, 0%, 90%);
     list-style-type: none;
     padding: 0;
     margin: 0;
@@ -118,7 +118,7 @@
   ul ul {
     left: 100%;
     top: 0;
-    background-color: rgb(200, 200, 200);
+    background-color: hsl(0, 0%, 78%);
   }
 
   li {
@@ -126,7 +126,7 @@
   }
 
   li:hover {
-    background-color: rgb(200, 200, 200);
+    background-color: hsl(0, 0%, 78%);
   }
 
   li:hover > ul {
@@ -149,7 +149,7 @@
   }
 
   button:hover {
-    background-color: rgb(150, 150, 150);
+    background-color: hsl(0, 0%, 59%);
     color: white;
   }
 </style>

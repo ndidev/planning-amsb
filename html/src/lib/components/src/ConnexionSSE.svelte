@@ -16,7 +16,7 @@
   Usage :
   ```tsx
   <ConnexionSSE
-    subscriptions: string[] =[]  // Liste des modules souscrits
+    subscriptions: string[] = []  // Liste des modules souscrits
   />
   ``` 
  -->

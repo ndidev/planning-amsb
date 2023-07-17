@@ -15,6 +15,7 @@ export type { Cote } from "./src/Cote";
 export type { DBEventData } from "./src/DBEvent";
 export type { EscaleConsignation } from "./src/EscaleConsignation";
 export type { FiltreBois, FiltreCharter } from "./src/Filtres";
+export type { LoginInfo } from "./src/LoginInfo";
 export type { Maree } from "./src/Maree";
 export type { ModuleId, ModulePlanning, Roles, Module } from "./src/Modules";
 export type { Pays } from "./src/Pays";

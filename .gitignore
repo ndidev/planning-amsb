@@ -1,4 +1,6 @@
+.vscode/
 .DS_Store
+docker/
 node_modules/
 vendor/
 .parcel-cache/

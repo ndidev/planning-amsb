@@ -12,7 +12,7 @@ require __DIR__ . "/vendor/autoload.php";
 require __DIR__ . "/utils/utils.php";
 
 // Chargement des variables d'environnement
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__, ".env");
+$dotenv = Dotenv\Dotenv::createImmutable(ROOTPATH, ".env");
 $dotenv->load();
 
 // Inscrit l'URL de l'API dans l'environnement

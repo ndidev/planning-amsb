@@ -2,6 +2,9 @@
  * Svelte stores
  */
 
+// Auth info
+export { authInfo } from "./src/authInfo";
+
 // User
 export { currentUser } from "./src/currentUser";
 

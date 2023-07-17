@@ -12,8 +12,9 @@ declare global {
  * BASE
  */
 const BASE =
-  import.meta.env.VITE_API_HOST ||
-  window.location.protocol + "//" + window.location.host;
+  import.meta.env.MODE === "development"
+    ? "http://localhost:8080"
+    : window.location.protocol + "//" + window.location.host;
 
 /**
  * API

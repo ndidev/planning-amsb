@@ -565,8 +565,8 @@
     align-items: flex-start;
     margin: 10px 0;
     padding: 10px 0;
-    background-color: rgb(250, 250, 250);
-    border: 1px solid #ccc;
+    background-color: hsl(0, 0%, 98%);
+    border: 1px solid hsl(0, 0%, 80%);
     border-radius: 5px;
   }
 

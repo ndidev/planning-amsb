@@ -321,7 +321,7 @@
   <div class="heures pure-u-3-24 pure-u-lg-2-24">
     {#if rdv.heure_arrivee}
       <div class="heure heure-arrivee pure-u-1 pure-u-lg-11-24">
-        {rdv.heure_arrivee}
+        {rdv.heure_arrivee.substring(0, 5)}
       </div>
     {/if}
 
@@ -337,7 +337,7 @@
 
     {#if rdv.heure_depart}
       <div class="heure heure-depart pure-u-1 pure-u-lg-11-24">
-        {rdv.heure_depart}
+        {rdv.heure_depart.substring(0, 5)}
       </div>
     {/if}
 
@@ -518,8 +518,8 @@
 
 <style>
   .rdv {
-    --bg-arrive: rgb(255, 225, 140);
-    --bg-parti: rgb(215, 255, 200);
+    --bg-arrive: hsl(44, 100%, 79%);
+    --bg-parti: hsl(104, 100%, 89%);
     padding: 8px 0 8px 5px;
     border-bottom: 1px solid hsl(0, 0%, 60%);
     align-items: baseline;
@@ -559,7 +559,7 @@
   }
 
   .commentaire_cache {
-    --commentaire-cache-color: hsl(0, 0%, 70%);
+    --commentaire-cache-color: hsl(0, 0%, 50%);
     color: var(--commentaire-cache-color);
   }
 
@@ -574,20 +574,17 @@
 
   .confirmation_affretement :global(button::after) {
     position: absolute;
-    font-family: "Material Symbols Outlined";
-    content: "close";
+    left: 0.6em;
+  }
+
+  .confirmation_affretement[data-confirme="0"] :global(button::after) {
+    content: "✘";
     color: red;
-    font-size: 24px;
-    left: 15px;
   }
 
   .confirmation_affretement[data-confirme="1"] :global(button::after) {
-    position: absolute;
-    font-family: "Material Symbols Outlined";
-    content: "check";
+    content: "✔︎";
     color: green;
-    font-size: 24px;
-    left: 15px;
   }
 
   /* Mobile */

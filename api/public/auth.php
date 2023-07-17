@@ -82,6 +82,7 @@ try {
         (new HTTPResponse(200))
           ->setType("json")
           ->setBody(json_encode([
+            "uid" => $user->uid,
             "login" => $user->login,
             "nom" => $user->nom,
             "roles" => $user->roles,
@@ -118,19 +119,6 @@ try {
 
       $user = (new User)->from_session();
 
-      // Vérification du rôle associé à la rubrique
-      if ($user->can_access($query["rubrique"] ?? NULL) === false) {
-        throw new AccessException();
-      }
-
-      // Vérification de l'accès administrateur si nécessaire
-      if (
-        strpos($_SERVER["HTTP_REFERER"], "/admin")
-        && $user->is_admin === false
-      ) {
-        throw new AdminException();
-      }
-
       (new HTTPResponse(200))
         ->setType("json")
         ->setBody(json_encode([
@@ -151,6 +139,17 @@ try {
       (new User)->first_login($_POST["login"], $_POST["password"]);
 
       (new HTTPResponse(200))->send();
+      break;
+
+
+    case 'info':
+      (new HTTPResponse(200))
+        ->setType("json")
+        ->setBody(json_encode([
+          "MAX_LOGIN_ATTEMPTS" => (int) $_ENV["AUTH_MAX_LOGIN_ATTEMPTS"],
+          "LONGUEUR_MINI_PASSWORD" => (int) $_ENV["AUTH_LONGUEUR_MINI_PASSWORD"],
+        ]))
+        ->send();
       break;
 
 

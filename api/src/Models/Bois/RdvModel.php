@@ -51,8 +51,8 @@ class RdvModel extends BaseModel
           id,
           attente,
           date_rdv,
-          SUBSTRING(heure_arrivee, 1, 5) AS heure_arrivee,
-          SUBSTRING(heure_depart, 1, 5) AS heure_depart,
+          heure_arrivee,
+          heure_depart,
           confirmation_affretement,
           numero_bl,
           commentaire_public,
@@ -107,8 +107,8 @@ class RdvModel extends BaseModel
         id,
         attente,
         date_rdv,
-        SUBSTRING(heure_arrivee, 1, 5) AS heure_arrivee,
-        SUBSTRING(heure_depart, 1, 5) AS heure_depart,
+        heure_arrivee,
+        heure_depart,
         confirmation_affretement,
         numero_bl,
         commentaire_public,
@@ -278,7 +278,7 @@ class RdvModel extends BaseModel
     if (isset($input["heure_arrivee"])) {
 
       // Heure
-      $heure = date('H:i');
+      $heure = date('H:i:s');
       $this->db
         ->prepare("UPDATE bois_planning SET heure_arrivee = :heure WHERE id = :id")
         ->execute([
@@ -358,7 +358,7 @@ class RdvModel extends BaseModel
      * Heure de départ
      */
     if (isset($input["heure_depart"])) {
-      $heure = date('H:i');
+      $heure = date('H:i:s');
       $this->db
         ->prepare("UPDATE bois_planning SET heure_depart = :heure WHERE id = :id")
         ->execute([

@@ -49,7 +49,7 @@
 
 <div
   id="bandeau-filtre"
-  style:background={filtreActif ? "rgb(255, 210, 210)" : "white"}
+  style:background={filtreActif ? "hsl(0, 100%, 92%)" : "white"}
 >
   <button
     id="toggle-filtre"
@@ -59,7 +59,7 @@
     {filtreAffiche ? "Masquer" : "Afficher"} le filtre
   </button>
 
-  <div class="champs" style:display={filtreAffiche ? "grid" : "none"}>
+  <form style:display={filtreAffiche ? "grid" : "none"}>
     <!-- Dates -->
     <div class="bloc">
       <div>
@@ -178,13 +178,19 @@
     <div class="bloc">
       <!-- Boutons filtre -->
       <div>
-        <button name="filtrer" class="pure-button" on:click={appliquerFiltre}>
+        <button
+          type="submit"
+          name="filtrer"
+          class="pure-button"
+          on:click|preventDefault={appliquerFiltre}
+        >
           Filtrer
         </button>
         <!-- <BoutonAction on:click={appliquerFiltre}>Filtrer</BoutonAction> -->
       </div>
       <div>
         <button
+          type="reset"
           name="supprimer_filtre"
           class="pure-button"
           on:click={supprimerFiltre}
@@ -196,7 +202,7 @@
         </BoutonAction> -->
       </div>
     </div>
-  </div>
+  </form>
 </div>
 
 <style>
@@ -210,13 +216,13 @@
     cursor: pointer;
   }
 
-  .champs {
+  form {
     display: flex;
     flex-direction: column;
     row-gap: 10px;
   }
 
-  .champs > .bloc {
+  form > .bloc {
     display: grid;
     row-gap: 10px;
   }
@@ -243,7 +249,7 @@
 
   /* Desktop */
   @media screen and (min-width: 768px) {
-    .champs {
+    form {
       display: grid;
       grid-template-columns: 12% repeat(3, 23%) 15%;
       column-gap: 1%;

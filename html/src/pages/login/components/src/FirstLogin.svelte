@@ -15,6 +15,7 @@
   import Notiflix from "notiflix";
 
   import { appURLs } from "@app/utils";
+  import { authInfo } from "@app/stores";
 
   const screen: Writable<string> = getContext("screen");
   const login: Writable<string> = getContext("login");
@@ -28,9 +29,7 @@
   /**
    * Longueur minimum du mot de passe.
    */
-  const LONGUEUR_MINI_PASSWORD = parseInt(
-    import.meta.env.VITE_LONGUEUR_MINI_PASSWORD
-  );
+  const { LONGUEUR_MINI_PASSWORD } = $authInfo;
 
   let validerButton: HTMLButtonElement;
   let passwordInput: HTMLInputElement;

@@ -65,7 +65,7 @@
 
 <style>
   .date {
-    color: rgb(88, 200, 95);
+    color: hsl(124, 50%, 56%);
     margin-top: 30px;
     margin-bottom: 15px;
   }

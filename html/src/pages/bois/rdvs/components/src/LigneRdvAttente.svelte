@@ -230,105 +230,110 @@
 {/if}
 
 <div class="rdv pure-g" bind:this={ligne}>
-  <div class="date-rdv pure-u-1 pure-u-lg-4-24">{formattedDate}</div>
+  <div class="pure-u-1 pure-u-lg-22-24">
+    <div class="date-rdv pure-u-1 pure-u-lg-4-24">{formattedDate}</div>
 
-  <div class="adresses-tiers pure-u-1 pure-u-lg-5-24">
-    {#if chargementAffiche}
-      <div class="chargement">
+    <div class="adresses-tiers pure-u-1 pure-u-lg-5-24">
+      {#if chargementAffiche}
+        <div class="chargement">
+          <IconText>
+            <span slot="icon" title="Chargement">line_start_diamond</span>
+            <span slot="text">{adresses.chargement}</span>
+            <span slot="tooltip">{adresses.tooltipChargement}</span>
+          </IconText>
+        </div>
+      {/if}
+
+      <div class="client">
         <IconText>
-          <span slot="icon" title="Chargement">line_start_diamond</span>
-          <span slot="text">{adresses.chargement}</span>
-          <span slot="tooltip">{adresses.tooltipChargement}</span>
+          <span slot="icon" title="Client">
+            {#if chargementAffiche || livraisonAffiche}
+              person
+            {/if}
+          </span>
+          <span slot="text">{adresses.client}</span>
+          <span slot="tooltip">{adresses.tootipClient}</span>
         </IconText>
       </div>
-    {/if}
 
-    <div class="client">
-      <IconText>
-        <span slot="icon" title="Client">
-          {#if chargementAffiche || livraisonAffiche}
-            person
-          {/if}
-        </span>
-        <span slot="text">{adresses.client}</span>
-        <span slot="tooltip">{adresses.tootipClient}</span>
+      {#if livraisonAffiche}
+        <div class="livraison">
+          <IconText>
+            <span slot="icon" title="Livraison">line_end_circle</span>
+            <span slot="text">{adresses.livraison}</span>
+            <span slot="tooltip">{adresses.tooltipLivraison}</span>
+          </IconText>
+        </div>
+      {/if}
+    </div>
+
+    <div class="transporteur pure-u-1 pure-u-lg-2-24">
+      {#if rdv.transporteur}
+        <IconText hideIcon={["desktop"]}>
+          <span slot="icon" title="Transporteur">local_shipping</span>
+          <span slot="text" style:font-weight="bold"
+            >{transporteur.nom_court}</span
+          >
+          <span slot="tooltip">
+            {#if rdv.transporteur >= 11}
+              <!-- Transporteur non "spécial" -->
+              {transporteur.telephone || "Téléphone non renseigné"}
+            {/if}
+          </span>
+        </IconText>
+      {/if}
+    </div>
+
+    <div
+      class="affreteur pure-u-1 pure-u-lg-2-24"
+      class:lie-agence={affreteur.lie_agence}
+    >
+      <IconText iconType="text" hideIcon={["desktop"]}>
+        <span slot="icon" title="Affréteur">A</span>
+        <span slot="text">{affreteur.nom_court}</span>
       </IconText>
     </div>
 
-    {#if livraisonAffiche}
-      <div class="livraison">
-        <IconText>
-          <span slot="icon" title="Livraison">line_end_circle</span>
-          <span slot="text">{adresses.livraison}</span>
-          <span slot="tooltip">{adresses.tooltipLivraison}</span>
-        </IconText>
-      </div>
-    {/if}
-  </div>
-
-  <div class="transporteur pure-u-1 pure-u-lg-2-24">
-    {#if rdv.transporteur}
-      <IconText hideIcon={["desktop"]}>
-        <span slot="icon" title="Transporteur">local_shipping</span>
-        <span slot="text" style:font-weight="bold"
-          >{transporteur.nom_court}</span
-        >
-        <span slot="tooltip">
-          {#if rdv.transporteur >= 11}
-            <!-- Transporteur non "spécial" -->
-            {transporteur.telephone || "Téléphone non renseigné"}
-          {/if}
-        </span>
+    <div class="fournisseur pure-u-1 pure-u-lg-2-24">
+      <IconText iconType="text" hideIcon={["desktop"]}>
+        <span slot="icon" title="Fournisseur">F</span>
+        <span slot="text">{fournisseur.nom_court}</span>
       </IconText>
-    {/if}
-  </div>
+    </div>
 
-  <div
-    class="affreteur pure-u-1 pure-u-lg-2-24"
-    class:lie-agence={affreteur.lie_agence}
-  >
-    {affreteur.nom_court}
-  </div>
+    <div class="commentaires pure-u-1 pure-u-lg-6-24">
+      {#if rdv.commentaire_public}
+        <div class="commentaire-public">
+          <IconText hideIcon={["desktop"]}>
+            <span slot="icon" title="Commentaire public">comment</span>
+            <span slot="text"
+              >{@html rdv.commentaire_public.replace(
+                /(?:\r\n|\r|\n)/g,
+                "<br>"
+              )}</span
+            >
+          </IconText>
+        </div>
+      {/if}
 
-  <div class="fournisseur pure-u-1 pure-u-lg-2-24">
-    <IconText iconType="text" hideIcon={["desktop"]}>
-      <span slot="icon" title="Fournisseur">F</span>
-      <span slot="text">{fournisseur.nom_court}</span>
-    </IconText>
-  </div>
+      {#if rdv.commentaire_public && rdv.commentaire_cache}
+        <div class="separateur" />
+      {/if}
 
-  <div class="commentaires pure-u-1 pure-u-lg-6-24">
-    {#if rdv.commentaire_public}
-      <div class="commentaire-public">
-        <IconText hideIcon={["desktop"]}>
-          <span slot="icon" title="Commentaire public">comment</span>
-          <span slot="text"
-            >{@html rdv.commentaire_public.replace(
-              /(?:\r\n|\r|\n)/g,
-              "<br>"
-            )}</span
-          >
-        </IconText>
-      </div>
-    {/if}
-
-    {#if rdv.commentaire_public && rdv.commentaire_cache}
-      <div class="separateur" />
-    {/if}
-
-    {#if rdv.commentaire_cache}
-      <div class="commentaire_cache">
-        <IconText hideIcon={["desktop"]}>
-          <span slot="icon" title="Commentaire caché">comments_disabled</span>
-          <span slot="text"
-            >{@html rdv.commentaire_cache.replace(
-              /(?:\r\n|\r|\n)/g,
-              "<br>"
-            )}</span
-          >
-        </IconText>
-      </div>
-    {/if}
+      {#if rdv.commentaire_cache}
+        <div class="commentaire_cache">
+          <IconText hideIcon={["desktop"]}>
+            <span slot="icon" title="Commentaire caché">comments_disabled</span>
+            <span slot="text"
+              >{@html rdv.commentaire_cache.replace(
+                /(?:\r\n|\r|\n)/g,
+                "<br>"
+              )}</span
+            >
+          </IconText>
+        </div>
+      {/if}
+    </div>
   </div>
 
   {#if $currentUser.canEdit("bois")}

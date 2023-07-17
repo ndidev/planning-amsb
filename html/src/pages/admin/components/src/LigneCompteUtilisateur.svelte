@@ -16,7 +16,7 @@
 
   import { MaterialButton } from "@app/components";
 
-  import { adminUsers, currentUser } from "@app/stores";
+  import { adminUsers, currentUser, authInfo } from "@app/stores";
 
   import { sitemap, notiflixOptions, validerFormulaire } from "@app/utils";
 
@@ -91,7 +91,7 @@
   /**
    * Explications statut
    */
-  const explications: Record<AccountStatus, Explication> = {
+  $: explications = {
     [AccountStatus.ACTIVE]: {
       titre: "Compte actif",
       texte: "Le compte est actif et peut être utilisé.",
@@ -144,7 +144,7 @@
         "Le compte a été automatiquement bloqué en raison d'un nombre \
            trop important de tentatives de connexions erronées \
            (maximum autorisé : " +
-        import.meta.env.VITE_MAX_LOGIN_ATTEMPTS +
+        $authInfo.MAX_LOGIN_ATTEMPTS +
         ").<br/>" +
         'Pour le réactiver, cliquer sur "Réinitialiser le compte".',
       notiflix: {
@@ -174,7 +174,7 @@
         },
       },
     },
-  };
+  } as Record<AccountStatus, Explication>;
 
   /**
    * Afficher les explications sur le statut du compte.
