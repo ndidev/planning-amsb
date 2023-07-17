@@ -7,15 +7,9 @@
     "dev:routify": "routify",
     "dev:vite": "vite --host",
     "preview": "vite preview",
-    "build:dev": "run-s build:dev:*",
-    "build:dev:routify": "routify -b",
-    "build:dev:vite": "vite build --mode development --sourcemap true --minify false --outDir dist/dev",
-    "build:staging": "run-s build:staging:*",
-    "build:staging:routify": "routify -b",
-    "build:staging:vite": "vite build --mode staging --sourcemap true --outDir dist/staging",
-    "build:prod": "run-s build:prod:*",
-    "build:prod:routify": "routify -b",
-    "build:prod:vite": "vite build --outDir dist/prod",
+    "build:dev": "routify -b && vite build --mode development --sourcemap true --minify false",
+    "build:staging": "routify -b && vite build --mode staging --sourcemap true",
+    "build:prod": "routify -b && vite build --outDir dist/prod",
     "refresh": "routify -b && vite build --mode development"
   },
   "devDependencies": {
