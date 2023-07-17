@@ -201,7 +201,7 @@ class PDFMailer extends PHPMailer
 HTML;
 
     $this->Body = $html;
-    $this->AddEmbeddedImage(API . '/images/amsb_mini.png', 'logoimg', 'AMSB'); // Image appelée par Content ID (cid:logoimg) dans le corps du message
+    $this->AddEmbeddedImage(API . '/images/logo_agence_combi_mini.png', 'logoimg', 'AMSB'); // Image appelée par Content ID (cid:logoimg) dans le corps du message
   }
 
   /**

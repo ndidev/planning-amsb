@@ -10,7 +10,7 @@
   import { appURLs } from "@app/utils";
   import { User } from "@app/auth";
 
-  import logo from "/src/images/amsb.min.svg";
+  import logo from "/src/images/logo_agence_combi.min.svg";
 
   let login: string;
 

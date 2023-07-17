@@ -116,7 +116,7 @@
     margin: 0;
     padding: 0;
     opacity: 0.05;
-    background-image: url("/src/images/amsb.svg");
+    background-image: url("/src/images/logo_agence_combi.min.svg");
     background-repeat: no-repeat;
     background-position: center center;
     background-attachment: fixed;
