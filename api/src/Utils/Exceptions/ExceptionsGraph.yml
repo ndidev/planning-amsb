@@ -1,22 +1,22 @@
 GenericException:
-  DBException:
-    DBConnectionException:
-
-  AuthException:
-    UnauthorizedException:
-      SessionException:
-      LoginException:
-      InvalidApiKeyException:
-      InvalidAccountException:
-    ForbiddenException:
-      AccessException:
-      AdminException:
-      AccountStatusException:
-        AccountPendingException:
-        AccountInactiveException:
-        AccountLockedException:
-          AccountLockedException:
-            MaxLoginAttemptsException:
-        AccountDeletedException:
-
   ClientException:
+    AuthException:
+      UnauthorizedException:
+        SessionException:
+        LoginException:
+        InvalidApiKeyException:
+        InvalidAccountException:
+      ForbiddenException:
+        AccessException:
+        AdminException:
+        AccountStatusException:
+          AccountPendingException:
+          AccountInactiveException:
+          AccountLockedException:
+            AccountLockedException:
+              MaxLoginAttemptsException:
+          AccountDeletedException:
+
+  ServerException:
+    DBException:
+      DBConnectionException:
