@@ -6,11 +6,6 @@ use Api\Utils\BaseModel;
 
 class ListeNaviresModel extends BaseModel
 {
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   /**
    * Récupère un numéro de voyage pour un navire.
    * 

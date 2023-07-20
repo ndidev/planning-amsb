@@ -6,11 +6,6 @@ use Api\Utils\BaseModel;
 
 class BandeauInfoModel extends BaseModel
 {
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   /**
    * Récupère toutes les lignes du bandeau d'infos.
    * 

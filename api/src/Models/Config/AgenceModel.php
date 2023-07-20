@@ -6,11 +6,6 @@ use Api\Utils\BaseModel;
 
 class AgenceModel extends BaseModel
 {
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   /**
    * Récupère les données de l'agence.
    * 

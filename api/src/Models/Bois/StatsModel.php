@@ -6,11 +6,6 @@ use Api\Utils\BaseModel;
 
 class StatsModel extends BaseModel
 {
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   /**
    * Récupère les stats bois.
    * 

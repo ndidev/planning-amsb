@@ -8,11 +8,6 @@ class PortsModel extends BaseModel
 {
   private $redis_ns = "ports";
 
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   /**
    * Récupère tous les ports.
    * 

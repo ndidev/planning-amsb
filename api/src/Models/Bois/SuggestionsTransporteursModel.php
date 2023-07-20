@@ -6,11 +6,6 @@ use Api\Utils\BaseModel;
 
 class SuggestionsTransporteursModel extends BaseModel
 {
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   /**
    * Récupère les transporteurs susceptibles d'effectuer
    * un transport en un lieu de chargement et de livraison.

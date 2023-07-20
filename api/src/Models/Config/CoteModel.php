@@ -6,11 +6,6 @@ use Api\Utils\BaseModel;
 
 class CoteModel extends BaseModel
 {
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   /**
    * Récupère toutes les côtes.
    * 

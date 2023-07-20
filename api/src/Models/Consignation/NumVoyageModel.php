@@ -2,17 +2,10 @@
 
 namespace Api\Models\Consignation;
 
-use Api\Utils\DatabaseConnector as DB;
+use Api\Utils\BaseModel;
 
-class NumVoyageModel
+class NumVoyageModel extends BaseModel
 {
-  private $db;
-
-  public function __construct()
-  {
-    $this->db = (new DB)->getConnection();
-  }
-
   /**
    * Récupère un numéro de voyage pour un navire.
    * 

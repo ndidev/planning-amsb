@@ -9,11 +9,6 @@ class MareesModel extends BaseModel
 {
   private $redis_ns = "marees";
 
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   /**
    * Récupère les marées en fonction du filtre.
    * 

@@ -2,18 +2,10 @@
 
 namespace Api\Models\Tiers;
 
-use Api\Utils\DatabaseConnector as DB;
-use \PDO;
+use Api\Utils\BaseModel;
 
-class NombreRdvModel
+class NombreRdvModel extends BaseModel
 {
-  private PDO $db;
-
-  public function __construct()
-  {
-    $this->db = (new DB)->getConnection();
-  }
-
   /**
    * Récupère le nombre de RDV pour tous les tiers.
    * 

@@ -8,13 +8,6 @@ use Exception;
 
 class TiersModel extends BaseModel
 {
-  private $redis_ns = "tiers";
-
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   /**
    * Récupère tous les tiers.
    * 

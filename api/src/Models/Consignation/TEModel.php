@@ -2,17 +2,10 @@
 
 namespace Api\Models\Consignation;
 
-use Api\Utils\DatabaseConnector as DB;
+use Api\Utils\BaseModel;
 
-class TEModel
+class TEModel extends BaseModel
 {
-  private $db;
-
-  public function __construct()
-  {
-    $this->db = (new DB)->getConnection();
-  }
-
   /**
    * Récupère tous les tirants d'eau du planning consignation.
    * 

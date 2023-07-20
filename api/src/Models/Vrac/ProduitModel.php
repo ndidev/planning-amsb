@@ -6,13 +6,6 @@ use Api\Utils\BaseModel;
 
 class ProduitModel extends BaseModel
 {
-  private string $redis_ns = "vrac:produits";
-
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   /**
    * Récupère tous les produits vrac.
    * 

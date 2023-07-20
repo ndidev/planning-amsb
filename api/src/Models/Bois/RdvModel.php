@@ -7,13 +7,6 @@ use Api\Utils\Exceptions\ClientException;
 
 class RdvModel extends BaseModel
 {
-  private string $redis_ns = "bois:rdvs";
-
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   /**
    * Récupère tous les RDV bois.
    * 

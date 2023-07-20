@@ -6,12 +6,6 @@ use Api\Utils\BaseModel;
 
 class AjoutRapideBoisModel extends BaseModel
 {
-
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   /**
    * Récupère tous les ajouts rapides bois.
    */

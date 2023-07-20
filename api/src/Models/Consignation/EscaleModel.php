@@ -2,19 +2,12 @@
 
 namespace Api\Models\Consignation;
 
-use Api\Utils\DatabaseConnector as DB;
+use Api\Utils\BaseModel;
 use DateInterval;
 use DateTime;
 
-class EscaleModel
+class EscaleModel extends BaseModel
 {
-  private $db;
-
-  public function __construct()
-  {
-    $this->db = (new DB)->getConnection();
-  }
-
   /**
    * Récupère toutes les escales consignation.
    * 
