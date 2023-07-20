@@ -11,13 +11,29 @@ use \IntlDateFormatter;
 class DateUtils
 {
   public const TIMEZONE = "Europe/Paris";
+
+  /** Exemple : `2023-07-24` */
   public const ISO_DATE = "yyyy-MM-dd";
+
+  /** Exemple : `13:56` */
   public const ISO_TIME = "HH:mm";
+
+  /** Exemple : `2023-07-24T11:56:47Z` */
   public const ISO_DATETIME_FULL = "yyyy-MM-ddTHH:mm:ssZ";
+
+  /** Exemple : `lundi 24 juillet 2023` */
   public const DATE_FULL = "EEEE dd MMMM yyyy";
+
+  /** Exemple : `lundi 24 juillet 2023 13:56:47` */
   public const DATETIME_FULL = "EEEE dd MMMM yyyy HH:mm:ss";
+
+  /** Exemple : `2023-07-24` */
   public const SQL_DATE = "yyyy-MM-dd";
+
+  /** Exemple : `13:56:47` */
   public const SQL_TIME = "HH:mm:ss";
+
+  /** Exemple : `2023-07-24 13:56:47` */
   public const SQL_TIMESTAMP = "yyyy-MM-dd HH:mm:ss";
 
   /**

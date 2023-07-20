@@ -15,7 +15,7 @@ class TiersModel extends BaseModel
    * 
    * @return array Liste des tiers
    */
-  public function readAll(array $options = []): array
+  public function readAll(): array
   {
     $statement =
       "SELECT *
