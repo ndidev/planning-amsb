@@ -21,7 +21,7 @@ class PortsModel extends BaseModel
     if (!$ports) {
       $statement = "SELECT * FROM utils_ports ORDER BY SUBSTRING(locode, 1, 2), nom";
 
-      $ports = $this->db->query($statement)->fetchAll();
+      $ports = $this->mysql->query($statement)->fetchAll();
 
       $this->redis->set($this->redis_ns, json_encode($ports));
     }
@@ -44,7 +44,7 @@ class PortsModel extends BaseModel
       FROM utils_ports
       WHERE locode = :locode";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
     $requete->execute(["locode" => $locode]);
     $port = $requete->fetch();
 
@@ -71,16 +71,16 @@ class PortsModel extends BaseModel
         :nom
       )";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
 
-    $this->db->beginTransaction();
+    $this->mysql->beginTransaction();
     $requete->execute([
       'locode' => $input["locode"],
       'nom' => $input["nom"]
     ]);
 
-    $last_id = $this->db->lastInsertId();
-    $this->db->commit();
+    $last_id = $this->mysql->lastInsertId();
+    $this->mysql->commit();
 
     $this->redis->del($this->redis_ns);
 
@@ -101,7 +101,7 @@ class PortsModel extends BaseModel
       SET nom = :nom
       WHERE locode = :locode";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
     $requete->execute([
       'nom' => $input["nom"],
       'locode' => $locode
@@ -121,7 +121,7 @@ class PortsModel extends BaseModel
    */
   public function delete($locode): bool
   {
-    $requete = $this->db->prepare("DELETE FROM utils_ports WHERE locode = :locode");
+    $requete = $this->mysql->prepare("DELETE FROM utils_ports WHERE locode = :locode");
     $succes = $requete->execute(["locode" => $locode]);
 
     $this->redis->del($this->redis_ns);

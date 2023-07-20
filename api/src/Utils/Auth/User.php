@@ -3,10 +3,10 @@
 namespace Api\Utils\Auth;
 
 use \DateTime;
+use Api\Utils\Database\MySQL;
 use \PDOException;
-use \Redis;
+use Api\Utils\Database\Redis;
 use \RedisException;
-use Api\Utils\DatabaseConnector as DB;
 use Api\Utils\Auth\UserRoles;
 use Api\Utils\Auth\AccountStatus;
 use Api\Utils\Auth\ApiKeyStatus;
@@ -85,7 +85,6 @@ class User
       $this->redis = $redis;
     } else {
       $this->redis = new Redis();
-      $this->redis->pconnect($_ENV["REDIS_HOST"], $_ENV["REDIS_PORT"]);
     }
 
     if ($uid) {
@@ -186,8 +185,7 @@ class User
 
     $now = DateUtils::format(DateUtils::SQL_TIMESTAMP, new DateTime());
 
-    (new DB)
-      ->getConnection()
+    (new MySQL)
       ->query("UPDATE admin_users SET last_connection = '{$now}' WHERE uid = '{$this->uid}'");
 
     $this->redis->hSet("admin:users:{$this->uid}", "last_connection", $now);
@@ -227,8 +225,7 @@ class User
       throw new AccountStatusException($this->statut, "Le compte n'est pas en attente d'activation");
     }
 
-    (new DB)
-      ->getConnection()
+    (new MySQL)
       ->prepare(
         "UPDATE `admin_users`
           SET
@@ -310,8 +307,7 @@ class User
 
     $key_info =
       $this->redis->hGetAll("admin:apikeys:{$api_key_hash}")
-      ?: (new DB)
-      ->getConnection()
+      ?: (new MySQL)
       ->query("SELECT `uid`, `status`, expiration FROM admin_api_keys WHERE `key` = '{$api_key_hash}'")
       ->fetch();
 
@@ -386,8 +382,7 @@ class User
   public function update_redis(): void
   {
     $user =
-      (new DB)
-      ->getConnection()
+      (new MySQL)
       ->query("SELECT * FROM admin_users WHERE uid = '{$this->uid}'")
       ->fetch();
 
@@ -461,8 +456,8 @@ class User
 
     // Identification grâce au login
     if ($login) {
-      $db = (new DB)->getConnection();
-      $requete = $db->prepare("SELECT uid FROM admin_users WHERE login = :login");
+      $mysql = new MySQL;
+      $requete = $mysql->prepare("SELECT uid FROM admin_users WHERE login = :login");
       $requete->execute(["login" => $login]);
       $user = $requete->fetch();
       $uid = $user["uid"] ?? null;
@@ -572,8 +567,7 @@ class User
    */
   private function increment_login_attempts(): int
   {
-    (new DB)
-      ->getConnection()
+    (new MySQL)
       ->query(
         "UPDATE admin_users
           SET login_attempts = login_attempts + 1
@@ -593,8 +587,7 @@ class User
    */
   private function reset_login_attempts(): void
   {
-    (new DB)
-      ->getConnection()
+    (new MySQL)
       ->query("UPDATE admin_users SET login_attempts = 0 WHERE uid = '{$this->uid}'");
 
     $this->redis->hSet("admin:users:{$this->uid}", "login_attempts", 0);
@@ -615,8 +608,7 @@ class User
       return;
     }
 
-    (new DB)
-      ->getConnection()
+    (new MySQL)
       ->prepare(
         "UPDATE admin_users
           SET

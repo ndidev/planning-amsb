@@ -108,10 +108,10 @@ class EscaleModel extends BaseModel
         WHERE escale_id = :id";
 
     // Escales
-    $requete_escales = $this->db->query($statement_escales);
+    $requete_escales = $this->mysql->query($statement_escales);
     $escales = $requete_escales->fetchAll();
 
-    $requete_marchandises = $this->db->prepare($statement_marchandises);
+    $requete_marchandises = $this->mysql->prepare($statement_marchandises);
 
     foreach ($escales as &$escale) {
       $id = $escale["id"];
@@ -202,7 +202,7 @@ class EscaleModel extends BaseModel
         WHERE escale_id = :id";
 
     // Escales
-    $requete_escale = $this->db->prepare($statement_escale);
+    $requete_escale = $this->mysql->prepare($statement_escale);
     $requete_escale->execute(["id" => $id]);
     $escale = $requete_escale->fetch();
 
@@ -217,7 +217,7 @@ class EscaleModel extends BaseModel
 
 
     // Marchandises
-    $requete_marchandises = $this->db->prepare($statement_marchandises);
+    $requete_marchandises = $this->mysql->prepare($statement_marchandises);
     $requete_marchandises->execute(["id" => $id]);
     $marchandises = $requete_marchandises->fetchAll();
 
@@ -308,9 +308,9 @@ class EscaleModel extends BaseModel
           :nombre_outturn
         )";
 
-    $requete = $this->db->prepare($statement_escale);
+    $requete = $this->mysql->prepare($statement_escale);
 
-    $this->db->beginTransaction();
+    $this->mysql->beginTransaction();
     $requete->execute([
       'navire' => $input["navire"] ?: "TBN",
       'voyage' => $input["voyage"],
@@ -338,11 +338,11 @@ class EscaleModel extends BaseModel
       'commentaire' => $input["commentaire"],
     ]);
 
-    $last_id = $this->db->lastInsertId();
-    $this->db->commit();
+    $last_id = $this->mysql->lastInsertId();
+    $this->mysql->commit();
 
     // Marchandises
-    $requete_marchandises = $this->db->prepare($statement_marchandises);
+    $requete_marchandises = $this->mysql->prepare($statement_marchandises);
     $marchandises = $input["marchandises"] ?? [];
     foreach ($marchandises as $marchandise) {
       $requete_marchandises->execute([
@@ -445,7 +445,7 @@ class EscaleModel extends BaseModel
           nombre_outturn = :nombre_outturn
         WHERE id = :id";
 
-    $requete = $this->db->prepare($statement_escale);
+    $requete = $this->mysql->prepare($statement_escale);
     $requete->execute([
       'navire' => $input["navire"] ?: "TBN",
       'voyage' => $input["voyage"],
@@ -478,7 +478,7 @@ class EscaleModel extends BaseModel
     // Suppression marchandises
     // !! SUPPRESSION A LAISSER *AVANT* L'AJOUT DE marchandise POUR EVITER SUPPRESSION IMMEDIATE APRES AJOUT !!
     // Comparaison du tableau transmis par POST avec la liste existante des marchandises pour le produit concerné
-    $requete_marchandises = $this->db->prepare(
+    $requete_marchandises = $this->mysql->prepare(
       "SELECT id
           FROM consignation_escales_marchandises
           WHERE escale_id = :escale_id"
@@ -497,7 +497,7 @@ class EscaleModel extends BaseModel
     }
     $ids_marchandises_a_supprimer = array_diff($ids_marchandises_existantes, $ids_marchandises_transmises);
 
-    $requete_supprimer = $this->db->prepare(
+    $requete_supprimer = $this->mysql->prepare(
       "DELETE FROM consignation_escales_marchandises
           WHERE id = :id"
     );
@@ -506,8 +506,8 @@ class EscaleModel extends BaseModel
     }
 
     // Ajout et modification marchandises
-    $requete_marchandises_ajout = $this->db->prepare($statement_marchandises_ajout);
-    $requete_marchandises_modif = $this->db->prepare($statement_marchandises_modif);
+    $requete_marchandises_ajout = $this->mysql->prepare($statement_marchandises_ajout);
+    $requete_marchandises_modif = $this->mysql->prepare($statement_marchandises_modif);
     $marchandises = $input["marchandises"] ?? [];
     foreach ($marchandises as $marchandise) {
       if ((int) $marchandise["id"]) {
@@ -553,7 +553,7 @@ class EscaleModel extends BaseModel
    */
   public function delete(int $id): bool
   {
-    $requete = $this->db->prepare("DELETE FROM consignation_planning WHERE id = :id");
+    $requete = $this->mysql->prepare("DELETE FROM consignation_planning WHERE id = :id");
     $succes = $requete->execute(["id" => $id]);
 
     return $succes;

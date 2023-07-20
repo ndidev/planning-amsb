@@ -49,14 +49,14 @@ class UserModel extends BaseModel
         `password` = :password
       WHERE `uid` = :uid";
 
-    $requete = $this->db->prepare($statement_nom);
+    $requete = $this->mysql->prepare($statement_nom);
     $requete->execute([
       "nom" => substr($input["nom"], 0, 255),
       "uid" => $uid
     ]);
 
     if ($input["password"] !== "") {
-      $requete_password = $this->db->prepare($statement_password);
+      $requete_password = $this->mysql->prepare($statement_password);
       $requete_password->execute([
         "password" => password_hash($input["password"], PASSWORD_DEFAULT),
         "uid" => $uid

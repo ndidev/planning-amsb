@@ -23,7 +23,7 @@ class ListeNaviresModel extends BaseModel
         FROM consignation_planning
         WHERE ops_date <= :date_fin AND etc_date >= :date_debut";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
     $requete->execute([
       "date_debut" => $date_debut,
       "date_fin" => $date_fin,

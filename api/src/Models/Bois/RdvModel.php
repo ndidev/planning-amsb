@@ -62,7 +62,7 @@ class RdvModel extends BaseModel
         $filtre_sql
         ORDER BY date_rdv";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
 
     $requete->execute([
       "date_debut" => $date_debut,
@@ -115,7 +115,7 @@ class RdvModel extends BaseModel
       FROM bois_planning
       WHERE id = :id";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
     $requete->execute(["id" => $id]);
     $rdv = $requete->fetch();
 
@@ -163,9 +163,9 @@ class RdvModel extends BaseModel
       :commentaire_cache
       )";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
 
-    $this->db->beginTransaction();
+    $this->mysql->beginTransaction();
     $requete->execute([
       'attente' => (int) $input["attente"],
       'date_rdv' => $input["date_rdv"] ?: NULL,
@@ -183,8 +183,8 @@ class RdvModel extends BaseModel
       'commentaire_cache' => $input["commentaire_cache"],
     ]);
 
-    $last_id = $this->db->lastInsertId();
-    $this->db->commit();
+    $last_id = $this->mysql->lastInsertId();
+    $this->mysql->commit();
 
     return $this->read($last_id);
   }
@@ -217,7 +217,7 @@ class RdvModel extends BaseModel
         commentaire_cache = :commentaire_cache
       WHERE id = :id";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
     $requete->execute([
       'attente' => (int) $input["attente"],
       'date_rdv' => $input["date_rdv"] ?: NULL,
@@ -253,7 +253,7 @@ class RdvModel extends BaseModel
      * Confirmation affrètement
      */
     if (isset($input["confirmation_affretement"])) {
-      $this->db
+      $this->mysql
         ->prepare(
           "UPDATE bois_planning
            SET confirmation_affretement = :confirmation_affretement
@@ -272,7 +272,7 @@ class RdvModel extends BaseModel
 
       // Heure
       $heure = date('H:i:s');
-      $this->db
+      $this->mysql
         ->prepare("UPDATE bois_planning SET heure_arrivee = :heure WHERE id = :id")
         ->execute([
           'heure' => $heure,
@@ -285,7 +285,7 @@ class RdvModel extends BaseModel
 
       if ($current["fournisseur"] === 292 /* Stora Enso */) {
         // Récupération du numéro de BL du RDV à modifier (si déjà renseigné)
-        $reponse_bl_actuel = $this->db->prepare(
+        $reponse_bl_actuel = $this->mysql->prepare(
           "SELECT numero_bl
               FROM bois_planning
               WHERE id = :id"
@@ -301,7 +301,7 @@ class RdvModel extends BaseModel
         // Ceci permet de prendre en compte les cas où le dernier numéro
         // renseigné n'est pas le plus haut numériquement
         // Permet aussi de prendre en compte les éventuels bons sans numéro "numérique"
-        $reponse_bl_precedent = $this->db->query(
+        $reponse_bl_precedent = $this->mysql->query(
           "SELECT numero_bl
               FROM bois_planning
               WHERE fournisseur = {$current["fournisseur"]}
@@ -333,7 +333,7 @@ class RdvModel extends BaseModel
         // Insertion du nouveau numéro de BL si numéro non déjà renseigné
         $numero_bl_nouveau = is_numeric($numero_bl_precedent) ? $numero_bl_precedent + 1 : '';
         if ($numero_bl_actuel === '' && $numero_bl_nouveau) {
-          $requete = $this->db->prepare(
+          $requete = $this->mysql->prepare(
             "UPDATE bois_planning
                 SET numero_bl = :numero_bl
                 WHERE id = :id"
@@ -352,7 +352,7 @@ class RdvModel extends BaseModel
      */
     if (isset($input["heure_depart"])) {
       $heure = date('H:i:s');
-      $this->db
+      $this->mysql
         ->prepare("UPDATE bois_planning SET heure_depart = :heure WHERE id = :id")
         ->execute([
           'heure' => $heure,
@@ -374,7 +374,7 @@ class RdvModel extends BaseModel
         292 // Stora Enso
       ];
 
-      $current = $this->db
+      $current = $this->mysql
         ->query(
           "SELECT p.fournisseur, f.nom_court AS fournisseur_nom
            FROM bois_planning p
@@ -388,7 +388,7 @@ class RdvModel extends BaseModel
         && $numero_bl !== ""
         && $numero_bl !== "-"
       ) {
-        $requete = $this->db->prepare(
+        $requete = $this->mysql->prepare(
           "SELECT COUNT(id) AS bl_existe, id
             FROM bois_planning
             WHERE numero_bl LIKE CONCAT('%', :numero_bl, '%')
@@ -407,7 +407,7 @@ class RdvModel extends BaseModel
       }
 
       if (!$bl_existe && !$dry_run) {
-        $this->db
+        $this->mysql
           ->prepare(
             "UPDATE bois_planning
               SET
@@ -438,7 +438,7 @@ class RdvModel extends BaseModel
    */
   public function delete(int $id): bool
   {
-    $requete = $this->db->prepare("DELETE FROM bois_planning WHERE id = :id");
+    $requete = $this->mysql->prepare("DELETE FROM bois_planning WHERE id = :id");
     $succes = $requete->execute(["id" => $id]);
 
     return $succes;

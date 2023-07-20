@@ -38,7 +38,7 @@ class NumVoyageModel extends BaseModel
         ORDER BY eta_date DESC, etc_date DESC
         LIMIT 1";
 
-    $reponse_voyage = $this->db->prepare($statement);
+    $reponse_voyage = $this->mysql->prepare($statement);
     $reponse_voyage->execute(["navire" => $navire]);
     $voyage = $reponse_voyage->fetch()["voyage"] ?? NULL;
 

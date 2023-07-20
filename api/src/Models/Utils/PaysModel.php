@@ -24,7 +24,7 @@ class PaysModel extends BaseModel
           FROM utils_pays
           ORDER BY nom";
 
-      $pays = $this->db->query($statement)->fetchAll();
+      $pays = $this->mysql->query($statement)->fetchAll();
 
       $this->redis->set($this->redis_ns, json_encode($pays));
     }
@@ -48,7 +48,7 @@ class PaysModel extends BaseModel
         FROM utils_pays
         WHERE iso = :iso";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
     $requete->execute(["iso" => $iso]);
     $pays = $requete->fetch();
 
@@ -76,16 +76,16 @@ class PaysModel extends BaseModel
           :nom
         )";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
 
-    $this->db->beginTransaction();
+    $this->mysql->beginTransaction();
     $requete->execute([
       'iso' => $input["iso"],
       'nom' => $input["nom"]
     ]);
 
-    $last_id = $this->db->lastInsertId();
-    $this->db->commit();
+    $last_id = $this->mysql->lastInsertId();
+    $this->mysql->commit();
 
     $this->redis->del($this->redis_ns);
 
@@ -107,7 +107,7 @@ class PaysModel extends BaseModel
         SET nom = :nom
         WHERE iso = :iso";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
     $requete->execute([
       'nom' => $input["nom"],
       'iso' => $iso
@@ -127,7 +127,7 @@ class PaysModel extends BaseModel
    */
   public function delete($iso): bool
   {
-    $requete = $this->db->prepare("DELETE FROM utils_pays WHERE iso = :iso");
+    $requete = $this->mysql->prepare("DELETE FROM utils_pays WHERE iso = :iso");
     $succes = $requete->execute(["iso" => $iso]);
 
     $this->redis->del($this->redis_ns);

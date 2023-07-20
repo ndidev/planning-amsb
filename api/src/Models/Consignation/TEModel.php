@@ -15,7 +15,7 @@ class TEModel extends BaseModel
   {
     $statement = "SELECT * FROM drafts_par_tonnage";
 
-    $donnees = $this->db->query($statement)->fetchAll();
+    $donnees = $this->mysql->query($statement)->fetchAll();
 
     return $donnees;
   }

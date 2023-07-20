@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/bootstrap.php';
 
-use Api\Utils\DatabaseConnector;
+use Api\Utils\Database\MySQL;
 use Api\Utils\DateUtils;
 use Api\Utils\PDF\PDFUtils;
 
@@ -17,10 +17,10 @@ if (empty($_POST) && !DateUtils::verifierJourOuvre(AUJOURDHUI)) {
   return FALSE;
 }
 
-$db = (new DatabaseConnector)->getConnection();
+$mysql = new MySQL;
 
 // Récupération des configurations PDF
-$configs = $db->query("SELECT * FROM config_pdf")->fetchAll();
+$configs = $mysql->query("SELECT * FROM config_pdf")->fetchAll();
 
 /**
  * Pour chaque config :  

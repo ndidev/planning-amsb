@@ -25,7 +25,7 @@ class SuggestionsTransporteursModel extends BaseModel
       FROM tiers
       WHERE id = :id";
 
-    $requete_lieu = $this->db->prepare($statement_lieu);
+    $requete_lieu = $this->mysql->prepare($statement_lieu);
 
     $requete_lieu->execute(["id" => $chargement_id]);
     $donnees_chargement = $requete_lieu->fetch();
@@ -79,7 +79,7 @@ class SuggestionsTransporteursModel extends BaseModel
       ORDER BY transports DESC
       LIMIT 10";
 
-    $requete_transporteurs = $this->db->prepare($statement_transporteurs);
+    $requete_transporteurs = $this->mysql->prepare($statement_transporteurs);
 
     $requete_transporteurs->execute([
       "chargement_id" => $chargement_id,

@@ -13,7 +13,7 @@ class AgenceModel extends BaseModel
    */
   public function readAll(): array
   {
-    $requete = $this->db->query("SELECT * FROM config_agence");
+    $requete = $this->mysql->query("SELECT * FROM config_agence");
     $donnees = $requete->fetchAll();
 
     return $donnees;
@@ -28,7 +28,7 @@ class AgenceModel extends BaseModel
    */
   public function read(string $service): ?array
   {
-    $requete = $this->db->prepare("SELECT * FROM config_agence WHERE service = :service");
+    $requete = $this->mysql->prepare("SELECT * FROM config_agence WHERE service = :service");
     $requete->execute(["service" => $service]);
     $service = $requete->fetch();
 
@@ -63,7 +63,7 @@ class AgenceModel extends BaseModel
           email = :email
         WHERE service = :service";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
     $requete->execute([
       "nom" => $input["nom"],
       "adresse_ligne_1" => $input["adresse_ligne_1"],

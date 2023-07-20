@@ -35,7 +35,7 @@ class BandeauInfoModel extends BaseModel
 
     $statement = "SELECT * FROM bandeau_info $filtre_sql";
 
-    $requete = $this->db->query($statement);
+    $requete = $this->mysql->query($statement);
     $infos = $requete->fetchAll();
 
     // Rétablissement des types INT et bool
@@ -63,7 +63,7 @@ class BandeauInfoModel extends BaseModel
   {
     $statement = "SELECT * FROM bandeau_info WHERE id = :id";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
     $requete->execute(["id" => $id]);
     $infos = $requete->fetch();
 
@@ -101,9 +101,9 @@ class BandeauInfoModel extends BaseModel
       :message
       )";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
 
-    $this->db->beginTransaction();
+    $this->mysql->beginTransaction();
     $requete->execute([
       'module' => $input["module"],
       'pc' => (int) $input["pc"],
@@ -112,8 +112,8 @@ class BandeauInfoModel extends BaseModel
       'message' => substr($input["message"], 0, 255),
     ]);
 
-    $last_id = $this->db->lastInsertId();
-    $this->db->commit();
+    $last_id = $this->mysql->lastInsertId();
+    $this->mysql->commit();
 
     return $this->read($last_id);
   }
@@ -137,7 +137,7 @@ class BandeauInfoModel extends BaseModel
         message = :message
       WHERE id = :id";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
     $requete->execute([
       'module' => $input["module"],
       'pc' => (int) $input["pc"],
@@ -159,7 +159,7 @@ class BandeauInfoModel extends BaseModel
    */
   public function delete(int $id): bool
   {
-    $requete = $this->db->prepare("DELETE FROM bandeau_info WHERE id = :id");
+    $requete = $this->mysql->prepare("DELETE FROM bandeau_info WHERE id = :id");
     $succes = $requete->execute(["id" => $id]);
 
     return $succes;

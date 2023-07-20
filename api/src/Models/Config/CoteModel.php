@@ -15,7 +15,7 @@ class CoteModel extends BaseModel
   {
     $statement = "SELECT * FROM config_cotes";
 
-    $donnees = $this->db->query($statement)->fetchAll();
+    $donnees = $this->mysql->query($statement)->fetchAll();
 
     for ($i = 0; $i < count($donnees); $i++) {
       $donnees[$i]["valeur"] = (float) $donnees[$i]["valeur"];
@@ -37,7 +37,7 @@ class CoteModel extends BaseModel
       FROM config_cotes
       WHERE cote = :cote";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
     $requete->execute(["cote" => $nom_cote]);
     $cote = $requete->fetch();
 
@@ -64,7 +64,7 @@ class CoteModel extends BaseModel
       SET valeur = :valeur
       WHERE cote = :cote";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
     $requete->execute([
       'valeur' => (float) $input["valeur"],
       'cote' => $cote

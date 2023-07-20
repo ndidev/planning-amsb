@@ -47,7 +47,7 @@ class StatsModel extends BaseModel
         $filtre_sql";
 
 
-    $requete_rdvs = $this->db->prepare($statement_rdvs);
+    $requete_rdvs = $this->mysql->prepare($statement_rdvs);
 
     $requete_rdvs->execute([
       "date_debut" => $date_debut,

@@ -57,7 +57,7 @@ class RegistreModel extends BaseModel
           date_rdv,
           numero_bl";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
 
     $requete->execute([
       "date_debut" => $date_debut,

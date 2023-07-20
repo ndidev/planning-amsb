@@ -60,7 +60,7 @@ class NombreRdvModel extends BaseModel
       FROM tiers t
       ";
 
-    $liste_tiers = $this->db->query($statement)->fetchAll();
+    $liste_tiers = $this->mysql->query($statement)->fetchAll();
 
     $liste_tiers_avec_cles = [];
     foreach ($liste_tiers as $infos) {
@@ -134,7 +134,7 @@ class NombreRdvModel extends BaseModel
       WHERE t.id = :id
       ";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
     $requete->execute(["id" => $id]);
     $nombre_rdv = $requete->fetch();
 
