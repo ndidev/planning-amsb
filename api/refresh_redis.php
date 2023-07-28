@@ -1,17 +1,19 @@
 <?php
 
+/**
+ * Script rafraichissant les données de Redis
+ * après un relancement ou une mise à jour de la base de données.
+ */
+
 require_once __DIR__ . "/bootstrap.php";
 
 use Api\Utils\Database\MySQL;
+use Api\Utils\Database\Redis;
 use Api\Models\Admin\UserAccountModel;
 use Api\Utils\Auth\User;
 
 $mysql = new MySQL;
-$redis_host = $_ENV["REDIS_HOST"];
-$redis_port = $_ENV["REDIS_PORT"];
-
-$redis = new Redis();
-$redis->pconnect($redis_host, $redis_port);
+$redis = new Redis;
 
 // Users
 (new UserAccountModel(new User(null, $redis)))->readAll();
