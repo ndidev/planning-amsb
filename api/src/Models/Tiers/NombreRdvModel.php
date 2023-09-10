@@ -2,18 +2,10 @@
 
 namespace Api\Models\Tiers;
 
-use Api\Utils\DatabaseConnector as DB;
-use \PDO;
+use Api\Utils\BaseModel;
 
-class NombreRdvModel
+class NombreRdvModel extends BaseModel
 {
-  private PDO $db;
-
-  public function __construct()
-  {
-    $this->db = (new DB)->getConnection();
-  }
-
   /**
    * Récupère le nombre de RDV pour tous les tiers.
    * 
@@ -68,7 +60,7 @@ class NombreRdvModel
       FROM tiers t
       ";
 
-    $liste_tiers = $this->db->query($statement)->fetchAll();
+    $liste_tiers = $this->mysql->query($statement)->fetchAll();
 
     $liste_tiers_avec_cles = [];
     foreach ($liste_tiers as $infos) {
@@ -142,7 +134,7 @@ class NombreRdvModel
       WHERE t.id = :id
       ";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
     $requete->execute(["id" => $id]);
     $nombre_rdv = $requete->fetch();
 

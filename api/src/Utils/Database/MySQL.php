@@ -1,17 +1,18 @@
 <?php
 
-namespace Api\Utils;
+namespace Api\Utils\Database;
 
 use Api\Utils\Exceptions\DB\DBConnectionException;
-use Api\Utils\HTTP\HTTPResponse;
 
 /**
- * Connexion à la base de données.
+ * Connexion à la base de données MySQL.
  */
-class DatabaseConnector
+class MySQL extends \PDO
 {
-  private $db_connection = null;
-
+  /**
+   * @param string|null $database Optionnel. Nom de la base de données à connecter.
+   * @return void 
+   */
   public function __construct(string $database = null)
   {
     $host = $_ENV["DB_HOST"];
@@ -21,7 +22,7 @@ class DatabaseConnector
     $pass = $_ENV["DB_PASS"];
 
     try {
-      $this->db_connection = new \PDO(
+      parent::__construct(
         "mysql:host=$host;port=$port;dbname=$base;charset=utf8mb4",
         $user,
         $pass,
@@ -33,24 +34,7 @@ class DatabaseConnector
         ]
       );
     } catch (\PDOException $pdo_exception) {
-      $e = new DBConnectionException(previous: $pdo_exception);
-      error_logger($e);
-      (new HTTPResponse($e->http_status))
-        ->setType("json")
-        ->setBody(json_encode([
-          "message" => $e->getMessage()
-        ]))
-        ->send();
+      throw new DBConnectionException(previous: $pdo_exception);
     }
-  }
-
-  public function getConnection(): \PDO
-  {
-    return $this->db_connection;
-  }
-
-  public function __destruct()
-  {
-    $this->db_connection = null;
   }
 }

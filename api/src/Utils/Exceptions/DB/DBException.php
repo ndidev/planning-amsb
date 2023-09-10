@@ -2,12 +2,12 @@
 
 namespace Api\Utils\Exceptions\DB;
 
-use Api\Utils\Exceptions\GenericException;
+use Api\Utils\Exceptions\ServerException;
 
 /**
  * Exception générique de base de données.
  */
-class DBException extends GenericException
+class DBException extends ServerException
 {
   private const DEFAULT_MESSAGE = "Erreur générique de la base de données";
   private const HTTP_STATUS = 500;

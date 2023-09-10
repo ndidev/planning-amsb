@@ -9,7 +9,6 @@ require_once __DIR__ . "/../vendor/autoload.php";
 
 use PHPUnit\Framework\TestCase;
 use Api\Utils\DateUtils;
-use PHPUnit\TextUI\XmlConfiguration\IniSetting;
 
 final class DateUtilsTest extends TestCase
 {

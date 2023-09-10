@@ -6,11 +6,6 @@ use Api\Utils\BaseModel;
 
 class CharterModel extends BaseModel
 {
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   /**
    * Récupère tous les affrètements maritimes.
    * 
@@ -77,14 +72,14 @@ class CharterModel extends BaseModel
         WHERE charter = :id";
 
     // Charters
-    $requete_charters = $this->db->prepare($statement_charters);
+    $requete_charters = $this->mysql->prepare($statement_charters);
     $requete_charters->execute([
       "date_debut" => $date_debut,
       "date_fin" => $date_fin
     ]);
     $charters = $requete_charters->fetchAll();
 
-    $requete_details = $this->db->prepare($statement_details);
+    $requete_details = $this->mysql->prepare($statement_details);
 
     foreach ($charters as &$charter) {
       $charter["archive"] = (bool) $charter["archive"];
@@ -150,14 +145,14 @@ class CharterModel extends BaseModel
         WHERE charter = :id";
 
     // Charters
-    $requete_charter = $this->db->prepare($statement_charter);
+    $requete_charter = $this->mysql->prepare($statement_charter);
     $requete_charter->execute(["id" => $id]);
     $charter = $requete_charter->fetch();
 
     if (!$charter) return null;
 
     // Détails
-    $requete_details = $this->db->prepare($statement_details);
+    $requete_details = $this->mysql->prepare($statement_details);
     $requete_details->execute(["id" => $id]);
     $details = $requete_details->fetchAll();
 
@@ -234,9 +229,9 @@ class CharterModel extends BaseModel
           :commentaire
         )";
 
-    $requete = $this->db->prepare($statement_charter);
+    $requete = $this->mysql->prepare($statement_charter);
 
-    $this->db->beginTransaction();
+    $this->mysql->beginTransaction();
     $requete->execute([
       "statut" => $input["statut"],
       // Laycan
@@ -260,11 +255,11 @@ class CharterModel extends BaseModel
       "archive" => (int) $input["archive"],
     ]);
 
-    $last_id = $this->db->lastInsertId();
-    $this->db->commit();
+    $last_id = $this->mysql->lastInsertId();
+    $this->mysql->commit();
 
     // Détails
-    $requete_details = $this->db->prepare($statement_details);
+    $requete_details = $this->mysql->prepare($statement_details);
     $details = $input["legs"] ?? [];
     foreach ($details as $detail) {
       $requete_details->execute([
@@ -348,7 +343,7 @@ class CharterModel extends BaseModel
           commentaire = :commentaire
         WHERE id = :id";
 
-    $requete = $this->db->prepare($statement_charter);
+    $requete = $this->mysql->prepare($statement_charter);
     $requete->execute([
       "statut" => $input["statut"],
       // Laycan
@@ -377,7 +372,7 @@ class CharterModel extends BaseModel
     // Suppression details
     // !! SUPPRESSION A LAISSER *AVANT* L'AJOUT DE detail POUR EVITER SUPPRESSION IMMEDIATE APRES AJOUT !!
     // Comparaison du tableau transmis par POST avec la liste existante des details pour le produit concerné
-    $requete_details = $this->db->prepare(
+    $requete_details = $this->mysql->prepare(
       "SELECT id
           FROM chartering_detail
           WHERE charter = :charter_id"
@@ -396,7 +391,7 @@ class CharterModel extends BaseModel
     }
     $ids_details_a_supprimer = array_diff($ids_details_existantes, $ids_details_transmises);
 
-    $requete_supprimer = $this->db->prepare(
+    $requete_supprimer = $this->mysql->prepare(
       "DELETE FROM chartering_detail
           WHERE id = :id"
     );
@@ -405,8 +400,8 @@ class CharterModel extends BaseModel
     }
 
     // Ajout et modification details
-    $requete_details_ajout = $this->db->prepare($statement_details_ajout);
-    $requete_details_modif = $this->db->prepare($statement_details_modif);
+    $requete_details_ajout = $this->mysql->prepare($statement_details_ajout);
+    $requete_details_modif = $this->mysql->prepare($statement_details_modif);
     $details = $input["legs"] ?? [];
     foreach ($details as $detail) {
       if ((int) $detail["id"]) {
@@ -444,7 +439,7 @@ class CharterModel extends BaseModel
    */
   public function delete(int $id): bool
   {
-    $requete = $this->db->prepare("DELETE FROM chartering_registre WHERE id = :id");
+    $requete = $this->mysql->prepare("DELETE FROM chartering_registre WHERE id = :id");
     $succes = $requete->execute(["id" => $id]);
 
     return $succes;

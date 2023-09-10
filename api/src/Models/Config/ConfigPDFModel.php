@@ -6,11 +6,6 @@ use Api\Utils\BaseModel;
 
 class ConfigPDFModel extends BaseModel
 {
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   /**
    * Récupère toutes les configurations PDF.
    * 
@@ -29,7 +24,7 @@ class ConfigPDFModel extends BaseModel
           jours_apres
         FROM config_pdf";
 
-    $requete = $this->db->query($statement);
+    $requete = $this->mysql->query($statement);
 
     $configs = $requete->fetchAll();
 
@@ -68,7 +63,7 @@ class ConfigPDFModel extends BaseModel
         FROM config_pdf
         WHERE id = :id";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
 
     $requete->execute(['id' => $id]);
 
@@ -111,9 +106,9 @@ class ConfigPDFModel extends BaseModel
           :jours_apres
         )";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
 
-    $this->db->beginTransaction();
+    $this->mysql->beginTransaction();
     $requete->execute([
       "module" => $input["module"],
       "fournisseur" => $input["fournisseur"],
@@ -123,8 +118,8 @@ class ConfigPDFModel extends BaseModel
       "jours_apres" => $input["jours_apres"],
     ]);
 
-    $last_id = $this->db->lastInsertId();
-    $this->db->commit();
+    $last_id = $this->mysql->lastInsertId();
+    $this->mysql->commit();
 
     return $this->read($last_id);
   }
@@ -151,7 +146,7 @@ class ConfigPDFModel extends BaseModel
         WHERE
           id = :id";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
     $requete->execute([
       "module" => $input["module"],
       "fournisseur" => $input["fournisseur"],
@@ -174,7 +169,7 @@ class ConfigPDFModel extends BaseModel
    */
   public function delete(int $id): bool
   {
-    $requete = $this->db->prepare("DELETE FROM config_pdf WHERE id = :id");
+    $requete = $this->mysql->prepare("DELETE FROM config_pdf WHERE id = :id");
     $succes = $requete->execute(["id" => $id]);
 
     return $succes;

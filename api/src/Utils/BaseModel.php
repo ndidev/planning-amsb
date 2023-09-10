@@ -2,9 +2,8 @@
 
 namespace Api\Utils;
 
-use Api\Utils\DatabaseConnector as DB;
-use \PDO;
-use \Redis;
+use Api\Utils\Database\MySQL;
+use Api\Utils\Database\Redis;
 
 /**
  * Classe servant de base aux modèles.
@@ -16,7 +15,7 @@ abstract class BaseModel
   /**
    * Connexion à la base MariaDB.
    */
-  protected PDO $db;
+  protected MySQL $mysql;
 
   /**
    * Instance Redis.
@@ -25,13 +24,7 @@ abstract class BaseModel
 
   public function __construct()
   {
-    $this->db = (new DB)->getConnection();
+    $this->mysql = new MySQL();
     $this->redis = new Redis();
-    $this->redis->pconnect($_ENV["REDIS_HOST"], $_ENV["REDIS_PORT"]);
-  }
-
-  public function __destruct()
-  {
-    $this->redis->close();
   }
 }

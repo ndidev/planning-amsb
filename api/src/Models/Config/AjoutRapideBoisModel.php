@@ -6,12 +6,6 @@ use Api\Utils\BaseModel;
 
 class AjoutRapideBoisModel extends BaseModel
 {
-
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   /**
    * Récupère tous les ajouts rapides bois.
    */
@@ -20,7 +14,7 @@ class AjoutRapideBoisModel extends BaseModel
 
     $statement = "SELECT * FROM config_ajouts_rapides_bois";
 
-    $ajouts_rapides = $this->db->query($statement)->fetchAll();
+    $ajouts_rapides = $this->mysql->query($statement)->fetchAll();
 
     array_walk_recursive($ajouts_rapides, function (&$value, $key) {
       $value = match ($key) {
@@ -54,7 +48,7 @@ class AjoutRapideBoisModel extends BaseModel
         FROM config_ajouts_rapides_bois
         WHERE id = :id";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
     $requete->execute(["id" => $id]);
 
     $ligne = $requete->fetch();
@@ -100,9 +94,9 @@ class AjoutRapideBoisModel extends BaseModel
         :livraison
       )";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
 
-    $this->db->beginTransaction();
+    $this->mysql->beginTransaction();
     $requete->execute([
       'module' => "bois",
       'fournisseur' => $input["fournisseur"],
@@ -113,8 +107,8 @@ class AjoutRapideBoisModel extends BaseModel
       'livraison' => $input["livraison"] ?: NULL,
     ]);
 
-    $last_id = $this->db->lastInsertId();
-    $this->db->commit();
+    $last_id = $this->mysql->lastInsertId();
+    $this->mysql->commit();
 
     return $this->read($last_id);
   }
@@ -140,7 +134,7 @@ class AjoutRapideBoisModel extends BaseModel
           livraison = :livraison
         WHERE id = :id";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
     $requete->execute([
       'fournisseur' => $input["fournisseur"],
       'transporteur' => $input["transporteur"] ?: NULL,
@@ -163,7 +157,7 @@ class AjoutRapideBoisModel extends BaseModel
    */
   public function delete(int $id): bool
   {
-    $requete = $this->db->prepare("DELETE FROM config_ajouts_rapides_bois WHERE id = :id");
+    $requete = $this->mysql->prepare("DELETE FROM config_ajouts_rapides_bois WHERE id = :id");
     $succes = $requete->execute(["id" => $id]);
 
     return $succes;

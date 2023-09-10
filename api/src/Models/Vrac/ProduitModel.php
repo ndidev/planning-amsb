@@ -6,13 +6,6 @@ use Api\Utils\BaseModel;
 
 class ProduitModel extends BaseModel
 {
-  private string $redis_ns = "vrac:produits";
-
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   /**
    * Récupère tous les produits vrac.
    * 
@@ -38,11 +31,11 @@ class ProduitModel extends BaseModel
     $donnees = [];
 
     // Produits
-    $requete_produits = $this->db->query($statement_produits);
+    $requete_produits = $this->mysql->query($statement_produits);
     $produits = $requete_produits->fetchAll();
 
     // Qualités
-    $requete_qualites = $this->db->prepare($statement_qualites);
+    $requete_qualites = $this->mysql->prepare($statement_qualites);
     foreach ($produits as $produit) {
       $requete_qualites->execute(["produit" => $produit["id"]]);
       $produit["qualites"] = $requete_qualites->fetchAll();
@@ -77,14 +70,14 @@ class ProduitModel extends BaseModel
         ORDER BY nom";
 
     // Produit
-    $requete_produit = $this->db->prepare($statement_produit);
+    $requete_produit = $this->mysql->prepare($statement_produit);
     $requete_produit->execute(["id" => $id]);
     $produit = $requete_produit->fetch();
 
     if (!$produit) return null;
 
     // Qualités
-    $requete_qualites = $this->db->prepare($statement_qualites);
+    $requete_qualites = $this->mysql->prepare($statement_qualites);
     $requete_qualites->execute(["produit" => $id]);
     $produit["qualites"] = $requete_qualites->fetchAll();
 
@@ -120,19 +113,19 @@ class ProduitModel extends BaseModel
           :couleur
         )";
 
-    $requete_produit = $this->db->prepare($statement_produit);
+    $requete_produit = $this->mysql->prepare($statement_produit);
 
-    $this->db->beginTransaction();
+    $this->mysql->beginTransaction();
     $requete_produit->execute([
       'nom' => $input["nom"],
       'couleur' => $input["couleur"],
       'unite' => $input["unite"]
     ]);
-    $last_id = $this->db->lastInsertId();
-    $this->db->commit();
+    $last_id = $this->mysql->lastInsertId();
+    $this->mysql->commit();
 
     // Qualités
-    $requete_qualites = $this->db->prepare($statement_qualites);
+    $requete_qualites = $this->mysql->prepare($statement_qualites);
     $qualites = $input["qualites"] ?? [];
     foreach ($qualites as $qualite) {
       $requete_qualites->execute([
@@ -179,7 +172,7 @@ class ProduitModel extends BaseModel
           couleur = :couleur
         WHERE id = :id";
 
-    $requete_produit = $this->db->prepare($statement_produit);
+    $requete_produit = $this->mysql->prepare($statement_produit);
     $requete_produit->execute([
       'nom' => $input["nom"],
       'couleur' => $input["couleur"],
@@ -191,7 +184,7 @@ class ProduitModel extends BaseModel
     // Suppression qualités
     // !! SUPPRESSION A LAISSER *AVANT* L'AJOUT DE QUALITE POUR EVITER SUPPRESSION IMMEDIATE APRES AJOUT !!
     // Comparaison du tableau transmis par POST avec la liste existante des qualités pour le produit concerné
-    $requete_qualites = $this->db->prepare("SELECT id FROM vrac_qualites WHERE produit = :produit");
+    $requete_qualites = $this->mysql->prepare("SELECT id FROM vrac_qualites WHERE produit = :produit");
     $requete_qualites->execute(['produit' => $id]);
     $ids_qualites_existantes = [];
     while ($qualite = $requete_qualites->fetch()) {
@@ -206,14 +199,14 @@ class ProduitModel extends BaseModel
     }
     $ids_qualites_a_supprimer = array_diff($ids_qualites_existantes, $ids_qualites_transmises);
 
-    $requete_supprimer = $this->db->prepare("DELETE FROM vrac_qualites WHERE id = :id");
+    $requete_supprimer = $this->mysql->prepare("DELETE FROM vrac_qualites WHERE id = :id");
     foreach ($ids_qualites_a_supprimer as $id_suppr) {
       $requete_supprimer->execute(['id' => $id_suppr]);
     }
 
     // Ajout et modification qualités
-    $requete_qualites_ajout = $this->db->prepare($statement_qualites_ajout);
-    $requete_qualites_modif = $this->db->prepare($statement_qualites_modif);
+    $requete_qualites_ajout = $this->mysql->prepare($statement_qualites_ajout);
+    $requete_qualites_modif = $this->mysql->prepare($statement_qualites_modif);
     $qualites = $input["qualites"] ?? [];
     foreach ($qualites as $qualite) {
       if ($qualite["id"]) {
@@ -243,7 +236,7 @@ class ProduitModel extends BaseModel
    */
   public function delete(int $id): bool
   {
-    $requete = $this->db->prepare("DELETE FROM vrac_produits WHERE id = :id");
+    $requete = $this->mysql->prepare("DELETE FROM vrac_produits WHERE id = :id");
     $succes = $requete->execute(["id" => $id]);
 
     return $succes;

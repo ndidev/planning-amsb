@@ -8,11 +8,6 @@ use \DateTime;
 
 class RegistreModel extends BaseModel
 {
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   /**
    * Récupère tous les RDV bois.
    * 
@@ -62,7 +57,7 @@ class RegistreModel extends BaseModel
           date_rdv,
           numero_bl";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
 
     $requete->execute([
       "date_debut" => $date_debut,

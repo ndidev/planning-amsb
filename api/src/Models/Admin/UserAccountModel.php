@@ -24,7 +24,7 @@ class UserAccountModel extends BaseModel
   {
     $statement = "SELECT * FROM admin_users ORDER BY login";
 
-    $comptes = $this->db->query($statement)->fetchAll();
+    $comptes = $this->mysql->query($statement)->fetchAll();
 
     // Update Redis
     $this->redis->pipeline();
@@ -75,7 +75,7 @@ class UserAccountModel extends BaseModel
     if (!$compte) {
       $statement = "SELECT * FROM admin_users WHERE uid = :uid";
 
-      $requete = $this->db->prepare($statement);
+      $requete = $this->mysql->prepare($statement);
       $requete->execute(["uid" => $uid]);
       $compte = $requete->fetch();
 
@@ -111,7 +111,7 @@ class UserAccountModel extends BaseModel
    */
   public function create(array $input): array
   {
-    $uids = $this->db->query("SELECT uid FROM admin_users")->fetchAll(\PDO::FETCH_COLUMN);
+    $uids = $this->mysql->query("SELECT uid FROM admin_users")->fetchAll(\PDO::FETCH_COLUMN);
 
     do {
       $uid = substr(md5(uniqid()), 0, 8);
@@ -138,7 +138,7 @@ class UserAccountModel extends BaseModel
       $value = (int) $value;
     }
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
 
     $requete->execute([
       "uid" => $uid,
@@ -150,7 +150,7 @@ class UserAccountModel extends BaseModel
       "admin" => $this->admin->nom
     ]);
 
-    [$uid] = $this->db->query("SELECT uid FROM admin_users WHERE login = '{$input["login"]}'")->fetch(\PDO::FETCH_NUM);
+    [$uid] = $this->mysql->query("SELECT uid FROM admin_users WHERE login = '{$input["login"]}'")->fetch(\PDO::FETCH_NUM);
 
     (new User($uid))->update_redis();
 
@@ -191,7 +191,7 @@ class UserAccountModel extends BaseModel
         $input["roles"]["admin"] = $user->roles->admin ?? 0;
       }
 
-      $requete = $this->db->prepare($statement);
+      $requete = $this->mysql->prepare($statement);
       $requete->execute([
         "login" => substr($input["login"], 0, 255),
         "nom" => substr($input["nom"], 0, 255),
@@ -211,7 +211,7 @@ class UserAccountModel extends BaseModel
           historique = CONCAT(historique, '\n', '(', NOW(), ') Compte réinitialisé par ', :admin)
         WHERE uid = :uid";
 
-      $requete = $this->db->prepare($statement);
+      $requete = $this->mysql->prepare($statement);
       $requete->execute([
         "statut" => AccountStatus::PENDING->value,
         "admin" => $this->admin->nom,
@@ -231,7 +231,7 @@ class UserAccountModel extends BaseModel
           historique = CONCAT(historique, '\n', '(', NOW(), ') Compte désactivé par ', :admin)
         WHERE uid = :uid";
 
-      $requete = $this->db->prepare($statement);
+      $requete = $this->mysql->prepare($statement);
       $requete->execute([
         "statut" => AccountStatus::INACTIVE->value,
         "admin" => $this->admin->nom,
@@ -271,7 +271,7 @@ class UserAccountModel extends BaseModel
         historique = CONCAT(historique, '\n', '(', NOW(), ') Compte supprimé par ', :admin)
       WHERE uid = :uid";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
     $succes = $requete->execute([
       "statut" => AccountStatus::DELETED->value,
       "admin" => $this->admin->nom,

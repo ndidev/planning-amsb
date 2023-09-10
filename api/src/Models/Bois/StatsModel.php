@@ -6,11 +6,6 @@ use Api\Utils\BaseModel;
 
 class StatsModel extends BaseModel
 {
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   /**
    * Récupère les stats bois.
    * 
@@ -52,7 +47,7 @@ class StatsModel extends BaseModel
         $filtre_sql";
 
 
-    $requete_rdvs = $this->db->prepare($statement_rdvs);
+    $requete_rdvs = $this->mysql->prepare($statement_rdvs);
 
     $requete_rdvs->execute([
       "date_debut" => $date_debut,

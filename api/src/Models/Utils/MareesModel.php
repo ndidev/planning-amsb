@@ -9,11 +9,6 @@ class MareesModel extends BaseModel
 {
   private $redis_ns = "marees";
 
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   /**
    * Récupère les marées en fonction du filtre.
    * 
@@ -35,7 +30,7 @@ class MareesModel extends BaseModel
           FROM marees m
           WHERE m.date BETWEEN :debut AND :fin";
 
-      $requete = $this->db->prepare($statement);
+      $requete = $this->mysql->prepare($statement);
       $requete->execute([
         "debut" => $debut,
         "fin" => $fin
@@ -74,7 +69,7 @@ class MareesModel extends BaseModel
           FROM marees
           WHERE SUBSTRING(date, 1, 4) = :annee";
 
-      $requete = $this->db->prepare($statement);
+      $requete = $this->mysql->prepare($statement);
       $requete->execute(["annee" => $annee]);
       $marees = $requete->fetchAll();
 
@@ -109,7 +104,7 @@ class MareesModel extends BaseModel
         "SELECT DISTINCT SUBSTRING(date, 1, 4) AS annee
           FROM `utils_marees_shom`";
 
-      $annees = $this->db->query($statement)->fetchAll();
+      $annees = $this->mysql->query($statement)->fetchAll();
 
       for ($i = 0; $i < count($annees); $i++) {
         $annees[$i] = $annees[$i]["annee"];
@@ -136,9 +131,9 @@ class MareesModel extends BaseModel
       )
     ";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
 
-    $this->db->beginTransaction();
+    $this->mysql->beginTransaction();
     foreach ($marees as [$date, $heure, $hauteur]) {
       $requete->execute([
         "date" => $date,
@@ -146,7 +141,7 @@ class MareesModel extends BaseModel
         "hauteur" => $hauteur
       ]);
     }
-    $this->db->commit();
+    $this->mysql->commit();
 
     $this->invalidate_redis();
   }
@@ -160,7 +155,7 @@ class MareesModel extends BaseModel
    */
   public function delete(int $annee): bool
   {
-    $requete = $this->db->prepare("DELETE FROM utils_marees_shom WHERE SUBSTRING(date, 1, 4) = :annee");
+    $requete = $this->mysql->prepare("DELETE FROM utils_marees_shom WHERE SUBSTRING(date, 1, 4) = :annee");
     $succes = $requete->execute(["annee" => $annee]);
 
     $this->invalidate_redis();

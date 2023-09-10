@@ -6,13 +6,6 @@ use Api\Utils\BaseModel;
 
 class RdvModel extends BaseModel
 {
-  private string $redis_ns = "vrac:rdvs";
-
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   /**
    * Récupère tous les RDV vrac.
    * 
@@ -38,7 +31,7 @@ class RdvModel extends BaseModel
         ORDER BY date_rdv";
 
 
-    $requete = $this->db->query($statement);
+    $requete = $this->mysql->query($statement);
     $rdvs = $requete->fetchAll();
 
     // Rétablissement des types bool
@@ -80,7 +73,7 @@ class RdvModel extends BaseModel
           FROM vrac_planning
           WHERE id = :id";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
     $requete->execute(["id" => $id]);
     $rdv = $requete->fetch();
 
@@ -124,9 +117,9 @@ class RdvModel extends BaseModel
       :commentaire
     )";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
 
-    $this->db->beginTransaction();
+    $this->mysql->beginTransaction();
     $requete->execute([
       'date_rdv' => $input["date_rdv"],
       'heure' => $input["heure"] ?: NULL,
@@ -141,8 +134,8 @@ class RdvModel extends BaseModel
       'commentaire' => $input["commentaire"]
     ]);
 
-    $last_id = $this->db->lastInsertId();
-    $this->db->commit();
+    $last_id = $this->mysql->lastInsertId();
+    $this->mysql->commit();
 
     return $this->read($last_id);
   }
@@ -172,7 +165,7 @@ class RdvModel extends BaseModel
         commentaire = :commentaire
       WHERE id = :id";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
     $requete->execute([
       'date_rdv' => $input["date_rdv"],
       'heure' => $input["heure"] ?: NULL,
@@ -200,7 +193,7 @@ class RdvModel extends BaseModel
    */
   public function delete(int $id): bool
   {
-    $requete = $this->db->prepare("DELETE FROM vrac_planning WHERE id = :id");
+    $requete = $this->mysql->prepare("DELETE FROM vrac_planning WHERE id = :id");
     $succes = $requete->execute(["id" => $id]);
 
     return $succes;

@@ -2,14 +2,12 @@
 
 namespace Api\Utils\Exceptions;
 
-use \Exception;
-
 /**
  * Exception générique de l'application.
  * 
  * Toutes les erreurs lancées depuis l'application doivent dériver de cette classe.
  */
-class GenericException extends Exception
+abstract class AppException extends \Exception
 {
   private const DEFAULT_MESSAGE = "Erreur générique de l'application";
   private const HTTP_STATUS = 500;

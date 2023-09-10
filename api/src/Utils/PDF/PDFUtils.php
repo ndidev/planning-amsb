@@ -2,7 +2,7 @@
 
 namespace Api\Utils\PDF;
 
-use Api\Utils\DatabaseConnector as DB;
+use Api\Utils\Database\MySQL;
 use Api\Utils\DateUtils;
 use Api\Utils\PDF\PDFVrac;
 use PHPMailer\PHPMailer\SMTP;
@@ -30,13 +30,13 @@ class PDFUtils
     DateTime $date_fin
   ): tFPDF {
 
-    $db = (new DB)->getConnection();
+    $mysql = new MySQL;
 
     /**
      * Récupération données fournisseur et agence
      */
-    $donnees_fournisseur = $db->query("SELECT nom_court AS nom, logo FROM tiers WHERE id = $fournisseur")->fetch();
-    $donnees_agence = $db->query("SELECT ville FROM config_agence WHERE service = 'transit'")->fetch();
+    $donnees_fournisseur = $mysql->query("SELECT nom_court AS nom, logo FROM tiers WHERE id = $fournisseur")->fetch();
+    $donnees_agence = $mysql->query("SELECT ville FROM config_agence WHERE service = 'transit'")->fetch();
 
     if (!$donnees_fournisseur) {
       return FALSE;
@@ -47,7 +47,7 @@ class PDFUtils
      */
     if ($module === "vrac") {
       // RDV vrac
-      $requete_rdvs_vrac = $db->prepare(
+      $requete_rdvs_vrac = $mysql->prepare(
         "SELECT
             pl.date_rdv,
             pl.heure,
@@ -94,7 +94,7 @@ class PDFUtils
      */
     if ($module === "bois") {
       // RDV bois planifiés
-      $requete_rdvs_bois_non_attente = $db->prepare(
+      $requete_rdvs_bois_non_attente = $mysql->prepare(
         "SELECT
             pl.date_rdv,
             pl.numero_bl,
@@ -128,7 +128,7 @@ class PDFUtils
       );
 
       // RDV bois en attente
-      $requete_rdvs_bois_attente = $db->prepare(
+      $requete_rdvs_bois_attente = $mysql->prepare(
         "SELECT
             pl.date_rdv,
             pl.commentaire_public,
@@ -218,7 +218,7 @@ class PDFUtils
     ];
 
     // Infos agence
-    $agence = (new DB)->getConnection()->query("SELECT * FROM config_agence WHERE service = 'transit'")->fetch();
+    $agence = (new MySQL)->query("SELECT * FROM config_agence WHERE service = 'transit'")->fetch();
 
     try {
       // Création e-mail

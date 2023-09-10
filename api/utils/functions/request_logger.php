@@ -1,16 +1,16 @@
 <?php
 
-use Api\Utils\DatabaseConnector as DB;
+use Api\Utils\Database\MySQL;
 
 function request_logger()
 {
   $log_file = "/app/log/requests.log";
 
-  $db = (new DB)->getConnection();
+  $mysql = new MySQL;
 
   if (isset($_COOKIE["planning-uid"])) {
     try {
-      $user = $db->query("SELECT login, nom FROM admin_users WHERE uid = '{$_COOKIE['planning-uid']}'")->fetch();
+      $user = $mysql->query("SELECT login, nom FROM admin_users WHERE uid = '{$_COOKIE['planning-uid']}'")->fetch();
     } catch (Throwable $e) {
       error_logger($e);
     }

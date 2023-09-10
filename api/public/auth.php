@@ -4,10 +4,8 @@ require_once __DIR__ . "/../bootstrap.php";
 
 use Api\Utils\Auth\User;
 use Api\Utils\HTTP\HTTPResponse;
-use Api\Utils\Exceptions\Auth\AuthException;
-use Api\Utils\Exceptions\Auth\AdminException;
 use Api\Utils\Exceptions\Auth\AccountPendingException;
-use Api\Utils\Exceptions\Auth\AccessException;
+use Api\Utils\Exceptions\AppException;
 
 /**
  * Méthodes HTTP supportées.
@@ -158,7 +156,7 @@ try {
       (new HTTPResponse(404))->send();
       break;
   }
-} catch (AuthException $e) {
+} catch (AppException $e) {
   (new HTTPResponse($e->http_status))
     ->setType("text")
     ->setBody($e->getMessage())

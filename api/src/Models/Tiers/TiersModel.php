@@ -8,13 +8,6 @@ use Exception;
 
 class TiersModel extends BaseModel
 {
-  private $redis_ns = "tiers";
-
-  public function __construct()
-  {
-    parent::__construct();
-  }
-
   /**
    * Récupère tous les tiers.
    * 
@@ -22,7 +15,7 @@ class TiersModel extends BaseModel
    * 
    * @return array Liste des tiers
    */
-  public function readAll(array $options = []): array
+  public function readAll(): array
   {
     $statement =
       "SELECT *
@@ -31,7 +24,7 @@ class TiersModel extends BaseModel
           nom_court,
           ville";
 
-    $liste_tiers = $this->db->query($statement)->fetchAll();
+    $liste_tiers = $this->mysql->query($statement)->fetchAll();
 
     foreach ($liste_tiers as &$tiers) {
       // Changement TINYINT en booléen
@@ -76,7 +69,7 @@ class TiersModel extends BaseModel
         FROM tiers
         WHERE id = :id";
 
-    $requete_tiers = $this->db->prepare($statement);
+    $requete_tiers = $this->mysql->prepare($statement);
     $requete_tiers->execute(["id" => $id]);
     $tiers = $requete_tiers->fetch();
 
@@ -148,9 +141,9 @@ class TiersModel extends BaseModel
           :actif
         )";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
 
-    $this->db->beginTransaction();
+    $this->mysql->beginTransaction();
     $requete->execute([
       'nom_court' => $input["nom_court"] ?: $input["nom_complet"],
       'nom_complet' => $input["nom_complet"],
@@ -177,8 +170,8 @@ class TiersModel extends BaseModel
       'actif' => 1,
     ]);
 
-    $last_id = $this->db->lastInsertId();
-    $this->db->commit();
+    $last_id = $this->mysql->lastInsertId();
+    $this->mysql->commit();
 
     return $this->read($last_id);
   }
@@ -225,7 +218,7 @@ class TiersModel extends BaseModel
           actif = :actif
         WHERE id = :id";
 
-    $requete = $this->db->prepare($statement);
+    $requete = $this->mysql->prepare($statement);
 
     $champs = [
       'nom_court' => $input["nom_court"] ?: $input["nom_complet"],
@@ -274,7 +267,7 @@ class TiersModel extends BaseModel
       throw new Exception("Le tiers est concerné par $nombre_rdv rdv. Impossible de le supprimer.");
     }
 
-    $requete = $this->db->prepare("DELETE FROM tiers WHERE id = :id");
+    $requete = $this->mysql->prepare("DELETE FROM tiers WHERE id = :id");
     $succes = $requete->execute(["id" => $id]);
 
     return $succes;

@@ -2,15 +2,15 @@
 
 namespace Api\Utils\Exceptions\Auth;
 
-use Api\Utils\Exceptions\GenericException;
+use Api\Utils\Exceptions\ClientException;
 
 /**
  * Exception générique d'authentification de l'utilisateur.
  */
-class AuthException extends GenericException
+class AuthException extends ClientException
 {
   private const DEFAULT_MESSAGE = "Erreur d'authentification";
-  private const HTTP_STATUS = 500;
+  private const HTTP_STATUS = 400;
 
   public function __construct(
     string $message = self::DEFAULT_MESSAGE,

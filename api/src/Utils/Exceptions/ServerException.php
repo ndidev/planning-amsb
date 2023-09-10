@@ -7,10 +7,10 @@ use Api\Utils\Exceptions\AppException;
 /**
  * Exception de mauvaise requête client.
  */
-class ClientException extends AppException
+class ServerException extends AppException
 {
-  private const DEFAULT_MESSAGE = "Erreur de requête";
-  private const HTTP_STATUS = 400;
+  private const DEFAULT_MESSAGE = "Erreur serveur";
+  private const HTTP_STATUS = 500;
 
   public function __construct(
     string $message = self::DEFAULT_MESSAGE,

@@ -2,17 +2,10 @@
 
 namespace Api\Models\Consignation;
 
-use Api\Utils\DatabaseConnector as DB;
+use Api\Utils\BaseModel;
 
-class NumVoyageModel
+class NumVoyageModel extends BaseModel
 {
-  private $db;
-
-  public function __construct()
-  {
-    $this->db = (new DB)->getConnection();
-  }
-
   /**
    * Récupère un numéro de voyage pour un navire.
    * 
@@ -45,7 +38,7 @@ class NumVoyageModel
         ORDER BY eta_date DESC, etc_date DESC
         LIMIT 1";
 
-    $reponse_voyage = $this->db->prepare($statement);
+    $reponse_voyage = $this->mysql->prepare($statement);
     $reponse_voyage->execute(["navire" => $navire]);
     $voyage = $reponse_voyage->fetch()["voyage"] ?? NULL;
 

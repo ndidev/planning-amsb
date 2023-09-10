@@ -26,6 +26,7 @@
   async function logUserIn() {
     loginButton.textContent = "Connexion...";
     loginButton.setAttribute("disabled", "true");
+    loginMessage = "";
 
     const url = new URL(appURLs.auth);
     url.pathname += "login";
