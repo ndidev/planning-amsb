@@ -61,7 +61,7 @@
   let isNew = $params.id === "new";
   const copie = parseInt($params.copie);
 
-  let rdv: RdvBois = isNew && !copie ? { ...nouveauRdv } : null;
+  let rdv: RdvBois = { ...nouveauRdv };
   let numero_bl = rdv?.numero_bl;
   let heure_arrivee = rdv?.heure_arrivee?.substring(0, 5) ?? "";
   let heure_depart = rdv?.heure_depart?.substring(0, 5) ?? "";
@@ -100,13 +100,13 @@
       return null;
     }
 
-    // Si l'heure n'a pas changé, conserver les secondes
-    if (heure === (rdv["heure_" + type] as string).substring(0, 5)) {
-      return rdv["heure_" + type] as string;
-    }
+    const heure_rdv = (rdv["heure_" + type] as string) || "";
 
-    // Si l'heure a changé, mettre les secondes à zéro
-    if (heure !== (rdv["heure_" + type] as string).substring(0, 5)) {
+    if (heure === heure_rdv.substring(0, 5)) {
+      // Si l'heure n'a pas changé, conserver les secondes
+      return heure_rdv;
+    } else {
+      // Si l'heure a changé, mettre les secondes à zéro
       return heure + ":00";
     }
   }
@@ -245,6 +245,7 @@
       $goto("./");
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
+      console.error(erreur);
       boutonAjouter.$set({ disabled: false });
     }
   }
@@ -267,6 +268,7 @@
       $goto("./");
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
+      console.error(erreur);
       boutonModifier.$set({ disabled: false });
     }
   }
@@ -293,6 +295,7 @@
           $goto("./");
         } catch (erreur) {
           Notiflix.Notify.failure(erreur.message);
+          console.error(erreur);
           boutonSupprimer.$set({ disabled: false });
         }
       },
