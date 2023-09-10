@@ -439,9 +439,18 @@
       </IconText>
     </div>
 
+    <div class="commande_prete pure-u-1 pure-u-lg-1-24">
+      {#if rdv.commande_prete}
+        <IconText hideText={["desktop"]}>
+          <span slot="icon" title="Commande prête">package_2</span>
+          <span slot="text">Commande prête</span>
+        </IconText>
+      {/if}
+    </div>
+
     {#if $currentUser.canEdit("bois")}
       <div
-        class="numero_bl pure-u-lg-3-24"
+        class="numero_bl pure-u-lg-2-24"
         contenteditable
         bind:this={inputNumeroBL}
         bind:textContent={numero_bl}
@@ -457,12 +466,12 @@
         }}
       />
     {:else}
-      <div class="numero_bl pure-u-lg-3-24">
+      <div class="numero_bl pure-u-lg-2-24">
         {rdv.numero_bl}
       </div>
     {/if}
 
-    <div class="commentaires pure-u-1 pure-u-lg-6-24">
+    <div class="commentaires pure-u-1 pure-u-lg-5-24">
       {#if rdv.commentaire_public}
         <div class="commentaire-public">
           <IconText hideIcon={["desktop"]}>
@@ -534,7 +543,8 @@
   .affreteur,
   .fournisseur,
   .numero_bl,
-  .commentaires {
+  .commentaires,
+  .commande_prete {
     margin-left: 5px;
   }
 
@@ -598,6 +608,10 @@
     .commentaires {
       margin-top: 10px;
     }
+
+    /* .commande_prete {
+      text-align: left;
+    } */
   }
 
   /* Desktop */

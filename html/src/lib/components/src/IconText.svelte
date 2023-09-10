@@ -8,6 +8,7 @@
   <IconText
     iconType: "icon" | "text" = "icon"
     hideIcon: ("mobile" | "desktop")[] = []
+    hideText: ("mobile" | "desktop")[] = []
   />
   ```
  -->
@@ -17,6 +18,7 @@
   export let iconType: "icon" | "text" = "icon";
 
   export let hideIcon: Array<(typeof breakpoints)[number]["type"]> = [];
+  export let hideText: Array<(typeof breakpoints)[number]["type"]> = [];
 </script>
 
 <div class="icon-text">
@@ -29,7 +31,11 @@
     <slot name="icon" />
   </div>
 
-  <div class="text">
+  <div
+    class="text"
+    class:no-desktop={hideText.includes("desktop")}
+    class:no-mobile={hideText.includes("mobile")}
+  >
     <slot name="text" />
 
     {#if $$slots.tooltip}

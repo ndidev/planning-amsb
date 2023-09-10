@@ -301,6 +301,15 @@
       </IconText>
     </div>
 
+    <div class="commande_prete pure-u-1 pure-u-lg-1-24">
+      {#if rdv.commande_prete}
+        <IconText hideText={["desktop"]}>
+          <span slot="icon" title="Commande prête">package_2</span>
+          <span slot="text">Commande prête</span>
+        </IconText>
+      {/if}
+    </div>
+
     <div class="commentaires pure-u-1 pure-u-lg-6-24">
       {#if rdv.commentaire_public}
         <div class="commentaire-public">
@@ -375,7 +384,8 @@
   .transporteur,
   .affreteur,
   .fournisseur,
-  .commentaires {
+  .commentaires,
+  .commande_prete {
     margin-left: 5px;
   }
 

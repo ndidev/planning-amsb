@@ -47,6 +47,7 @@ class RdvModel extends BaseModel
           heure_arrivee,
           heure_depart,
           confirmation_affretement,
+          commande_prete,
           numero_bl,
           commentaire_public,
           commentaire_cache,
@@ -76,6 +77,7 @@ class RdvModel extends BaseModel
       $value = match ($key) {
         "attente",
         "confirmation_affretement",
+        "commande_prete",
         "lie_agence" => (bool) $value,
         default => $value,
       };
@@ -103,6 +105,7 @@ class RdvModel extends BaseModel
         heure_arrivee,
         heure_depart,
         confirmation_affretement,
+        commande_prete,
         numero_bl,
         commentaire_public,
         commentaire_cache,
@@ -126,6 +129,7 @@ class RdvModel extends BaseModel
       $value = match ($key) {
         "attente",
         "confirmation_affretement",
+        "commande_prete",
         "lie_agence" => (bool) $value,
         default => $value,
       };
@@ -157,6 +161,7 @@ class RdvModel extends BaseModel
       :transporteur,
       :affreteur,
       :fournisseur,
+      :commande_prete,
       :confirmation_affretement,
       :numero_bl,
       :commentaire_public,
@@ -177,6 +182,7 @@ class RdvModel extends BaseModel
       'transporteur' => $input["transporteur"] ?: NULL,
       'affreteur' => $input["affreteur"] ?: NULL,
       'fournisseur' => $input["fournisseur"],
+      'commande_prete' => (int) $input["commande_prete"],
       'confirmation_affretement' => (int) $input["confirmation_affretement"],
       'numero_bl' => $input["numero_bl"],
       'commentaire_public' => $input["commentaire_public"],
@@ -211,6 +217,7 @@ class RdvModel extends BaseModel
         transporteur = :transporteur,
         affreteur = :affreteur,
         fournisseur = :fournisseur,
+        commande_prete = :commande_prete,
         confirmation_affretement = :confirmation_affretement,
         numero_bl = :numero_bl,
         commentaire_public = :commentaire_public,
@@ -229,6 +236,7 @@ class RdvModel extends BaseModel
       'transporteur' => $input["transporteur"] ?: NULL,
       'affreteur' => $input["affreteur"] ?: NULL,
       'fournisseur' => $input["fournisseur"],
+      'commande_prete' => (int) $input["commande_prete"],
       'confirmation_affretement' => (int) $input["confirmation_affretement"],
       'numero_bl' => $input["numero_bl"],
       'commentaire_public' => $input["commentaire_public"],

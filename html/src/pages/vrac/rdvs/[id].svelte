@@ -34,6 +34,7 @@
     qualite: null,
     quantite: 0,
     max: false,
+    commande_prete: false,
     fournisseur: null,
     client: null,
     transporteur: null,
@@ -254,6 +255,17 @@
             /> Max</label
           >
         </span>
+      </div>
+
+      <!-- Commande prête -->
+      <div class="pure-control-group">
+        <label for="commande_prete">Commande prête</label>
+        <input
+          type="checkbox"
+          name="commande_prete"
+          id="commande_prete"
+          bind:checked={rdv.commande_prete}
+        />
       </div>
 
       <!-- Fournisseur -->
