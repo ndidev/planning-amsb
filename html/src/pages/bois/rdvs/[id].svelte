@@ -47,6 +47,7 @@
     livraison: null,
     transporteur: null,
     affreteur: null,
+    commande_prete: false,
     confirmation_affretement: false,
     numero_bl: "",
     commentaire_public: "",
@@ -449,6 +450,17 @@
           role="bois_affreteur"
           bind:value={rdv.affreteur}
           name="Affréteur"
+        />
+      </div>
+
+      <!-- Commande prête -->
+      <div class="pure-control-group">
+        <label for="commande_prete">Commande prête</label>
+        <input
+          type="checkbox"
+          name="commande_prete"
+          id="commande_prete"
+          bind:checked={rdv.commande_prete}
         />
       </div>
 

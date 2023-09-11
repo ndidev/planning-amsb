@@ -42,6 +42,11 @@ export type RdvVrac = {
   max: boolean;
 
   /**
+   * `true` si la commande a été préparée.
+   */
+  commande_prete: boolean;
+
+  /**
    * Code du tiers fournisseur.
    */
   fournisseur: Tiers["id"];

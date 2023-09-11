@@ -50,13 +50,21 @@
 
   <div class="heure pure-u-lg-1-24 pure-u-4-24">{rdv.heure ?? ""}</div>
 
+  <div class="commande_prete pure-u-1 pure-u-lg-1-24" style:text-align="right">
+    {#if rdv.commande_prete}
+      <span class="material-symbols-outlined" title="Commande prête"
+        >package_2</span
+      >
+    {/if}
+  </div>
+
   <div class="quantite-unite pure-u-lg-2-24 pure-u-6-24">
     <span class="quantite">{rdv.quantite}</span>
     <span class="unite">{produit.unite}</span>
     <span class="max">{rdv.max ? "max" : ""}</span>
   </div>
 
-  <div class="client pure-u-lg-8-24 pure-u-1">
+  <div class="client pure-u-lg-7-24 pure-u-1">
     {client.nom_court}
     {client.ville}
   </div>
@@ -66,10 +74,10 @@
 
   <div class="num_commande pure-u-lg-3-24 pure-u-12-24">{rdv.num_commande}</div>
 
-  <div class="pure-u-lg-5-24">
+  <div class="pure-u-lg-6-24">
     <!-- Espacement -->
   </div>
-  <div class="commentaire pure-u-lg-18-24 pure-u-1">{rdv.commentaire}</div>
+  <div class="commentaire pure-u-lg-17-24 pure-u-1">{rdv.commentaire}</div>
 </div>
 
 <style>

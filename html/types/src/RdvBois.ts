@@ -63,6 +63,11 @@ export type RdvBois = {
   fournisseur: Tiers["id"];
 
   /**
+   * Commande prête.
+   */
+  commande_prete?: boolean;
+
+  /**
    * `true` si la confirmation d'affrètement a été envoyée au transporteur.
    */
   confirmation_affretement: boolean;

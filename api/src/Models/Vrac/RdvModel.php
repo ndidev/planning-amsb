@@ -22,6 +22,7 @@ class RdvModel extends BaseModel
           qualite,
           quantite,
           max,
+          commande_prete,
           fournisseur,
           client,
           transporteur,
@@ -37,7 +38,7 @@ class RdvModel extends BaseModel
     // Rétablissement des types bool
     array_walk_recursive($rdvs, function (&$value, $key) {
       $value = match ($key) {
-        "max" => $value = (bool) $value,
+        "max", "commande_prete" => $value = (bool) $value,
         default => $value,
       };
     });
@@ -65,6 +66,7 @@ class RdvModel extends BaseModel
             qualite,
             quantite,
             max,
+            commande_prete,
             fournisseur,
             client,
             transporteur,
@@ -82,7 +84,7 @@ class RdvModel extends BaseModel
     // Rétablissement des types bool
     array_walk_recursive($rdv, function (&$value, $key) {
       $value = match ($key) {
-        "max" => $value = (bool) $value,
+        "max", "commande_prete" => $value = (bool) $value,
         default => $value,
       };
     });
@@ -110,6 +112,7 @@ class RdvModel extends BaseModel
       :qualite,
       :quantite,
       :max,
+      :commande_prete,
       :fournisseur,
       :client,
       :transporteur,
@@ -127,6 +130,7 @@ class RdvModel extends BaseModel
       'qualite' => $input["qualite"] ?? NULL,
       'quantite' => $input["quantite"],
       'max' => (int) $input["max"],
+      'commande_prete' => (int) $input["commande_prete"],
       'fournisseur' => $input["fournisseur"],
       'client' => $input["client"],
       'transporteur' => $input["transporteur"] ?: NULL,
@@ -158,6 +162,7 @@ class RdvModel extends BaseModel
         qualite = :qualite,
         quantite = :quantite,
         max = :max,
+        commande_prete = :commande_prete,
 				fournisseur = :fournisseur,
         client = :client,
         transporteur = :transporteur,
@@ -173,6 +178,7 @@ class RdvModel extends BaseModel
       'qualite' => $input["qualite"] ?? NULL,
       'quantite' => $input["quantite"],
       'max' => (int) $input["max"],
+      'commande_prete' => (int) $input["commande_prete"],
       'fournisseur' => $input["fournisseur"],
       'client' => $input["client"],
       'transporteur' => $input["transporteur"] ?: NULL,

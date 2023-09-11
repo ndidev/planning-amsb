@@ -128,6 +128,19 @@
     {#if rdv.qualite}
       <span class="qualite" style:color={qualite.couleur}>{qualite.nom}</span>
     {/if}
+    {#if rdv.commande_prete}
+      <span class="material-symbols-outlined no-desktop" title="Commande prête"
+        >package_2</span
+      >
+    {/if}
+  </div>
+
+  <div class="commande_prete pure-u-1 pure-u-lg-1-24 no-mobile">
+    {#if rdv.commande_prete}
+      <span class="material-symbols-outlined" title="Commande prête"
+        >package_2</span
+      >
+    {/if}
   </div>
 
   <div class="quantite-unite pure-u-lg-2-24 pure-u-6-24">
@@ -136,7 +149,7 @@
     <span class="max">{rdv.max ? "max" : ""}</span>
   </div>
 
-  <div class="client pure-u-lg-8-24 pure-u-1">
+  <div class="client pure-u-lg-7-24 pure-u-1">
     {client.nom_court}
     {client.ville}
   </div>
@@ -164,10 +177,10 @@
     </div>
   {/if}
 
-  <div class="pure-u-lg-5-24">
+  <div class="pure-u-lg-6-24">
     <!-- Espacement -->
   </div>
-  <div class="commentaire pure-u-lg-18-24 pure-u-1">{rdv.commentaire}</div>
+  <div class="commentaire pure-u-lg-17-24 pure-u-1">{rdv.commentaire}</div>
   <!-- <hr /> -->
 </div>
 
@@ -208,6 +221,10 @@
 
   /* Mobile */
   @media screen and (max-width: 767px) {
+    .no-mobile {
+      display: none;
+    }
+
     .rdv {
       padding: 8px 0;
     }
@@ -227,10 +244,18 @@
       margin-left: auto;
       text-align: right;
     }
+
+    .commande_prete {
+      text-align: left;
+    }
   }
 
   /* Desktop */
   @media screen and (min-width: 768px) {
+    .no-desktop {
+      display: none;
+    }
+
     .rdv {
       font-size: 1.2rem;
       padding: 8px 0 8px 5px;
@@ -247,6 +272,10 @@
     .num_commande,
     .commentaire {
       margin-left: 10px;
+    }
+
+    .commande_prete {
+      text-align: center;
     }
   }
 </style>
