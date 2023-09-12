@@ -70,6 +70,14 @@ class PDFBois extends PDFPlanning
 
         $date_mise_en_forme = DateUtils::format(DateUtils::DATE_FULL, $date_rdv);
 
+        if ($chargement_pays === 'FR') {
+          $chargement_departement = ' ' . substr($chargement_cp, 0, 2);
+          $chargement_pays = '';
+        } else {
+          $chargement_departement = '';
+          $chargement_pays = ' (' . $chargement_pays . ')';
+        }
+
         if ($client_pays === 'FR') {
           $client_departement = ' ' . substr($client_cp, 0, 2);
           $client_pays = '';
@@ -92,6 +100,11 @@ class PDFBois extends PDFPlanning
           $this->AddDate($date_mise_en_forme);
         }
         $this->AddLine(
+          $chargement_id,
+          $chargement_nom,
+          $chargement_departement,
+          $chargement_ville,
+          $chargement_pays,
           $client_id,
           $client_nom,
           $client_departement,
@@ -146,7 +159,15 @@ class PDFBois extends PDFPlanning
           $date_mise_en_forme = DateUtils::format(DateUtils::DATE_FULL, $date_rdv);
         }
 
-        if (strtolower($client_pays) === 'france') {
+        if ($chargement_pays === 'FR') {
+          $chargement_departement = ' ' . substr($chargement_cp, 0, 2);
+          $chargement_pays = '';
+        } else {
+          $chargement_departement = '';
+          $chargement_pays = ' (' . $chargement_pays . ')';
+        }
+
+        if ($client_pays === 'FR') {
           $client_departement = ' ' . substr($client_cp, 0, 2);
           $client_pays = '';
         } else {
@@ -154,7 +175,7 @@ class PDFBois extends PDFPlanning
           $client_pays = ' (' . $client_pays . ')';
         }
 
-        if (strtolower($livraison_pays) === 'france') {
+        if ($livraison_pays === 'FR') {
           $livraison_departement = ' ' . substr($livraison_cp, 0, 2);
           $livraison_pays = '';
         } else {
@@ -164,6 +185,11 @@ class PDFBois extends PDFPlanning
 
         $this->AddLineAttente(
           $date_mise_en_forme,
+          $chargement_id,
+          $chargement_nom,
+          $chargement_departement,
+          $chargement_ville,
+          $chargement_pays,
           $client_id,
           $client_nom,
           $client_departement,
@@ -200,6 +226,11 @@ class PDFBois extends PDFPlanning
   /**
    * Ajout d'une ligne RDV.
    * 
+   * @param string $chargement_id 
+   * @param string $chargement_nom 
+   * @param string $chargement_departement 
+   * @param string $chargement_ville 
+   * @param string $chargement_pays 
    * @param string $client_id 
    * @param string $client_nom 
    * @param string $client_departement 
@@ -216,6 +247,11 @@ class PDFBois extends PDFPlanning
    * @param string $commentaire 
    */
   function AddLine(
+    ?string $chargement_id,
+    ?string $chargement_nom,
+    ?string $chargement_departement,
+    ?string $chargement_ville,
+    ?string $chargement_pays,
     ?string $client_id,
     ?string $client_nom,
     ?string $client_departement,
@@ -233,24 +269,37 @@ class PDFBois extends PDFPlanning
   ): void {
     $this->SetFont('Roboto', '', 10);
     $this->SetTextColor(0, 0, 0);
+
     $this->Cell(100, 6, $client_nom . $client_departement . ' ' . $client_ville . $client_pays);
+
     if ($affreteur_lie_agence == 1) {
       $this->SetTextColor(0, 0, 255);
     }
     $this->Cell(40, 6, $affreteur);
+
     $this->SetTextColor(0, 0, 0);
     $this->Cell(40, 6, $numero_bl, 0, 1);
-    if ($client_id !== $livraison_id) {
+
+    if ((int) $chargement_id !== 1 /* AMSB */) {
       $this->SetTextColor(100, 100, 100);
-      $this->Cell(10, 6, "chez");
+      $this->Cell(10, 6, "chargement " . $chargement_nom . $chargement_departement . ' ' . $chargement_ville . $chargement_pays, 0, 1);
       $this->SetTextColor(0, 0, 0);
-      $this->Cell(100, 6, $livraison_nom . $livraison_departement . ' ' . $livraison_ville . $livraison_pays, 0, 1);
+      // $this->Cell(100, 6, $chargement_nom . $chargement_departement . ' ' . $chargement_ville . $chargement_pays, 0, 1);
     }
+
+    if ($livraison_id !== $client_id) {
+      $this->SetTextColor(100, 100, 100);
+      $this->Cell(10, 6, "livraison " . $livraison_nom . $livraison_departement . ' ' . $livraison_ville . $livraison_pays, 0, 1);
+      $this->SetTextColor(0, 0, 0);
+      // $this->Cell(100, 6, $livraison_nom . $livraison_departement . ' ' . $livraison_ville . $livraison_pays, 0, 1);
+    }
+
     if ($commentaire !== '') {
       $commentaire = str_replace(" <br> ", "\n", $commentaire);
       $this->Cell(5, 6); // Décalage de 0.5cm
       $this->MultiCell(0, 6, $commentaire);
     }
+
     $this->Cell(0, 4, '', 0, 1); // Espace avant le prochain rdv pour la lisibilité
   }
 
@@ -264,6 +313,11 @@ class PDFBois extends PDFPlanning
 
   function AddLineAttente(
     string $date_mise_en_forme,
+    string $chargement_id,
+    string $chargement_nom,
+    string $chargement_departement,
+    string $chargement_ville,
+    string $chargement_pays,
     string $client_id,
     string $client_nom,
     string $client_departement,
@@ -280,17 +334,26 @@ class PDFBois extends PDFPlanning
     $this->SetTextColor(100, 100, 100);
     $this->Cell(10, 6); // Décalage de 1cm
     $this->Cell(50, 6, $date_mise_en_forme);
+
     $this->Cell(100, 6, $client_nom . $client_departement . ' ' . $client_ville . $client_pays, 0, 1);
-    if ($client_id !== $livraison_id) {
+
+    if ((int) $chargement_id !== 1 /* AMSB */) {
       $this->Cell(60, 6); // Décalage de 6cm
-      $this->Cell(10, 6, "chez");
-      $this->Cell(100, 6, $livraison_nom . $livraison_departement . ' ' . $livraison_ville . $livraison_pays, 0, 1);
+      $this->Cell(10, 6, "chargement " . $chargement_nom . $chargement_departement . ' ' . $chargement_ville . $chargement_pays, 0, 1);
     }
+
+    if ($livraison_id !== $client_id) {
+      $this->Cell(60, 6); // Décalage de 6cm
+      $this->Cell(10, 6, "livraison " . $livraison_nom . $livraison_departement . ' ' . $livraison_ville . $livraison_pays, 0, 1);
+      // $this->Cell(100, 6, $livraison_nom . $livraison_departement . ' ' . $livraison_ville . $livraison_pays, 0, 1);
+    }
+
     if ($commentaire != '') {
       $commentaire = str_replace(" <br> ", "\n", $commentaire);
       $this->Cell(60, 6); // Décalage de 6cm
       $this->MultiCell(0, 6, $commentaire);
     }
+
     $this->Cell(0, 4, '', 0, 1); // Espace avant le prochain rdv pour la lisibilité
   }
 
