@@ -99,6 +99,11 @@ class PDFUtils
             pl.date_rdv,
             pl.numero_bl,
             pl.commentaire_public,
+            ch.id AS chargement_id,
+            ch.nom_court AS chargement_nom,
+            ch.cp AS chargement_cp,
+            ch.ville AS chargement_ville,
+            ch.pays AS chargement_pays,
             c.id AS client_id,
             c.nom_court AS client_nom,
             c.cp AS client_cp,
@@ -113,7 +118,7 @@ class PDFUtils
             a.lie_agence AS affreteur_lie_agence
           FROM bois_planning pl
           LEFT JOIN tiers c ON c.id = pl.client
-          -- LEFT JOIN tiers ch ON ch.id = pl.chargement
+          LEFT JOIN tiers ch ON ch.id = pl.chargement
           LEFT JOIN tiers l ON l.id = pl.livraison
           LEFT JOIN tiers a ON a.id = pl.affreteur
           WHERE date_rdv
@@ -132,6 +137,11 @@ class PDFUtils
         "SELECT
             pl.date_rdv,
             pl.commentaire_public,
+            ch.id AS chargement_id,
+            ch.nom_court AS chargement_nom,
+            ch.cp AS chargement_cp,
+            ch.ville AS chargement_ville,
+            ch.pays AS chargement_pays,
             c.id AS client_id,
             c.nom_court AS client_nom,
             c.cp AS client_cp,
@@ -144,7 +154,7 @@ class PDFUtils
             l.pays AS livraison_pays
           FROM bois_planning pl
           LEFT JOIN tiers c ON c.id = pl.client
-          -- LEFT JOIN tiers ch ON ch.id = pl.chargement
+          LEFT JOIN tiers ch ON ch.id = pl.chargement
           LEFT JOIN tiers l ON l.id = pl.livraison
           WHERE attente = 1
           AND fournisseur = :fournisseur
