@@ -379,6 +379,13 @@
           name="Fournisseur"
           required
         />
+        {#if rdv.fournisseur && rdv.affreteur && rdv.fournisseur !== rdv.affreteur && $tiers.get(rdv.affreteur)?.bois_fournisseur}
+          <span
+            class="material-symbols-outlined warning-fournisseur"
+            title="Erreur possible : vérifier que le fournisseur est correct"
+            >warning</span
+          >
+        {/if}
       </div>
 
       <!-- Chargement -->
@@ -557,6 +564,18 @@
 </main>
 
 <style>
+  .warning-fournisseur {
+    color: red;
+    cursor: help;
+    animation: warning-animation 0.5s linear 0s 6 alternate;
+  }
+
+  @keyframes warning-animation {
+    100% {
+      color: white;
+    }
+  }
+
   :global(.notiflix-report .suggestions) {
     padding-left: 5%;
   }
