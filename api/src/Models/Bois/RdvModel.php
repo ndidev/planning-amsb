@@ -291,7 +291,10 @@ class RdvModel extends BaseModel
       // Numéro BL automatique (Stora Enso)      
       $current = $this->read($id);
 
-      if ($current["fournisseur"] === 292 /* Stora Enso */) {
+      if (
+        $current["fournisseur"] === 292 /* Stora Enso */
+        && $current["chargement"] === 1 /* AMSB */
+      ) {
         // Récupération du numéro de BL du RDV à modifier (si déjà renseigné)
         $reponse_bl_actuel = $this->mysql->prepare(
           "SELECT numero_bl
