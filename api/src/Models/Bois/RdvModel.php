@@ -437,6 +437,22 @@ class RdvModel extends BaseModel
       }
     }
 
+    /**
+     * Commande prête
+     */
+    if (isset($input["commande_prete"])) {
+      $this->mysql
+        ->prepare(
+          "UPDATE bois_planning
+           SET commande_prete = :commande_prete
+           WHERE id = :id"
+        )
+        ->execute([
+          'commande_prete' => (int) $input["commande_prete"],
+          'id' => $id,
+        ]);
+    }
+
     return $this->read($id);
   }
 

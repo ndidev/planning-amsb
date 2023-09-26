@@ -63,6 +63,21 @@
   ) || { ...qualiteVierge };
 
   /**
+   * Renseigner commande prête en cliquant sur l'icône paquet.
+   */
+  async function renseignerCommandePrete() {
+    try {
+      await vracRdvs.patch(rdv.id, {
+        commande_prete: !rdv.commande_prete,
+      });
+    } catch (err) {
+      Notiflix.Notify.failure(err.message);
+    } finally {
+      afficherModal = false;
+    }
+  }
+
+  /**
    * Supprimer le RDV.
    */
   function supprimerRdv() {
@@ -136,10 +151,31 @@
   </div>
 
   <div class="commande_prete pure-u-1 pure-u-lg-1-24 no-mobile">
-    {#if rdv.commande_prete}
+    {#if rdv.commande_prete && !$currentUser.canEdit("vrac")}
       <span class="material-symbols-outlined" title="Commande prête"
         >package_2</span
       >
+    {/if}
+
+    {#if rdv.commande_prete && $currentUser.canEdit("vrac")}
+      <div class="commande_prete-bouton-annuler">
+        <MaterialButton
+          icon="package_2"
+          title="Annuler la préparation de commande"
+          invert
+          on:click={renseignerCommandePrete}
+        />
+      </div>
+    {/if}
+
+    {#if !rdv.commande_prete && $currentUser.canEdit("vrac")}
+      <div class="commande_prete-bouton-confirmer">
+        <MaterialButton
+          icon="package_2"
+          title="Renseigner commande prête"
+          on:click={renseignerCommandePrete}
+        />
+      </div>
     {/if}
   </div>
 
@@ -219,6 +255,10 @@
     font-weight: bold;
   }
 
+  .commande_prete-bouton-confirmer {
+    display: none;
+  }
+
   /* Mobile */
   @media screen and (max-width: 767px) {
     .no-mobile {
@@ -276,6 +316,10 @@
 
     .commande_prete {
       text-align: center;
+    }
+
+    .rdv:hover .commande_prete-bouton-confirmer {
+      display: inline-block;
     }
   }
 </style>

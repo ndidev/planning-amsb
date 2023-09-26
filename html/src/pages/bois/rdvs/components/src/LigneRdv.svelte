@@ -224,6 +224,21 @@
   }
 
   /**
+   * Renseigner commande prête en cliquant sur l'icône paquet.
+   */
+  async function renseignerCommandePrete() {
+    try {
+      await boisRdvs.patch(rdv.id, {
+        commande_prete: !rdv.commande_prete,
+      });
+    } catch (err) {
+      Notiflix.Notify.failure(err.message);
+    } finally {
+      afficherModal = false;
+    }
+  }
+
+  /**
    * Modifier le numéro de BL.
    */
   async function changerNumeroBL() {
@@ -440,11 +455,32 @@
     </div>
 
     <div class="commande_prete pure-u-1 pure-u-lg-1-24">
-      {#if rdv.commande_prete}
+      {#if rdv.commande_prete && !$currentUser.canEdit("bois")}
         <IconText hideText={["desktop"]}>
           <span slot="icon" title="Commande prête">package_2</span>
           <span slot="text">Commande prête</span>
         </IconText>
+      {/if}
+
+      {#if rdv.commande_prete && $currentUser.canEdit("bois")}
+        <div class="commande_prete-bouton-annuler">
+          <MaterialButton
+            icon="package_2"
+            title="Annuler la préparation de commande"
+            invert
+            on:click={renseignerCommandePrete}
+          />
+        </div>
+      {/if}
+
+      {#if !rdv.commande_prete && $currentUser.canEdit("bois")}
+        <div class="commande_prete-bouton-confirmer">
+          <MaterialButton
+            icon="package_2"
+            title="Renseigner commande prête"
+            on:click={renseignerCommandePrete}
+          />
+        </div>
       {/if}
     </div>
 
@@ -473,7 +509,7 @@
 
     <div class="commentaires pure-u-1 pure-u-lg-5-24">
       {#if rdv.commentaire_public}
-        <div class="commentaire-public">
+        <div class="commentaire_public">
           <IconText hideIcon={["desktop"]}>
             <span slot="icon" title="Commentaire public">comment</span>
             <span slot="text"
@@ -597,6 +633,10 @@
     color: green;
   }
 
+  .commande_prete-bouton-confirmer {
+    display: none;
+  }
+
   /* Mobile */
   @media screen and (max-width: 767px) {
     .numero_bl,
@@ -608,14 +648,14 @@
     .commentaires {
       margin-top: 10px;
     }
-
-    /* .commande_prete {
-      text-align: left;
-    } */
   }
 
   /* Desktop */
   @media screen and (min-width: 768px) {
+    .rdv {
+      min-height: 2.75rem; /* Pour éviter saut de contenu lors de hover avec icônes Material */
+    }
+
     .rdv:hover .copie-modif-suppr {
       visibility: visible;
       margin-right: 10px;
@@ -632,6 +672,15 @@
 
     .commentaire_cache {
       border-left: 1px dotted var(--commentaire-cache-color);
+    }
+
+    .commentaire_public,
+    .commentaire_cache {
+      padding-left: 5px;
+    }
+
+    .rdv:hover .commande_prete-bouton-confirmer {
+      display: inline-block;
     }
   }
 </style>
