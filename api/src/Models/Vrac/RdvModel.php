@@ -191,6 +191,35 @@ class RdvModel extends BaseModel
   }
 
   /**
+   * Met à jour certaines proriétés d'un RDV vrac.
+   * 
+   * @param int   $id    id du RDV à modifier
+   * @param array $input Données à modifier
+   * 
+   * @return array RDV modifié
+   */
+  public function patch(int $id, array $input): array
+  {
+    /**
+     * Commande prête
+     */
+    if (isset($input["commande_prete"])) {
+      $this->mysql
+        ->prepare(
+          "UPDATE vrac_planning
+           SET commande_prete = :commande_prete
+           WHERE id = :id"
+        )
+        ->execute([
+          'commande_prete' => (int) $input["commande_prete"],
+          'id' => $id,
+        ]);
+    }
+
+    return $this->read($id);
+  }
+
+  /**
    * Supprime un RDV vrac.
    * 
    * @param int $id ID du RDV à supprimer

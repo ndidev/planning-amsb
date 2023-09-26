@@ -112,11 +112,14 @@
    * Taille de l'icône.
    */
   export let fontSize = "24px";
+
+  export let invert = false;
 </script>
 
 <button
   type="button"
   class="material-symbols-outlined"
+  class:invert
   style:--color={color}
   style:--hover-color={hoverColor}
   style:--font-size={fontSize}
@@ -148,9 +151,19 @@
     transition: color var(--transition-time) linear;
   }
 
-  button:is(:hover, :focus) {
+  button:is(:hover, :focus):not(.invert) {
     color: var(--hover-color, var(--default-hover-color));
     font-variation-settings: "FILL" 1;
+  }
+
+  button.invert {
+    color: var(--hover-color, var(--default-hover-color));
+    /* font-variation-settings: "FILL" 1; */
+  }
+
+  button.invert:is(:hover, :focus) {
+    color: var(--default-color);
+    font-variation-settings: "FILL" 0;
   }
 
   /* Cercle au survol */

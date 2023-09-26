@@ -27,7 +27,7 @@ class RdvController extends BaseController
   {
     switch ($this->request->method) {
       case 'OPTIONS':
-        $this->response->setCode(204)->addHeader("Access-Control-Allow-Methods", "OPTIONS, HEAD, GET, POST, PUT, DELETE");
+        $this->response->setCode(204)->addHeader("Access-Control-Allow-Methods", "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE");
         break;
 
       case 'GET':
@@ -47,12 +47,16 @@ class RdvController extends BaseController
         $this->update($this->id);
         break;
 
+      case 'PATCH':
+        $this->patch($this->id);
+        break;
+
       case 'DELETE':
         $this->delete($this->id);
         break;
 
       default:
-        $this->response->setCode(405)->addHeader("Allow", "OPTIONS, HEAD, GET, POST, PUT, DELETE");
+        $this->response->setCode(405)->addHeader("Allow", "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE");
         break;
     }
 
@@ -169,6 +173,34 @@ class RdvController extends BaseController
     $input = $this->request->body;
 
     $donnees = $this->model->update($id, $input);
+
+    $this->response
+      ->setBody(json_encode($donnees))
+      ->setHeaders($this->headers)
+      ->flush();
+
+    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
+  }
+
+  /**
+   * Met à jour certaines proriétés d'un RDV vrac.
+   * 
+   * @param int $id id du RDV à modifier.
+   */
+  public function patch(int $id)
+  {
+    if (!$this->user->can_edit($this->module)) {
+      throw new AccessException();
+    }
+
+    if (!$this->read($id, true)) {
+      $this->response->setCode(404);
+      return;
+    }
+
+    $input = $this->request->body;
+
+    $donnees = $this->model->patch($id, $input);
 
     $this->response
       ->setBody(json_encode($donnees))

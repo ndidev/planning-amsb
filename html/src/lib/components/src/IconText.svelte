@@ -21,7 +21,13 @@
   export let hideText: Array<(typeof breakpoints)[number]["type"]> = [];
 </script>
 
-<div class="icon-text">
+<div
+  class="icon-text"
+  class:icon-no-desktop={hideIcon.includes("desktop")}
+  class:icon-no-mobile={hideIcon.includes("mobile")}
+  class:text-no-desktop={hideText.includes("desktop")}
+  class:text-no-mobile={hideText.includes("mobile")}
+>
   <div
     class="icon"
     class:material-symbols-outlined={iconType === "icon"}
@@ -75,8 +81,19 @@
   /* Mobile */
   @media screen and (max-width: 767px) {
     .no-mobile {
-      width: 0;
-      visibility: hidden;
+      display: none;
+    }
+
+    .text-no-mobile {
+      grid-template-columns: min-content;
+    }
+
+    .icon-no-mobile {
+      grid-template-columns: 1fr;
+    }
+
+    .text-no-mobile.icon-no-mobile {
+      display: none;
     }
 
     .icon {
@@ -88,8 +105,19 @@
   /* Desktop */
   @media screen and (min-width: 768px) {
     .no-desktop {
-      width: 0;
-      visibility: hidden;
+      display: none;
+    }
+
+    .text-no-desktop {
+      grid-template-columns: min-content;
+    }
+
+    .icon-no-desktop {
+      grid-template-columns: 1fr;
+    }
+
+    .text-no-desktop.icon-no-desktop {
+      display: none;
     }
   }
 </style>
