@@ -4,6 +4,7 @@ require_once __DIR__ . "/../bootstrap.php";
 
 use Api\Utils\Auth\User;
 use Api\Utils\HTTP\HTTPResponse;
+use Api\Utils\Security;
 use Api\Utils\Exceptions\Auth\AccountPendingException;
 use Api\Utils\Exceptions\AppException;
 
@@ -20,6 +21,14 @@ $supported_methods = [
   "PATCH",
   "DELETE"
 ];
+
+if (Security::check_if_request_can_be_done() === false) {
+  (new HTTPResponse(429))
+    ->addHeader("Retry-After", (string) Security::BLOCKED_IP_TIMEOUT)
+    ->setType("text/plain")
+    ->setBody("Adresse IP bloquée. Trop de requêtes non authentifiées.")
+    ->send();
+}
 
 // Pre-flight request
 if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {

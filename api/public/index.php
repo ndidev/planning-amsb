@@ -5,6 +5,7 @@ use Api\Utils\Router;
 use Api\Utils\HTTP\HTTPResponse;
 use Api\Utils\HTTP\ETag;
 use Api\Utils\Auth\User;
+use Api\Utils\Security;
 use Api\Controllers\Bois\RdvController as RdvBois;
 use Api\Controllers\Bois\RegistreController as RegistreBois;
 use Api\Controllers\Bois\StatsController as StatsBois;
@@ -32,6 +33,14 @@ use Api\Controllers\User\UserController as UserManagement;
 use Api\Controllers\Admin\UserAccountController as UserAccount;
 use Api\Utils\Exceptions\Auth\AuthException;
 use Api\Utils\Exceptions\ClientException;
+
+if (Security::check_if_request_can_be_done() === false) {
+  (new HTTPResponse(429))
+    ->addHeader("Retry-After", (string) Security::BLOCKED_IP_TIMEOUT)
+    ->setType("text/plain")
+    ->setBody("Adresse IP bloquée. Trop de requêtes non authentifiées.")
+    ->send();
+}
 
 // Pre-flight request
 if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
@@ -63,7 +72,12 @@ if ($_ENV["AUTH"] === "ON") {
 
     // Si aucune des deux authentifications n'est valide
     if (!$valid_session && !$valid_api_key) {
-      (new HTTPResponse(401))->send();
+      Security::prevent_bruteforce();
+
+      (new HTTPResponse(401))
+        ->setType("text/plain")
+        ->setBody("Requête non authentifiée.")
+        ->send();
     }
   } catch (Throwable $e) {
     // Autres erreurs non gérées
