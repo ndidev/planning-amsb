@@ -93,6 +93,7 @@
           bind:value={$login}
           autocomplete="username"
           placeholder="Identifiant"
+          required
         />
       </div>
 
