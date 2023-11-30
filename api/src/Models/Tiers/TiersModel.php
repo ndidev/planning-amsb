@@ -72,7 +72,7 @@ class TiersModel extends BaseModel
    * 
    * @return array Tiers récupéré
    */
-  public function read($id, array $options = []): ?array
+  public function read($id): ?array
   {
     $statement =
       "SELECT *

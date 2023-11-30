@@ -21,7 +21,7 @@ class RdvModel extends BaseModel
    * 
    * @return array Tous les RDV récupérés
    */
-  public function readAll($query = null): array
+  public function readAll(): array
   {
     $statement =
       "SELECT
