@@ -9,6 +9,16 @@ use Exception;
 class TiersModel extends BaseModel
 {
   /**
+   * Vérifie si une entrée existe dans la base de données.
+   * 
+   * @param int $id Identifiant de l'entrée.
+   */
+  public function exists(int $id)
+  {
+    return $this->mysql->exists("tiers", $id);
+  }
+
+  /**
    * Récupère tous les tiers.
    * 
    * @param array $options Options de récupération

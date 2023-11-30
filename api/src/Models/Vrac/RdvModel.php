@@ -7,6 +7,16 @@ use Api\Utils\BaseModel;
 class RdvModel extends BaseModel
 {
   /**
+   * Vérifie si une entrée existe dans la base de données.
+   * 
+   * @param int $id Identifiant de l'entrée.
+   */
+  public function exists(int $id)
+  {
+    return $this->mysql->exists("vrac_planning", $id);
+  }
+
+  /**
    * Récupère tous les RDV vrac.
    * 
    * @return array Tous les RDV récupérés

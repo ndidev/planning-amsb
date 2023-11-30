@@ -7,6 +7,16 @@ use Api\Utils\BaseModel;
 class CharterModel extends BaseModel
 {
   /**
+   * Vérifie si une entrée existe dans la base de données.
+   * 
+   * @param int $id Identifiant de l'entrée.
+   */
+  public function exists(int $id)
+  {
+    return $this->mysql->exists("chartering_registre", $id);
+  }
+
+  /**
    * Récupère tous les affrètements maritimes.
    * 
    * @param array $filtre

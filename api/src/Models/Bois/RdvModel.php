@@ -8,6 +8,16 @@ use Api\Utils\Exceptions\ClientException;
 class RdvModel extends BaseModel
 {
   /**
+   * Vérifie si une entrée existe dans la base de données.
+   * 
+   * @param int $id Identifiant de l'entrée.
+   */
+  public function exists(int $id)
+  {
+    return $this->mysql->exists("tiers", $id);
+  }
+
+  /**
    * Récupère tous les RDV bois.
    * 
    * @param array $filtre Filtre qui contient...

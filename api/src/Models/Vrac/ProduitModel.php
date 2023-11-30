@@ -7,6 +7,16 @@ use Api\Utils\BaseModel;
 class ProduitModel extends BaseModel
 {
   /**
+   * Vérifie si une entrée existe dans la base de données.
+   * 
+   * @param int $id Identifiant de l'entrée.
+   */
+  public function exists(int $id)
+  {
+    return $this->mysql->exists("vrac_produits", $id);
+  }
+
+  /**
    * Récupère tous les produits vrac.
    * 
    * @return array Liste des produits vrac

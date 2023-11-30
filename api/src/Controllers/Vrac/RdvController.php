@@ -165,7 +165,7 @@ class RdvController extends BaseController
       throw new AccessException();
     }
 
-    if (!$this->read($id, true)) {
+    if (!$this->model->exists($id)) {
       $this->response->setCode(404);
       return;
     }
@@ -193,7 +193,7 @@ class RdvController extends BaseController
       throw new AccessException();
     }
 
-    if (!$this->read($id, true)) {
+    if (!$this->model->exists($id)) {
       $this->response->setCode(404);
       return;
     }
@@ -221,7 +221,7 @@ class RdvController extends BaseController
       throw new AccessException();
     }
 
-    if (!$this->read($id, true)) {
+    if (!$this->model->exists($id)) {
       $this->response->setCode(404);
       return;
     }
