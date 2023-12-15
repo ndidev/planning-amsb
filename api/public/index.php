@@ -40,7 +40,7 @@ if (Security::check_if_request_can_be_done() === false) {
   (new HTTPResponse(429))
     ->addHeader("Retry-After", (string) Security::BLOCKED_IP_TIMEOUT)
     ->setType("text/plain")
-    ->setBody("Adresse IP bloquée. Trop de requêtes non authentifiées.")
+    ->setBody("IP address blocked. Too many unauthenticated requests.")
     ->send();
 }
 
@@ -78,7 +78,7 @@ if ($_ENV["AUTH"] === "ON") {
 
       (new HTTPResponse(401))
         ->setType("text/plain")
-        ->setBody("Requête non authentifiée.")
+        ->setBody("Unauthenticated request.")
         ->send();
     }
   } catch (Throwable $e) {

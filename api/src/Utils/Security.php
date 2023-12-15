@@ -29,6 +29,8 @@ class Security
   /**
    * Durée de blocage d'une adresse IP
    * après un nombre trop important de requêtes non authentifiées.
+   * 
+   * Valeur actuelle : 15 minutes.
    */
   public const BLOCKED_IP_TIMEOUT = 15 * UNE_MINUTE;
 
