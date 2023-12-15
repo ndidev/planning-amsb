@@ -46,7 +46,7 @@ class MySQL extends \PDO
    */
   public function exists(string $table, int $id)
   {
-    $statement = "SELECT COUNT(*) as `exists` FROM `$table` WHERE id = :id";
+    $statement = "SELECT EXISTS (SELECT * FROM `$table` WHERE id = :id)";
 
     $requete = $this->prepare($statement);
     $requete->execute(["id" => $id]);
