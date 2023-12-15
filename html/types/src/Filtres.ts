@@ -1,4 +1,4 @@
-import type { RdvBois, Charter } from "@app/types";
+import type { RdvBois, Charter, EscaleConsignation } from "@app/types";
 
 export type FiltreBois = {
   date_debut?: string;
@@ -18,4 +18,13 @@ export type FiltreCharter = {
   armateur?: Charter["armateur"][];
   courtier?: Charter["courtier"][];
   statut?: Charter["statut"][];
+};
+
+export type FiltreConsignation = {
+  date_debut?: string;
+  date_fin?: string;
+  navire?: EscaleConsignation["navire"][];
+  armateur?: EscaleConsignation["armateur"][];
+  last_port?: EscaleConsignation["last_port"][];
+  next_port?: EscaleConsignation["next_port"][];
 };

@@ -2,14 +2,14 @@
 
 namespace Api\Controllers\Consignation;
 
-use Api\Models\Consignation\ListeNaviresModel;
+use Api\Models\Consignation\NaviresEnActiviteModel;
 use Api\Utils\BaseController;
 use Api\Utils\HTTP\ETag;
 
 /**
- * Liste des navires ayant fait escale.
+ * Liste des navires en opération entre deux dates.
  */
-class ListeNaviresController extends BaseController
+class NaviresEnActiviteController extends BaseController
 {
   private $model;
   private $module = "consignation";
@@ -17,7 +17,7 @@ class ListeNaviresController extends BaseController
   public function __construct()
   {
     parent::__construct();
-    $this->model = new ListeNaviresModel;
+    $this->model = new NaviresEnActiviteModel;
     $this->processRequest();
   }
 
@@ -47,7 +47,9 @@ class ListeNaviresController extends BaseController
    */
   public function readAll()
   {
-    $donnees = $this->model->readAll();
+    $input = $this->request->query;
+
+    $donnees = $this->model->readAll($input);
 
     $etag = ETag::get($donnees);
 
