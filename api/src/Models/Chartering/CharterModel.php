@@ -29,9 +29,9 @@ class CharterModel extends BaseModel
     $date_debut = isset($filtre["date_debut"]) ? $filtre['date_debut'] : "0001-01-01";
     $date_fin = isset($filtre["date_fin"]) ? $filtre['date_fin'] : "9999-12-31";
     $filtre_statut = $filtre["statut"] ?? "";
-    $filtre_affreteur = preg_replace("/,$/", "", $filtre['affreteur'] ?? "");
-    $filtre_armateur = preg_replace("/,$/", "", $filtre['armateur'] ?? "");
-    $filtre_courtier = preg_replace("/,$/", "", $filtre['courtier'] ?? "");
+    $filtre_affreteur = trim($filtre['affreteur'] ?? "", ",");
+    $filtre_armateur = trim($filtre['armateur'] ?? "", ",");
+    $filtre_courtier = trim($filtre['courtier'] ?? "", ",");
 
     $filtre_sql_affreteur = $filtre_affreteur === "" ? "" : " AND affreteur IN ($filtre_affreteur)";
     $filtre_sql_armateur = $filtre_armateur === "" ? "" : " AND armateur IN ($filtre_armateur)";

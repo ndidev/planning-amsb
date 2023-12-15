@@ -16,12 +16,12 @@ class StatsModel extends BaseModel
     // Filtre
     $date_debut = isset($filtre['date_debut']) ? ($filtre['date_debut'] ?: date("Y-m-d")) : date("Y-m-d");
     $date_fin = isset($filtre["date_fin"]) ? ($filtre['date_fin'] ?: "9999-12-31") : "9999-12-31";
-    $filtre_fournisseur = preg_replace("/,$/", "", $filtre['fournisseur'] ?? "");
-    $filtre_client = preg_replace("/,$/", "", $filtre['client'] ?? "");
-    $filtre_chargement = preg_replace("/,$/", "", $filtre['chargement'] ?? "");
-    $filtre_livraison = preg_replace("/,$/", "", $filtre['livraison'] ?? "");
-    $filtre_transporteur = preg_replace("/,$/", "", $filtre['transporteur'] ?? "");
-    $filtre_affreteur = preg_replace("/,$/", "", $filtre['affreteur'] ?? "");
+    $filtre_fournisseur = trim($filtre['fournisseur'] ?? "", ",");
+    $filtre_client = trim($filtre['client'] ?? "", ",");
+    $filtre_chargement = trim($filtre['chargement'] ?? "", ",");
+    $filtre_livraison = trim($filtre['livraison'] ?? "", ",");
+    $filtre_transporteur = trim($filtre['transporteur'] ?? "", ",");
+    $filtre_affreteur = trim($filtre['affreteur'] ?? "", ",");
 
     $filtre_sql_fournisseur = $filtre_fournisseur === "" ? "" : " AND fournisseur IN ($filtre_fournisseur)";
     $filtre_sql_client = $filtre_client === "" ? "" : " AND client IN ($filtre_client)";
