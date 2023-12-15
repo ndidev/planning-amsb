@@ -101,12 +101,15 @@
    * @param fin
    */
   async function getNaviresParDate(debut: string, fin: string) {
-    const listeNavires: ListeNavires = await fetcher(`consignation/navires`, {
-      params: {
-        date_debut: debut,
-        date_fin: fin,
-      },
-    });
+    const listeNavires: NaviresEnActivite = await fetcher(
+      `consignation/navires-en-activite`,
+      {
+        params: {
+          date_debut: debut,
+          date_fin: fin,
+        },
+      }
+    );
 
     const map = new Map<string, string[]>();
 
@@ -123,12 +126,12 @@
 
     return map;
 
-    type ListeNavires = [
+    type NaviresEnActivite = [
       {
         navire: string;
         debut: string;
         fin: string;
-      }
+      },
     ];
   }
 
