@@ -76,6 +76,7 @@ class StatsModel extends BaseModel
       12 => 0,
     ];
 
+    // Compilation du nombre de RDV par année et par mois
     foreach ($rdvs as $rdv) {
       $date_rdv = explode("-", $rdv["date_rdv"]);
       $annee = $date_rdv[0];

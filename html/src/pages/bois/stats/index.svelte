@@ -1,3 +1,4 @@
+<!-- routify:options title="Planning AMSB - Statistiques bois" -->
 <script lang="ts">
   import { onDestroy, setContext } from "svelte";
   import { writable } from "svelte/store";
