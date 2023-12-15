@@ -170,7 +170,7 @@ class RdvController extends BaseController
       throw new AccessException();
     }
 
-    if (!$this->read($id, true)) {
+    if (!$this->model->exists($id)) {
       $this->response->setCode(404);
       return;
     }
@@ -198,7 +198,7 @@ class RdvController extends BaseController
       throw new AccessException();
     }
 
-    if (!$this->read($id, true)) {
+    if (!$this->model->exists($id)) {
       $this->response->setCode(404);
       return;
     }
@@ -226,7 +226,7 @@ class RdvController extends BaseController
       throw new AccessException();
     }
 
-    if (!$this->read($id, true)) {
+    if (!$this->model->exists($id)) {
       $message = "Not Found";
       $documentation = $_ENV["API_URL"] . "/doc/#/Bois/supprimerRdvBois";
       $body = json_encode(["message" => $message, "documentation_url" => $documentation]);

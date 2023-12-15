@@ -14,14 +14,15 @@ class StatsModel extends BaseModel
   public function readAll(array $filtre): array
   {
     // Filtre
-    $date_debut = isset($filtre['date_debut']) ? ($filtre['date_debut'] ?: date("Y-m-d")) : date("Y-m-d");
+    // $date_debut = isset($filtre['date_debut']) ? ($filtre['date_debut'] ?: date("Y-m-d")) : date("Y-m-d");
+    $date_debut = isset($filtre['date_debut']) ? ($filtre['date_debut'] ?: "0001-01-01") : "0001-01-01";
     $date_fin = isset($filtre["date_fin"]) ? ($filtre['date_fin'] ?: "9999-12-31") : "9999-12-31";
-    $filtre_fournisseur = preg_replace("/,$/", "", $filtre['fournisseur'] ?? "");
-    $filtre_client = preg_replace("/,$/", "", $filtre['client'] ?? "");
-    $filtre_chargement = preg_replace("/,$/", "", $filtre['chargement'] ?? "");
-    $filtre_livraison = preg_replace("/,$/", "", $filtre['livraison'] ?? "");
-    $filtre_transporteur = preg_replace("/,$/", "", $filtre['transporteur'] ?? "");
-    $filtre_affreteur = preg_replace("/,$/", "", $filtre['affreteur'] ?? "");
+    $filtre_fournisseur = trim($filtre['fournisseur'] ?? "", ",");
+    $filtre_client = trim($filtre['client'] ?? "", ",");
+    $filtre_chargement = trim($filtre['chargement'] ?? "", ",");
+    $filtre_livraison = trim($filtre['livraison'] ?? "", ",");
+    $filtre_transporteur = trim($filtre['transporteur'] ?? "", ",");
+    $filtre_affreteur = trim($filtre['affreteur'] ?? "", ",");
 
     $filtre_sql_fournisseur = $filtre_fournisseur === "" ? "" : " AND fournisseur IN ($filtre_fournisseur)";
     $filtre_sql_client = $filtre_client === "" ? "" : " AND client IN ($filtre_client)";
@@ -40,7 +41,7 @@ class StatsModel extends BaseModel
 
     $statement_rdvs =
       "SELECT
-          date_rdv
+          date_rdv as `date`
         FROM bois_planning
         WHERE date_rdv BETWEEN :date_debut AND :date_fin
         AND attente = 0
@@ -76,10 +77,11 @@ class StatsModel extends BaseModel
       12 => 0,
     ];
 
+    // Compilation du nombre de RDV par année et par mois
     foreach ($rdvs as $rdv) {
-      $date_rdv = explode("-", $rdv["date_rdv"]);
-      $annee = $date_rdv[0];
-      $mois = $date_rdv[1];
+      $date = explode("-", $rdv["date"]);
+      $annee = $date[0];
+      $mois = $date[1];
 
       if (!array_key_exists($annee, $stats["Par année"])) {
         $stats["Par année"][$annee] = $modele_annee;

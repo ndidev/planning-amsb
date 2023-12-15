@@ -11,6 +11,7 @@ use Api\Utils\Auth\UserRoles;
 use Api\Utils\Auth\AccountStatus;
 use Api\Utils\Auth\ApiKeyStatus;
 use Api\Utils\DateUtils;
+use Api\Utils\Security;
 use Api\Utils\Exceptions\Auth\LoginException;
 use Api\Utils\Exceptions\Auth\SessionException;
 use Api\Utils\Exceptions\Auth\AccountStatusException;
@@ -112,12 +113,16 @@ class User
     try {
       $this->identify(login: $login);
     } catch (InvalidAccountException) {
+      Security::prevent_bruteforce();
+
       throw new LoginException();
     }
 
     $this->populate();
 
     if ($this->can_login === false) {
+      Security::prevent_bruteforce();
+
       throw new LoginException();
     }
 
@@ -132,20 +137,7 @@ class User
     $password_is_valid = password_verify($password, $this->password ?? "");
 
     if (!$password_is_valid) {
-      // Si le compte est désactivé, ne pas incrémenter les tentatives
-      if ($this->statut !== AccountStatus::INACTIVE) {
-        $login_attempts = $this->increment_login_attempts();
-      }
-
-      if ($login_attempts >= $_ENV["AUTH_MAX_LOGIN_ATTEMPTS"]) {
-        // Si le compte n'est pas déjà bloqué, le bloquer
-        if ($this->statut !== AccountStatus::LOCKED) {
-          $date = DateUtils::format(DateUtils::SQL_TIMESTAMP, new DateTime());
-          $raison = "($date) Compte bloqué : nombre de tentatives de connexions dépassé.";
-          $this->lock_account($raison);
-        }
-        throw new MaxLoginAttemptsException();
-      }
+      Security::prevent_bruteforce();
 
       throw new LoginException();
     }
@@ -324,10 +316,12 @@ class User
 
 
     if (!$uid) {
+      Security::prevent_bruteforce();
       throw new InvalidApiKeyException();
     }
 
     if ($status !== ApiKeyStatus::ACTIVE) {
+      Security::prevent_bruteforce();
       throw new InvalidApiKeyException();
     }
 
@@ -462,7 +456,6 @@ class User
       $user = $requete->fetch();
       $uid = $user["uid"] ?? null;
 
-      // Copie des infos dans Redis
       if (!$uid) {
         throw new InvalidAccountException();
       }

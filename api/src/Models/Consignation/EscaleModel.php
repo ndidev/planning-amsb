@@ -9,6 +9,16 @@ use DateTime;
 class EscaleModel extends BaseModel
 {
   /**
+   * Vérifie si une entrée existe dans la base de données.
+   * 
+   * @param int $id Identifiant de l'entrée.
+   */
+  public function exists(int $id)
+  {
+    return $this->mysql->exists("consignation_planning", $id);
+  }
+
+  /**
    * Récupère toutes les escales consignation.
    * 
    * @return array Toutes les escale récupérés

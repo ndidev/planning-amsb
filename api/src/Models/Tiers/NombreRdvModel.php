@@ -13,7 +13,7 @@ class NombreRdvModel extends BaseModel
    * 
    * @return array Nombre de RDV pour tous les tiers
    */
-  public function readAll(array $options = []): array
+  public function readAll(): array
   {
     // Nombre de RDV par tiers
     $statement =
@@ -82,7 +82,7 @@ class NombreRdvModel extends BaseModel
    * 
    * @return array Tiers récupéré
    */
-  public function read($id, array $options = []): array
+  public function read($id): array
   {
 
     /**

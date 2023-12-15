@@ -19,7 +19,7 @@ export class Filtre<
     const params = {};
 
     for (let [key, value] of Object.entries(this.data)) {
-      value = Array.isArray(value) ? value.join(",") : value.toString();
+      value = Array.isArray(value) ? value.join(",") : String(value || "");
 
       if (value) {
         params[key] = value;

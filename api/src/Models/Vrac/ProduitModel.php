@@ -7,40 +7,38 @@ use Api\Utils\BaseModel;
 class ProduitModel extends BaseModel
 {
   /**
+   * Vérifie si une entrée existe dans la base de données.
+   * 
+   * @param int $id Identifiant de l'entrée.
+   */
+  public function exists(int $id)
+  {
+    return $this->mysql->exists("vrac_produits", $id);
+  }
+
+  /**
    * Récupère tous les produits vrac.
    * 
    * @return array Liste des produits vrac
    */
   public function readAll(): array
   {
-    $statement_produits =
-      "SELECT
-        id,
-        nom,
-        couleur,
-        unite
-      FROM vrac_produits
-      ORDER BY nom";
-
-    $statement_qualites =
-      "SELECT *
-        FROM vrac_qualites
-        WHERE produit = :produit
-        ORDER BY nom";
-
-    $donnees = [];
+    $statement_produits = "SELECT * FROM vrac_produits ORDER BY nom";
+    $statement_qualites = "SELECT * FROM vrac_qualites ORDER BY nom";
 
     // Produits
     $requete_produits = $this->mysql->query($statement_produits);
     $produits = $requete_produits->fetchAll();
 
     // Qualités
-    $requete_qualites = $this->mysql->prepare($statement_qualites);
-    foreach ($produits as $produit) {
-      $requete_qualites->execute(["produit" => $produit["id"]]);
-      $produit["qualites"] = $requete_qualites->fetchAll();
-      array_push($donnees, $produit);
+    $requete_qualites = $this->mysql->query($statement_qualites);
+    $qualites = $requete_qualites->fetchAll();
+
+    foreach ($produits as &$produit) {
+      $produit["qualites"] = array_values(array_filter($qualites, fn ($qualite) => $qualite["produit"] === $produit["id"]));
     }
+
+    $donnees = $produits;
 
     return $donnees;
   }

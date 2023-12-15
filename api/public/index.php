@@ -5,6 +5,7 @@ use Api\Utils\Router;
 use Api\Utils\HTTP\HTTPResponse;
 use Api\Utils\HTTP\ETag;
 use Api\Utils\Auth\User;
+use Api\Utils\Security;
 use Api\Controllers\Bois\RdvController as RdvBois;
 use Api\Controllers\Bois\RegistreController as RegistreBois;
 use Api\Controllers\Bois\StatsController as StatsBois;
@@ -14,6 +15,8 @@ use Api\Controllers\Vrac\ProduitController as VracProduit;
 use Api\Controllers\Consignation\EscaleController as EscaleConsignation;
 use Api\Controllers\Consignation\NumVoyageController as NumVoyageConsignation;
 use Api\Controllers\Consignation\TEController as TE;
+use Api\Controllers\Consignation\StatsController as StatsConsignation;
+use Api\Controllers\Consignation\NaviresEnActiviteController as NaviresEnActivite;
 use Api\Controllers\Consignation\ListeNaviresController as ListeNavires;
 use Api\Controllers\Chartering\CharterController as AffretementMaritime;
 use Api\Controllers\Tiers\TiersController as Tiers;
@@ -32,6 +35,14 @@ use Api\Controllers\User\UserController as UserManagement;
 use Api\Controllers\Admin\UserAccountController as UserAccount;
 use Api\Utils\Exceptions\Auth\AuthException;
 use Api\Utils\Exceptions\ClientException;
+
+if (Security::check_if_request_can_be_done() === false) {
+  (new HTTPResponse(429))
+    ->addHeader("Retry-After", (string) Security::BLOCKED_IP_TIMEOUT)
+    ->setType("text/plain")
+    ->setBody("IP address blocked. Too many unauthenticated requests.")
+    ->send();
+}
 
 // Pre-flight request
 if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
@@ -63,7 +74,12 @@ if ($_ENV["AUTH"] === "ON") {
 
     // Si aucune des deux authentifications n'est valide
     if (!$valid_session && !$valid_api_key) {
-      (new HTTPResponse(401))->send();
+      Security::prevent_bruteforce();
+
+      (new HTTPResponse(401))
+        ->setType("text/plain")
+        ->setBody("Unauthenticated request.")
+        ->send();
     }
   } catch (Throwable $e) {
     // Autres erreurs non gérées
@@ -86,7 +102,7 @@ $routes = [
   ["/bois/rdvs/[i:id]?", fn ($id = null) => new RdvBois($id)],
   ["/bois/registre", fn () => new RegistreBois()],
   ["/bois/stats", fn () => new StatsBois()],
-  ["/bois/suggestions_transporteurs", fn () => new SuggestionsTransporteurs()],
+  ["/bois/suggestions-transporteurs", fn () => new SuggestionsTransporteurs()],
 
   // Vrac
   ["/vrac/rdvs/[i:id]?", fn ($id = null) => new RdvVrac($id)],
@@ -96,7 +112,9 @@ $routes = [
   ["/consignation/escales/[i:id]?", fn ($id = null) => new EscaleConsignation($id)],
   ["/consignation/voyage", fn () => new NumVoyageConsignation()],
   ["/consignation/te", fn () => new TE()],
+  ["/consignation/stats", fn () => new StatsConsignation()],
   ["/consignation/navires", fn () => new ListeNavires()],
+  ["/consignation/navires-en-activite", fn () => new NaviresEnActivite()],
 
   // Chartering
   ["/chartering/charters/[i:id]?", fn ($id = null) => new AffretementMaritime($id)],
@@ -170,7 +188,7 @@ function buildIndex(): array
     "rdvs_bois" => "bois/rdvs/{id}{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}&client={client}&livraison={livraison}&fournisseur={fournisseur}&affreteur={affreteur}&transporteur={transporteur}}",
     "registre" => "bois/registre/{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}",
     "stats" => "bois/stats/{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}&client={client}&livraison={livraison}&fournisseur={fournisseur}&affreteur={affreteur}&transporteur={transporteur}}",
-    "suggestions_transporteurs" => "suggestions_transporteurs?chargement={id}&livraison={id}",
+    "suggestions-transporteurs" => "suggestions-transporteurs?chargement={id}&livraison={id}",
     // Vrac
     "rdvs_vrac" => "vrac/rdvs/{id}",
     "produits_vrac" => "vrac/produits/{id}",
@@ -178,6 +196,9 @@ function buildIndex(): array
     "escales" => "consignation/escales/{id}",
     "escales_archives" => "consignation/escales?archives",
     "te" => "consignation/te",
+    "stats" => "consignation/stats/{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}&armateur={armateur}}",
+    "navires" => "consignation/navires",
+    "navires-en-activite" => "consignation/navires-en-activite/{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}",
     // Chartering
     "affretements_maritimes" => "chartering/charters/{id}",
     // Tiers

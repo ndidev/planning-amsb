@@ -1,4 +1,4 @@
-<!-- routify:options title="Planning AMSB - Statistiques bois" -->
+<!-- routify:options title="Planning AMSB - Statistiques consignation" -->
 <script lang="ts">
   import { onDestroy, setContext } from "svelte";
   import { writable } from "svelte/store";
@@ -7,11 +7,11 @@
 
   import { fetcher, Filtre } from "@app/utils";
 
-  import type { FiltreBois } from "@app/types";
+  import type { FiltreConsignation } from "@app/types";
   import Notiflix from "notiflix";
 
-  let filtre = new Filtre<FiltreBois>(
-    JSON.parse(sessionStorage.getItem("filtre-stats-bois")) || {}
+  let filtre = new Filtre<FiltreConsignation>(
+    JSON.parse(sessionStorage.getItem("filtre-stats-consignation")) || {}
   );
 
   const storeFiltre = writable(filtre);
@@ -52,7 +52,9 @@
    */
   async function recupererStats() {
     try {
-      stats = await fetcher("bois/stats", { params: filtre.toParams() });
+      stats = await fetcher("consignation/stats", {
+        params: filtre.toParams(),
+      });
     } catch (error) {
       Notiflix.Notify.failure(error.message);
       console.error(error);
@@ -64,7 +66,7 @@
   });
 </script>
 
-<!-- routify:options guard="bois" -->
+<!-- routify:options guard="consignation" -->
 
 <main class="formulaire">
   <h1>Statistiques</h1>
