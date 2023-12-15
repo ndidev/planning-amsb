@@ -126,16 +126,15 @@
         minQuery > 1 ? `au moins ${minQuery} charactères ` : ""
       }pour rechercher`,
     fetchEmpty: "Aucune donnée ne correspond à votre recherche",
-    createRowLabel: (value) => `Create '${value}'`,
+    createRowLabel: (value) => `Créer '${value}'`,
   };
 
   /**
    * Type prédéfini.
    */
   const typesPredefinis = ["tiers", "port", "pays"] as const;
-  type ArrayType<T> = T extends readonly (infer U)[] ? U : never;
 
-  export let type: ArrayType<typeof typesPredefinis> | undefined = undefined;
+  export let type: (typeof typesPredefinis)[number] | undefined = undefined;
 
   /**
    * Rôle du tiers.

@@ -15,6 +15,8 @@ use Api\Controllers\Vrac\ProduitController as VracProduit;
 use Api\Controllers\Consignation\EscaleController as EscaleConsignation;
 use Api\Controllers\Consignation\NumVoyageController as NumVoyageConsignation;
 use Api\Controllers\Consignation\TEController as TE;
+use Api\Controllers\Consignation\StatsController as StatsConsignation;
+use Api\Controllers\Consignation\NaviresEnActiviteController as NaviresEnActivite;
 use Api\Controllers\Consignation\ListeNaviresController as ListeNavires;
 use Api\Controllers\Chartering\CharterController as AffretementMaritime;
 use Api\Controllers\Tiers\TiersController as Tiers;
@@ -100,7 +102,7 @@ $routes = [
   ["/bois/rdvs/[i:id]?", fn ($id = null) => new RdvBois($id)],
   ["/bois/registre", fn () => new RegistreBois()],
   ["/bois/stats", fn () => new StatsBois()],
-  ["/bois/suggestions_transporteurs", fn () => new SuggestionsTransporteurs()],
+  ["/bois/suggestions-transporteurs", fn () => new SuggestionsTransporteurs()],
 
   // Vrac
   ["/vrac/rdvs/[i:id]?", fn ($id = null) => new RdvVrac($id)],
@@ -110,7 +112,9 @@ $routes = [
   ["/consignation/escales/[i:id]?", fn ($id = null) => new EscaleConsignation($id)],
   ["/consignation/voyage", fn () => new NumVoyageConsignation()],
   ["/consignation/te", fn () => new TE()],
+  ["/consignation/stats", fn () => new StatsConsignation()],
   ["/consignation/navires", fn () => new ListeNavires()],
+  ["/consignation/navires-en-activite", fn () => new NaviresEnActivite()],
 
   // Chartering
   ["/chartering/charters/[i:id]?", fn ($id = null) => new AffretementMaritime($id)],
@@ -184,7 +188,7 @@ function buildIndex(): array
     "rdvs_bois" => "bois/rdvs/{id}{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}&client={client}&livraison={livraison}&fournisseur={fournisseur}&affreteur={affreteur}&transporteur={transporteur}}",
     "registre" => "bois/registre/{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}",
     "stats" => "bois/stats/{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}&client={client}&livraison={livraison}&fournisseur={fournisseur}&affreteur={affreteur}&transporteur={transporteur}}",
-    "suggestions_transporteurs" => "suggestions_transporteurs?chargement={id}&livraison={id}",
+    "suggestions-transporteurs" => "suggestions-transporteurs?chargement={id}&livraison={id}",
     // Vrac
     "rdvs_vrac" => "vrac/rdvs/{id}",
     "produits_vrac" => "vrac/produits/{id}",
@@ -192,6 +196,9 @@ function buildIndex(): array
     "escales" => "consignation/escales/{id}",
     "escales_archives" => "consignation/escales?archives",
     "te" => "consignation/te",
+    "stats" => "consignation/stats/{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}&armateur={armateur}}",
+    "navires" => "consignation/navires",
+    "navires-en-activite" => "consignation/navires-en-activite/{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}",
     // Chartering
     "affretements_maritimes" => "chartering/charters/{id}",
     // Tiers

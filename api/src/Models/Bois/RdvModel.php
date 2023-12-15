@@ -8,6 +8,16 @@ use Api\Utils\Exceptions\ClientException;
 class RdvModel extends BaseModel
 {
   /**
+   * Vérifie si une entrée existe dans la base de données.
+   * 
+   * @param int $id Identifiant de l'entrée.
+   */
+  public function exists(int $id)
+  {
+    return $this->mysql->exists("tiers", $id);
+  }
+
+  /**
    * Récupère tous les RDV bois.
    * 
    * @param array $filtre Filtre qui contient...
@@ -17,12 +27,12 @@ class RdvModel extends BaseModel
     // Filtre
     $date_debut = isset($query['date_debut']) ? ($query['date_debut'] ?: date("Y-m-d")) : date("Y-m-d");
     $date_fin = isset($query['date_fin']) ? ($query['date_fin'] ?: "9999-12-31") : "9999-12-31";
-    $filtre_fournisseur = preg_replace("/,$/", "", $query['fournisseur'] ?? "");
-    $filtre_client = preg_replace("/,$/", "", $query['client'] ?? "");
-    $filtre_chargement = preg_replace("/,$/", "", $query['chargement'] ?? "");
-    $filtre_livraison = preg_replace("/,$/", "", $query['livraison'] ?? "");
-    $filtre_transporteur = preg_replace("/,$/", "", $query['transporteur'] ?? "");
-    $filtre_affreteur = preg_replace("/,$/", "", $query['affreteur'] ?? "");
+    $filtre_fournisseur = trim($query['fournisseur'] ?? "", ",");
+    $filtre_client = trim($query['client'] ?? "", ",");
+    $filtre_chargement = trim($query['chargement'] ?? "", ",");
+    $filtre_livraison = trim($query['livraison'] ?? "", ",");
+    $filtre_transporteur = trim($query['transporteur'] ?? "", ",");
+    $filtre_affreteur = trim($query['affreteur'] ?? "", ",");
 
     $filtre_sql_fournisseur = $filtre_fournisseur === "" ? "" : " AND fournisseur IN ($filtre_fournisseur)";
     $filtre_sql_client = $filtre_client === "" ? "" : " AND client IN ($filtre_client)";
@@ -59,7 +69,11 @@ class RdvModel extends BaseModel
           transporteur
         FROM bois_planning
         WHERE 
-          (date_rdv BETWEEN :date_debut AND :date_fin OR date_rdv IS NULL OR attente = 1)
+          (
+            (date_rdv BETWEEN :date_debut AND :date_fin)
+            OR date_rdv IS NULL
+            OR attente = 1
+          )
         $filtre_sql
         ORDER BY date_rdv";
 

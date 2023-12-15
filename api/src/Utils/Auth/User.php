@@ -468,7 +468,6 @@ class User
       $user = $requete->fetch();
       $uid = $user["uid"] ?? null;
 
-      // Copie des infos dans Redis
       if (!$uid) {
         throw new InvalidAccountException();
       }
