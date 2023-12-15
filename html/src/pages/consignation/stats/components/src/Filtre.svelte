@@ -1,7 +1,7 @@
 <!-- 
   @component
   
-  Bandeau filtre pour le planning bois.
+  Bandeau filtre pour le planning consignation.
 
   Usage :
   ```tsx
@@ -9,23 +9,28 @@
   ```
  -->
 <script lang="ts">
-  import { getContext } from "svelte";
+  import { onMount, getContext } from "svelte";
   import type { Writable } from "svelte/store";
 
   import { Svelecte } from "@app/components";
-  import { Filtre } from "@app/utils";
+  import { Filtre, fetcher } from "@app/utils";
 
-  import type { FiltreBois } from "@app/types";
+  import type { FiltreConsignation } from "@app/types";
 
-  const filtre = getContext<Writable<Filtre<FiltreBois>>>("filtre");
+  const filtre = getContext<Writable<Filtre<FiltreConsignation>>>("filtre");
 
   let _filtre = { ...$filtre.data };
+
+  let listeNavires: string[] = [];
 
   /**
    * Enregistrer le filtre.
    */
   async function appliquerFiltre() {
-    sessionStorage.setItem("filtre-stats-bois", JSON.stringify(_filtre));
+    sessionStorage.setItem(
+      "filtre-stats-consignation",
+      JSON.stringify(_filtre)
+    );
 
     filtre.set(new Filtre(_filtre));
   }
@@ -34,11 +39,15 @@
    * Supprimer le filtre.
    */
   function supprimerFiltre() {
-    sessionStorage.removeItem("filtre-stats-bois");
+    sessionStorage.removeItem("filtre-stats-consignation");
 
     filtre.set(new Filtre({}));
     _filtre = {};
   }
+
+  onMount(async () => {
+    listeNavires = await fetcher<string[]>("consignation/navires");
+  });
 </script>
 
 <div id="bandeau-filtre">
@@ -69,59 +78,30 @@
     </div>
 
     <div class="filtre_bloc">
-      <!-- Filtre fournisseur -->
+      <!-- Filtre navire -->
       <div>
-        <label for="filtre_fournisseur">Fournisseur</label>
+        <label for="filtre_navire">Navires</label>
         <Svelecte
-          inputId="filtre_fournisseur"
-          type="tiers"
-          role="bois_fournisseur"
-          bind:value={_filtre.fournisseur}
-          placeholder="Fournisseur"
+          inputId="filtre_navire"
+          options={listeNavires}
+          bind:value={_filtre.navire}
+          labelAsValue
+          placeholder="Navires"
           multiple
+          virtualList
           style="width: 100%;"
         />
       </div>
 
-      <!-- Filtre client -->
+      <!-- Filtre armateur -->
       <div>
-        <label for="filtre_client">Client</label>
+        <label for="filtre_armateur">Armateurs</label>
         <Svelecte
-          inputId="filtre_client"
+          inputId="filtre_armateur"
           type="tiers"
-          role="bois_client"
-          bind:value={_filtre.client}
-          placeholder="Client"
-          multiple
-          style="width: 100%;"
-        />
-      </div>
-    </div>
-
-    <div class="filtre_bloc">
-      <!-- Filtre chargement -->
-      <div class="">
-        <label for="filtre_chargement">Chargement</label>
-        <Svelecte
-          inputId="filtre_chargement"
-          type="tiers"
-          role="bois_client"
-          bind:value={_filtre.chargement}
-          placeholder="Chargement"
-          multiple
-          style="width: 100%;"
-        />
-      </div>
-
-      <!-- Filtre livraison -->
-      <div>
-        <label for="filtre_livraison">Livraison</label>
-        <Svelecte
-          inputId="filtre_livraison"
-          type="tiers"
-          role="bois_client"
-          bind:value={_filtre.livraison}
-          placeholder="Livraison"
+          role="maritime_armateur"
+          bind:value={_filtre.armateur}
+          placeholder="Armateurs"
           multiple
           style="width: 100%;"
         />
@@ -129,30 +109,30 @@
     </div>
 
     <div class="filtre_bloc">
-      <!-- Filtre transporteur -->
+      <!-- Filtre port précédent -->
       <div>
-        <label for="filtre_transporteur">Transporteur</label>
+        <label for="filtre_last_port">Ports précédents</label>
         <Svelecte
-          inputId="filtre_transporteur"
-          type="tiers"
-          role="bois_transporteur"
-          bind:value={_filtre.transporteur}
-          placeholder="Transporteur"
+          inputId="filtre_last_port"
+          type="port"
+          bind:value={_filtre.last_port}
+          placeholder="Ports précédents"
           multiple
+          virtualList
           style="width: 100%;"
         />
       </div>
 
-      <!-- Filtre affréteur -->
+      <!-- Filtre port suivant -->
       <div>
-        <label for="filtre_affreteur">Affréteur</label>
+        <label for="filtre_next_port">Ports suivants</label>
         <Svelecte
-          inputId="filtre_affreteur"
-          type="tiers"
-          role="bois_affreteur"
-          bind:value={_filtre.affreteur}
-          placeholder="Affréteur"
+          inputId="filtre_next_port"
+          type="port"
+          bind:value={_filtre.next_port}
+          placeholder="Ports suivants"
           multiple
+          virtualList
           style="width: 100%;"
         />
       </div>

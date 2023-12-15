@@ -76,6 +76,12 @@ export const sitemap: Map<ModuleId, Module> = new Map([
             href: "/consignation/te",
             devices: ["desktop"],
           },
+          {
+            affichage: "Statistiques",
+            roleMini: UserRoles.ACCESS,
+            href: "/consignation/stats",
+            devices: ["desktop"],
+          },
         ],
       },
     },
@@ -110,6 +116,7 @@ export const sitemap: Map<ModuleId, Module> = new Map([
       type: TypesModules.ACCESS,
       tree: {
         href: "/tiers",
+        roleMini: UserRoles.ACCESS,
         devices: ["mobile", "desktop"],
       },
     },
@@ -121,6 +128,7 @@ export const sitemap: Map<ModuleId, Module> = new Map([
       type: TypesModules.ACCESS,
       tree: {
         href: "/config",
+        roleMini: UserRoles.ACCESS,
         devices: ["desktop"],
       },
     },
@@ -132,6 +140,7 @@ export const sitemap: Map<ModuleId, Module> = new Map([
       type: TypesModules.ACCESS,
       tree: {
         href: "/admin",
+        roleMini: UserRoles.ACCESS,
         devices: ["mobile", "desktop"],
       },
     },

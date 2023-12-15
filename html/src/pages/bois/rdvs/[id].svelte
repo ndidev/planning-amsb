@@ -163,7 +163,7 @@
 
     try {
       const suggestions: SuggestionsTransporteurs = await fetcher(
-        "bois/suggestions_transporteurs",
+        "bois/suggestions-transporteurs",
         {
           params: {
             chargement: rdv.chargement.toString(),
