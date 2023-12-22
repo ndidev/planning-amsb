@@ -1,14 +1,14 @@
 <?php
 
-namespace Api\Controllers\Utils;
+namespace App\Controllers\Utils;
 
-use Api\Models\Utils\PaysModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
+use App\Models\Utils\PaysModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
 
 use Exception;
 
-class PaysController extends BaseController
+class PaysController extends Controller
 {
   private $model;
   private $sse_event = "pays";

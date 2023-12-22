@@ -1,13 +1,13 @@
 <?php
 
-namespace Api\Controllers\Config;
+namespace App\Controllers\Config;
 
-use Api\Models\Config\CoteModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
+use App\Models\Config\CoteModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
 
 
-class CoteController extends BaseController
+class CoteController extends Controller
 {
   private $model;
   private $module = "config";

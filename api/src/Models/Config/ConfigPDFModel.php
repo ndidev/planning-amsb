@@ -1,10 +1,10 @@
 <?php
 
-namespace Api\Models\Config;
+namespace App\Models\Config;
 
-use Api\Utils\BaseModel;
+use App\Models\Model;
 
-class ConfigPDFModel extends BaseModel
+class ConfigPDFModel extends Model
 {
   /**
    * Récupère toutes les configurations PDF.

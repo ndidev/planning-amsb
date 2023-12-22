@@ -1,13 +1,13 @@
 <?php
 
-namespace Api\Controllers\User;
+namespace App\Controllers\User;
 
-use Api\Models\User\UserModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
-use Api\Utils\Exceptions\Auth\AuthException;
+use App\Models\User\UserModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
+use App\Core\Exceptions\Auth\AuthException;
 
-class UserController extends BaseController
+class UserController extends Controller
 {
   private $model;
   private $module = "user";

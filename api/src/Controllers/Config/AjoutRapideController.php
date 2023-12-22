@@ -1,14 +1,14 @@
 <?php
 
-namespace Api\Controllers\Config;
+namespace App\Controllers\Config;
 
-use Api\Models\Config\AjoutRapideBoisModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
-use Api\Utils\Exceptions\Auth\AccessException;
+use App\Models\Config\AjoutRapideBoisModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
+use App\Core\Exceptions\Auth\AccessException;
 
 
-class AjoutRapideController extends BaseController
+class AjoutRapideController extends Controller
 {
   private $model;
   private $module = "config";

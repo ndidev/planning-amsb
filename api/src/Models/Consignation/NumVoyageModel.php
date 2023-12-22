@@ -1,10 +1,10 @@
 <?php
 
-namespace Api\Models\Consignation;
+namespace App\Models\Consignation;
 
-use Api\Utils\BaseModel;
+use App\Models\Model;
 
-class NumVoyageModel extends BaseModel
+class NumVoyageModel extends Model
 {
   /**
    * Récupère un numéro de voyage pour un navire.

@@ -1,15 +1,15 @@
 <?php
 
-namespace Api\Controllers\Consignation;
+namespace App\Controllers\Consignation;
 
-use Api\Models\Consignation\NaviresEnActiviteModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
+use App\Models\Consignation\NaviresEnActiviteModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
 
 /**
  * Liste des navires en opération entre deux dates.
  */
-class NaviresEnActiviteController extends BaseController
+class NaviresEnActiviteController extends Controller
 {
   private $model;
   private $module = "consignation";

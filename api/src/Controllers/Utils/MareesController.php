@@ -1,12 +1,12 @@
 <?php
 
-namespace Api\Controllers\Utils;
+namespace App\Controllers\Utils;
 
-use Api\Models\Utils\MareesModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
+use App\Models\Utils\MareesModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
 
-class MareesController extends BaseController
+class MareesController extends Controller
 {
   private $model;
   private $module = "marees";

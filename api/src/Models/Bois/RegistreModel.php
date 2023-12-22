@@ -1,12 +1,12 @@
 <?php
 
-namespace Api\Models\Bois;
+namespace App\Models\Bois;
 
-use Api\Utils\BaseModel;
-use Api\Utils\DateUtils;
+use App\Models\Model;
+use App\Core\DateUtils;
 use \DateTime;
 
-class RegistreModel extends BaseModel
+class RegistreModel extends Model
 {
   /**
    * Récupère tous les RDV bois.

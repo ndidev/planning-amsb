@@ -1,16 +1,16 @@
 <?php
 
-namespace Api\Controllers\Bois;
+namespace App\Controllers\Bois;
 
-use Api\Models\Bois\RegistreModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
+use App\Models\Bois\RegistreModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
 
-use Api\Utils\DateUtils;
+use App\Core\DateUtils;
 use DateTime;
-use Api\Utils\Exceptions\Auth\AccessException;
+use App\Core\Exceptions\Auth\AccessException;
 
-class RegistreController extends BaseController
+class RegistreController extends Controller
 {
   private $model;
   private $module = "bois";

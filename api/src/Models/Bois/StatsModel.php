@@ -1,10 +1,10 @@
 <?php
 
-namespace Api\Models\Bois;
+namespace App\Models\Bois;
 
-use Api\Utils\BaseModel;
+use App\Models\Model;
 
-class StatsModel extends BaseModel
+class StatsModel extends Model
 {
   /**
    * Récupère les stats bois.

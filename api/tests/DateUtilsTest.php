@@ -8,7 +8,7 @@ date_default_timezone_set('Europe/Paris');
 require_once __DIR__ . "/../vendor/autoload.php";
 
 use PHPUnit\Framework\TestCase;
-use Api\Utils\DateUtils;
+use App\Core\DateUtils;
 
 final class DateUtilsTest extends TestCase
 {

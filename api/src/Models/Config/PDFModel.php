@@ -1,9 +1,9 @@
 <?php
 
-namespace Api\Models\Config;
+namespace App\Models\Config;
 
-use Api\Utils\PDF\PDFUtils;
-use Api\Utils\DateUtils;
+use App\Core\PDF\PDFUtils;
+use App\Core\DateUtils;
 
 class PDFModel
 {

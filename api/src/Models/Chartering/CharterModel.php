@@ -1,10 +1,10 @@
 <?php
 
-namespace Api\Models\Chartering;
+namespace App\Models\Chartering;
 
-use Api\Utils\BaseModel;
+use App\Models\Model;
 
-class CharterModel extends BaseModel
+class CharterModel extends Model
 {
   /**
    * Vérifie si une entrée existe dans la base de données.

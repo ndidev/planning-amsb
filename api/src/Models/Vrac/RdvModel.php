@@ -1,10 +1,10 @@
 <?php
 
-namespace Api\Models\Vrac;
+namespace App\Models\Vrac;
 
-use Api\Utils\BaseModel;
+use App\Models\Model;
 
-class RdvModel extends BaseModel
+class RdvModel extends Model
 {
   /**
    * Vérifie si une entrée existe dans la base de données.

@@ -1,15 +1,15 @@
 <?php
 
-namespace Api\Controllers\Vrac;
+namespace App\Controllers\Vrac;
 
-use Api\Models\Vrac\ProduitModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
+use App\Models\Vrac\ProduitModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
 
 use Exception;
-use Api\Utils\Exceptions\Auth\AccessException;
+use App\Core\Exceptions\Auth\AccessException;
 
-class ProduitController extends BaseController
+class ProduitController extends Controller
 {
   private $model;
   private $module = "vrac";

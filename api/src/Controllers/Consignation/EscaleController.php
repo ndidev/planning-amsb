@@ -1,15 +1,15 @@
 <?php
 
-namespace Api\Controllers\Consignation;
+namespace App\Controllers\Consignation;
 
-use Api\Models\Consignation\EscaleModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
+use App\Models\Consignation\EscaleModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
 
 use Exception;
-use Api\Utils\Exceptions\Auth\AccessException;
+use App\Core\Exceptions\Auth\AccessException;
 
-class EscaleController extends BaseController
+class EscaleController extends Controller
 {
   private $model;
   private $module = "consignation";

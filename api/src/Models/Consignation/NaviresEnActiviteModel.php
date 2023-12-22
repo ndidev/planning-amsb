@@ -1,10 +1,10 @@
 <?php
 
-namespace Api\Models\Consignation;
+namespace App\Models\Consignation;
 
-use Api\Utils\BaseModel;
+use App\Models\Model;
 
-class NaviresEnActiviteModel extends BaseModel
+class NaviresEnActiviteModel extends Model
 {
   /**
    * Récupère la liste des navires en activité entre deux dates.

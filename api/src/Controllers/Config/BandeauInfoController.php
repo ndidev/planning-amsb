@@ -1,13 +1,13 @@
 <?php
 
-namespace Api\Controllers\Config;
+namespace App\Controllers\Config;
 
-use Api\Models\Config\BandeauInfoModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
-use Api\Utils\Exceptions\Auth\AccessException;
+use App\Models\Config\BandeauInfoModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
+use App\Core\Exceptions\Auth\AccessException;
 
-class BandeauInfoController extends BaseController
+class BandeauInfoController extends Controller
 {
   private $model;
   private $module = "config";

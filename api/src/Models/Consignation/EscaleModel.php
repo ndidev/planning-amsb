@@ -1,12 +1,12 @@
 <?php
 
-namespace Api\Models\Consignation;
+namespace App\Models\Consignation;
 
-use Api\Utils\BaseModel;
+use App\Models\Model;
 use DateInterval;
 use DateTime;
 
-class EscaleModel extends BaseModel
+class EscaleModel extends Model
 {
   /**
    * Vérifie si une entrée existe dans la base de données.

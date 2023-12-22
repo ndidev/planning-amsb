@@ -1,13 +1,13 @@
 <?php
 
-namespace Api\Controllers\Bois;
+namespace App\Controllers\Bois;
 
-use Api\Models\Bois\RdvModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
-use Api\Utils\Exceptions\Auth\AccessException;
+use App\Models\Bois\RdvModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
+use App\Core\Exceptions\Auth\AccessException;
 
-class RdvController extends BaseController
+class RdvController extends Controller
 {
   private $model;
   private $module = "bois";

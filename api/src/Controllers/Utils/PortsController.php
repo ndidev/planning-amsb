@@ -1,12 +1,12 @@
 <?php
 
-namespace Api\Controllers\Utils;
+namespace App\Controllers\Utils;
 
-use Api\Models\Utils\PortsModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
+use App\Models\Utils\PortsModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
 
-class PortsController extends BaseController
+class PortsController extends Controller
 {
   private $model;
   private $sse_event = "ports";

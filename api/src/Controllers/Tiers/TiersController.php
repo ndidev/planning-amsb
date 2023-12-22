@@ -1,13 +1,13 @@
 <?php
 
-namespace Api\Controllers\Tiers;
+namespace App\Controllers\Tiers;
 
-use Api\Models\Tiers\TiersModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
-use Api\Utils\Exceptions\Auth\AccessException;
+use App\Models\Tiers\TiersModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
+use App\Core\Exceptions\Auth\AccessException;
 
-class TiersController extends BaseController
+class TiersController extends Controller
 {
   private $model;
   private $module = "tiers";

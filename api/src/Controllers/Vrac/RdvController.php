@@ -1,15 +1,15 @@
 <?php
 
-namespace Api\Controllers\Vrac;
+namespace App\Controllers\Vrac;
 
-use Api\Models\Vrac\RdvModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
+use App\Models\Vrac\RdvModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
 
 use Exception;
-use Api\Utils\Exceptions\Auth\AccessException;
+use App\Core\Exceptions\Auth\AccessException;
 
-class RdvController extends BaseController
+class RdvController extends Controller
 {
   private $model;
   private $module = "vrac";

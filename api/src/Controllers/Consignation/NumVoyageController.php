@@ -1,15 +1,15 @@
 <?php
 
-namespace Api\Controllers\Consignation;
+namespace App\Controllers\Consignation;
 
-use Api\Models\Consignation\NumVoyageModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
+use App\Models\Consignation\NumVoyageModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
 
-use Api\Utils\Exceptions\Auth\AccessException;
+use App\Core\Exceptions\Auth\AccessException;
 
 
-class NumVoyageController extends BaseController
+class NumVoyageController extends Controller
 {
   private $model;
   private $module = "consignation";

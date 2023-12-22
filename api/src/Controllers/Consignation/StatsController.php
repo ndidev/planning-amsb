@@ -1,14 +1,14 @@
 <?php
 
-namespace Api\Controllers\Consignation;
+namespace App\Controllers\Consignation;
 
-use Api\Models\Consignation\StatsModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
+use App\Models\Consignation\StatsModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
 
-use Api\Utils\Exceptions\Auth\AccessException;
+use App\Core\Exceptions\Auth\AccessException;
 
-class StatsController extends BaseController
+class StatsController extends Controller
 {
     private $model;
     private $module = "consignation";

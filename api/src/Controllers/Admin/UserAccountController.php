@@ -1,13 +1,13 @@
 <?php
 
-namespace Api\Controllers\Admin;
+namespace App\Controllers\Admin;
 
-use Api\Models\Admin\UserAccountModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
-use Api\Utils\Exceptions\Auth\AdminException;
+use App\Models\Admin\UserAccountModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
+use App\Core\Exceptions\Auth\AdminException;
 
-class UserAccountController extends BaseController
+class UserAccountController extends Controller
 {
   private $model;
   private $module = "admin";

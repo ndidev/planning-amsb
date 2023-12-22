@@ -1,10 +1,10 @@
 <?php
 
-namespace Api\Models\Consignation;
+namespace App\Models\Consignation;
 
-use Api\Utils\BaseModel;
+use App\Models\Model;
 
-class TEModel extends BaseModel
+class TEModel extends Model
 {
   /**
    * Récupère tous les tirants d'eau du planning consignation.

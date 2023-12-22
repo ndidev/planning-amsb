@@ -1,13 +1,13 @@
 <?php
 
-namespace Api\Controllers\Config\PDF;
+namespace App\Controllers\Config\PDF;
 
-use Api\Models\Config\PDFModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
+use App\Models\Config\PDFModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
 
 
-class VisualiserPDFController extends BaseController
+class VisualiserPDFController extends Controller
 {
   private $model;
 

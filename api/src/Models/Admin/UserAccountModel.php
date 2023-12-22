@@ -1,13 +1,13 @@
 <?php
 
-namespace Api\Models\Admin;
+namespace App\Models\Admin;
 
-use Api\Utils\BaseModel;
-use Api\Utils\Auth\AccountStatus;
-use Api\Utils\Auth\User;
-use Api\Utils\Exceptions\Auth\ForbiddenException;
+use App\Models\Model;
+use App\Core\Auth\AccountStatus;
+use App\Core\Auth\User;
+use App\Core\Exceptions\Auth\ForbiddenException;
 
-class UserAccountModel extends BaseModel
+class UserAccountModel extends Model
 {
   /**
    * @param User $admin Compte administrateur effectuant la modification.

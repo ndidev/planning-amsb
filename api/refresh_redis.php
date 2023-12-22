@@ -7,10 +7,10 @@
 
 require_once __DIR__ . "/bootstrap.php";
 
-use Api\Utils\Database\MySQL;
-use Api\Utils\Database\Redis;
-use Api\Models\Admin\UserAccountModel;
-use Api\Utils\Auth\User;
+use App\Core\Database\MySQL;
+use App\Core\Database\Redis;
+use App\Models\Admin\UserAccountModel;
+use App\Core\Auth\User;
 
 $mysql = new MySQL;
 $redis = new Redis;

@@ -1,10 +1,10 @@
 <?php
 
-namespace Api\Models\Config;
+namespace App\Models\Config;
 
-use Api\Utils\BaseModel;
+use App\Models\Model;
 
-class AjoutRapideBoisModel extends BaseModel
+class AjoutRapideBoisModel extends Model
 {
   /**
    * Récupère tous les ajouts rapides bois.

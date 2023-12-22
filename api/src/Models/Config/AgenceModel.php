@@ -1,10 +1,10 @@
 <?php
 
-namespace Api\Models\Config;
+namespace App\Models\Config;
 
-use Api\Utils\BaseModel;
+use App\Models\Model;
 
-class AgenceModel extends BaseModel
+class AgenceModel extends Model
 {
   /**
    * Récupère les données de l'agence.

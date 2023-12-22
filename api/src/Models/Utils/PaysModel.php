@@ -1,10 +1,10 @@
 <?php
 
-namespace Api\Models\Utils;
+namespace App\Models\Utils;
 
-use Api\Utils\BaseModel;
+use App\Models\Model;
 
-class PaysModel extends BaseModel
+class PaysModel extends Model
 {
   private $redis_ns = "pays";
 

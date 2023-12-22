@@ -1,10 +1,10 @@
 <?php
 
-namespace Api\Models\Tiers;
+namespace App\Models\Tiers;
 
-use Api\Utils\BaseModel;
+use App\Models\Model;
 
-class NombreRdvModel extends BaseModel
+class NombreRdvModel extends Model
 {
   /**
    * Récupère le nombre de RDV pour tous les tiers.

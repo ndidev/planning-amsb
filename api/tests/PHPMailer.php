@@ -2,8 +2,8 @@
 
 require_once __DIR__ . "/../bootstrap.php";
 
-use Api\Utils\PDF\PDFMailer;
-use Api\Utils\DateUtils;
+use App\Core\PDF\PDFMailer;
+use App\Core\DateUtils;
 use PHPMailer\PHPMailer\Exception as PHPMailerException;
 
 $agence = [

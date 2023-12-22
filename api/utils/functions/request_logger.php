@@ -1,6 +1,6 @@
 <?php
 
-use Api\Utils\Database\MySQL;
+use App\Core\Database\MySQL;
 
 function request_logger()
 {

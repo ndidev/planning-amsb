@@ -1,11 +1,11 @@
 <?php
 
-namespace Api\Models\User;
+namespace App\Models\User;
 
-use Api\Utils\BaseModel;
-use Api\Utils\Auth\User;
+use App\Models\Model;
+use App\Core\Auth\User;
 
-class UserModel extends BaseModel
+class UserModel extends Model
 {
   public function __construct(private User $user)
   {

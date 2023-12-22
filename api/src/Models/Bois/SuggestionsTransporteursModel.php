@@ -1,10 +1,10 @@
 <?php
 
-namespace Api\Models\Bois;
+namespace App\Models\Bois;
 
-use Api\Utils\BaseModel;
+use App\Models\Model;
 
-class SuggestionsTransporteursModel extends BaseModel
+class SuggestionsTransporteursModel extends Model
 {
   /**
    * Récupère les transporteurs susceptibles d'effectuer

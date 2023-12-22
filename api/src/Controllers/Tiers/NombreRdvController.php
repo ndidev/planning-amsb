@@ -1,13 +1,13 @@
 <?php
 
-namespace Api\Controllers\Tiers;
+namespace App\Controllers\Tiers;
 
-use Api\Models\Tiers\NombreRdvModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
+use App\Models\Tiers\NombreRdvModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
 
 
-class NombreRdvController extends BaseController
+class NombreRdvController extends Controller
 {
   private $model;
   private $module = "tiers";

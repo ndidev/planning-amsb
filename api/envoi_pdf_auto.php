@@ -2,9 +2,9 @@
 
 require_once __DIR__ . '/bootstrap.php';
 
-use Api\Utils\Database\MySQL;
-use Api\Utils\DateUtils;
-use Api\Utils\PDF\PDFUtils;
+use App\Core\Database\MySQL;
+use App\Core\DateUtils;
+use App\Core\PDF\PDFUtils;
 
 const AUJOURDHUI = new DateTime();
 

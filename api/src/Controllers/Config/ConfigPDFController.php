@@ -1,13 +1,13 @@
 <?php
 
-namespace Api\Controllers\Config;
+namespace App\Controllers\Config;
 
-use Api\Models\Config\ConfigPDFModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
-use Api\Utils\Exceptions\Auth\AccessException;
+use App\Models\Config\ConfigPDFModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
+use App\Core\Exceptions\Auth\AccessException;
 
-class ConfigPDFController extends BaseController
+class ConfigPDFController extends Controller
 {
   private $model;
   private $module = "config";

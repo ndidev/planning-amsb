@@ -1,10 +1,10 @@
 <?php
 
-namespace Api\Models\Consignation;
+namespace App\Models\Consignation;
 
-use Api\Utils\BaseModel;
+use App\Models\Model;
 
-class ListeNaviresModel extends BaseModel
+class ListeNaviresModel extends Model
 {
     /**
      * Récupère la liste des tous les noms de navire.

@@ -1,14 +1,14 @@
 <?php
 
-namespace Api\Controllers\Bois;
+namespace App\Controllers\Bois;
 
-use Api\Models\Bois\SuggestionsTransporteursModel as Model;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
+use App\Models\Bois\SuggestionsTransporteursModel as Model;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
 
-use Api\Utils\Exceptions\Auth\AccessException;
+use App\Core\Exceptions\Auth\AccessException;
 
-class SuggestionsTransporteursController extends BaseController
+class SuggestionsTransporteursController extends Controller
 {
   private $model;
   private $module = "bois";

@@ -1,11 +1,11 @@
 <?php
 
-namespace Api\Models\Bois;
+namespace App\Models\Bois;
 
-use Api\Utils\BaseModel;
-use Api\Utils\Exceptions\ClientException;
+use App\Models\Model;
+use App\Core\Exceptions\ClientException;
 
-class RdvModel extends BaseModel
+class RdvModel extends Model
 {
   /**
    * Vérifie si une entrée existe dans la base de données.

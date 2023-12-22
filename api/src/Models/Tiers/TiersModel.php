@@ -1,12 +1,12 @@
 <?php
 
-namespace Api\Models\Tiers;
+namespace App\Models\Tiers;
 
-use Api\Utils\BaseModel;
+use App\Models\Model;
 use Throwable;
 use Exception;
 
-class TiersModel extends BaseModel
+class TiersModel extends Model
 {
   /**
    * Vérifie si une entrée existe dans la base de données.

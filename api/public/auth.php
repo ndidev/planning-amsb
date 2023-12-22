@@ -2,11 +2,11 @@
 
 require_once __DIR__ . "/../bootstrap.php";
 
-use Api\Utils\Auth\User;
-use Api\Utils\HTTP\HTTPResponse;
-use Api\Utils\Security;
-use Api\Utils\Exceptions\Auth\AccountPendingException;
-use Api\Utils\Exceptions\AppException;
+use App\Core\Auth\User;
+use App\Core\HTTP\HTTPResponse;
+use App\Core\Security;
+use App\Core\Exceptions\Auth\AccountPendingException;
+use App\Core\Exceptions\AppException;
 
 /**
  * Méthodes HTTP supportées.

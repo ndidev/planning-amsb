@@ -2,7 +2,7 @@
 
 require_once __DIR__ . "/../vendor/autoload.php";
 
-use Api\Utils\Auth\User;
+use App\Core\Auth\User;
 
 $user = "bob";
 

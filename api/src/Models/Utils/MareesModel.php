@@ -1,11 +1,11 @@
 <?php
 
-namespace Api\Models\Utils;
+namespace App\Models\Utils;
 
-use Api\Utils\BaseModel;
+use App\Models\Model;
 use RedisException;
 
-class MareesModel extends BaseModel
+class MareesModel extends Model
 {
   private $redis_ns = "marees";
 

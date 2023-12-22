@@ -1,14 +1,14 @@
 <?php
 
-namespace Api\Controllers\Consignation;
+namespace App\Controllers\Consignation;
 
-use Api\Models\Consignation\TEModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
+use App\Models\Consignation\TEModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
 
 
 
-class TEController extends BaseController
+class TEController extends Controller
 {
   private $model;
   private $module = "consignation";

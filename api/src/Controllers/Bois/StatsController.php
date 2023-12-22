@@ -1,14 +1,14 @@
 <?php
 
-namespace Api\Controllers\Bois;
+namespace App\Controllers\Bois;
 
-use Api\Models\Bois\StatsModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
+use App\Models\Bois\StatsModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
 
-use Api\Utils\Exceptions\Auth\AccessException;
+use App\Core\Exceptions\Auth\AccessException;
 
-class StatsController extends BaseController
+class StatsController extends Controller
 {
   private $model;
   private $module = "bois";

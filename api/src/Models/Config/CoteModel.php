@@ -1,10 +1,10 @@
 <?php
 
-namespace Api\Models\Config;
+namespace App\Models\Config;
 
-use Api\Utils\BaseModel;
+use App\Models\Model;
 
-class CoteModel extends BaseModel
+class CoteModel extends Model
 {
   /**
    * Récupère toutes les côtes.

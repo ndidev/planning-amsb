@@ -1,15 +1,15 @@
 <?php
 
-namespace Api\Controllers\Chartering;
+namespace App\Controllers\Chartering;
 
-use Api\Models\Chartering\CharterModel;
-use Api\Utils\BaseController;
-use Api\Utils\HTTP\ETag;
+use App\Models\Chartering\CharterModel;
+use App\Controllers\Controller;
+use App\Core\HTTP\ETag;
 
 use Exception;
-use Api\Utils\Exceptions\Auth\AccessException;
+use App\Core\Exceptions\Auth\AccessException;
 
-class CharterController extends BaseController
+class CharterController extends Controller
 {
   private $model;
   private $module = "chartering";

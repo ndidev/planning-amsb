@@ -1,10 +1,10 @@
 <?php
 
-namespace Api\Models\Consignation;
+namespace App\Models\Consignation;
 
-use Api\Utils\BaseModel;
+use App\Models\Model;
 
-class StatsModel extends BaseModel
+class StatsModel extends Model
 {
   /**
    * Récupère les stats consignation.
