@@ -53,7 +53,7 @@ class Security
     // Nombre de tentatives et blocage éventuel
     $attempts = (int) static::redis()->get("security:attempts:$client_ip_address");
     if ($attempts >= static::MAX_FAILED_ATTEMPTS) {
-      static::redis()->setex("security:blocked:$client_ip_address", static::BLOCKED_IP_TIMEOUT, "1");
+      // static::redis()->setex("security:blocked:$client_ip_address", static::BLOCKED_IP_TIMEOUT, "1");
     }
 
     sleep(static::SLEEP_TIME);
@@ -68,7 +68,7 @@ class Security
   public static function check_if_request_can_be_done(): bool
   {
     if (static::is_ip_blocked() === true) {
-      return false;
+      // return false;
     }
 
     return true;
