@@ -5,7 +5,7 @@
   export let escale: EscaleConsignation;
 </script>
 
-<div class="card">
+<li class="card">
   <div class="navire">
     <a href="/consignation/escales/{escale.id}">{escale.navire}</a>
   </div>
@@ -49,7 +49,7 @@
       <li>Aucune marchandise</li>
     {/each}
   </ul>
-</div>
+</li>
 
 <style>
   .card {

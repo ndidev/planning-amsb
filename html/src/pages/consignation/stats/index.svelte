@@ -181,9 +181,11 @@
     {/if}
   </div>
 
-  {#each details as detail}
-    <CarteEscale escale={detail} />
-  {/each}
+  <ul class="details">
+    {#each details as detail}
+      <CarteEscale escale={detail} />
+    {/each}
+  </ul>
 </main>
 
 <style>
@@ -265,6 +267,12 @@
 
   table td:has(button:is(:hover, :focus)) {
     background-color: bisque;
+  }
+
+  /* DETAILS */
+
+  .details {
+    list-style-type: none;
   }
 
   @media screen and (max-width: 480px) {
