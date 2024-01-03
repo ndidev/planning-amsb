@@ -13,7 +13,4 @@
 </div>
 
 <style>
-  .page {
-    min-height: calc(100svh - var(--footer-height));
-  }
 </style>

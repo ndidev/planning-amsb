@@ -9,7 +9,16 @@
   ```
  -->
 <script lang="ts">
+  import { onMount } from "svelte";
+
   const afficherFooter = import.meta.env.MODE !== "production";
+
+  onMount(() => {
+    document.documentElement.style.setProperty(
+      "--footer-height",
+      afficherFooter ? "50px" : "0px"
+    );
+  });
 </script>
 
 {#if afficherFooter}
@@ -19,13 +28,14 @@
 {/if}
 
 <style>
-  * {
-    --footer-height: 50px;
+  :global(:root) {
+    --footer-height: 0px;
   }
 
   footer {
-    position: sticky;
+    position: fixed;
     bottom: 0;
+    width: 100vw;
     height: var(--footer-height);
     line-height: var(--footer-height);
     z-index: 10;

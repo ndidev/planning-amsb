@@ -78,12 +78,12 @@
 
 <div class="login-conteneur">
   <form
-    class="pure-form pure-form-aligned"
+    class="pure-form pure-form-stacked"
     id="login-form"
     on:submit|preventDefault={logUserIn}
   >
     <fieldset>
-      <div class="pure-control-group">
+      <div class="input-group">
         <label for="login">Identifiant</label>
         <input
           type="text"
@@ -97,7 +97,7 @@
         />
       </div>
 
-      <div class="pure-control-group">
+      <div class="input-group">
         <label for="password">Mot de passe</label>
         <input
           type="password"
@@ -112,7 +112,7 @@
 
       <div class="pure-controls">
         <button
-          class="pure-button pure-button-primary"
+          class="pure-button pure-button-primary pure-u-1"
           type="submit"
           bind:this={loginButton}
         >
@@ -126,6 +126,10 @@
 </div>
 
 <style>
+  .input-group {
+    margin: 1rem 0;
+  }
+
   .login-message {
     text-align: center;
   }

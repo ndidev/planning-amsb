@@ -41,6 +41,6 @@
   @import "/src/css/formulaire.css";
 
   .page {
-    min-height: calc(100svh - var(--footer-height));
+    margin-bottom: calc(var(--footer-height) + 50px);
   }
 </style>

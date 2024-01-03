@@ -80,17 +80,19 @@
   });
 </script>
 
-<header>
-  <img src={logo} id="logo" alt="Agence Maritime Saint-Brieuc" />
-</header>
+<div class="page">
+  <header class="logo-header">
+    <img src={logo} id="logo" alt="Agence Maritime Saint-Brieuc" />
+  </header>
 
-<main>
-  {#if screen}
-    <svelte:component this={screens[screen]} />
-  {:else}
-    <Chargement />
-  {/if}
-</main>
+  <main>
+    {#if screen}
+      <svelte:component this={screens[screen]} />
+    {:else}
+      <Chargement />
+    {/if}
+  </main>
+</div>
 
 <style>
   @import "/src/css/commun.css";
@@ -99,18 +101,28 @@
     --footer-height: 50px;
   }
 
+  .page {
+    display: flex;
+    flex-direction: column;
+    height: calc(100svh - var(--footer-height));
+  }
+
+  .logo-header {
+    flex: 0 1 auto;
+  }
+
   #logo {
     display: block;
     margin: auto;
     margin-top: 5vh;
     max-width: 70%;
-    max-height: 20vh;
+    max-height: 15vh;
   }
 
   main {
-    display: flex;
+    flex: 1 1 auto;
+    display: grid;
     justify-content: center;
     align-items: center;
-    height: calc(95vh - 20vh - var(--footer-height));
   }
 </style>
