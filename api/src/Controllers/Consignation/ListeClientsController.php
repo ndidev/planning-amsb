@@ -2,21 +2,23 @@
 
 namespace App\Controllers\Consignation;
 
-use App\Models\Consignation\StatsModel;
+use App\Models\Consignation\ListeClientsModel;
 use App\Controllers\Controller;
 use App\Core\HTTP\ETag;
-
 use App\Core\Exceptions\Auth\AccessException;
 
-class StatsController extends Controller
+/**
+ * Liste des clients en consignation.
+ */
+class ListeClientsController extends Controller
 {
     private $model;
     private $module = "consignation";
 
-    public function __construct(private ?string $ids)
+    public function __construct()
     {
         parent::__construct();
-        $this->model = new StatsModel;
+        $this->model = new ListeClientsModel;
         $this->processRequest();
     }
 
@@ -29,11 +31,7 @@ class StatsController extends Controller
 
             case 'GET':
             case 'HEAD':
-                if ($this->ids) {
-                    $this->readDetails($this->ids);
-                } else {
-                    $this->readAll($this->request->query);
-                }
+                $this->readAll();
                 break;
 
             default:
@@ -46,44 +44,15 @@ class StatsController extends Controller
     }
 
     /**
-     * Récupère toutes les escales consignation.
-     * 
-     * @param array $filtre
+     * Renvoie la liste des marchandises utilisées en consignation.
      */
-    public function readAll(array $filtre)
+    public function readAll()
     {
         if (!$this->user->can_access($this->module)) {
             throw new AccessException();
         }
 
-        $donnees = $this->model->readAll($filtre);
-
-        $etag = ETag::get($donnees);
-
-        if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
-            return;
-        }
-
-        $this->headers["ETag"] = $etag;
-
-        $this->response
-            ->setBody(json_encode($donnees))
-            ->setHeaders($this->headers);
-    }
-
-    /**
-     * Récupère toutes les escales consignation.
-     * 
-     * @param array $filtre
-     */
-    public function readDetails($ids)
-    {
-        if (!$this->user->can_access($this->module)) {
-            throw new AccessException();
-        }
-
-        $donnees = $this->model->readDetails($ids);
+        $donnees = $this->model->readAll();
 
         $etag = ETag::get($donnees);
 

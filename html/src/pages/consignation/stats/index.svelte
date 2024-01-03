@@ -3,22 +3,26 @@
   import { onDestroy, setContext } from "svelte";
   import { writable } from "svelte/store";
 
-  import { Filtre as BandeauFiltre } from "./components";
+  import { Filtre as BandeauFiltre, CarteEscale } from "./components";
 
   import { fetcher, Filtre } from "@app/utils";
 
-  import type { FiltreConsignation } from "@app/types";
+  import type { FiltreConsignation, EscaleConsignation } from "@app/types";
   import Notiflix from "notiflix";
 
   let filtre = new Filtre<FiltreConsignation>(
     JSON.parse(sessionStorage.getItem("filtre-stats-consignation")) || {}
   );
 
+  let stats: Stats;
+  let details: EscaleConsignation[] = [];
+
   const storeFiltre = writable(filtre);
 
   const unsubscribeFiltre = storeFiltre.subscribe((value) => {
     filtre = value;
     recupererStats();
+    details = [];
   });
 
   setContext("filtre", storeFiltre);
@@ -27,23 +31,21 @@
     Total: number;
     "Par année": {
       [annee: string]: {
-        "1": number;
-        "2": number;
-        "3": number;
-        "4": number;
-        "5": number;
-        "6": number;
-        "7": number;
-        "8": number;
-        "9": number;
-        "10": number;
-        "11": number;
-        "12": number;
+        "1": { nombre: number; ids: number[] };
+        "2": { nombre: number; ids: number[] };
+        "3": { nombre: number; ids: number[] };
+        "4": { nombre: number; ids: number[] };
+        "5": { nombre: number; ids: number[] };
+        "6": { nombre: number; ids: number[] };
+        "7": { nombre: number; ids: number[] };
+        "8": { nombre: number; ids: number[] };
+        "9": { nombre: number; ids: number[] };
+        "10": { nombre: number; ids: number[] };
+        "11": { nombre: number; ids: number[] };
+        "12": { nombre: number; ids: number[] };
       };
     };
   };
-
-  let stats: Stats;
 
   /**
    * Récupère les statistiques par année.
@@ -59,6 +61,14 @@
       Notiflix.Notify.failure(error.message);
       console.error(error);
     }
+  }
+
+  async function recupererDetails(ids: number[]) {
+    const escales = await fetcher<EscaleConsignation[]>(
+      `consignation/stats/${ids.join(",")}`
+    );
+
+    details = escales;
   }
 
   onDestroy(() => {
@@ -101,15 +111,30 @@
           {#each Object.entries(stats["Par année"]) as [annee, statsAnnee]}
             <tr>
               <th scope="row">{annee}</th>
-              {#each Object.entries(statsAnnee) as [mois, camions]}
-                <td>{camions.toLocaleString("fr-FR")}</td>
+              {#each Object.entries(statsAnnee) as [mois, statsMois]}
+                <td>
+                  <button on:click={() => recupererDetails(statsMois.ids)}
+                    >{statsMois.nombre.toLocaleString("fr-FR")}</button
+                  >
+                </td>
               {/each}
 
               <!-- Total par année -->
               <td class="total">
-                {Object.values(statsAnnee)
-                  .reduce((sum, current) => sum + current, 0)
-                  .toLocaleString("fr-FR")}
+                <button
+                  class="bold"
+                  on:click={() =>
+                    recupererDetails(
+                      Object.values(statsAnnee)
+                        .map(({ ids }) => ids)
+                        .reduce((prev, current) => [...current, ...prev], [])
+                    )}
+                >
+                  {Object.values(statsAnnee)
+                    .map(({ nombre }) => nombre)
+                    .reduce((sum, current) => sum + current, 0)
+                    .toLocaleString("fr-FR")}
+                </button>
               </td>
             </tr>
           {/each}
@@ -122,23 +147,43 @@
             {#each [...Array(12).keys()] as mois}
               <td>
                 {Math.round(
-                  // Total des camions par mois
+                  // Total des escales par mois
                   Object.values(stats["Par année"])
-                    .map((statsAnnee) => statsAnnee[mois + 1])
+                    .map((statsAnnee) => statsAnnee[mois + 1].nombre)
                     .reduce((total, valeur) => total + valeur, 0) /
-                    // Nombre d'années (ignorer les années à zéro camion)
+                    // Nombre d'années (ignorer les années à zéro escale)
                     (Object.values(stats["Par année"])
                       .map((statsAnnee) => statsAnnee[mois + 1])
                       .filter((valeur) => valeur).length || 1)
                 ).toLocaleString("fr-FR")}
               </td>
             {/each}
-            <td class="total">{stats.Total.toLocaleString("fr-FR")}</td>
+            <td class="total"
+              ><button
+                class="bold"
+                on:click={() =>
+                  recupererDetails(
+                    Object.values(stats["Par année"])
+                      .map((annee) =>
+                        Object.values(annee)
+                          .map(({ ids }) => ids)
+                          .reduce((prev, current) => [...prev, ...current])
+                      )
+                      .reduce((prev, current) => [...prev, ...current])
+                  )}
+              >
+                {stats.Total.toLocaleString("fr-FR")}
+              </button>
+            </td>
           </tr>
         </tfoot>
       </table>
     {/if}
   </div>
+
+  {#each details as detail}
+    <CarteEscale escale={detail} />
+  {/each}
 </main>
 
 <style>
@@ -150,6 +195,10 @@
   h1 {
     margin: 20px 0;
     text-align: center;
+  }
+
+  .bold {
+    font-weight: bold;
   }
 
   /* STATS */
@@ -202,6 +251,20 @@
 
   tr:nth-child(even) {
     background-color: #eee;
+  }
+
+  table button {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    text-align: right;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+  }
+
+  table td:has(button:is(:hover, :focus)) {
+    background-color: bisque;
   }
 
   @media screen and (max-width: 480px) {

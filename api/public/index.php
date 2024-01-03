@@ -17,7 +17,9 @@ use App\Controllers\Consignation\NumVoyageController as NumVoyageConsignation;
 use App\Controllers\Consignation\TEController as TE;
 use App\Controllers\Consignation\StatsController as StatsConsignation;
 use App\Controllers\Consignation\NaviresEnActiviteController as NaviresEnActivite;
-use App\Controllers\Consignation\ListeNaviresController as ListeNavires;
+use App\Controllers\Consignation\ListeNaviresController as NaviresConsignation;
+use App\Controllers\Consignation\ListeMarchandisesController as MarchandisesConsignation;
+use App\Controllers\Consignation\ListeClientsController as ClientsConsignation;
 use App\Controllers\Chartering\CharterController as AffretementMaritime;
 use App\Controllers\Tiers\TiersController as Tiers;
 use App\Controllers\Tiers\NombreRdvController as NombreRdv;
@@ -112,8 +114,10 @@ $routes = [
   ["/consignation/escales/[i:id]?", fn ($id = null) => new EscaleConsignation($id)],
   ["/consignation/voyage", fn () => new NumVoyageConsignation()],
   ["/consignation/te", fn () => new TE()],
-  ["/consignation/stats", fn () => new StatsConsignation()],
-  ["/consignation/navires", fn () => new ListeNavires()],
+  ["/consignation/stats/[*:ids]?", fn ($ids = null) => new StatsConsignation($ids)],
+  ["/consignation/navires", fn () => new NaviresConsignation()],
+  ["/consignation/marchandises", fn () => new MarchandisesConsignation()],
+  ["/consignation/clients", fn () => new ClientsConsignation()],
   ["/consignation/navires-en-activite", fn () => new NaviresEnActivite()],
 
   // Chartering
@@ -197,7 +201,10 @@ function buildIndex(): array
     "escales_archives" => "consignation/escales?archives",
     "te" => "consignation/te",
     "stats" => "consignation/stats/{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}&armateur={armateur}}",
+    "stats_details" => "consignation/stats/{periode}/{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}&armateur={armateur}}",
     "navires" => "consignation/navires",
+    "marchandises" => "consignation/marchandises",
+    "clients" => "consignation/clients",
     "navires-en-activite" => "consignation/navires-en-activite/{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}",
     // Chartering
     "affretements_maritimes" => "chartering/charters/{id}",

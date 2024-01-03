@@ -1,6 +1,6 @@
 <!-- routify:options title="Planning AMSB - Escale consignation" -->
 <script lang="ts">
-  import { getContext } from "svelte";
+  import { getContext, onMount } from "svelte";
   import { params, goto, redirect } from "@roxi/routify";
 
   import Notiflix from "notiflix";
@@ -22,7 +22,7 @@
 
   import type { Stores, EscaleConsignation } from "@app/types";
 
-  const { currentUser, consignationEscales } = getContext<Stores>("stores");
+  const { consignationEscales } = getContext<Stores>("stores");
 
   let form: HTMLFormElement;
   let boutonAjouter: BoutonAction;
@@ -82,6 +82,9 @@
    * Clé "each" de ligne marchandise.
    */
   let i: number;
+
+  let listeMarchandises: string[] = [];
+  let listeClients: string[] = [];
 
   const isNew = $params.id === "new";
 
@@ -261,6 +264,11 @@
       notiflixOptions.themes.red
     );
   }
+
+  onMount(async () => {
+    listeMarchandises = await fetcher<string[]>("consignation/marchandises");
+    listeClients = await fetcher<string[]>("consignation/clients");
+  });
 </script>
 
 <!-- routify:options param-is-page -->
@@ -312,6 +320,7 @@
         <Svelecte
           type="tiers"
           role="maritime_armateur"
+          id="armateur"
           placeholder="Armateur"
           bind:value={escale.armateur}
         />
@@ -578,30 +587,34 @@
               <input hidden class="id" />
               <div class="bloc pure-u-1 pure-u-lg-1-4">
                 <div class="pure-control-group">
-                  <label
-                    >Marchandise*
-                    <input
-                      list="marchandises_list"
-                      class="nom marchandise"
-                      maxlength="255"
-                      data-nom="Marchandise"
-                      bind:value={marchandise.marchandise}
-                      required
-                    />
-                  </label>
+                  <label for="marchandise_{i}">Marchandise</label>
+                  <Svelecte
+                    id="marchandise_{i}"
+                    options={listeMarchandises}
+                    labelAsValue
+                    virtualList
+                    allowEditing
+                    creatable
+                    creatablePrefix=""
+                    keepCreated
+                    placeholder="Marchandise"
+                    bind:value={marchandise.marchandise}
+                  />
                 </div>
                 <div class="pure-control-group">
-                  <label
-                    >Client*
-                    <input
-                      list="clients_list"
-                      maxlength="255"
-                      class="nom client"
-                      data-nom="Client"
-                      bind:value={marchandise.client}
-                      required
-                    />
-                  </label>
+                  <label for="client_{i}">Client</label>
+                  <Svelecte
+                    id="client_{i}"
+                    options={listeClients}
+                    labelAsValue
+                    virtualList
+                    allowEditing
+                    creatable
+                    creatablePrefix=""
+                    keepCreated
+                    placeholder="Client"
+                    bind:value={marchandise.client}
+                  />
                 </div>
                 <div class="pure-control-group">
                   <label>
@@ -629,25 +642,25 @@
                   </label>
                 </div>
                 <div class="pure-control-group">
-                  <label for={`tonnage_bl_${i}`}>Tonnage</label>
+                  <label for="tonnage_bl_{i}">Tonnage</label>
                   <InputDecimal
-                    id={`tonnage_bl_${i}`}
+                    id="tonnage_bl_{i}"
                     format="+3"
                     bind:value={marchandise.tonnage_bl}
                   />
                 </div>
                 <div class="pure-control-group">
-                  <label for={`cubage_bl_${i}`}>Cubage</label>
+                  <label for="cubage_bl_{i}">Cubage</label>
                   <InputDecimal
-                    id={`cubage_bl_${i}`}
+                    id="cubage_bl_{i}"
                     format="+3"
                     bind:value={marchandise.cubage_bl}
                   />
                 </div>
                 <div class="pure-control-group">
-                  <label for={`nombre_bl_${i}`}>Colis</label>
+                  <label for="nombre_bl_{i}">Colis</label>
                   <InputDecimal
-                    id={`nombre_bl_${i}`}
+                    id="nombre_bl_{i}"
                     format="+0"
                     bind:value={marchandise.nombre_bl}
                   />
@@ -657,25 +670,25 @@
               <div class="quantite bloc pure-u-1 pure-u-lg-1-4">
                 <div class="quantite type">Outturn</div>
                 <div class="pure-control-group">
-                  <label for={`tonnage_outturn_${i}`}>Tonnage</label>
+                  <label for="tonnage_outturn_{i}">Tonnage</label>
                   <InputDecimal
-                    id={`tonnage_outturn_${i}`}
+                    id="tonnage_outturn_{i}"
                     format="+3"
                     bind:value={marchandise.tonnage_outturn}
                   />
                 </div>
                 <div class="pure-control-group">
-                  <label for={`cubage_outturn_${i}`}>Cubage</label>
+                  <label for="cubage_outturn_{i}">Cubage</label>
                   <InputDecimal
-                    id={`cubage_outturn_${i}`}
+                    id="cubage_outturn_{i}"
                     format="+3"
                     bind:value={marchandise.cubage_outturn}
                   />
                 </div>
                 <div class="pure-control-group">
-                  <label for={`nombre_outturn_${i}`}>Colis</label>
+                  <label for="nombre_outturn_{i}">Colis</label>
                   <InputDecimal
-                    id={`nombre_outturn_${i}`}
+                    id="nombre_outturn_{i}"
                     format="+0"
                     bind:value={marchandise.nombre_outturn}
                   />
@@ -743,58 +756,6 @@
   <option value="Cesson 2" />
   <option value="Quai Garnier" />
   <option value="Quai Guindy" />
-</datalist>
-
-<datalist id="marchandises_list">
-  <option value="Ammonitrate" />
-  <option value="Bois" />
-  <option value="Bois (léger)" />
-  <option value="Bois (mixte)" />
-  <option value="Bois (lourd)" />
-  <option value="Bois (LVL)" />
-  <option value="Blé bio" />
-  <option value="Chlorure de potasse" />
-  <option value="Citrus" />
-  <option value="CSR (balles)" />
-  <option value="DAP" />
-  <option value="Drêches de maïs" />
-  <option value="Engrais vrac" />
-  <option value="Entec" />
-  <option value="Maerl" />
-  <option value="Magnésie" />
-  <option value="Magnésie K" />
-  <option value="Magnésie KS" />
-  <option value="Magnésie P" />
-  <option value="MCP BB" />
-  <option value="MCP vrac" />
-  <option value="MCP vrac mini" />
-  <option value="MCP vrac semoule" />
-  <option value="Poids bio" />
-  <option value="Sel" />
-  <option value="Sel (fin)" />
-  <option value="Sel (gros)" />
-  <option value="Sulfate de potasse" />
-  <option value="Tourteaux de colza" />
-  <option value="Tourteaux de tournesol" />
-  <option value="Triticale de blé bio" />
-  <option value="Urée" />
-  <option value="Woodchips" />
-</datalist>
-
-<datalist id="clients_list">
-  <option value="Altilis" />
-  <option value="Ar Cour" />
-  <option value="Ballay" />
-  <option value="Caliance" />
-  <option value="Catelys" />
-  <option value="Cobrena" />
-  <option value="Guyot" />
-  <option value="Masson" />
-  <option value="Protac" />
-  <option value="Stora Enso" />
-  <option value="Timab" />
-  <option value="Traxys" />
-  <option value="Wood2Wood" />
 </datalist>
 
 <style>

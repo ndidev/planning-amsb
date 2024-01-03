@@ -22,7 +22,7 @@
     IconText,
   } from "@app/components";
 
-  import { notiflixOptions, device } from "@app/utils";
+  import { notiflixOptions, device, DateUtils } from "@app/utils";
   import type { Stores, RdvBois, Tiers } from "@app/types";
 
   // Stores
@@ -163,12 +163,7 @@
   $: livraisonAffiche = rdv.livraison && rdv.client !== rdv.livraison;
 
   const formattedDate = rdv.date_rdv
-    ? new Date(rdv.date_rdv).toLocaleDateString("fr-FR", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })
+    ? new DateUtils(rdv.date_rdv).format().long
     : "Pas de date";
 
   /**
@@ -348,7 +343,7 @@
 
     <div class="commentaires pure-u-1 pure-u-lg-6-24">
       {#if rdv.commentaire_public}
-        <div class="commentaire-public">
+        <div class="commentaire_public">
           <IconText hideIcon={["desktop"]}>
             <span slot="icon" title="Commentaire public">comment</span>
             <span slot="text"
@@ -459,6 +454,11 @@
 
     .commentaire_cache {
       border-left: 1px dotted var(--commentaire-cache-color);
+    }
+
+    .commentaire_public,
+    .commentaire_cache {
+      padding-left: 5px;
     }
 
     .rdv:hover .commande_prete-bouton-confirmer {

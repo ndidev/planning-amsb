@@ -23,12 +23,9 @@
    */
   export let navires: string[];
 
-  const formattedDate = new Date(date).toLocaleDateString("fr-FR", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  import { DateUtils } from "@app/utils";
+
+  const formattedDate = new DateUtils(date).format().long;
 </script>
 
 <div class="ligne-date pure-u-1">

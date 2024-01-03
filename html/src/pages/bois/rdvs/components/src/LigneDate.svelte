@@ -11,6 +11,8 @@
   ```
  -->
 <script lang="ts">
+  import { DateUtils } from "@app/utils";
+
   import type { CamionsParDate } from "@app/types";
 
   export let date: string;
@@ -21,12 +23,7 @@
     charges: 0,
   };
 
-  const formattedDate = new Date(date).toLocaleDateString("fr-FR", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const formattedDate = new DateUtils(date).format().long;
 </script>
 
 <div>

@@ -22,6 +22,8 @@
   let _filtre = { ...$filtre.data };
 
   let listeNavires: string[] = [];
+  let listeMarchandises: string[] = [];
+  let listeClients: string[] = [];
 
   /**
    * Enregistrer le filtre.
@@ -47,6 +49,8 @@
 
   onMount(async () => {
     listeNavires = await fetcher<string[]>("consignation/navires");
+    listeMarchandises = await fetcher<string[]>("consignation/marchandises");
+    listeClients = await fetcher<string[]>("consignation/clients");
   });
 </script>
 
@@ -109,6 +113,38 @@
     </div>
 
     <div class="filtre_bloc">
+      <!-- Filtre marchandises -->
+      <div>
+        <label for="filtre_marchandise">Marchandises</label>
+        <Svelecte
+          inputId="filtre_marchandise"
+          options={listeMarchandises}
+          bind:value={_filtre.marchandise}
+          labelAsValue
+          placeholder="Marchandises"
+          multiple
+          virtualList
+          style="width: 100%;"
+        />
+      </div>
+
+      <!-- Filtre clients -->
+      <div>
+        <label for="filtre_client">Clients</label>
+        <Svelecte
+          inputId="filtre_client"
+          options={listeClients}
+          bind:value={_filtre.client}
+          labelAsValue
+          placeholder="Clients"
+          multiple
+          virtualList
+          style="width: 100%;"
+        />
+      </div>
+    </div>
+
+    <div class="filtre_bloc">
       <!-- Filtre port précédent -->
       <div>
         <label for="filtre_last_port">Ports précédents</label>
@@ -159,14 +195,6 @@
 </div>
 
 <style>
-  #bandeau-filtre {
-    position: sticky;
-    top: 0;
-    left: 0;
-    padding-left: 100px;
-    z-index: 2;
-  }
-
   .filtre_bloc {
     display: grid;
     row-gap: 10px;

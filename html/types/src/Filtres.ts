@@ -24,6 +24,8 @@ export type FiltreConsignation = {
   date_debut?: string;
   date_fin?: string;
   navire?: EscaleConsignation["navire"][];
+  marchandise?: EscaleConsignation["marchandises"][number]["marchandise"];
+  client?: EscaleConsignation["marchandises"][number]["client"];
   armateur?: EscaleConsignation["armateur"][];
   last_port?: EscaleConsignation["last_port"][];
   next_port?: EscaleConsignation["next_port"][];
