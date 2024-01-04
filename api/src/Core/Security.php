@@ -3,7 +3,6 @@
 namespace App\Core;
 
 use App\Core\Database\Redis;
-use RedisException;
 
 /**
  * Utilitaires de sécurité.
@@ -19,7 +18,7 @@ class Security
   /**
    * Nombre de requêtes non authentifiées avant de bloquer l'IP.
    */
-  private const MAX_FAILED_ATTEMPTS = 10;
+  private const MAX_FAILED_ATTEMPTS = 100;
 
   /**
    * Fenêtre de temps pour le comptage des requêtes non authentifiées.
@@ -47,13 +46,12 @@ class Security
   {
     $client_ip_address = $_SERVER["REMOTE_ADDR"];
 
-    static::redis()->incr("security:attempts:$client_ip_address");
+    // Incrémenter le nombre de tentatives de connexion et blocage éventuel
+    $attempts = (int) static::redis()->incr("security:attempts:$client_ip_address");
     static::redis()->expire("security:attempts:$client_ip_address", static::FAILED_ATTEMPTS_TIMEOUT);
 
-    // Nombre de tentatives et blocage éventuel
-    $attempts = (int) static::redis()->get("security:attempts:$client_ip_address");
     if ($attempts >= static::MAX_FAILED_ATTEMPTS) {
-      // static::redis()->setex("security:blocked:$client_ip_address", static::BLOCKED_IP_TIMEOUT, "1");
+      static::redis()->setex("security:blocked:$client_ip_address", static::BLOCKED_IP_TIMEOUT, "1");
     }
 
     sleep(static::SLEEP_TIME);
@@ -68,7 +66,7 @@ class Security
   public static function check_if_request_can_be_done(): bool
   {
     if (static::is_ip_blocked() === true) {
-      // return false;
+      return false;
     }
 
     return true;
