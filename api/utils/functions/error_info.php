@@ -12,29 +12,29 @@ require_once __DIR__ . "/array_stringify.php";
  */
 function error_info(?Throwable $e, string $format = "array"): mixed
 {
-  if (!($e instanceof Throwable)) {
-    return null;
-  }
+    if (!($e instanceof Throwable)) {
+        return null;
+    }
 
-  $array_error = [
-    "code" => $e->getCode(),
-    "message" => $e->getMessage(),
-    "file" => $e->getFile(),
-    "line" => $e->getLine(),
-    "previous" => error_info($e->getPrevious()),
-    "trace" => $e->getTrace()
-  ];
+    $array_error = [
+        "code" => $e->getCode(),
+        "message" => $e->getMessage(),
+        "file" => $e->getFile(),
+        "line" => $e->getLine(),
+        "previous" => error_info($e->getPrevious()),
+        "trace" => $e->getTrace()
+    ];
 
-  $string_error = array_stringify($array_error);
+    $string_error = array_stringify($array_error);
 
-  switch ($format) {
-    case 'array':
-      return $array_error;
+    switch ($format) {
+        case 'array':
+            return $array_error;
 
-    case 'string':
-      return $string_error;
+        case 'string':
+            return $string_error;
 
-    default:
-      return $array_error;
-  }
+        default:
+            return $array_error;
+    }
 }

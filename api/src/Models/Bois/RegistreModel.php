@@ -8,27 +8,27 @@ use \DateTime;
 
 class RegistreModel extends Model
 {
-  /**
-   * Récupère tous les RDV bois.
-   * 
-   * @param array $filtre Filtre qui contient...
-   */
-  public function readAll(array $filtre): array
-  {
-    $date_debut_defaut = DateUtils::format(DateUtils::SQL_DATE, DateUtils::jourOuvrePrecedent(new DateTime()));
-    $date_fin_defaut = date("Y-m-d");
+    /**
+     * Récupère tous les RDV bois.
+     * 
+     * @param array $filtre Filtre qui contient...
+     */
+    public function readAll(array $filtre): array
+    {
+        $date_debut_defaut = DateUtils::format(DateUtils::SQL_DATE, DateUtils::previousWorkingDay(new DateTime()));
+        $date_fin_defaut = date("Y-m-d");
 
-    // Filtre
-    $date_debut = isset($filtre['date_debut'])
-      ? ($filtre['date_debut'] ?: $date_debut_defaut)
-      : $date_debut_defaut;
+        // Filtre
+        $date_debut = isset($filtre['date_debut'])
+            ? ($filtre['date_debut'] ?: $date_debut_defaut)
+            : $date_debut_defaut;
 
-    $date_fin = isset($filtre['date_fin'])
-      ? ($filtre['date_fin'] ?: $date_fin_defaut)
-      : $date_fin_defaut;
+        $date_fin = isset($filtre['date_fin'])
+            ? ($filtre['date_fin'] ?: $date_fin_defaut)
+            : $date_fin_defaut;
 
-    $statement =
-      "SELECT
+        $statement =
+            "SELECT
           p.date_rdv,
           f.nom_court AS fournisseur,
           c.nom_court AS chargement_nom,
@@ -57,17 +57,17 @@ class RegistreModel extends Model
           date_rdv,
           numero_bl";
 
-    $requete = $this->mysql->prepare($statement);
+        $requete = $this->mysql->prepare($statement);
 
-    $requete->execute([
-      "date_debut" => $date_debut,
-      "date_fin" => $date_fin
-    ]);
+        $requete->execute([
+            "date_debut" => $date_debut,
+            "date_fin" => $date_fin
+        ]);
 
-    $rdvs = $requete->fetchAll();
+        $rdvs = $requete->fetchAll();
 
-    $donnees = $rdvs;
+        $donnees = $rdvs;
 
-    return $donnees;
-  }
+        return $donnees;
+    }
 }

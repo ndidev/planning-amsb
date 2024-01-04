@@ -6,18 +6,18 @@ use App\Models\Model;
 
 class NombreRdvModel extends Model
 {
-  /**
-   * Récupère le nombre de RDV pour tous les tiers.
-   * 
-   * @param array $options Options de récupération
-   * 
-   * @return array Nombre de RDV pour tous les tiers
-   */
-  public function readAll(): array
-  {
-    // Nombre de RDV par tiers
-    $statement =
-      "SELECT 
+    /**
+     * Récupère le nombre de RDV pour tous les tiers.
+     * 
+     * @param array $options Options de récupération
+     * 
+     * @return array Nombre de RDV pour tous les tiers
+     */
+    public function readAll(): array
+    {
+        // Nombre de RDV par tiers
+        $statement =
+            "SELECT 
         t.id,
         (
           (SELECT COUNT(v.id)
@@ -60,37 +60,37 @@ class NombreRdvModel extends Model
       FROM tiers t
       ";
 
-    $liste_tiers = $this->mysql->query($statement)->fetchAll();
+        $liste_tiers = $this->mysql->query($statement)->fetchAll();
 
-    $liste_tiers_avec_cles = [];
-    foreach ($liste_tiers as $infos) {
-      if ($infos["nombre_rdv"] > 0) {
-        $liste_tiers_avec_cles[$infos["id"]] = $infos["nombre_rdv"];
-      }
+        $liste_tiers_avec_cles = [];
+        foreach ($liste_tiers as $infos) {
+            if ($infos["nombre_rdv"] > 0) {
+                $liste_tiers_avec_cles[$infos["id"]] = $infos["nombre_rdv"];
+            }
+        }
+
+        $donnees = $liste_tiers_avec_cles;
+
+        return $donnees;
     }
 
-    $donnees = $liste_tiers_avec_cles;
-
-    return $donnees;
-  }
-
-  /**
-   * Récupère un tiers.
-   * 
-   * @param int   $id      ID du tiers à récupérer
-   * @param array $options Options de récupération
-   * 
-   * @return array Tiers récupéré
-   */
-  public function read($id): array
-  {
-
     /**
-     * Requêtes
+     * Récupère un tiers.
+     * 
+     * @param int   $id      ID du tiers à récupérer
+     * @param array $options Options de récupération
+     * 
+     * @return array Tiers récupéré
      */
+    public function read($id): array
+    {
 
-    $statement =
-      "SELECT 
+        /**
+         * Requêtes
+         */
+
+        $statement =
+            "SELECT 
         t.id,
         (
           (SELECT COUNT(v.id)
@@ -134,12 +134,12 @@ class NombreRdvModel extends Model
       WHERE t.id = :id
       ";
 
-    $requete = $this->mysql->prepare($statement);
-    $requete->execute(["id" => $id]);
-    $nombre_rdv = $requete->fetch();
+        $requete = $this->mysql->prepare($statement);
+        $requete->execute(["id" => $id]);
+        $nombre_rdv = $requete->fetch();
 
-    $donnees = $nombre_rdv;
+        $donnees = $nombre_rdv;
 
-    return $donnees;
-  }
+        return $donnees;
+    }
 }

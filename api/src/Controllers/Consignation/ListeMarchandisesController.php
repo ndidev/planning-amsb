@@ -5,7 +5,7 @@ namespace App\Controllers\Consignation;
 use App\Models\Consignation\ListeMarchandisesModel;
 use App\Controllers\Controller;
 use App\Core\HTTP\ETag;
-use App\Core\Exceptions\Auth\AccessException;
+use App\Core\Exceptions\Client\Auth\AccessException;
 
 /**
  * Liste des marchandises utilisées en consignation.
@@ -26,7 +26,7 @@ class ListeMarchandisesController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Access-Control-Allow-Methods", "OPTIONS, HEAD, GET");
+                $this->response->setCode(204)->addHeader("Allow", $this->supported_methods);
                 break;
 
             case 'GET':
@@ -35,7 +35,7 @@ class ListeMarchandisesController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", "OPTIONS, HEAD, GET");
+                $this->response->setCode(405)->addHeader("Allow", $this->supported_methods);
                 break;
         }
 

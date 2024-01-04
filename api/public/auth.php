@@ -5,39 +5,40 @@ require_once __DIR__ . "/../bootstrap.php";
 use App\Core\Auth\User;
 use App\Core\HTTP\HTTPResponse;
 use App\Core\Security;
-use App\Core\Exceptions\Auth\AccountPendingException;
+use App\Core\Exceptions\Client\Auth\AccountPendingException;
 use App\Core\Exceptions\AppException;
+
+
+if (Security::check_if_request_can_be_done() === false) {
+    (new HTTPResponse(429))
+        ->addHeader("Retry-After", (string) Security::BLOCKED_IP_TIMEOUT)
+        ->setType("text/plain")
+        ->setBody("IP address blocked. Too many unauthenticated requests.")
+        ->send();
+}
+
+// Pre-flight request
+if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
+    (new HTTPResponse())->sendCorsPreflight();
+}
 
 /**
  * Méthodes HTTP supportées.
  * @var string[]
  */
 $supported_methods = [
-  "OPTIONS",
-  "HEAD",
-  "GET",
-  "POST",
-  "PUT",
-  "PATCH",
-  "DELETE"
+    "OPTIONS",
+    "HEAD",
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE"
 ];
-
-if (Security::check_if_request_can_be_done() === false) {
-  (new HTTPResponse(429))
-    ->addHeader("Retry-After", (string) Security::BLOCKED_IP_TIMEOUT)
-    ->setType("text/plain")
-    ->setBody("IP address blocked. Too many unauthenticated requests.")
-    ->send();
-}
-
-// Pre-flight request
-if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
-  (new HTTPResponse())->sendCorsPreflight();
-}
 
 // Méthode non supportée
 if (array_search($_SERVER["REQUEST_METHOD"], $supported_methods) === FALSE) {
-  (new HTTPResponse(501))->send();
+    (new HTTPResponse(501))->send();
 }
 
 
@@ -52,130 +53,130 @@ parse_str($url["query"] ?? "", $query);
  * Liste des endoints.
  */
 try {
-  switch ($endpoint) {
-      /** AFFICHAGE GENERAL */
-    case null:
-    case "":
-      switch ($_SERVER["REQUEST_METHOD"]) {
-        case "OPTIONS":
-          (new HTTPResponse)
-            ->setCode(204)
-            ->addHeader("Access-Control-Allow-Methods", "OPTIONS, HEAD, GET")
-            ->send();
-          break;
+    switch ($endpoint) {
+            /** AFFICHAGE GENERAL */
+        case null:
+        case "":
+            switch ($_SERVER["REQUEST_METHOD"]) {
+                case "OPTIONS":
+                    (new HTTPResponse)
+                        ->setCode(204)
+                        ->addHeader("Access-Control-Allow-Methods", "OPTIONS, HEAD, GET")
+                        ->send();
+                    break;
 
-        case "GET":
-        case "HEAD":
-          break;
+                case "GET":
+                case "HEAD":
+                    break;
 
+                default:
+                    (new HTTPResponse)
+                        ->setCode(405)
+                        ->addHeader("Allow", "OPTIONS, HEAD, GET")
+                        ->send();
+                    break;
+            }
+
+
+        case 'login':
+            if (!isset($_POST["login"]) || !isset($_POST["password"])) {
+                (new HTTPResponse(400))->send();
+            }
+
+            // Authentification et envoi du cookie
+            try {
+                $user = (new User)->login($_POST["login"], $_POST["password"]);
+
+                (new HTTPResponse(200))
+                    ->setType("json")
+                    ->setBody(json_encode([
+                        "uid" => $user->uid,
+                        "login" => $user->login,
+                        "nom" => $user->nom,
+                        "roles" => $user->roles,
+                        "statut" => $user->statut,
+                    ]))
+                    ->send();
+            } catch (AccountPendingException $e) {
+                (new HTTPResponse(200))
+                    ->setType("json")
+                    ->setBody(json_encode([
+                        "message" => $e->getMessage(),
+                        "statut" => $e->getStatut()
+                    ]))
+                    ->send();
+            }
+            break;
+
+
+        case 'logout':
+            // Suppression de la session et suppression du cookie
+            (new User)->logout();
+            (new HTTPResponse(204))->send();
+            break;
+
+
+        case 'check':
+            // Bypass pour développement
+            if ($_ENV["AUTH"] === "OFF") {
+                (new HTTPResponse(200))
+                    ->setType("html")
+                    ->setBody("Auth OFF")
+                    ->send();
+            }
+
+            $user = (new User)->from_session();
+
+            (new HTTPResponse(200))
+                ->setType("json")
+                ->setBody(json_encode([
+                    "login" => $user->login,
+                    "nom" => $user->nom,
+                    "roles" => $user->roles,
+                    "statut" => $user->statut,
+                ]))
+                ->send();
+            break;
+
+
+        case 'first-login':
+            if (!isset($_POST["login"]) || !isset($_POST["password"])) {
+                (new HTTPResponse(400))->send();
+            }
+
+            (new User)->first_login($_POST["login"], $_POST["password"]);
+
+            (new HTTPResponse(200))->send();
+            break;
+
+
+        case 'info':
+            (new HTTPResponse(200))
+                ->setType("json")
+                ->setBody(json_encode([
+                    "MAX_LOGIN_ATTEMPTS" => (int) $_ENV["AUTH_MAX_LOGIN_ATTEMPTS"],
+                    "LONGUEUR_MINI_PASSWORD" => (int) $_ENV["AUTH_LONGUEUR_MINI_PASSWORD"],
+                ]))
+                ->send();
+            break;
+
+
+            /** DEFAUT */
         default:
-          (new HTTPResponse)
-            ->setCode(405)
-            ->addHeader("Allow", "OPTIONS, HEAD, GET")
-            ->send();
-          break;
-      }
-
-
-    case 'login':
-      if (!isset($_POST["login"]) || !isset($_POST["password"])) {
-        (new HTTPResponse(400))->send();
-      }
-
-      // Authentification et envoi du cookie
-      try {
-        $user = (new User)->login($_POST["login"], $_POST["password"]);
-
-        (new HTTPResponse(200))
-          ->setType("json")
-          ->setBody(json_encode([
-            "uid" => $user->uid,
-            "login" => $user->login,
-            "nom" => $user->nom,
-            "roles" => $user->roles,
-            "statut" => $user->statut,
-          ]))
-          ->send();
-      } catch (AccountPendingException $e) {
-        (new HTTPResponse(200))
-          ->setType("json")
-          ->setBody(json_encode([
-            "message" => $e->getMessage(),
-            "statut" => $e->getStatut()
-          ]))
-          ->send();
-      }
-      break;
-
-
-    case 'logout':
-      // Suppression de la session et suppression du cookie
-      (new User)->logout();
-      (new HTTPResponse(204))->send();
-      break;
-
-
-    case 'check':
-      // Bypass pour développement
-      if ($_ENV["AUTH"] === "OFF") {
-        (new HTTPResponse(200))
-          ->setType("html")
-          ->setBody("Auth OFF")
-          ->send();
-      }
-
-      $user = (new User)->from_session();
-
-      (new HTTPResponse(200))
-        ->setType("json")
-        ->setBody(json_encode([
-          "login" => $user->login,
-          "nom" => $user->nom,
-          "roles" => $user->roles,
-          "statut" => $user->statut,
-        ]))
-        ->send();
-      break;
-
-
-    case 'first-login':
-      if (!isset($_POST["login"]) || !isset($_POST["password"])) {
-        (new HTTPResponse(400))->send();
-      }
-
-      (new User)->first_login($_POST["login"], $_POST["password"]);
-
-      (new HTTPResponse(200))->send();
-      break;
-
-
-    case 'info':
-      (new HTTPResponse(200))
-        ->setType("json")
-        ->setBody(json_encode([
-          "MAX_LOGIN_ATTEMPTS" => (int) $_ENV["AUTH_MAX_LOGIN_ATTEMPTS"],
-          "LONGUEUR_MINI_PASSWORD" => (int) $_ENV["AUTH_LONGUEUR_MINI_PASSWORD"],
-        ]))
-        ->send();
-      break;
-
-
-      /** DEFAUT */
-    default:
-      (new HTTPResponse(404))->send();
-      break;
-  }
+            (new HTTPResponse(404))->send();
+            break;
+    }
 } catch (AppException $e) {
-  (new HTTPResponse($e->http_status))
-    ->setType("text")
-    ->setBody($e->getMessage())
-    ->send();
+    (new HTTPResponse($e->http_status))
+        ->setType("text")
+        ->setBody($e->getMessage())
+        ->send();
 } catch (Throwable $e) {
-  error_logger($e);
-  (new HTTPResponse(500))
-    ->setType("text")
-    ->setBody("Erreur serveur")
-    ->send();
+    error_logger($e);
+    (new HTTPResponse(500))
+        ->setType("text")
+        ->setBody("Erreur serveur")
+        ->send();
 }
 
 
@@ -190,14 +191,14 @@ try {
  */
 function makeEndpoint(string $path): ?string
 {
-  if (!$path) {
-    return null;
-  }
+    if (!$path) {
+        return null;
+    }
 
-  // Suppression du chemin de l'auth dans la requête
-  // ex : "/planning-amsb/auth/login" => "login"
-  $auth_path = $_ENV["AUTH_PATH"];
-  $endpoint = substr_replace($path, "", 0, strlen($auth_path));
+    // Suppression du chemin de l'auth dans la requête
+    // ex : "/planning-amsb/auth/login" => "login"
+    $auth_path = $_ENV["AUTH_PATH"];
+    $endpoint = substr_replace($path, "", 0, strlen($auth_path));
 
-  return $endpoint;
+    return $endpoint;
 }

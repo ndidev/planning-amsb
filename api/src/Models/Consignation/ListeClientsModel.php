@@ -15,8 +15,8 @@ class ListeClientsModel extends Model
     {
         $statement =
             "SELECT DISTINCT client
-        FROM consignation_escales_marchandises
-        ORDER BY client ASC";
+            FROM consignation_escales_marchandises
+            ORDER BY client ASC";
 
         $requete = $this->mysql->query($statement);
 

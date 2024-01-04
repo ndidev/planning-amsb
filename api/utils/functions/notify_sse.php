@@ -13,32 +13,32 @@ require_once __DIR__ . "/../../bootstrap.php";
  */
 function notify_sse(string $name, string $type, int|string $id, mixed $data = null): string|false
 {
-  $host = $_ENV["SSE_HOST"];
-  $port = $_ENV["SSE_UPDATES_PORT"];
-  $url = "http://$host:$port";
+    $host = $_ENV["SSE_HOST"];
+    $port = $_ENV["SSE_UPDATES_PORT"];
+    $url = "http://$host:$port";
 
-  $event = [
-    "name" => $name,
-    "type" => $type,
-    "id" => $id,
-    "data" => $data,
-    "origin" => $_SERVER["HTTP_X_SSE_CONNECTION"] ?? NULL,
-  ];
+    $event = [
+        "name" => $name,
+        "type" => $type,
+        "id" => $id,
+        "data" => $data,
+        "origin" => $_SERVER["HTTP_X_SSE_CONNECTION"] ?? NULL,
+    ];
 
-  $options = [
-    "http" => [
-      "header" => "Content-type: application/json\r\n",
-      "method" => "POST",
-      "content" => json_encode($event)
-    ]
-  ];
+    $options = [
+        "http" => [
+            "header" => "Content-type: application/json\r\n",
+            "method" => "POST",
+            "content" => json_encode($event)
+        ]
+    ];
 
-  $context = stream_context_create($options);
-  $result = file_get_contents($url, false, $context);
+    $context = stream_context_create($options);
+    $result = file_get_contents($url, false, $context);
 
-  if ($result === false) {
-    error_logger(new Exception("Erreur de notification SSE"));
-  }
+    if ($result === false) {
+        error_logger(new Exception("Erreur de notification SSE"));
+    }
 
-  return $result;
+    return $result;
 }

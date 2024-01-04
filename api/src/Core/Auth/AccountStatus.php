@@ -3,52 +3,51 @@
 namespace App\Core\Auth;
 
 /**
- * Statuts des comptes utilisateurs.
+ * Status of user accounts.
  */
 enum AccountStatus: string
 {
-  /**
-   * Compte actif.
-   * 
-   * Le compte peut être utilisé normalement.
-   */
-  case ACTIVE = "active";
+    /**
+     * Active account.
+     * 
+     * The account can be used normally.
+     */
+    case ACTIVE = "active";
 
-  /**
-   * Compte en attente d'activation.
-   * 
-   * Le compte est créé mais le mot de passe
-   * n'a pas été initialisé par l'utilisateur.
-   */
-  case PENDING = "pending";
+    /**
+     * Account awaiting activation.
+     * 
+     * The account has been created but the password
+     * hasn't yet been initialized by the user.
+     */
+    case PENDING = "pending";
 
-  /**
-   * Compte désactivé.
-   * 
-   * Le compte a été désactivé volontairement par un administrateur
-   * car l'utilisateur ne l'utilise plus
-   * (salarié ayant quitté l'entreprise, par exemple).
-   * 
-   * Seul un administrateur peur le réactiver.
-   */
-  case INACTIVE = "inactive";
+    /**
+     * Deactivated account.
+     * 
+     * The account was purposely deactivated by an administrator
+     * because it is no longer used (eg: former staff who left the company).
+     * 
+     * Only an administrator can reactivate the account.
+     */
+    case INACTIVE = "inactive";
 
-  /**
-   * Compte bloqué.
-   * 
-   * Le compte est bloqué pour l'une des raisons suivantes :
-   *  - nombre de tentatives de connexions dépassé
-   * 
-   * Seul un administrateur peur le débloquer.
-   */
-  case LOCKED = "locked";
+    /**
+     * Locked account.
+     * 
+     * The account has been locked due to one of the following reasons:
+     *  - the number of failed connection attempts has been reached
+     * 
+     * Only an administrator can unlock the account.
+     */
+    case LOCKED = "locked";
 
-  /**
-   * Compte supprimé.
-   * 
-   * Le compte a été supprimé.
-   * 
-   * Il est conservé pour l'historique des opérations mais n'est pas récupérable.
-   */
-  case DELETED = "deleted";
+    /**
+     * Deleted account.
+     * 
+     * The account has been soft-deleted.
+     * 
+     * It is preserved to keep the history of operations but cannot be recovered.
+     */
+    case DELETED = "deleted";
 }

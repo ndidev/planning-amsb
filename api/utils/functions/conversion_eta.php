@@ -4,25 +4,25 @@
  * Heures correspondantes pour ETA "imprécises"
  */
 const CORRESPONDANCE_ETA = [
-  'EAM' => '02:00',
-  'NUIT' => '03:00',
-  'AM' => '06:00',
-  'MATIN' => '06:00',
-  'LAM' => '10:00',
-  'NOON' => '12:00',
-  'EPM' => '13:00',
-  'PM' => '16:00',
-  'APREM' => '16:00',
-  'APRÈM' => '16:00',
-  'APRÈS-MIDI' => '16:00',
-  'APRES-MIDI' => '16:00',
-  'APRES MIDI' => '16:00',
-  'APRÈS MIDI' => '16:00',
-  'SOIR' => '20:00',
-  'EVENING' => '20:00',
-  'EVE' => '20:00',
-  'LPM' => '22:00',
-  'MINUIT' => '24:00'
+    'EAM' => '02:00',
+    'NUIT' => '03:00',
+    'AM' => '06:00',
+    'MATIN' => '06:00',
+    'LAM' => '10:00',
+    'NOON' => '12:00',
+    'EPM' => '13:00',
+    'PM' => '16:00',
+    'APREM' => '16:00',
+    'APRÈM' => '16:00',
+    'APRÈS-MIDI' => '16:00',
+    'APRES-MIDI' => '16:00',
+    'APRES MIDI' => '16:00',
+    'APRÈS MIDI' => '16:00',
+    'SOIR' => '20:00',
+    'EVENING' => '20:00',
+    'EVE' => '20:00',
+    'LPM' => '22:00',
+    'MINUIT' => '24:00'
 ];
 
 
@@ -43,10 +43,10 @@ const CORRESPONDANCE_ETA = [
  */
 function eta_vers_chiffres(string $heure, array $correspondance = CORRESPONDANCE_ETA): string
 {
-  foreach ($correspondance as $lettres => $chiffres) {
-    $heure = preg_replace("/\b$lettres\b/i", "$chiffres~", $heure);
-  }
-  return $heure;
+    foreach ($correspondance as $lettres => $chiffres) {
+        $heure = preg_replace("/\b$lettres\b/i", "$chiffres~", $heure);
+    }
+    return $heure;
 }
 
 
@@ -65,8 +65,8 @@ function eta_vers_chiffres(string $heure, array $correspondance = CORRESPONDANCE
  */
 function eta_vers_lettres(string $heure, $correspondance = CORRESPONDANCE_ETA): string
 {
-  foreach ($correspondance as $lettres => $chiffres) {
-    $heure = preg_replace("/\b$chiffres~/i", $lettres, $heure);
-  }
-  return $heure;
+    foreach ($correspondance as $lettres => $chiffres) {
+        $heure = preg_replace("/\b$chiffres~/i", $lettres, $heure);
+    }
+    return $heure;
 }

@@ -5,48 +5,64 @@ namespace App\Core\HTTP;
 class HTTPRequest
 {
 
-  /**
-   * Méthode HTTP de la requête.
-   */
-  public string $method;
+    /**
+     * HTTP request method.
+     */
+    public string $method;
 
-  /**
-   * 
-   */
-  protected array $headers = [];
+    /**
+     * HTTP request headers.
+     */
+    protected array $headers = [];
 
-  /**
-   * ETag de la requête
-   */
-  public readonly ?string $etag;
+    /**
+     * Request ETag.
+     */
+    public readonly ?string $etag;
 
-  /**
-   * Chemin de l'URL.
-   */
-  public string $path;
+    /**
+     * Request URL path.
+     */
+    public string $path;
 
-  /**
-   * Paramètres de la requête (partie après le "?").
-   */
-  public array $query = [];
+    /**
+     * Request query parameters (after "?").
+     */
+    public array $query = [];
 
-  /**
-   * Corps de la requête.
-   */
-  public array $body;
+    /**
+     * Request body.
+     */
+    public array $body;
 
-  public function __construct()
-  {
-    $this->method = $_SERVER["REQUEST_METHOD"];
+    /**
+     * `true` if the request is a CORS preflight request.
+     */
+    public readonly bool $is_preflight;
 
-    $this->headers = getallheaders();
+    public function __construct()
+    {
+        $this->method = $_SERVER["REQUEST_METHOD"];
 
-    $url = parse_url($_SERVER['REQUEST_URI']);
-    $this->path = $url["path"];
-    parse_str($url["query"] ?? "", $this->query);
+        $this->headers = getallheaders();
 
-    $this->body = !empty($_POST) ? $_POST : (array) json_decode(file_get_contents("php://input"), true);
+        $url = parse_url($_SERVER['REQUEST_URI']);
+        $this->path = $url["path"];
+        parse_str($url["query"] ?? "", $this->query);
 
-    $this->etag = $this->headers["If-None-Match"] ?? null;
-  }
+        $this->body = !empty($_POST) ? $_POST : (array) json_decode(file_get_contents("php://input"), true);
+
+        $this->etag = $this->headers["If-None-Match"] ?? null;
+
+        $headers = array_keys(array_change_key_case($this->headers, CASE_LOWER));
+        if (
+            $this->method === "OPTIONS"
+            && in_array("access-control-request-method", $headers)
+            && in_array("origin", $headers)
+        ) {
+            $this->is_preflight = true;
+        } else {
+            $this->is_preflight = false;
+        }
+    }
 }

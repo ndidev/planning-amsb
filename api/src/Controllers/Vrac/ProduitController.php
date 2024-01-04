@@ -5,9 +5,8 @@ namespace App\Controllers\Vrac;
 use App\Models\Vrac\ProduitModel;
 use App\Controllers\Controller;
 use App\Core\HTTP\ETag;
-
-use Exception;
-use App\Core\Exceptions\Auth\AccessException;
+use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Server\DB\DBException;
 
 class ProduitController extends Controller
 {
@@ -18,7 +17,7 @@ class ProduitController extends Controller
   public function __construct(
     private ?int $id
   ) {
-    parent::__construct();
+    parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
     $this->model = new ProduitModel;
     $this->processRequest();
   }
@@ -27,11 +26,11 @@ class ProduitController extends Controller
   {
     switch ($this->request->method) {
       case 'OPTIONS':
-        $this->response->setCode(204)->addHeader("Access-Control-Allow-Methods", "OPTIONS, HEAD, GET, POST, PUT, DELETE");
+        $this->response->setCode(204)->addHeader("Allow", $this->supported_methods);
         break;
 
-      case 'GET':
       case 'HEAD':
+      case 'GET':
         if ($this->id) {
           $this->read($this->id);
         } else {
@@ -52,7 +51,7 @@ class ProduitController extends Controller
         break;
 
       default:
-        $this->response->setCode(405)->addHeader("Allow", "OPTIONS, HEAD, GET, POST, PUT, DELETE");
+        $this->response->setCode(405)->addHeader("Allow", $this->supported_methods);
         break;
     }
 
@@ -198,7 +197,7 @@ class ProduitController extends Controller
       $this->response->setCode(204)->flush();
       notify_sse($this->sse_event, __FUNCTION__, $id);
     } else {
-      throw new Exception("Erreur lors de la suppression");
+      throw new DBException("Erreur lors de la suppression");
     }
   }
 }

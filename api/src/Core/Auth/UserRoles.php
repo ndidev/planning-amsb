@@ -3,29 +3,29 @@
 namespace App\Core\Auth;
 
 /**
- * Statuts des comptes utilisateurs.
+ * List of user roles.
  */
 enum UserRoles: int
 {
-  /**
-   * Aucun.
-   *
-   * L'utilisateur ne peut pas accéder à la rubrique.
-   */
-  case NONE = 0;
+    /**
+     * None.
+     *
+     * The user cannot access this part of the application.
+     */
+    case NONE = 0;
 
-  /**
-   * Visualisation.
-   *
-   * L'utilisateur peut visualiser la rubrique mais ne peut pas modifier.  
-   * L'utilisateur a accès aux rubriques de type "Accès/Pas accès".
-   */
-  case ACCESS = 1;
+    /**
+     * View only.
+     *
+     * The user can view the resources of this part of the application but cannot edit them.  
+     * The user can access parts of the application of type "Access/No access".
+     */
+    case ACCESS = 1;
 
-  /**
-   * Modification.
-   *
-   * L'utilisateur peut voir et modifier la rubrique.
-   */
-  case EDIT = 2;
+    /**
+     * Edit allowed.
+     *
+     * The user can view and edit the resources of this part of the application.
+     */
+    case EDIT = 2;
 }

@@ -15,8 +15,8 @@ class ListeNaviresModel extends Model
     {
         $statement =
             "SELECT DISTINCT navire
-                FROM consignation_planning
-                ORDER BY navire ASC";
+            FROM consignation_planning
+            ORDER BY navire ASC";
 
         $requete = $this->mysql->query($statement);
 

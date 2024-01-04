@@ -12,43 +12,43 @@ use \tFPDF;
 
 class PDFUtils
 {
-  /**
-   * Génère un PDF client.
-   * 
-   * @param string   $module      id du module.
-   * @param int      $fournisseur id du fournisseur.
-   * @param DateTime $date_debut  Date de début des RDV.
-   * @param DateTime $date_fin    Date de fin des RDV.
-   * 
-   * @return tFPDF 
-   * @throws PDOException 
-   */
-  public static function genererPDF(
-    string $module,
-    int $fournisseur,
-    DateTime $date_debut,
-    DateTime $date_fin
-  ): tFPDF {
-
-    $mysql = new MySQL;
-
     /**
-     * Récupération données fournisseur et agence
+     * Génère un PDF client.
+     * 
+     * @param string   $module      id du module.
+     * @param int      $fournisseur id du fournisseur.
+     * @param DateTime $date_debut  Date de début des RDV.
+     * @param DateTime $date_fin    Date de fin des RDV.
+     * 
+     * @return tFPDF 
+     * @throws PDOException 
      */
-    $donnees_fournisseur = $mysql->query("SELECT nom_court AS nom, logo FROM tiers WHERE id = $fournisseur")->fetch();
-    $donnees_agence = $mysql->query("SELECT ville FROM config_agence WHERE service = 'transit'")->fetch();
+    public static function generatePDF(
+        string $module,
+        int $fournisseur,
+        DateTime $date_debut,
+        DateTime $date_fin
+    ): tFPDF {
 
-    if (!$donnees_fournisseur) {
-      return FALSE;
-    }
+        $mysql = new MySQL;
 
-    /**
-     * Vrac
-     */
-    if ($module === "vrac") {
-      // RDV vrac
-      $requete_rdvs_vrac = $mysql->prepare(
-        "SELECT
+        /**
+         * Récupération données fournisseur et agence
+         */
+        $donnees_fournisseur = $mysql->query("SELECT nom_court AS nom, logo FROM tiers WHERE id = $fournisseur")->fetch();
+        $donnees_agence = $mysql->query("SELECT ville FROM config_agence WHERE service = 'transit'")->fetch();
+
+        if (!$donnees_fournisseur) {
+            return FALSE;
+        }
+
+        /**
+         * Vrac
+         */
+        if ($module === "vrac") {
+            // RDV vrac
+            $requete_rdvs_vrac = $mysql->prepare(
+                "SELECT
             pl.date_rdv,
             pl.heure,
             p.nom AS produit_nom,
@@ -76,26 +76,26 @@ class PDFUtils
             produit_nom,
             qualite_nom,
             client_nom"
-      );
+            );
 
-      $requete_rdvs_vrac->execute([
-        'fournisseur' => $fournisseur,
-        'date_debut' => DateUtils::format(DateUtils::SQL_DATE, $date_debut),
-        'date_fin' => DateUtils::format(DateUtils::SQL_DATE, $date_fin)
-      ]);
+            $requete_rdvs_vrac->execute([
+                'fournisseur' => $fournisseur,
+                'date_debut' => DateUtils::format(DateUtils::SQL_DATE, $date_debut),
+                'date_fin' => DateUtils::format(DateUtils::SQL_DATE, $date_fin)
+            ]);
 
-      $rdvs = $requete_rdvs_vrac->fetchAll();
+            $rdvs = $requete_rdvs_vrac->fetchAll();
 
-      return new PDFVrac($donnees_fournisseur, $rdvs, $date_debut, $date_fin, $donnees_agence);
-    }
+            return new PDFVrac($donnees_fournisseur, $rdvs, $date_debut, $date_fin, $donnees_agence);
+        }
 
-    /**
-     * Bois
-     */
-    if ($module === "bois") {
-      // RDV bois planifiés
-      $requete_rdvs_bois_non_attente = $mysql->prepare(
-        "SELECT
+        /**
+         * Bois
+         */
+        if ($module === "bois") {
+            // RDV bois planifiés
+            $requete_rdvs_bois_non_attente = $mysql->prepare(
+                "SELECT
             pl.date_rdv,
             pl.numero_bl,
             pl.commentaire_public,
@@ -130,11 +130,11 @@ class PDFUtils
             date_rdv,
             numero_bl,
             client_nom"
-      );
+            );
 
-      // RDV bois en attente
-      $requete_rdvs_bois_attente = $mysql->prepare(
-        "SELECT
+            // RDV bois en attente
+            $requete_rdvs_bois_attente = $mysql->prepare(
+                "SELECT
             pl.date_rdv,
             pl.commentaire_public,
             ch.id AS chargement_id,
@@ -161,106 +161,106 @@ class PDFUtils
           ORDER BY
             -date_rdv DESC,
             client_nom"
-      );
+            );
 
-      $requete_rdvs_bois_non_attente->execute([
-        'fournisseur' => $fournisseur,
-        'date_debut' => DateUtils::format(DateUtils::SQL_DATE, $date_debut),
-        'date_fin' => DateUtils::format(DateUtils::SQL_DATE, $date_fin)
-      ]);
+            $requete_rdvs_bois_non_attente->execute([
+                'fournisseur' => $fournisseur,
+                'date_debut' => DateUtils::format(DateUtils::SQL_DATE, $date_debut),
+                'date_fin' => DateUtils::format(DateUtils::SQL_DATE, $date_fin)
+            ]);
 
-      $requete_rdvs_bois_attente->execute([
-        'fournisseur' => $fournisseur,
-      ]);
+            $requete_rdvs_bois_attente->execute([
+                'fournisseur' => $fournisseur,
+            ]);
 
-      $rdvs = [
-        "non_attente" => $requete_rdvs_bois_non_attente->fetchAll(),
-        "attente" => $requete_rdvs_bois_attente->fetchAll(),
-      ];
+            $rdvs = [
+                "non_attente" => $requete_rdvs_bois_non_attente->fetchAll(),
+                "attente" => $requete_rdvs_bois_attente->fetchAll(),
+            ];
 
-      return new PDFBois($donnees_fournisseur, $rdvs, $date_debut, $date_fin, $donnees_agence);
+            return new PDFBois($donnees_fournisseur, $rdvs, $date_debut, $date_fin, $donnees_agence);
+        }
     }
-  }
 
-  /**
-   * Renvoie un PDF sous forme `string` pour visualisation (téléchargement).
-   * 
-   * @param tFPDF $pdf Instance du PDF à visualiser.
-   * 
-   * @return string 
-   * @throws Exception 
-   */
-  public static function stringifyPDF(tFPDF $pdf)
-  {
-    return $pdf->Output('S');
-  }
-
-  /**
-   * Envoie un PDF par e-mail.
-   * 
-   * @param tFPDF    $pdf          PDF à envoyer.
-   * @param string   $module       Id du module.
-   * @param int      $fournisseur  Id du fournisseur.
-   * @param string   $liste_emails Adresses e-mail des destinataires.
-   * @param DateTime $date_debut   Date de début des RDV.
-   * @param DateTime $date_fin     Date de fin des RDV.
-   * 
-   * @return array Résultat de l'envoi.
-   */
-  public static function envoyerPDF(
-    tFPDF $pdf,
-    string $module,
-    int $fournisseur,
-    string $liste_emails,
-    DateTime $date_debut,
-    DateTime $date_fin
-  ): array {
     /**
-     * @var array $resultat Résultat de l'envoi.
+     * Renvoie un PDF sous forme `string` pour visualisation (téléchargement).
+     * 
+     * @param tFPDF $pdf Instance du PDF à visualiser.
+     * 
+     * @return string 
+     * @throws Exception 
      */
-    $resultat = [
-      "module" => $module,
-      "fournisseur" => $fournisseur,
-      "statut" => null,
-      "message" => null,
-      "adresses" => null,
-      "erreur" => null
-    ];
-
-    // Infos agence
-    $agence = (new MySQL)->query("SELECT * FROM config_agence WHERE service = 'transit'")->fetch();
-
-    try {
-      // Création e-mail
-      $mail = new PDFMailer(
-        $pdf,
-        $date_debut,
-        $date_fin,
-        $agence
-      );
-
-      // Adresses
-      $mail->ajouterAdresses(to: explode(PHP_EOL, $liste_emails));
-
-      $mail->send();
-      $mail->smtpClose();
-
-      $resultat["statut"] = "succes";
-      $resultat["message"] = "Le PDF a été envoyé avec succès.";
-      $resultat["adresses"] = $mail->getAllAddresses();
-    } catch (PHPMailerException $e) {
-      $resultat["statut"] = "echec";
-      $resultat["message"] = "Erreur : " . $mail->ErrorInfo;
-      $resultat["erreur"] = $e->errorMessage();
-      error_logger($e);
-    } catch (\Exception $e) {
-      $resultat["statut"] = "echec";
-      $resultat["message"] = "Erreur : " . $mail->ErrorInfo;
-      error_logger($e);
-    } finally {
-      unset($mail);
-
-      return $resultat;
+    public static function stringifyPDF(tFPDF $pdf)
+    {
+        return $pdf->Output('S');
     }
-  }
+
+    /**
+     * Envoie un PDF par e-mail.
+     * 
+     * @param tFPDF    $pdf          PDF à envoyer.
+     * @param string   $module       Id du module.
+     * @param int      $fournisseur  Id du fournisseur.
+     * @param string   $liste_emails Adresses e-mail des destinataires.
+     * @param DateTime $date_debut   Date de début des RDV.
+     * @param DateTime $date_fin     Date de fin des RDV.
+     * 
+     * @return array Résultat de l'envoi.
+     */
+    public static function sendPDF(
+        tFPDF $pdf,
+        string $module,
+        int $fournisseur,
+        string $liste_emails,
+        DateTime $date_debut,
+        DateTime $date_fin
+    ): array {
+        /**
+         * @var array $resultat Résultat de l'envoi.
+         */
+        $resultat = [
+            "module" => $module,
+            "fournisseur" => $fournisseur,
+            "statut" => null,
+            "message" => null,
+            "adresses" => null,
+            "erreur" => null
+        ];
+
+        // Infos agence
+        $agence = (new MySQL)->query("SELECT * FROM config_agence WHERE service = 'transit'")->fetch();
+
+        try {
+            // Création e-mail
+            $mail = new PDFMailer(
+                $pdf,
+                $date_debut,
+                $date_fin,
+                $agence
+            );
+
+            // Adresses
+            $mail->ajouterAdresses(to: explode(PHP_EOL, $liste_emails));
+
+            $mail->send();
+            $mail->smtpClose();
+
+            $resultat["statut"] = "succes";
+            $resultat["message"] = "Le PDF a été envoyé avec succès.";
+            $resultat["adresses"] = $mail->getAllAddresses();
+        } catch (PHPMailerException $e) {
+            $resultat["statut"] = "echec";
+            $resultat["message"] = "Erreur : " . $mail->ErrorInfo;
+            $resultat["erreur"] = $e->errorMessage();
+            error_logger($e);
+        } catch (\Exception $e) {
+            $resultat["statut"] = "echec";
+            $resultat["message"] = "Erreur : " . $mail->ErrorInfo;
+            error_logger($e);
+        } finally {
+            unset($mail);
+
+            return $resultat;
+        }
+    }
 }

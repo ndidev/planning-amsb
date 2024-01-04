@@ -9,7 +9,7 @@ require_once __DIR__ . "/error_info.php";
  */
 function error_logger(Throwable $e)
 {
-  $error_string = error_info($e, "string");
+    $error_string = error_info($e, "string");
 
-  error_log(PHP_EOL . $error_string);
+    error_log(PHP_EOL . $error_string);
 }

@@ -5,6 +5,7 @@ namespace App\Controllers\Utils;
 use App\Models\Utils\PortsModel;
 use App\Controllers\Controller;
 use App\Core\HTTP\ETag;
+use App\Core\Exceptions\Server\DB\DBException;
 
 class PortsController extends Controller
 {
@@ -14,7 +15,7 @@ class PortsController extends Controller
   public function __construct(
     private ?string $locode,
   ) {
-    parent::__construct();
+    parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
     $this->model = new PortsModel;
     $this->processRequest();
   }
@@ -23,11 +24,11 @@ class PortsController extends Controller
   {
     switch ($this->request->method) {
       case 'OPTIONS':
-        $this->response->setCode(204)->addHeader("Access-Control-Allow-Methods", "OPTIONS, HEAD, GET, POST, PUT, DELETE");
+        $this->response->setCode(204)->addHeader("Allow", $this->supported_methods);
         break;
 
-      case 'GET':
       case 'HEAD':
+      case 'GET':
         if ($this->locode) {
           $this->read($this->locode);
         } else {
@@ -48,7 +49,7 @@ class PortsController extends Controller
         break;
 
       default:
-        $this->response->setCode(405)->addHeader("Allow", "OPTIONS, HEAD, GET, POST, PUT, DELETE");
+        $this->response->setCode(405)->addHeader("Allow", $this->supported_methods);
         break;
     }
 
@@ -174,7 +175,7 @@ class PortsController extends Controller
       $this->response->setCode(204);
       notify_sse($this->sse_event, __FUNCTION__, $locode);
     } else {
-      throw new \Exception("Erreur lors de la suppression");
+      throw new DBException("Erreur lors de la suppression");
     }
   }
 }

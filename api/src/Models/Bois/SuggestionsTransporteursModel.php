@@ -6,37 +6,37 @@ use App\Models\Model;
 
 class SuggestionsTransporteursModel extends Model
 {
-  /**
-   * Récupère les transporteurs susceptibles d'effectuer
-   * un transport en un lieu de chargement et de livraison.
-   * 
-   * @param array $filtre Filtre qui contient chargement et livraison
-   */
-  public function readAll(array $filtre): array
-  {
-    $chargement_id = $filtre["chargement"];
-    $livraison_id = $filtre["livraison"];
+    /**
+     * Récupère les transporteurs susceptibles d'effectuer
+     * un transport en un lieu de chargement et de livraison.
+     * 
+     * @param array $filtre Filtre qui contient chargement et livraison
+     */
+    public function readAll(array $filtre): array
+    {
+        $chargement_id = $filtre["chargement"];
+        $livraison_id = $filtre["livraison"];
 
-    // Récupérer les infos du lieu de chargement et de livraison
-    $statement_lieu = "SELECT
+        // Récupérer les infos du lieu de chargement et de livraison
+        $statement_lieu = "SELECT
         id,
         SUBSTRING(cp, 1, 2) as cp,
         pays
       FROM tiers
       WHERE id = :id";
 
-    $requete_lieu = $this->mysql->prepare($statement_lieu);
+        $requete_lieu = $this->mysql->prepare($statement_lieu);
 
-    $requete_lieu->execute(["id" => $chargement_id]);
-    $donnees_chargement = $requete_lieu->fetch();
+        $requete_lieu->execute(["id" => $chargement_id]);
+        $donnees_chargement = $requete_lieu->fetch();
 
-    $requete_lieu->execute(["id" => $livraison_id]);
-    $donnees_livraison = $requete_lieu->fetch();
+        $requete_lieu->execute(["id" => $livraison_id]);
+        $donnees_livraison = $requete_lieu->fetch();
 
 
-    // Récupérer les transporteurs
-    // ayant fait des transports identiques ou similaires
-    $statement_transporteurs = "SELECT
+        // Récupérer les transporteurs
+        // ayant fait des transports identiques ou similaires
+        $statement_transporteurs = "SELECT
         COUNT(id) as transports,
         transporteur_nom as nom,
         transporteur_telephone as telephone
@@ -79,27 +79,27 @@ class SuggestionsTransporteursModel extends Model
       ORDER BY transports DESC
       LIMIT 10";
 
-    $requete_transporteurs = $this->mysql->prepare($statement_transporteurs);
+        $requete_transporteurs = $this->mysql->prepare($statement_transporteurs);
 
-    $requete_transporteurs->execute([
-      "chargement_id" => $chargement_id,
-      "chargement_cp" => $donnees_chargement["cp"],
-      "chargement_pays" => $donnees_chargement["pays"],
-      "livraison_id" => $livraison_id,
-      "livraison_cp" => $donnees_livraison["cp"],
-      "livraison_pays" => $donnees_livraison["pays"],
-    ]);
+        $requete_transporteurs->execute([
+            "chargement_id" => $chargement_id,
+            "chargement_cp" => $donnees_chargement["cp"],
+            "chargement_pays" => $donnees_chargement["pays"],
+            "livraison_id" => $livraison_id,
+            "livraison_cp" => $donnees_livraison["cp"],
+            "livraison_pays" => $donnees_livraison["pays"],
+        ]);
 
-    $donnees_transporteurs = $requete_transporteurs->fetchAll();
+        $donnees_transporteurs = $requete_transporteurs->fetchAll();
 
-    $suggestions = [
-      "chargement" => $donnees_chargement,
-      "livraison" => $donnees_livraison,
-      "transporteurs" => $donnees_transporteurs
-    ];
+        $suggestions = [
+            "chargement" => $donnees_chargement,
+            "livraison" => $donnees_livraison,
+            "transporteurs" => $donnees_transporteurs
+        ];
 
-    $donnees = $suggestions;
+        $donnees = $suggestions;
 
-    return $donnees;
-  }
+        return $donnees;
+    }
 }
