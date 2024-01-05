@@ -65,6 +65,7 @@
         chargement: rdv.chargement,
         transporteur: rdv.transporteur,
         affreteur: rdv.affreteur,
+        commande_prete: false,
         confirmation_affretement: false,
         attente: false,
         commentaire_public: "",
@@ -138,7 +139,9 @@
     background-color: transparent;
     border: none;
     padding: 12px;
-    font: bold 12px Arial, Helvetica;
+    font:
+      bold 12px Arial,
+      Helvetica;
     text-transform: uppercase;
     text-decoration: none;
     white-space: nowrap;
