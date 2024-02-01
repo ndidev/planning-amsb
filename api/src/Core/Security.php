@@ -71,7 +71,7 @@ class Security
     public static function check_if_request_can_be_done(): bool
     {
         if (static::is_ip_blocked() === true) {
-            return false;
+            // return false;
         }
 
         return true;
