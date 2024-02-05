@@ -123,13 +123,7 @@ class MareesModel extends Model
      */
     public function create(array $marees): void
     {
-        $statement = "INSERT INTO utils_marees_shom
-      VALUES(
-        :date,
-        :heure,
-        :hauteur
-      )
-    ";
+        $statement = "INSERT INTO utils_marees_shom VALUES(:date, :heure, :hauteur)";
 
         $requete = $this->mysql->prepare($statement);
 

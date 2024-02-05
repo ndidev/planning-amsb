@@ -7,6 +7,8 @@ use App\Controllers\Controller;
 use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Server\DB\DBException;
 
+use function PHPSTORM_META\map;
+
 class MareesController extends Controller
 {
     private $model;
@@ -138,15 +140,16 @@ class MareesController extends Controller
 
         $csv = $_FILES["csv"];
         $content = file_get_contents($csv["tmp_name"]);
+        // Supprimer le BOM
+        $content = str_replace("\u{FEFF}", "", $content);
+        // Supprimer le carriage return produit par Windows
+        $content = str_replace("\r", "", $content);
         $lines = explode(PHP_EOL, $content);
+
+        $separator = ";";
 
         $marees = [];
         foreach ($lines as $line) {
-            // Supprimer le carriage return produit par Windows
-            $line = str_replace("\r", "", $line);
-
-            $separator = ";";
-
             // Ne pas prendre en compte les lignes non conformes
             if (strpos($line, $separator) === false) continue;
             if (strlen($line) <= 2) continue;
