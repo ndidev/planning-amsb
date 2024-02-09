@@ -33,7 +33,7 @@
 <script lang="ts">
   import Item from "svelecte/src/components/Item.svelte";
   import { onDestroy, getContext } from "svelte";
-  import type { Stores } from "@app/types";
+  import type { Stores, Tiers } from "@app/types";
   import type { Unsubscriber } from "svelte/store";
 
   // form and CE
@@ -139,17 +139,7 @@
   /**
    * Rôle du tiers.
    */
-  export let role:
-    | "bois_fournisseur"
-    | "bois_client"
-    | "bois_transporteur"
-    | "bois_affreteur"
-    | "vrac_fournisseur"
-    | "vrac_client"
-    | "vrac_transporteur"
-    | "maritime_armateur"
-    | "maritime_affreteur"
-    | "maritime_courtier" = undefined;
+  export let role: keyof Tiers["roles"] = undefined;
 
   if (typesPredefinis.includes(type)) {
     valueField = "id";
@@ -166,7 +156,7 @@
     unsubscribe = tiers.subscribe((listeTiers) => {
       if (listeTiers) {
         options = [...listeTiers.values()]
-          .filter((tiers) => (role ? tiers[role] : true))
+          .filter((tiers) => (role ? tiers.roles[role] : true))
           .map((tiers): ItemFormat => {
             return {
               id: tiers.id,

@@ -7,6 +7,7 @@ use App\Controllers\Controller;
 use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Server\DB\DBException;
+use App\Entity\ThirdParty;
 
 class TiersController extends Controller
 {
@@ -32,9 +33,9 @@ class TiersController extends Controller
             case 'HEAD':
             case 'GET':
                 if ($this->id) {
-                    $this->read($this->id, $this->request->query);
+                    $this->read($this->id);
                 } else {
-                    $this->readAll($this->request->query);
+                    $this->readAll();
                 }
                 break;
 
@@ -64,11 +65,11 @@ class TiersController extends Controller
      * 
      * @param array $options Options de récupérations.
      */
-    public function readAll(array $options)
+    public function readAll()
     {
-        $donnees = $this->model->readAll($options);
+        $listeTiers = $this->model->readAll();
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($listeTiers);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -78,7 +79,11 @@ class TiersController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(
+                json_encode(
+                    array_map(fn (ThirdParty $tiers) => $tiers->toArray(), $listeTiers)
+                )
+            )
             ->setHeaders($this->headers);
     }
 
@@ -86,23 +91,22 @@ class TiersController extends Controller
      * Récupère un tiers.
      * 
      * @param int   $id      id du tiers à récupérer.
-     * @param array $options Options de récupération.
      * @param bool  $dry_run Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(int $id, ?array $options = [], ?bool $dry_run = false)
+    public function read(int $id, ?bool $dry_run = false)
     {
-        $donnees = $this->model->read($id, $options);
+        $tiers = $this->model->read($id);
 
-        if (!$donnees && !$dry_run) {
+        if (!$tiers && !$dry_run) {
             $this->response->setCode(404);
             return;
         }
 
         if ($dry_run) {
-            return $donnees;
+            return $tiers;
         }
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($tiers);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -112,7 +116,7 @@ class TiersController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($tiers->toArray()))
             ->setHeaders($this->headers);
     }
 
@@ -127,19 +131,19 @@ class TiersController extends Controller
 
         $input = $this->request->body;
 
-        $donnees = $this->model->create($input);
+        $tiers = $this->model->create($input);
 
-        $id = $donnees["id"];
+        $id = $tiers["id"];
 
         $this->headers["Location"] = $_ENV["API_URL"] . "/tiers/$id";
 
         $this->response
             ->setCode(201)
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($tiers->toArray()))
             ->setHeaders($this->headers)
             ->flush();
 
-        notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
+        notify_sse($this->sse_event, __FUNCTION__, $id, $tiers->toArray());
     }
 
     /**
@@ -160,14 +164,14 @@ class TiersController extends Controller
 
         $input = $this->request->body;
 
-        $donnees = $this->model->update($id, $input);
+        $tiers = $this->model->update($id, $input);
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($tiers->toArray()))
             ->setHeaders($this->headers)
             ->flush();
 
-        notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
+        notify_sse($this->sse_event, __FUNCTION__, $id, $tiers->toArray());
     }
 
     /**
