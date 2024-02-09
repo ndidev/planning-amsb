@@ -3,6 +3,7 @@
 namespace App\Models\Utils;
 
 use App\Models\Model;
+use App\Entity\Country;
 
 class PaysModel extends Model
 {
@@ -11,24 +12,24 @@ class PaysModel extends Model
     /**
      * Récupère tous les pays.
      * 
-     * @return array Tous les pays récupérés.
+     * @return array<int, \App\Entity\Country> Tous les pays récupérés.
      */
     public function readAll(): array
     {
         // Redis
-        $pays = json_decode($this->redis->get($this->redis_ns));
+        $listePaysRaw = json_decode($this->redis->get($this->redis_ns), true);
 
-        if (!$pays) {
+        if (!$listePaysRaw) {
             $statement = "SELECT * FROM utils_pays ORDER BY nom";
 
-            $pays = $this->mysql->query($statement)->fetchAll();
+            $listePaysRaw = $this->mysql->query($statement)->fetchAll();
 
-            $this->redis->set($this->redis_ns, json_encode($pays));
+            $this->redis->set($this->redis_ns, json_encode($listePaysRaw));
         }
 
-        $donnees = $pays;
+        $listePays = array_map(fn (array $paysRaw) => new Country($paysRaw), $listePaysRaw);
 
-        return $donnees;
+        return $listePays;
     }
 
     /**
@@ -36,25 +37,21 @@ class PaysModel extends Model
      * 
      * @param string $iso Code ISO du pays à récupérer
      * 
-     * @return array Pays récupéré
+     * @return ?Country Pays récupéré
      */
-    public function read($iso): ?array
+    public function read(string $iso): ?Country
     {
-        $statement =
-            "SELECT *
-        FROM utils_pays
-        WHERE iso = :iso";
+        $statement = "SELECT * FROM utils_pays  WHERE iso = :iso";
 
         $requete = $this->mysql->prepare($statement);
         $requete->execute(["iso" => $iso]);
-        $pays = $requete->fetch();
+        $paysRaw = $requete->fetch();
 
-        if (!$pays) return null;
+        if (!$paysRaw) return null;
 
+        $pays = new Country($paysRaw);
 
-        $donnees = $pays;
-
-        return $donnees;
+        return $pays;
     }
 
     /**
@@ -62,9 +59,9 @@ class PaysModel extends Model
      * 
      * @param array $input Eléments du pays à créer
      * 
-     * @return array Pays créé
+     * @return Country Pays créé
      */
-    public function create(array $input): array
+    public function create(array $input): Country
     {
         $statement =
             "INSERT INTO utils_pays
@@ -95,9 +92,9 @@ class PaysModel extends Model
      * @param string $iso    Code ISO du pays à modifier
      * @param array  $input  Eléments du paus à modifier
      * 
-     * @return array Pays modifié
+     * @return Country Pays modifié
      */
-    public function update($iso, array $input): array
+    public function update($iso, array $input): Country
     {
         $statement =
             "UPDATE utils_pays
@@ -122,7 +119,7 @@ class PaysModel extends Model
      * 
      * @return bool TRUE si succès, FALSE si erreur
      */
-    public function delete($iso): bool
+    public function delete(string $iso): bool
     {
         $requete = $this->mysql->prepare("DELETE FROM utils_pays WHERE iso = :iso");
         $succes = $requete->execute(["iso" => $iso]);

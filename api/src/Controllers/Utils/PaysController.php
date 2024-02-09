@@ -6,6 +6,7 @@ use App\Models\Utils\PaysModel;
 use App\Controllers\Controller;
 use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Server\DB\DBException;
+use App\Entity\Country;
 
 class PaysController extends Controller
 {
@@ -62,9 +63,9 @@ class PaysController extends Controller
      */
     public function readAll()
     {
-        $donnees = $this->model->readAll();
+        $listePays = $this->model->readAll();
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($listePays);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -75,7 +76,11 @@ class PaysController extends Controller
         $this->headers["Cache-control"] = "max-age=31557600, must-revalidate";
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(
+                json_encode(
+                    array_map(fn (Country $pays) => $pays->toArray(), $listePays)
+                )
+            )
             ->setHeaders($this->headers);
     }
 
@@ -87,9 +92,9 @@ class PaysController extends Controller
      */
     public function read(string $iso, ?bool $dry_run = false)
     {
-        $donnees = $this->model->read($iso);
+        $pays = $this->model->read($iso);
 
-        if (!$donnees && !$dry_run) {
+        if (!$pays && !$dry_run) {
             $message = "Not Found";
             $documentation = $_ENV["API_URL"] . "/doc/#/Consignation/lireEscaleConsignation";
             $body = json_encode(["message" => $message, "documentation_url" => $documentation]);
@@ -98,10 +103,10 @@ class PaysController extends Controller
         }
 
         if ($dry_run) {
-            return $donnees;
+            return $pays;
         }
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($pays);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -112,7 +117,7 @@ class PaysController extends Controller
         $this->headers["Cache-control"] = "max-age=31557600, must-revalidate";
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($pays->toArray()))
             ->setHeaders($this->headers);
     }
 
@@ -123,18 +128,18 @@ class PaysController extends Controller
     {
         $input = $this->request->body;
 
-        $donnees = $this->model->create($input);
+        $pays = $this->model->create($input);
 
-        $iso = $donnees["iso"];
+        $iso = $pays->getISO();
 
         $this->headers["Location"] = $_ENV["API_URL"] . "/consignation/escales/$iso";
 
         $this->response
             ->setCode(201)
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($pays->toArray()))
             ->setHeaders($this->headers);
 
-        notify_sse($this->sse_event, __FUNCTION__, $iso, $donnees);
+        notify_sse($this->sse_event, __FUNCTION__, $iso, $pays->toArray());
     }
 
     /**
@@ -151,13 +156,13 @@ class PaysController extends Controller
 
         $input = $this->request->body;
 
-        $donnees = $this->model->update($iso, $input);
+        $pays = $this->model->update($iso, $input);
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($pays->toArray()))
             ->setHeaders($this->headers);
 
-        notify_sse($this->sse_event, __FUNCTION__, $iso, $donnees);
+        notify_sse($this->sse_event, __FUNCTION__, $iso, $pays->toArray());
     }
 
     /**
