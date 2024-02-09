@@ -3,6 +3,7 @@
 namespace App\Models\Utils;
 
 use App\Models\Model;
+use App\Entity\Port;
 
 class PortsModel extends Model
 {
@@ -11,24 +12,24 @@ class PortsModel extends Model
     /**
      * Récupère tous les ports.
      * 
-     * @return array Tous les ports récupérés.
+     * @return array<int, \App\Entity\Port> Tous les ports récupérés.
      */
     public function readAll(): array
     {
         // Redis
-        $ports = json_decode($this->redis->get($this->redis_ns));
+        $portsRaw = json_decode($this->redis->get($this->redis_ns), true);
 
-        if (!$ports) {
+        if (!$portsRaw) {
             $statement = "SELECT * FROM utils_ports ORDER BY SUBSTRING(locode, 1, 2), nom";
 
-            $ports = $this->mysql->query($statement)->fetchAll();
+            $portsRaw = $this->mysql->query($statement)->fetchAll();
 
-            $this->redis->set($this->redis_ns, json_encode($ports));
+            $this->redis->set($this->redis_ns, json_encode($portsRaw));
         }
 
-        $donnees = $ports;
+        $listePorts = array_map(fn (array $portRaw) => new Port($portRaw), $portsRaw);
 
-        return $donnees;
+        return $listePorts;
     }
 
     /**
@@ -36,9 +37,9 @@ class PortsModel extends Model
      * 
      * @param string $locode UNLOCODE du port à récupérer
      * 
-     * @return array Port récupéré
+     * @return ?Port Port récupéré
      */
-    public function read($locode): ?array
+    public function read($locode): ?Port
     {
         $statement = "SELECT *
       FROM utils_ports
@@ -46,14 +47,13 @@ class PortsModel extends Model
 
         $requete = $this->mysql->prepare($statement);
         $requete->execute(["locode" => $locode]);
-        $port = $requete->fetch();
+        $portRaw = $requete->fetch();
 
-        if (!$port) return null;
+        if (!$portRaw) return null;
 
+        $port = new Port($portRaw);
 
-        $donnees = $port;
-
-        return $donnees;
+        return $port;
     }
 
     /**
@@ -61,9 +61,9 @@ class PortsModel extends Model
      * 
      * @param array $input Eléments du port à créer
      * 
-     * @return array Port créé
+     * @return Port Port créé
      */
-    public function create(array $input): array
+    public function create(array $input): Port
     {
         $statement = "INSERT INTO utils_ports
       VALUES(
@@ -93,9 +93,9 @@ class PortsModel extends Model
      * @param string $locode UNLOCODE du port à modifier
      * @param array  $input  Eléments du port à modifier
      * 
-     * @return array Port modifié
+     * @return Port Port modifié
      */
-    public function update($locode, array $input): array
+    public function update($locode, array $input): Port
     {
         $statement = "UPDATE utils_ports
       SET nom = :nom

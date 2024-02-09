@@ -6,6 +6,7 @@ use App\Models\Utils\PortsModel;
 use App\Controllers\Controller;
 use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Server\DB\DBException;
+use App\Entity\Port;
 
 class PortsController extends Controller
 {
@@ -62,9 +63,9 @@ class PortsController extends Controller
    */
   public function readAll()
   {
-    $donnees = $this->model->readAll();
+    $listePorts = $this->model->readAll();
 
-    $etag = ETag::get($donnees);
+    $etag = ETag::get($listePorts);
 
     if ($this->request->etag === $etag) {
       $this->response->setCode(304);
@@ -75,7 +76,11 @@ class PortsController extends Controller
     $this->headers["Cache-control"] = "max-age=31557600, must-revalidate";
 
     $this->response
-      ->setBody(json_encode($donnees))
+      ->setBody(
+        json_encode(
+          array_map(fn (Port $port) => $port->toArray(), $listePorts)
+        )
+      )
       ->setHeaders($this->headers);
   }
 
@@ -109,7 +114,7 @@ class PortsController extends Controller
     $this->headers["Cache-control"] = "max-age=31557600, must-revalidate";
 
     $this->response
-      ->setBody(json_encode($donnees))
+      ->setBody(json_encode($donnees->toArray()))
       ->setHeaders($this->headers);
   }
 
@@ -128,10 +133,10 @@ class PortsController extends Controller
 
     $this->response
       ->setCode(201)
-      ->setBody(json_encode($donnees))
+      ->setBody(json_encode($donnees->toArray()))
       ->setHeaders($this->headers);
 
-    notify_sse($this->sse_event, __FUNCTION__, $locode, $donnees);
+    notify_sse($this->sse_event, __FUNCTION__, $locode, $donnees->toArray());
   }
 
   /**
@@ -151,10 +156,10 @@ class PortsController extends Controller
     $donnees = $this->model->update($locode, $input);
 
     $this->response
-      ->setBody(json_encode($donnees))
+      ->setBody(json_encode($donnees->toArray()))
       ->setHeaders($this->headers);
 
-    notify_sse($this->sse_event, __FUNCTION__, $locode, $donnees);
+    notify_sse($this->sse_event, __FUNCTION__, $locode, $donnees->toArray());
   }
 
   /**
