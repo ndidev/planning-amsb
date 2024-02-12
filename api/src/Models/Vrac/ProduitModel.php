@@ -2,6 +2,7 @@
 
 namespace App\Models\Vrac;
 
+use App\Entity\BulkProduct;
 use App\Models\Model;
 
 class ProduitModel extends Model
@@ -19,28 +20,41 @@ class ProduitModel extends Model
     /**
      * Récupère tous les produits vrac.
      * 
-     * @return array Liste des produits vrac
+     * @return array<int, \App\Entity\BulkProduct> Liste des produits vrac
      */
     public function readAll(): array
     {
-        $statement_produits = "SELECT * FROM vrac_produits ORDER BY nom";
-        $statement_qualites = "SELECT * FROM vrac_qualites ORDER BY nom";
+        $productsStatement = "SELECT * FROM vrac_produits ORDER BY nom";
+        $qualitiesStatement = "SELECT * FROM vrac_qualites ORDER BY nom";
 
         // Produits
-        $requete_produits = $this->mysql->query($statement_produits);
-        $produits = $requete_produits->fetchAll();
+        $productsRequest = $this->mysql->query($productsStatement);
+        $productsRaw = $productsRequest->fetchAll();
 
         // Qualités
-        $requete_qualites = $this->mysql->query($statement_qualites);
-        $qualites = $requete_qualites->fetchAll();
+        $qualitiesRequest = $this->mysql->query($qualitiesStatement);
+        $qualitiesRaw = $qualitiesRequest->fetchAll();
 
-        foreach ($produits as &$produit) {
-            $produit["qualites"] = array_values(array_filter($qualites, fn ($qualite) => $qualite["produit"] === $produit["id"]));
-        }
+        $products = array_map(
+            function (array $productRaw) use ($qualitiesRaw) {
+                $product = new BulkProduct($productRaw);
 
-        $donnees = $produits;
+                $productQualities =
+                    array_values(
+                        array_filter(
+                            $qualitiesRaw,
+                            fn (array $quality) => $quality["produit"] === $productRaw["id"]
+                        )
+                    );
 
-        return $donnees;
+                $product->setQualities($productQualities);
+
+                return $product;
+            },
+            $productsRaw
+        );
+
+        return $products;
     }
 
     /**
@@ -48,40 +62,40 @@ class ProduitModel extends Model
      * 
      * @param int $id ID du produit à récupérer
      * 
-     * @return array Produit récupéré
+     * @return ?BulkProduct Produit récupéré
      */
-    public function read($id): ?array
+    public function read(int $id): ?BulkProduct
     {
-        $statement_produit =
+        $productStatement =
             "SELECT
-        id,
-        nom,
-        couleur,
-        unite
-      FROM vrac_produits
-      WHERE id = :id";
+                id,
+                nom,
+                couleur,
+                unite
+            FROM vrac_produits
+            WHERE id = :id";
 
-        $statement_qualites =
+        $qualitiesStatement =
             "SELECT *
-        FROM vrac_qualites
-        WHERE produit = :produit
-        ORDER BY nom";
+            FROM vrac_qualites
+            WHERE produit = :produit
+            ORDER BY nom";
 
         // Produit
-        $requete_produit = $this->mysql->prepare($statement_produit);
-        $requete_produit->execute(["id" => $id]);
-        $produit = $requete_produit->fetch();
+        $productRequest = $this->mysql->prepare($productStatement);
+        $productRequest->execute(["id" => $id]);
+        $productRaw = $productRequest->fetch();
 
-        if (!$produit) return null;
+        if (!$productRaw) return null;
 
         // Qualités
-        $requete_qualites = $this->mysql->prepare($statement_qualites);
-        $requete_qualites->execute(["produit" => $id]);
-        $produit["qualites"] = $requete_qualites->fetchAll();
+        $qualitiesRequest = $this->mysql->prepare($qualitiesStatement);
+        $qualitiesRequest->execute(["produit" => $id]);
+        $qualitiesRaw = $qualitiesRequest->fetchAll();
 
-        $donnees = $produit;
+        $product = (new BulkProduct($productRaw))->setQualities($qualitiesRaw);
 
-        return $donnees;
+        return $product;
     }
 
     /**
@@ -89,27 +103,27 @@ class ProduitModel extends Model
      * 
      * @param array $input Eléments du produit à créer
      * 
-     * @return array Produit créé
+     * @return BulkProduct Produit créé
      */
-    public function create(array $input): array
+    public function create(array $input): BulkProduct
     {
         $statement_produit =
             "INSERT INTO vrac_produits
-        VALUES(
-          NULL,
-          :nom,
-          :couleur,
-          :unite
-        )";
+            VALUES(
+                NULL,
+                :nom,
+                :couleur,
+                :unite
+            )";
 
         $statement_qualites =
             "INSERT INTO vrac_qualites
-        VALUES(
-          NULL,
-          :produit,
-          :nom,
-          :couleur
-        )";
+            VALUES(
+                NULL,
+                :produit,
+                :nom,
+                :couleur
+            )";
 
         $requete_produit = $this->mysql->prepare($statement_produit);
 
@@ -142,33 +156,33 @@ class ProduitModel extends Model
      * @param int   $id     ID du produit à modifier
      * @param array $input  Eléments du produit à modifier
      * 
-     * @return array Produit modifié
+     * @return BulkProduct Produit modifié
      */
-    public function update($id, array $input): array
+    public function update($id, array $input): BulkProduct
     {
         $statement_produit =
             "UPDATE vrac_produits
-        SET
-          nom = :nom,
-          couleur = :couleur,
-          unite = :unite
-        WHERE id = :id";
+            SET
+                nom = :nom,
+                couleur = :couleur,
+                unite = :unite
+            WHERE id = :id";
 
         $statement_qualites_ajout =
             "INSERT INTO vrac_qualites
-        VALUES(
-          NULL,
-          :produit,
-          :nom,
-          :couleur
-        )";
+            VALUES(
+                NULL,
+                :produit,
+                :nom,
+                :couleur
+            )";
 
         $statement_qualites_modif =
             "UPDATE vrac_qualites
-        SET
-          nom = :nom,
-          couleur = :couleur
-        WHERE id = :id";
+            SET
+                nom = :nom,
+                couleur = :couleur
+            WHERE id = :id";
 
         $requete_produit = $this->mysql->prepare($statement_produit);
         $requete_produit->execute([

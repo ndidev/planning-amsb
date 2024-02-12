@@ -7,6 +7,7 @@ use App\Controllers\Controller;
 use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Server\DB\DBException;
+use App\Entity\BulkProduct;
 
 class ProduitController extends Controller
 {
@@ -68,9 +69,9 @@ class ProduitController extends Controller
       throw new AccessException();
     }
 
-    $donnees = $this->model->readAll();
+    $products = $this->model->readAll();
 
-    $etag = ETag::get($donnees);
+    $etag = ETag::get($products);
 
     if ($this->request->etag === $etag) {
       $this->response->setCode(304);
@@ -80,7 +81,11 @@ class ProduitController extends Controller
     $this->headers["ETag"] = $etag;
 
     $this->response
-      ->setBody(json_encode($donnees))
+      ->setBody(
+        json_encode(
+          array_map(fn (BulkProduct $product) => $product->toArray(), $products)
+        )
+      )
       ->setHeaders($this->headers);
   }
 
@@ -96,18 +101,18 @@ class ProduitController extends Controller
       throw new AccessException();
     }
 
-    $donnees = $this->model->read($id);
+    $product = $this->model->read($id);
 
-    if (!$donnees && !$dry_run) {
+    if (!$product && !$dry_run) {
       $this->response->setCode(404);
       return;
     }
 
     if ($dry_run) {
-      return $donnees;
+      return $product;
     }
 
-    $etag = ETag::get($donnees);
+    $etag = ETag::get($product);
 
     if ($this->request->etag === $etag) {
       $this->response->setCode(304);
@@ -117,7 +122,7 @@ class ProduitController extends Controller
     $this->headers["ETag"] = $etag;
 
     $this->response
-      ->setBody(json_encode($donnees))
+      ->setBody(json_encode($product?->toArray()))
       ->setHeaders($this->headers);
   }
 
@@ -132,19 +137,19 @@ class ProduitController extends Controller
 
     $input = $this->request->body;
 
-    $donnees = $this->model->create($input);
+    $product = $this->model->create($input);
 
-    $id = $donnees["id"];
+    $id = $product["id"];
 
     $this->headers["Location"] = $_ENV["API_URL"] . "/vrac/produits/$id";
 
     $this->response
       ->setCode(201)
-      ->setBody(json_encode($donnees))
+      ->setBody(json_encode($product->toArray()))
       ->setHeaders($this->headers)
       ->flush();
 
-    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
+    notify_sse($this->sse_event, __FUNCTION__, $id, $product->toArray());
   }
 
   /**
@@ -165,14 +170,14 @@ class ProduitController extends Controller
 
     $input = $this->request->body;
 
-    $donnees = $this->model->update($id, $input);
+    $product = $this->model->update($id, $input);
 
     $this->response
-      ->setBody(json_encode($donnees))
+      ->setBody(json_encode($product->toArray()))
       ->setHeaders($this->headers)
       ->flush();
 
-    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
+    notify_sse($this->sse_event, __FUNCTION__, $id, $product->toArray());
   }
 
   /**
