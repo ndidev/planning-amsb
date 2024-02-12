@@ -83,4 +83,16 @@ class ThirdPartyService
     {
         return $this->thirdPartyRepository->deleteThirdParty($id);
     }
+
+    /**
+     * Récupère le nombre de RDV pour un tiers ou tous les tiers.
+     * 
+     * @param int $id Optionnel. ID du tiers à récupérer.
+     * 
+     * @return array Nombre de RDV pour le(s) tiers.
+     */
+    public function getThirdPartyAppointmentCount(?int $id = null): array
+    {
+        return $this->thirdPartyRepository->getAppointmentCount($id);
+    }
 }

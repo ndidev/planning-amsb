@@ -2,20 +2,20 @@
 
 namespace App\Controllers\Tiers;
 
-use App\Models\Tiers\NombreRdvModel;
+use App\Service\ThirdPartyService;
 use App\Controllers\Controller;
 use App\Core\HTTP\ETag;
 
 class NombreRdvController extends Controller
 {
-    private $model;
+    private ThirdPartyService $service;
     private $module = "tiers";
 
     public function __construct(
-        private ?int $id,
+        private ?int $id = null,
     ) {
         parent::__construct();
-        $this->model = new NombreRdvModel;
+        $this->service = new ThirdPartyService();
         $this->processRequest();
     }
 
@@ -28,11 +28,7 @@ class NombreRdvController extends Controller
 
             case 'HEAD':
             case 'GET':
-                if ($this->id) {
-                    $this->read($this->id, $this->request->query);
-                } else {
-                    $this->readAll($this->request->query);
-                }
+                $this->read($this->id);
                 break;
 
             default:
@@ -45,49 +41,25 @@ class NombreRdvController extends Controller
     }
 
     /**
-     * Récupère le nombre de RDV pour tous les tiers.
-     * 
-     * @param array $options Options de récupérations.
-     */
-    public function readAll(array $options)
-    {
-        $donnees = $this->model->readAll($options);
-
-        $etag = ETag::get($donnees);
-
-        if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
-            return;
-        }
-
-        $this->headers["ETag"] = $etag;
-
-        $this->response
-            ->setBody(json_encode($donnees))
-            ->setHeaders($this->headers);
-    }
-
-    /**
      * Récupère le nombre de RDV pour un tiers.
      * 
      * @param int   $id      id du tiers à récupérer.
-     * @param array $options Options de récupération.
      * @param bool  $dry_run Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(int $id, ?array $options = [], ?bool $dry_run = false)
+    public function read(?int $id, ?bool $dry_run = false)
     {
-        $donnees = $this->model->read($id, $options);
-
-        if (!$donnees && !$dry_run) {
+        if ($id && !$this->service->thirdPartyExists($id) && !$dry_run) {
             $this->response->setCode(404);
             return;
         }
 
+        $appointmentCount = $this->service->getThirdPartyAppointmentCount($id);
+
         if ($dry_run) {
-            return $donnees;
+            return $appointmentCount;
         }
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($appointmentCount);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -97,7 +69,7 @@ class NombreRdvController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($appointmentCount))
             ->setHeaders($this->headers);
     }
 }

@@ -7,15 +7,15 @@ use App\Core\Interfaces\Arrayable;
 class ThirdParty implements Arrayable
 {
     private ?int $id;
-    private string $nom_court;
-    private string $nom_complet;
-    private string $adresse_ligne_1;
-    private string $adresse_ligne_2;
-    private string $cp;
-    private string $ville;
-    private Country $pays;
-    private string $telephone;
-    private string $commentaire;
+    private string $shortName;
+    private string $fullName;
+    private string $addressLine1;
+    private string $addressLine2;
+    private string $postCode;
+    private string $city;
+    private Country $country;
+    private string $phone;
+    private string $comments;
     private array $roles = [
         "bois_fournisseur" => false,
         "bois_client" => false,
@@ -28,30 +28,32 @@ class ThirdParty implements Arrayable
         "maritime_affreteur" => false,
         "maritime_courtier" => false,
     ];
-    private bool $non_modifiable;
-    private bool $lie_agence;
+    private bool $nonEditable;
+    private bool $isAgency;
     private ?string $logo;
-    private bool $actif;
+    private bool $active;
+    private int $appointmentCount = 0;
 
     public function __construct(array $rawData = [])
     {
         $this->setId($rawData["id"] ?? null);
-        $this->setNomCourt($rawData["nom_court"] ?? "");
-        $this->setNomComplet($rawData["nom_complet"] ?? "");
-        $this->setAdresseLigne1($rawData["adresse_ligne_1"] ?? "");
-        $this->setAdresseLigne2($rawData["adresse_ligne_2"] ?? "");
-        $this->setCodePostal($rawData["cp"] ?? "");
-        $this->setVille($rawData["ville"] ?? "");
+        $this->setShortName($rawData["nom_court"] ?? "");
+        $this->setFullName($rawData["nom_complet"] ?? "");
+        $this->setAddressLine1($rawData["adresse_ligne_1"] ?? "");
+        $this->setAddressLine2($rawData["adresse_ligne_2"] ?? "");
+        $this->setPostCode($rawData["cp"] ?? "");
+        $this->setCity($rawData["ville"] ?? "");
         $this->setCountry((new Country())->setISO($rawData["pays"] ?? ""));
-        $this->setTelephone($rawData["telephone"] ?? "");
-        $this->setCommentaire($rawData["commentaire"] ?? "");
+        $this->setPhone($rawData["telephone"] ?? "");
+        $this->setComments($rawData["commentaire"] ?? "");
         foreach ($this->roles as $role => $value) {
             $this->setRole($role, $rawData[$role] ?? false);
         }
-        $this->setNonModifiable($rawData["non_modifiable"] ?? false);
-        $this->setLieAgence($rawData["lie_agence"] ?? false);
+        $this->setNonEditable($rawData["non_modifiable"] ?? false);
+        $this->setIsAgency($rawData["lie_agence"] ?? false);
         $this->setLogo($rawData["logo"] ?? null);
-        $this->setActif($rawData["actif"] ?? true);
+        $this->setActive($rawData["actif"] ?? true);
+        $this->setAppointmentCount($rawData["nombre_rdv"] ?? 0);
     }
 
     public function getId(): ?int
@@ -66,112 +68,117 @@ class ThirdParty implements Arrayable
         return $this;
     }
 
-    public function getNomCourt(): string
+    public function getShortName(): string
     {
-        return $this->nom_court;
+        return $this->shortName;
     }
 
-    public function setNomCourt(string $nom_court): static
+    public function setShortName(string $shortName): static
     {
-        $this->nom_court = $nom_court;
+        $this->shortName = $shortName;
 
         return $this;
     }
 
-    public function getNomComplet(): string
+    public function getFullName(): string
     {
-        return $this->nom_complet;
+        return $this->fullName;
     }
 
-    public function setNomComplet(string $nom_complet): static
+    public function setFullName(string $fullName): static
     {
-        $this->nom_complet = $nom_complet;
+        $this->fullName = $fullName;
 
         return $this;
     }
 
-    public function getAdresseLigne1(): string
+    public function getAddressLine1(): string
     {
-        return $this->adresse_ligne_1;
+        return $this->addressLine1;
     }
 
-    public function setAdresseLigne1(string $adresse_ligne_1): static
+    public function setAddressLine1(string $addressLine1): static
     {
-        $this->adresse_ligne_1 = $adresse_ligne_1;
+        $this->addressLine1 = $addressLine1;
 
         return $this;
     }
 
-    public function getAdresseLigne2(): string
+    public function getAddressLine2(): string
     {
-        return $this->adresse_ligne_2;
+        return $this->addressLine2;
     }
 
-    public function setAdresseLigne2(string $adresse_ligne_2): static
+    public function setAddressLine2(string $addressLine2): static
     {
-        $this->adresse_ligne_2 = $adresse_ligne_2;
+        $this->addressLine2 = $addressLine2;
 
         return $this;
     }
 
-    public function getCodePostal(): string
+    public function getPostCode(): string
     {
-        return $this->cp;
+        return $this->postCode;
     }
 
-    public function setCodePostal(string $cp): static
+    public function setPostCode(string $postCode): static
     {
-        $this->cp = $cp;
+        $this->postCode = $postCode;
 
         return $this;
     }
 
-    public function getVille(): string
+    public function getCity(): string
     {
-        return $this->ville;
+        return $this->city;
     }
 
-    public function setVille(string $ville): static
+    public function setCity(string $city): static
     {
-        $this->ville = $ville;
+        $this->city = $city;
 
         return $this;
     }
 
-    public function getPays(): Country
+    public function getCountry(): Country
     {
-        return $this->pays;
+        return $this->country;
     }
 
-    public function setCountry(Country $pays): static
+    public function setCountry(Country $country): static
     {
-        $this->pays = $pays;
+        $this->country = $country;
 
         return $this;
     }
 
-    public function getTelephone(): string
+    public function getPhone(): string
     {
-        return $this->telephone;
+        return $this->phone;
     }
 
-    public function setTelephone(string $telephone): static
+    public function setPhone(string $phone): static
     {
-        $this->telephone = $telephone;
+        $this->phone = $phone;
 
         return $this;
     }
 
-    public function getCommentaire(): string
+    public function getComments(): string
     {
-        return $this->commentaire;
+        return $this->comments;
     }
 
-    public function setCommentaire(string $commentaire): static
+    public function setComments(string $comments): static
     {
-        $this->commentaire = $commentaire;
+        $this->comments = $comments;
 
         return $this;
+    }
+
+    public function getRoles(): array
+    {
+        return $this->roles;
     }
 
     public function getRole(string $role): bool
@@ -186,26 +193,26 @@ class ThirdParty implements Arrayable
         return $this;
     }
 
-    public function getNonModifiable(): bool
+    public function getNonEditable(): bool
     {
-        return $this->non_modifiable;
+        return $this->nonEditable;
     }
 
-    public function setNonModifiable(bool|int $non_modifiable): static
+    public function setNonEditable(bool|int $nonEditable): static
     {
-        $this->non_modifiable = (bool) $non_modifiable;
+        $this->nonEditable = (bool) $nonEditable;
 
         return $this;
     }
 
-    public function getLieAgence(): bool
+    public function getIsAgency(): bool
     {
-        return $this->lie_agence;
+        return $this->isAgency;
     }
 
-    public function setLieAgence(bool|int $lie_agence): static
+    public function setIsAgency(bool|int $isAgency): static
     {
-        $this->lie_agence = (bool) $lie_agence;
+        $this->isAgency = (bool) $isAgency;
 
         return $this;
     }
@@ -226,14 +233,26 @@ class ThirdParty implements Arrayable
         return $this;
     }
 
-    public function getActif(): bool
+    public function getActive(): bool
     {
-        return $this->actif;
+        return $this->active;
     }
 
-    public function setActif(bool|int $actif): static
+    public function setActive(bool|int $active): static
     {
-        $this->actif = (bool) $actif;
+        $this->active = (bool) $active;
+
+        return $this;
+    }
+
+    public function getAppointmentCount(): int
+    {
+        return $this->appointmentCount;
+    }
+
+    public function setAppointmentCount(int $appointmentCount): static
+    {
+        $this->appointmentCount = $appointmentCount;
 
         return $this;
     }
@@ -242,20 +261,21 @@ class ThirdParty implements Arrayable
     {
         return [
             "id" => $this->id,
-            "nom_court" => $this->nom_court,
-            "nom_complet" => $this->nom_complet,
-            "adresse_ligne_1" => $this->adresse_ligne_1,
-            "adresse_ligne_2" => $this->adresse_ligne_2,
-            "cp" => $this->cp,
-            "ville" => $this->ville,
-            "pays" => $this->pays->getISO(),
-            "telephone" => $this->telephone,
-            "commentaire" => $this->commentaire,
-            "roles" => $this->roles,
-            "non_modifiable" => $this->non_modifiable,
-            "lie_agence" => $this->lie_agence,
-            "logo" => $this->logo,
-            "actif" => $this->actif,
+            "nom_court" => $this->getShortName(),
+            "nom_complet" => $this->getFullName(),
+            "adresse_ligne_1" => $this->getAddressLine1(),
+            "adresse_ligne_2" => $this->getAddressLine2(),
+            "cp" => $this->getPostCode(),
+            "ville" => $this->getCity(),
+            "pays" => $this->country->getISO(),
+            "telephone" => $this->getPhone(),
+            "commentaire" => $this->getComments(),
+            "roles" => $this->getRoles(),
+            "non_modifiable" => $this->getNonEditable(),
+            "lie_agence" => $this->getIsAgency(),
+            "logo" => $this->getLogo(),
+            "actif" => $this->getActive(),
+            "nombre_rdv" => $this->getAppointmentCount(),
         ];
     }
 }

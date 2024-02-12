@@ -3,7 +3,6 @@
 namespace App\Repository;
 
 use App\Entity\ThirdParty;
-use App\Models\Tiers\NombreRdvModel;
 use App\Core\Exceptions\Server\DB\DBException;
 
 class ThirdPartyRepository extends Repository
@@ -242,19 +241,19 @@ class ThirdPartyRepository extends Repository
      */
     public function deleteThirdParty(int $id): bool
     {
-        $nombre_rdv = (new NombreRdvModel())->read($id)["nombre_rdv"];
-        if ($nombre_rdv > 0) {
-            throw new \Exception("Le tiers est concerné par $nombre_rdv rdv. Impossible de le supprimer.");
+        $appointmentCount = $this->getAppointmentCount($id);
+        if ($appointmentCount > 0) {
+            throw new \Exception("Le tiers est concerné par $appointmentCount rdv. Impossible de le supprimer.");
         }
 
-        $requete = $this->mysql->prepare("DELETE FROM tiers WHERE id = :id");
-        $succes = $requete->execute(["id" => $id]);
+        $req = $this->mysql->prepare("DELETE FROM tiers WHERE id = :id");
+        $success = $req->execute(["id" => $id]);
 
-        if (!$succes) {
+        if (!$success) {
             throw new DBException("Erreur lors de la suppression");
         }
 
-        return $succes;
+        return $success;
     }
 
     /**
@@ -313,5 +312,122 @@ class ThirdPartyRepository extends Repository
             error_logger($e);
             return false;
         }
+    }
+
+    /**
+     * Récupère le nombre de RDV pour un tiers ou tous les tiers.
+     * 
+     * @param int $id Optionnel. ID du tiers à récupérer.
+     * 
+     * @return array Nombre de RDV pour le(s) tiers.
+     */
+    public function getAppointmentCount(?int $id = null): array
+    {
+        $statementWithoutId =
+            "SELECT 
+                t.id,
+                (
+                (SELECT COUNT(v.id)
+                    FROM vrac_planning v
+                    WHERE t.id IN (
+                    v.client,
+                    v.transporteur,
+                    v.fournisseur
+                    )
+                )
+                +
+                (SELECT COUNT(b.id)
+                    FROM bois_planning b
+                    WHERE t.id IN (
+                    b.client,
+                    b.chargement,
+                    b.livraison,
+                    b.transporteur,
+                    b.affreteur,
+                    b.fournisseur
+                    )
+                )
+                +
+                (SELECT COUNT(c.id)
+                    FROM consignation_planning c
+                    WHERE t.id IN (
+                    c.armateur
+                    )
+                )
+                +
+                (SELECT COUNT(ch.id)
+                    FROM chartering_registre ch
+                    WHERE t.id IN (
+                    ch.armateur,
+                    ch.affreteur,
+                    ch.courtier
+                    )
+                )
+                ) AS nombre_rdv
+            FROM tiers t
+            ";
+
+        $statementWithId =
+            "SELECT 
+                t.id,
+                (
+                (SELECT COUNT(v.id)
+                    FROM vrac_planning v
+                    WHERE t.id IN (
+                    v.client,
+                    v.transporteur,
+                    v.fournisseur
+                    )
+                )
+                +
+                (SELECT COUNT(b.id)
+                    FROM bois_planning b
+                    WHERE t.id IN (
+                    b.client,
+                    b.chargement,
+                    b.livraison,
+                    b.transporteur,
+                    b.affreteur,
+                    b.fournisseur
+                    )
+                )
+                +
+                (SELECT COUNT(c.id)
+                    FROM consignation_planning c
+                    WHERE t.id IN (
+                    c.armateur
+                    )
+                )
+                +
+                (SELECT COUNT(ch.id)
+                    FROM chartering_registre ch
+                    WHERE t.id IN (
+                    ch.armateur,
+                    ch.affreteur,
+                    ch.courtier
+                    )
+                )
+                ) AS nombre_rdv
+            FROM tiers t
+            WHERE t.id = :id
+            ";
+
+        if (is_null($id)) {
+            $req = $this->mysql->query($statementWithoutId);
+            $appointmentCountWithoutKeys = $req->fetchAll();
+
+            $appointmentCount = [];
+            foreach ($appointmentCountWithoutKeys as $infos) {
+                if ($infos["nombre_rdv"] > 0) {
+                    $appointmentCount[$infos["id"]] = $infos["nombre_rdv"];
+                }
+            }
+        } else {
+            $req = $this->mysql->prepare($statementWithId);
+            $req->execute(["id" => $id]);
+            $appointmentCount = $req->fetch();
+        }
+
+        return $appointmentCount;
     }
 }
