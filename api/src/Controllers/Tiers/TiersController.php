@@ -133,7 +133,7 @@ class TiersController extends Controller
 
         $tiers = $this->model->create($input);
 
-        $id = $tiers["id"];
+        $id = $tiers->getId();
 
         $this->headers["Location"] = $_ENV["API_URL"] . "/tiers/$id";
 

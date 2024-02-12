@@ -139,7 +139,7 @@ class ProduitController extends Controller
 
     $product = $this->model->create($input);
 
-    $id = $product["id"];
+    $id = $product->getId();
 
     $this->headers["Location"] = $_ENV["API_URL"] . "/vrac/produits/$id";
 

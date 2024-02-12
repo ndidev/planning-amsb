@@ -125,18 +125,18 @@ class PortsController extends Controller
   {
     $input = $this->request->body;
 
-    $donnees = $this->model->create($input);
+    $port = $this->model->create($input);
 
-    $locode = $donnees["locode"];
+    $locode = $port->getLocode();
 
     $this->headers["Location"] = $_ENV["API_URL"] . "/ports/$locode";
 
     $this->response
       ->setCode(201)
-      ->setBody(json_encode($donnees->toArray()))
+      ->setBody(json_encode($port->toArray()))
       ->setHeaders($this->headers);
 
-    notify_sse($this->sse_event, __FUNCTION__, $locode, $donnees->toArray());
+    notify_sse($this->sse_event, __FUNCTION__, $locode, $port->toArray());
   }
 
   /**
