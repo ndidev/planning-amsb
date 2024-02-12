@@ -1,20 +1,41 @@
 <?php
 
-namespace App\Models\Vrac;
+namespace App\Repository;
 
 use App\Entity\BulkProduct;
-use App\Models\Model;
+use App\Core\Exceptions\Server\DB\DBException;
+use App\Entity\BulkQuality;
 
-class ProduitModel extends Model
+class BulkProductRepository extends Repository
 {
     /**
-     * Vérifie si une entrée existe dans la base de données.
-     * 
-     * @param int $id Identifiant de l'entrée.
+     * @var array<int, \App\Entity\BulkProduct>
      */
-    public function exists(int $id)
+    static private array $productsCache = [];
+
+    /**
+     * @var array<int, \App\Entity\BulkQuality>
+     */
+    static private array $qualitiesCache = [];
+
+    /**
+     * Vérifie si un produit existe dans la base de données.
+     * 
+     * @param int $id Identifiant du produit.
+     */
+    public function productExists(int $id): bool
     {
         return $this->mysql->exists("vrac_produits", $id);
+    }
+
+    /**
+     * Vérifie si une qualité existe dans la base de données.
+     * 
+     * @param int $id Identifiant de la qualité.
+     */
+    public function qualityExists(int $id): bool
+    {
+        return $this->mysql->exists("vrac_qualites", $id);
     }
 
     /**
@@ -22,7 +43,7 @@ class ProduitModel extends Model
      * 
      * @return array<int, \App\Entity\BulkProduct> Liste des produits vrac
      */
-    public function readAll(): array
+    public function getProducts(): array
     {
         $productsStatement = "SELECT * FROM vrac_produits ORDER BY nom";
         $qualitiesStatement = "SELECT * FROM vrac_qualites ORDER BY nom";
@@ -54,6 +75,8 @@ class ProduitModel extends Model
             $productsRaw
         );
 
+        static::$productsCache = $products;
+
         return $products;
     }
 
@@ -64,8 +87,18 @@ class ProduitModel extends Model
      * 
      * @return ?BulkProduct Produit récupéré
      */
-    public function read(int $id): ?BulkProduct
+    public function getProduct(int $id): ?BulkProduct
     {
+        $product = array_filter(
+            static::$productsCache,
+            fn (BulkProduct $productInCache) => $productInCache->getId() === $id
+        )[0] ?? null;
+
+        if ($product) {
+            return $product;
+        }
+
+        // Produit
         $productStatement =
             "SELECT
                 id,
@@ -75,27 +108,106 @@ class ProduitModel extends Model
             FROM vrac_produits
             WHERE id = :id";
 
-        $qualitiesStatement =
-            "SELECT *
-            FROM vrac_qualites
-            WHERE produit = :produit
-            ORDER BY nom";
-
-        // Produit
         $productRequest = $this->mysql->prepare($productStatement);
         $productRequest->execute(["id" => $id]);
         $productRaw = $productRequest->fetch();
 
         if (!$productRaw) return null;
 
+        $product = new BulkProduct($productRaw);
+
         // Qualités
+        $qualitiesStatement =
+            "SELECT *
+            FROM vrac_qualites
+            WHERE produit = :produit
+            ORDER BY nom";
+
         $qualitiesRequest = $this->mysql->prepare($qualitiesStatement);
         $qualitiesRequest->execute(["produit" => $id]);
         $qualitiesRaw = $qualitiesRequest->fetchAll();
 
-        $product = (new BulkProduct($productRaw))->setQualities($qualitiesRaw);
+        $qualities = array_map(
+            fn (array $qualityRaw) => new BulkQuality($qualityRaw),
+            $qualitiesRaw
+        );
+
+        $product->setQualities($qualities);
+
+        array_push(static::$productsCache, $product);
+        static::$qualitiesCache = array_merge(static::$qualitiesCache, $qualities);
 
         return $product;
+    }
+
+    /**
+     * Récupère les qualités d'un produit vrac.
+     * 
+     * @param int $productId ID du produit.
+     * 
+     * @return array<int, \App\Entity\BulkQuality> Qualités récupérées.
+     */
+    public function getQualities(int $productId): array
+    {
+        $qualitiesStatement =
+            "SELECT
+                id,
+                nom,
+                couleur
+            FROM vrac_qualites
+            WHERE produit = :productId";
+
+        // Produit
+        $qualitiesRequest = $this->mysql->prepare($qualitiesStatement);
+        $qualitiesRequest->execute(["productId" => $productId]);
+        $qualitiesRaw = $qualitiesRequest->fetchAll();
+
+        $qualities = array_map(
+            fn (array $qualityRaw) => new BulkQuality($qualityRaw),
+            $qualitiesRaw
+        );
+
+        return $qualities;
+    }
+
+    /**
+     * Récupère une qualité vrac.
+     * 
+     * @param int $id ID de la qualité à récupérer.
+     * 
+     * @return ?BulkQuality Qualité récupérée.
+     */
+    public function getQuality(int $id): ?BulkQuality
+    {
+        $quality = array_filter(
+            static::$qualitiesCache,
+            fn (BulkQuality $qualityInCache) => $qualityInCache->getId() === $id
+        )[0] ?? null;
+
+        if ($quality) {
+            return $quality;
+        }
+
+        $qualityStatement =
+            "SELECT
+                id,
+                nom,
+                couleur
+            FROM vrac_qualites
+            WHERE id = :id";
+
+        // Produit
+        $qualityRequest = $this->mysql->prepare($qualityStatement);
+        $qualityRequest->execute(["id" => $id]);
+        $qualityRaw = $qualityRequest->fetch();
+
+        if (!$qualityRaw) return null;
+
+        $quality = new BulkQuality($qualityRaw);
+
+        array_push(static::$qualitiesCache, $quality);
+
+        return $quality;
     }
 
     /**
@@ -105,7 +217,7 @@ class ProduitModel extends Model
      * 
      * @return BulkProduct Produit créé
      */
-    public function create(array $input): BulkProduct
+    public function createProduct(array $input): BulkProduct
     {
         $statement_produit =
             "INSERT INTO vrac_produits
@@ -147,7 +259,7 @@ class ProduitModel extends Model
             ]);
         }
 
-        return $this->read($last_id);
+        return $this->getProduct($last_id);
     }
 
     /**
@@ -158,7 +270,7 @@ class ProduitModel extends Model
      * 
      * @return BulkProduct Produit modifié
      */
-    public function update($id, array $input): BulkProduct
+    public function updateProduct($id, array $input): BulkProduct
     {
         $statement_produit =
             "UPDATE vrac_produits
@@ -236,7 +348,7 @@ class ProduitModel extends Model
             }
         }
 
-        return $this->read($id);
+        return $this->getProduct($id);
     }
 
     /**
@@ -246,10 +358,14 @@ class ProduitModel extends Model
      * 
      * @return bool TRUE si succès, FALSE si erreur
      */
-    public function delete(int $id): bool
+    public function deleteProduct(int $id): bool
     {
         $requete = $this->mysql->prepare("DELETE FROM vrac_produits WHERE id = :id");
         $succes = $requete->execute(["id" => $id]);
+
+        if (!$succes) {
+            throw new DBException("Erreur lors de la suppression");
+        }
 
         return $succes;
     }

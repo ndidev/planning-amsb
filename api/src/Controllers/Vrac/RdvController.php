@@ -2,15 +2,15 @@
 
 namespace App\Controllers\Vrac;
 
-use App\Models\Vrac\RdvModel;
+use App\Service\BulkAppointmentService;
 use App\Controllers\Controller;
 use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AccessException;
-use App\Core\Exceptions\Server\DB\DBException;
+use App\Entity\BulkAppointment;
 
 class RdvController extends Controller
 {
-  private $model;
+  private BulkAppointmentService $bulkAppointmentService;
   private $module = "vrac";
   private $sse_event = "vrac/rdvs";
 
@@ -18,7 +18,7 @@ class RdvController extends Controller
     private ?int $id
   ) {
     parent::__construct("OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE");
-    $this->model = new RdvModel;
+    $this->bulkAppointmentService = new BulkAppointmentService();
     $this->processRequest();
   }
 
@@ -74,9 +74,9 @@ class RdvController extends Controller
       throw new AccessException();
     }
 
-    $donnees = $this->model->readAll($query);
+    $appointments = $this->bulkAppointmentService->getAppointments($query);
 
-    $etag = ETag::get($donnees);
+    $etag = ETag::get($appointments);
 
     if ($this->request->etag === $etag) {
       $this->response->setCode(304);
@@ -86,7 +86,11 @@ class RdvController extends Controller
     $this->headers["ETag"] = $etag;
 
     $this->response
-      ->setBody(json_encode($donnees))
+      ->setBody(
+        json_encode(
+          array_map(fn (BulkAppointment $appointment) => $appointment->toArray(), $appointments)
+        )
+      )
       ->setHeaders($this->headers);
   }
 
@@ -102,18 +106,18 @@ class RdvController extends Controller
       throw new AccessException();
     }
 
-    $donnees = $this->model->read($id);
+    $appointment = $this->bulkAppointmentService->getAppointment($id);
 
-    if (!$donnees && !$dry_run) {
+    if (!$appointment && !$dry_run) {
       $this->response->setCode(404);
       return;
     }
 
     if ($dry_run) {
-      return $donnees;
+      return $appointment;
     }
 
-    $etag = ETag::get($donnees);
+    $etag = ETag::get($appointment);
 
     if ($this->request->etag === $etag) {
       $this->response->setCode(304);
@@ -123,7 +127,7 @@ class RdvController extends Controller
     $this->headers["ETag"] = $etag;
 
     $this->response
-      ->setBody(json_encode($donnees))
+      ->setBody(json_encode($appointment->toArray()))
       ->setHeaders($this->headers);
   }
 
@@ -138,19 +142,19 @@ class RdvController extends Controller
 
     $input = $this->request->body;
 
-    $donnees = $this->model->create($input);
+    $appointment = $this->bulkAppointmentService->createAppointment($input);
 
-    $id = $donnees["id"];
+    $id = $appointment["id"];
 
     $this->headers["Location"] = $_ENV["API_URL"] . "/vrac/rdv/$id";
 
     $this->response
       ->setCode(201)
-      ->setBody(json_encode($donnees))
+      ->setBody(json_encode($appointment->toArray()))
       ->setHeaders($this->headers)
       ->flush();
 
-    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
+    notify_sse($this->sse_event, __FUNCTION__, $id, $appointment->toArray());
   }
 
   /**
@@ -164,21 +168,21 @@ class RdvController extends Controller
       throw new AccessException();
     }
 
-    if (!$this->model->exists($id)) {
+    if (!$this->bulkAppointmentService->appointmentExists($id)) {
       $this->response->setCode(404);
       return;
     }
 
     $input = $this->request->body;
 
-    $donnees = $this->model->update($id, $input);
+    $appointment = $this->bulkAppointmentService->updateAppointment($id, $input);
 
     $this->response
-      ->setBody(json_encode($donnees))
+      ->setBody(json_encode($appointment->toArray()))
       ->setHeaders($this->headers)
       ->flush();
 
-    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
+    notify_sse($this->sse_event, __FUNCTION__, $id, $appointment->toArray());
   }
 
   /**
@@ -192,21 +196,21 @@ class RdvController extends Controller
       throw new AccessException();
     }
 
-    if (!$this->model->exists($id)) {
+    if (!$this->bulkAppointmentService->appointmentExists($id)) {
       $this->response->setCode(404);
       return;
     }
 
     $input = $this->request->body;
 
-    $donnees = $this->model->patch($id, $input);
+    $appointment = $this->bulkAppointmentService->patchAppointment($id, $input);
 
     $this->response
-      ->setBody(json_encode($donnees))
+      ->setBody(json_encode($appointment->toArray()))
       ->setHeaders($this->headers)
       ->flush();
 
-    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
+    notify_sse($this->sse_event, __FUNCTION__, $id, $appointment->toArray());
   }
 
   /**
@@ -220,18 +224,14 @@ class RdvController extends Controller
       throw new AccessException();
     }
 
-    if (!$this->model->exists($id)) {
+    if (!$this->bulkAppointmentService->appointmentExists($id)) {
       $this->response->setCode(404);
       return;
     }
 
-    $succes = $this->model->delete($id);
+    $this->bulkAppointmentService->deleteAppointment($id);
 
-    if ($succes) {
-      $this->response->setCode(204)->flush();
-      notify_sse($this->sse_event, __FUNCTION__, $id);
-    } else {
-      throw new DBException("Erreur lors de la suppression");
-    }
+    $this->response->setCode(204)->flush();
+    notify_sse($this->sse_event, __FUNCTION__, $id);
   }
 }

@@ -78,7 +78,13 @@ class BulkProduct implements Arrayable
     public function setQualities(array $qualities): static
     {
         $this->qualities = array_map(
-            fn (array $qualityRaw) => new BulkQuality($qualityRaw),
+            function (array|BulkQuality $quality) {
+                if (is_array($quality)) {
+                    return new BulkQuality($quality);
+                } else {
+                    return $quality;
+                }
+            },
             $qualities
         );
 

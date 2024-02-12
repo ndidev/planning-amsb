@@ -2,16 +2,15 @@
 
 namespace App\Controllers\Vrac;
 
-use App\Models\Vrac\ProduitModel;
 use App\Controllers\Controller;
+use App\Service\BulkProductService;
 use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AccessException;
-use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\BulkProduct;
 
 class ProduitController extends Controller
 {
-  private $model;
+  private BulkProductService $productService;
   private $module = "vrac";
   private $sse_event = "vrac/produits";
 
@@ -19,7 +18,7 @@ class ProduitController extends Controller
     private ?int $id
   ) {
     parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
-    $this->model = new ProduitModel;
+    $this->productService = new BulkProductService();
     $this->processRequest();
   }
 
@@ -69,7 +68,7 @@ class ProduitController extends Controller
       throw new AccessException();
     }
 
-    $products = $this->model->readAll();
+    $products = $this->productService->getProducts();
 
     $etag = ETag::get($products);
 
@@ -101,7 +100,7 @@ class ProduitController extends Controller
       throw new AccessException();
     }
 
-    $product = $this->model->read($id);
+    $product = $this->productService->getProduct($id);
 
     if (!$product && !$dry_run) {
       $this->response->setCode(404);
@@ -137,7 +136,7 @@ class ProduitController extends Controller
 
     $input = $this->request->body;
 
-    $product = $this->model->create($input);
+    $product = $this->productService->createProduct($input);
 
     $id = $product->getId();
 
@@ -163,14 +162,14 @@ class ProduitController extends Controller
       throw new AccessException();
     }
 
-    if (!$this->model->exists($id)) {
+    if (!$this->productService->productExists($id)) {
       $this->response->setCode(404);
       return;
     }
 
     $input = $this->request->body;
 
-    $product = $this->model->update($id, $input);
+    $product = $this->productService->updateProduct($id, $input);
 
     $this->response
       ->setBody(json_encode($product->toArray()))
@@ -191,18 +190,14 @@ class ProduitController extends Controller
       throw new AccessException();
     }
 
-    if (!$this->model->exists($id)) {
+    if (!$this->productService->productExists($id)) {
       $this->response->setCode(404);
       return;
     }
 
-    $succes = $this->model->delete($id);
+    $this->productService->deleteProduct($id);
 
-    if ($succes) {
-      $this->response->setCode(204)->flush();
-      notify_sse($this->sse_event, __FUNCTION__, $id);
-    } else {
-      throw new DBException("Erreur lors de la suppression");
-    }
+    $this->response->setCode(204)->flush();
+    notify_sse($this->sse_event, __FUNCTION__, $id);
   }
 }
