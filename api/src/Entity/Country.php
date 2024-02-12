@@ -6,8 +6,8 @@ use App\Core\Interfaces\Arrayable;
 
 class Country implements Arrayable
 {
-    private string $iso = "";
-    private string $nom = "";
+    private string $iso;
+    private string $nom;
 
     public function __construct(array $rawData = [])
     {

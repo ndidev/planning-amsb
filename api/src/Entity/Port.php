@@ -6,8 +6,8 @@ use App\Core\Interfaces\Arrayable;
 
 class Port implements Arrayable
 {
-    private string $locode = "";
-    private string $nom = "";
+    private string $locode;
+    private string $nom;
 
     public function __construct(array $rawData = [])
     {

@@ -6,16 +6,16 @@ use App\Core\Interfaces\Arrayable;
 
 class ThirdParty implements Arrayable
 {
-    private ?int $id = null;
-    private string $nom_court = "";
-    private string $nom_complet = "";
-    private string $adresse_ligne_1 = "";
-    private string $adresse_ligne_2 = "";
-    private string $cp = "";
-    private string $ville = "";
+    private ?int $id;
+    private string $nom_court;
+    private string $nom_complet;
+    private string $adresse_ligne_1;
+    private string $adresse_ligne_2;
+    private string $cp;
+    private string $ville;
     private Country $pays;
-    private string $telephone = "";
-    private string $commentaire = "";
+    private string $telephone;
+    private string $commentaire;
     private array $roles = [
         "bois_fournisseur" => false,
         "bois_client" => false,
@@ -28,10 +28,10 @@ class ThirdParty implements Arrayable
         "maritime_affreteur" => false,
         "maritime_courtier" => false,
     ];
-    private bool $non_modifiable = false;
-    private bool $lie_agence = false;
-    private ?string $logo = null;
-    private bool $actif = true;
+    private bool $non_modifiable;
+    private bool $lie_agence;
+    private ?string $logo;
+    private bool $actif;
 
     public function __construct(array $rawData = [])
     {
