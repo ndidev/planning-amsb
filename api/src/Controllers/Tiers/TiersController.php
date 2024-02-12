@@ -2,16 +2,15 @@
 
 namespace App\Controllers\Tiers;
 
-use App\Models\Tiers\TiersModel;
+use App\Service\ThirdPartyService;
 use App\Controllers\Controller;
 use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AccessException;
-use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\ThirdParty;
 
 class TiersController extends Controller
 {
-    private $model;
+    private ThirdPartyService $thirdPartyService;
     private $module = "tiers";
     private $sse_event = "tiers";
 
@@ -19,7 +18,7 @@ class TiersController extends Controller
         private ?int $id,
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
-        $this->model = new TiersModel;
+        $this->thirdPartyService = new ThirdPartyService();
         $this->processRequest();
     }
 
@@ -67,7 +66,7 @@ class TiersController extends Controller
      */
     public function readAll()
     {
-        $listeTiers = $this->model->readAll();
+        $listeTiers = $this->thirdPartyService->getThirdParties();
 
         $etag = ETag::get($listeTiers);
 
@@ -95,7 +94,7 @@ class TiersController extends Controller
      */
     public function read(int $id, ?bool $dry_run = false)
     {
-        $tiers = $this->model->read($id);
+        $tiers = $this->thirdPartyService->getThirdParty($id);
 
         if (!$tiers && !$dry_run) {
             $this->response->setCode(404);
@@ -131,7 +130,7 @@ class TiersController extends Controller
 
         $input = $this->request->body;
 
-        $tiers = $this->model->create($input);
+        $tiers = $this->thirdPartyService->createThirdParty($input);
 
         $id = $tiers->getId();
 
@@ -157,14 +156,14 @@ class TiersController extends Controller
             throw new AccessException();
         }
 
-        if (!$this->model->exists($id)) {
+        if (!$this->thirdPartyService->thirdPartyExists($id)) {
             $this->response->setCode(404);
             return;
         }
 
         $input = $this->request->body;
 
-        $tiers = $this->model->update($id, $input);
+        $tiers = $this->thirdPartyService->updateThirdParty($id, $input);
 
         $this->response
             ->setBody(json_encode($tiers->toArray()))
@@ -185,18 +184,14 @@ class TiersController extends Controller
             throw new AccessException();
         }
 
-        if (!$this->model->exists($id)) {
+        if (!$this->thirdPartyService->thirdPartyExists($id)) {
             $this->response->setCode(404);
             return;
         }
 
-        $succes = $this->model->delete($id);
+        $this->thirdPartyService->deleteThirdParty($id);
 
-        if ($succes) {
-            $this->response->setCode(204)->flush();
-            notify_sse($this->sse_event, __FUNCTION__, $id);
-        } else {
-            throw new DBException("Erreur lors de la suppression");
-        }
+        $this->response->setCode(204)->flush();
+        notify_sse($this->sse_event, __FUNCTION__, $id);
     }
 }

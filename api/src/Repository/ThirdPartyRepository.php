@@ -1,18 +1,24 @@
 <?php
 
-namespace App\Models\Tiers;
+namespace App\Repository;
 
-use App\Models\Model;
 use App\Entity\ThirdParty;
+use App\Models\Tiers\NombreRdvModel;
+use App\Core\Exceptions\Server\DB\DBException;
 
-class TiersModel extends Model
+class ThirdPartyRepository extends Repository
 {
+    /**
+     * @var array<int, \App\Entity\ThirdParty>
+     */
+    static private array $cache = [];
+
     /**
      * Vérifie si une entrée existe dans la base de données.
      * 
      * @param int $id Identifiant de l'entrée.
      */
-    public function exists(int $id)
+    public function thirdPartyExists(int $id)
     {
         return $this->mysql->exists("tiers", $id);
     }
@@ -22,7 +28,7 @@ class TiersModel extends Model
      * 
      * @return array<int, \App\Entity\ThirdParty> Liste des tiers
      */
-    public function readAll(): array
+    public function getThirdParties(): array
     {
         $statement =
             "SELECT *
@@ -31,11 +37,13 @@ class TiersModel extends Model
             nom_court,
             ville";
 
-        $listeTiersRaw = $this->mysql->query($statement)->fetchAll();
+        $thirdPartiesRaw = $this->mysql->query($statement)->fetchAll();
 
-        $listeTiers = array_map(fn (array $tiersRaw) => new ThirdParty($tiersRaw), $listeTiersRaw);
+        $thirdParties = array_map(fn (array $thirdPartyRaw) => new ThirdParty($thirdPartyRaw), $thirdPartiesRaw);
 
-        return $listeTiers;
+        static::$cache = $thirdParties;
+
+        return $thirdParties;
     }
 
     /**
@@ -44,24 +52,32 @@ class TiersModel extends Model
      * @param int   $id      ID du tiers à récupérer
      * @param array $options Options de récupération
      * 
-     * @return ?ThirdPArty Tiers récupéré
+     * @return ?ThirdParty Tiers récupéré
      */
-    public function read($id): ?ThirdParty
+    public function getThirdParty($id): ?ThirdParty
     {
-        $statement =
-            "SELECT *
-        FROM tiers
-        WHERE id = :id";
+        $thirdParty = array_filter(
+            static::$cache,
+            fn (ThirdParty $thirdPartyInCache) => $thirdPartyInCache->getId() === $id
+        )[0] ?? null;
 
-        $requete_tiers = $this->mysql->prepare($statement);
-        $requete_tiers->execute(["id" => $id]);
-        $tiersRaw = $requete_tiers->fetch();
+        if ($thirdParty) {
+            return $thirdParty;
+        }
 
-        if (!$tiersRaw) return null;
+        $statement = "SELECT * FROM tiers WHERE id = :id";
 
-        $tiers = new ThirdParty($tiersRaw);
+        $req = $this->mysql->prepare($statement);
+        $req->execute(["id" => $id]);
+        $thirdPartyRaw = $req->fetch();
 
-        return $tiers;
+        if (!$thirdPartyRaw) return null;
+
+        $thirdParty = new ThirdParty($thirdPartyRaw);
+
+        array_push(static::$cache, $thirdParty);
+
+        return $thirdParty;
     }
 
     /**
@@ -71,7 +87,7 @@ class TiersModel extends Model
      * 
      * @return ThirdParty Tiers créé
      */
-    public function create(array $input): ThirdParty
+    public function createThirdParty(array $input): ThirdParty
     {
         // Enregistrement du logo dans le dossier images
         $logo = $this->enregistrerLogo($input["logo"] ?? NULL) ?: NULL;
@@ -137,7 +153,7 @@ class TiersModel extends Model
         $last_id = $this->mysql->lastInsertId();
         $this->mysql->commit();
 
-        return $this->read($last_id);
+        return $this->getThirdParty($last_id);
     }
 
     /**
@@ -148,7 +164,7 @@ class TiersModel extends Model
      * 
      * @return ThirdParty tiers modifié
      */
-    public function update($id, array $input): ThirdParty
+    public function updateThirdParty($id, array $input): ThirdParty
     {
         // Enregistrement du logo dans le dossier images
         $logo = $this->enregistrerLogo($input["logo"]);
@@ -214,7 +230,7 @@ class TiersModel extends Model
 
         $requete->execute($champs);
 
-        return $this->read($id);
+        return $this->getThirdParty($id);
     }
 
     /**
@@ -224,7 +240,7 @@ class TiersModel extends Model
      * 
      * @return bool TRUE si succès, FALSE si erreur
      */
-    public function delete(int $id): bool
+    public function deleteThirdParty(int $id): bool
     {
         $nombre_rdv = (new NombreRdvModel())->read($id)["nombre_rdv"];
         if ($nombre_rdv > 0) {
@@ -233,6 +249,10 @@ class TiersModel extends Model
 
         $requete = $this->mysql->prepare("DELETE FROM tiers WHERE id = :id");
         $succes = $requete->execute(["id" => $id]);
+
+        if (!$succes) {
+            throw new DBException("Erreur lors de la suppression");
+        }
 
         return $succes;
     }
