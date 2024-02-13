@@ -21,9 +21,9 @@
 
   let _filtre = { ...$filtre.data };
 
-  let listeNavires: string[] = [];
-  let listeMarchandises: string[] = [];
-  let listeClients: string[] = [];
+  let listeNavires: string[] = [""];
+  let listeMarchandises: string[] = [""];
+  let listeClients: string[] = [""];
 
   /**
    * Enregistrer le filtre.

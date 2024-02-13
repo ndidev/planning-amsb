@@ -83,8 +83,8 @@
    */
   let i: number;
 
-  let listeMarchandises: string[] = [];
-  let listeClients: string[] = [];
+  let listeMarchandises: string[] = [""];
+  let listeClients: string[] = [""];
 
   const isNew = $params.id === "new";
 
