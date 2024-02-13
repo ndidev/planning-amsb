@@ -83,8 +83,8 @@
    */
   let i: number;
 
-  let listeMarchandises: string[] = [""];
-  let listeClients: string[] = [""];
+  let listeMarchandises: string[] = [];
+  let listeClients: string[] = [];
 
   const isNew = $params.id === "new";
 
@@ -599,6 +599,7 @@
                     keepCreated
                     placeholder="Marchandise"
                     bind:value={marchandise.marchandise}
+                    required
                   />
                 </div>
                 <div class="pure-control-group">
@@ -614,6 +615,7 @@
                     keepCreated
                     placeholder="Client"
                     bind:value={marchandise.client}
+                    required
                   />
                 </div>
                 <div class="pure-control-group">

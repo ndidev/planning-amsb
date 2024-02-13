@@ -109,22 +109,22 @@ class StatsModel extends Model
 
         $statement_escales =
             "SELECT
-          cp.id,
-          cp.navire,
-          cp.ops_date,
-          cp.etc_date,
-          cem.marchandise,
-          cem.client,
-          cem.tonnage_bl,
-          cem.tonnage_outturn,
-          cem.cubage_bl,
-          cem.cubage_outturn,
-          cem.nombre_bl,
-          cem.nombre_outturn
-        FROM consignation_planning cp
-        LEFT JOIN consignation_escales_marchandises cem ON cem.escale_id = cp.id
-        WHERE cp.id IN ($filtre_ids)
-        ORDER BY cp.etc_date DESC";
+                cp.id,
+                cp.navire,
+                cp.ops_date,
+                cp.etc_date,
+                IFNULL(cem.marchandise, '') as marchandise,
+                IFNULL(cem.client, '') as client,
+                cem.tonnage_bl,
+                cem.tonnage_outturn,
+                cem.cubage_bl,
+                cem.cubage_outturn,
+                cem.nombre_bl,
+                cem.nombre_outturn
+            FROM consignation_planning cp
+            LEFT JOIN consignation_escales_marchandises cem ON cem.escale_id = cp.id
+            WHERE cp.id IN ($filtre_ids)
+            ORDER BY cp.etc_date DESC";
 
         $requete_escales = $this->mysql->query($statement_escales);
 

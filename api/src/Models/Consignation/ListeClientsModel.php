@@ -16,6 +16,8 @@ class ListeClientsModel extends Model
         $statement =
             "SELECT DISTINCT client
             FROM consignation_escales_marchandises
+            WHERE client IS NOT NULL
+            AND client <> ''
             ORDER BY client ASC";
 
         $requete = $this->mysql->query($statement);
