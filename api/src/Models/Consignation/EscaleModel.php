@@ -30,92 +30,92 @@ class EscaleModel extends Model
         if (array_key_exists("archives", $filtre)) {
             $statement_escales =
                 "SELECT
-            id,
-            navire,
-            voyage,
-            armateur,
-            eta_date,
-            eta_heure,
-            nor_date,
-            nor_heure,
-            pob_date,
-            pob_heure,
-            etb_date,
-            etb_heure,
-            ops_date,
-            ops_heure,
-            etc_date,
-            etc_heure,
-            etd_date,
-            etd_heure,
-            te_arrivee,
-            te_depart,
-            last_port,
-            next_port,
-            call_port,
-            quai,
-            commentaire
-          FROM consignation_planning
-          WHERE etd_date <= '$hier'
-          ORDER BY
-            -eta_date ASC,
-            eta_heure,
-            -etb_date ASC,
-            etb_heure";
+                    id,
+                    navire,
+                    voyage,
+                    armateur,
+                    eta_date,
+                    eta_heure,
+                    nor_date,
+                    nor_heure,
+                    pob_date,
+                    pob_heure,
+                    etb_date,
+                    etb_heure,
+                    ops_date,
+                    ops_heure,
+                    etc_date,
+                    etc_heure,
+                    etd_date,
+                    etd_heure,
+                    te_arrivee,
+                    te_depart,
+                    last_port,
+                    next_port,
+                    call_port,
+                    quai,
+                    commentaire
+                FROM consignation_planning
+                WHERE etd_date <= '$hier'
+                ORDER BY
+                    -eta_date ASC,
+                    eta_heure,
+                    -etb_date ASC,
+                    etb_heure";
         } else {
             $statement_escales =
                 "SELECT
-            id,
-            navire,
-            voyage,
-            armateur,
-            eta_date,
-            eta_heure,
-            nor_date,
-            nor_heure,
-            pob_date,
-            pob_heure,
-            etb_date,
-            etb_heure,
-            ops_date,
-            ops_heure,
-            etc_date,
-            etc_heure,
-            etd_date,
-            etd_heure,
-            te_arrivee,
-            te_depart,
-            last_port,
-            next_port,
-            call_port,
-            quai,
-            commentaire
-          FROM consignation_planning
-          WHERE etd_date >= '$hier'
-          OR etd_date IS NULL
-          ORDER BY
-            -eta_date DESC,
-            eta_heure,
-            -etb_date DESC,
-            etb_heure";
+                    id,
+                    navire,
+                    voyage,
+                    armateur,
+                    eta_date,
+                    eta_heure,
+                    nor_date,
+                    nor_heure,
+                    pob_date,
+                    pob_heure,
+                    etb_date,
+                    etb_heure,
+                    ops_date,
+                    ops_heure,
+                    etc_date,
+                    etc_heure,
+                    etd_date,
+                    etd_heure,
+                    te_arrivee,
+                    te_depart,
+                    last_port,
+                    next_port,
+                    call_port,
+                    quai,
+                    commentaire
+                FROM consignation_planning
+                WHERE etd_date >= '$hier'
+                OR etd_date IS NULL
+                ORDER BY
+                    -eta_date DESC,
+                    eta_heure,
+                    -etb_date DESC,
+                    etb_heure";
         }
 
         $statement_marchandises =
             "SELECT
-          id,
-          escale_id,
-          marchandise,
-          client,
-          operation,
-          environ,
-          tonnage_bl,
-          cubage_bl,
-          nombre_bl,
-          tonnage_outturn,
-          cubage_outturn,
-          nombre_outturn
-        FROM consignation_escales_marchandises
-        WHERE escale_id = :id";
+                id,
+                escale_id,
+                IFNULL(marchandise, '') as marchandise,
+                IFNULL(client, '') as client,
+                operation,
+                environ,
+                tonnage_bl,
+                cubage_bl,
+                nombre_bl,
+                tonnage_outturn,
+                cubage_outturn,
+                nombre_outturn
+            FROM consignation_escales_marchandises
+            WHERE escale_id = :id";
 
         // Escales
         $requete_escales = $this->mysql->query($statement_escales);
@@ -166,50 +166,50 @@ class EscaleModel extends Model
     {
         $statement_escale =
             "SELECT
-          id,
-          navire,
-          voyage,
-          armateur,
-          eta_date,
-          eta_heure,
-          nor_date,
-          nor_heure,
-          pob_date,
-          pob_heure,
-          etb_date,
-          etb_heure,
-          ops_date,
-          ops_heure,
-          etc_date,
-          etc_heure,
-          etd_date,
-          etd_heure,
-          te_arrivee,
-          te_depart,
-          last_port,
-          next_port,
-          call_port,
-          quai,
-          commentaire
-        FROM consignation_planning 
-        WHERE id = :id";
+                id,
+                navire,
+                voyage,
+                armateur,
+                eta_date,
+                eta_heure,
+                nor_date,
+                nor_heure,
+                pob_date,
+                pob_heure,
+                etb_date,
+                etb_heure,
+                ops_date,
+                ops_heure,
+                etc_date,
+                etc_heure,
+                etd_date,
+                etd_heure,
+                te_arrivee,
+                te_depart,
+                last_port,
+                next_port,
+                call_port,
+                quai,
+                commentaire
+            FROM consignation_planning 
+            WHERE id = :id";
 
         $statement_marchandises =
             "SELECT
-          id,
-          escale_id,
-          marchandise,
-          client,
-          operation,
-          environ,
-          tonnage_bl,
-          cubage_bl,
-          nombre_bl,
-          tonnage_outturn,
-          cubage_outturn,
-          nombre_outturn
-        FROM consignation_escales_marchandises
-        WHERE escale_id = :id";
+                id,
+                escale_id,
+                IFNULL(marchandise, '') as marchandise,
+                IFNULL(client, '') as client,
+                operation,
+                environ,
+                tonnage_bl,
+                cubage_bl,
+                nombre_bl,
+                tonnage_outturn,
+                cubage_outturn,
+                nombre_outturn
+            FROM consignation_escales_marchandises
+            WHERE escale_id = :id";
 
         // Escales
         $requete_escale = $this->mysql->prepare($statement_escale);

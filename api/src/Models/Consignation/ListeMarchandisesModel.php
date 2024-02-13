@@ -16,6 +16,8 @@ class ListeMarchandisesModel extends Model
         $statement =
             "SELECT DISTINCT marchandise
             FROM consignation_escales_marchandises
+            WHERE marchandise IS NOT NULL
+            AND marchandise <> ''
             ORDER BY marchandise ASC";
 
         $requete = $this->mysql->query($statement);

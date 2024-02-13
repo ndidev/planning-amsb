@@ -599,6 +599,7 @@
                     keepCreated
                     placeholder="Marchandise"
                     bind:value={marchandise.marchandise}
+                    required
                   />
                 </div>
                 <div class="pure-control-group">
@@ -614,6 +615,7 @@
                     keepCreated
                     placeholder="Client"
                     bind:value={marchandise.client}
+                    required
                   />
                 </div>
                 <div class="pure-control-group">
