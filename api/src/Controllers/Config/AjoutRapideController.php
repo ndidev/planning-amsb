@@ -68,7 +68,7 @@ class AjoutRapideController extends Controller
 
         // Filtre sur les catégories autorisées pour l'utilisateur
         foreach ($donnees as $key => $ligne) {
-            if ($this->user->can_access($ligne["module"]) === false) {
+            if ($this->user->canAccess($ligne["module"]) === false) {
                 unset($donnees[$key]);
             }
         }
@@ -103,7 +103,7 @@ class AjoutRapideController extends Controller
         }
 
         if (
-            $donnees && !$this->user->can_access($donnees["module"])
+            $donnees && !$this->user->canAccess($donnees["module"])
         ) {
             throw new AccessException();
         }
@@ -131,7 +131,7 @@ class AjoutRapideController extends Controller
      */
     public function create()
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
@@ -169,9 +169,9 @@ class AjoutRapideController extends Controller
         $input = $this->request->body;
 
         if (
-            !$this->user->can_access($this->module)
-            || !$this->user->can_edit($current["module"])
-            || !$this->user->can_edit($input["module"])
+            !$this->user->canAccess($this->module)
+            || !$this->user->canEdit($current["module"])
+            || !$this->user->canEdit($input["module"])
         ) {
             throw new AccessException();
         }
@@ -201,8 +201,8 @@ class AjoutRapideController extends Controller
         }
 
         if (
-            !$this->user->can_access($this->module)
-            || !$this->user->can_edit($current["module"])
+            !$this->user->canAccess($this->module)
+            || !$this->user->canEdit($current["module"])
         ) {
             throw new AccessException();
         }

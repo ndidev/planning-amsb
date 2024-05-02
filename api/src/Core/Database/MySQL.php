@@ -44,7 +44,7 @@ class MySQL extends \PDO
      * @param string $table Nom de la table.
      * @param int    $id    Identifiant de l'entrée.
      */
-    public function exists(string $table, int $id)
+    public function exists(string $table, int $id): bool
     {
         $statement = "SELECT EXISTS (SELECT * FROM `$table` WHERE id = :id)";
 

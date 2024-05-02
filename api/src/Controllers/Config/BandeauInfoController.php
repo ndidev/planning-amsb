@@ -72,7 +72,7 @@ class BandeauInfoController extends Controller
         $donnees =
             array_values(
                 array_filter($donnees, function ($ligne) {
-                    return $this->user->can_access($ligne["module"]);
+                    return $this->user->canAccess($ligne["module"]);
                 })
             );
 
@@ -107,7 +107,7 @@ class BandeauInfoController extends Controller
         }
 
         if (
-            $donnees && !$this->user->can_access($donnees["module"])
+            $donnees && !$this->user->canAccess($donnees["module"])
         ) {
             throw new AccessException();
         }
@@ -139,8 +139,8 @@ class BandeauInfoController extends Controller
         $input = $this->request->body;
 
         if (
-            !$this->user->can_access($this->module)
-            || !$this->user->can_edit($input["module"])
+            !$this->user->canAccess($this->module)
+            || !$this->user->canEdit($input["module"])
         ) {
             throw new AccessException();
         }
@@ -180,9 +180,9 @@ class BandeauInfoController extends Controller
         $input = $this->request->body;
 
         if (
-            !$this->user->can_access($this->module)
-            || !$this->user->can_edit($current["module"])
-            || !$this->user->can_edit($input["module"])
+            !$this->user->canAccess($this->module)
+            || !$this->user->canEdit($current["module"])
+            || !$this->user->canEdit($input["module"])
         ) {
             throw new AccessException();
         }
@@ -215,8 +215,8 @@ class BandeauInfoController extends Controller
         }
 
         if (
-            !$this->user->can_access($this->module)
-            || !$this->user->can_edit($current["module"])
+            !$this->user->canAccess($this->module)
+            || !$this->user->canEdit($current["module"])
         ) {
             throw new AccessException();
         }

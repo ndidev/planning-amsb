@@ -2,12 +2,11 @@
 
 namespace App\Core;
 
-use \DateTime;
-use \DateInterval;
-use \DateTimeZone;
-use \DateTimeInterface;
-use \IntlDateFormatter;
-
+/**
+ * Date utilities.
+ * 
+ * @package App\Core
+ */
 class DateUtils
 {
     public const TIMEZONE = "Europe/Paris";
@@ -47,22 +46,22 @@ class DateUtils
      */
     public static function format(
         string $pattern,
-        DateTimeInterface|string $date,
+        \DateTimeInterface|string $date,
         ?string $locale = "fr_FR"
     ): string {
-        $timezone = new DateTimeZone(self::TIMEZONE);
+        $timezone = new \DateTimeZone(self::TIMEZONE);
 
-        $formatter = new IntlDateFormatter(
+        $formatter = new \IntlDateFormatter(
             $locale,
-            IntlDateFormatter::FULL,
-            IntlDateFormatter::FULL,
+            \IntlDateFormatter::FULL,
+            \IntlDateFormatter::FULL,
             $timezone,
-            IntlDateFormatter::GREGORIAN,
+            \IntlDateFormatter::GREGORIAN,
             $pattern
         );
 
-        if (!($date instanceof DateTimeInterface)) {
-            $datetime = new DateTime($date, $timezone);
+        if (!($date instanceof \DateTimeInterface)) {
+            $datetime = new \DateTime($date, $timezone);
         } else {
             $datetime = $date;
         }
@@ -75,14 +74,14 @@ class DateUtils
      * 
      * If the date is already a `DateTime` object, return the date untouched.
      * 
-     * @param DateTime|string $date 
+     * @param \DateTimeInterface|string $date 
      * 
-     * @return DateTime 
+     * @return \DateTime 
      */
-    public static function convertDate(DateTime|string $date): DateTime
+    public static function convertDate(\DateTimeInterface|string $date): \DateTime
     {
-        if ($date instanceof DateTime) {
-            $datetime = $date;
+        if ($date instanceof \DateTimeInterface) {
+            $datetime = \DateTime::createFromInterface($date);
         } else {
             if (str_contains($date, "/")) {
                 $date_array = explode("/", $date);
@@ -91,7 +90,7 @@ class DateUtils
                 $date_ymd = $date;
             }
 
-            $datetime = new DateTime($date_ymd);
+            $datetime = new \DateTime($date_ymd);
         }
 
         return $datetime;
@@ -102,35 +101,35 @@ class DateUtils
      * 
      * Note: only checks for public holiday in France.
      * 
-     * @param DateTime|string $date Date to check.
+     * @param \DateTimeInterface|string $date Date to check.
      * 
      * @return bool `true` if public holiday, `false` otherwise.
      */
-    public static function checkPublicHoliday(DateTime|string $date): bool
+    public static function checkPublicHoliday(\DateTimeInterface|string $date): bool
     {
         $date = self::convertDate($date);
 
         $year = (int) $date->format("Y");
 
-        $easter = new DateTime("@" . easter_date($year));
+        $easter = new \DateTime("@" . easter_date($year));
 
         /**
-         * @var DateTime[] Public holidays list.
+         * @var \DateTime[] Public holidays list.
          */
         $public_holidays = [
-            "jour_an" => new DateTime("$year-01-01"),
+            "jour_an" => new \DateTime("$year-01-01"),
             "paques" => $easter,
-            "lundi_paques" => (clone $easter)->add(new DateInterval("P1D")),
-            "fete_travail" => new DateTime("$year-05-01"),
-            "victoire_1945" => new DateTime("$year-05-08"),
-            "ascension" => (clone $easter)->add(new DateInterval("P39D")),
-            "pentecote" => (clone $easter)->add(new DateInterval("P49D")),
-            "lundi_pentecote" => (clone $easter)->add(new DateInterval("P50D")),
-            "fete_nationale" => new DateTime("$year-07-14"),
-            "assomption" => new DateTime("$year-08-15"),
-            "toussaint" => new DateTime("$year-11-01"),
-            "armistice_1918" => new DateTime("$year-11-11"),
-            "noel" => new DateTime("$year-12-25"),
+            "lundi_paques" => (clone $easter)->add(new \DateInterval("P1D")),
+            "fete_travail" => new \DateTime("$year-05-01"),
+            "victoire_1945" => new \DateTime("$year-05-08"),
+            "ascension" => (clone $easter)->add(new \DateInterval("P39D")),
+            "pentecote" => (clone $easter)->add(new \DateInterval("P49D")),
+            "lundi_pentecote" => (clone $easter)->add(new \DateInterval("P50D")),
+            "fete_nationale" => new \DateTime("$year-07-14"),
+            "assomption" => new \DateTime("$year-08-15"),
+            "toussaint" => new \DateTime("$year-11-01"),
+            "armistice_1918" => new \DateTime("$year-11-11"),
+            "noel" => new \DateTime("$year-12-25"),
         ];
 
 
@@ -151,11 +150,11 @@ class DateUtils
      * 
      * Note: only checks for working days in France.
      * 
-     * @param DateTime|string $date Date to check.
+     * @param \DateTimeInterface|string $date Date to check.
      * 
      * @return bool `true` if working day, `false` otherwise.
      */
-    public static function checkWorkingDay(DateTime|string $date): bool
+    public static function checkWorkingDay(\DateTimeInterface|string $date): bool
     {
         $date = self::convertDate($date);
 
@@ -186,22 +185,22 @@ class DateUtils
      * 
      * Example: returs the previous Thursday if the date is a Saturday and `$offset` = 2 (assuming no public holiday in between).
      * 
-     * @param DateTime|string $date   Date.
-     * @param int             $offset Optional. Number of days before $date. Default = 1.
+     * @param \DateTimeInterface|string $date   Date.
+     * @param int                       $offset Optional. Number of days before $date. Default = 1.
      * 
-     * @return DateTime
+     * @return \DateTime
      */
     public static function previousWorkingDay(
-        DateTime|string $date,
+        \DateTimeInterface|string $date,
         ?int $offset = 1
-    ): DateTime {
+    ): \DateTime {
         $date = self::convertDate($date);
 
         $previous_working_day = clone $date;
 
         for ($i = 0; $i < $offset; $i++) {
             do {
-                $previous_working_day->sub(new DateInterval("P1D"));
+                $previous_working_day->sub(new \DateInterval("P1D"));
             } while (!self::checkWorkingDay($previous_working_day));
         }
 
@@ -217,22 +216,22 @@ class DateUtils
      * 
      * Example: returs the next Tuesday if the date is a Saturday and `$offset` = 2 (assuming no public holiday in between).
      * 
-     * @param DateTime|string $date   Date.
-     * @param int             $offset Optional. Number of days after $date. Default = 1.
+     * @param \DateTimeInterface|string $date   Date.
+     * @param int                       $offset Optional. Number of days after $date. Default = 1.
      * 
-     * @return DateTime
+     * @return \DateTime
      */
     public static function nextWorkingDay(
-        DateTime|string $date,
+        \DateTimeInterface|string $date,
         ?int $offset = 1
-    ): DateTime {
+    ): \DateTime {
         $date = self::convertDate($date);
 
         $next_working_day = clone $date;
 
         for ($i = 0; $i < $offset; $i++) {
             do {
-                $next_working_day->add(new DateInterval("P1D"));
+                $next_working_day->add(new \DateInterval("P1D"));
             } while (!self::checkWorkingDay($next_working_day));
         }
 

@@ -45,7 +45,7 @@ class NumVoyageController extends Controller
      */
     public function read()
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 

@@ -66,7 +66,7 @@ class CharterController extends Controller
      */
     public function readAll(array $archives)
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
@@ -94,7 +94,7 @@ class CharterController extends Controller
      */
     public function read(int $id, ?bool $dry_run = false)
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
@@ -128,7 +128,7 @@ class CharterController extends Controller
      */
     public function create()
     {
-        if (!$this->user->can_edit($this->module)) {
+        if (!$this->user->canEdit($this->module)) {
             throw new AccessException();
         }
 
@@ -156,7 +156,7 @@ class CharterController extends Controller
      */
     public function update(int $id)
     {
-        if (!$this->user->can_edit($this->module)) {
+        if (!$this->user->canEdit($this->module)) {
             throw new AccessException();
         }
 
@@ -184,7 +184,7 @@ class CharterController extends Controller
      */
     public function delete(int $id)
     {
-        if (!$this->user->can_edit($this->module)) {
+        if (!$this->user->canEdit($this->module)) {
             throw new AccessException();
         }
 

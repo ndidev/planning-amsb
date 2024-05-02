@@ -41,8 +41,8 @@ abstract class Controller
   public function __construct(string $supported_methods = "OPTIONS, HEAD, GET")
   {
     // $this->user = $GLOBALS["user"];
-    $this->request = new HTTPRequest;
-    $this->response = new HTTPResponse;
+    $this->request = new HTTPRequest();
+    $this->response = new HTTPResponse();
 
     $this->supported_methods = $supported_methods;
 
@@ -54,7 +54,7 @@ abstract class Controller
   /**
    * Process a CORS preflight request.
    */
-  private function processCORSpreflight()
+  private function processCORSpreflight(): void
   {
     if (!$this->request->is_preflight) {
       return;
@@ -67,7 +67,7 @@ abstract class Controller
    * Vérification de l'authentification
    * 2 méthodes : session ou clé API
    */
-  private function authenticateUser()
+  private function authenticateUser(): void
   {
     if ($_ENV["AUTH"] === "ON") {
       try {

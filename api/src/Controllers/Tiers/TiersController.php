@@ -124,7 +124,7 @@ class TiersController extends Controller
      */
     public function create()
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
@@ -152,7 +152,7 @@ class TiersController extends Controller
      */
     public function update(int $id)
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
@@ -180,7 +180,7 @@ class TiersController extends Controller
      */
     public function delete(int $id)
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 

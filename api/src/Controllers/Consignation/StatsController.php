@@ -51,7 +51,7 @@ class StatsController extends Controller
      */
     public function readAll(array $filtre)
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
@@ -78,7 +78,7 @@ class StatsController extends Controller
      */
     public function readDetails($ids)
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 

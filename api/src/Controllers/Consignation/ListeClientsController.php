@@ -48,7 +48,7 @@ class ListeClientsController extends Controller
      */
     public function readAll()
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 

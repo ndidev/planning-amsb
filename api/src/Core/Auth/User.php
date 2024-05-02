@@ -350,7 +350,7 @@ class User
      * 
      * @return bool `true` si l'utilisateur peut accéder à la rubrique, `false` sinon.
      */
-    public function can_access(?string $rubrique): bool
+    public function canAccess(?string $rubrique): bool
     {
         // Accès à l'accueil et à l'écran individuel de modification du nom/mdp
         if ($rubrique === null || $rubrique === "user") return true;
@@ -365,7 +365,7 @@ class User
      * 
      * @return bool `true` si l'utilisateur peut éditer la rubrique, `false` sinon.
      */
-    public function can_edit(?string $rubrique): bool
+    public function canEdit(?string $rubrique): bool
     {
         return ($this->roles->$rubrique ?? -1) >= UserRoles::EDIT->value;
     }

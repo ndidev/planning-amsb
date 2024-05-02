@@ -49,7 +49,7 @@ class RegistreController extends Controller
      */
     public function get(array $filtre)
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 

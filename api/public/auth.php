@@ -9,7 +9,7 @@ use App\Core\Exceptions\Client\Auth\AccountPendingException;
 use App\Core\Exceptions\AppException;
 
 
-if (Security::check_if_request_can_be_done() === false) {
+if (Security::checkIfRequestCanBeDone() === false) {
     (new HTTPResponse(HTTPResponse::HTTP_TOO_MANY_REQUESTS_429))
         ->addHeader("Retry-After", (string) Security::BLOCKED_IP_TIMEOUT)
         ->setType("text/plain")

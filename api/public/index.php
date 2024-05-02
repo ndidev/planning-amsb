@@ -37,7 +37,7 @@ use App\Controllers\Config\CoteController as Cote;
 use App\Controllers\User\UserController as UserManagement;
 use App\Controllers\Admin\UserAccountController as UserAccount;
 
-if (Security::check_if_request_can_be_done() === false) {
+if (Security::checkIfRequestCanBeDone() === false) {
     (new HTTPResponse(HTTPResponse::HTTP_TOO_MANY_REQUESTS_429))
         ->addHeader("Retry-After", (string) Security::BLOCKED_IP_TIMEOUT)
         ->setType("text/plain")
@@ -128,7 +128,7 @@ try {
         ->setType("text")
         ->setBody("Erreur serveur")
         ->send();
-} catch (Throwable $e) {
+} catch (\Throwable $e) {
     error_logger($e);
     (new HTTPResponse(HTTPResponse::HTTP_INTERNAL_SERVER_ERROR_500))
         ->setType("text")
