@@ -2,20 +2,20 @@
 
 namespace App\Controllers\Tiers;
 
-use App\Service\ThirdPartyService;
+use App\Service\TiersService;
 use App\Controllers\Controller;
 use App\Core\HTTP\ETag;
 
 class NombreRdvController extends Controller
 {
-    private ThirdPartyService $service;
+    private TiersService $service;
     private $module = "tiers";
 
     public function __construct(
         private ?int $id = null,
     ) {
         parent::__construct();
-        $this->service = new ThirdPartyService();
+        $this->service = new TiersService();
         $this->processRequest();
     }
 
@@ -48,18 +48,18 @@ class NombreRdvController extends Controller
      */
     public function read(?int $id, ?bool $dry_run = false)
     {
-        if ($id && !$this->service->thirdPartyExists($id) && !$dry_run) {
+        if ($id && !$this->service->tiersExiste($id) && !$dry_run) {
             $this->response->setCode(404);
             return;
         }
 
-        $appointmentCount = $this->service->getThirdPartyAppointmentCount($id);
+        $rdvCount = $this->service->getNombreRdvTiers($id);
 
         if ($dry_run) {
-            return $appointmentCount;
+            return $rdvCount;
         }
 
-        $etag = ETag::get($appointmentCount);
+        $etag = ETag::get($rdvCount);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -69,7 +69,7 @@ class NombreRdvController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($appointmentCount))
+            ->setBody(json_encode($rdvCount))
             ->setHeaders($this->headers);
     }
 }

@@ -2,13 +2,13 @@
 
 namespace App\Repository;
 
-use App\Entity\ThirdParty;
+use App\Entity\Tiers;
 use App\Core\Exceptions\Server\DB\DBException;
 
-class ThirdPartyRepository extends Repository
+class TiersRepository extends Repository
 {
     /**
-     * @var array<int, \App\Entity\ThirdParty>
+     * @var array<int, \App\Entity\Tiers>
      */
     static private array $cache = [];
 
@@ -17,7 +17,7 @@ class ThirdPartyRepository extends Repository
      * 
      * @param int $id Identifiant de l'entrée.
      */
-    public function thirdPartyExists(int $id)
+    public function tiersExiste(int $id)
     {
         return $this->mysql->exists("tiers", $id);
     }
@@ -25,9 +25,9 @@ class ThirdPartyRepository extends Repository
     /**
      * Récupère tous les tiers.
      * 
-     * @return array<int, \App\Entity\ThirdParty> Liste des tiers
+     * @return array<int, \App\Entity\Tiers> Liste des tiers
      */
-    public function getThirdParties(): array
+    public function getListeTiers(): array
     {
         $statement =
             "SELECT *
@@ -38,7 +38,7 @@ class ThirdPartyRepository extends Repository
 
         $thirdPartiesRaw = $this->mysql->query($statement)->fetchAll();
 
-        $thirdParties = array_map(fn (array $thirdPartyRaw) => new ThirdParty($thirdPartyRaw), $thirdPartiesRaw);
+        $thirdParties = array_map(fn (array $thirdPartyRaw) => new Tiers($thirdPartyRaw), $thirdPartiesRaw);
 
         static::$cache = $thirdParties;
 
@@ -51,13 +51,13 @@ class ThirdPartyRepository extends Repository
      * @param int   $id      ID du tiers à récupérer
      * @param array $options Options de récupération
      * 
-     * @return ?ThirdParty Tiers récupéré
+     * @return ?Tiers Tiers récupéré
      */
-    public function getThirdParty($id): ?ThirdParty
+    public function getTiers($id): ?Tiers
     {
         $thirdParty = array_filter(
             static::$cache,
-            fn (ThirdParty $thirdPartyInCache) => $thirdPartyInCache->getId() === $id
+            fn (Tiers $thirdPartyInCache) => $thirdPartyInCache->getId() === $id
         )[0] ?? null;
 
         if ($thirdParty) {
@@ -72,7 +72,7 @@ class ThirdPartyRepository extends Repository
 
         if (!$thirdPartyRaw) return null;
 
-        $thirdParty = new ThirdParty($thirdPartyRaw);
+        $thirdParty = new Tiers($thirdPartyRaw);
 
         array_push(static::$cache, $thirdParty);
 
@@ -84,9 +84,9 @@ class ThirdPartyRepository extends Repository
      * 
      * @param array $input Eléments du tiers à créer
      * 
-     * @return ThirdParty Tiers créé
+     * @return Tiers Tiers créé
      */
-    public function createThirdParty(array $input): ThirdParty
+    public function createThirdParty(array $input): Tiers
     {
         // Enregistrement du logo dans le dossier images
         $logo = $this->enregistrerLogo($input["logo"] ?? NULL) ?: NULL;
@@ -152,7 +152,7 @@ class ThirdPartyRepository extends Repository
         $last_id = $this->mysql->lastInsertId();
         $this->mysql->commit();
 
-        return $this->getThirdParty($last_id);
+        return $this->getTiers($last_id);
     }
 
     /**
@@ -161,9 +161,9 @@ class ThirdPartyRepository extends Repository
      * @param int   $id ID du tiers à modifier
      * @param array $input  Eléments du tiers à modifier
      * 
-     * @return ThirdParty tiers modifié
+     * @return Tiers tiers modifié
      */
-    public function updateThirdParty($id, array $input): ThirdParty
+    public function updateTiers($id, array $input): Tiers
     {
         // Enregistrement du logo dans le dossier images
         $logo = $this->enregistrerLogo($input["logo"]);
@@ -229,7 +229,7 @@ class ThirdPartyRepository extends Repository
 
         $requete->execute($champs);
 
-        return $this->getThirdParty($id);
+        return $this->getTiers($id);
     }
 
     /**
@@ -239,11 +239,11 @@ class ThirdPartyRepository extends Repository
      * 
      * @return bool TRUE si succès, FALSE si erreur
      */
-    public function deleteThirdParty(int $id): bool
+    public function deleteTiers(int $id): bool
     {
-        $appointmentCount = $this->getAppointmentCount($id);
-        if ($appointmentCount > 0) {
-            throw new \Exception("Le tiers est concerné par $appointmentCount rdv. Impossible de le supprimer.");
+        $rdvCount = $this->getNombreRdv($id);
+        if ($rdvCount > 0) {
+            throw new \Exception("Le tiers est concerné par $rdvCount rdv. Impossible de le supprimer.");
         }
 
         $req = $this->mysql->prepare("DELETE FROM tiers WHERE id = :id");
@@ -321,7 +321,7 @@ class ThirdPartyRepository extends Repository
      * 
      * @return array Nombre de RDV pour le(s) tiers.
      */
-    public function getAppointmentCount(?int $id = null): array
+    public function getNombreRdv(?int $id = null): array
     {
         $statementWithoutId =
             "SELECT 
@@ -414,20 +414,20 @@ class ThirdPartyRepository extends Repository
 
         if (is_null($id)) {
             $req = $this->mysql->query($statementWithoutId);
-            $appointmentCountWithoutKeys = $req->fetchAll();
+            $rdvCountWithoutKeys = $req->fetchAll();
 
-            $appointmentCount = [];
-            foreach ($appointmentCountWithoutKeys as $infos) {
+            $rdvCount = [];
+            foreach ($rdvCountWithoutKeys as $infos) {
                 if ($infos["nombre_rdv"] > 0) {
-                    $appointmentCount[$infos["id"]] = $infos["nombre_rdv"];
+                    $rdvCount[$infos["id"]] = $infos["nombre_rdv"];
                 }
             }
         } else {
             $req = $this->mysql->prepare($statementWithId);
             $req->execute(["id" => $id]);
-            $appointmentCount = $req->fetch();
+            $rdvCount = $req->fetch();
         }
 
-        return $appointmentCount;
+        return $rdvCount;
     }
 }

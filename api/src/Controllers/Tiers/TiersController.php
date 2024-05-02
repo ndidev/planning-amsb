@@ -2,15 +2,15 @@
 
 namespace App\Controllers\Tiers;
 
-use App\Service\ThirdPartyService;
+use App\Service\TiersService;
 use App\Controllers\Controller;
 use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AccessException;
-use App\Entity\ThirdParty;
+use App\Entity\Tiers;
 
 class TiersController extends Controller
 {
-    private ThirdPartyService $thirdPartyService;
+    private TiersService $thirdPartyService;
     private $module = "tiers";
     private $sse_event = "tiers";
 
@@ -18,7 +18,7 @@ class TiersController extends Controller
         private ?int $id,
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
-        $this->thirdPartyService = new ThirdPartyService();
+        $this->thirdPartyService = new TiersService();
         $this->processRequest();
     }
 
@@ -66,7 +66,7 @@ class TiersController extends Controller
      */
     public function readAll()
     {
-        $listeTiers = $this->thirdPartyService->getThirdParties();
+        $listeTiers = $this->thirdPartyService->getListeTiers();
 
         $etag = ETag::get($listeTiers);
 
@@ -80,7 +80,7 @@ class TiersController extends Controller
         $this->response
             ->setBody(
                 json_encode(
-                    array_map(fn (ThirdParty $tiers) => $tiers->toArray(), $listeTiers)
+                    array_map(fn (Tiers $tiers) => $tiers->toArray(), $listeTiers)
                 )
             )
             ->setHeaders($this->headers);
@@ -94,7 +94,7 @@ class TiersController extends Controller
      */
     public function read(int $id, ?bool $dry_run = false)
     {
-        $tiers = $this->thirdPartyService->getThirdParty($id);
+        $tiers = $this->thirdPartyService->getTiers($id);
 
         if (!$tiers && !$dry_run) {
             $this->response->setCode(404);
@@ -139,8 +139,7 @@ class TiersController extends Controller
         $this->response
             ->setCode(201)
             ->setBody(json_encode($tiers->toArray()))
-            ->setHeaders($this->headers)
-            ->flush();
+            ->setHeaders($this->headers);
 
         notify_sse($this->sse_event, __FUNCTION__, $id, $tiers->toArray());
     }
@@ -156,19 +155,18 @@ class TiersController extends Controller
             throw new AccessException();
         }
 
-        if (!$this->thirdPartyService->thirdPartyExists($id)) {
+        if (!$this->thirdPartyService->tiersExiste($id)) {
             $this->response->setCode(404);
             return;
         }
 
         $input = $this->request->body;
 
-        $tiers = $this->thirdPartyService->updateThirdParty($id, $input);
+        $tiers = $this->thirdPartyService->updateTiers($id, $input);
 
         $this->response
             ->setBody(json_encode($tiers->toArray()))
-            ->setHeaders($this->headers)
-            ->flush();
+            ->setHeaders($this->headers);
 
         notify_sse($this->sse_event, __FUNCTION__, $id, $tiers->toArray());
     }
@@ -184,12 +182,12 @@ class TiersController extends Controller
             throw new AccessException();
         }
 
-        if (!$this->thirdPartyService->thirdPartyExists($id)) {
+        if (!$this->thirdPartyService->tiersExiste($id)) {
             $this->response->setCode(404);
             return;
         }
 
-        $this->thirdPartyService->deleteThirdParty($id);
+        $this->thirdPartyService->deleteTiers($id);
 
         $this->response->setCode(204)->flush();
         notify_sse($this->sse_event, __FUNCTION__, $id);

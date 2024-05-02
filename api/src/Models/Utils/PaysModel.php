@@ -3,7 +3,7 @@
 namespace App\Models\Utils;
 
 use App\Models\Model;
-use App\Entity\Country;
+use App\Entity\Pays;
 
 class PaysModel extends Model
 {
@@ -12,7 +12,7 @@ class PaysModel extends Model
     /**
      * Récupère tous les pays.
      * 
-     * @return array<int, \App\Entity\Country> Tous les pays récupérés.
+     * @return array<int, \App\Entity\Pays> Tous les pays récupérés.
      */
     public function readAll(): array
     {
@@ -27,7 +27,7 @@ class PaysModel extends Model
             $this->redis->set($this->redis_ns, json_encode($listePaysRaw));
         }
 
-        $listePays = array_map(fn (array $paysRaw) => new Country($paysRaw), $listePaysRaw);
+        $listePays = array_map(fn (array $paysRaw) => new Pays($paysRaw), $listePaysRaw);
 
         return $listePays;
     }
@@ -37,9 +37,9 @@ class PaysModel extends Model
      * 
      * @param string $iso Code ISO du pays à récupérer
      * 
-     * @return ?Country Pays récupéré
+     * @return ?Pays Pays récupéré
      */
-    public function read(string $iso): ?Country
+    public function read(string $iso): ?Pays
     {
         $statement = "SELECT * FROM utils_pays  WHERE iso = :iso";
 
@@ -49,7 +49,7 @@ class PaysModel extends Model
 
         if (!$paysRaw) return null;
 
-        $pays = new Country($paysRaw);
+        $pays = new Pays($paysRaw);
 
         return $pays;
     }
@@ -59,9 +59,9 @@ class PaysModel extends Model
      * 
      * @param array $input Eléments du pays à créer
      * 
-     * @return Country Pays créé
+     * @return Pays Pays créé
      */
-    public function create(array $input): Country
+    public function create(array $input): Pays
     {
         $statement =
             "INSERT INTO utils_pays
@@ -92,9 +92,9 @@ class PaysModel extends Model
      * @param string $iso    Code ISO du pays à modifier
      * @param array  $input  Eléments du paus à modifier
      * 
-     * @return Country Pays modifié
+     * @return Pays Pays modifié
      */
-    public function update($iso, array $input): Country
+    public function update($iso, array $input): Pays
     {
         $statement =
             "UPDATE utils_pays

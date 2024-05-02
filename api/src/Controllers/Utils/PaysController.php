@@ -6,7 +6,7 @@ use App\Models\Utils\PaysModel;
 use App\Controllers\Controller;
 use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Server\DB\DBException;
-use App\Entity\Country;
+use App\Entity\Pays;
 
 class PaysController extends Controller
 {
@@ -78,7 +78,7 @@ class PaysController extends Controller
         $this->response
             ->setBody(
                 json_encode(
-                    array_map(fn (Country $pays) => $pays->toArray(), $listePays)
+                    array_map(fn (Pays $pays) => $pays->toArray(), $listePays)
                 )
             )
             ->setHeaders($this->headers);

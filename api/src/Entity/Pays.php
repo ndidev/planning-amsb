@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use App\Core\Interfaces\Arrayable;
 
-class Country implements Arrayable
+class Pays implements Arrayable
 {
     private string $iso;
     private string $nom;
@@ -42,8 +42,8 @@ class Country implements Arrayable
     public function toArray(): array
     {
         return [
-            "iso" => $this->iso,
-            "nom" => $this->nom,
+            "iso" => $this->getISO(),
+            "nom" => $this->getNom(),
         ];
     }
 }
