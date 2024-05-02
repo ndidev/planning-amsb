@@ -109,28 +109,30 @@ class RdvModel extends Model
      * 
      * @return array Rendez-vous récupéré
      */
-    public function read($id): ?array
+    public function read(?int $id): ?array
     {
+        if (!$id) return null;
+
         $statement =
             "SELECT
-        id,
-        attente,
-        date_rdv,
-        heure_arrivee,
-        heure_depart,
-        confirmation_affretement,
-        commande_prete,
-        numero_bl,
-        commentaire_public,
-        commentaire_cache,
-        client,
-        chargement,
-        livraison,
-        affreteur,
-        fournisseur,
-        transporteur
-      FROM bois_planning
-      WHERE id = :id";
+                id,
+                attente,
+                date_rdv,
+                heure_arrivee,
+                heure_depart,
+                confirmation_affretement,
+                commande_prete,
+                numero_bl,
+                commentaire_public,
+                commentaire_cache,
+                client,
+                chargement,
+                livraison,
+                affreteur,
+                fournisseur,
+                transporteur
+            FROM bois_planning
+            WHERE id = :id";
 
         $requete = $this->mysql->prepare($statement);
         $requete->execute(["id" => $id]);
@@ -267,19 +269,23 @@ class RdvModel extends Model
      * @param int   $id    id du RDV à modifier
      * @param array $input Données à modifier
      * 
-     * @return array RDV modifié
+     * @return ?array RDV modifié ou null si aucune modification
      */
-    public function patch(int $id, array $input): array
+    public function patch(?int $id, array $input): ?array
     {
         /**
          * Confirmation affrètement
          */
         if (isset($input["confirmation_affretement"])) {
+            if (!$id) {
+                throw new ClientException("L'identifiant du RDV est requis pour confirmer l'affrètement.");
+            }
+
             $this->mysql
                 ->prepare(
                     "UPDATE bois_planning
-           SET confirmation_affretement = :confirmation_affretement
-           WHERE id = :id"
+                    SET confirmation_affretement = :confirmation_affretement
+                    WHERE id = :id"
                 )
                 ->execute([
                     'confirmation_affretement' => (int) $input["confirmation_affretement"],
@@ -291,6 +297,9 @@ class RdvModel extends Model
          * Heure d'arrivée (+ numéro BL auto le cas échéant)
          */
         if (isset($input["heure_arrivee"])) {
+            if (!$id) {
+                throw new ClientException("L'identifiant du RDV est requis pour enregistrer l'heure d'arrivée.");
+            }
 
             // Heure
             $heure = date('H:i:s');
@@ -303,11 +312,11 @@ class RdvModel extends Model
 
 
             // Numéro BL automatique (Stora Enso)      
-            $current = $this->read($id);
+            $rdv = $this->read($id);
 
             if (
-                $current["fournisseur"] === 292 /* Stora Enso */
-                && $current["chargement"] === 1 /* AMSB */
+                $rdv["fournisseur"] === 292 /* Stora Enso */
+                && $rdv["chargement"] === 1 /* AMSB */
             ) {
                 // Récupération du numéro de BL du RDV à modifier (si déjà renseigné)
                 $reponse_bl_actuel = $this->mysql->prepare(
@@ -329,7 +338,7 @@ class RdvModel extends Model
                 $reponse_bl_precedent = $this->mysql->query(
                     "SELECT numero_bl
               FROM bois_planning
-              WHERE fournisseur = {$current["fournisseur"]}
+              WHERE fournisseur = {$rdv["fournisseur"]}
               AND numero_bl != ''
               ORDER BY
                 date_rdv DESC,
@@ -376,6 +385,10 @@ class RdvModel extends Model
          * Heure de départ
          */
         if (isset($input["heure_depart"])) {
+            if (!$id) {
+                throw new ClientException("L'identifiant du RDV est requis pour enregistrer l'heure de départ.");
+            }
+
             $heure = date('H:i:s');
             $this->mysql
                 ->prepare("UPDATE bois_planning SET heure_depart = :heure WHERE id = :id")
@@ -390,40 +403,67 @@ class RdvModel extends Model
          */
         if (isset($input["numero_bl"])) {
             $numero_bl = $input['numero_bl'];
-            $dry_run = $input["dry_run"] ?? FALSE;
+            $fournisseur = [
+                "id" => $input['fournisseur'] ?? null,
+                "nom" => "",
+            ];
+            $dry_run = $input["dry_run"] ?? false;
 
-            $bl_existe = FALSE;
+            // Si pas d'identifiant de RDV ni d'identifiant de fournisseur, ne rien faire
+            if (!$id && !$fournisseur["id"]) {
+                return null;
+            }
+
+            $bl_existe = false;
 
             // Fournisseurs dont le numéro de BL doit être unique
             $fournisseurs_bl_unique = [
                 292 // Stora Enso
             ];
 
-            $current = $this->mysql
-                ->query(
-                    "SELECT p.fournisseur, f.nom_court AS fournisseur_nom
-           FROM bois_planning p
-           JOIN tiers f ON f.id = p.fournisseur
-           WHERE p.id = {$id}"
-                )->fetch();
+            // Si le fournisseur n'est pas dans la liste des fournisseurs dont le numéro de BL doit être unique, ne rien faire
+            if ($fournisseur["id"] && !in_array($fournisseur["id"], $fournisseurs_bl_unique)) {
+                return null;
+            }
 
-            // Vérification si le numéro de BL existe déjà (pour Enso)
+            if ($id && !$fournisseur["id"]) {
+                $requete_fournisseur = $this->mysql
+                    ->prepare(
+                        "SELECT p.fournisseur as id, f.nom_court AS nom
+                            FROM bois_planning p
+                            JOIN tiers f ON f.id = p.fournisseur
+                            WHERE p.id = :id"
+                    );
+            } else {
+                $requete_fournisseur = $this->mysql
+                    ->prepare(
+                        "SELECT t.id, t.nom_court AS nom
+                            FROM tiers t
+                            WHERE t.id = :id"
+                    );
+            }
+
+            $requete_fournisseur->execute(["id" => $fournisseur["id"] ?? (int) $id]);
+            $fournisseur = $requete_fournisseur->fetch();
+
+
+            // Vérifier si le numéro de BL existe déjà (pour Stora Enso)
             if (
-                array_search($current["fournisseur"], $fournisseurs_bl_unique) !== FALSE
+                in_array($fournisseur["id"], $fournisseurs_bl_unique)
                 && $numero_bl !== ""
                 && $numero_bl !== "-"
             ) {
                 $requete = $this->mysql->prepare(
                     "SELECT COUNT(id) AS bl_existe, id
-            FROM bois_planning
-            WHERE numero_bl LIKE CONCAT('%', :numero_bl, '%')
-            AND fournisseur = :fournisseur
-            AND NOT id = :id"
+                    FROM bois_planning
+                    WHERE numero_bl LIKE CONCAT('%', :numero_bl, '%')
+                    AND fournisseur = :fournisseur
+                    AND NOT id = :id"
                 );
                 $requete->execute([
                     "numero_bl" => $numero_bl,
-                    "fournisseur" => $current["fournisseur"],
-                    "id" => $id
+                    "fournisseur" => $fournisseur["id"],
+                    "id" => (int) $id,
                 ]);
 
                 $reponse_bdd = $requete->fetch();
@@ -431,23 +471,22 @@ class RdvModel extends Model
                 $bl_existe = (bool) $reponse_bdd["bl_existe"];
             }
 
-            if (!$bl_existe && !$dry_run) {
+            if ($id && !$bl_existe && !$dry_run) {
                 $this->mysql
                     ->prepare(
                         "UPDATE bois_planning
-              SET
-                numero_bl = :numero_bl
-              WHERE id = :id"
+                        SET numero_bl = :numero_bl
+                        WHERE id = :id"
                     )
                     ->execute([
                         'numero_bl' => $numero_bl,
-                        'id' => $id
+                        'id' => (int) $id
                     ]);
             }
 
-            // Si le numéro de BL existe déjà (pour Enso), message d'erreur
+            // Si le numéro de BL existe déjà (pour Stora Enso), message d'erreur
             if ($bl_existe && $id != $reponse_bdd["id"]) {
-                throw new ClientException("Le numéro de BL $numero_bl existe déjà pour {$current["fournisseur_nom"]}.");
+                throw new ClientException("Le numéro de BL $numero_bl existe déjà pour {$fournisseur["nom"]}.");
             }
         }
 

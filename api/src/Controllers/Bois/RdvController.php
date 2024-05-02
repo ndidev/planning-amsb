@@ -2,15 +2,16 @@
 
 namespace App\Controllers\Bois;
 
-use App\Models\Bois\RdvModel;
 use App\Controllers\Controller;
-use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Server\DB\DBException;
+use App\Core\HTTP\ETag;
+use App\Entity\Bois\RdvBois;
+use App\Service\BoisService;
 
 class RdvController extends Controller
 {
-    private $model;
+    private $service;
     private $module = "bois";
     private $sse_event = "bois/rdvs";
 
@@ -18,7 +19,7 @@ class RdvController extends Controller
         private ?int $id
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE");
-        $this->model = new RdvModel;
+        $this->service = new BoisService();
         $this->processRequest();
     }
 
@@ -74,9 +75,9 @@ class RdvController extends Controller
             throw new AccessException();
         }
 
-        $donnees = $this->model->readAll($filtre);
+        $rdvs = $this->service->getRdvs($filtre);
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($rdvs);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -86,8 +87,12 @@ class RdvController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setBody(
+                json_encode(
+                    array_map(fn (RdvBois $rdv) => $rdv->toArray(), $rdvs)
+                )
+            );
     }
 
     /**
@@ -102,18 +107,18 @@ class RdvController extends Controller
             throw new AccessException();
         }
 
-        $donnees = $this->model->read($id);
+        $rdv = $this->service->getRdv($id);
 
-        if (!$donnees && !$dry_run) {
+        if (!$rdv && !$dry_run) {
             $this->response->setCode(404);
             return;
         }
 
         if ($dry_run) {
-            return $donnees;
+            return $rdv;
         }
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($rdv);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -123,7 +128,7 @@ class RdvController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($rdv->toArray()))
             ->setHeaders($this->headers);
     }
 
@@ -132,7 +137,7 @@ class RdvController extends Controller
      */
     public function create()
     {
-        if (!$this->user->can_edit($this->module)) {
+        if (!$this->user->canEdit($this->module)) {
             throw new AccessException();
         }
 
@@ -145,19 +150,18 @@ class RdvController extends Controller
             return;
         }
 
-        $donnees = $this->model->create($input);
+        $rdv = $this->service->createRdv($input);
 
-        $id = $donnees["id"];
+        $id = $rdv->getId();
 
         $this->headers["Location"] = $_ENV["API_URL"] . "/bois/rdv/$id";
 
         $this->response
             ->setCode(201)
-            ->setBody(json_encode($donnees))
             ->setHeaders($this->headers)
-            ->flush();
+            ->setBody(json_encode($rdv->toArray()));
 
-        notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
+        notify_sse($this->sse_event, __FUNCTION__, $id, $rdv->toArray());
     }
 
     /**
@@ -171,21 +175,20 @@ class RdvController extends Controller
             throw new AccessException();
         }
 
-        if (!$this->model->exists($id)) {
+        if (!$this->service->rdvExiste($id)) {
             $this->response->setCode(404);
             return;
         }
 
         $input = $this->request->body;
 
-        $donnees = $this->model->update($id, $input);
+        $rdv = $this->service->updateRdv($id, $input);
 
         $this->response
-            ->setBody(json_encode($donnees))
             ->setHeaders($this->headers)
-            ->flush();
+            ->setBody(json_encode($rdv->toArray()));
 
-        notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
+        notify_sse($this->sse_event, __FUNCTION__, $id, $rdv->toArray());
     }
 
     /**
@@ -193,27 +196,28 @@ class RdvController extends Controller
      * 
      * @param int $id id du RDV à modifier.
      */
-    public function patch(int $id)
+    public function patch(?int $id)
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException();
         }
 
-        if (!$this->model->exists($id)) {
+        if ($id && !$this->service->rdvExiste($id)) {
             $this->response->setCode(404);
             return;
         }
 
         $input = $this->request->body;
 
-        $donnees = $this->model->patch($id, $input);
+        $rdv = $this->service->patchRdv($id, $input);
 
         $this->response
-            ->setBody(json_encode($donnees))
             ->setHeaders($this->headers)
-            ->flush();
+            ->setBody(json_encode($rdv->toArray()));
 
-        notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
+        if ($rdv) {
+            notify_sse($this->sse_event, __FUNCTION__, $id, $rdv->toArray());
+        }
     }
 
     /**
@@ -227,7 +231,7 @@ class RdvController extends Controller
             throw new AccessException();
         }
 
-        if (!$this->model->exists($id)) {
+        if (!$this->service->rdvExiste($id)) {
             $message = "Not Found";
             $documentation = $_ENV["API_URL"] . "/doc/#/Bois/supprimerRdvBois";
             $body = json_encode(["message" => $message, "documentation_url" => $documentation]);
@@ -235,7 +239,7 @@ class RdvController extends Controller
             return;
         }
 
-        $succes = $this->model->delete($id);
+        $succes = $this->service->deleteRdv($id);
 
         if ($succes) {
             $this->response->setCode(204)->flush();
