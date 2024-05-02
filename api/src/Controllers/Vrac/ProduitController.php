@@ -3,14 +3,14 @@
 namespace App\Controllers\Vrac;
 
 use App\Controllers\Controller;
-use App\Service\BulkProductService;
+use App\Service\VracService;
 use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AccessException;
-use App\Entity\BulkProduct;
+use App\Entity\Vrac\ProduitVrac;
 
 class ProduitController extends Controller
 {
-  private BulkProductService $productService;
+  private VracService $produitService;
   private $module = "vrac";
   private $sse_event = "vrac/produits";
 
@@ -18,7 +18,7 @@ class ProduitController extends Controller
     private ?int $id
   ) {
     parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
-    $this->productService = new BulkProductService();
+    $this->produitService = new VracService();
     $this->processRequest();
   }
 
@@ -68,9 +68,9 @@ class ProduitController extends Controller
       throw new AccessException();
     }
 
-    $products = $this->productService->getProducts();
+    $produits = $this->produitService->getProduits();
 
-    $etag = ETag::get($products);
+    $etag = ETag::get($produits);
 
     if ($this->request->etag === $etag) {
       $this->response->setCode(304);
@@ -82,7 +82,7 @@ class ProduitController extends Controller
     $this->response
       ->setBody(
         json_encode(
-          array_map(fn (BulkProduct $product) => $product->toArray(), $products)
+          array_map(fn (ProduitVrac $produit) => $produit->toArray(), $produits)
         )
       )
       ->setHeaders($this->headers);
@@ -100,18 +100,18 @@ class ProduitController extends Controller
       throw new AccessException();
     }
 
-    $product = $this->productService->getProduct($id);
+    $produit = $this->produitService->getProduit($id);
 
-    if (!$product && !$dry_run) {
+    if (!$produit && !$dry_run) {
       $this->response->setCode(404);
       return;
     }
 
     if ($dry_run) {
-      return $product;
+      return $produit;
     }
 
-    $etag = ETag::get($product);
+    $etag = ETag::get($produit);
 
     if ($this->request->etag === $etag) {
       $this->response->setCode(304);
@@ -121,7 +121,7 @@ class ProduitController extends Controller
     $this->headers["ETag"] = $etag;
 
     $this->response
-      ->setBody(json_encode($product?->toArray()))
+      ->setBody(json_encode($produit?->toArray()))
       ->setHeaders($this->headers);
   }
 
@@ -136,19 +136,18 @@ class ProduitController extends Controller
 
     $input = $this->request->body;
 
-    $product = $this->productService->createProduct($input);
+    $produit = $this->produitService->createProduit($input);
 
-    $id = $product->getId();
+    $id = $produit->getId();
 
     $this->headers["Location"] = $_ENV["API_URL"] . "/vrac/produits/$id";
 
     $this->response
       ->setCode(201)
-      ->setBody(json_encode($product->toArray()))
-      ->setHeaders($this->headers)
-      ->flush();
+      ->setBody(json_encode($produit->toArray()))
+      ->setHeaders($this->headers);
 
-    notify_sse($this->sse_event, __FUNCTION__, $id, $product->toArray());
+    notify_sse($this->sse_event, __FUNCTION__, $id, $produit->toArray());
   }
 
   /**
@@ -162,21 +161,20 @@ class ProduitController extends Controller
       throw new AccessException();
     }
 
-    if (!$this->productService->productExists($id)) {
+    if (!$this->produitService->produitExists($id)) {
       $this->response->setCode(404);
       return;
     }
 
     $input = $this->request->body;
 
-    $product = $this->productService->updateProduct($id, $input);
+    $produit = $this->produitService->updateProduit($id, $input);
 
     $this->response
-      ->setBody(json_encode($product->toArray()))
-      ->setHeaders($this->headers)
-      ->flush();
+      ->setBody(json_encode($produit->toArray()))
+      ->setHeaders($this->headers);
 
-    notify_sse($this->sse_event, __FUNCTION__, $id, $product->toArray());
+    notify_sse($this->sse_event, __FUNCTION__, $id, $produit->toArray());
   }
 
   /**
@@ -190,12 +188,12 @@ class ProduitController extends Controller
       throw new AccessException();
     }
 
-    if (!$this->productService->productExists($id)) {
+    if (!$this->produitService->produitExists($id)) {
       $this->response->setCode(404);
       return;
     }
 
-    $this->productService->deleteProduct($id);
+    $this->produitService->deleteProduit($id);
 
     $this->response->setCode(204)->flush();
     notify_sse($this->sse_event, __FUNCTION__, $id);
