@@ -17,6 +17,12 @@ class RootController extends Controller
 
     public function processRequest()
     {
+        if (true === $this->_404) {
+            $this->showIndex();
+            $this->response->send();
+            return;
+        }
+
         switch ($this->request->method) {
             case 'OPTIONS':
                 $this->response->setCode(204)->addHeader("Allow", $this->supported_methods);
