@@ -2,22 +2,20 @@
 
 namespace App\Controllers\Bois;
 
-use App\Models\Bois\RegistreModel;
+use App\Service\BoisService;
 use App\Controllers\Controller;
 use App\Core\HTTP\ETag;
-use App\Core\DateUtils;
-use DateTime;
 use App\Core\Exceptions\Client\Auth\AccessException;
 
 class RegistreController extends Controller
 {
-    private $model;
+    private $service;
     private $module = "bois";
 
     public function __construct()
     {
         parent::__construct();
-        $this->model = new RegistreModel;
+        $this->service = new BoisService();
         $this->processRequest();
     }
 
@@ -53,9 +51,9 @@ class RegistreController extends Controller
             throw new AccessException();
         }
 
-        $donnees = $this->model->readAll($filtre);
+        $csv = $this->service->getRegistreAffretement($filtre);
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($csv);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -65,94 +63,13 @@ class RegistreController extends Controller
         $date = date('YmdHis');
         $fichier = "registre_bois_$date.csv";
 
-        $rdvs = $donnees;
-
-        $output = fopen("php://temp/maxmemory:" . (5 * 1024 * 1024), "r+");
-
-        if ($output) {
-            try {
-                // UTF-8 BOM
-                $bom = chr(0xEF) . chr(0xBB) . chr(0xBF);
-                fputs($output, $bom);
-
-                // En-tête
-                $entete = [
-                    "Date",
-                    "Mois",
-                    "Donneur d'ordre",
-                    "Marchandise",
-                    "Chargement",
-                    "Livraison",
-                    "Numéro BL",
-                    "Transporteur"
-                ];
-                fputcsv($output, $entete, ';', '"');
-
-                // Lignes de RDV
-                foreach ($rdvs as $rdv) {
-
-                    /**
-                     * @var string $date_rdv
-                     * @var string $fournisseur
-                     * @var string $chargement_nom
-                     * @var string $chargement_ville
-                     * @var string $chargement_pays
-                     * @var string $livraison_nom
-                     * @var string $livraison_cp
-                     * @var string $livraison_ville
-                     * @var string $livraison_pays
-                     * @var string $numero_bl
-                     * @var string $transporteur
-                     */
-                    extract($rdv);
-
-                    $mois = DateUtils::format("LLLL", new DateTime($date_rdv));
-
-                    if (strtolower($chargement_pays) == 'france') {
-                        $chargement_pays = "";
-                    } else {
-                        $chargement_pays = " ($chargement_pays)";
-                    }
-
-                    if (strtolower($livraison_pays) === 'france') {
-                        $livraison_departement = " " . substr($livraison_cp, 0, 2);
-                        $livraison_pays = "";
-                    } else {
-                        $livraison_departement = "";
-                        $livraison_pays = " ($livraison_pays)";
-                    }
-
-                    $ligne = [
-                        date('d/m/Y', strtotime($date_rdv)),
-                        $mois,
-                        $fournisseur,
-                        "1 COMPLET DE BOIS",
-                        $chargement_nom === "AMSB" ? "AMSB" : $chargement_nom . ' ' . $chargement_ville . $chargement_pays,
-                        $livraison_nom === NULL
-                            ? "Pas de lieu de livraison renseigné"
-                            : $livraison_nom . $livraison_departement . ' ' . $livraison_ville . $livraison_pays,
-                        $numero_bl,
-                        $transporteur ?? "",
-                    ];
-
-                    fputcsv($output, $ligne, ';', '"');
-                }
-            } catch (\Throwable $e) {
-                throw "Erreur écriture lignes";
-            }
-
-            rewind($output);
-
-            $csv = stream_get_contents($output);
-        }
-
         $this->headers["ETag"] = $etag;
         $this->headers["Content-Type"] = "text/csv";
         $this->headers["Content-Disposition"] = "attachment; filename=$fichier";
         $this->headers["Cache-Control"] = "no-store, no-cache";
 
         $this->response
-            ->setBody($csv)
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setBody($csv);
     }
 }
