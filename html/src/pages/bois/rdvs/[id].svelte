@@ -127,12 +127,18 @@
    * Vérification du numéro BL directement pour éviter doublon
    */
   async function verifierNumeroBL() {
+    if (!numero_bl || !rdv.fournisseur) {
+      rdv.numero_bl = numero_bl;
+      return;
+    }
+
     try {
-      await fetcher(`bois/rdvs/${rdv.id}`, {
+      await fetcher(`bois/rdvs/${rdv.id ?? ""}`, {
         requestInit: {
           method: "PATCH",
           body: JSON.stringify({
             numero_bl,
+            fournisseur: rdv.fournisseur,
             dry_run: "true",
           }),
         },
@@ -377,9 +383,10 @@
           role="bois_fournisseur"
           bind:value={rdv.fournisseur}
           name="Fournisseur"
+          on:change={verifierNumeroBL}
           required
         />
-        {#if rdv.fournisseur && rdv.affreteur && rdv.fournisseur !== rdv.affreteur && $tiers.get(rdv.affreteur).roles.bois_fournisseur}
+        {#if rdv.fournisseur && rdv.affreteur && rdv.fournisseur !== rdv.affreteur && $tiers?.get(rdv.affreteur).roles.bois_fournisseur}
           <span
             class="material-symbols-outlined warning-fournisseur"
             title="Erreur possible : vérifier que le fournisseur est correct"
