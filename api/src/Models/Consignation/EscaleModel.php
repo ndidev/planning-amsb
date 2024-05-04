@@ -348,7 +348,7 @@ class EscaleModel extends Model
             'commentaire' => $input["commentaire"],
         ]);
 
-        $last_id = $this->mysql->lastInsertId();
+        $lastInsertId = $this->mysql->lastInsertId();
         $this->mysql->commit();
 
         // Marchandises
@@ -356,7 +356,7 @@ class EscaleModel extends Model
         $marchandises = $input["marchandises"] ?? [];
         foreach ($marchandises as $marchandise) {
             $requete_marchandises->execute([
-                'escale_id' => $last_id,
+                'escale_id' => $lastInsertId,
                 'marchandise' => $marchandise["marchandise"],
                 'client' => $marchandise["client"],
                 'operation' => $marchandise["operation"],
@@ -370,7 +370,7 @@ class EscaleModel extends Model
             ]);
         }
 
-        return $this->read($last_id);
+        return $this->read($lastInsertId);
     }
 
     /**

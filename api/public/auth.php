@@ -23,8 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
 }
 
 /**
- * Méthodes HTTP supportées.
- * @var string[]
+ * Supported HTTP methods.
  */
 $supported_methods = [
     "OPTIONS",
@@ -36,27 +35,26 @@ $supported_methods = [
     "DELETE"
 ];
 
-// Méthode non supportée
+// TODO: Properly handle supported methods (CORS)
+
+// Unsupported HTTP method
 if (array_search($_SERVER["REQUEST_METHOD"], $supported_methods) === FALSE) {
     (new HTTPResponse(HTTPResponse::HTTP_NOT_IMPLEMENTED_501))->send();
 }
 
 
-// Décomposition du chemin
+// Get the endpoint
 $url = parse_url($_SERVER['REQUEST_URI']);
 $path = $url["path"] ?? null;
 $endpoint = makeEndpoint($path);
 $query = [];
 parse_str($url["query"] ?? "", $query);
 
-/**
- * Liste des endoints.
- */
+// Endpoints
 try {
     switch ($endpoint) {
-            /** AFFICHAGE GENERAL */
         case null:
-        case "":
+        case "/":
             switch ($_SERVER["REQUEST_METHOD"]) {
                 case "OPTIONS":
                     (new HTTPResponse)
@@ -78,12 +76,12 @@ try {
             }
 
 
-        case 'login':
+        case '/login':
             if (!isset($_POST["login"]) || !isset($_POST["password"])) {
                 (new HTTPResponse(HTTPResponse::HTTP_BAD_REQUEST_400))->send();
             }
 
-            // Authentification et envoi du cookie
+            // Authenticate and send the cookie
             try {
                 $user = (new User)->login($_POST["login"], $_POST["password"]);
 
@@ -109,15 +107,15 @@ try {
             break;
 
 
-        case 'logout':
-            // Suppression de la session et suppression du cookie
+        case '/logout':
+            // Delete the cookie and session
             (new User)->logout();
             (new HTTPResponse(HTTPResponse::HTTP_NO_CONTENT_204))->send();
             break;
 
 
-        case 'check':
-            // Bypass pour développement
+        case '/check':
+            // Development bypass
             if ($_ENV["AUTH"] === "OFF") {
                 (new HTTPResponse(HTTPResponse::HTTP_OK_200))
                     ->setType("html")
@@ -139,7 +137,7 @@ try {
             break;
 
 
-        case 'first-login':
+        case '/first-login':
             if (!isset($_POST["login"]) || !isset($_POST["password"])) {
                 (new HTTPResponse(HTTPResponse::HTTP_NOT_FOUND_404))->send();
             }
@@ -150,7 +148,7 @@ try {
             break;
 
 
-        case 'info':
+        case '/info':
             (new HTTPResponse(HTTPResponse::HTTP_OK_200))
                 ->setType("json")
                 ->setBody(json_encode([
@@ -161,7 +159,6 @@ try {
             break;
 
 
-            /** DEFAUT */
         default:
             (new HTTPResponse(HTTPResponse::HTTP_NOT_FOUND_404))->send();
             break;
@@ -180,14 +177,15 @@ try {
 }
 
 
-/** === Fonctions === */
+/** === Functions === */
 
 /**
- * Crée l'endpoint à partir du path.
+/**
+ * Creates the endpoint from the path.
  * 
- * @param string $path Path obtenu de parse_url()
+ * @param string $path Path obtained from parse_url()
  * 
- * @return string Endpoint au format "path/to/endpoint"
+ * @return string Endpoint in the format "path/to/endpoint"
  */
 function makeEndpoint(string $path): ?string
 {
@@ -195,10 +193,10 @@ function makeEndpoint(string $path): ?string
         return null;
     }
 
-    // Suppression du chemin de l'auth dans la requête
-    // ex : "/planning-amsb/auth/login" => "login"
+    // Delete the auth path in the request
+    // e.g. : "/auth/login" => "/login"
     $auth_path = $_ENV["AUTH_PATH"];
-    $endpoint = substr_replace($path, "", 0, strlen($auth_path));
+    $endpoint = str_replace($auth_path, "", $path);
 
     return $endpoint;
 }

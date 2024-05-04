@@ -107,10 +107,10 @@ class AjoutRapideBoisModel extends Model
             'livraison' => $input["livraison"] ?: NULL,
         ]);
 
-        $last_id = $this->mysql->lastInsertId();
+        $lastInsertId = $this->mysql->lastInsertId();
         $this->mysql->commit();
 
-        return $this->read($last_id);
+        return $this->read($lastInsertId);
     }
 
     /**

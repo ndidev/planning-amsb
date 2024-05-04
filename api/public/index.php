@@ -6,36 +6,36 @@ use App\Core\HTTP\HTTPResponse;
 use App\Core\Security;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\ServerException;
-use App\Controllers\RootController as Root;
-use App\Controllers\Bois\RdvController as RdvBois;
-use App\Controllers\Bois\RegistreController as RegistreBois;
-use App\Controllers\Bois\StatsController as StatsBois;
-use App\Controllers\Bois\SuggestionsTransporteursController as SuggestionsTransporteurs;
-use App\Controllers\Vrac\RdvController as RdvVrac;
-use App\Controllers\Vrac\ProduitController as VracProduit;
-use App\Controllers\Consignation\EscaleController as EscaleConsignation;
-use App\Controllers\Consignation\NumVoyageController as NumVoyageConsignation;
-use App\Controllers\Consignation\TEController as TE;
-use App\Controllers\Consignation\StatsController as StatsConsignation;
-use App\Controllers\Consignation\NaviresEnActiviteController as NaviresEnActivite;
-use App\Controllers\Consignation\ListeNaviresController as NaviresConsignation;
-use App\Controllers\Consignation\ListeMarchandisesController as MarchandisesConsignation;
-use App\Controllers\Consignation\ListeClientsController as ClientsConsignation;
-use App\Controllers\Chartering\CharterController as AffretementMaritime;
-use App\Controllers\Tiers\TiersController as Tiers;
-use App\Controllers\Tiers\NombreRdvController as NombreRdv;
-use App\Controllers\Utils\PortsController as Ports;
-use App\Controllers\Utils\PaysController as Pays;
-use App\Controllers\Utils\MareesController as Marees;
-use App\Controllers\Config\AgenceController as Agence;
-use App\Controllers\Config\BandeauInfoController as BandeauInfo;
-use App\Controllers\Config\ConfigPDFController as ConfigPDF;
-use App\Controllers\Config\PDF\VisualiserPDFController as VisualiserPDF;
-use App\Controllers\Config\PDF\EnvoiPDFController as EnvoiPDF;
-use App\Controllers\Config\AjoutRapideController as AjoutRapide;
-use App\Controllers\Config\CoteController as Cote;
-use App\Controllers\User\UserController as UserManagement;
-use App\Controllers\Admin\UserAccountController as UserAccount;
+use App\Controller\RootController;
+use App\Controller\Timber\TimberAppointmentController as RdvBois;
+use App\Controller\Timber\TimberRegisterController as RegistreBois;
+use App\Controller\Timber\TimberStatsController as StatsBois;
+use App\Controller\Timber\TransportSuggestionsController;
+use App\Controller\Bulk\BulkAppointmentController;
+use App\Controller\Bulk\BulkProductController;
+use App\Controller\Consignation\EscaleController as EscaleConsignation;
+use App\Controller\Consignation\NumVoyageController as NumVoyageConsignation;
+use App\Controller\Consignation\TEController as TE;
+use App\Controller\Consignation\StatsController as StatsConsignation;
+use App\Controller\Consignation\NaviresEnActiviteController;
+use App\Controller\Consignation\ListeNaviresController as NaviresConsignation;
+use App\Controller\Consignation\ListeMarchandisesController as MarchandisesConsignation;
+use App\Controller\Consignation\ListeClientsController as ClientsConsignationController;
+use App\Controller\Chartering\CharterController;
+use App\Controller\ThirdParty\ThirdPartyController;
+use App\Controller\ThirdParty\AppointmentCountController;
+use App\Controller\Utils\PortController;
+use App\Controller\Utils\CountryController;
+use App\Controller\Utils\TideController;
+use App\Controller\Config\AgenceController;
+use App\Controller\Config\BandeauInfoController;
+use App\Controller\Config\ConfigPDFController;
+use App\Controller\Config\PDF\VisualiserPDFController;
+use App\Controller\Config\PDF\EnvoiPDFController;
+use App\Controller\Config\AjoutRapideController;
+use App\Controller\Config\CoteController;
+use App\Controller\User\UserController as UserManagementController;
+use App\Controller\Admin\UserAccountController;
 
 if (Security::checkIfRequestCanBeDone() === false) {
     (new HTTPResponse(HTTPResponse::HTTP_TOO_MANY_REQUESTS_429))
@@ -46,22 +46,21 @@ if (Security::checkIfRequestCanBeDone() === false) {
 }
 
 /**
- * Routes de l'API.
- * @var array
+ * API routes.
  */
 $routes = [
     // Affichage général
-    ["/", fn () => new Root()],
+    ["/", fn () => new RootController()],
 
     // Bois
     ["/bois/rdvs/[i:id]?", fn ($id = null) => new RdvBois($id)],
     ["/bois/registre", fn () => new RegistreBois()],
     ["/bois/stats", fn () => new StatsBois()],
-    ["/bois/suggestions-transporteurs", fn () => new SuggestionsTransporteurs()],
+    ["/bois/suggestions-transporteurs", fn () => new TransportSuggestionsController()],
 
     // Vrac
-    ["/vrac/rdvs/[i:id]?", fn ($id = null) => new RdvVrac($id)],
-    ["/vrac/produits/[i:id]?", fn ($id = null) => new VracProduit($id)],
+    ["/vrac/rdvs/[i:id]?", fn ($id = null) => new BulkAppointmentController($id)],
+    ["/vrac/produits/[i:id]?", fn ($id = null) => new BulkProductController($id)],
 
     // Consignation
     ["/consignation/escales/[i:id]?", fn ($id = null) => new EscaleConsignation($id)],
@@ -70,36 +69,36 @@ $routes = [
     ["/consignation/stats/[*:ids]?", fn ($ids = null) => new StatsConsignation($ids)],
     ["/consignation/navires", fn () => new NaviresConsignation()],
     ["/consignation/marchandises", fn () => new MarchandisesConsignation()],
-    ["/consignation/clients", fn () => new ClientsConsignation()],
-    ["/consignation/navires-en-activite", fn () => new NaviresEnActivite()],
+    ["/consignation/clients", fn () => new ClientsConsignationController()],
+    ["/consignation/navires-en-activite", fn () => new NaviresEnActiviteController()],
 
     // Chartering
-    ["/chartering/charters/[i:id]?", fn ($id = null) => new AffretementMaritime($id)],
+    ["/chartering/charters/[i:id]?", fn ($id = null) => new CharterController($id)],
 
     // Utilitaires
-    ["/ports/[a:locode]?", fn ($locode = null) => new Ports($locode)],
-    ["/pays/[a:iso]?", fn ($iso = null) => new Pays($iso)],
-    ["/marees/[i:annee]?", fn ($annee = null) => new Marees($annee)],
-    ["/marees/annees", fn () => new Marees(annees: true)],
+    ["/ports/[a:locode]?", fn ($locode = null) => new PortController($locode)],
+    ["/pays/[a:iso]?", fn ($iso = null) => new CountryController($iso)],
+    ["/marees/[i:annee]?", fn ($annee = null) => new TideController($annee)],
+    ["/marees/annees", fn () => new TideController(annees: true)],
 
     // Config
-    ["/config/agence/[a:service]?", fn ($service = null) => new Agence($service)],
-    ["/config/bandeau-info/[i:id]?", fn ($id = null) => new BandeauInfo($id)],
-    ["/config/pdf/[i:id]?", fn ($id = null) => new ConfigPDF($id)],
-    ["/config/pdf/visu", fn () => new VisualiserPDF()],
-    ["/config/pdf/envoi", fn () => new EnvoiPDF()],
-    ["/config/ajouts-rapides/[i:id]?", fn ($id = null) => new AjoutRapide($id)],
-    ["/config/cotes/[a:cote]?", fn ($cote = null) => new Cote($cote)],
+    ["/config/agence/[a:service]?", fn ($service = null) => new AgenceController($service)],
+    ["/config/bandeau-info/[i:id]?", fn ($id = null) => new BandeauInfoController($id)],
+    ["/config/pdf/[i:id]?", fn ($id = null) => new ConfigPDFController($id)],
+    ["/config/pdf/visu", fn () => new VisualiserPDFController()],
+    ["/config/pdf/envoi", fn () => new EnvoiPDFController()],
+    ["/config/ajouts-rapides/[i:id]?", fn ($id = null) => new AjoutRapideController($id)],
+    ["/config/cotes/[a:cote]?", fn ($cote = null) => new CoteController($cote)],
 
     // Tiers
-    ["/tiers/[i:id]?", fn ($id = null) => new Tiers($id)],
-    ["/tiers/[i:id]?/nombre_rdv", fn ($id = null) => new NombreRdv($id)],
+    ["/tiers/[i:id]?", fn ($id = null) => new ThirdPartyController($id)],
+    ["/tiers/[i:id]?/nombre_rdv", fn ($id = null) => new AppointmentCountController($id)],
 
     // Admin
-    ["/admin/users/[a:uid]?", fn ($uid = null) => new UserAccount($uid)],
+    ["/admin/users/[a:uid]?", fn ($uid = null) => new UserAccountController($uid)],
 
     // Utilisateur
-    ["/user", fn () => new UserManagement()],
+    ["/user", fn () => new UserManagementController()],
 ];
 
 /**
@@ -115,7 +114,7 @@ try {
         call_user_func_array($controller, $params);
     } else {
         // 404 Not Found
-        new Root(true);
+        new RootController(true);
     }
 } catch (ClientException $e) {
     (new HTTPResponse($e->http_status))

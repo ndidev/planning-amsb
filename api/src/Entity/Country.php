@@ -4,25 +4,25 @@ namespace App\Entity;
 
 use App\Core\Interfaces\Arrayable;
 
-class Port implements Arrayable
+class Country implements Arrayable
 {
-    private string $locode;
+    private string $iso;
     private string $name;
 
     public function __construct(array $rawData = [])
     {
-        $this->setLocode($rawData["locode"] ?? "");
+        $this->setISO($rawData["iso"] ?? "");
         $this->setName($rawData["nom"] ?? "");
     }
 
-    public function getLocode(): string
+    public function getISO(): string
     {
-        return $this->locode;
+        return $this->iso;
     }
 
-    public function setLocode(string $locode): static
+    public function setISO(string $iso): static
     {
-        $this->locode = $locode;
+        $this->iso = $iso;
 
         return $this;
     }
@@ -39,19 +39,11 @@ class Port implements Arrayable
         return $this;
     }
 
-    public function getDisplayName(): string
-    {
-        $displayName = $this->name . ", " . substr($this->locode, 0, 2);
-
-        return $displayName;
-    }
-
     public function toArray(): array
     {
         return [
-            "locode" => $this->getLocode(),
+            "iso" => $this->getISO(),
             "nom" => $this->getName(),
-            "nom_affichage" => $this->getDisplayName(),
         ];
     }
 }

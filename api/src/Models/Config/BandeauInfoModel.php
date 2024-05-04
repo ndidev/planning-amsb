@@ -112,10 +112,10 @@ class BandeauInfoModel extends Model
             'message' => substr($input["message"], 0, 255),
         ]);
 
-        $last_id = $this->mysql->lastInsertId();
+        $lastInsertId = $this->mysql->lastInsertId();
         $this->mysql->commit();
 
-        return $this->read($last_id);
+        return $this->read($lastInsertId);
     }
 
     /**

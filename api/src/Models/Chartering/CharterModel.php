@@ -265,7 +265,7 @@ class CharterModel extends Model
             "archive" => (int) $input["archive"],
         ]);
 
-        $last_id = $this->mysql->lastInsertId();
+        $lastInsertId = $this->mysql->lastInsertId();
         $this->mysql->commit();
 
         // Détails
@@ -273,7 +273,7 @@ class CharterModel extends Model
         $details = $input["legs"] ?? [];
         foreach ($details as $detail) {
             $requete_details->execute([
-                "charter" => $last_id,
+                "charter" => $lastInsertId,
                 "bl_date" => $detail["bl_date"],
                 "marchandise" => $detail["marchandise"],
                 "quantite" => $detail["quantite"],
@@ -283,7 +283,7 @@ class CharterModel extends Model
             ]);
         }
 
-        return $this->read($last_id);
+        return $this->read($lastInsertId);
     }
 
     /**

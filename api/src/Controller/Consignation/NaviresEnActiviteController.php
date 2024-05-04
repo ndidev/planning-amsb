@@ -1,0 +1,67 @@
+<?php
+
+namespace App\Controller\Consignation;
+
+use App\Models\Consignation\NaviresEnActiviteModel;
+use App\Controller\Controller;
+use App\Core\HTTP\ETag;
+
+/**
+ * Liste des navires en opération entre deux dates.
+ */
+class NaviresEnActiviteController extends Controller
+{
+    private $model;
+    private $module = "consignation";
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->model = new NaviresEnActiviteModel;
+        $this->processRequest();
+    }
+
+    public function processRequest(): void
+    {
+        switch ($this->request->method) {
+            case 'OPTIONS':
+                $this->response->setCode(204)->addHeader("Allow", $this->supported_methods);
+                break;
+
+            case 'HEAD':
+            case 'GET':
+                $this->readAll();
+                break;
+
+            default:
+                $this->response->setCode(405)->addHeader("Allow", $this->supported_methods);
+                break;
+        }
+
+        // Envoi de la réponse HTTP
+        $this->response->send();
+    }
+
+    /**
+     * Renvoie le dernier numéro de voyage du navire.
+     */
+    public function readAll()
+    {
+        $input = $this->request->query;
+
+        $donnees = $this->model->readAll($input);
+
+        $etag = ETag::get($donnees);
+
+        if ($this->request->etag === $etag) {
+            $this->response->setCode(304);
+            return;
+        }
+
+        $this->headers["ETag"] = $etag;
+
+        $this->response
+            ->setBody(json_encode($donnees))
+            ->setHeaders($this->headers);
+    }
+}
