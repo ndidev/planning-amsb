@@ -43,7 +43,7 @@ export function createFlatStore<T extends { id: string | number }>(
     return () => {
       document.removeEventListener(`planning:${endpoint}`, handleDBEvent);
       for (const event of additionalEvents) {
-        document.removeEventListener(`planning:${event}`, () => fetchAll);
+        document.removeEventListener(`planning:${event}`, fetchAll);
       }
     };
   });
