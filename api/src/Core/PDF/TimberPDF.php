@@ -3,28 +3,23 @@
 namespace App\Core\PDF;
 
 use App\Core\DateUtils;
-use App\Core\PDF\PDFPlanning;
-use \DateTime;
 
-class PDFBois extends PDFPlanning
+final class TimberPDF extends PlanningPDF
 {
     /**
      * Génère un PDF bois.
      * 
      * @param array    $fournisseur Infos sur le fournisseur.
      * @param array    $rdvs        RDVs à inclure dans le PDF.
-     * @param DateTime $date_debut  Date de début des RDV.
-     * @param DateTime $date_fin    Date de fin des RDV.
+     * @param \DateTime $date_debut  Date de début des RDV.
+     * @param \DateTime $date_fin    Date de fin des RDV.
      * @param array    $agence      Infos sur l'agence.
-     * 
-     * @return void 
-     * @throws Exception 
      */
     public function __construct(
         protected array $fournisseur,
         protected array $rdvs,
-        protected DateTime $date_debut,
-        protected DateTime $date_fin,
+        protected \DateTime $date_debut,
+        protected \DateTime $date_fin,
         protected array $agence
     ) {
         parent::__construct(
@@ -32,10 +27,10 @@ class PDFBois extends PDFPlanning
             $agence
         );
 
-        $this->genererPDF();
+        $this->generatePDF();
     }
 
-    protected function genererPDF()
+    protected function generatePDF()
     {
         $this->AliasNbPages();
         $this->AddPage();
@@ -360,10 +355,10 @@ class PDFBois extends PDFPlanning
     /**
      * Affichage d'un message "Aucun RDV".
      * 
-     * @param DateTime $date_debut Date de début.
-     * @param DateTime $date_fin   Date de fin.
+     * @param \DateTime $date_debut Date de début.
+     * @param \DateTime $date_fin   Date de fin.
      */
-    function AucunRDV(DateTime $date_debut, DateTime $date_fin): void
+    function AucunRDV(\DateTime $date_debut, \DateTime $date_fin): void
     {
         $this->SetFont('Roboto', '', 12);
         $this->SetTextColor(0, 0, 0);

@@ -73,16 +73,16 @@ class CoteController extends Controller
     /**
      * Récupère une côte.
      */
-    public function read(string $cote, ?bool $dry_run = false)
+    public function read(string $cote, ?bool $dryRun = false)
     {
         $donnees = $this->model->read($cote);
 
-        if (!$donnees && !$dry_run) {
+        if (!$donnees && !$dryRun) {
             $this->response->setCode(404);
             return;
         }
 
-        if ($dry_run) {
+        if ($dryRun) {
             return $donnees;
         }
 

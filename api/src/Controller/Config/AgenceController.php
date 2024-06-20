@@ -76,16 +76,16 @@ class AgenceController extends Controller
      * 
      * @param string $service Service de l'agence à récupérer.
      */
-    public function read(string $service, ?bool $dry_run = false)
+    public function read(string $service, ?bool $dryRun = false)
     {
         $donnees = $this->model->read($service);
 
-        if (!$donnees && !$dry_run) {
+        if (!$donnees && !$dryRun) {
             $this->response->setCode(404);
             return;
         }
 
-        if ($dry_run) {
+        if ($dryRun) {
             return $donnees;
         }
 

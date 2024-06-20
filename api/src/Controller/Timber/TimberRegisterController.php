@@ -9,13 +9,13 @@ use App\Core\Exceptions\Client\Auth\AccessException;
 
 class TimberRegisterController extends Controller
 {
-    private $service;
-    private $module = "bois";
+    private TimberService $timberService;
+    private string $module = "bois";
 
     public function __construct()
     {
         parent::__construct();
-        $this->service = new TimberService();
+        $this->timberService = new TimberService();
         $this->processRequest();
     }
 
@@ -51,7 +51,7 @@ class TimberRegisterController extends Controller
             throw new AccessException();
         }
 
-        $csv = $this->service->getChateringRegister($filter);
+        $csv = $this->timberService->getChateringRegister($filter);
 
         $etag = ETag::get($csv);
 
@@ -61,11 +61,11 @@ class TimberRegisterController extends Controller
         }
 
         $date = date('YmdHis');
-        $filename = "registre_bois_$date.csv";
+        $filename = "registre_bois_{$date}.csv";
 
         $this->headers["ETag"] = $etag;
         $this->headers["Content-Type"] = "text/csv";
-        $this->headers["Content-Disposition"] = "attachment; filename=$filename";
+        $this->headers["Content-Disposition"] = "attachment; filename={$filename}";
         $this->headers["Cache-Control"] = "no-store, no-cache";
 
         $this->response

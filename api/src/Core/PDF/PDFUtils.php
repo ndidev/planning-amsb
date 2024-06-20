@@ -4,10 +4,9 @@ namespace App\Core\PDF;
 
 use App\Core\Database\MySQL;
 use App\Core\DateUtils;
-use App\Core\PDF\PDFVrac;
+use App\Core\PDF\BulkPDF;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception as PHPMailerException;
-use \DateTime;
 use \tFPDF;
 
 class PDFUtils
@@ -17,17 +16,17 @@ class PDFUtils
      * 
      * @param string   $module      id du module.
      * @param int      $fournisseur id du fournisseur.
-     * @param DateTime $date_debut  Date de début des RDV.
-     * @param DateTime $date_fin    Date de fin des RDV.
+     * @param \DateTime $date_debut  Date de début des RDV.
+     * @param \DateTime $date_fin    Date de fin des RDV.
      * 
      * @return tFPDF 
-     * @throws PDOException 
+     * @throws \PDOException 
      */
     public static function generatePDF(
         string $module,
         int $fournisseur,
-        DateTime $date_debut,
-        DateTime $date_fin
+        \DateTime $date_debut,
+        \DateTime $date_fin
     ): tFPDF {
 
         $mysql = new MySQL;
@@ -86,7 +85,7 @@ class PDFUtils
 
             $rdvs = $requete_rdvs_vrac->fetchAll();
 
-            return new PDFVrac($donnees_fournisseur, $rdvs, $date_debut, $date_fin, $donnees_agence);
+            return new BulkPDF($donnees_fournisseur, $rdvs, $date_debut, $date_fin, $donnees_agence);
         }
 
         /**
@@ -178,7 +177,7 @@ class PDFUtils
                 "attente" => $requete_rdvs_bois_attente->fetchAll(),
             ];
 
-            return new PDFBois($donnees_fournisseur, $rdvs, $date_debut, $date_fin, $donnees_agence);
+            return new TimberPDF($donnees_fournisseur, $rdvs, $date_debut, $date_fin, $donnees_agence);
         }
     }
 
@@ -187,8 +186,7 @@ class PDFUtils
      * 
      * @param tFPDF $pdf Instance du PDF à visualiser.
      * 
-     * @return string 
-     * @throws Exception 
+     * @return string PDF sous forme `string`.
      */
     public static function stringifyPDF(tFPDF $pdf)
     {
@@ -202,8 +200,8 @@ class PDFUtils
      * @param string   $module       Id du module.
      * @param int      $fournisseur  Id du fournisseur.
      * @param string   $liste_emails Adresses e-mail des destinataires.
-     * @param DateTime $date_debut   Date de début des RDV.
-     * @param DateTime $date_fin     Date de fin des RDV.
+     * @param \DateTime $date_debut   Date de début des RDV.
+     * @param \DateTime $date_fin     Date de fin des RDV.
      * 
      * @return array Résultat de l'envoi.
      */
@@ -212,8 +210,8 @@ class PDFUtils
         string $module,
         int $fournisseur,
         string $liste_emails,
-        DateTime $date_debut,
-        DateTime $date_fin
+        \DateTime $date_debut,
+        \DateTime $date_fin
     ): array {
         /**
          * @var array $resultat Résultat de l'envoi.
@@ -240,7 +238,7 @@ class PDFUtils
             );
 
             // Adresses
-            $mail->ajouterAdresses(to: explode(PHP_EOL, $liste_emails));
+            $mail->addAddresses(to: explode(PHP_EOL, $liste_emails));
 
             $mail->send();
             $mail->smtpClose();

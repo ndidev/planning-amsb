@@ -90,9 +90,9 @@ class CharterController extends Controller
      * Récupère un affrètement maritime.
      * 
      * @param int  $id      id de l'affrètement à récupérer.
-     * @param bool $dry_run Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param bool $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(int $id, ?bool $dry_run = false)
+    public function read(int $id, ?bool $dryRun = false)
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
@@ -100,12 +100,12 @@ class CharterController extends Controller
 
         $donnees = $this->model->read($id);
 
-        if (!$donnees && !$dry_run) {
+        if (!$donnees && !$dryRun) {
             $this->response->setCode(404);
             return;
         }
 
-        if ($dry_run) {
+        if ($dryRun) {
             return $donnees;
         }
 
@@ -119,8 +119,8 @@ class CharterController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setBody(json_encode($donnees));
     }
 
     /**

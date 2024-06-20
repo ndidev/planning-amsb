@@ -91,13 +91,13 @@ class AjoutRapideController extends Controller
      * Récupère un ajout rapide.
      * 
      * @param int  $id      id de l'ajout rapide à récupérer.
-     * @param bool $dry_run Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param bool $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(int $id, ?bool $dry_run = false)
+    public function read(int $id, ?bool $dryRun = false)
     {
         $donnees = $this->model->read($id);
 
-        if (!$donnees && !$dry_run) {
+        if (!$donnees && !$dryRun) {
             $this->response->setCode(404);
             return;
         }
@@ -108,7 +108,7 @@ class AjoutRapideController extends Controller
             throw new AccessException();
         }
 
-        if ($dry_run) {
+        if ($dryRun) {
             return $donnees;
         }
 

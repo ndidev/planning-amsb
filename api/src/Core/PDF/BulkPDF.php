@@ -3,10 +3,10 @@
 namespace App\Core\PDF;
 
 use App\Core\DateUtils;
-use App\Core\PDF\PDFPlanning;
+use App\Core\PDF\PlanningPDF;
 use \DateTime;
 
-class PDFVrac extends PDFPlanning
+final class BulkPDF extends PlanningPDF
 {
     /**
      * Génère un PDF vrac.

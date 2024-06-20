@@ -90,9 +90,9 @@ class EscaleController extends Controller
      * Récupère une escale consignation.
      * 
      * @param int  $id      id de l'escale à récupérer.
-     * @param bool $dry_run Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param bool $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(int $id, ?bool $dry_run = false)
+    public function read(int $id, ?bool $dryRun = false)
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
@@ -100,12 +100,12 @@ class EscaleController extends Controller
 
         $donnees = $this->model->read($id);
 
-        if (!$donnees && !$dry_run) {
+        if (!$donnees && !$dryRun) {
             $this->response->setCode(404);
             return;
         }
 
-        if ($dry_run) {
+        if ($dryRun) {
             return $donnees;
         }
 

@@ -2,12 +2,11 @@
 
 namespace App\Core\PDF;
 
-use \Exception;
 use \tFPDF;
 
 define("_SYSTEM_TTFONTS", UNIFONTS . "/");
 
-class PDFPlanning extends tFPDF
+abstract class PlanningPDF extends tFPDF
 {
     public function __construct(
         protected array $fournisseur,
@@ -84,8 +83,7 @@ class PDFPlanning extends tFPDF
      * 
      * @param string $file Chemin du fichier WebP.
      * 
-     * @return array 
-     * @throws Exception 
+     * @return array Informations sur l'image.
      */
     protected function _parsewebp(string $file): array
     {
