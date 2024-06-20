@@ -525,7 +525,7 @@ class User
             "path" => $_ENV["SESSION_COOKIE_PATH"],
             // "samesite" => str_starts_with($_SERVER['HTTP_HOST'], "localhost") ? "None" : "Strict",
             "samesite" => "Strict",
-            "secure" => $_ENV["ENVIRONNEMENT"] !== "development",
+            "secure" => $_ENV["APP_ENV"] !== "development",
             // "secure" => true,
             "httponly" => true
         ]);
