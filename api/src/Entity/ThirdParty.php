@@ -4,12 +4,13 @@
 
 namespace App\Entity;
 
-use App\Core\Interfaces\Arrayable;
+use App\Core\Traits\IdentifierTrait;
 use App\Service\CountryService;
 
-class ThirdParty implements Arrayable
+class ThirdParty extends AbstractEntity
 {
-    private ?int $id;
+    use IdentifierTrait;
+
     private string $shortName;
     private string $fullName;
     private string $addressLine1;
@@ -57,18 +58,6 @@ class ThirdParty implements Arrayable
         $this->setLogo($rawData["logo"] ?? null);
         $this->setIsActive($rawData["actif"] ?? true);
         $this->setAppointmentCount($rawData["nombre_rdv"] ?? 0);
-    }
-
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
-
-    public function setId(?int $id): static
-    {
-        $this->id = $id;
-
-        return $this;
     }
 
     public function getShortName(): string

@@ -9,7 +9,7 @@ use App\Service\PortService;
 
 class PortRepository extends Repository
 {
-    private $redisNamespace = "countries";
+    private $redisNamespace = "ports";
 
     /**
      * Récupère tous les ports.

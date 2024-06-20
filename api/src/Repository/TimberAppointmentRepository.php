@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Core\Component\Collection;
 use App\Core\DateUtils;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\DB\DBException;
@@ -31,34 +32,34 @@ class TimberAppointmentRepository extends Repository
      * 
      * @param array $query Paramètres de recherche.
      * 
-     * @return TimberAppointment[] Tous les RDV récupérés
+     * @return Collection<TimberAppointment> Tous les RDV récupérés
      */
-    public function getAppointments(array $query): array
+    public function getAppointments(array $query): Collection
     {
         // Filtre
-        $date_debut = isset($query['date_debut']) ? ($query['date_debut'] ?: date("Y-m-d")) : date("Y-m-d");
-        $date_fin = isset($query['date_fin']) ? ($query['date_fin'] ?: "9999-12-31") : "9999-12-31";
-        $filtre_fournisseur = trim($query['fournisseur'] ?? "", ",");
-        $filtre_client = trim($query['client'] ?? "", ",");
-        $filtre_chargement = trim($query['chargement'] ?? "", ",");
-        $filtre_livraison = trim($query['livraison'] ?? "", ",");
-        $filtre_transporteur = trim($query['transporteur'] ?? "", ",");
-        $filtre_affreteur = trim($query['affreteur'] ?? "", ",");
+        $startDate = isset($query['date_debut']) ? ($query['date_debut'] ?: date("Y-m-d")) : date("Y-m-d");
+        $endDate = isset($query['date_fin']) ? ($query['date_fin'] ?: "9999-12-31") : "9999-12-31";
+        $supplierFilter = trim($query['fournisseur'] ?? "", ",");
+        $customerFilter = trim($query['client'] ?? "", ",");
+        $loadingPlaceFilter = trim($query['chargement'] ?? "", ",");
+        $deliveryPlaceFilter = trim($query['livraison'] ?? "", ",");
+        $transportFilter = trim($query['transporteur'] ?? "", ",");
+        $chartererFilter = trim($query['affreteur'] ?? "", ",");
 
-        $filtre_sql_fournisseur = $filtre_fournisseur === "" ? "" : " AND fournisseur IN ($filtre_fournisseur)";
-        $filtre_sql_client = $filtre_client === "" ? "" : " AND client IN ($filtre_client)";
-        $filtre_sql_chargement = $filtre_chargement === "" ? "" : " AND chargement IN ($filtre_chargement)";
-        $filtre_sql_livraison = $filtre_livraison === "" ? "" : " AND livraison IN ($filtre_livraison)";
-        $filtre_sql_transporteur = $filtre_transporteur === "" ? "" : " AND transporteur IN ($filtre_transporteur)";
-        $filtre_sql_affreteur = $filtre_affreteur === "" ? "" : " AND affreteur IN ($filtre_affreteur)";
+        $sqlSupplierFilter = $supplierFilter === "" ? "" : " AND fournisseur IN ($supplierFilter)";
+        $sqlCustomerFilter = $customerFilter === "" ? "" : " AND client IN ($customerFilter)";
+        $sqlLoadingPlaceFilter = $loadingPlaceFilter === "" ? "" : " AND chargement IN ($loadingPlaceFilter)";
+        $sqlDeliveryPlaceFilter = $deliveryPlaceFilter === "" ? "" : " AND livraison IN ($deliveryPlaceFilter)";
+        $sqlTransportFilter = $transportFilter === "" ? "" : " AND transporteur IN ($transportFilter)";
+        $sqlChartererFilter = $chartererFilter === "" ? "" : " AND affreteur IN ($chartererFilter)";
 
-        $filtre_sql =
-            $filtre_sql_fournisseur
-            . $filtre_sql_client
-            . $filtre_sql_chargement
-            . $filtre_sql_livraison
-            . $filtre_sql_transporteur
-            . $filtre_sql_affreteur;
+        $sqlFilter =
+            $sqlSupplierFilter
+            . $sqlCustomerFilter
+            . $sqlLoadingPlaceFilter
+            . $sqlDeliveryPlaceFilter
+            . $sqlTransportFilter
+            . $sqlChartererFilter;
 
         $statement =
             "SELECT
@@ -85,26 +86,26 @@ class TimberAppointmentRepository extends Repository
                 OR date_rdv IS NULL
                 OR attente = 1
             )
-            $filtre_sql
+            $sqlFilter
             ORDER BY date_rdv";
 
         $requete = $this->mysql->prepare($statement);
 
         $requete->execute([
-            "date_debut" => $date_debut,
-            "date_fin" => $date_fin
+            "date_debut" => $startDate,
+            "date_fin" => $endDate
         ]);
 
         $rdvsRaw = $requete->fetchAll();
 
         $timberService = new TimberService();
 
-        $rdvs = array_map(
-            fn (array $rdvRaw) => $timberService->makeTimberAppointment($rdvRaw),
+        $appointments = array_map(
+            fn (array $appointmentRaw) => $timberService->makeTimberAppointment($appointmentRaw),
             $rdvsRaw
         );
 
-        return $rdvs;
+        return new Collection($appointments);
     }
 
     /**
@@ -209,11 +210,11 @@ class TimberAppointmentRepository extends Repository
     /**
      * Met à jour un RDV bois.
      * 
-     * @param TimberAppointment $rdv RDV à modifier
+     * @param TimberAppointment $appointment RDV à modifier
      * 
      * @return TimberAppointment RDV modifié
      */
-    public function updateAppointment(TimberAppointment $rdv): TimberAppointment
+    public function updateAppointment(TimberAppointment $appointment): TimberAppointment
     {
         $statement = "UPDATE bois_planning
             SET
@@ -236,25 +237,25 @@ class TimberAppointmentRepository extends Repository
 
         $request = $this->mysql->prepare($statement);
         $request->execute([
-            'attente' => (int) $rdv->isOnHold(),
-            'date_rdv' => $rdv->getDate(true),
-            'heure_arrivee' => $rdv->getArrivalTime(true),
-            'heure_depart' => $rdv->getDepartureTime(true),
-            'chargement' => $rdv->getLoadingPlace()->getId(),
-            'client' => $rdv->getCustomer()->getId(),
-            'livraison' => $rdv->getDeliveryPlace()->getId(),
-            'transporteur' => $rdv->getTransport()?->getId(),
-            'affreteur' => $rdv->getTransportBroker()?->getId(),
-            'fournisseur' => $rdv->getSupplier()->getId(),
-            'commande_prete' => (int) $rdv->isReady(),
-            'confirmation_affretement' => (int) $rdv->getCharteringConfirmationSent(),
-            'numero_bl' => $rdv->getDeliveryNoteNumber(),
-            'commentaire_public' => $rdv->getPublicComment(),
-            'commentaire_cache' => $rdv->getPrivateComment(),
-            'id' => $rdv->getId(),
+            'attente' => (int) $appointment->isOnHold(),
+            'date_rdv' => $appointment->getDate(true),
+            'heure_arrivee' => $appointment->getArrivalTime(true),
+            'heure_depart' => $appointment->getDepartureTime(true),
+            'chargement' => $appointment->getLoadingPlace()->getId(),
+            'client' => $appointment->getCustomer()->getId(),
+            'livraison' => $appointment->getDeliveryPlace()->getId(),
+            'transporteur' => $appointment->getTransport()?->getId(),
+            'affreteur' => $appointment->getTransportBroker()?->getId(),
+            'fournisseur' => $appointment->getSupplier()->getId(),
+            'commande_prete' => (int) $appointment->isReady(),
+            'confirmation_affretement' => (int) $appointment->getCharteringConfirmationSent(),
+            'numero_bl' => $appointment->getDeliveryNoteNumber(),
+            'commentaire_public' => $appointment->getPublicComment(),
+            'commentaire_cache' => $appointment->getPrivateComment(),
+            'id' => $appointment->getId(),
         ]);
 
-        return $this->getAppointment($rdv->getId());
+        return $this->getAppointment($appointment->getId());
     }
 
     /**
@@ -294,11 +295,11 @@ class TimberAppointmentRepository extends Repository
         $this->mysql
             ->prepare(
                 "UPDATE bois_planning
-                SET confirmation_affretement = :confirmation_affretement
+                SET confirmation_affretement = :status
                 WHERE id = :id"
             )
             ->execute([
-                'confirmation_affretement' => (int) $status,
+                'status' => (int) $status,
                 'id' => $id,
             ]);
 
@@ -310,9 +311,9 @@ class TimberAppointmentRepository extends Repository
         // Heure
         $heure = date('H:i:s');
         $this->mysql
-            ->prepare("UPDATE bois_planning SET heure_arrivee = :heure WHERE id = :id")
+            ->prepare("UPDATE bois_planning SET heure_arrivee = :time WHERE id = :id")
             ->execute([
-                'heure' => $heure,
+                'time' => $heure,
                 'id' => $id
             ]);
 
@@ -375,13 +376,13 @@ class TimberAppointmentRepository extends Repository
             // Insertion du nouveau numéro de BL si numéro non déjà renseigné
             $numero_bl_nouveau = is_numeric($numero_bl_precedent) ? $numero_bl_precedent + 1 : '';
             if ($numero_bl_actuel === '' && $numero_bl_nouveau) {
-                $requete = $this->mysql->prepare(
+                $request = $this->mysql->prepare(
                     "UPDATE bois_planning
             SET numero_bl = :numero_bl
             WHERE id = :id"
                 );
 
-                $requete->execute([
+                $request->execute([
                     'numero_bl' => $numero_bl_nouveau,
                     'id' => $id
                 ]);
@@ -400,11 +401,11 @@ class TimberAppointmentRepository extends Repository
      */
     public function setDepartureTime(int $id): TimberAppointment
     {
-        $heure = date('H:i:s');
+        $time = date('H:i:s');
         $this->mysql
-            ->prepare("UPDATE bois_planning SET heure_depart = :heure WHERE id = :id")
+            ->prepare("UPDATE bois_planning SET heure_depart = :time WHERE id = :id")
             ->execute([
-                'heure' => $heure,
+                'time' => $time,
                 'id' => $id
             ]);
 
@@ -421,32 +422,32 @@ class TimberAppointmentRepository extends Repository
      */
     public function setDeliveryNoteNumber(?int $id, array $input): ?TimberAppointment
     {
-        $numero_bl = $input['numero_bl'];
-        $fournisseur = [
+        $deliveryNoteNumber = $input['numero_bl'];
+        $supplierData = [
             "id" => $input['fournisseur'] ?? null,
             "nom" => "",
         ];
-        $dry_run = $input["dry_run"] ?? false;
+        $dryRun = $input["dry_run"] ?? false;
 
         // Si pas d'identifiant de RDV ni d'identifiant de fournisseur, ne rien faire
-        if (!$id && !$fournisseur["id"]) {
+        if (!$id && !$supplierData["id"]) {
             return null;
         }
 
-        $bl_existe = false;
+        $deliveryNoteExists = false;
 
         // Fournisseurs dont le numéro de BL doit être unique
-        $fournisseurs_bl_unique = [
+        $suppliersWithUniqueDeliveryNoteNumber = [
             292 // Stora Enso
         ];
 
         // Si le fournisseur n'est pas dans la liste des fournisseurs dont le numéro de BL doit être unique, ne rien faire
-        if ($fournisseur["id"] && !in_array($fournisseur["id"], $fournisseurs_bl_unique)) {
+        if ($supplierData["id"] && !in_array($supplierData["id"], $suppliersWithUniqueDeliveryNoteNumber)) {
             return null;
         }
 
-        if ($id && !$fournisseur["id"]) {
-            $requete_fournisseur = $this->mysql
+        if ($id && !$supplierData["id"]) {
+            $supplierRequest = $this->mysql
                 ->prepare(
                     "SELECT p.fournisseur as id, f.nom_court AS nom
                             FROM bois_planning p
@@ -454,7 +455,7 @@ class TimberAppointmentRepository extends Repository
                             WHERE p.id = :id"
                 );
         } else {
-            $requete_fournisseur = $this->mysql
+            $supplierRequest = $this->mysql
                 ->prepare(
                     "SELECT t.id, t.nom_court AS nom
                             FROM tiers t
@@ -462,50 +463,50 @@ class TimberAppointmentRepository extends Repository
                 );
         }
 
-        $requete_fournisseur->execute(["id" => $fournisseur["id"] ?? (int) $id]);
-        $fournisseur = $requete_fournisseur->fetch();
+        $supplierRequest->execute(["id" => $supplierData["id"] ?? (int) $id]);
+        $supplierData = $supplierRequest->fetch();
 
 
         // Vérifier si le numéro de BL existe déjà (pour Stora Enso)
         if (
-            in_array($fournisseur["id"], $fournisseurs_bl_unique)
-            && $numero_bl !== ""
-            && $numero_bl !== "-"
+            in_array($supplierData["id"], $suppliersWithUniqueDeliveryNoteNumber)
+            && $deliveryNoteNumber !== ""
+            && $deliveryNoteNumber !== "-"
         ) {
-            $requete = $this->mysql->prepare(
+            $request = $this->mysql->prepare(
                 "SELECT COUNT(id) AS bl_existe, id
                     FROM bois_planning
-                    WHERE numero_bl LIKE CONCAT('%', :numero_bl, '%')
-                    AND fournisseur = :fournisseur
+                    WHERE numero_bl LIKE CONCAT('%', :deliveryNoteNumber, '%')
+                    AND fournisseur = :supplierId
                     AND NOT id = :id"
             );
-            $requete->execute([
-                "numero_bl" => $numero_bl,
-                "fournisseur" => $fournisseur["id"],
+            $request->execute([
+                "deliveryNoteNumber" => $deliveryNoteNumber,
+                "supplierId" => $supplierData["id"],
                 "id" => (int) $id,
             ]);
 
-            $reponse_bdd = $requete->fetch();
+            $dbResult = $request->fetch();
 
-            $bl_existe = (bool) $reponse_bdd["bl_existe"];
+            $deliveryNoteExists = (bool) $dbResult["bl_existe"];
         }
 
-        if ($id && !$bl_existe && !$dry_run) {
+        if ($id && !$deliveryNoteExists && !$dryRun) {
             $this->mysql
                 ->prepare(
                     "UPDATE bois_planning
-                        SET numero_bl = :numero_bl
+                        SET numero_bl = :deliveryNoteNumber
                         WHERE id = :id"
                 )
                 ->execute([
-                    'numero_bl' => $numero_bl,
+                    'deliveryNoteNumber' => $deliveryNoteNumber,
                     'id' => (int) $id
                 ]);
         }
 
         // Si le numéro de BL existe déjà (pour Stora Enso), message d'erreur
-        if ($bl_existe && $id != $reponse_bdd["id"]) {
-            throw new ClientException("Le numéro de BL $numero_bl existe déjà pour {$fournisseur["nom"]}.");
+        if ($deliveryNoteExists && $id != $dbResult["id"]) {
+            throw new ClientException("Le numéro de BL $deliveryNoteNumber existe déjà pour {$supplierData["nom"]}.");
         }
 
         return $id ? $this->getAppointment($id) : null;
@@ -533,23 +534,23 @@ class TimberAppointmentRepository extends Repository
     /**
      * Renvoie l'extrait du registre d'affrètement avec le filtre appliqué.
      *
-     * @param array $filtre 
+     * @param array $filter 
      * 
      * @return TimberRegisterEntryDTO[] Extrait du registre d'affrètement.
      */
-    public function getCharteringRegister(array $filtre): array
+    public function getCharteringRegister(array $filter): array
     {
-        $date_debut_defaut = DateUtils::format(DateUtils::SQL_DATE, DateUtils::previousWorkingDay(new \DateTimeImmutable()));
-        $date_fin_defaut = date("Y-m-d");
+        $defaultStartDate = DateUtils::format(DateUtils::SQL_DATE, DateUtils::previousWorkingDay(new \DateTimeImmutable()));
+        $defaultEndDate = date("Y-m-d");
 
         // Filtre
-        $date_debut = isset($filtre['date_debut'])
-            ? ($filtre['date_debut'] ?: $date_debut_defaut)
-            : $date_debut_defaut;
+        $startDate = isset($filter['date_debut'])
+            ? ($filter['date_debut'] ?: $defaultStartDate)
+            : $defaultStartDate;
 
-        $date_fin = isset($filtre['date_fin'])
-            ? ($filtre['date_fin'] ?: $date_fin_defaut)
-            : $date_fin_defaut;
+        $endDate = isset($filter['date_fin'])
+            ? ($filter['date_fin'] ?: $defaultEndDate)
+            : $defaultEndDate;
 
         $statement =
             "SELECT
@@ -557,11 +558,11 @@ class TimberAppointmentRepository extends Repository
                 f.nom_court AS fournisseur,
                 c.nom_court AS chargement_nom,
                 c.ville AS chargement_ville,
-                cpays.nom AS chargement_pays,
+                cpays.nom AS loadingPlaceCountry,
                 l.nom_court AS livraison_nom,
-                l.cp AS livraison_cp,
+                l.cp AS deliveryPlacePostCode,
                 l.ville AS livraison_ville,
-                lpays.nom AS livraison_pays,
+                lpays.nom AS deliveryPlaceCountry,
                 p.numero_bl,
                 t.nom_court AS transporteur
             FROM bois_planning p
@@ -573,35 +574,35 @@ class TimberAppointmentRepository extends Repository
             LEFT JOIN utils_pays cpays ON c.pays = cpays.iso
             LEFT JOIN utils_pays lpays ON l.pays = lpays.iso
             WHERE a.lie_agence = 1
-                AND (date_rdv BETWEEN :date_debut AND :date_fin)
+                AND (date_rdv BETWEEN :startDate AND :endDate)
                 AND attente = 0
             ORDER BY
             date_rdv,
             numero_bl";
 
-        $requete = $this->mysql->prepare($statement);
+        $request = $this->mysql->prepare($statement);
 
-        $requete->execute([
-            "date_debut" => $date_debut,
-            "date_fin" => $date_fin
+        $request->execute([
+            "startDate" => $startDate,
+            "endDate" => $endDate
         ]);
 
-        $rdvsRaw = $requete->fetchAll();
+        $appointmentsRaw = $request->fetchAll();
 
         $timberService = new TimberService();
 
-        $entreesRegistre = array_map(
+        $registryEntries = array_map(
             fn (array $rdvRaw) => $timberService->makeTimberRegisterEntryDTO($rdvRaw),
-            $rdvsRaw
+            $appointmentsRaw
         );
 
-        return $entreesRegistre;
+        return $registryEntries;
     }
 
     public function getTransportSuggestions(int $loadingPlaceId, int $deliveryPlaceId): array
     {
         // Récupérer les infos du lieu de chargement et de livraison
-        $statement_lieu =
+        $locationStatement =
             "SELECT
                 id,
                 SUBSTRING(cp, 1, 2) as cp,
@@ -609,18 +610,17 @@ class TimberAppointmentRepository extends Repository
             FROM tiers
             WHERE id = :id";
 
-        $requete_lieu = $this->mysql->prepare($statement_lieu);
+        $locationRequest = $this->mysql->prepare($locationStatement);
 
-        $requete_lieu->execute(["id" => $loadingPlaceId]);
-        $donnees_chargement = $requete_lieu->fetch();
+        $locationRequest->execute(["id" => $loadingPlaceId]);
+        $loadingPlaceData = $locationRequest->fetch();
 
-        $requete_lieu->execute(["id" => $deliveryPlaceId]);
-        $donnees_livraison = $requete_lieu->fetch();
+        $locationRequest->execute(["id" => $deliveryPlaceId]);
+        $deliveryPlaceData = $locationRequest->fetch();
 
 
-        // Récupérer les transporteurs
-        // ayant fait des transports identiques ou similaires
-        $statement_transporteurs =
+        // Récupérer les transporteurs ayant fait des transports identiques ou similaires
+        $transportStatement =
             "SELECT
                 COUNT(id) as transports,
                 transporteur_nom as nom,
@@ -649,38 +649,38 @@ class TimberAppointmentRepository extends Repository
                 AND t.non_modifiable = 0
                 HAVING
                     (
-                        (p.chargement = :chargement_id)
-                    OR (:chargement_pays = 'FR' AND c_cp = :chargement_cp)
-                    OR (NOT :chargement_pays = 'FR' AND c_pays = :chargement_pays)
+                        (p.chargement = :loadingPlaceId)
+                    OR (:loadingPlaceCountry = 'FR' AND c_cp = :loadingPlacePostCode)
+                    OR (NOT :loadingPlaceCountry = 'FR' AND c_pays = :loadingPlaceCountry)
                     )
                     AND 
                     (
-                        (p.livraison = :livraison_id)
-                    OR (:livraison_pays = 'FR' AND l_cp = :livraison_cp)
-                    OR (NOT :livraison_pays = 'FR' AND l_pays = :livraison_pays)
+                        (p.livraison = :deliveryPlaceId)
+                    OR (:deliveryPlaceCountry = 'FR' AND l_cp = :deliveryPlacePostCode)
+                    OR (NOT :deliveryPlaceCountry = 'FR' AND l_pays = :deliveryPlaceCountry)
                     )
             ) AS transports_corrspondants
             GROUP BY transporteur_nom
             ORDER BY transports DESC
             LIMIT 10";
 
-        $requete_transporteurs = $this->mysql->prepare($statement_transporteurs);
+        $requete_transporteurs = $this->mysql->prepare($transportStatement);
 
         $requete_transporteurs->execute([
-            "chargement_id" => $loadingPlaceId,
-            "chargement_cp" => $donnees_chargement["cp"],
-            "chargement_pays" => $donnees_chargement["pays"],
-            "livraison_id" => $deliveryPlaceId,
-            "livraison_cp" => $donnees_livraison["cp"],
-            "livraison_pays" => $donnees_livraison["pays"],
+            "loadingPlaceId" => $loadingPlaceId,
+            "loadingPlacePostCode" => $loadingPlaceData["cp"],
+            "loadingPlaceCountry" => $loadingPlaceData["pays"],
+            "deliveryPlaceId" => $deliveryPlaceId,
+            "deliveryPlacePostCode" => $deliveryPlaceData["cp"],
+            "deliveryPlaceCountry" => $deliveryPlaceData["pays"],
         ]);
 
-        $donnees_transporteurs = $requete_transporteurs->fetchAll();
+        $transportData = $requete_transporteurs->fetchAll();
 
         $suggestions = [
-            "chargement" => $donnees_chargement,
-            "livraison" => $donnees_livraison,
-            "transporteurs" => $donnees_transporteurs
+            "chargement" => $loadingPlaceData,
+            "livraison" => $deliveryPlaceData,
+            "transporteurs" => $transportData
         ];
 
         return $suggestions;
@@ -698,23 +698,23 @@ class TimberAppointmentRepository extends Repository
         $endDate = isset($filter["date_fin"]) ? ($filter['date_fin'] ?: "9999-12-31") : "9999-12-31";
         $supplierFilter = trim($filter['fournisseur'] ?? "", ",");
         $customerFilter = trim($filter['client'] ?? "", ",");
-        $loadingFilter = trim($filter['chargement'] ?? "", ",");
-        $deliveryFilter = trim($filter['livraison'] ?? "", ",");
+        $loadingPlaceFilter = trim($filter['chargement'] ?? "", ",");
+        $deliveryPlaceFilter = trim($filter['livraison'] ?? "", ",");
         $transportFilter = trim($filter['transporteur'] ?? "", ",");
         $chartererFilter = trim($filter['affreteur'] ?? "", ",");
 
         $sqlSupplierFilter = $supplierFilter === "" ? "" : " AND fournisseur IN ($supplierFilter)";
         $sqlCustomerFilter = $customerFilter === "" ? "" : " AND client IN ($customerFilter)";
-        $sqlLoadingFilter = $loadingFilter === "" ? "" : " AND chargement IN ($loadingFilter)";
-        $sqlDeliveryFilter = $deliveryFilter === "" ? "" : " AND livraison IN ($deliveryFilter)";
+        $sqlLoadingPlaceFilter = $loadingPlaceFilter === "" ? "" : " AND chargement IN ($loadingPlaceFilter)";
+        $sqlDeliveryPlaceFilter = $deliveryPlaceFilter === "" ? "" : " AND livraison IN ($deliveryPlaceFilter)";
         $sqlTransportFilter = $transportFilter === "" ? "" : " AND transporteur IN ($transportFilter)";
         $sqlChartererFilter = $chartererFilter === "" ? "" : " AND affreteur IN ($chartererFilter)";
 
         $sqlFilter =
             $sqlSupplierFilter
             . $sqlCustomerFilter
-            . $sqlLoadingFilter
-            . $sqlDeliveryFilter
+            . $sqlLoadingPlaceFilter
+            . $sqlDeliveryPlaceFilter
             . $sqlTransportFilter
             . $sqlChartererFilter;
 

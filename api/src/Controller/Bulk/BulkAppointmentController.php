@@ -6,13 +6,12 @@ use App\Service\BulkService;
 use App\Controller\Controller;
 use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AccessException;
-use App\Entity\Bulk\BulkAppointment;
 
 class BulkAppointmentController extends Controller
 {
     private BulkService $bulkService;
-    private $module = "vrac";
-    private $sse_event = "vrac/rdvs";
+    private string $module = "vrac";
+    private string $sse_event = "vrac/rdvs";
 
     public function __construct(
         private ?int $id
@@ -74,9 +73,9 @@ class BulkAppointmentController extends Controller
             throw new AccessException();
         }
 
-        $rdvs = $this->bulkService->getAppointments($query);
+        $appointments = $this->bulkService->getAppointments($query);
 
-        $etag = ETag::get($rdvs);
+        $etag = ETag::get($appointments);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -87,37 +86,33 @@ class BulkAppointmentController extends Controller
 
         $this->response
             ->setHeaders($this->headers)
-            ->setBody(
-                json_encode(
-                    array_map(fn (BulkAppointment $rdv) => $rdv->toArray(), $rdvs)
-                )
-            );
+            ->setJSON($appointments);
     }
 
     /**
      * Récupère un RDV vrac.
      * 
      * @param int  $id      id du RDV à récupérer.
-     * @param bool $dry_run Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param bool $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(int $id, ?bool $dry_run = false)
+    public function read(int $id, ?bool $dryRun = false)
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
-        $rdv = $this->bulkService->getAppointment($id);
+        $appointment = $this->bulkService->getAppointment($id);
 
-        if (!$rdv && !$dry_run) {
+        if (!$appointment && !$dryRun) {
             $this->response->setCode(404);
             return;
         }
 
-        if ($dry_run) {
-            return $rdv;
+        if ($dryRun) {
+            return $appointment;
         }
 
-        $etag = ETag::get($rdv);
+        $etag = ETag::get($appointment);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -127,8 +122,8 @@ class BulkAppointmentController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($rdv->toArray()))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($appointment);
     }
 
     /**
@@ -142,18 +137,18 @@ class BulkAppointmentController extends Controller
 
         $input = $this->request->body;
 
-        $rdv = $this->bulkService->createAppointment($input);
+        $appointment = $this->bulkService->createAppointment($input);
 
-        $id = $rdv->getId();
+        $id = $appointment->getId();
 
         $this->headers["Location"] = $_ENV["API_URL"] . "/vrac/rdv/$id";
 
         $this->response
             ->setCode(201)
-            ->setBody(json_encode($rdv->toArray()))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($appointment);
 
-        notify_sse($this->sse_event, __FUNCTION__, $id, $rdv->toArray());
+        notify_sse($this->sse_event, __FUNCTION__, $id, $appointment->toArray());
     }
 
     /**
@@ -174,13 +169,13 @@ class BulkAppointmentController extends Controller
 
         $input = $this->request->body;
 
-        $rdv = $this->bulkService->updateAppointment($id, $input);
+        $appointment = $this->bulkService->updateAppointment($id, $input);
 
         $this->response
-            ->setBody(json_encode($rdv->toArray()))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($appointment);
 
-        notify_sse($this->sse_event, __FUNCTION__, $id, $rdv->toArray());
+        notify_sse($this->sse_event, __FUNCTION__, $id, $appointment->toArray());
     }
 
     /**
@@ -201,13 +196,13 @@ class BulkAppointmentController extends Controller
 
         $input = $this->request->body;
 
-        $rdv = $this->bulkService->patchAppointment($id, $input);
+        $appointment = $this->bulkService->patchAppointment($id, $input);
 
         $this->response
-            ->setBody(json_encode($rdv->toArray()))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($appointment);
 
-        notify_sse($this->sse_event, __FUNCTION__, $id, $rdv->toArray());
+        notify_sse($this->sse_event, __FUNCTION__, $id, $appointment->toArray());
     }
 
     /**

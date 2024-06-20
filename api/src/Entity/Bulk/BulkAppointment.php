@@ -1,15 +1,19 @@
 <?php
 
+// Path: api/src/Entity/Bulk/BulkAppointment.php
+
 namespace App\Entity\Bulk;
 
-use App\Core\Interfaces\Arrayable;
+use App\Entity\AbstractEntity;
 use App\Entity\ThirdParty;
 use App\Service\BulkService;
 use App\Service\ThirdPartyService;
+use App\Core\Traits\IdentifierTrait;
 
-class BulkAppointment implements Arrayable
+class BulkAppointment extends AbstractEntity
 {
-    private ?int $id = null;
+    use IdentifierTrait;
+
     private ?\DateTimeImmutable $date = null;
     private ?\DateTimeImmutable $time = null;
     private ?BulkProduct $product = null;
@@ -21,18 +25,6 @@ class BulkAppointment implements Arrayable
     private ?ThirdParty $transport = null;
     private string $orderNumber = "";
     private string $comments = "";
-
-    public function setId(?int $id): static
-    {
-        $this->id = $id;
-
-        return $this;
-    }
-
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
 
     public function setDate(\DateTimeImmutable|string $date): static
     {

@@ -77,29 +77,25 @@ class ThirdPartyController extends Controller
 
         $this->response
             ->setHeaders($this->headers)
-            ->setBody(
-                json_encode(
-                    array_map(fn (ThirdParty $tiers) => $tiers->toArray(), $thirdParties)
-                )
-            );
+            ->setJSON(array_map(fn (ThirdParty $thirdParty) => $thirdParty->toArray(), $thirdParties));
     }
 
     /**
      * Retrieves a third party.
      * 
      * @param int   $id      id of the third party to retrieve.
-     * @param bool  $dry_run Retrieve the resource without sending the HTTP response.
+     * @param bool  $dryRun Retrieve the resource without sending the HTTP response.
      */
-    public function read(int $id, ?bool $dry_run = false)
+    public function read(int $id, ?bool $dryRun = false)
     {
         $thirdParty = $this->thirdPartyService->getThirdParty($id);
 
-        if (!$thirdParty && !$dry_run) {
+        if (!$thirdParty && !$dryRun) {
             $this->response->setCode(404);
             return;
         }
 
-        if ($dry_run) {
+        if ($dryRun) {
             return $thirdParty;
         }
 
@@ -114,7 +110,7 @@ class ThirdPartyController extends Controller
 
         $this->response
             ->setHeaders($this->headers)
-            ->setBody(json_encode($thirdParty->toArray()));
+            ->setJSON($thirdParty);
     }
 
     /**
@@ -137,7 +133,7 @@ class ThirdPartyController extends Controller
         $this->response
             ->setCode(201)
             ->setHeaders($this->headers)
-            ->setBody(json_encode($thirdParty->toArray()));
+            ->setJSON($thirdParty);
 
         notify_sse($this->sse_event, __FUNCTION__, $id, $thirdParty->toArray());
     }
@@ -163,8 +159,8 @@ class ThirdPartyController extends Controller
         $thirdParty = $this->thirdPartyService->updateThirdParty($id, $input);
 
         $this->response
-            ->setBody(json_encode($thirdParty->toArray()))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($thirdParty);
 
         notify_sse($this->sse_event, __FUNCTION__, $id, $thirdParty->toArray());
     }

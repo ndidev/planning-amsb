@@ -1,13 +1,16 @@
 <?php
 
+// Path: api/src/Entity/Bulk/BulkProduct.php
+
 namespace App\Entity\Bulk;
 
-use App\Core\Interfaces\Arrayable;
-use App\Service\BulkService;
+use App\Core\Traits\IdentifierTrait;
+use App\Entity\AbstractEntity;
 
-class BulkProduct implements Arrayable
+class BulkProduct extends AbstractEntity
 {
-    private ?int $id = null;
+    use IdentifierTrait;
+
     private string $name = "";
     private string $color = "";
     private string $unit = "";

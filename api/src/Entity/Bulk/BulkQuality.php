@@ -1,27 +1,19 @@
 <?php
 
+// Path: api/src/Entity/Bulk/BulkQuality.php
+
 namespace App\Entity\Bulk;
 
 use App\Core\Interfaces\Arrayable;
+use App\Core\Traits\IdentifierTrait;
 
 class BulkQuality implements Arrayable
 {
-    private ?int $id = null;
+    use IdentifierTrait;
+
     private string $name = "";
     private string $color = "";
     private ?BulkProduct $product = null;
-
-    public function setId(?int $id): static
-    {
-        $this->id = $id;
-
-        return $this;
-    }
-
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
 
     public function setName(string $name): static
     {

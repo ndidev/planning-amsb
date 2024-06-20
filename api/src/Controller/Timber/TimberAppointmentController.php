@@ -4,22 +4,20 @@ namespace App\Controller\Timber;
 
 use App\Controller\Controller;
 use App\Core\Exceptions\Client\Auth\AccessException;
-use App\Core\Exceptions\Server\DB\DBException;
 use App\Core\HTTP\ETag;
-use App\Entity\Timber\TimberAppointment;
 use App\Service\TimberService;
 
 class TimberAppointmentController extends Controller
 {
-    private $service;
-    private $module = "bois";
-    private $sse_event = "bois/rdvs";
+    private TimberService $timberService;
+    private string $module = "bois";
+    private string $sse_event = "bois/rdvs";
 
     public function __construct(
         private ?int $id
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE");
-        $this->service = new TimberService();
+        $this->timberService = new TimberService();
         $this->processRequest();
     }
 
@@ -75,9 +73,9 @@ class TimberAppointmentController extends Controller
             throw new AccessException();
         }
 
-        $rdvs = $this->service->getAppointments($filtre);
+        $appointments = $this->timberService->getAppointments($filtre);
 
-        $etag = ETag::get($rdvs);
+        $etag = ETag::get($appointments);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -88,37 +86,33 @@ class TimberAppointmentController extends Controller
 
         $this->response
             ->setHeaders($this->headers)
-            ->setBody(
-                json_encode(
-                    array_map(fn (TimberAppointment $rdv) => $rdv->toArray(), $rdvs)
-                )
-            );
+            ->setJSON($appointments);
     }
 
     /**
      * Récupère un RDV bois.
      * 
      * @param int $id      id du RDV à récupérer.
-     * @param bool $dry_run Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param bool $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(int $id, ?bool $dry_run = false)
+    public function read(int $id, ?bool $dryRun = false)
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
-        $rdv = $this->service->getAppointment($id);
+        $appointment = $this->timberService->getAppointment($id);
 
-        if (!$rdv && !$dry_run) {
+        if (!$appointment && !$dryRun) {
             $this->response->setCode(404);
             return;
         }
 
-        if ($dry_run) {
-            return $rdv;
+        if ($dryRun) {
+            return $appointment;
         }
 
-        $etag = ETag::get($rdv);
+        $etag = ETag::get($appointment);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -128,8 +122,8 @@ class TimberAppointmentController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($rdv->toArray()))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($appointment);
     }
 
     /**
@@ -150,18 +144,18 @@ class TimberAppointmentController extends Controller
             return;
         }
 
-        $rdv = $this->service->createAppointment($input);
+        $appointment = $this->timberService->createAppointment($input);
 
-        $id = $rdv->getId();
+        $id = $appointment->getId();
 
         $this->headers["Location"] = $_ENV["API_URL"] . "/bois/rdv/$id";
 
         $this->response
             ->setCode(201)
             ->setHeaders($this->headers)
-            ->setBody(json_encode($rdv->toArray()));
+            ->setJSON($appointment);
 
-        notify_sse($this->sse_event, __FUNCTION__, $id, $rdv->toArray());
+        notify_sse($this->sse_event, __FUNCTION__, $id, $appointment->toArray());
     }
 
     /**
@@ -175,18 +169,18 @@ class TimberAppointmentController extends Controller
             throw new AccessException();
         }
 
-        if (!$this->service->appointmentExists($id)) {
+        if (!$this->timberService->appointmentExists($id)) {
             $this->response->setCode(404);
             return;
         }
 
         $input = $this->request->body;
 
-        $rdv = $this->service->updateAppointment($id, $input);
+        $rdv = $this->timberService->updateAppointment($id, $input);
 
         $this->response
             ->setHeaders($this->headers)
-            ->setBody(json_encode($rdv->toArray()));
+            ->setJSON($rdv);
 
         notify_sse($this->sse_event, __FUNCTION__, $id, $rdv->toArray());
     }
@@ -202,18 +196,18 @@ class TimberAppointmentController extends Controller
             throw new AccessException();
         }
 
-        if ($id && !$this->service->appointmentExists($id)) {
+        if ($id && !$this->timberService->appointmentExists($id)) {
             $this->response->setCode(404);
             return;
         }
 
         $input = $this->request->body;
 
-        $rdv = $this->service->patchAppointment($id, $input);
+        $rdv = $this->timberService->patchAppointment($id, $input);
 
         $this->response
             ->setHeaders($this->headers)
-            ->setBody(json_encode($rdv->toArray()));
+            ->setJSON($rdv);
 
         if ($rdv) {
             notify_sse($this->sse_event, __FUNCTION__, $id, $rdv->toArray());
@@ -231,7 +225,7 @@ class TimberAppointmentController extends Controller
             throw new AccessException();
         }
 
-        if (!$this->service->appointmentExists($id)) {
+        if (!$this->timberService->appointmentExists($id)) {
             $message = "Not Found";
             $documentation = $_ENV["API_URL"] . "/doc/#/Bois/supprimerRdvBois";
             $body = json_encode(["message" => $message, "documentation_url" => $documentation]);
@@ -239,13 +233,9 @@ class TimberAppointmentController extends Controller
             return;
         }
 
-        $succes = $this->service->deleteAppointment($id);
+        $this->timberService->deleteAppointment($id);
 
-        if ($succes) {
-            $this->response->setCode(204)->flush();
-            notify_sse($this->sse_event, __FUNCTION__, $id);
-        } else {
-            throw new DBException("Erreur lors de la suppression");
-        }
+        $this->response->setCode(204)->flush();
+        notify_sse($this->sse_event, __FUNCTION__, $id);
     }
 }

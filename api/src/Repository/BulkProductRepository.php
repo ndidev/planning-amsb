@@ -1,7 +1,10 @@
 <?php
 
+// Path: api/src/Repository/BulkProductRepository.php
+
 namespace App\Repository;
 
+use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\Bulk\BulkProduct;
 use App\Entity\Bulk\BulkQuality;
@@ -42,9 +45,9 @@ class BulkProductRepository extends Repository
     /**
      * Fetch all bulk products.
      * 
-     * @return BulkProduct[] List of bulk products.
+     * @return Collection<BulkProduct> List of bulk products.
      */
-    public function getProducts(): array
+    public function getProducts(): Collection
     {
         $productsStatement = "SELECT * FROM vrac_produits ORDER BY nom";
         $qualitiesStatement = "SELECT * FROM vrac_qualites ORDER BY nom";
@@ -77,7 +80,7 @@ class BulkProductRepository extends Repository
 
         static::$productsCache = $products;
 
-        return $products;
+        return new Collection($products);
     }
 
     /**

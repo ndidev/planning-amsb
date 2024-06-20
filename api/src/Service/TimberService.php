@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Core\Component\Collection;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\ServerException;
 use App\DTO\TimberRegisterEntryDTO;
@@ -73,9 +74,9 @@ class TimberService
      * 
      * @param array $query Paramètres de recherche.
      * 
-     * @return TimberAppointment[] Tous les RDV récupérés.
+     * @return Collection<TimberAppointment> Tous les RDV récupérés.
      */
-    public function getAppointments(array $query): array
+    public function getAppointments(array $query): Collection
     {
         return $this->timberAppointmentRepository->getAppointments($query);
     }

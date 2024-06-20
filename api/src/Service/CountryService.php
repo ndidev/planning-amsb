@@ -23,6 +23,11 @@ class CountryService
             ->setName($rawData["nom"] ?? "");
     }
 
+    /**
+     * Fetches all countries.
+     * 
+     * @return Country[] All fetched countries.
+     */
     public function getCountries(): array
     {
         return $this->countryRepository->fetchAll();

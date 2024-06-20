@@ -1,15 +1,18 @@
 <?php
 
+// Path: api/src/Entity/Timber/TimberAppointment.php
+
 namespace App\Entity\Timber;
 
-use App\Core\Interfaces\Arrayable;
+use App\Core\Traits\IdentifierTrait;
+use App\Entity\AbstractEntity;
 use App\Entity\ThirdParty;
-use App\Service\TimberService;
 use App\Service\ThirdPartyService;
 
-class TimberAppointment implements Arrayable
+class TimberAppointment extends AbstractEntity
 {
-    private ?int $id = null;
+    use IdentifierTrait;
+
     private bool $isOnHold = false;
     private ?\DateTimeImmutable $date = null;
     private ?\DateTimeImmutable $arrivalTime = null;
@@ -25,18 +28,6 @@ class TimberAppointment implements Arrayable
     private string $deliveryNoteNumber = "";
     private string $publicComment = "";
     private string $privateComment = "";
-
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
-
-    public function setId(?int $id): static
-    {
-        $this->id = $id;
-
-        return $this;
-    }
 
     public function isOnHold(): bool
     {

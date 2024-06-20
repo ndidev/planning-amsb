@@ -67,6 +67,6 @@ class TransportSuggestionsController extends Controller
 
         $this->response
             ->setHeaders($this->headers)
-            ->setBody(json_encode($suggestions));
+            ->setJSON($suggestions);
     }
 }

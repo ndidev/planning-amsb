@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Core\Component\Collection;
 use App\Entity\Bulk\BulkAppointment;
 use App\Entity\Bulk\BulkProduct;
 use App\Entity\Bulk\BulkQuality;
@@ -70,7 +71,7 @@ class BulkService
      * 
      * @return bool True if the bulk appointment exists, false otherwise.
      */
-    public function appointmentExists(int $id)
+    public function appointmentExists(int $id): bool
     {
         return $this->appointmentRepository->appointmentExists($id);
     }
@@ -78,9 +79,9 @@ class BulkService
     /**
      * Retrieves all bulk appointments.
      * 
-     * @return BulkAppointment[] All retrieved appointments.
+     * @return Collection<BulkAppointment> All retrieved appointments.
      */
-    public function getAppointments(): array
+    public function getAppointments(): Collection
     {
         return $this->appointmentRepository->getAppointments();
     }
@@ -204,9 +205,9 @@ class BulkService
     /**
      * Retrieves all bulk products.
      * 
-     * @return BulkProduct[] List of bulk products.
+     * @return Collection<BulkProduct> List of bulk products.
      */
-    public function getProducts(): array
+    public function getProducts(): Collection
     {
         return $this->productRepository->getProducts();
     }

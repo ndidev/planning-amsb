@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\Bulk\BulkAppointment;
 use App\Service\BulkService;
@@ -26,9 +27,9 @@ class BulkAppointmentRepository extends Repository
     /**
      * Fetch all the bulk appointments.
      * 
-     * @return BulkAppointment[] The fetched appointments.
+     * @return Collection<BulkAppointment> The fetched appointments.
      */
-    public function getAppointments(): array
+    public function getAppointments(): Collection
     {
         $statement =
             "SELECT
@@ -53,12 +54,12 @@ class BulkAppointmentRepository extends Repository
 
         $bulkService = new BulkService();
 
-        $rdvs = array_map(
-            fn (array $rdvRaw) => $bulkService->makeBulkAppointmentFromDatabase($rdvRaw),
+        $appointments = array_map(
+            fn (array $appointmentRaw) => $bulkService->makeBulkAppointmentFromDatabase($appointmentRaw),
             $appointmentsRaw
         );
 
-        return $rdvs;
+        return new Collection($appointments);
     }
 
     /**

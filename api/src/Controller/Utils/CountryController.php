@@ -11,13 +11,13 @@ use App\Entity\Country;
 
 class CountryController extends Controller
 {
-    private $service;
+    private CountryService $countryService;
 
     public function __construct(
         private ?string $iso
     ) {
         parent::__construct("OPTIONS, HEAD, GET");
-        $this->service = new CountryService();
+        $this->countryService = new CountryService();
         $this->processRequest();
     }
 
@@ -51,7 +51,7 @@ class CountryController extends Controller
      */
     private function readAll()
     {
-        $countries = $this->service->getCountries();
+        $countries = $this->countryService->getCountries();
 
         $etag = ETag::get($countries);
 
@@ -64,23 +64,19 @@ class CountryController extends Controller
         $this->headers["Cache-control"] = "max-age=31557600, must-revalidate";
 
         $this->response
-            ->setBody(
-                json_encode(
-                    array_map(fn (Country $pays) => $pays->toArray(), $countries)
-                )
-            )
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON(array_map(fn (Country $country) => $country->toArray(), $countries));
     }
 
     /**
      * Fetch a country.
      *
      * @param string $iso     ISO code of the country to fetch.
-     * @param bool   $dry_run Fetch the resource without returning the HTTP response.
+     * @param bool   $dryRun Fetch the resource without returning the HTTP response.
      */
     private function read(string $iso)
     {
-        $country = $this->service->getCountry($iso);
+        $country = $this->countryService->getCountry($iso);
 
         if (!$country) {
             $message = "Not Found";
@@ -101,7 +97,7 @@ class CountryController extends Controller
         $this->headers["Cache-control"] = "max-age=31557600, must-revalidate";
 
         $this->response
-            ->setBody(json_encode($country->toArray()))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($country);
     }
 }

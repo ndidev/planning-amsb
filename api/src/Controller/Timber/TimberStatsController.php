@@ -9,8 +9,8 @@ use App\Core\Exceptions\Client\Auth\AccessException;
 
 class TimberStatsController extends Controller
 {
-    private $service;
-    private $module = "bois";
+    private TimberService $service;
+    private string $module = "bois";
 
     public function __construct()
     {
@@ -64,6 +64,6 @@ class TimberStatsController extends Controller
 
         $this->response
             ->setHeaders($this->headers)
-            ->setBody(json_encode($stats));
+            ->setJSON($stats);
     }
 }
