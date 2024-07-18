@@ -57,6 +57,7 @@ try {
             /** AFFICHAGE GENERAL */
         case null:
         case "":
+        case "/":
             switch ($_SERVER["REQUEST_METHOD"]) {
                 case "OPTIONS":
                     (new HTTPResponse)
@@ -78,7 +79,7 @@ try {
             }
 
 
-        case 'login':
+        case '/login':
             if (!isset($_POST["login"]) || !isset($_POST["password"])) {
                 (new HTTPResponse(400))->send();
             }
@@ -109,14 +110,14 @@ try {
             break;
 
 
-        case 'logout':
+        case '/logout':
             // Suppression de la session et suppression du cookie
             (new User)->logout();
             (new HTTPResponse(204))->send();
             break;
 
 
-        case 'check':
+        case '/check':
             // Bypass pour développement
             if ($_ENV["AUTH"] === "OFF") {
                 (new HTTPResponse(200))
@@ -139,7 +140,7 @@ try {
             break;
 
 
-        case 'first-login':
+        case '/first-login':
             if (!isset($_POST["login"]) || !isset($_POST["password"])) {
                 (new HTTPResponse(400))->send();
             }
@@ -150,7 +151,7 @@ try {
             break;
 
 
-        case 'info':
+        case '/info':
             (new HTTPResponse(200))
                 ->setType("json")
                 ->setBody(json_encode([
