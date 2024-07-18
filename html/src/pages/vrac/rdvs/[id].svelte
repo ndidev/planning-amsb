@@ -288,7 +288,7 @@
           inputId="client"
           type="tiers"
           role="vrac_client"
-          name="Fournisseur"
+          name="Client"
           bind:value={rdv.client}
           required
         />
@@ -301,7 +301,7 @@
           inputId="transporteur"
           type="tiers"
           role="vrac_transporteur"
-          name="Fournisseur"
+          name="Transporteur"
           bind:value={rdv.transporteur}
         />
       </div>
