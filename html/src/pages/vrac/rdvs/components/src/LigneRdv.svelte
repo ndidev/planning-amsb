@@ -219,7 +219,9 @@
   <div class="pure-u-lg-6-24">
     <!-- Espacement -->
   </div>
-  <div class="commentaire pure-u-lg-17-24 pure-u-1">{rdv.commentaire}</div>
+  <div class="commentaire pure-u-lg-17-24 pure-u-1">
+    {@html rdv.commentaire.replace(/(?:\r\n|\r|\n)/g, "<br>")}
+  </div>
   <!-- <hr /> -->
 </div>
 
