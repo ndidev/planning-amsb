@@ -179,7 +179,10 @@
     {/if}
   </div>
 
-  <div class="quantite-unite pure-u-lg-2-24 pure-u-6-24">
+  <div
+    class="quantite-unite pure-u-lg-2-24 pure-u-6-24"
+    style:color={rdv.max ? "red" : "initial"}
+  >
     <span class="quantite">{rdv.quantite}</span>
     <span class="unite">{produit.unite}</span>
     <span class="max">{rdv.max ? "max" : ""}</span>
