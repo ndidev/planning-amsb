@@ -58,7 +58,10 @@
     {/if}
   </div>
 
-  <div class="quantite-unite pure-u-lg-2-24 pure-u-6-24">
+  <div
+    class="quantite-unite pure-u-lg-2-24 pure-u-6-24"
+    style:color={rdv.max ? "red" : "initial"}
+  >
     <span class="quantite">{rdv.quantite}</span>
     <span class="unite">{produit.unite}</span>
     <span class="max">{rdv.max ? "max" : ""}</span>
@@ -77,7 +80,9 @@
   <div class="pure-u-lg-6-24">
     <!-- Espacement -->
   </div>
-  <div class="commentaire pure-u-lg-17-24 pure-u-1">{rdv.commentaire}</div>
+  <div class="commentaire pure-u-lg-17-24 pure-u-1">
+    {@html rdv.commentaire.replace(/(?:\r\n|\r|\n)/g, "<br>")}
+  </div>
 </div>
 
 <style>
