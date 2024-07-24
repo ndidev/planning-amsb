@@ -237,4 +237,33 @@ class DateUtils
 
         return $next_working_day;
     }
+
+    /**
+     * Make a DateTimeImmutable object from an input date or time.
+     * 
+     * @param \DateTimeImmutable|string|null $datetime 
+     */
+    public static function makeDateTimeImmutable(\DateTimeImmutable|string|null $datetime): ?\DateTimeImmutable
+    {
+        $datetimeObject = null;
+
+        if (is_null($datetime)) {
+            $datetimeObject = null;
+        } else if (is_string($datetime)) {
+            $datetimeObject = new \DateTimeImmutable($datetime);
+        } else {
+            $datetimeObject = $datetime;
+        }
+
+        // TODO: use this method in entities
+
+        return $datetimeObject;
+    }
+
+    public static function getDateTimeImmutableValue(): \DateTimeImmutable|string|null
+    {
+        // TODO: Implement getDateTimeImmutableValue() method.
+
+        return null;
+    }
 }

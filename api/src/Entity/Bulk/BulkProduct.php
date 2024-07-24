@@ -65,6 +65,9 @@ class BulkProduct extends AbstractEntity
         return $this->unit;
     }
 
+    /**
+     * @param BulkQuality[] $qualities 
+     */
     public function setQualities(array $qualities): static
     {
         $this->qualities = array_map(

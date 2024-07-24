@@ -12,24 +12,23 @@ use App\Core\Interfaces\Arrayable;
 class Collection implements \IteratorAggregate, \Countable, Arrayable, \JsonSerializable
 {
     /**
-     * @var array<T>
+     * @param T[] $items
      */
-    private array $items = [];
-
-    public function __construct(array $items = [])
+    public function __construct(private array $items = [])
     {
-        foreach ($items as $item) {
-            // $this->add($item);
-            array_push($this->items, $item);
-        }
     }
 
-    // public function add(Identifiable $item): static
-    // {
-    //     $this->items[] = $item;
+    /**
+     * Add an item to the collection.
+     * 
+     * @param T $item 
+     */
+    public function add(mixed $item): static
+    {
+        $this->items[] = $item;
 
-    //     return $this;
-    // }
+        return $this;
+    }
 
     // public function remove(Identifiable $item): static
     // {
@@ -39,7 +38,7 @@ class Collection implements \IteratorAggregate, \Countable, Arrayable, \JsonSeri
     // }
 
     /**
-     * @return \ArrayIterator<T>
+     * @return T[]
      */
     public function getIterator(): \ArrayIterator
     {
@@ -54,7 +53,7 @@ class Collection implements \IteratorAggregate, \Countable, Arrayable, \JsonSeri
     /**
      * Transform the collection to an array.
      * 
-     * @return array<T>
+     * @return T[]
      */
     public function toArray(): array
     {
@@ -64,7 +63,7 @@ class Collection implements \IteratorAggregate, \Countable, Arrayable, \JsonSeri
     /**
      * Transform the collection to an array so that it can be serialized to JSON.
      * 
-     * @return array<T>
+     * @return T[]
      */
     public function jsonSerialize(): array
     {

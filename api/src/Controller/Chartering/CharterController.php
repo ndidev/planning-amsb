@@ -2,23 +2,22 @@
 
 namespace App\Controller\Chartering;
 
-use App\Models\Chartering\CharterModel;
+use App\Service\CharteringService;
 use App\Controller\Controller;
 use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AccessException;
-use App\Core\Exceptions\Server\DB\DBException;
 
 class CharterController extends Controller
 {
-    private $model;
-    private $module = "chartering";
-    private $sse_event = "chartering/charters";
+    private CharteringService $charteringService;
+    private string $module = "chartering";
+    private string $sse_event = "chartering/charters";
 
     public function __construct(
         private ?int $id
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
-        $this->model = new CharterModel;
+        $this->charteringService = new CharteringService;
         $this->processRequest();
     }
 
@@ -70,9 +69,9 @@ class CharterController extends Controller
             throw new AccessException();
         }
 
-        $donnees = $this->model->readAll($archives);
+        $charters = $this->charteringService->getCharters($archives);
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($charters);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -82,8 +81,8 @@ class CharterController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($charters);
     }
 
     /**
@@ -98,18 +97,18 @@ class CharterController extends Controller
             throw new AccessException();
         }
 
-        $donnees = $this->model->read($id);
+        $charter = $this->charteringService->getCharter($id);
 
-        if (!$donnees && !$dryRun) {
+        if (!$charter && !$dryRun) {
             $this->response->setCode(404);
             return;
         }
 
         if ($dryRun) {
-            return $donnees;
+            return $charter;
         }
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($charter);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -120,7 +119,7 @@ class CharterController extends Controller
 
         $this->response
             ->setHeaders($this->headers)
-            ->setBody(json_encode($donnees));
+            ->setJSON($charter);
     }
 
     /**
@@ -134,19 +133,18 @@ class CharterController extends Controller
 
         $input = $this->request->body;
 
-        $donnees = $this->model->create($input);
+        $newCharter = $this->charteringService->createCharter($input);
 
-        $id = $donnees["id"];
+        $id = $newCharter->getId();
 
         $this->headers["Location"] = $_ENV["API_URL"] . "/chartering/charters/$id";
 
         $this->response
             ->setCode(201)
-            ->setBody(json_encode($donnees))
             ->setHeaders($this->headers)
-            ->flush();
+            ->setJSON($newCharter);
 
-        notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
+        notify_sse($this->sse_event, __FUNCTION__, $id, $newCharter->toArray());
     }
 
     /**
@@ -160,21 +158,20 @@ class CharterController extends Controller
             throw new AccessException();
         }
 
-        if (!$this->model->exists($id)) {
+        if (!$this->charteringService->charterExists($id)) {
             $this->response->setCode(404);
             return;
         }
 
         $input = $this->request->body;
 
-        $donnees = $this->model->update($id, $input);
+        $charter = $this->charteringService->updateCharter($id, $input);
 
         $this->response
-            ->setBody(json_encode($donnees))
             ->setHeaders($this->headers)
-            ->flush();
+            ->setJSON($charter);
 
-        notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
+        notify_sse($this->sse_event, __FUNCTION__, $id, $charter->toArray());
     }
 
     /**
@@ -188,18 +185,14 @@ class CharterController extends Controller
             throw new AccessException();
         }
 
-        if (!$this->model->exists($id)) {
+        if (!$this->charteringService->charterExists($id)) {
             $this->response->setCode(404);
             return;
         }
 
-        $succes = $this->model->delete($id);
+        $this->charteringService->deleteCharter($id);
 
-        if ($succes) {
-            $this->response->setCode(204)->flush();
-            notify_sse($this->sse_event, __FUNCTION__, $id);
-        } else {
-            throw new DBException("Erreur lors de la suppression");
-        }
+        $this->response->setCode(204);
+        notify_sse($this->sse_event, __FUNCTION__, $id);
     }
 }

@@ -48,9 +48,7 @@ class BulkAppointment extends AbstractEntity
 
     public function setTime(\DateTimeImmutable|string|null $heure): static
     {
-        if (is_null($heure)) {
-            $this->time = null;
-        } else if (is_string($heure)) {
+        if (is_string($heure)) {
             $this->time = new \DateTimeImmutable($heure);
         } else {
             $this->time = $heure;
@@ -68,7 +66,7 @@ class BulkAppointment extends AbstractEntity
         }
     }
 
-    public function setProduct(BulkProduct|int $product): static
+    public function setProduct(BulkProduct|int|null $product): static
     {
         if (is_int($product)) {
             $this->product = (new BulkService())->getProduct($product);
@@ -86,9 +84,7 @@ class BulkAppointment extends AbstractEntity
 
     public function setQuality(BulkQuality|int|null $qualite): static
     {
-        if (is_null($qualite)) {
-            $this->quality = null;
-        } else if (is_int($qualite)) {
+        if (is_int($qualite)) {
             $this->quality = (new BulkService())->getQuality($qualite);
         } else {
             $this->quality = $qualite;
@@ -130,7 +126,7 @@ class BulkAppointment extends AbstractEntity
         return $this->ready;
     }
 
-    public function setSupplier(ThirdParty|int $supplier): static
+    public function setSupplier(ThirdParty|int|null $supplier): static
     {
         if (is_int($supplier)) {
             $this->supplier = (new ThirdPartyService())->getThirdParty($supplier);
@@ -146,7 +142,7 @@ class BulkAppointment extends AbstractEntity
         return $this->supplier;
     }
 
-    public function setClient(ThirdParty|int $client): static
+    public function setClient(ThirdParty|int|null $client): static
     {
         if (is_int($client)) {
             $this->client = (new ThirdPartyService())->getThirdParty($client);
@@ -164,9 +160,7 @@ class BulkAppointment extends AbstractEntity
 
     public function setTransport(ThirdParty|int|null $transport): static
     {
-        if (is_null($transport)) {
-            $this->transport = null;
-        } else if (is_int($transport)) {
+        if (is_int($transport)) {
             $this->transport = (new ThirdPartyService())->getThirdParty($transport);
         } else {
             $this->transport = $transport;
@@ -208,15 +202,15 @@ class BulkAppointment extends AbstractEntity
     {
         return  [
             "id" => $this->getId(),
-            "date_rdv" => $this->getDate()->format("Y-m-d"),
+            "date_rdv" => $this->getDate()?->format("Y-m-d"),
             "heure" => $this->getTime()?->format("H:i"),
-            "produit" => $this->getProduct()->getId(),
+            "produit" => $this->getProduct()?->getId(),
             "qualite" => $this->getQuality()?->getId(),
-            "quantite" => $this->getQuantity()->getValue(),
-            "max" => $this->getQuantity()->isMax(),
+            "quantite" => $this->getQuantity()?->getValue() ?? 0,
+            "max" => $this->getQuantity()?->isMax() ?? false,
             "commande_prete" => $this->isReady(),
-            "fournisseur" => $this->getSupplier()->getId(),
-            "client" => $this->getClient()->getId(),
+            "fournisseur" => $this->getSupplier()?->getId(),
+            "client" => $this->getClient()?->getId(),
             "transporteur" => $this->getTransport()?->getId(),
             "num_commande" => $this->getOrderNumber(),
             "commentaire" => $this->getComments(),

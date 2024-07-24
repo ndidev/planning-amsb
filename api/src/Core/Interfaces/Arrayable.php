@@ -3,16 +3,14 @@
 namespace App\Core\Interfaces;
 
 /**
- * Interface Arrayable
- * 
- * Cette interface définit une méthode toArray() qui permet de convertir un objet en un tableau associatif.
+ * This interface defines a toArray() method that converts an object into an array.
  */
 interface Arrayable
 {
     /**
-     * Convertit l'objet en un tableau associatif.
+     * Converts the object into an array.
      * 
-     * @return array Le tableau associatif représentant l'objet.
+     * @return array The array representing the object.
      */
     public function toArray(): array;
 }

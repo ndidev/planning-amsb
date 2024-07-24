@@ -72,16 +72,7 @@ export type Charter = {
   /**
    * Étapes du voyage.
    */
-  legs: {
-    id: number;
-    charter: Charter["id"];
-    bl_date: string;
-    pol: Port["locode"];
-    pod: Port["locode"];
-    marchandise: string;
-    quantite: string;
-    commentaire: string;
-  }[];
+  legs: CharterLeg[];
 
   /**
    * Commentaire.
@@ -92,4 +83,49 @@ export type Charter = {
    * `true` si l'affrètement a été archivé.
    */
   archive: boolean;
+};
+
+/**
+ * Trajet d'un affrètement.
+ */
+export type CharterLeg = {
+  /**
+   * Identifiant du trajet.
+   */
+  id: number;
+
+  /**
+   * Identifiant de l'affrètement auquel appartient le trajet.
+   */
+  charter: Charter["id"];
+
+  /**
+   * Date d'établissement du B/L.
+   */
+  bl_date: string;
+
+  /**
+   * Code du port de chargement.
+   */
+  pol: Port["locode"];
+
+  /**
+   * Code du port de déchargement.
+   */
+  pod: Port["locode"];
+
+  /**
+   * Description de la marchandise.
+   */
+  marchandise: string;
+
+  /**
+   * Quantité de marchandise.
+   */
+  quantite: string;
+
+  /**
+   * Commentaire.
+   */
+  commentaire: string;
 };

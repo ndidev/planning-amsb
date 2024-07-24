@@ -52,9 +52,7 @@ class TimberAppointment extends AbstractEntity
 
     public function setDate(\DateTimeImmutable|string|null $date): static
     {
-        if (is_null($date)) {
-            $this->date = null;
-        } else if (is_string($date)) {
+        if (is_string($date)) {
             $this->date = new \DateTimeImmutable($date);
         } else {
             $this->date = $date;
@@ -74,9 +72,7 @@ class TimberAppointment extends AbstractEntity
 
     public function setArrivalTime(\DateTimeImmutable|string|null $arrivalTime): static
     {
-        if (is_null($arrivalTime)) {
-            $this->arrivalTime = null;
-        } else if (is_string($arrivalTime)) {
+        if (is_string($arrivalTime)) {
             $this->arrivalTime = new \DateTimeImmutable($arrivalTime);
         } else {
             $this->arrivalTime = $arrivalTime;
@@ -96,9 +92,7 @@ class TimberAppointment extends AbstractEntity
 
     public function setDepartureTime(\DateTimeImmutable|string|null $departureTime): static
     {
-        if (is_null($departureTime)) {
-            $this->departureTime = null;
-        } else if (is_string($departureTime)) {
+        if (is_string($departureTime)) {
             $this->departureTime = new \DateTimeImmutable($departureTime);
         } else {
             $this->departureTime = $departureTime;
@@ -114,9 +108,7 @@ class TimberAppointment extends AbstractEntity
 
     public function setSupplier(ThirdParty|int|null $supplier): static
     {
-        if (is_null($supplier)) {
-            $this->supplier = null;
-        } else if (is_int($supplier)) {
+        if (is_int($supplier)) {
             $this->supplier = (new ThirdPartyService())->getThirdParty($supplier);
         } else {
             $this->supplier = $supplier;
@@ -132,9 +124,7 @@ class TimberAppointment extends AbstractEntity
 
     public function setLoadingPlace(ThirdParty|int|null $loadingPlace): static
     {
-        if (is_null($loadingPlace)) {
-            $this->loadingPlace = null;
-        } else if (is_int($loadingPlace)) {
+        if (is_int($loadingPlace)) {
             $this->loadingPlace = (new ThirdPartyService())->getThirdParty($loadingPlace);
         } else {
             $this->loadingPlace = $loadingPlace;
@@ -150,9 +140,7 @@ class TimberAppointment extends AbstractEntity
 
     public function setDeliveryPlace(ThirdParty|int|null $livraison): static
     {
-        if (is_null($livraison)) {
-            $this->deliveryPlace = null;
-        } else if (is_int($livraison)) {
+        if (is_int($livraison)) {
             $this->deliveryPlace = (new ThirdPartyService())->getThirdParty($livraison);
         } else {
             $this->deliveryPlace = $livraison;
@@ -168,9 +156,7 @@ class TimberAppointment extends AbstractEntity
 
     public function setCustomer(ThirdParty|int|null $customer): static
     {
-        if (is_null($customer)) {
-            $this->customer = null;
-        } else if (is_int($customer)) {
+        if (is_int($customer)) {
             $this->customer = (new ThirdPartyService())->getThirdParty($customer);
         } else {
             $this->customer = $customer;
@@ -186,9 +172,7 @@ class TimberAppointment extends AbstractEntity
 
     public function setTransport(ThirdParty|int|null $transporteur): static
     {
-        if (is_null($transporteur)) {
-            $this->transport = null;
-        } else if (is_int($transporteur)) {
+        if (is_int($transporteur)) {
             $this->transport = (new ThirdPartyService())->getThirdParty($transporteur);
         } else {
             $this->transport = $transporteur;
@@ -204,9 +188,7 @@ class TimberAppointment extends AbstractEntity
 
     public function setTransportBroker(ThirdParty|int|null $transportBroker): static
     {
-        if (is_null($transportBroker)) {
-            $this->transportBroker = null;
-        } else if (is_int($transportBroker)) {
+        if (is_int($transportBroker)) {
             $this->transportBroker = (new ThirdPartyService())->getThirdParty($transportBroker);
         } else {
             $this->transportBroker = $transportBroker;
@@ -283,12 +265,12 @@ class TimberAppointment extends AbstractEntity
             "date_rdv" => $this->getDate(true),
             "heure_arrivee" => $this->getArrivalTime(true),
             "heure_depart" => $this->getDepartureTime(true),
-            "fournisseur" => $this->supplier?->getId(),
-            "chargement" => $this->loadingPlace?->getId(),
-            "livraison" => $this->deliveryPlace?->getId(),
-            "client" => $this->customer?->getId(),
-            "transporteur" => $this->transport?->getId(),
-            "affreteur" => $this->transportBroker?->getId(),
+            "fournisseur" => $this->getSupplier()?->getId(),
+            "chargement" => $this->getLoadingPlace()?->getId(),
+            "livraison" => $this->getDeliveryPlace()?->getId(),
+            "client" => $this->getCustomer()?->getId(),
+            "transporteur" => $this->getTransport()?->getId(),
+            "affreteur" => $this->getTransportBroker()?->getId(),
             "commande_prete" => $this->isReady(),
             "confirmation_affretement" => $this->getCharteringConfirmationSent(),
             "numero_bl" => $this->getDeliveryNoteNumber(),

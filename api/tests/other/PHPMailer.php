@@ -34,7 +34,7 @@ try {
     // Création e-mail
     $mail = new PDFMailer(null, $date_debut, $date_fin, $agence, true);
 
-    $mail->ajouterAdresses();
+    $mail->addAddresses();
 
     $mail->send();
     $mail->smtpClose();

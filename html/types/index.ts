@@ -6,7 +6,7 @@ export type {
 } from "./src/AjoutRapide";
 export type { AppURLs } from "./src/AppURLs";
 export type { CamionsParDate } from "./src/CamionsParDate";
-export type { Charter } from "./src/Charter";
+export type { Charter, CharterLeg } from "./src/Charter";
 export type { Collection } from "./src/Collection";
 export type { CompteUtilisateur } from "./src/CompteUtilisateur";
 export type { ConfigBandeauInfo } from "./src/ConfigBandeauInfo";

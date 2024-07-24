@@ -314,8 +314,7 @@ class BulkProductRepository extends Repository
 
         if (!empty($qualitiesIdsToBeDeleted)) {
             $deleteQualitiesStatement = "DELETE FROM vrac_qualites WHERE id IN (" . implode(",", $qualitiesIdsToBeDeleted) . ")";
-            $deleteQualitiesRequest = $this->mysql->prepare($deleteQualitiesStatement);
-            $deleteQualitiesRequest->execute();
+            $this->mysql->exec($deleteQualitiesStatement);
         }
 
         // Insert and update qualities
