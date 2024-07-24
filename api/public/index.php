@@ -6,6 +6,7 @@ use App\Core\HTTP\HTTPResponse;
 use App\Core\Security;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\ServerException;
+use App\Controllers\Controller;
 use App\Controllers\RootController as Root;
 use App\Controllers\Bois\RdvController as RdvBois;
 use App\Controllers\Bois\RegistreController as RegistreBois;
@@ -47,60 +48,65 @@ if (Security::check_if_request_can_be_done() === false) {
 
 /**
  * Routes de l'API.
- * @var array
+ * @var array{{string, string}} $routes
  */
 $routes = [
     // Affichage général
-    ["/", fn () => new Root()],
+    ["/", Root::class],
 
     // Bois
-    ["/bois/rdvs/[i:id]?", fn ($id = null) => new RdvBois($id)],
-    ["/bois/registre", fn () => new RegistreBois()],
-    ["/bois/stats", fn () => new StatsBois()],
-    ["/bois/suggestions-transporteurs", fn () => new SuggestionsTransporteurs()],
+    ["/bois/rdvs/[i:id]?", RdvBois::class],
+    ["/bois/registre", RegistreBois::class],
+    ["/bois/stats", StatsBois::class],
+    ["/bois/suggestions-transporteurs", SuggestionsTransporteurs::class],
 
     // Vrac
-    ["/vrac/rdvs/[i:id]?", fn ($id = null) => new RdvVrac($id)],
-    ["/vrac/produits/[i:id]?", fn ($id = null) => new VracProduit($id)],
+    ["/vrac/rdvs/[i:id]?", RdvVrac::class],
+    ["/vrac/produits/[i:id]?", VracProduit::class],
 
     // Consignation
-    ["/consignation/escales/[i:id]?", fn ($id = null) => new EscaleConsignation($id)],
-    ["/consignation/voyage", fn () => new NumVoyageConsignation()],
-    ["/consignation/te", fn () => new TE()],
-    ["/consignation/stats/[*:ids]?", fn ($ids = null) => new StatsConsignation($ids)],
-    ["/consignation/navires", fn () => new NaviresConsignation()],
-    ["/consignation/marchandises", fn () => new MarchandisesConsignation()],
-    ["/consignation/clients", fn () => new ClientsConsignation()],
-    ["/consignation/navires-en-activite", fn () => new NaviresEnActivite()],
+    ["/consignation/escales/[i:id]?", EscaleConsignation::class],
+    ["/consignation/voyage", NumVoyageConsignation::class],
+    ["/consignation/te", TE::class],
+    ["/consignation/stats/[*:ids]?", StatsConsignation::class],
+    ["/consignation/navires", NaviresConsignation::class],
+    ["/consignation/marchandises", MarchandisesConsignation::class],
+    ["/consignation/clients", ClientsConsignation::class],
+    ["/consignation/navires-en-activite", NaviresEnActivite::class],
 
     // Chartering
-    ["/chartering/charters/[i:id]?", fn ($id = null) => new AffretementMaritime($id)],
+    ["/chartering/charters/[i:id]?", AffretementMaritime::class],
 
     // Utilitaires
-    ["/ports/[a:locode]?", fn ($locode = null) => new Ports($locode)],
-    ["/pays/[a:iso]?", fn ($iso = null) => new Pays($iso)],
-    ["/marees/[i:annee]?", fn ($annee = null) => new Marees($annee)],
-    ["/marees/annees", fn () => new Marees(annees: true)],
+    ["/ports/[a:locode]?", Ports::class],
+    ["/pays/[a:iso]?", Pays::class],
+    ["/marees/[i:annee]?", Marees::class],
+    ["/marees/annees", Marees::class],
 
     // Config
-    ["/config/agence/[a:service]?", fn ($service = null) => new Agence($service)],
-    ["/config/bandeau-info/[i:id]?", fn ($id = null) => new BandeauInfo($id)],
-    ["/config/pdf/[i:id]?", fn ($id = null) => new ConfigPDF($id)],
-    ["/config/pdf/visu", fn () => new VisualiserPDF()],
-    ["/config/pdf/envoi", fn () => new EnvoiPDF()],
-    ["/config/ajouts-rapides/[i:id]?", fn ($id = null) => new AjoutRapide($id)],
-    ["/config/cotes/[a:cote]?", fn ($cote = null) => new Cote($cote)],
+    ["/config/agence/[a:service]?", Agence::class],
+    ["/config/bandeau-info/[i:id]?", BandeauInfo::class],
+    ["/config/pdf/[i:id]?", ConfigPDF::class],
+    ["/config/pdf/visu", VisualiserPDF::class],
+    ["/config/pdf/envoi", EnvoiPDF::class],
+    ["/config/ajouts-rapides/[i:id]?", AjoutRapide::class],
+    ["/config/cotes/[a:cote]?", Cote::class],
 
     // Tiers
-    ["/tiers/[i:id]?", fn ($id = null) => new Tiers($id)],
-    ["/tiers/[i:id]?/nombre_rdv", fn ($id = null) => new NombreRdv($id)],
+    ["/tiers/[i:id]?", Tiers::class],
+    ["/tiers/[i:id]?/nombre_rdv", NombreRdv::class],
 
     // Admin
-    ["/admin/users/[a:uid]?", fn ($uid = null) => new UserAccount($uid)],
+    ["/admin/users/[a:uid]?", UserAccount::class],
 
     // Utilisateur
-    ["/user", fn () => new UserManagement()],
+    ["/user", UserManagement::class],
 ];
+
+/**
+ * @var HTTPResponse $response
+ */
+$response = null;
 
 /**
  * Routeur
@@ -110,28 +116,32 @@ try {
     $match = $router->match();
 
     if (is_array($match)) {
-        $controller = $match["target"];
+        $controllerClass = $match["target"];
         $params = $match["params"];
-        call_user_func_array($controller, $params);
+        $name = $match["name"];
+
+        /** @var Controller $controller */
+        $controller = new $controllerClass(...$params);
     } else {
         // 404 Not Found
-        new Root(true);
+        $controller = new Root(true);
     }
+
+    $response = $controller->getResponse();
 } catch (ClientException $e) {
-    (new HTTPResponse($e->http_status))
+    $response = (new HTTPResponse($e->http_status))
         ->setType("text")
-        ->setBody($e->getMessage())
-        ->send();
+        ->setBody($e->getMessage());
 } catch (ServerException $e) {
     error_logger($e);
-    (new HTTPResponse($e->http_status))
+    $response = (new HTTPResponse($e->http_status))
         ->setType("text")
-        ->setBody("Erreur serveur")
-        ->send();
-} catch (Throwable $e) {
+        ->setBody("Erreur serveur");
+} catch (\Throwable $e) {
     error_logger($e);
-    (new HTTPResponse(500))
+    $response = (new HTTPResponse(500))
         ->setType("text")
-        ->setBody("Erreur serveur")
-        ->send();
+        ->setBody("Erreur serveur");
 }
+
+$response->send();

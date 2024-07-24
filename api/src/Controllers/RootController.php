@@ -9,8 +9,9 @@ use App\Core\HTTP\ETag;
  */
 class RootController extends Controller
 {
-    public function __construct(private bool $_404 = false)
-    {
+    public function __construct(
+        private bool $_404 = false,
+    ) {
         parent::__construct("OPTIONS, HEAD, GET");
         $this->processRequest();
     }
@@ -19,7 +20,7 @@ class RootController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Allow", $this->supported_methods);
+                $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -28,12 +29,9 @@ class RootController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", $this->supported_methods);
+                $this->response->setCode(405)->addHeader("Allow", $this->supportedMethods);
                 break;
         }
-
-        // Envoi de la réponse HTTP
-        $this->response->send();
     }
 
     /**

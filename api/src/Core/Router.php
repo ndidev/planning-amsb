@@ -47,8 +47,11 @@ class Router
      * @param array $matchTypes
      * @throws RuntimeException
      */
-    public function __construct(array $routes = [], string $basePath = '', array $matchTypes = [])
-    {
+    public function __construct(
+        array $routes = [],
+        string $basePath = '',
+        array $matchTypes = []
+    ) {
         $this->addRoutes($routes);
         $this->setBasePath($basePath);
         $this->addMatchTypes($matchTypes);
@@ -185,7 +188,7 @@ class Router
      * Match a given Request Url against stored routes
      * @param string $requestUrl
      * @param string $requestMethod
-     * @return array|false Array with route information on success, false on failure (no match).
+     * @return array{target: string, params: array, name: string}|false Array with route information on success, false on failure (no match).
      */
     public function match(string $requestUrl = null): array|false
     {

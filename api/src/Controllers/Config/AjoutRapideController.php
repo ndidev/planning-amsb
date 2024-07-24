@@ -15,7 +15,7 @@ class AjoutRapideController extends Controller
     private $sse_event = "config/ajouts-rapides";
 
     public function __construct(
-        private ?int $id
+        private ?int $id = null,
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
         $this->model = new AjoutRapideBoisModel;
@@ -26,7 +26,7 @@ class AjoutRapideController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Allow", $this->supported_methods);
+                $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -51,12 +51,9 @@ class AjoutRapideController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", $this->supported_methods);
+                $this->response->setCode(405)->addHeader("Allow", $this->supportedMethods);
                 break;
         }
-
-        // Envoi de la réponse HTTP
-        $this->response->send();
     }
 
     /**

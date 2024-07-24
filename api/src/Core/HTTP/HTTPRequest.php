@@ -38,7 +38,7 @@ class HTTPRequest
     /**
      * `true` if the request is a CORS preflight request.
      */
-    public readonly bool $is_preflight;
+    public readonly bool $isPreflight;
 
     public function __construct()
     {
@@ -60,9 +60,9 @@ class HTTPRequest
             && in_array("access-control-request-method", $headers)
             && in_array("origin", $headers)
         ) {
-            $this->is_preflight = true;
+            $this->isPreflight = true;
         } else {
-            $this->is_preflight = false;
+            $this->isPreflight = false;
         }
     }
 }

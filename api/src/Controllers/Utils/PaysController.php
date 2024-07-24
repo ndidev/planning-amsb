@@ -13,7 +13,7 @@ class PaysController extends Controller
     private $sse_event = "pays";
 
     public function __construct(
-        private ?string $iso
+        private ?string $iso = null,
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
         $this->model = new PaysModel;
@@ -24,7 +24,7 @@ class PaysController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Allow", $this->supported_methods);
+                $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -49,12 +49,9 @@ class PaysController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", $this->supported_methods);
+                $this->response->setCode(405)->addHeader("Allow", $this->supportedMethods);
                 break;
         }
-
-        // Envoi de la réponse HTTP
-        $this->response->send();
     }
 
     /**

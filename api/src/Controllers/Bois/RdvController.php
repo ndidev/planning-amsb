@@ -15,7 +15,7 @@ class RdvController extends Controller
     private $sse_event = "bois/rdvs";
 
     public function __construct(
-        private ?int $id
+        private ?int $id = null,
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE");
         $this->model = new RdvModel;
@@ -26,7 +26,7 @@ class RdvController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Allow", $this->supported_methods);
+                $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -55,12 +55,9 @@ class RdvController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", $this->supported_methods);
+                $this->response->setCode(405)->addHeader("Allow", $this->supportedMethods);
                 break;
         }
-
-        // Envoi de la réponse HTTP
-        $this->response->send();
     }
 
     /**

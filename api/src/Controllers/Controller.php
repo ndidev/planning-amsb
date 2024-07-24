@@ -36,19 +36,26 @@ abstract class Controller
   /**
    * Supported HTTP methods.
    */
-  protected string $supported_methods;
+  protected string $supportedMethods;
 
-  public function __construct(string $supported_methods = "OPTIONS, HEAD, GET")
+  public function __construct(string $supportedMethods = "OPTIONS, HEAD, GET")
   {
     // $this->user = $GLOBALS["user"];
-    $this->request = new HTTPRequest;
-    $this->response = new HTTPResponse;
+    $this->request = new HTTPRequest();
+    $this->response = new HTTPResponse();
 
-    $this->supported_methods = $supported_methods;
+    $this->supportedMethods = $supportedMethods;
 
     $this->processCORSpreflight();
 
     $this->authenticateUser();
+  }
+
+  abstract function processRequest();
+
+  public function getResponse(): HTTPResponse
+  {
+    return $this->response;
   }
 
   /**
@@ -56,11 +63,11 @@ abstract class Controller
    */
   private function processCORSpreflight()
   {
-    if (!$this->request->is_preflight) {
+    if (!$this->request->isPreflight) {
       return;
     }
 
-    $this->response->sendCorsPreflight($this->supported_methods);
+    $this->response->sendCorsPreflight($this->supportedMethods);
   }
 
   /**
@@ -70,39 +77,28 @@ abstract class Controller
   private function authenticateUser()
   {
     if ($_ENV["AUTH"] === "ON") {
+      $validSession = true;
+      $validApiKey = true;
+
+      // Session
       try {
-        $valid_session = true;
-        $valid_api_key = true;
+        $this->user = (new User)->from_session();
+      } catch (AuthException) {
+        $validSession = false;
+      }
 
-        // Session
-        try {
-          $this->user = (new User)->from_session();
-        } catch (AuthException) {
-          $valid_session = false;
-        }
+      // Clé API
+      try {
+        $this->user = (new User)->from_api_key();
+      } catch (AuthException) {
+        $validApiKey = false;
+      }
 
-        // Clé API
-        try {
-          $this->user = (new User)->from_api_key();
-        } catch (AuthException) {
-          $valid_api_key = false;
-        }
+      // Si aucune des deux authentifications n'est valide
+      if (!$validSession && !$validApiKey) {
+        Security::prevent_bruteforce();
 
-        // Si aucune des deux authentifications n'est valide
-        if (!$valid_session && !$valid_api_key) {
-          Security::prevent_bruteforce();
-
-          (new HTTPResponse(401))
-            ->setType("text/plain")
-            ->setBody("Unauthenticated request.")
-            ->send();
-        }
-      } catch (\Throwable $th) {
-        // Autres erreurs non gérées
-        error_logger($th);
-        (new HTTPResponse(500))
-          ->setBody(json_encode(["message" => "Erreur serveur"]))
-          ->send();
+        throw new AuthException("Unauthenticated request.");
       }
     }
   }

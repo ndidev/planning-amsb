@@ -7,8 +7,6 @@ use App\Controllers\Controller;
 use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Server\DB\DBException;
 
-use function PHPSTORM_META\map;
-
 class MareesController extends Controller
 {
     private $model;
@@ -17,7 +15,7 @@ class MareesController extends Controller
 
     public function __construct(
         private ?int $annee = 0,
-        private bool $annees = false
+        private bool $annees = false,
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, DELETE");
         $this->model = new MareesModel;
@@ -28,7 +26,7 @@ class MareesController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Allow", $this->supported_methods);
+                $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -51,12 +49,9 @@ class MareesController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", $this->supported_methods);
+                $this->response->setCode(405)->addHeader("Allow", $this->supportedMethods);
                 break;
         }
-
-        // Envoi de la réponse HTTP
-        $this->response->send();
     }
 
     /**
