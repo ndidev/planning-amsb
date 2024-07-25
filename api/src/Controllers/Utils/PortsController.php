@@ -10,7 +10,7 @@ use App\Core\Exceptions\Server\DB\DBException;
 class PortsController extends Controller
 {
   private $model;
-  private $sse_event = "ports";
+  private $sseEventName = "ports";
 
   public function __construct(
     private ?string $locode = null,
@@ -128,7 +128,7 @@ class PortsController extends Controller
       ->setBody(json_encode($donnees))
       ->setHeaders($this->headers);
 
-    notify_sse($this->sse_event, __FUNCTION__, $locode, $donnees);
+    $this->sse->addEvent($this->sseEventName, __FUNCTION__, $locode, $donnees);
   }
 
   /**
@@ -151,7 +151,7 @@ class PortsController extends Controller
       ->setBody(json_encode($donnees))
       ->setHeaders($this->headers);
 
-    notify_sse($this->sse_event, __FUNCTION__, $locode, $donnees);
+    $this->sse->addEvent($this->sseEventName, __FUNCTION__, $locode, $donnees);
   }
 
   /**
@@ -170,7 +170,7 @@ class PortsController extends Controller
 
     if ($succes) {
       $this->response->setCode(204);
-      notify_sse($this->sse_event, __FUNCTION__, $locode);
+      $this->sse->addEvent($this->sseEventName, __FUNCTION__, $locode);
     } else {
       throw new DBException("Erreur lors de la suppression");
     }

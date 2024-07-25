@@ -10,7 +10,7 @@ class AgenceController extends Controller
 {
     private $model;
     private $module = "config";
-    private $sse_event = "config/agence";
+    private $sseEventName = "config/agence";
 
     public function __construct(
         private ?string $service = null,
@@ -121,6 +121,6 @@ class AgenceController extends Controller
             ->setHeaders($this->headers)
             ->flush();
 
-        notify_sse($this->sse_event, __FUNCTION__, $service, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $service, $donnees);
     }
 }

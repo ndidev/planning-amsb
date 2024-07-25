@@ -2,11 +2,12 @@
 
 namespace App\Controllers;
 
-use App\Core\Security;
 use App\Core\Auth\User;
+use App\Core\Component\SSEHandler;
 use App\Core\Exceptions\Client\Auth\AuthException;
 use App\Core\HTTP\HTTPRequest;
 use App\Core\HTTP\HTTPResponse;
+use App\Core\Security;
 
 /**
  * Classe servant de base aux contrôleurs.
@@ -38,6 +39,11 @@ abstract class Controller
    */
   protected string $supportedMethods;
 
+  /**
+   * Server-Sent Events handler.
+   */
+  public SSEHandler $sse;
+
   public function __construct(string $supportedMethods = "OPTIONS, HEAD, GET")
   {
     // $this->user = $GLOBALS["user"];
@@ -45,6 +51,8 @@ abstract class Controller
     $this->response = new HTTPResponse();
 
     $this->supportedMethods = $supportedMethods;
+
+    $this->sse = new SSEHandler();
 
     $this->processCORSpreflight();
 

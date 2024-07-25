@@ -11,7 +11,7 @@ class UserController extends Controller
 {
     private $model;
     private $module = "user";
-    private $sse_event = "admin/users";
+    private $sseEventName = "admin/users";
 
     public function __construct()
     {
@@ -91,6 +91,6 @@ class UserController extends Controller
             ->setBody(json_encode($donnees))
             ->setHeaders($this->headers);
 
-        notify_sse($this->sse_event, __FUNCTION__, $this->user->uid, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $this->user->uid, $donnees);
     }
 }

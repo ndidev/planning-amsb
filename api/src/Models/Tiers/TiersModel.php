@@ -3,8 +3,7 @@
 namespace App\Models\Tiers;
 
 use App\Models\Model;
-use Throwable;
-use Exception;
+use App\Core\Logger\ErrorLogger;
 
 class TiersModel extends Model
 {
@@ -274,7 +273,7 @@ class TiersModel extends Model
     {
         $nombre_rdv = (new NombreRdvModel())->read($id)["nombre_rdv"];
         if ($nombre_rdv > 0) {
-            throw new Exception("Le tiers est concerné par $nombre_rdv rdv. Impossible de le supprimer.");
+            throw new \Exception("Le tiers est concerné par $nombre_rdv rdv. Impossible de le supprimer.");
         }
 
         $requete = $this->mysql->prepare("DELETE FROM tiers WHERE id = :id");
@@ -313,7 +312,7 @@ class TiersModel extends Model
             $image = imagecreatefromstring(base64_decode($data));
 
             if (!$image) {
-                throw new Exception("Logo : Erreur dans la création de l'image (imagecreatefromstring)");
+                throw new \Exception("Logo : Erreur dans la création de l'image (imagecreatefromstring)");
             }
 
 
@@ -331,12 +330,12 @@ class TiersModel extends Model
             $filename = $hash . ".webp";
             $filepath = LOGOS . "/$filename";
             if (imagewebp($image_resized, $filepath, 100) === false) {
-                throw new Exception("Erreur dans l'enregistrement du logo (imagewebp)");
+                throw new \Exception("Erreur dans l'enregistrement du logo (imagewebp)");
             }
 
             return $filename;
-        } catch (Throwable $e) {
-            error_logger($e);
+        } catch (\Throwable $e) {
+            ErrorLogger::log($e);
             return false;
         }
     }

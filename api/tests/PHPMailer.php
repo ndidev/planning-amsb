@@ -2,8 +2,9 @@
 
 require_once __DIR__ . "/../bootstrap.php";
 
-use App\Core\PDF\PDFMailer;
 use App\Core\DateUtils;
+use App\Core\PDF\PDFMailer;
+use App\Core\Logger\ErrorLogger;
 use PHPMailer\PHPMailer\Exception as PHPMailerException;
 
 $agence = [
@@ -46,19 +47,15 @@ try {
     $resultat["statut"] = "echec";
     $resultat["message"] = "Erreur : " . $mail->ErrorInfo;
     $resultat["erreur"] = $e->errorMessage();
-    error_logger($e);
+    ErrorLogger::log($e);
 } catch (\Exception $e) {
     $resultat["statut"] = "echec";
     $resultat["message"] = "Erreur : " . $mail->ErrorInfo;
-    error_logger($e);
+    ErrorLogger::log($e);
 } finally {
     unset($mail);
 
-    // echo "<pre>";
-    // print_r($resultat);
-    // echo "</pre>";
-
-    $reapport = "";
+    $rapport = "";
 
     // Mise à jour du rapport
     // $rapport .= "• $module/$fournisseur : {$resultat['statut']}" . PHP_EOL;

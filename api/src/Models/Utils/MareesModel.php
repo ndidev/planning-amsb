@@ -3,7 +3,7 @@
 namespace App\Models\Utils;
 
 use App\Models\Model;
-use RedisException;
+use App\Core\Constants;
 
 class MareesModel extends Model
 {
@@ -44,7 +44,7 @@ class MareesModel extends Model
             }
 
             if (!empty($marees)) {
-                $this->redis->setex($this->redis_ns . ":" . $request_hash, ONE_WEEK, json_encode($marees));
+                $this->redis->setex($this->redis_ns . ":" . $request_hash, Constants::ONE_WEEK, json_encode($marees));
             }
         }
 
@@ -160,7 +160,7 @@ class MareesModel extends Model
     /**
      * Supprime les données des marées de Redis.
      * 
-     * @throws RedisException 
+     * @throws \RedisException 
      */
     private function invalidate_redis()
     {

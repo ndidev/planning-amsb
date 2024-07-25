@@ -4,7 +4,7 @@ namespace App\Core\PDF;
 
 use App\Core\DateUtils;
 use App\Core\PDF\PDFPlanning;
-use \DateTime;
+use App\Core\ColorConverter;
 
 class PDFVrac extends PDFPlanning
 {
@@ -13,8 +13,8 @@ class PDFVrac extends PDFPlanning
      * 
      * @param array    $fournisseur Infos sur le fournisseur.
      * @param array    $rdvs        RDVs à inclure dans le PDF.
-     * @param DateTime $date_debut  Date de début des RDV.
-     * @param DateTime $date_fin    Date de fin des RDV.
+     * @param \DateTime $date_debut  Date de début des RDV.
+     * @param \DateTime $date_fin    Date de fin des RDV.
      * @param array    $agence      Infos sur l'agence.
      * 
      * @return void 
@@ -23,8 +23,8 @@ class PDFVrac extends PDFPlanning
     public function __construct(
         protected array $fournisseur,
         protected array $rdvs,
-        protected DateTime $date_debut,
-        protected DateTime $date_fin,
+        protected \DateTime $date_debut,
+        protected \DateTime $date_fin,
         protected array $agence
     ) {
         parent::__construct($fournisseur, $agence);
@@ -141,16 +141,16 @@ class PDFVrac extends PDFPlanning
     ): void {
         $this->SetFont('Roboto', '', 10);
         // Heure
-        $couleur = explode(',', hex_vers_rgb('#D91FFA'));
+        $couleur = explode(',', ColorConverter::hexToRgb('#D91FFA'));
         $this->SetTextColor($couleur[0], $couleur[1], $couleur[2]);
         $this->Cell(15, 6, $heure);
         // Produit
-        $couleur = explode(',', hex_vers_rgb($produit_couleur));
+        $couleur = explode(',', ColorConverter::hexToRgb($produit_couleur));
         $this->SetTextColor($couleur[0], $couleur[1], $couleur[2]);
         $this->Cell(20, 6, $produit_nom);
         // Qualité
         if ($qualite_couleur) {
-            $couleur = explode(',', hex_vers_rgb($qualite_couleur));
+            $couleur = explode(',', ColorConverter::hexToRgb($qualite_couleur));
             $this->SetTextColor($couleur[0], $couleur[1], $couleur[2]);
         }
         $this->Cell(20, 6, $qualite_nom);
@@ -167,10 +167,10 @@ class PDFVrac extends PDFPlanning
     /**
      * Affichage d'un message "Aucun RDV".
      * 
-     * @param DateTime $date_debut Date de début.
-     * @param DateTime $date_fin   Date de fin.
+     * @param \DateTime $date_debut Date de début.
+     * @param \DateTime $date_fin   Date de fin.
      */
-    function AucunRDV(DateTime $date_debut, DateTime $date_fin): void
+    function AucunRDV(\DateTime $date_debut, \DateTime $date_fin): void
     {
         $this->SetFont('Roboto', '', 12);
         $this->SetTextColor(0, 0, 0);

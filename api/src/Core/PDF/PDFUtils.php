@@ -2,13 +2,14 @@
 
 namespace App\Core\PDF;
 
+use \DateTime;
+use \tFPDF;
 use App\Core\Database\MySQL;
 use App\Core\DateUtils;
 use App\Core\PDF\PDFVrac;
-use PHPMailer\PHPMailer\SMTP;
+use App\Core\Logger\ErrorLogger;
 use PHPMailer\PHPMailer\Exception as PHPMailerException;
-use \DateTime;
-use \tFPDF;
+use PHPMailer\PHPMailer\SMTP;
 
 class PDFUtils
 {
@@ -252,11 +253,11 @@ class PDFUtils
             $resultat["statut"] = "echec";
             $resultat["message"] = "Erreur : " . $mail->ErrorInfo;
             $resultat["erreur"] = $e->errorMessage();
-            error_logger($e);
+            ErrorLogger::log($e);
         } catch (\Exception $e) {
             $resultat["statut"] = "echec";
             $resultat["message"] = "Erreur : " . $mail->ErrorInfo;
-            error_logger($e);
+            ErrorLogger::log($e);
         } finally {
             unset($mail);
 

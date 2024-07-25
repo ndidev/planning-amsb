@@ -10,7 +10,7 @@ class CoteController extends Controller
 {
     private $model;
     private $module = "config";
-    private $sse_event = "config/cotes";
+    private $sseEventName = "config/cotes";
 
     public function __construct(
         private ?string $cote = null,
@@ -118,6 +118,6 @@ class CoteController extends Controller
             ->setHeaders($this->headers)
             ->flush();
 
-        notify_sse($this->sse_event, __FUNCTION__, $cote, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $cote, $donnees);
     }
 }

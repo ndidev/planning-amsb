@@ -7,6 +7,7 @@ use App\Core\HTTP\HTTPResponse;
 use App\Core\Security;
 use App\Core\Exceptions\Client\Auth\AccountPendingException;
 use App\Core\Exceptions\AppException;
+use App\Core\Logger\ErrorLogger;
 
 
 if (Security::check_if_request_can_be_done() === false) {
@@ -173,7 +174,7 @@ try {
         ->setBody($e->getMessage())
         ->send();
 } catch (Throwable $e) {
-    error_logger($e);
+    ErrorLogger::log($e);
     (new HTTPResponse(500))
         ->setType("text")
         ->setBody("Erreur serveur")

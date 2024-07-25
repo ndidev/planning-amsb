@@ -13,7 +13,7 @@ class UserAccountController extends Controller
 {
     private $model;
     private $module = "admin";
-    private $sse_event = "admin/users";
+    private $sseEventName = "admin/users";
 
     public function __construct(
         private ?string $uid = null,
@@ -139,7 +139,7 @@ class UserAccountController extends Controller
             ->setBody(json_encode($donnees))
             ->setHeaders($this->headers);
 
-        notify_sse($this->sse_event, __FUNCTION__, $uid, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $uid, $donnees);
     }
 
     /**
@@ -162,7 +162,7 @@ class UserAccountController extends Controller
             ->setBody(json_encode($donnees))
             ->setHeaders($this->headers);
 
-        notify_sse($this->sse_event, __FUNCTION__, $uid, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $uid, $donnees);
     }
 
     /**
@@ -186,7 +186,7 @@ class UserAccountController extends Controller
 
         if ($succes) {
             $this->response->setCode(204);
-            notify_sse($this->sse_event, __FUNCTION__, $uid);
+            $this->sse->addEvent($this->sseEventName, __FUNCTION__, $uid);
         } else {
             throw new DBException("Erreur lors de la suppression");
         }

@@ -12,7 +12,7 @@ class ProduitController extends Controller
 {
   private $model;
   private $module = "vrac";
-  private $sse_event = "vrac/produits";
+  private $sseEventName = "vrac/produits";
 
   public function __construct(
     private ?int $id = null,
@@ -141,7 +141,7 @@ class ProduitController extends Controller
       ->setHeaders($this->headers)
       ->flush();
 
-    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
+    $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $donnees);
   }
 
   /**
@@ -169,7 +169,7 @@ class ProduitController extends Controller
       ->setHeaders($this->headers)
       ->flush();
 
-    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
+    $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $donnees);
   }
 
   /**
@@ -192,7 +192,7 @@ class ProduitController extends Controller
 
     if ($succes) {
       $this->response->setCode(204)->flush();
-      notify_sse($this->sse_event, __FUNCTION__, $id);
+      $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
     } else {
       throw new DBException("Erreur lors de la suppression");
     }

@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Core\Functions;
+
 /** LZW compression
  * 
  * @link http://code.google.com/p/php-lzw/

@@ -2,27 +2,23 @@
 
 namespace App\Core\Auth;
 
-use \DateTime;
+use App\Core\Component\SSEHandler;
 use App\Core\Database\MySQL;
-use \PDOException;
 use App\Core\Database\Redis;
-use \RedisException;
-use App\Core\Auth\UserRoles;
-use App\Core\Auth\AccountStatus;
-use App\Core\Auth\ApiKeyStatus;
 use App\Core\DateUtils;
-use App\Core\Security;
-use App\Core\Exceptions\Client\Auth\LoginException;
-use App\Core\Exceptions\Client\Auth\SessionException;
-use App\Core\Exceptions\Client\Auth\AccountStatusException;
-use App\Core\Exceptions\Client\Auth\AccountPendingException;
+use App\Core\Exceptions\Client\Auth\AccountDeletedException;
 use App\Core\Exceptions\Client\Auth\AccountInactiveException;
 use App\Core\Exceptions\Client\Auth\AccountLockedException;
-use App\Core\Exceptions\Client\Auth\AccountDeletedException;
+use App\Core\Exceptions\Client\Auth\AccountPendingException;
+use App\Core\Exceptions\Client\Auth\AccountStatusException;
+use App\Core\Exceptions\Client\Auth\AuthException;
 use App\Core\Exceptions\Client\Auth\InvalidAccountException;
 use App\Core\Exceptions\Client\Auth\InvalidApiKeyException;
+use App\Core\Exceptions\Client\Auth\LoginException;
 use App\Core\Exceptions\Client\Auth\MaxLoginAttemptsException;
-use App\Core\Exceptions\Client\Auth\AuthException;
+use App\Core\Exceptions\Client\Auth\SessionException;
+use App\Core\Security;
+use App\Core\Constants;
 
 /**
  * Classe contenant toutes les propriétés d'un compte utilisateur.
@@ -79,6 +75,8 @@ class User
 
     private Redis $redis;
 
+    private SSEHandler $sse;
+
     public function __construct(?string $uid = null, ?Redis $redis = null)
     {
         if ($redis) {
@@ -92,6 +90,8 @@ class User
             $this->uid = $uid;
             $this->populate();
         }
+
+        $this->sse = new SSEHandler();
     }
 
     /**
@@ -175,7 +175,7 @@ class User
         // - envoi du cookie
         $this->reset_login_attempts();
 
-        $now = DateUtils::format(DateUtils::SQL_TIMESTAMP, new DateTime());
+        $now = DateUtils::format(DateUtils::SQL_TIMESTAMP, new \DateTime());
 
         (new MySQL)
             ->query("UPDATE admin_users SET last_connection = '{$now}' WHERE uid = '{$this->uid}'");
@@ -235,7 +235,7 @@ class User
 
         $this->update_redis();
 
-        notify_sse("admin/users", "update", $this->uid);
+        $this->sse->addEvent("admin/users", "update", $this->uid);
     }
 
 
@@ -247,7 +247,7 @@ class User
      * 
      * @throws SessionException 
      * @throws AccountStatusException 
-     * @throws RedisException 
+     * @throws \RedisException 
      */
     public function from_session(): User
     {
@@ -285,7 +285,7 @@ class User
      * @return User
      * 
      * @throws InvalidApiKeyException
-     * @throws RedisException
+     * @throws \RedisException
      */
     public function from_api_key(): User
     {
@@ -305,7 +305,7 @@ class User
 
         if ($key_info) {
             $this->redis->hMSet("admin:apikeys:{$api_key_hash}", $key_info);
-            $this->redis->expire("admin:apikeys:{$api_key_hash}", ONE_WEEK);
+            $this->redis->expire("admin:apikeys:{$api_key_hash}", Constants::ONE_WEEK);
         }
 
         [
@@ -325,7 +325,7 @@ class User
             throw new InvalidApiKeyException();
         }
 
-        $now = DateUtils::format(DateUtils::SQL_TIMESTAMP, new DateTime);
+        $now = DateUtils::format(DateUtils::SQL_TIMESTAMP, new \DateTime);
         if ($expiration && $expiration < $now) {
             throw new InvalidApiKeyException();
         }
@@ -416,7 +416,7 @@ class User
         $this->redis->exec();
 
         // Clôturer les connexions SSE
-        notify_sse("admin/sessions", "close", "uid:{$this->uid}");
+        $this->sse->addEvent("admin/sessions", "close", "uid:{$this->uid}");
     }
 
 
@@ -514,7 +514,7 @@ class User
      * 
      * @param string $sid ID de la session.
      * 
-     * @throws RedisException
+     * @throws \RedisException
      */
     private function register_session(string $sid): void
     {
@@ -537,7 +537,7 @@ class User
      * Supprime la session de Redis
      * et passe la valeur du cookie de session à `false`.
      * 
-     * @throws RedisException
+     * @throws \RedisException
      */
     private function delete_session(string $sid): void
     {
@@ -547,7 +547,7 @@ class User
             "path" => $_ENV["SESSION_COOKIE_PATH"]
         ]);
 
-        notify_sse("admin/sessions", "close", "sid:{$sid}");
+        $this->sse->addEvent("admin/sessions", "close", "sid:{$sid}");
     }
 
     /**
@@ -555,8 +555,8 @@ class User
      *
      * @return int Nombre de tentatives de connexion.
      *
-     * @throws PDOException 
-     * @throws RedisException 
+     * @throws \PDOException 
+     * @throws \RedisException 
      */
     private function increment_login_attempts(): int
     {
@@ -575,8 +575,8 @@ class User
     /**
      * Réinitialise le nombre de tentatives de connexions pour un utilisateur.
      * 
-     * @throws PDOException 
-     * @throws RedisException 
+     * @throws \PDOException 
+     * @throws \RedisException 
      */
     private function reset_login_attempts(): void
     {
@@ -591,8 +591,8 @@ class User
      * 
      * @param string $raison Raison du blocage du compte.
      * 
-     * @throws PDOException 
-     * @throws RedisException 
+     * @throws \PDOException 
+     * @throws \RedisException 
      */
     private function lock_account(string $raison = ""): void
     {
@@ -633,7 +633,7 @@ class User
         foreach ($user["roles"] as $role => &$value) {
             $value = (int) $value;
         }
-        notify_sse("admin/users", "update", $this->uid, $user);
+        $this->sse->addEvent("admin/users", "update", $this->uid, $user);
 
         $this->clear_sessions();
     }

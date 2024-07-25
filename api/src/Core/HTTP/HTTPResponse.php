@@ -2,7 +2,7 @@
 
 namespace App\Core\HTTP;
 
-require_once __DIR__ . "/../../../utils/lzw.inc.php";
+use function App\Core\Functions\lzw_compress;
 
 /**
  * Réponses HTTP.

@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Core\Functions;
+
 /**
  * Stringify an array
  * 

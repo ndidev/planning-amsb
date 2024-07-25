@@ -3,6 +3,7 @@
 namespace App\Core;
 
 use App\Core\Database\Redis;
+use App\Core\Constants;
 
 /**
  * Security utilities.
@@ -15,7 +16,7 @@ class Security
      * 
      * Current value: 2 seconds.
      */
-    private const SLEEP_TIME = 2 * ONE_SECOND;
+    private const SLEEP_TIME = 2 * Constants::ONE_SECOND;
 
     /**
      * Number of unauthenticated requests before blocking the IP address.
@@ -29,7 +30,7 @@ class Security
      * 
      * Current value: 10 seconds.
      */
-    public const FAILED_ATTEMPTS_TIMEOUT = 10 * ONE_SECOND;
+    public const FAILED_ATTEMPTS_TIMEOUT = 10 * Constants::ONE_SECOND;
 
     /**
      * IP address blocking duration
@@ -37,7 +38,7 @@ class Security
      * 
      * Current value: 15 minutes.
      */
-    public const BLOCKED_IP_TIMEOUT = 15 * ONE_MINUTE;
+    public const BLOCKED_IP_TIMEOUT = 15 * Constants::ONE_MINUTE;
 
     /**
      * Redis instance.

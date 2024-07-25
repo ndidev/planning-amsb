@@ -3,8 +3,7 @@
 namespace App\Models\Consignation;
 
 use App\Models\Model;
-use DateInterval;
-use DateTime;
+use App\Core\ETAConverter;
 
 class EscaleModel extends Model
 {
@@ -25,7 +24,7 @@ class EscaleModel extends Model
      */
     public function readAll(array $filtre = []): array
     {
-        $hier = (new DateTime())->sub(new DateInterval("P1D"))->format("Y-m-d");
+        $hier = (new \DateTime())->sub(new \DateInterval("P1D"))->format("Y-m-d");
 
         if (array_key_exists("archives", $filtre)) {
             $statement_escales =
@@ -127,7 +126,7 @@ class EscaleModel extends Model
             $id = $escale["id"];
 
             // ETA
-            $escale["eta_heure"] = eta_vers_lettres($escale["eta_heure"]);
+            $escale["eta_heure"] = ETAConverter::toLetters($escale["eta_heure"]);
 
             // TE
             $escale["te_arrivee"] = $escale["te_arrivee"] !== NULL ? (float) $escale["te_arrivee"] : NULL;
@@ -219,7 +218,7 @@ class EscaleModel extends Model
         if (!$escale) return null;
 
         // ETA
-        $escale["eta_heure"] = eta_vers_lettres($escale["eta_heure"]);
+        $escale["eta_heure"] = ETAConverter::toLetters($escale["eta_heure"]);
 
         // TE
         $escale["te_arrivee"] = $escale["te_arrivee"] !== NULL ? (float) $escale["te_arrivee"] : NULL;
@@ -326,7 +325,7 @@ class EscaleModel extends Model
             'voyage' => $input["voyage"],
             'armateur' => $input["armateur"] ?: NULL,
             'eta_date' => $input["eta_date"],
-            'eta_heure' => eta_vers_chiffres($input["eta_heure"]),
+            'eta_heure' => ETAConverter::toDigits($input["eta_heure"]),
             'nor_date' => $input["nor_date"],
             'nor_heure' => $input["nor_heure"],
             'pob_date' => $input["pob_date"],
@@ -461,7 +460,7 @@ class EscaleModel extends Model
             'voyage' => $input["voyage"],
             'armateur' => $input["armateur"] ?: NULL,
             'eta_date' => $input["eta_date"],
-            'eta_heure' => eta_vers_chiffres($input["eta_heure"]),
+            'eta_heure' => ETAConverter::toDigits($input["eta_heure"]),
             'nor_date' => $input["nor_date"],
             'nor_heure' => $input["nor_heure"],
             'pob_date' => $input["pob_date"],

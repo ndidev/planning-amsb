@@ -12,7 +12,7 @@ class RdvController extends Controller
 {
   private $model;
   private $module = "vrac";
-  private $sse_event = "vrac/rdvs";
+  private $sseEventName = "vrac/rdvs";
 
   public function __construct(
     private ?int $id = null,
@@ -144,10 +144,9 @@ class RdvController extends Controller
     $this->response
       ->setCode(201)
       ->setBody(json_encode($donnees))
-      ->setHeaders($this->headers)
-      ->flush();
+      ->setHeaders($this->headers);
 
-    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
+    $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $donnees);
   }
 
   /**
@@ -172,10 +171,9 @@ class RdvController extends Controller
 
     $this->response
       ->setBody(json_encode($donnees))
-      ->setHeaders($this->headers)
-      ->flush();
+      ->setHeaders($this->headers);
 
-    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
+    $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $donnees);
   }
 
   /**
@@ -200,10 +198,9 @@ class RdvController extends Controller
 
     $this->response
       ->setBody(json_encode($donnees))
-      ->setHeaders($this->headers)
-      ->flush();
+      ->setHeaders($this->headers);
 
-    notify_sse($this->sse_event, __FUNCTION__, $id, $donnees);
+    $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $donnees);
   }
 
   /**
@@ -225,8 +222,8 @@ class RdvController extends Controller
     $succes = $this->model->delete($id);
 
     if ($succes) {
-      $this->response->setCode(204)->flush();
-      notify_sse($this->sse_event, __FUNCTION__, $id);
+      $this->response->setCode(204);
+      $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
     } else {
       throw new DBException("Erreur lors de la suppression");
     }

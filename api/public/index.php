@@ -1,5 +1,5 @@
 <?php
-require __DIR__ . "/../bootstrap.php";
+require_once __DIR__ . "/../bootstrap.php";
 
 use App\Core\Router;
 use App\Core\HTTP\HTTPResponse;
@@ -37,6 +37,7 @@ use App\Controllers\Config\AjoutRapideController as AjoutRapide;
 use App\Controllers\Config\CoteController as Cote;
 use App\Controllers\User\UserController as UserManagement;
 use App\Controllers\Admin\UserAccountController as UserAccount;
+use App\Core\Logger\ErrorLogger;
 
 if (Security::check_if_request_can_be_done() === false) {
     (new HTTPResponse(429))
@@ -128,17 +129,19 @@ try {
     }
 
     $response = $controller->getResponse();
+
+    $controller->sse->notify();
 } catch (ClientException $e) {
     $response = (new HTTPResponse($e->http_status))
         ->setType("text")
         ->setBody($e->getMessage());
 } catch (ServerException $e) {
-    error_logger($e);
+    ErrorLogger::log($e);
     $response = (new HTTPResponse($e->http_status))
         ->setType("text")
         ->setBody("Erreur serveur");
 } catch (\Throwable $e) {
-    error_logger($e);
+    ErrorLogger::log($e);
     $response = (new HTTPResponse(500))
         ->setType("text")
         ->setBody("Erreur serveur");

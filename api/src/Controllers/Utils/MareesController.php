@@ -11,7 +11,7 @@ class MareesController extends Controller
 {
     private $model;
     private $module = "marees";
-    private $sse_event = "marees";
+    private $sseEventName = "marees";
 
     public function __construct(
         private ?int $annee = 0,
@@ -171,7 +171,7 @@ class MareesController extends Controller
             ->setHeaders($this->headers)
             ->setBody(json_encode($donnees));
 
-        notify_sse($this->sse_event, __FUNCTION__, $annee, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $annee, $donnees);
     }
 
     /**
@@ -185,7 +185,7 @@ class MareesController extends Controller
 
         if ($succes) {
             $this->response->setCode(204);
-            notify_sse($this->sse_event, __FUNCTION__, $annee);
+            $this->sse->addEvent($this->sseEventName, __FUNCTION__, $annee);
         } else {
             throw new DBException("Erreur lors de la suppression");
         }
