@@ -45,7 +45,7 @@ class ETAConverter
      * 
      * @return string Heure convertie en chiffres.
      */
-    public static function toDigits(string $heure, array $correspondance = static::CORRESPONDANCE_ETA): string
+    public static function toDigits(string $heure, array $correspondance = self::CORRESPONDANCE_ETA): string
     {
         foreach ($correspondance as $lettres => $chiffres) {
             $heure = preg_replace("/\b$lettres\b/i", "$chiffres~", $heure);
@@ -67,7 +67,7 @@ class ETAConverter
      * 
      * @return string Heure convertie en lettres.
      */
-    public static function toLetters(string $heure, $correspondance = static::CORRESPONDANCE_ETA): string
+    public static function toLetters(string $heure, $correspondance = self::CORRESPONDANCE_ETA): string
     {
         foreach ($correspondance as $lettres => $chiffres) {
             $heure = preg_replace("/\b$chiffres~/i", $lettres, $heure);
