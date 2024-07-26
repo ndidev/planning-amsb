@@ -18,7 +18,7 @@ class ProduitController extends Controller
     private ?int $id = null,
   ) {
     parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
-    $this->model = new ProduitModel;
+    $this->model = new ProduitModel();
     $this->processRequest();
   }
 

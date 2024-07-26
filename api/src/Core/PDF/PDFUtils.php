@@ -31,7 +31,7 @@ class PDFUtils
         DateTime $date_fin
     ): tFPDF {
 
-        $mysql = new MySQL;
+        $mysql = new MySQL();
 
         /**
          * Récupération données fournisseur et agence

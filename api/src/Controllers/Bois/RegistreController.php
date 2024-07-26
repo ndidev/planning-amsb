@@ -17,7 +17,7 @@ class RegistreController extends Controller
     public function __construct()
     {
         parent::__construct();
-        $this->model = new RegistreModel;
+        $this->model = new RegistreModel();
         $this->processRequest();
     }
 

@@ -17,7 +17,7 @@ class AgenceController extends Controller
 
     ) {
         parent::__construct("OPTIONS, HEAD, GET, PUT");
-        $this->model = new AgenceModel;
+        $this->model = new AgenceModel();
         $this->processRequest();
     }
 

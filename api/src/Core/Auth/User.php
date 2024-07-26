@@ -450,7 +450,7 @@ class User
 
         // Identification grâce au login
         if ($login) {
-            $mysql = new MySQL;
+            $mysql = new MySQL();
             $requete = $mysql->prepare("SELECT uid FROM admin_users WHERE login = :login");
             $requete->execute(["login" => $login]);
             $user = $requete->fetch();

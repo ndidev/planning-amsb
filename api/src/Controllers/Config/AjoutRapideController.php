@@ -18,7 +18,7 @@ class AjoutRapideController extends Controller
         private ?int $id = null,
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
-        $this->model = new AjoutRapideBoisModel;
+        $this->model = new AjoutRapideBoisModel();
         $this->processRequest();
     }
 

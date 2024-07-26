@@ -15,7 +15,7 @@ class StatsController extends Controller
     public function __construct()
     {
         parent::__construct();
-        $this->model = new StatsModel;
+        $this->model = new StatsModel();
         $this->processRequest();
     }
 

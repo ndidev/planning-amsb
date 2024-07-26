@@ -15,7 +15,7 @@ class NumVoyageController extends Controller
     public function __construct()
     {
         parent::__construct();
-        $this->model = new NumVoyageModel;
+        $this->model = new NumVoyageModel();
         $this->processRequest();
     }
 

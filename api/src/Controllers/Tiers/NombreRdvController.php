@@ -15,7 +15,7 @@ class NombreRdvController extends Controller
         private ?int $id = null,
     ) {
         parent::__construct();
-        $this->model = new NombreRdvModel;
+        $this->model = new NombreRdvModel();
         $this->processRequest();
     }
 

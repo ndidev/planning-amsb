@@ -18,7 +18,7 @@ class RdvController extends Controller
     private ?int $id = null,
   ) {
     parent::__construct("OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE");
-    $this->model = new RdvModel;
+    $this->model = new RdvModel();
     $this->processRequest();
   }
 

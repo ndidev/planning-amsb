@@ -18,7 +18,7 @@ class EscaleController extends Controller
         private ?int $id = null,
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
-        $this->model = new EscaleModel;
+        $this->model = new EscaleModel();
         $this->processRequest();
     }
 

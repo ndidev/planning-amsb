@@ -18,7 +18,7 @@ class ListeClientsController extends Controller
     public function __construct()
     {
         parent::__construct();
-        $this->model = new ListeClientsModel;
+        $this->model = new ListeClientsModel();
         $this->processRequest();
     }
 

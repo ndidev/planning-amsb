@@ -15,7 +15,7 @@ class SuggestionsTransporteursController extends Controller
     public function __construct()
     {
         parent::__construct();
-        $this->model = new Model;
+        $this->model = new Model();
         $this->processRequest();
     }
 

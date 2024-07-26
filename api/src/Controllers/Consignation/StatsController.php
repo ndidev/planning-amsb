@@ -16,7 +16,7 @@ class StatsController extends Controller
         private ?string $ids = null,
     ) {
         parent::__construct();
-        $this->model = new StatsModel;
+        $this->model = new StatsModel();
         $this->processRequest();
     }
 

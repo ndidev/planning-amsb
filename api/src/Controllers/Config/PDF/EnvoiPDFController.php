@@ -13,7 +13,7 @@ class EnvoiPDFController extends Controller
     public function __construct()
     {
         parent::__construct();
-        $this->model = new PDFModel;
+        $this->model = new PDFModel();
         $this->processRequest();
     }
 

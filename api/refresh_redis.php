@@ -12,8 +12,8 @@ use App\Core\Database\Redis;
 use App\Models\Admin\UserAccountModel;
 use App\Core\Auth\User;
 
-$mysql = new MySQL;
-$redis = new Redis;
+$mysql = new MySQL();
+$redis = new Redis();
 
 // Users
 (new UserAccountModel(new User(null, $redis)))->readAll();

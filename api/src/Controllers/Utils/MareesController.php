@@ -18,7 +18,7 @@ class MareesController extends Controller
         private bool $annees = false,
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, DELETE");
-        $this->model = new MareesModel;
+        $this->model = new MareesModel();
         $this->processRequest();
     }
 

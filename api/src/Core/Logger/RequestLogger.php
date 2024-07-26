@@ -12,7 +12,7 @@ class RequestLogger
     {
         $log_file = "/app/log/requests.log";
 
-        $mysql = new MySQL;
+        $mysql = new MySQL();
 
         if (isset($_COOKIE["planning-uid"])) {
             try {

@@ -16,7 +16,7 @@ class CoteController extends Controller
         private ?string $cote = null,
     ) {
         parent::__construct("OPTIONS, HEAD, GET, PUT");
-        $this->model = new CoteModel;
+        $this->model = new CoteModel();
         $this->processRequest();
     }
 

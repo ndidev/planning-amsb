@@ -16,7 +16,7 @@ class PaysController extends Controller
         private ?string $iso = null,
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
-        $this->model = new PaysModel;
+        $this->model = new PaysModel();
         $this->processRequest();
     }
 

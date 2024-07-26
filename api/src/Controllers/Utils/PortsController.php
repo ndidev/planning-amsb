@@ -16,7 +16,7 @@ class PortsController extends Controller
     private ?string $locode = null,
   ) {
     parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
-    $this->model = new PortsModel;
+    $this->model = new PortsModel();
     $this->processRequest();
   }
 

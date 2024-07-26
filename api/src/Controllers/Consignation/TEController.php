@@ -14,7 +14,7 @@ class TEController extends Controller
     public function __construct()
     {
         parent::__construct();
-        $this->model = new TEModel;
+        $this->model = new TEModel();
         $this->processRequest();
     }
 

@@ -17,7 +17,7 @@ if (empty($_POST) && !DateUtils::checkWorkingDay(AUJOURDHUI)) {
     return FALSE;
 }
 
-$mysql = new MySQL;
+$mysql = new MySQL();
 
 // Récupération des configurations PDF
 $configs = $mysql->query("SELECT * FROM config_pdf")->fetchAll();

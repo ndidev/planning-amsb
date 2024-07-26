@@ -17,7 +17,7 @@ class ListeNaviresController extends Controller
     public function __construct()
     {
         parent::__construct();
-        $this->model = new ListeNaviresModel;
+        $this->model = new ListeNaviresModel();
         $this->processRequest();
     }
 

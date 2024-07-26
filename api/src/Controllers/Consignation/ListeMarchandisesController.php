@@ -18,7 +18,7 @@ class ListeMarchandisesController extends Controller
     public function __construct()
     {
         parent::__construct();
-        $this->model = new ListeMarchandisesModel;
+        $this->model = new ListeMarchandisesModel();
         $this->processRequest();
     }
 
