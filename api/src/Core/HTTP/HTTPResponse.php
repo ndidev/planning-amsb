@@ -2,6 +2,9 @@
 
 namespace App\Core\HTTP;
 
+include __DIR__ . "/../../Core/Functions/lzw.inc.php";
+
+
 use function App\Core\Functions\lzw_compress;
 
 /**
