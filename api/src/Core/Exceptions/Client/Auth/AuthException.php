@@ -10,7 +10,7 @@ use App\Core\Exceptions\Client\ClientException;
 class AuthException extends ClientException
 {
     private const DEFAULT_MESSAGE = "Erreur d'authentification";
-    private const HTTP_STATUS = 400;
+    private const HTTP_STATUS = 401;
 
     public function __construct(
         string $message = self::DEFAULT_MESSAGE,
