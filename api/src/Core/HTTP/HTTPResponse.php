@@ -4,6 +4,7 @@ namespace App\Core\HTTP;
 
 include __DIR__ . "/../../Core/Functions/lzw.inc.php";
 
+use App\Core\Logger\ErrorLogger;
 
 use function App\Core\Functions\lzw_compress;
 
@@ -319,43 +320,49 @@ class HTTPResponse
             }
         }
 
-        // En-tête HTTP
-        $this->headers["Content-Encoding"] = $compression_method;
+        try {
+            // Méthodes de compression
+            switch ($compression_method) {
+                case 'gzip':
+                    // GZIP (== PHP gzencode)
+                    $this->body = gzencode($this->body);
+                    break;
 
-        // Méthodes de compression
-        // ? IDEA: gérer les erreurs de compression ? (vraiment nécessaire ?)
-        switch ($compression_method) {
-            case 'gzip':
-                // GZIP (== PHP gzencode)
-                $this->body = gzencode($this->body);
-                break;
+                case 'deflate':
+                    // HTTP DEFLATE (== PHP gzcompress)
+                    $this->body = gzcompress($this->body, 9);
+                    break;
 
-            case 'deflate':
-                // HTTP DEFLATE (== PHP gzcompress)
-                $this->body = gzcompress($this->body, 9);
-                break;
+                case 'compress':
+                    // HTTP Compress (== LZW compress)
+                    // https://code.google.com/archive/p/php-lzw/
+                    $this->body = lzw_compress($this->body);
+                    break;
 
-            case 'compress':
-                // HTTP Compress (== LZW compress)
-                // https://code.google.com/archive/p/php-lzw/
-                $this->body = lzw_compress($this->body);
-                break;
+                case 'br':
+                    // Brotli
+                    // Non-implémenté (nécessite compilation du module pour PHP et Apache)
+                    // TODO: Implémenter Brotli
+                    // https://github.com/kjdev/php-ext-brotli
+                    // https://blog.anthony-jacob.com/compiler-le-module-brotli-apache-et-lextension-brotli-php-pour-ubuntu-18-04/
 
-            case 'br':
-                // Brotli
-                // Non-implémenté (nécessite compilation du module pour PHP et Apache)
-                // TODO: Implémenter Brotli
-                // https://github.com/kjdev/php-ext-brotli
-                // https://blog.anthony-jacob.com/compiler-le-module-brotli-apache-et-lextension-brotli-php-pour-ubuntu-18-04/
+                    // $this->body = brotli_compress($this->body);
+                    break;
 
-                // $this->body = brotli_compress($this->body);
-                break;
+                case 'identity':
+                default:
+                    // Identity (pas de compression)
+                    // Pas de changement du corps de réponse
+                    break;
+            }
 
-            case 'identity':
-            default:
-                // Identity (pas de compression)
-                // Pas de changement du corps de réponse
-                break;
+            // En-tête HTTP
+            $this->headers["Content-Encoding"] = $compression_method;
+        } catch (\Throwable $th) {
+            ErrorLogger::log($th);
+
+            // Fallback = pas de compression
+            // Pas de changement du corps de réponse
         }
     }
 
