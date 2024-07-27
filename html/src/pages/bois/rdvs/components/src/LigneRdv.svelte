@@ -500,6 +500,9 @@
             inputNumeroBL.blur();
           }
         }}
+        role="textbox"
+        aria-label="Numéro de BL"
+        tabindex="0"
       />
     {:else}
       <div class="numero_bl pure-u-lg-2-24">
