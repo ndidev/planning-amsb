@@ -31,8 +31,6 @@
 {/if}
 
 <style>
-  @import "/src/css/commun.css";
-
   * {
     margin: 0;
     padding: 0;

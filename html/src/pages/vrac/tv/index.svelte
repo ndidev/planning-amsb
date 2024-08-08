@@ -103,8 +103,6 @@
 {/if}
 
 <style>
-  @import "/src/css/commun.css";
-
   /* ARRIERE-PLAN */
 
   main::before {

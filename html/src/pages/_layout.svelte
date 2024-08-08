@@ -37,9 +37,6 @@
 </Guard>
 
 <style>
-  @import "/src/css/commun.css";
-  @import "/src/css/formulaire.css";
-
   .page {
     margin-bottom: calc(var(--footer-height) + 50px);
   }

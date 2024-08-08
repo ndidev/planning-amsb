@@ -1,4 +1,7 @@
-// import "./global.css";
+import "purecss/build/pure-min.css";
+import "purecss/build/grids-responsive-min.css";
+import "./css/commun.css";
+import "./css/formulaire.css";
 import HMR from "@roxi/routify/hmr";
 import App from "./App.svelte";
 

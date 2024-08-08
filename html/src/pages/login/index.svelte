@@ -95,8 +95,6 @@
 </div>
 
 <style>
-  @import "/src/css/commun.css";
-
   * {
     --footer-height: 50px;
   }

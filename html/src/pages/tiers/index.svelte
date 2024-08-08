@@ -654,10 +654,6 @@
     margin-left: calc(10em + 20px);
   }
 
-  :global(.inactif) {
-    color: darkgray;
-  }
-
   .roles {
     display: flex;
     flex-wrap: wrap;
