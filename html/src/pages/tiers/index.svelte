@@ -1,17 +1,20 @@
 <!-- routify:options title="Planning AMSB - Tiers" -->
 <script lang="ts" context="module">
-  import { addFormatter } from "svelecte/src/Svelecte.svelte";
+  import { addRenderer } from "svelecte";
 
-  addFormatter({
-    select: (item, isSelected: boolean) => {
-      if (isSelected) {
-        return `<div>${item.texte}</div>`;
-      }
+  type ListeTiers = {
+    id: string;
+    texte: string;
+    texteRecherche: string;
+    actif: boolean;
+  }[];
 
-      return `<span ${!item.actif ? "style='color: darkgray;'" : ""}>${
-        item.texte
-      }</span>`;
-    },
+  addRenderer("select", (item: ListeTiers[number], isSelected, inputValue) => {
+    return isSelected
+      ? `<div>${item.texte}</div>`
+      : `<span ${!item.actif ? "style='color: darkgray;'" : ""}>${
+          item.texte
+        }</span>`;
   });
 </script>
 
@@ -81,13 +84,6 @@
     actif: true,
     nombre_rdv: 0,
   };
-
-  type ListeTiers = {
-    id: string;
-    texte: string;
-    texteRecherche: string;
-    actif: boolean;
-  }[];
 
   /**
    * Liste peuplant la liste déroulante.
@@ -301,7 +297,7 @@
       options={listeDeroulanteTiers}
       bind:value={selectedId}
       valueField="id"
-      searchField="texteRecherche"
+      searchProps={{ fields: ["texteRecherche"] }}
       labelField="texte"
       placeholder="Nouveau..."
       renderer="select"

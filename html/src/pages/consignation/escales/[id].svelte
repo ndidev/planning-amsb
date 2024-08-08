@@ -591,7 +591,6 @@
                   <Svelecte
                     id="marchandise_{i}"
                     options={listeMarchandises}
-                    labelAsValue
                     virtualList
                     allowEditing
                     creatable
@@ -607,7 +606,6 @@
                   <Svelecte
                     id="client_{i}"
                     options={listeClients}
-                    labelAsValue
                     virtualList
                     allowEditing
                     creatable

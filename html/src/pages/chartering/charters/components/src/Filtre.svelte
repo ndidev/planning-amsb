@@ -100,7 +100,6 @@
           bind:value={_filtre.affreteur}
           placeholder="Affréteur"
           multiple
-          style="width: 100%;"
         />
       </div>
 
@@ -114,7 +113,6 @@
           bind:value={_filtre.armateur}
           placeholder="Armateur"
           multiple
-          style="width: 100%;"
         />
       </div>
     </div>
@@ -130,7 +128,6 @@
           bind:value={_filtre.courtier}
           placeholder="Courtier"
           multiple
-          style="width: 100%;"
         />
       </div>
 
