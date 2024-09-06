@@ -89,9 +89,11 @@
           inputId="filtre_navire"
           options={listeNavires}
           bind:value={_filtre.navire}
+          labelAsValue
           placeholder="Navires"
           multiple
           virtualList
+          style="width: 100%;"
         />
       </div>
 
@@ -105,6 +107,7 @@
           bind:value={_filtre.armateur}
           placeholder="Armateurs"
           multiple
+          style="width: 100%;"
         />
       </div>
     </div>
@@ -117,9 +120,11 @@
           inputId="filtre_marchandise"
           options={listeMarchandises}
           bind:value={_filtre.marchandise}
+          labelAsValue
           placeholder="Marchandises"
           multiple
           virtualList
+          style="width: 100%;"
         />
       </div>
 
@@ -130,9 +135,11 @@
           inputId="filtre_client"
           options={listeClients}
           bind:value={_filtre.client}
+          labelAsValue
           placeholder="Clients"
           multiple
           virtualList
+          style="width: 100%;"
         />
       </div>
     </div>
@@ -148,6 +155,7 @@
           placeholder="Ports précédents"
           multiple
           virtualList
+          style="width: 100%;"
         />
       </div>
 
@@ -161,6 +169,7 @@
           placeholder="Ports suivants"
           multiple
           virtualList
+          style="width: 100%;"
         />
       </div>
     </div>
@@ -202,7 +211,7 @@
     width: 100%;
     border: 1px solid #ccc;
     border-radius: 4px;
-    min-height: var(--sv-min-height, 38px);
+    min-height: 38px;
   }
 
   button {

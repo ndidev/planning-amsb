@@ -73,13 +73,13 @@
       <div>
         <label for="filtre_fournisseur">Fournisseur</label>
         <Svelecte
-          name="filtre_fournisseur"
           inputId="filtre_fournisseur"
           type="tiers"
           role="bois_fournisseur"
           bind:value={_filtre.fournisseur}
           placeholder="Fournisseur"
           multiple
+          style="width: 100%;"
         />
       </div>
 
@@ -93,6 +93,7 @@
           bind:value={_filtre.client}
           placeholder="Client"
           multiple
+          style="width: 100%;"
         />
       </div>
     </div>
@@ -108,6 +109,7 @@
           bind:value={_filtre.chargement}
           placeholder="Chargement"
           multiple
+          style="width: 100%;"
         />
       </div>
 
@@ -121,6 +123,7 @@
           bind:value={_filtre.livraison}
           placeholder="Livraison"
           multiple
+          style="width: 100%;"
         />
       </div>
     </div>
@@ -136,6 +139,7 @@
           bind:value={_filtre.transporteur}
           placeholder="Transporteur"
           multiple
+          style="width: 100%;"
         />
       </div>
 
@@ -149,6 +153,7 @@
           bind:value={_filtre.affreteur}
           placeholder="Affréteur"
           multiple
+          style="width: 100%;"
         />
       </div>
     </div>
@@ -198,7 +203,7 @@
     width: 100%;
     border: 1px solid #ccc;
     border-radius: 4px;
-    min-height: var(--sv-min-height, 38px);
+    min-height: 38px;
   }
 
   button {
