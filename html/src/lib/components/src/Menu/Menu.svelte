@@ -9,6 +9,7 @@
   ```
  -->
 <script lang="ts">
+  import { onMount, onDestroy } from "svelte";
   import { url, beforeUrlChange } from "@roxi/routify";
 
   import { MaterialButton } from "@app/components";
@@ -28,17 +29,40 @@
 
   let nav: HTMLElement;
 
-  let affichageMenu = false;
+  let isMenuDisplayed = false;
 
   $: menuButtonFontSize = $device.isSmallerThan("desktop") ? "24px" : "36px";
+
+  function toggleMenu() {
+    isMenuDisplayed = !isMenuDisplayed;
+  }
+
+  /**
+   * Afficher/masquer le menu en appuyant sur Ctrl+M.
+   *
+   * @param {KeyboardEvent} event Événement clavier
+   */
+  function toggleMenuWithKeyboard(event: KeyboardEvent) {
+    if (event.ctrlKey && event.key === "m") {
+      toggleMenu();
+    }
+  }
 
   // Cacher le menu lors le la navigation sur mobile
   $beforeUrlChange((event, route) => {
     if (nav.offsetWidth >= document.body.offsetWidth) {
-      affichageMenu = false;
+      isMenuDisplayed = false;
     }
 
     return true;
+  });
+
+  onMount(() => {
+    window.addEventListener("keydown", toggleMenuWithKeyboard);
+  });
+
+  onDestroy(() => {
+    window.removeEventListener("keydown", toggleMenuWithKeyboard);
   });
 </script>
 
@@ -46,11 +70,9 @@
   <!-- Affichage/masquage du menu -->
   <MaterialButton
     icon="menu"
-    title="Menu"
+    title="Menu [Ctrl+M]"
     fontSize={menuButtonFontSize}
-    on:click={() => {
-      affichageMenu = !affichageMenu;
-    }}
+    on:click={toggleMenu}
   />
 
   <!-- Nouveau RDV -->
@@ -59,7 +81,7 @@
   {/if}
 </div>
 
-<nav bind:this={nav} style="display: {affichageMenu ? 'flex' : 'none'};">
+<nav bind:this={nav} style="display: {isMenuDisplayed ? 'flex' : 'none'};">
   <ul>
     {#each [...sitemap] as [module, { affichage, tree: { href, children, devices } }]}
       {@const deviceMatches = devices?.includes($device.type) ?? true}
@@ -90,7 +112,10 @@
     {/each}
   </ul>
 
-  <div class="user-footer" style="display: {affichageMenu ? 'block' : 'none'};">
+  <div
+    class="user-footer"
+    style="display: {isMenuDisplayed ? 'block' : 'none'};"
+  >
     <UserFooter />
   </div>
 </nav>
