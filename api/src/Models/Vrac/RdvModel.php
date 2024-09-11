@@ -138,7 +138,7 @@ class RdvModel extends Model
             'heure' => $input["heure"] ?: NULL,
             'produit' => $input["produit"],
             'qualite' => $input["qualite"] ?? NULL,
-            'quantite' => $input["quantite"],
+            'quantite' => (int) $input["quantite"],
             'max' => (int) $input["max"],
             'commande_prete' => (int) $input["commande_prete"],
             'fournisseur' => $input["fournisseur"],
@@ -186,7 +186,7 @@ class RdvModel extends Model
             'heure' => $input["heure"] ?: NULL,
             'produit' => $input["produit"],
             'qualite' => $input["qualite"] ?? NULL,
-            'quantite' => $input["quantite"],
+            'quantite' => (int) $input["quantite"],
             'max' => (int) $input["max"],
             'commande_prete' => (int) $input["commande_prete"],
             'fournisseur' => $input["fournisseur"],
@@ -217,8 +217,8 @@ class RdvModel extends Model
             $this->mysql
                 ->prepare(
                     "UPDATE vrac_planning
-           SET commande_prete = :commande_prete
-           WHERE id = :id"
+                     SET commande_prete = :commande_prete
+                     WHERE id = :id"
                 )
                 ->execute([
                     'commande_prete' => (int) $input["commande_prete"],

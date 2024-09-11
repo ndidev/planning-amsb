@@ -9,7 +9,7 @@
   ```
  -->
 <script lang="ts">
-  import { MaterialButton, InputDecimal } from "@app/components";
+  import { MaterialButton, NumericInput } from "@app/components";
 
   import Notiflix from "notiflix";
 
@@ -65,7 +65,7 @@
     <!-- Valeur -->
     <div class="pure-control-group">
       <label for={"config_cotes_" + cote.cote}>Valeur : </label>
-      <InputDecimal
+      <NumericInput
         id={"config_cotes_" + cote.cote}
         format="+2"
         bind:value={cote.valeur}

@@ -2,30 +2,33 @@
   @component
   
  Formats numeric inputs.
+
  The function allows to limit the input to figures
- that may be preceded by a plus or minus sign
- and a decimal separator.
- Applies to "input" elements with the attribute data-decimal=* where * is (+/-)(\d).
- HTML: <input data-decimal=*>
+ that may be preceded by a plus or minus sign and a decimal separator.
+
+  ```tsx
+  <NumericInput
+    value: number
+    format: string  // see examples below
+    placeholder: string
+    id: string
+    name: string
+    required: boolean
+    class: string
+  />
+  ```
  
  Examples :
-  - data-decimal="2"   (+) or (-) number with 2 decimals
-  - data-decimal="-1"  Negative number with 1 decimal
-  - data-decimal="+0"  Positive integer (0 decimal)
-  - data-decimal="+"   Positive number (free decimals)
-  - data-decimal="-"   Negative number (free decimals)
-  - data-decimal=""    (+) or (-) number (free decimals)
+  - format="2"   (+) or (-) number with 2 decimals
+  - format="-1"  Negative number with 1 decimal
+  - format="+0"  Positive integer (0 decimal)
+  - format="+"   Positive number (free decimals)
+  - format="-"   Negative number (free decimals)
+  - format=""    (+) or (-) number (free decimals)
 
- @author Nicolas DENIS
- @link https://gist.github.com/ScoopAndrun/c9f16beed8506a44edcb328e0d42e3b4
- @license Unlicense https://spdx.org/licenses/Unlicense.html
- @listens event:keypress
- @listens event:blur
- @param {HTMLElement} context Parent element for which the function must be applied to the children 
  -->
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { stringify } from "uuid";
 
   let input: HTMLInputElement;
 
@@ -106,19 +109,22 @@
    * Decimals after the separator.
    */
   function setDecimals() {
-    if (input.value !== "") {
-      // Check for decimal separators (in case of pasted value)
-      input.value = input.value.replace(/,|\./, separator);
-      // Remove spaces
-      input.value = input.value.replace(/\s/g, "");
+    if (input.value === "") {
+      value = null;
+      return;
+    }
 
-      if (format === "" || format === "+" || format === "-") {
-        // For inputs with no amount of decimals chosen
-        input.value = parseFloat(input.value).toString();
-      } else {
-        // For inputs with a specific amount of decimals chosen
-        input.value = parseFloat(input.value).toFixed(parseInt(decimals));
-      }
+    // Check for decimal separators (in case of pasted value)
+    input.value = input.value.replace(/,|\./, separator);
+    // Remove spaces
+    input.value = input.value.replace(/\s/g, "");
+
+    if (format === "" || format === "+" || format === "-") {
+      // For inputs with no amount of decimals chosen
+      input.value = parseFloat(input.value).toString();
+    } else {
+      // For inputs with a specific amount of decimals chosen
+      input.value = parseFloat(input.value).toFixed(parseInt(decimals));
     }
   }
 

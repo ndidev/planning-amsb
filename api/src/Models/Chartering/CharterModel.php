@@ -256,10 +256,10 @@ class CharterModel extends Model
             "armateur" => $input["armateur"],
             "courtier" => $input["courtier"],
             // Montants
-            "fret_achat" => $input["fret_achat"],
-            "fret_vente" => $input["fret_vente"],
-            "surestaries_achat" => $input["surestaries_achat"],
-            "surestaries_vente" => $input["surestaries_vente"],
+            "fret_achat" => is_null($input["fret_achat"]) ? NULL : (float) $input["fret_achat"],
+            "fret_vente" => is_null($input["fret_vente"]) ? NULL : (float) $input["fret_vente"],
+            "surestaries_achat" => is_null($input["surestaries_achat"]) ? NULL : (float) $input["surestaries_achat"],
+            "surestaries_vente" => is_null($input["surestaries_vente"]) ? NULL : (float) $input["surestaries_vente"],
             // Divers
             "commentaire" => $input["commentaire"],
             "archive" => (int) $input["archive"],
@@ -368,10 +368,10 @@ class CharterModel extends Model
             "armateur" => $input["armateur"],
             "courtier" => $input["courtier"],
             // Montants
-            "fret_achat" => $input["fret_achat"],
-            "fret_vente" => $input["fret_vente"],
-            "surestaries_achat" => $input["surestaries_achat"],
-            "surestaries_vente" => $input["surestaries_vente"],
+            "fret_achat" => is_null($input["fret_achat"]) ? NULL : (float) $input["fret_achat"],
+            "fret_vente" => is_null($input["fret_vente"]) ? NULL : (float) $input["fret_vente"],
+            "surestaries_achat" => is_null($input["surestaries_achat"]) ? NULL : (float) $input["surestaries_achat"],
+            "surestaries_vente" => is_null($input["surestaries_vente"]) ? NULL : (float) $input["surestaries_vente"],
             // Divers
             "commentaire" => $input["commentaire"],
             "archive" => (int) $input["archive"],

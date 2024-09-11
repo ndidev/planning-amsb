@@ -8,7 +8,7 @@
   import {
     MaterialButton,
     Svelecte,
-    InputDecimal,
+    NumericInput,
     Chargement,
     BoutonAction,
   } from "@app/components";
@@ -495,7 +495,7 @@
       <!-- TE arrivée -->
       <div class="pure-control-group">
         <label for="te_arrivee">TE arrivée</label>
-        <InputDecimal
+        <NumericInput
           id="te_arrivee"
           format="+2"
           bind:value={escale.te_arrivee}
@@ -507,7 +507,7 @@
       <!-- TE départ -->
       <div class="pure-control-group">
         <label for="te_depart">TE départ</label>
-        <InputDecimal
+        <NumericInput
           id="te_depart"
           format="+2"
           bind:value={escale.te_depart}
@@ -645,7 +645,7 @@
                 </div>
                 <div class="pure-control-group">
                   <label for="tonnage_bl_{i}">Tonnage</label>
-                  <InputDecimal
+                  <NumericInput
                     id="tonnage_bl_{i}"
                     format="+3"
                     bind:value={marchandise.tonnage_bl}
@@ -653,7 +653,7 @@
                 </div>
                 <div class="pure-control-group">
                   <label for="cubage_bl_{i}">Cubage</label>
-                  <InputDecimal
+                  <NumericInput
                     id="cubage_bl_{i}"
                     format="+3"
                     bind:value={marchandise.cubage_bl}
@@ -661,7 +661,7 @@
                 </div>
                 <div class="pure-control-group">
                   <label for="nombre_bl_{i}">Colis</label>
-                  <InputDecimal
+                  <NumericInput
                     id="nombre_bl_{i}"
                     format="+0"
                     bind:value={marchandise.nombre_bl}
@@ -673,7 +673,7 @@
                 <div class="quantite type">Outturn</div>
                 <div class="pure-control-group">
                   <label for="tonnage_outturn_{i}">Tonnage</label>
-                  <InputDecimal
+                  <NumericInput
                     id="tonnage_outturn_{i}"
                     format="+3"
                     bind:value={marchandise.tonnage_outturn}
@@ -681,7 +681,7 @@
                 </div>
                 <div class="pure-control-group">
                   <label for="cubage_outturn_{i}">Cubage</label>
-                  <InputDecimal
+                  <NumericInput
                     id="cubage_outturn_{i}"
                     format="+3"
                     bind:value={marchandise.cubage_outturn}
@@ -689,7 +689,7 @@
                 </div>
                 <div class="pure-control-group">
                   <label for="nombre_outturn_{i}">Colis</label>
-                  <InputDecimal
+                  <NumericInput
                     id="nombre_outturn_{i}"
                     format="+0"
                     bind:value={marchandise.nombre_outturn}

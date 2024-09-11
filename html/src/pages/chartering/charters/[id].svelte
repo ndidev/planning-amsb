@@ -8,7 +8,7 @@
   import {
     MaterialButton,
     Svelecte,
-    InputDecimal,
+    NumericInput,
     Chargement,
     BoutonAction,
   } from "@app/components";
@@ -306,7 +306,7 @@
       <!-- Montants -->
       <div class="pure-control-group">
         <label for="fret_achat">Fret (achat)</label>
-        <InputDecimal
+        <NumericInput
           name="fret_achat"
           id="fret_achat"
           format="2"
@@ -316,7 +316,7 @@
       </div>
       <div class="pure-control-group">
         <label for="fret_vente">Fret (vente)</label>
-        <InputDecimal
+        <NumericInput
           name="fret_vente"
           id="fret_vente"
           format="2"
@@ -326,7 +326,7 @@
       </div>
       <div class="pure-control-group">
         <label for="surestaries_achat">Surestaries (achat)</label>
-        <InputDecimal
+        <NumericInput
           name="surestaries_achat"
           id="surestaries_achat"
           format="2"
@@ -336,7 +336,7 @@
       </div>
       <div class="pure-control-group">
         <label for="surestaries_vente">Surestaries (vente)</label>
-        <InputDecimal
+        <NumericInput
           name="surestaries_vente"
           id="surestaries_vente"
           format="2"

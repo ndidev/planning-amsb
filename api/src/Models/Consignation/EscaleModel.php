@@ -360,12 +360,12 @@ class EscaleModel extends Model
                 'client' => $marchandise["client"],
                 'operation' => $marchandise["operation"],
                 'environ' => $marchandise["environ"] ? 1 : 0,
-                'tonnage_bl' => $marchandise["tonnage_bl"],
-                'cubage_bl' => $marchandise["cubage_bl"],
-                'nombre_bl' => $marchandise["nombre_bl"],
-                'tonnage_outturn' => $marchandise["tonnage_outturn"],
-                'cubage_outturn' => $marchandise["cubage_outturn"],
-                'nombre_outturn' => $marchandise["nombre_outturn"],
+                'tonnage_bl' => is_null($marchandise["tonnage_bl"]) ? NULL : (float) $marchandise["tonnage_bl"],
+                'cubage_bl' => is_null($marchandise["cubage_bl"]) ? NULL : (float) $marchandise["cubage_bl"],
+                'nombre_bl' => is_null($marchandise["nombre_bl"]) ? NULL : (int) $marchandise["nombre_bl"],
+                'tonnage_outturn' => is_null($marchandise["tonnage_outturn"]) ? NULL : (float) $marchandise["tonnage_outturn"],
+                'cubage_outturn' => is_null($marchandise["cubage_outturn"]) ? NULL : (float) $marchandise["cubage_outturn"],
+                'nombre_outturn' => is_null($marchandise["nombre_outturn"]) ? NULL : (int) $marchandise["nombre_outturn"],
             ]);
         }
 
@@ -525,12 +525,12 @@ class EscaleModel extends Model
                     'client' => $marchandise["client"],
                     'operation' => $marchandise["operation"],
                     'environ' => $marchandise["environ"] ? 1 : 0,
-                    'tonnage_bl' => $marchandise["tonnage_bl"],
-                    'cubage_bl' => $marchandise["cubage_bl"],
-                    'nombre_bl' => $marchandise["nombre_bl"],
-                    'tonnage_outturn' => $marchandise["tonnage_outturn"],
-                    'cubage_outturn' => $marchandise["cubage_outturn"],
-                    'nombre_outturn' => $marchandise["nombre_outturn"],
+                    'tonnage_bl' => is_null($marchandise["tonnage_bl"]) ? NULL : (float) $marchandise["tonnage_bl"],
+                    'cubage_bl' => is_null($marchandise["cubage_bl"]) ? NULL : (float) $marchandise["cubage_bl"],
+                    'nombre_bl' => is_null($marchandise["nombre_bl"]) ? NULL : (int) $marchandise["nombre_bl"],
+                    'tonnage_outturn' => is_null($marchandise["tonnage_outturn"]) ? NULL : (float) $marchandise["tonnage_outturn"],
+                    'cubage_outturn' => is_null($marchandise["cubage_outturn"]) ? NULL : (float) $marchandise["cubage_outturn"],
+                    'nombre_outturn' => is_null($marchandise["nombre_outturn"]) ? NULL : (int) $marchandise["nombre_outturn"],
                     'id' => $marchandise["id"]
                 ]);
             } else {

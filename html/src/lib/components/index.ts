@@ -9,7 +9,7 @@ export { default as ConnexionSSE } from "./src/ConnexionSSE.svelte";
 export { default as CoteCesson } from "./src/CoteCesson.svelte";
 export { default as EnvFooter } from "./src/EnvFooter.svelte";
 export { default as IconText } from "./src/IconText.svelte";
-export { default as InputDecimal } from "./src/InputDecimal.svelte";
+export { default as NumericInput } from "./src/NumericInput.svelte";
 export { default as MaterialButton } from "./src/MaterialButton.svelte";
 export { default as Menu } from "./src/Menu";
 export { default as Modal } from "./src/Modal.svelte";

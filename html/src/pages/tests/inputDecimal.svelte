@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { InputDecimal } from "@app/components";
+  import { NumericInput } from "@app/components";
 
   let obj = {
     value: 1,
@@ -9,7 +9,7 @@
 <h1>InputDecimal</h1>
 
 <div>
-  Format "+3" : <InputDecimal format="+3" bind:value={obj.value} />
+  Format "+3" : <NumericInput format="+3" bind:value={obj.value} />
 </div>
 
 <style></style>
