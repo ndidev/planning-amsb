@@ -418,26 +418,27 @@ class HTTPResponse
      */
     private function applyHeaders(): void
     {
-        // En-têtes de base par défaut
-        // header("Date: " . gmdate("D, d M Y H:i:s T")); // Temps GMT, désactivé car ajouté par défaut par le serveur web
-        header("Content-Security-Policy: default-src 'self' 'unsafe-inline'");
+        // Default headers
+
+        // Cache-Control
         header("Cache-control: no-cache");
+
+        // CORS headers
         if ($this->preflight_headers_added === false) {
             $this->addCorsHeaders();
         }
 
-        // ! FIXME : Se conformer à la RFC 7230 https://datatracker.ietf.org/doc/html/rfc7230#section-3.3.2
-        if (!($this->code < 200 || $this->code === 204)) {
+        // "Content-Length" header if there is a body
+        if ($this->code >= 200 && $this->code !== 204 && $this->code !== 304) {
             header("Content-Length: " . strlen($this->body ?? ""));
         }
 
-        // En-tête "Content-Type"
+        // "Content-Type" header if there is a body
         if ($this->body) {
             header("Content-Type: {$this->type}");
         }
 
-
-        // Ajout des en-têtes additionnels passés en paramètres aux en-têtes de la réponse
+        // Apply customs headers
         foreach ($this->headers as $name => $value) {
             header($name ? "$name: $value" : $value);
         }
