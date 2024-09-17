@@ -14,14 +14,14 @@ class MareesController extends Controller
     private $sseEventName = "marees";
 
     public function __construct(
-        private ?int $year = 0,
-        private bool $years = false,
+        private ?int $annee = 0,
+        private bool $annees = false,
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, DELETE");
         $this->model = new MareesModel();
 
         if (str_contains($this->request->path, "/annees")) {
-            $this->years = true;
+            $this->annees = true;
         }
 
         $this->processRequest();
@@ -36,10 +36,10 @@ class MareesController extends Controller
 
             case 'HEAD':
             case 'GET':
-                if ($this->years) {
+                if ($this->annees) {
                     $this->readYears();
-                } else if ($this->year) {
-                    $this->readYear($this->year);
+                } else if ($this->annee) {
+                    $this->readYear($this->annee);
                 } else {
                     $this->read($this->request->query);
                 }
@@ -50,7 +50,7 @@ class MareesController extends Controller
                 break;
 
             case 'DELETE':
-                $this->delete($this->year);
+                $this->delete($this->annee);
                 break;
 
             default:
