@@ -25,7 +25,7 @@ use App\Controller\Consignation\ListeClientsController as ClientsConsignation;
 use App\Controller\Chartering\CharterController as AffretementMaritime;
 use App\Controller\Tiers\TiersController as Tiers;
 use App\Controller\Tiers\NombreRdvController as NombreRdv;
-use App\Controller\Utils\PortsController as Ports;
+use App\Controller\Utils\PortController as Ports;
 use App\Controller\Utils\CountryController as Pays;
 use App\Controller\Utils\MareesController as Marees;
 use App\Controller\Config\AgenceController as Agence;
