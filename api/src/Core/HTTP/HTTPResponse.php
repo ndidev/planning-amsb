@@ -148,6 +148,22 @@ class HTTPResponse
     }
 
     /**
+     * Set the body of the HTTP response as JSON.
+     * 
+     * @param mixed $data        Data to encode as JSON.
+     * @param bool  $alreadyJson Set to true if the data is already JSON encoded.
+     * 
+     * @return HTTPResponse 
+     */
+    public function setJSON(mixed $data, bool $alreadyJson = false): HTTPResponse
+    {
+        $this->body = $alreadyJson ? $data : json_encode($data);
+        $this->setType('json');
+
+        return $this;
+    }
+
+    /**
      * Activate or deactivate compression for the HTTP response.  
      * 
      * By default the compression is set to `TRUE`.
