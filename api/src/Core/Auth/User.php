@@ -18,7 +18,8 @@ use App\Core\Exceptions\Client\Auth\LoginException;
 use App\Core\Exceptions\Client\Auth\MaxLoginAttemptsException;
 use App\Core\Exceptions\Client\Auth\SessionException;
 use App\Core\Security;
-use App\Core\Constants;
+
+use const App\Core\Constants\ONE_WEEK;
 
 /**
  * Classe contenant toutes les propriétés d'un compte utilisateur.
@@ -304,7 +305,7 @@ class User
 
         if ($key_info) {
             $this->redis->hMSet("admin:apikeys:{$api_key_hash}", $key_info);
-            $this->redis->expire("admin:apikeys:{$api_key_hash}", Constants::ONE_WEEK);
+            $this->redis->expire("admin:apikeys:{$api_key_hash}", ONE_WEEK);
         }
 
         [
