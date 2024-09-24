@@ -39,9 +39,9 @@ class RootController extends Controller
      */
     private function showIndex()
     {
-        $liste_endpoints = $this->buildIndex();
+        $endpointsList = $this->buildIndex();
 
-        $etag = ETag::get($liste_endpoints);
+        $etag = ETag::get($endpointsList);
 
         if (isset($_SERVER["HTTP_IF_NONE_MATCH"]) && $etag === $_SERVER["HTTP_IF_NONE_MATCH"]) {
             $this->response->setCode(304);
@@ -52,8 +52,7 @@ class RootController extends Controller
             ->setCode($this->_404 ? 404 : 200)
             ->addHeader("ETag", $etag)
             ->setType("json")
-            ->setBody(json_encode($liste_endpoints))
-            ->send();
+            ->setBody(json_encode($endpointsList));
     }
 
 
@@ -64,7 +63,7 @@ class RootController extends Controller
      */
     private function buildIndex(): array
     {
-        $liste_endpoints = [
+        $endpointsList = [
             // Bois
             "rdvs_bois" => "bois/rdvs/{id}{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}&client={client}&livraison={livraison}&fournisseur={fournisseur}&affreteur={affreteur}&transporteur={transporteur}}",
             "registre" => "bois/registre/{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}",
@@ -107,10 +106,10 @@ class RootController extends Controller
             "users" => "admin/users/{uid}",
         ];
 
-        foreach ($liste_endpoints as $description => $path) {
-            $liste_endpoints[$description] = $_ENV["API_URL"] . "/" . $path;
+        foreach ($endpointsList as $description => $path) {
+            $endpointsList[$description] = $_ENV["API_URL"] . "/" . $path;
         }
 
-        return $liste_endpoints;
+        return $endpointsList;
     }
 }

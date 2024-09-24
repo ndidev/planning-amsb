@@ -76,16 +76,15 @@ class BandeauInfoController extends Controller
         $etag = ETag::get($bannerEntries);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304)->send();
+            $this->response->setCode(304);
             return;
         }
 
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($bannerEntries))
             ->setHeaders($this->headers)
-            ->send();
+            ->setBody(json_encode($bannerEntries));
     }
 
     /**
@@ -99,7 +98,7 @@ class BandeauInfoController extends Controller
         $bannerEntry = $this->model->read($id);
 
         if (!$bannerEntry && !$dryRun) {
-            $this->response->setCode(404)->send();
+            $this->response->setCode(404);
             return;
         }
 
@@ -116,16 +115,15 @@ class BandeauInfoController extends Controller
         $etag = ETag::get($bannerEntry);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304)->send();
+            $this->response->setCode(304);
             return;
         }
 
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($bannerEntry))
             ->setHeaders($this->headers)
-            ->send();
+            ->setBody(json_encode($bannerEntry));
     }
 
     /**
