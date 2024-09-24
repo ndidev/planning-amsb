@@ -11,7 +11,7 @@ use App\Core\Logger\ErrorLogger;
 
 
 if (Security::checkIfRequestCanBeDone() === false) {
-    (new HTTPResponse(429))
+    (new HTTPResponse(HTTPResponse::HTTP_TOO_MANY_REQUESTS_429))
         ->addHeader("Retry-After", (string) Security::BLOCKED_IP_TIMEOUT)
         ->setType("text/plain")
         ->setBody("IP address blocked. Too many unauthenticated requests.")
@@ -39,7 +39,7 @@ $supported_methods = [
 
 // Méthode non supportée
 if (array_search($_SERVER["REQUEST_METHOD"], $supported_methods) === FALSE) {
-    (new HTTPResponse(501))->send();
+    (new HTTPResponse(HTTPResponse::HTTP_NOT_IMPLEMENTED_501))->send();
 }
 
 
@@ -62,7 +62,7 @@ try {
             switch ($_SERVER["REQUEST_METHOD"]) {
                 case "OPTIONS":
                     (new HTTPResponse)
-                        ->setCode(204)
+                        ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
                         ->addHeader("Access-Control-Allow-Methods", "OPTIONS, HEAD, GET")
                         ->send();
                     break;
@@ -73,7 +73,7 @@ try {
 
                 default:
                     (new HTTPResponse)
-                        ->setCode(405)
+                        ->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)
                         ->addHeader("Allow", "OPTIONS, HEAD, GET")
                         ->send();
                     break;
@@ -82,14 +82,14 @@ try {
 
         case '/login':
             if (!isset($_POST["login"]) || !isset($_POST["password"])) {
-                (new HTTPResponse(400))->send();
+                (new HTTPResponse(HTTPResponse::HTTP_BAD_REQUEST_400))->send();
             }
 
             // Authentification et envoi du cookie
             try {
                 $user = (new User)->login($_POST["login"], $_POST["password"]);
 
-                (new HTTPResponse(200))
+                (new HTTPResponse(HTTPResponse::HTTP_OK_200))
                     ->setType("json")
                     ->setBody(json_encode([
                         "uid" => $user->uid,
@@ -100,7 +100,7 @@ try {
                     ]))
                     ->send();
             } catch (AccountPendingException $e) {
-                (new HTTPResponse(200))
+                (new HTTPResponse(HTTPResponse::HTTP_OK_200))
                     ->setType("json")
                     ->setBody(json_encode([
                         "message" => $e->getMessage(),
@@ -114,14 +114,14 @@ try {
         case '/logout':
             // Suppression de la session et suppression du cookie
             (new User)->logout();
-            (new HTTPResponse(204))->send();
+            (new HTTPResponse(HTTPResponse::HTTP_NO_CONTENT_204))->send();
             break;
 
 
         case '/check':
             // Bypass pour développement
             if ($_ENV["AUTH"] === "OFF") {
-                (new HTTPResponse(200))
+                (new HTTPResponse(HTTPResponse::HTTP_OK_200))
                     ->setType("html")
                     ->setBody("Auth OFF")
                     ->send();
@@ -129,7 +129,7 @@ try {
 
             $user = (new User)->identifyFromSession();
 
-            (new HTTPResponse(200))
+            (new HTTPResponse(HTTPResponse::HTTP_OK_200))
                 ->setType("json")
                 ->setBody(json_encode([
                     "login" => $user->login,
@@ -143,17 +143,17 @@ try {
 
         case '/first-login':
             if (!isset($_POST["login"]) || !isset($_POST["password"])) {
-                (new HTTPResponse(400))->send();
+                (new HTTPResponse(HTTPResponse::HTTP_BAD_REQUEST_400))->send();
             }
 
             (new User)->initializeAccount($_POST["login"], $_POST["password"]);
 
-            (new HTTPResponse(200))->send();
+            (new HTTPResponse(HTTPResponse::HTTP_OK_200))->send();
             break;
 
 
         case '/info':
-            (new HTTPResponse(200))
+            (new HTTPResponse(HTTPResponse::HTTP_OK_200))
                 ->setType("json")
                 ->setBody(json_encode([
                     "MAX_LOGIN_ATTEMPTS" => (int) $_ENV["AUTH_MAX_LOGIN_ATTEMPTS"],
@@ -165,7 +165,7 @@ try {
 
             /** DEFAUT */
         default:
-            (new HTTPResponse(404))->send();
+            (new HTTPResponse(HTTPResponse::HTTP_NOT_FOUND_404))->send();
             break;
     }
 } catch (AppException $e) {
@@ -175,7 +175,7 @@ try {
         ->send();
 } catch (Throwable $e) {
     ErrorLogger::log($e);
-    (new HTTPResponse(500))
+    (new HTTPResponse(HTTPResponse::HTTP_INTERNAL_SERVER_ERROR_500))
         ->setType("text")
         ->setBody("Erreur serveur")
         ->send();

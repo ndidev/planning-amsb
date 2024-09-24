@@ -2,8 +2,6 @@
 
 namespace App\Core\HTTP;
 
-include __DIR__ . "/../../Core/Functions/lzw.inc.php";
-
 use App\Core\Logger\ErrorLogger;
 
 use function App\Core\Functions\lzw_compress;
@@ -15,6 +13,73 @@ use function App\Core\Functions\lzw_compress;
  */
 class HTTPResponse
 {
+    // HTTP status codes constants
+    public const HTTP_CONTINUE_100 = 100;
+    public const HTTP_SWITCHING_PROTOCOLS_101 = 101;
+    public const HTTP_PROCESSING_102 = 102;
+    public const HTTP_EARLY_HINTS_103 = 103;
+    public const HTTP_OK_200 = 200;
+    public const HTTP_CREATED_201 = 201;
+    public const HTTP_ACCEPTED_202 = 202;
+    public const HTTP_NON_AUTHORITATIVE_INFORMATION_203 = 203;
+    public const HTTP_NO_CONTENT_204 = 204;
+    public const HTTP_RESET_CONTENT_205 = 205;
+    public const HTTP_PARTIAL_CONTENT_206 = 206;
+    public const HTTP_MULTI_STATUS_207 = 207;
+    public const HTTP_ALREADY_REPORTED_208 = 208;
+    public const HTTP_IM_USED_226 = 226;
+    public const HTTP_MULTIPLE_CHOICES_300 = 300;
+    public const HTTP_MOVED_PERMANENTLY_301 = 301;
+    public const HTTP_FOUND_302 = 302;
+    public const HTTP_SEE_OTHER_303 = 303;
+    public const HTTP_NOT_MODIFIED_304 = 304;
+    public const HTTP_USE_PROXY_305 = 305;
+    public const HTTP_SWITCH_PROXY_306 = 306;
+    public const HTTP_TEMPORARY_REDIRECT_307 = 307;
+    public const HTTP_PERMANENT_REDIRECT_308 = 308;
+    public const HTTP_BAD_REQUEST_400 = 400;
+    public const HTTP_UNAUTHORIZED_401 = 401;
+    public const HTTP_PAYMENT_REQUIRED_402 = 402;
+    public const HTTP_FORBIDDEN_403 = 403;
+    public const HTTP_NOT_FOUND_404 = 404;
+    public const HTTP_METHOD_NOT_ALLOWED_405 = 405;
+    public const HTTP_NOT_ACCEPTABLE_406 = 406;
+    public const HTTP_PROXY_AUTHENTICATION_REQUIRED_407 = 407;
+    public const HTTP_REQUEST_TIMEOUT_408 = 408;
+    public const HTTP_CONFLICT_409 = 409;
+    public const HTTP_GONE_410 = 410;
+    public const HTTP_LENGTH_REQUIRED_411 = 411;
+    public const HTTP_PRECONDITION_FAILED_412 = 412;
+    public const HTTP_PAYLOAD_TOO_LARGE_413 = 413;
+    public const HTTP_URI_TOO_LONG_414 = 414;
+    public const HTTP_UNSUPPORTED_MEDIA_TYPE_415 = 415;
+    public const HTTP_RANGE_NOT_SATISFIABLE_416 = 416;
+    public const HTTP_EXPECTATION_FAILED_417 = 417;
+    public const HTTP_IM_A_TEAPOT_418 = 418;
+    public const HTTP_MISDIRECTED_REQUEST_421 = 421;
+    public const HTTP_UNPROCESSABLE_ENTITY_422 = 422;
+    public const HTTP_LOCKED_423 = 423;
+    public const HTTP_FAILED_DEPENDENCY_424 = 424;
+    public const HTTP_TOO_EARLY_425 = 425;
+    public const HTTP_UPGRADE_REQUIRED_426 = 426;
+    public const HTTP_PRECONDITION_REQUIRED_428 = 428;
+    public const HTTP_TOO_MANY_REQUESTS_429 = 429;
+    public const HTTP_REQUEST_HEADER_FIELDS_TOO_LARGE_431 = 431;
+    public const HTTP_UNAVAILABLE_FOR_LEGAL_REASONS_451 = 451;
+    public const HTTP_INTERNAL_SERVER_ERROR_500 = 500;
+    public const HTTP_NOT_IMPLEMENTED_501 = 501;
+    public const HTTP_BAD_GATEWAY_502 = 502;
+    public const HTTP_SERVICE_UNAVAILABLE_503 = 503;
+    public const HTTP_GATEWAY_TIMEOUT_504 = 504;
+    public const HTTP_HTTP_VERSION_NOT_SUPPORTED_505 = 505;
+    public const HTTP_VARIANT_ALSO_NEGOTIATES_506 = 506;
+    public const HTTP_INSUFFICIENT_STORAGE_507 = 507;
+    public const HTTP_LOOP_DETECTED_508 = 508;
+    public const HTTP_NOT_EXTENDED_510 = 510;
+    public const HTTP_NETWORK_AUTHENTICATION_REQUIRED_511 = 511;
+
+
+
     private int $code = 200;
     private array $headers = [];
     private ?string $body = null;

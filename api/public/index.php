@@ -40,7 +40,7 @@ use App\Controller\Admin\UserAccountController as UserAccount;
 use App\Core\Logger\ErrorLogger;
 
 if (Security::checkIfRequestCanBeDone() === false) {
-    (new HTTPResponse(429))
+    (new HTTPResponse(HTTPResponse::HTTP_TOO_MANY_REQUESTS_429))
         ->addHeader("Retry-After", (string) Security::BLOCKED_IP_TIMEOUT)
         ->setType("text/plain")
         ->setBody("IP address blocked. Too many unauthenticated requests.")
@@ -142,7 +142,7 @@ try {
         ->setBody("Erreur serveur");
 } catch (\Throwable $e) {
     ErrorLogger::log($e);
-    $response = (new HTTPResponse(500))
+    $response = (new HTTPResponse(HTTPResponse::HTTP_INTERNAL_SERVER_ERROR_500))
         ->setType("text")
         ->setBody("Erreur serveur");
 }
