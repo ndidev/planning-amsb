@@ -3,10 +3,10 @@
 namespace App\Core\Functions;
 
 /**
- * Stringify an array
+ * Stringify an array.
  * 
- * @param array $array       Array to be stringified
- * @param int   $indentation Indentation spaces for the string output
+ * @param array $array       Array to be stringified.
+ * @param int   $indentation Indentation spaces for the string output.
  * 
  * @return string Stringified array
  */
