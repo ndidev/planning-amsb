@@ -2,9 +2,7 @@
 
 namespace App\Entity;
 
-use App\Core\Interfaces\Arrayable;
-
-class Country implements Arrayable, \JsonSerializable
+class Country extends AbstractEntity
 {
     private string $iso;
     private string $name;
@@ -45,10 +43,5 @@ class Country implements Arrayable, \JsonSerializable
             "iso" => $this->getISO(),
             "nom" => $this->getName(),
         ];
-    }
-
-    public function jsonSerialize(): array
-    {
-        return $this->toArray();
     }
 }
