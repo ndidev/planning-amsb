@@ -12,4 +12,4 @@ $redis_port = 6380;
 $redis = new Redis();
 $redis->pconnect($redis_host, $redis_port);
 
-(new User($user, $redis))->clear_sessions();
+(new User($user, $redis))->clearSessions();

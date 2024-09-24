@@ -14,14 +14,14 @@ class MareesController extends Controller
     private $sseEventName = "marees";
 
     public function __construct(
-        private ?int $annee = 0,
-        private bool $annees = false,
+        private ?int $year = 0,
+        private bool $years = false,
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, DELETE");
         $this->model = new MareesModel();
 
         if (str_contains($this->request->path, "/annees")) {
-            $this->annees = true;
+            $this->years = true;
         }
 
         $this->processRequest();
@@ -36,10 +36,10 @@ class MareesController extends Controller
 
             case 'HEAD':
             case 'GET':
-                if ($this->annees) {
+                if ($this->years) {
                     $this->readYears();
-                } else if ($this->annee) {
-                    $this->readYear($this->annee);
+                } else if ($this->year) {
+                    $this->readYear($this->year);
                 } else {
                     $this->read($this->request->query);
                 }
@@ -50,7 +50,7 @@ class MareesController extends Controller
                 break;
 
             case 'DELETE':
-                $this->delete($this->annee);
+                $this->delete($this->year);
                 break;
 
             default:
@@ -66,9 +66,9 @@ class MareesController extends Controller
      */
     public function read(?array $filtre = null)
     {
-        $donnees = $this->model->read($filtre);
+        $tides = $this->model->read($filtre);
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($tides);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -78,7 +78,7 @@ class MareesController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($tides))
             ->setHeaders($this->headers);
     }
 
@@ -89,9 +89,9 @@ class MareesController extends Controller
      */
     public function readYear(int $annee)
     {
-        $donnees = $this->model->readYear($annee);
+        $tidesOfYear = $this->model->readYear($annee);
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($tidesOfYear);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -101,7 +101,7 @@ class MareesController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($tidesOfYear))
             ->setHeaders($this->headers);
     }
 
@@ -110,9 +110,9 @@ class MareesController extends Controller
      */
     public function readYears()
     {
-        $donnees = $this->model->readYears();
+        $years = $this->model->readYears();
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($years);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -122,7 +122,7 @@ class MareesController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($years))
             ->setHeaders($this->headers);
     }
 
@@ -148,49 +148,49 @@ class MareesController extends Controller
 
         $separator = ";";
 
-        $marees = [];
+        $tides = [];
         foreach ($lines as $line) {
             // Ne pas prendre en compte les lignes non conformes
             if (strpos($line, $separator) === false) continue;
             if (strlen($line) <= 2) continue;
 
-            // Enregistrer chaque ligne dans le tableau $marees
-            [$date, $heure, $hauteur] = str_getcsv($line, $separator);
-            array_push($marees, [
+            // Enregistrer chaque ligne dans le tableau $tides
+            [$date, $time, $height] = str_getcsv($line, $separator);
+            array_push($tides, [
                 $date,
-                $heure,
-                (float) $hauteur
+                $time,
+                (float) $height
             ]);
         }
 
-        $annee = substr($marees[0][0], 0, 4);
+        $year = substr($tides[0][0], 0, 4);
 
-        $this->model->create($marees);
+        $this->model->create($tides);
 
-        $this->headers["Location"] = $_ENV["API_URL"] . "/marees/$annee";
+        $this->headers["Location"] = $_ENV["API_URL"] . "/marees/$year";
 
-        $donnees = ["annee" => (int) $annee];
+        $newYear = ["annee" => (int) $year];
 
         $this->response
             ->setCode(201)
             ->setHeaders($this->headers)
-            ->setBody(json_encode($donnees));
+            ->setBody(json_encode($newYear));
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $annee, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $year, $newYear);
     }
 
     /**
      * Supprime les marrées pour une année.
      * 
-     * @param int $annee Année pour laquelle supprimer les marées.
+     * @param int $year Année pour laquelle supprimer les marées.
      */
-    public function delete(int $annee)
+    public function delete(int $year)
     {
-        $succes = $this->model->delete($annee);
+        $success = $this->model->delete($year);
 
-        if ($succes) {
+        if ($success) {
             $this->response->setCode(204);
-            $this->sse->addEvent($this->sseEventName, __FUNCTION__, $annee);
+            $this->sse->addEvent($this->sseEventName, __FUNCTION__, $year);
         } else {
             throw new DBException("Erreur lors de la suppression");
         }

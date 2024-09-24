@@ -5,7 +5,7 @@ namespace App\Core\Exceptions\Server;
 use App\Core\Exceptions\AppException;
 
 /**
- * Exception de mauvaise requête client.
+ * Exception d'erreur serveur.
  */
 class ServerException extends AppException
 {
@@ -14,9 +14,9 @@ class ServerException extends AppException
 
     public function __construct(
         string $message = self::DEFAULT_MESSAGE,
-        public int $http_status = self::HTTP_STATUS,
+        public int $httpStatus = self::HTTP_STATUS,
         \Throwable|null $previous = null
     ) {
-        parent::__construct($message, $http_status, $previous);
+        parent::__construct($message, $httpStatus, $previous);
     }
 }

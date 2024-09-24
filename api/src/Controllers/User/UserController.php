@@ -48,18 +48,18 @@ class UserController extends Controller
     public function read()
     {
         try {
-            $donnees = $this->model->read();
+            $user = $this->model->read();
         } catch (AuthException) {
             $this->response->setCode(401);
             return;
         }
 
-        if (!$donnees) {
+        if (!$user) {
             $this->response->setCode(404);
             return;
         }
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($user);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -69,7 +69,7 @@ class UserController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($user))
             ->setHeaders($this->headers);
     }
 
@@ -81,16 +81,16 @@ class UserController extends Controller
         $input = $this->request->body;
 
         try {
-            $donnees = $this->model->update($input);
+            $updatedUser = $this->model->update($input);
         } catch (AuthException) {
             $this->response->setCode(401);
             return;
         }
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($updatedUser))
             ->setHeaders($this->headers);
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $this->user->uid, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $this->user->uid, $updatedUser);
     }
 }

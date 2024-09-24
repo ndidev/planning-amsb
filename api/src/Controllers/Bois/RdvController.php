@@ -63,17 +63,17 @@ class RdvController extends Controller
     /**
      * Récupère tous les RDV bois.
      * 
-     * @param array $filtre
+     * @param array $filter
      */
-    public function readAll(array $filtre)
+    public function readAll(array $filter)
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
-        $donnees = $this->model->readAll($filtre);
+        $appointments = $this->model->readAll($filter);
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($appointments);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -83,34 +83,34 @@ class RdvController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setBody(json_encode($appointments));
     }
 
     /**
      * Récupère un RDV bois.
      * 
      * @param int $id      id du RDV à récupérer.
-     * @param bool $dry_run Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param bool $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(int $id, ?bool $dry_run = false)
+    public function read(int $id, ?bool $dryRun = false)
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
-        $donnees = $this->model->read($id);
+        $appointment = $this->model->read($id);
 
-        if (!$donnees && !$dry_run) {
+        if (!$appointment && !$dryRun) {
             $this->response->setCode(404);
             return;
         }
 
-        if ($dry_run) {
-            return $donnees;
+        if ($dryRun) {
+            return $appointment;
         }
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($appointment);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -120,8 +120,8 @@ class RdvController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setBody(json_encode($appointment));
     }
 
     /**
@@ -129,7 +129,7 @@ class RdvController extends Controller
      */
     public function create()
     {
-        if (!$this->user->can_edit($this->module)) {
+        if (!$this->user->canEdit($this->module)) {
             throw new AccessException();
         }
 
@@ -164,7 +164,7 @@ class RdvController extends Controller
      */
     public function update(int $id)
     {
-        if (!$this->user->can_edit($this->module)) {
+        if (!$this->user->canEdit($this->module)) {
             throw new AccessException();
         }
 
@@ -192,7 +192,7 @@ class RdvController extends Controller
      */
     public function patch(int $id)
     {
-        if (!$this->user->can_edit($this->module)) {
+        if (!$this->user->canEdit($this->module)) {
             throw new AccessException();
         }
 
@@ -203,14 +203,14 @@ class RdvController extends Controller
 
         $input = $this->request->body;
 
-        $donnees = $this->model->patch($id, $input);
+        $updatedAppointment = $this->model->patch($id, $input);
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($updatedAppointment))
             ->setHeaders($this->headers)
             ->flush();
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $updatedAppointment);
     }
 
     /**
@@ -220,21 +220,21 @@ class RdvController extends Controller
      */
     public function delete(int $id)
     {
-        if (!$this->user->can_edit($this->module)) {
+        if (!$this->user->canEdit($this->module)) {
             throw new AccessException();
         }
 
         if (!$this->model->exists($id)) {
             $message = "Not Found";
-            $documentation = $_ENV["API_URL"] . "/doc/#/Bois/supprimerRdvBois";
-            $body = json_encode(["message" => $message, "documentation_url" => $documentation]);
+            $docURL = $_ENV["API_URL"] . "/doc/#/Bois/supprimerRdvBois";
+            $body = json_encode(["message" => $message, "documentation_url" => $docURL]);
             $this->response->setCode(404)->setBody($body);
             return;
         }
 
-        $succes = $this->model->delete($id);
+        $success = $this->model->delete($id);
 
-        if ($succes) {
+        if ($success) {
             $this->response->setCode(204)->flush();
             $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
         } else {

@@ -21,8 +21,8 @@ class HTTPResponse
     private bool $compression = true;
     private string $type = 'application/json; charset=UTF-8';
     private bool $exit = true;
-    private bool $is_sent = false;
-    private bool $preflight_headers_added = false;
+    private bool $isSent = false;
+    private bool $preflightHeadersAdded = false;
 
     public function __construct(?int $code = null)
     {
@@ -36,7 +36,7 @@ class HTTPResponse
      */
     public function send(): void
     {
-        if ($this->is_sent === true) {
+        if ($this->isSent === true) {
             return;
         }
 
@@ -52,7 +52,7 @@ class HTTPResponse
             echo $this->body;
         }
 
-        $this->is_sent = true;
+        $this->isSent = true;
 
         // Sortie de script
         if ($this->exit) {
@@ -85,28 +85,7 @@ class HTTPResponse
         @ob_flush();
         flush();
 
-        $this->is_sent = true;
-    }
-
-    /**
-     * Debug HTTP response.
-     * 
-     * @return never
-     */
-    public function debug()
-    {
-        echo "<pre>";
-        print_r([
-            "code" => $this->code,
-            "headers" => $this->headers,
-            "body" => $this->body,
-            "compression" => $this->compression,
-            "type" => $this->type,
-            "exit" => $this->exit
-        ]);
-        echo "</pre>";
-
-        exit;
+        $this->isSent = true;
     }
 
     /**
@@ -257,10 +236,10 @@ class HTTPResponse
          * Méthodes de compression acceptées par le client.
          * @var string
          */
-        $client_accept_encoding = $_SERVER["HTTP_ACCEPT_ENCODING"] ?? null;
+        $clientAcceptEncoding = $_SERVER["HTTP_ACCEPT_ENCODING"] ?? null;
 
         // Si pas de compression acceptée, renvoi de la réponse intacte
-        if ($client_accept_encoding === null) {
+        if ($clientAcceptEncoding === null) {
             return;
         }
 
@@ -268,34 +247,34 @@ class HTTPResponse
          * Tableau des méthodes accpetées par le client, par ordre de priorité.
          * @var string[]
          */
-        $client_accepted_methods = explode(",", $client_accept_encoding);
+        $clientAcceptedMethods = explode(",", $clientAcceptEncoding);
 
         /**
          * Tableau des priorités de compression.  
          * ```
          * [(string) $method => (float) $priority]
          * ```
-         * @var float[]
+         * @var array<string, float>
          */
-        $client_compression_priority = [];
+        $clientCompressionPriority = [];
 
-        foreach ($client_accepted_methods as $method) {
-            $method_array = explode(";q=", $method);
-            $method_name = trim($method_array[0]);
-            $method_priority = (float) ($method_array[1] ?? 1);
+        foreach ($clientAcceptedMethods as $method) {
+            $methodArray = explode(";q=", $method);
+            $methodName = trim($methodArray[0]);
+            $methodPriority = (float) ($methodArray[1] ?? 1);
 
-            $client_compression_priority[$method_name] = $method_priority;
+            $clientCompressionPriority[$methodName] = $methodPriority;
         }
 
         // Tri du tableau par priorité décroissante
-        arsort($client_compression_priority);
+        arsort($clientCompressionPriority);
 
 
         /**
          * Méthodes de compression supportées par le serveur.
          * @var bool[]
          */
-        $server_supported_methods = [
+        $serverSupportedMethods = [
             "gzip" => true,
             "deflate" => true,
             "compress" => false, // La fonction ne prend en charge que la table ASCII
@@ -307,22 +286,22 @@ class HTTPResponse
          * Méthode de compression utilisée ("identity" par défaut, modifié ci-dessous).
          * @var string
          */
-        $compression_method = "identity";
+        $selectedCompressionMethod = "identity";
 
         // Enregistrement de la première méthode acceptée par le client
         // et supportée par le serveur
-        foreach ($client_compression_priority as $method => $priority) {
-            $is_supported = $server_supported_methods[$method] ?? false;
+        foreach ($clientCompressionPriority as $method => $priority) {
+            $isSupportedMethod = $serverSupportedMethods[$method] ?? false;
 
-            if ($is_supported && $priority != 0) {
-                $compression_method = $method;
+            if ($isSupportedMethod && $priority != 0) {
+                $selectedCompressionMethod = $method;
                 break;
             }
         }
 
         try {
             // Méthodes de compression
-            switch ($compression_method) {
+            switch ($selectedCompressionMethod) {
                 case 'gzip':
                     // GZIP (== PHP gzencode)
                     $this->body = gzencode($this->body);
@@ -357,7 +336,7 @@ class HTTPResponse
             }
 
             // En-tête HTTP
-            $this->headers["Content-Encoding"] = $compression_method;
+            $this->headers["Content-Encoding"] = $selectedCompressionMethod;
         } catch (\Throwable $th) {
             ErrorLogger::log($th);
 
@@ -369,13 +348,13 @@ class HTTPResponse
     /**
      * Ajouter les en-têtes relatifs à CORS.
      * 
-     * @param string $supported_methods Méthodes HTTP supportées.
+     * @param string $supportedMethods Méthodes HTTP supportées.
      */
-    private function addCorsHeaders(bool $is_preflight = false, string $supported_methods = "OPTIONS, HEAD, GET"): void
+    private function addCorsHeaders(bool $is_preflight = false, string $supportedMethods = "OPTIONS, HEAD, GET"): void
     {
         // Pre-flight request
         if ($is_preflight) {
-            header("Access-Control-Allow-Methods: " . $supported_methods);
+            header("Access-Control-Allow-Methods: " . $supportedMethods);
             header("Access-Control-Allow-Headers: Content-Type, X-API-Key, X-SSE-Connection");
             header("Access-Control-Max-Age: 3600");
         }
@@ -424,7 +403,7 @@ class HTTPResponse
         header("Cache-control: no-cache");
 
         // CORS headers
-        if ($this->preflight_headers_added === false) {
+        if ($this->preflightHeadersAdded === false) {
             $this->addCorsHeaders();
         }
 

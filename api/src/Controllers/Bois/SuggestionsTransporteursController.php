@@ -44,13 +44,13 @@ class SuggestionsTransporteursController extends Controller
      */
     public function readAll(array $filtre)
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
-        $donnees = $this->model->readAll($filtre);
+        $suggestions = $this->model->readAll($filtre);
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($suggestions);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -60,7 +60,7 @@ class SuggestionsTransporteursController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($suggestions))
             ->setHeaders($this->headers);
     }
 }

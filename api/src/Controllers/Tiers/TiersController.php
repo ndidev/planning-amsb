@@ -63,9 +63,9 @@ class TiersController extends Controller
      */
     public function readAll(array $options)
     {
-        $donnees = $this->model->readAll($options);
+        $thirdParties = $this->model->readAll($options);
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($thirdParties);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -75,7 +75,7 @@ class TiersController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($thirdParties))
             ->setHeaders($this->headers);
     }
 
@@ -84,22 +84,22 @@ class TiersController extends Controller
      * 
      * @param int   $id      id du tiers à récupérer.
      * @param array $options Options de récupération.
-     * @param bool  $dry_run Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param bool  $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(int $id, ?array $options = [], ?bool $dry_run = false)
+    public function read(int $id, ?array $options = [], ?bool $dryRun = false)
     {
-        $donnees = $this->model->read($id, $options);
+        $thirdParty = $this->model->read($id, $options);
 
-        if (!$donnees && !$dry_run) {
+        if (!$thirdParty && !$dryRun) {
             $this->response->setCode(404);
             return;
         }
 
-        if ($dry_run) {
-            return $donnees;
+        if ($dryRun) {
+            return $thirdParty;
         }
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($thirdParty);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -109,7 +109,7 @@ class TiersController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($thirdParty))
             ->setHeaders($this->headers);
     }
 
@@ -118,25 +118,25 @@ class TiersController extends Controller
      */
     public function create()
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
         $input = $this->request->body;
 
-        $donnees = $this->model->create($input);
+        $newThirdParty = $this->model->create($input);
 
-        $id = $donnees["id"];
+        $id = $newThirdParty["id"];
 
         $this->headers["Location"] = $_ENV["API_URL"] . "/tiers/$id";
 
         $this->response
             ->setCode(201)
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($newThirdParty))
             ->setHeaders($this->headers)
             ->flush();
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $newThirdParty);
     }
 
     /**
@@ -146,7 +146,7 @@ class TiersController extends Controller
      */
     public function update(int $id)
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
@@ -157,14 +157,14 @@ class TiersController extends Controller
 
         $input = $this->request->body;
 
-        $donnees = $this->model->update($id, $input);
+        $updatedThirdyParty = $this->model->update($id, $input);
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($updatedThirdyParty))
             ->setHeaders($this->headers)
             ->flush();
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $updatedThirdyParty);
     }
 
     /**
@@ -174,7 +174,7 @@ class TiersController extends Controller
      */
     public function delete(int $id)
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
@@ -183,9 +183,9 @@ class TiersController extends Controller
             return;
         }
 
-        $succes = $this->model->delete($id);
+        $success = $this->model->delete($id);
 
-        if ($succes) {
+        if ($success) {
             $this->response->setCode(204)->flush();
             $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
         } else {

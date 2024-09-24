@@ -20,12 +20,10 @@ class ListeNaviresModel extends Model
             AND navire <> ''
             ORDER BY navire ASC";
 
-        $requete = $this->mysql->query($statement);
+        $request = $this->mysql->query($statement);
 
-        $navires = $requete->fetchAll(\PDO::FETCH_COLUMN);
+        $shipsNames = $request->fetchAll(\PDO::FETCH_COLUMN);
 
-        $donnees = $navires;
-
-        return $donnees;
+        return $shipsNames;
     }
 }

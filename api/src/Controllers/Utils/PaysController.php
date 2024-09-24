@@ -59,9 +59,9 @@ class PaysController extends Controller
      */
     public function readAll()
     {
-        $donnees = $this->model->readAll();
+        $countries = $this->model->readAll();
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($countries);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -72,7 +72,7 @@ class PaysController extends Controller
         $this->headers["Cache-control"] = "max-age=31557600, must-revalidate";
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($countries))
             ->setHeaders($this->headers);
     }
 
@@ -80,25 +80,25 @@ class PaysController extends Controller
      * Récupère un pays.
      * 
      * @param string $iso     Code ISO du pays à récupérer.
-     * @param bool   $dry_run Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param bool   $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(string $iso, ?bool $dry_run = false)
+    public function read(string $iso, ?bool $dryRun = false)
     {
-        $donnees = $this->model->read($iso);
+        $country = $this->model->read($iso);
 
-        if (!$donnees && !$dry_run) {
+        if (!$country && !$dryRun) {
             $message = "Not Found";
-            $documentation = $_ENV["API_URL"] . "/doc/#/Consignation/lireEscaleConsignation";
-            $body = json_encode(["message" => $message, "documentation_url" => $documentation]);
+            $docURL = $_ENV["API_URL"] . "/doc/#/Consignation/lireEscaleConsignation";
+            $body = json_encode(["message" => $message, "documentation_url" => $docURL]);
             $this->response->setCode(404)->setBody($body);
             return;
         }
 
-        if ($dry_run) {
-            return $donnees;
+        if ($dryRun) {
+            return $country;
         }
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($country);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -109,7 +109,7 @@ class PaysController extends Controller
         $this->headers["Cache-control"] = "max-age=31557600, must-revalidate";
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($country))
             ->setHeaders($this->headers);
     }
 
@@ -120,18 +120,18 @@ class PaysController extends Controller
     {
         $input = $this->request->body;
 
-        $donnees = $this->model->create($input);
+        $newCountry = $this->model->create($input);
 
-        $iso = $donnees["iso"];
+        $iso = $newCountry["iso"];
 
         $this->headers["Location"] = $_ENV["API_URL"] . "/consignation/escales/$iso";
 
         $this->response
             ->setCode(201)
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($newCountry))
             ->setHeaders($this->headers);
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $iso, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $iso, $newCountry);
     }
 
     /**
@@ -148,13 +148,13 @@ class PaysController extends Controller
 
         $input = $this->request->body;
 
-        $donnees = $this->model->update($iso, $input);
+        $updatedCountry = $this->model->update($iso, $input);
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($updatedCountry))
             ->setHeaders($this->headers);
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $iso, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $iso, $updatedCountry);
     }
 
     /**
@@ -169,9 +169,9 @@ class PaysController extends Controller
             return;
         }
 
-        $succes = $this->model->delete($iso);
+        $success = $this->model->delete($iso);
 
-        if ($succes) {
+        if ($success) {
             $this->response->setCode(204);
             $this->sse->addEvent($this->sseEventName, __FUNCTION__, $iso);
         } else {

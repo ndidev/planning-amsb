@@ -20,7 +20,7 @@ class UserAccountController extends Controller
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
 
-        if ($this->user->is_admin === false) {
+        if ($this->user->isAdmin === false) {
             throw new AdminException();
         }
 
@@ -87,18 +87,18 @@ class UserAccountController extends Controller
      * Récupère un compte utilisateur.
      * 
      * @param string $uid     UID du compte à récupérer.
-     * @param bool   $dry_run Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param bool   $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(string $uid, ?bool $dry_run = false)
+    public function read(string $uid, ?bool $dryRun = false)
     {
         $donnees = $this->model->read($uid);
 
-        if (!$donnees && !$dry_run) {
+        if (!$donnees && !$dryRun) {
             $this->response->setCode(404);
             return;
         }
 
-        if ($dry_run) {
+        if ($dryRun) {
             return $donnees;
         }
 
@@ -182,9 +182,9 @@ class UserAccountController extends Controller
             return;
         }
 
-        $succes = $this->model->delete($uid);
+        $success = $this->model->delete($uid);
 
-        if ($succes) {
+        if ($success) {
             $this->response->setCode(204);
             $this->sse->addEvent($this->sseEventName, __FUNCTION__, $uid);
         } else {

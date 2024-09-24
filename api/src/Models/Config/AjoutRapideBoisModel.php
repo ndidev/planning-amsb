@@ -11,12 +11,12 @@ class AjoutRapideBoisModel extends Model
      */
     public function readAll(): array
     {
-
         $statement = "SELECT * FROM config_ajouts_rapides_bois";
 
-        $ajouts_rapides = $this->mysql->query($statement)->fetchAll();
+        $quickAddConfigs = $this->mysql->query($statement)->fetchAll();
 
-        array_walk_recursive($ajouts_rapides, function (&$value, $key) {
+        // Rétablissement des types int
+        array_walk_recursive($quickAddConfigs, function (&$value, $key) {
             $value = match ($key) {
                 "id",
                 "client",
@@ -29,9 +29,7 @@ class AjoutRapideBoisModel extends Model
             };
         });
 
-        $donnees = $ajouts_rapides;
-
-        return $donnees;
+        return $quickAddConfigs;
     }
 
     /**
@@ -43,19 +41,17 @@ class AjoutRapideBoisModel extends Model
      */
     public function read($id): ?array
     {
-        $statement =
-            "SELECT *
-        FROM config_ajouts_rapides_bois
-        WHERE id = :id";
+        $statement = "SELECT * FROM config_ajouts_rapides_bois WHERE id = :id";
 
-        $requete = $this->mysql->prepare($statement);
-        $requete->execute(["id" => $id]);
+        $request = $this->mysql->prepare($statement);
+        $request->execute(["id" => $id]);
 
-        $ligne = $requete->fetch();
+        $quickAddConfig = $request->fetch();
 
-        if (!$ligne) return null;
+        if (!$quickAddConfig) return null;
 
-        array_walk_recursive($ligne, function (&$value, $key) {
+        // Rétablissement des types int
+        array_walk_recursive($quickAddConfig, function (&$value, $key) {
             $value = match ($key) {
                 "id",
                 "client",
@@ -68,9 +64,7 @@ class AjoutRapideBoisModel extends Model
             };
         });
 
-        $donnees = $ligne;
-
-        return $donnees;
+        return $quickAddConfig;
     }
 
     /**
@@ -83,21 +77,22 @@ class AjoutRapideBoisModel extends Model
     public function create(array $input): array
     {
         $statement =
-            "INSERT INTO config_ajouts_rapides_bois VALUES(
-        NULL,
-        :module,
-        :fournisseur,
-        :transporteur,
-        :affreteur,
-        :chargement,
-        :client,
-        :livraison
-      )";
+            "INSERT INTO config_ajouts_rapides_bois
+            VALUES(
+                NULL,
+                :module,
+                :fournisseur,
+                :transporteur,
+                :affreteur,
+                :chargement,
+                :client,
+                :livraison
+            )";
 
-        $requete = $this->mysql->prepare($statement);
+        $request = $this->mysql->prepare($statement);
 
         $this->mysql->beginTransaction();
-        $requete->execute([
+        $request->execute([
             'module' => "bois",
             'fournisseur' => $input["fournisseur"],
             'transporteur' => $input["transporteur"] ?: NULL,
@@ -107,10 +102,10 @@ class AjoutRapideBoisModel extends Model
             'livraison' => $input["livraison"] ?: NULL,
         ]);
 
-        $last_id = $this->mysql->lastInsertId();
+        $lastInsertId = $this->mysql->lastInsertId();
         $this->mysql->commit();
 
-        return $this->read($last_id);
+        return $this->read($lastInsertId);
     }
 
     /**
@@ -125,17 +120,17 @@ class AjoutRapideBoisModel extends Model
     {
         $statement =
             "UPDATE config_ajouts_rapides_bois
-        SET
-          fournisseur = :fournisseur,
-          transporteur = :transporteur,
-          affreteur = :affreteur,
-          chargement = :chargement,
-          client = :client,
-          livraison = :livraison
-        WHERE id = :id";
+            SET
+                fournisseur = :fournisseur,
+                transporteur = :transporteur,
+                affreteur = :affreteur,
+                chargement = :chargement,
+                client = :client,
+                livraison = :livraison
+            WHERE id = :id";
 
-        $requete = $this->mysql->prepare($statement);
-        $requete->execute([
+        $request = $this->mysql->prepare($statement);
+        $request->execute([
             'fournisseur' => $input["fournisseur"],
             'transporteur' => $input["transporteur"] ?: NULL,
             'affreteur' => $input["affreteur"] ?: NULL,
@@ -157,9 +152,9 @@ class AjoutRapideBoisModel extends Model
      */
     public function delete(int $id): bool
     {
-        $requete = $this->mysql->prepare("DELETE FROM config_ajouts_rapides_bois WHERE id = :id");
-        $succes = $requete->execute(["id" => $id]);
+        $request = $this->mysql->prepare("DELETE FROM config_ajouts_rapides_bois WHERE id = :id");
+        $isDeleted = $request->execute(["id" => $id]);
 
-        return $succes;
+        return $isDeleted;
     }
 }

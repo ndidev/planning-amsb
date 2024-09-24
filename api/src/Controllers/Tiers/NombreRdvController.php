@@ -48,9 +48,9 @@ class NombreRdvController extends Controller
      */
     public function readAll(array $options)
     {
-        $donnees = $this->model->readAll($options);
+        $appointmentsQuantity = $this->model->readAll($options);
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($appointmentsQuantity);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -60,7 +60,7 @@ class NombreRdvController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($appointmentsQuantity))
             ->setHeaders($this->headers);
     }
 
@@ -69,22 +69,22 @@ class NombreRdvController extends Controller
      * 
      * @param int   $id      id du tiers à récupérer.
      * @param array $options Options de récupération.
-     * @param bool  $dry_run Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param bool  $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(int $id, ?array $options = [], ?bool $dry_run = false)
+    public function read(int $id, ?array $options = [], ?bool $dryRun = false)
     {
-        $donnees = $this->model->read($id, $options);
+        $appointmentsQuantity = $this->model->read($id, $options);
 
-        if (!$donnees && !$dry_run) {
+        if (!$appointmentsQuantity && !$dryRun) {
             $this->response->setCode(404);
             return;
         }
 
-        if ($dry_run) {
-            return $donnees;
+        if ($dryRun) {
+            return $appointmentsQuantity;
         }
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($appointmentsQuantity);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -94,7 +94,7 @@ class NombreRdvController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($appointmentsQuantity))
             ->setHeaders($this->headers);
     }
 }

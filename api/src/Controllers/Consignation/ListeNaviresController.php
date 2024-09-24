@@ -44,9 +44,9 @@ class ListeNaviresController extends Controller
      */
     public function readAll()
     {
-        $donnees = $this->model->readAll();
+        $shipNames = $this->model->readAll();
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($shipNames);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -56,7 +56,7 @@ class ListeNaviresController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($shipNames))
             ->setHeaders($this->headers);
     }
 }

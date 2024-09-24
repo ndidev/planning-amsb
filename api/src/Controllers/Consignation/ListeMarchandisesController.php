@@ -45,13 +45,13 @@ class ListeMarchandisesController extends Controller
      */
     public function readAll()
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
-        $donnees = $this->model->readAll();
+        $cargoes = $this->model->readAll();
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($cargoes);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -61,7 +61,7 @@ class ListeMarchandisesController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($cargoes))
             ->setHeaders($this->headers);
     }
 }

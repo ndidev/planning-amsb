@@ -42,20 +42,18 @@ class RdvModel extends Model
             ORDER BY date_rdv";
 
 
-        $requete = $this->mysql->query($statement);
-        $rdvs = $requete->fetchAll();
+        $request = $this->mysql->query($statement);
+        $appointments = $request->fetchAll();
 
         // Rétablissement des types bool
-        array_walk_recursive($rdvs, function (&$value, $key) {
+        array_walk_recursive($appointments, function (&$value, $key) {
             $value = match ($key) {
                 "max", "commande_prete" => $value = (bool) $value,
                 default => $value,
             };
         });
 
-        $donnees = $rdvs;
-
-        return $donnees;
+        return $appointments;
     }
 
     /**
@@ -69,39 +67,37 @@ class RdvModel extends Model
     {
         $statement =
             "SELECT
-            id,
-            date_rdv,
-            SUBSTRING(heure, 1, 5) AS heure,
-            produit,
-            qualite,
-            quantite,
-            max,
-            commande_prete,
-            fournisseur,
-            client,
-            transporteur,
-            num_commande,
-            commentaire
-          FROM vrac_planning
-          WHERE id = :id";
+                id,
+                date_rdv,
+                SUBSTRING(heure, 1, 5) AS heure,
+                produit,
+                qualite,
+                quantite,
+                max,
+                commande_prete,
+                fournisseur,
+                client,
+                transporteur,
+                num_commande,
+                commentaire
+            FROM vrac_planning
+            WHERE id = :id";
 
-        $requete = $this->mysql->prepare($statement);
-        $requete->execute(["id" => $id]);
-        $rdv = $requete->fetch();
+        $request = $this->mysql->prepare($statement);
+        $request->execute(["id" => $id]);
+        $appointment = $request->fetch();
 
-        if (!$rdv) return null;
+        if (!$appointment) return null;
 
         // Rétablissement des types bool
-        array_walk_recursive($rdv, function (&$value, $key) {
+        array_walk_recursive($appointment, function (&$value, $key) {
             $value = match ($key) {
                 "max", "commande_prete" => $value = (bool) $value,
                 default => $value,
             };
         });
 
-        $donnees = $rdv;
-
-        return $donnees;
+        return $appointment;
     }
 
     /**
@@ -113,27 +109,28 @@ class RdvModel extends Model
      */
     public function create(array $input): array
     {
-        $statement = "INSERT INTO vrac_planning
-    VALUES(
-      NULL,
-      :date_rdv,
-      :heure,
-      :produit,
-      :qualite,
-      :quantite,
-      :max,
-      :commande_prete,
-      :fournisseur,
-      :client,
-      :transporteur,
-      :num_commande,
-      :commentaire
-    )";
+        $statement =
+            "INSERT INTO vrac_planning
+            VALUES(
+                NULL,
+                :date_rdv,
+                :heure,
+                :produit,
+                :qualite,
+                :quantite,
+                :max,
+                :commande_prete,
+                :fournisseur,
+                :client,
+                :transporteur,
+                :num_commande,
+                :commentaire
+            )";
 
-        $requete = $this->mysql->prepare($statement);
+        $request = $this->mysql->prepare($statement);
 
         $this->mysql->beginTransaction();
-        $requete->execute([
+        $request->execute([
             'date_rdv' => $input["date_rdv"],
             'heure' => $input["heure"] ?: NULL,
             'produit' => $input["produit"],
@@ -148,10 +145,10 @@ class RdvModel extends Model
             'commentaire' => $input["commentaire"]
         ]);
 
-        $last_id = $this->mysql->lastInsertId();
+        $lastInsertId = $this->mysql->lastInsertId();
         $this->mysql->commit();
 
-        return $this->read($last_id);
+        return $this->read($lastInsertId);
     }
 
     /**
@@ -164,24 +161,25 @@ class RdvModel extends Model
      */
     public function update($id, array $input): array
     {
-        $statement = "UPDATE vrac_planning
-      SET
-        date_rdv = :date_rdv,
-        heure = :heure,
-        produit = :produit,
-        qualite = :qualite,
-        quantite = :quantite,
-        max = :max,
-        commande_prete = :commande_prete,
-				fournisseur = :fournisseur,
-        client = :client,
-        transporteur = :transporteur,
-        num_commande = :num_commande,
-        commentaire = :commentaire
-      WHERE id = :id";
+        $statement =
+            "UPDATE vrac_planning
+            SET
+                date_rdv = :date_rdv,
+                heure = :heure,
+                produit = :produit,
+                qualite = :qualite,
+                quantite = :quantite,
+                max = :max,
+                commande_prete = :commande_prete,
+                fournisseur = :fournisseur,
+                client = :client,
+                transporteur = :transporteur,
+                num_commande = :num_commande,
+                commentaire = :commentaire
+            WHERE id = :id";
 
-        $requete = $this->mysql->prepare($statement);
-        $requete->execute([
+        $request = $this->mysql->prepare($statement);
+        $request->execute([
             'date_rdv' => $input["date_rdv"],
             'heure' => $input["heure"] ?: NULL,
             'produit' => $input["produit"],
@@ -238,9 +236,9 @@ class RdvModel extends Model
      */
     public function delete(int $id): bool
     {
-        $requete = $this->mysql->prepare("DELETE FROM vrac_planning WHERE id = :id");
-        $succes = $requete->execute(["id" => $id]);
+        $deleteRequest = $this->mysql->prepare("DELETE FROM vrac_planning WHERE id = :id");
+        $isDeleted = $deleteRequest->execute(["id" => $id]);
 
-        return $succes;
+        return $isDeleted;
     }
 }

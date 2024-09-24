@@ -25,69 +25,69 @@ class RdvModel extends Model
     public function readAll(array $query): array
     {
         // Filtre
-        $date_debut = isset($query['date_debut']) ? ($query['date_debut'] ?: date("Y-m-d")) : date("Y-m-d");
-        $date_fin = isset($query['date_fin']) ? ($query['date_fin'] ?: "9999-12-31") : "9999-12-31";
-        $filtre_fournisseur = trim($query['fournisseur'] ?? "", ",");
-        $filtre_client = trim($query['client'] ?? "", ",");
-        $filtre_chargement = trim($query['chargement'] ?? "", ",");
-        $filtre_livraison = trim($query['livraison'] ?? "", ",");
-        $filtre_transporteur = trim($query['transporteur'] ?? "", ",");
-        $filtre_affreteur = trim($query['affreteur'] ?? "", ",");
+        $startDate = isset($query['date_debut']) ? ($query['date_debut'] ?: date("Y-m-d")) : date("Y-m-d");
+        $endDate = isset($query['date_fin']) ? ($query['date_fin'] ?: "9999-12-31") : "9999-12-31";
+        $supplierFilter = trim($query['fournisseur'] ?? "", ",");
+        $clientFilter = trim($query['client'] ?? "", ",");
+        $loadingFilter = trim($query['chargement'] ?? "", ",");
+        $deliveryFilter = trim($query['livraison'] ?? "", ",");
+        $transportFilter = trim($query['transporteur'] ?? "", ",");
+        $chartererFilter = trim($query['affreteur'] ?? "", ",");
 
-        $filtre_sql_fournisseur = $filtre_fournisseur === "" ? "" : " AND fournisseur IN ($filtre_fournisseur)";
-        $filtre_sql_client = $filtre_client === "" ? "" : " AND client IN ($filtre_client)";
-        $filtre_sql_chargement = $filtre_chargement === "" ? "" : " AND chargement IN ($filtre_chargement)";
-        $filtre_sql_livraison = $filtre_livraison === "" ? "" : " AND livraison IN ($filtre_livraison)";
-        $filtre_sql_transporteur = $filtre_transporteur === "" ? "" : " AND transporteur IN ($filtre_transporteur)";
-        $filtre_sql_affreteur = $filtre_affreteur === "" ? "" : " AND affreteur IN ($filtre_affreteur)";
+        $sqlSupplierFilter = $supplierFilter === "" ? "" : " AND fournisseur IN ($supplierFilter)";
+        $sqlClientFilter = $clientFilter === "" ? "" : " AND client IN ($clientFilter)";
+        $sqlLoadingFilter = $loadingFilter === "" ? "" : " AND chargement IN ($loadingFilter)";
+        $sqlDeliveryFilter = $deliveryFilter === "" ? "" : " AND livraison IN ($deliveryFilter)";
+        $sqlTransportFilter = $transportFilter === "" ? "" : " AND transporteur IN ($transportFilter)";
+        $sqlChartererFilter = $chartererFilter === "" ? "" : " AND affreteur IN ($chartererFilter)";
 
-        $filtre_sql =
-            $filtre_sql_fournisseur
-            . $filtre_sql_client
-            . $filtre_sql_chargement
-            . $filtre_sql_livraison
-            . $filtre_sql_transporteur
-            . $filtre_sql_affreteur;
+        $sqlFilter =
+            $sqlSupplierFilter
+            . $sqlClientFilter
+            . $sqlLoadingFilter
+            . $sqlDeliveryFilter
+            . $sqlTransportFilter
+            . $sqlChartererFilter;
 
         $statement =
             "SELECT
-          id,
-          attente,
-          date_rdv,
-          heure_arrivee,
-          heure_depart,
-          confirmation_affretement,
-          commande_prete,
-          numero_bl,
-          commentaire_public,
-          commentaire_cache,
-          client,
-          chargement,
-          livraison,
-          affreteur,
-          fournisseur,
-          transporteur
-        FROM bois_planning
-        WHERE 
-          (
-            (date_rdv BETWEEN :date_debut AND :date_fin)
-            OR date_rdv IS NULL
-            OR attente = 1
-          )
-        $filtre_sql
-        ORDER BY date_rdv";
+                id,
+                attente,
+                date_rdv,
+                heure_arrivee,
+                heure_depart,
+                confirmation_affretement,
+                commande_prete,
+                numero_bl,
+                commentaire_public,
+                commentaire_cache,
+                client,
+                chargement,
+                livraison,
+                affreteur,
+                fournisseur,
+                transporteur
+            FROM bois_planning
+            WHERE 
+            (
+                (date_rdv BETWEEN :date_debut AND :date_fin)
+                OR date_rdv IS NULL
+                OR attente = 1
+            )
+            $sqlFilter
+            ORDER BY date_rdv";
 
-        $requete = $this->mysql->prepare($statement);
+        $request = $this->mysql->prepare($statement);
 
-        $requete->execute([
-            "date_debut" => $date_debut,
-            "date_fin" => $date_fin
+        $request->execute([
+            "date_debut" => $startDate,
+            "date_fin" => $endDate
         ]);
 
-        $rdvs = $requete->fetchAll();
+        $appointments = $request->fetchAll();
 
         // Rétablissement des types bool
-        array_walk_recursive($rdvs, function (&$value, $key) {
+        array_walk_recursive($appointments, function (&$value, $key) {
             $value = match ($key) {
                 "attente",
                 "confirmation_affretement",
@@ -97,9 +97,7 @@ class RdvModel extends Model
             };
         });
 
-        $donnees = $rdvs;
-
-        return $donnees;
+        return $appointments;
     }
 
     /**
@@ -113,33 +111,33 @@ class RdvModel extends Model
     {
         $statement =
             "SELECT
-        id,
-        attente,
-        date_rdv,
-        heure_arrivee,
-        heure_depart,
-        confirmation_affretement,
-        commande_prete,
-        numero_bl,
-        commentaire_public,
-        commentaire_cache,
-        client,
-        chargement,
-        livraison,
-        affreteur,
-        fournisseur,
-        transporteur
-      FROM bois_planning
-      WHERE id = :id";
+                id,
+                attente,
+                date_rdv,
+                heure_arrivee,
+                heure_depart,
+                confirmation_affretement,
+                commande_prete,
+                numero_bl,
+                commentaire_public,
+                commentaire_cache,
+                client,
+                chargement,
+                livraison,
+                affreteur,
+                fournisseur,
+                transporteur
+            FROM bois_planning
+            WHERE id = :id";
 
-        $requete = $this->mysql->prepare($statement);
-        $requete->execute(["id" => $id]);
-        $rdv = $requete->fetch();
+        $request = $this->mysql->prepare($statement);
+        $request->execute(["id" => $id]);
+        $appointment = $request->fetch();
 
-        if (!$rdv) return null;
+        if (!$appointment) return null;
 
         // Rétablissement des types bool
-        array_walk_recursive($rdv, function (&$value, $key) {
+        array_walk_recursive($appointment, function (&$value, $key) {
             $value = match ($key) {
                 "attente",
                 "confirmation_affretement",
@@ -149,9 +147,7 @@ class RdvModel extends Model
             };
         });
 
-        $donnees = $rdv;
-
-        return $donnees;
+        return $appointment;
     }
 
     /**
@@ -163,29 +159,31 @@ class RdvModel extends Model
      */
     public function create(array $input): array
     {
-        $statement = "INSERT INTO bois_planning VALUES(
-      NULL,
-      :attente,
-      :date_rdv,
-      :heure_arrivee,
-      :heure_depart,
-      :chargement,
-      :client,
-      :livraison,
-      :transporteur,
-      :affreteur,
-      :fournisseur,
-      :commande_prete,
-      :confirmation_affretement,
-      :numero_bl,
-      :commentaire_public,
-      :commentaire_cache
-      )";
+        $statement =
+            "INSERT INTO bois_planning
+            VALUES(
+                NULL,
+                :attente,
+                :date_rdv,
+                :heure_arrivee,
+                :heure_depart,
+                :chargement,
+                :client,
+                :livraison,
+                :transporteur,
+                :affreteur,
+                :fournisseur,
+                :commande_prete,
+                :confirmation_affretement,
+                :numero_bl,
+                :commentaire_public,
+                :commentaire_cache
+            )";
 
-        $requete = $this->mysql->prepare($statement);
+        $request = $this->mysql->prepare($statement);
 
         $this->mysql->beginTransaction();
-        $requete->execute([
+        $request->execute([
             'attente' => (int) $input["attente"],
             'date_rdv' => $input["date_rdv"] ?: NULL,
             'heure_arrivee' => $input["heure_arrivee"] ?: NULL,
@@ -203,10 +201,10 @@ class RdvModel extends Model
             'commentaire_cache' => $input["commentaire_cache"],
         ]);
 
-        $last_id = $this->mysql->lastInsertId();
+        $lastInsertId = $this->mysql->lastInsertId();
         $this->mysql->commit();
 
-        return $this->read($last_id);
+        return $this->read($lastInsertId);
     }
 
     /**
@@ -219,27 +217,28 @@ class RdvModel extends Model
      */
     public function update(int $id, array $input): array
     {
-        $statement = "UPDATE bois_planning
-      SET
-        attente = :attente,
-        date_rdv = :date_rdv,
-        heure_arrivee = :heure_arrivee,
-        heure_depart = :heure_depart,
-        chargement = :chargement,
-        client = :client,
-        livraison = :livraison,
-        transporteur = :transporteur,
-        affreteur = :affreteur,
-        fournisseur = :fournisseur,
-        commande_prete = :commande_prete,
-        confirmation_affretement = :confirmation_affretement,
-        numero_bl = :numero_bl,
-        commentaire_public = :commentaire_public,
-        commentaire_cache = :commentaire_cache
-      WHERE id = :id";
+        $statement =
+            "UPDATE bois_planning
+            SET
+                attente = :attente,
+                date_rdv = :date_rdv,
+                heure_arrivee = :heure_arrivee,
+                heure_depart = :heure_depart,
+                chargement = :chargement,
+                client = :client,
+                livraison = :livraison,
+                transporteur = :transporteur,
+                affreteur = :affreteur,
+                fournisseur = :fournisseur,
+                commande_prete = :commande_prete,
+                confirmation_affretement = :confirmation_affretement,
+                numero_bl = :numero_bl,
+                commentaire_public = :commentaire_public,
+                commentaire_cache = :commentaire_cache
+            WHERE id = :id";
 
-        $requete = $this->mysql->prepare($statement);
-        $requete->execute([
+        $request = $this->mysql->prepare($statement);
+        $request->execute([
             'attente' => (int) $input["attente"],
             'date_rdv' => $input["date_rdv"] ?: NULL,
             'heure_arrivee' => $input["heure_arrivee"] ?: NULL,
@@ -275,14 +274,15 @@ class RdvModel extends Model
          * Confirmation affrètement
          */
         if (isset($input["confirmation_affretement"])) {
-            $this->mysql
+            $this
+                ->mysql
                 ->prepare(
                     "UPDATE bois_planning
-           SET confirmation_affretement = :confirmation_affretement
-           WHERE id = :id"
+                    SET confirmation_affretement = :charterConfirmation
+                    WHERE id = :id"
                 )
                 ->execute([
-                    'confirmation_affretement' => (int) $input["confirmation_affretement"],
+                    'charterConfirmation' => (int) $input["confirmation_affretement"],
                     'id' => $id,
                 ]);
         }
@@ -293,31 +293,32 @@ class RdvModel extends Model
         if (isset($input["heure_arrivee"])) {
 
             // Heure
-            $heure = date('H:i:s');
-            $this->mysql
-                ->prepare("UPDATE bois_planning SET heure_arrivee = :heure WHERE id = :id")
+            $time = date('H:i:s');
+            $this
+                ->mysql
+                ->prepare("UPDATE bois_planning SET heure_arrivee = :arrivalTime WHERE id = :id")
                 ->execute([
-                    'heure' => $heure,
+                    'arrivalTime' => $time,
                     'id' => $id
                 ]);
 
 
             // Numéro BL automatique (Stora Enso)      
-            $current = $this->read($id);
+            $appointment = $this->read($id);
 
             if (
-                $current["fournisseur"] === 292 /* Stora Enso */
-                && $current["chargement"] === 1 /* AMSB */
+                $appointment["fournisseur"] === 292 /* Stora Enso */
+                && $appointment["chargement"] === 1 /* AMSB */
             ) {
                 // Récupération du numéro de BL du RDV à modifier (si déjà renseigné)
-                $reponse_bl_actuel = $this->mysql->prepare(
+                $currentBlNumberRequest = $this->mysql->prepare(
                     "SELECT numero_bl
-              FROM bois_planning
-              WHERE id = :id"
+                    FROM bois_planning
+                    WHERE id = :id"
                 );
-                $reponse_bl_actuel->execute(["id" => $id]);
-                $reponse_bl_actuel = $reponse_bl_actuel->fetch();
-                $numero_bl_actuel = $reponse_bl_actuel["numero_bl"];
+                $currentBlNumberRequest->execute(["id" => $id]);
+                $currentBlNumberRequest = $currentBlNumberRequest->fetch();
+                $currentBlNumber = $currentBlNumberRequest["numero_bl"];
 
                 // Dernier numéro de BL de Stora Enso :
                 // - enregistrement des 10 derniers numéros dans un tableau
@@ -326,46 +327,46 @@ class RdvModel extends Model
                 // Ceci permet de prendre en compte les cas où le dernier numéro
                 // renseigné n'est pas le plus haut numériquement
                 // Permet aussi de prendre en compte les éventuels bons sans numéro "numérique"
-                $reponse_bl_precedent = $this->mysql->query(
+                $precedingBlNumbersRequest = $this->mysql->query(
                     "SELECT numero_bl
-              FROM bois_planning
-              WHERE fournisseur = {$current["fournisseur"]}
-              AND numero_bl != ''
-              ORDER BY
-                date_rdv DESC,
-                heure_arrivee DESC,
-                numero_bl DESC
-              LIMIT 10"
+                    FROM bois_planning
+                    WHERE fournisseur = {$appointment["fournisseur"]}
+                    AND numero_bl != ''
+                    ORDER BY
+                        date_rdv DESC,
+                        heure_arrivee DESC,
+                        numero_bl DESC
+                    LIMIT 10"
                 )->fetchAll();
 
-                $numeros_bl_precedents = [];
+                $precedingBlNumbers = [];
 
-                foreach ($reponse_bl_precedent as $numero_bl) {
+                foreach ($precedingBlNumbersRequest as $blNumber) {
                     // Si le dernier numéro de BL est composé (ex: "200101 + 200102")
                     // alors séparation/tri de la chaîne de caractères puis récupération du numéro le plus élevé
                     $matches = NULL; // Tableau pour récupérer les numéros de BL
-                    preg_match_all("/\d{6}/", $numero_bl["numero_bl"], $matches); // Filtre sur les numéros valides (6 chiffres)
+                    preg_match_all("/\d{6}/", $blNumber["numero_bl"], $matches); // Filtre sur les numéros valides (6 chiffres)
                     $matches = $matches[0]; // Extraction des résultats
                     sort($matches); // Tri des numéros
-                    $numeros_bl_precedents[] = array_pop($matches); // Récupération du numéro le plus élevé
+                    $precedingBlNumbers[] = array_pop($matches); // Récupération du numéro le plus élevé
                 }
 
                 // Tri des 10 derniers numéros de BL puis récupération du plus élevé
-                sort($numeros_bl_precedents);
-                $numero_bl_precedent = array_pop($numeros_bl_precedents);
+                sort($precedingBlNumbers);
+                $precedingBlNumber = array_pop($precedingBlNumbers);
 
                 // Calcul du nouveau numéro de BL (si possible)
                 // Insertion du nouveau numéro de BL si numéro non déjà renseigné
-                $numero_bl_nouveau = is_numeric($numero_bl_precedent) ? $numero_bl_precedent + 1 : '';
-                if ($numero_bl_actuel === '' && $numero_bl_nouveau) {
-                    $requete = $this->mysql->prepare(
+                $newBlNumber = is_numeric($precedingBlNumber) ? $precedingBlNumber + 1 : '';
+                if ($currentBlNumber === '' && $newBlNumber) {
+                    $updateBlNumberRequest = $this->mysql->prepare(
                         "UPDATE bois_planning
-                SET numero_bl = :numero_bl
-                WHERE id = :id"
+                        SET numero_bl = :newBlNumber
+                        WHERE id = :id"
                     );
 
-                    $requete->execute([
-                        'numero_bl' => $numero_bl_nouveau,
+                    $updateBlNumberRequest->execute([
+                        'newBlNumber' => $newBlNumber,
                         'id' => $id
                     ]);
                 }
@@ -376,11 +377,11 @@ class RdvModel extends Model
          * Heure de départ
          */
         if (isset($input["heure_depart"])) {
-            $heure = date('H:i:s');
+            $time = date('H:i:s');
             $this->mysql
                 ->prepare("UPDATE bois_planning SET heure_depart = :heure WHERE id = :id")
                 ->execute([
-                    'heure' => $heure,
+                    'heure' => $time,
                     'id' => $id
                 ]);
         }
@@ -389,65 +390,65 @@ class RdvModel extends Model
          * Numéro de BL
          */
         if (isset($input["numero_bl"])) {
-            $numero_bl = $input['numero_bl'];
-            $dry_run = $input["dry_run"] ?? FALSE;
+            $blNumber = $input['numero_bl'];
+            $dryRun = $input["dry_run"] ?? FALSE;
 
-            $bl_existe = FALSE;
+            $blNumberExists = FALSE;
 
             // Fournisseurs dont le numéro de BL doit être unique
-            $fournisseurs_bl_unique = [
+            $suppliersWithUniqueBlNumbers = [
                 292 // Stora Enso
             ];
 
-            $current = $this->mysql
+            $appointment = $this->mysql
                 ->query(
                     "SELECT p.fournisseur, f.nom_court AS fournisseur_nom
-           FROM bois_planning p
-           JOIN tiers f ON f.id = p.fournisseur
-           WHERE p.id = {$id}"
+                    FROM bois_planning p
+                    JOIN tiers f ON f.id = p.fournisseur
+                    WHERE p.id = {$id}"
                 )->fetch();
 
             // Vérification si le numéro de BL existe déjà (pour Enso)
             if (
-                array_search($current["fournisseur"], $fournisseurs_bl_unique) !== FALSE
-                && $numero_bl !== ""
-                && $numero_bl !== "-"
+                in_array($appointment["fournisseur"], $suppliersWithUniqueBlNumbers)
+                && $blNumber !== ""
+                && $blNumber !== "-"
             ) {
-                $requete = $this->mysql->prepare(
-                    "SELECT COUNT(id) AS bl_existe, id
-            FROM bois_planning
-            WHERE numero_bl LIKE CONCAT('%', :numero_bl, '%')
-            AND fournisseur = :fournisseur
-            AND NOT id = :id"
+                $updateBlNumberRequest = $this->mysql->prepare(
+                    "SELECT COUNT(*) AS countOfSameBlNumber, id AS idOfSameBlNumber
+                    FROM bois_planning
+                    WHERE numero_bl LIKE CONCAT('%', :blNumber, '%')
+                    AND fournisseur = :supplierId
+                    AND NOT id = :id"
                 );
-                $requete->execute([
-                    "numero_bl" => $numero_bl,
-                    "fournisseur" => $current["fournisseur"],
+                $updateBlNumberRequest->execute([
+                    "blNumber" => $blNumber,
+                    "supplierId" => $appointment["fournisseur"],
                     "id" => $id
                 ]);
 
-                $reponse_bdd = $requete->fetch();
+                [$countOfSameBlNumber, $idOfSameBlNumber] = $updateBlNumberRequest->fetch(\PDO::FETCH_NUM);
 
-                $bl_existe = (bool) $reponse_bdd["bl_existe"];
+                $blNumberExists = $countOfSameBlNumber > 0;
             }
 
-            if (!$bl_existe && !$dry_run) {
-                $this->mysql
+            if (!$blNumberExists && !$dryRun) {
+                $this
+                    ->mysql
                     ->prepare(
                         "UPDATE bois_planning
-              SET
-                numero_bl = :numero_bl
-              WHERE id = :id"
+                        SET numero_bl = :newBlNumber
+                        WHERE id = :id"
                     )
                     ->execute([
-                        'numero_bl' => $numero_bl,
+                        'newBlNumber' => $blNumber,
                         'id' => $id
                     ]);
             }
 
             // Si le numéro de BL existe déjà (pour Enso), message d'erreur
-            if ($bl_existe && $id != $reponse_bdd["id"]) {
-                throw new ClientException("Le numéro de BL $numero_bl existe déjà pour {$current["fournisseur_nom"]}.");
+            if ($blNumberExists && $id != $idOfSameBlNumber) {
+                throw new ClientException("Le numéro de BL {$blNumber} existe déjà pour {$appointment["fournisseur_nom"]}.");
             }
         }
 
@@ -458,8 +459,8 @@ class RdvModel extends Model
             $this->mysql
                 ->prepare(
                     "UPDATE bois_planning
-           SET commande_prete = :commande_prete
-           WHERE id = :id"
+                    SET commande_prete = :commande_prete
+                    WHERE id = :id"
                 )
                 ->execute([
                     'commande_prete' => (int) $input["commande_prete"],
@@ -479,9 +480,9 @@ class RdvModel extends Model
      */
     public function delete(int $id): bool
     {
-        $requete = $this->mysql->prepare("DELETE FROM bois_planning WHERE id = :id");
-        $succes = $requete->execute(["id" => $id]);
+        $request = $this->mysql->prepare("DELETE FROM bois_planning WHERE id = :id");
+        $isDeleted = $request->execute(["id" => $id]);
 
-        return $succes;
+        return $isDeleted;
     }
 }

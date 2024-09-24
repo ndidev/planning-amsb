@@ -63,13 +63,13 @@ class EscaleController extends Controller
      */
     public function readAll(array $archives)
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
-        $donnees = $this->model->readAll($archives);
+        $calls = $this->model->readAll($archives);
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($calls);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -79,7 +79,7 @@ class EscaleController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($calls))
             ->setHeaders($this->headers);
     }
 
@@ -87,26 +87,26 @@ class EscaleController extends Controller
      * Récupère une escale consignation.
      * 
      * @param int  $id      id de l'escale à récupérer.
-     * @param bool $dry_run Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param bool $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(int $id, ?bool $dry_run = false)
+    public function read(int $id, ?bool $dryRun = false)
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
-        $donnees = $this->model->read($id);
+        $call = $this->model->read($id);
 
-        if (!$donnees && !$dry_run) {
+        if (!$call && !$dryRun) {
             $this->response->setCode(404);
             return;
         }
 
-        if ($dry_run) {
-            return $donnees;
+        if ($dryRun) {
+            return $call;
         }
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($call);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -116,7 +116,7 @@ class EscaleController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($call))
             ->setHeaders($this->headers);
     }
 
@@ -125,25 +125,25 @@ class EscaleController extends Controller
      */
     public function create()
     {
-        if (!$this->user->can_edit($this->module)) {
+        if (!$this->user->canEdit($this->module)) {
             throw new AccessException();
         }
 
         $input = $this->request->body;
 
-        $donnees = $this->model->create($input);
+        $newCall = $this->model->create($input);
 
-        $id = $donnees["id"];
+        $id = $newCall["id"];
 
         $this->headers["Location"] = $_ENV["API_URL"] . "/consignation/escales/$id";
 
         $this->response
             ->setCode(201)
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($newCall))
             ->setHeaders($this->headers)
             ->flush();
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $newCall);
     }
 
     /**
@@ -153,7 +153,7 @@ class EscaleController extends Controller
      */
     public function update(int $id)
     {
-        if (!$this->user->can_edit($this->module)) {
+        if (!$this->user->canEdit($this->module)) {
             throw new AccessException();
         }
 
@@ -164,14 +164,14 @@ class EscaleController extends Controller
 
         $input = $this->request->body;
 
-        $donnees = $this->model->update($id, $input);
+        $updatedCall = $this->model->update($id, $input);
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($updatedCall))
             ->setHeaders($this->headers)
             ->flush();
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $updatedCall);
     }
 
     /**
@@ -181,7 +181,7 @@ class EscaleController extends Controller
      */
     public function delete(int $id)
     {
-        if (!$this->user->can_edit($this->module)) {
+        if (!$this->user->canEdit($this->module)) {
             throw new AccessException();
         }
 
@@ -190,9 +190,9 @@ class EscaleController extends Controller
             return;
         }
 
-        $succes = $this->model->delete($id);
+        $success = $this->model->delete($id);
 
-        if ($succes) {
+        if ($success) {
             $this->response->setCode(204)->flush();
             $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
         } else {

@@ -47,8 +47,8 @@ class ETAConverter
      */
     public static function toDigits(string $heure, array $correspondance = self::CORRESPONDANCE_ETA): string
     {
-        foreach ($correspondance as $lettres => $chiffres) {
-            $heure = preg_replace("/\b$lettres\b/i", "$chiffres~", $heure);
+        foreach ($correspondance as $letters => $digits) {
+            $heure = preg_replace("/\b$letters\b/i", "$digits~", $heure);
         }
         return $heure;
     }
@@ -62,16 +62,16 @@ class ETAConverter
      * 
      * Utilisé dans le planning consignation.
      * 
-     * @param string $heure          Heure à modifier si nécessaire.
+     * @param string $time          Heure à modifier si nécessaire.
      * @param array  $correspondance Tableau des correspondances entre chiffres et lettres.
      * 
      * @return string Heure convertie en lettres.
      */
-    public static function toLetters(string $heure, $correspondance = self::CORRESPONDANCE_ETA): string
+    public static function toLetters(string $time, $correspondance = self::CORRESPONDANCE_ETA): string
     {
-        foreach ($correspondance as $lettres => $chiffres) {
-            $heure = preg_replace("/\b$chiffres~/i", $lettres, $heure);
+        foreach ($correspondance as $letters => $digits) {
+            $time = preg_replace("/\b$digits~/i", $letters, $time);
         }
-        return $heure;
+        return $time;
     }
 }

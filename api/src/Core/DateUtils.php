@@ -117,7 +117,7 @@ class DateUtils
         /**
          * @var DateTime[] Public holidays list.
          */
-        $public_holidays = [
+        $publicHolidays = [
             "jour_an" => new DateTime("$year-01-01"),
             "paques" => $easter,
             "lundi_paques" => (clone $easter)->add(new DateInterval("P1D")),
@@ -135,7 +135,7 @@ class DateUtils
 
 
         // Check public holiday
-        foreach ($public_holidays as $holiday) {
+        foreach ($publicHolidays as $holiday) {
             if ($date->setTime(0, 0) == $holiday) {
                 return true;
             }
@@ -197,15 +197,15 @@ class DateUtils
     ): DateTime {
         $date = self::convertDate($date);
 
-        $previous_working_day = clone $date;
+        $previousWorkingDay = clone $date;
 
         for ($i = 0; $i < $offset; $i++) {
             do {
-                $previous_working_day->sub(new DateInterval("P1D"));
-            } while (!self::checkWorkingDay($previous_working_day));
+                $previousWorkingDay->sub(new DateInterval("P1D"));
+            } while (!self::checkWorkingDay($previousWorkingDay));
         }
 
-        return $previous_working_day;
+        return $previousWorkingDay;
     }
 
     /**
@@ -228,14 +228,14 @@ class DateUtils
     ): DateTime {
         $date = self::convertDate($date);
 
-        $next_working_day = clone $date;
+        $nextWorkingDay = clone $date;
 
         for ($i = 0; $i < $offset; $i++) {
             do {
-                $next_working_day->add(new DateInterval("P1D"));
-            } while (!self::checkWorkingDay($next_working_day));
+                $nextWorkingDay->add(new DateInterval("P1D"));
+            } while (!self::checkWorkingDay($nextWorkingDay));
         }
 
-        return $next_working_day;
+        return $nextWorkingDay;
     }
 }

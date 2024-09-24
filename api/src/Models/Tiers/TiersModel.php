@@ -2,6 +2,8 @@
 
 namespace App\Models\Tiers;
 
+use App\Core\Exceptions\Client\ClientException;
+use App\Core\Exceptions\Server\ServerException;
 use App\Models\Model;
 use App\Core\Logger\ErrorLogger;
 
@@ -26,41 +28,34 @@ class TiersModel extends Model
      */
     public function readAll(): array
     {
-        $statement =
-            "SELECT *
-            FROM tiers
-            ORDER BY
-            nom_court,
-            ville";
+        $statement = "SELECT * FROM tiers ORDER BY nom_court, ville";
 
-        $liste_tiers = $this->mysql->query($statement)->fetchAll();
+        $thirdParties = $this->mysql->query($statement)->fetchAll();
 
-        foreach ($liste_tiers as &$tiers) {
+        foreach ($thirdParties as &$thirdParty) {
             // Changement TINYINT en booléen
-            $tiers["id"] = (int) $tiers["id"];
-            $tiers["bois_fournisseur"] = (bool) $tiers["bois_fournisseur"];
-            $tiers["bois_client"] = (bool) $tiers["bois_client"];
-            $tiers["bois_transporteur"] = (bool) $tiers["bois_transporteur"];
-            $tiers["bois_affreteur"] = (bool) $tiers["bois_affreteur"];
-            $tiers["vrac_fournisseur"] = (bool) $tiers["vrac_fournisseur"];
-            $tiers["vrac_client"] = (bool) $tiers["vrac_client"];
-            $tiers["vrac_transporteur"] = (bool) $tiers["vrac_transporteur"];
-            $tiers["maritime_affreteur"] = (bool) $tiers["maritime_affreteur"];
-            $tiers["maritime_armateur"] = (bool) $tiers["maritime_armateur"];
-            $tiers["maritime_courtier"] = (bool) $tiers["maritime_courtier"];
-            $tiers["non_modifiable"] = (bool) $tiers["non_modifiable"];
-            $tiers["lie_agence"] = (bool) $tiers["lie_agence"];
-            $tiers["actif"] = (bool) $tiers["actif"];
+            $thirdParty["id"] = (int) $thirdParty["id"];
+            $thirdParty["bois_fournisseur"] = (bool) $thirdParty["bois_fournisseur"];
+            $thirdParty["bois_client"] = (bool) $thirdParty["bois_client"];
+            $thirdParty["bois_transporteur"] = (bool) $thirdParty["bois_transporteur"];
+            $thirdParty["bois_affreteur"] = (bool) $thirdParty["bois_affreteur"];
+            $thirdParty["vrac_fournisseur"] = (bool) $thirdParty["vrac_fournisseur"];
+            $thirdParty["vrac_client"] = (bool) $thirdParty["vrac_client"];
+            $thirdParty["vrac_transporteur"] = (bool) $thirdParty["vrac_transporteur"];
+            $thirdParty["maritime_affreteur"] = (bool) $thirdParty["maritime_affreteur"];
+            $thirdParty["maritime_armateur"] = (bool) $thirdParty["maritime_armateur"];
+            $thirdParty["maritime_courtier"] = (bool) $thirdParty["maritime_courtier"];
+            $thirdParty["non_modifiable"] = (bool) $thirdParty["non_modifiable"];
+            $thirdParty["lie_agence"] = (bool) $thirdParty["lie_agence"];
+            $thirdParty["actif"] = (bool) $thirdParty["actif"];
 
             // Modififaction de l'adresse du logo
-            if ($tiers["logo"]) {
-                $tiers["logo"] = $_ENV["LOGOS_URL"] . "/" . $tiers["logo"];
+            if ($thirdParty["logo"]) {
+                $thirdParty["logo"] = $_ENV["LOGOS_URL"] . "/" . $thirdParty["logo"];
             }
         }
 
-        $donnees = $liste_tiers;
-
-        return $donnees;
+        return $thirdParties;
     }
 
     /**
@@ -73,40 +68,35 @@ class TiersModel extends Model
      */
     public function read($id): ?array
     {
-        $statement =
-            "SELECT *
-        FROM tiers
-        WHERE id = :id";
+        $statement = "SELECT * FROM tiers WHERE id = :id";
 
-        $requete_tiers = $this->mysql->prepare($statement);
-        $requete_tiers->execute(["id" => $id]);
-        $tiers = $requete_tiers->fetch();
+        $thirdPartyRequest = $this->mysql->prepare($statement);
+        $thirdPartyRequest->execute(["id" => $id]);
+        $thirdParty = $thirdPartyRequest->fetch();
 
-        if (!$tiers) return null;
+        if (!$thirdParty) return null;
 
-        $tiers["id"] = (int) $tiers["id"];
-        $tiers["bois_fournisseur"] = (bool) $tiers["bois_fournisseur"];
-        $tiers["bois_client"] = (bool) $tiers["bois_client"];
-        $tiers["bois_transporteur"] = (bool) $tiers["bois_transporteur"];
-        $tiers["vrac_fournisseur"] = (bool) $tiers["vrac_fournisseur"];
-        $tiers["bois_affreteur"] = (bool) $tiers["bois_affreteur"];
-        $tiers["vrac_client"] = (bool) $tiers["vrac_client"];
-        $tiers["vrac_transporteur"] = (bool) $tiers["vrac_transporteur"];
-        $tiers["maritime_affreteur"] = (bool) $tiers["maritime_affreteur"];
-        $tiers["maritime_armateur"] = (bool) $tiers["maritime_armateur"];
-        $tiers["maritime_courtier"] = (bool) $tiers["maritime_courtier"];
-        $tiers["non_modifiable"] = (bool) $tiers["non_modifiable"];
-        $tiers["lie_agence"] = (bool) $tiers["lie_agence"];
-        $tiers["actif"] = (bool) $tiers["actif"];
+        $thirdParty["id"] = (int) $thirdParty["id"];
+        $thirdParty["bois_fournisseur"] = (bool) $thirdParty["bois_fournisseur"];
+        $thirdParty["bois_client"] = (bool) $thirdParty["bois_client"];
+        $thirdParty["bois_transporteur"] = (bool) $thirdParty["bois_transporteur"];
+        $thirdParty["vrac_fournisseur"] = (bool) $thirdParty["vrac_fournisseur"];
+        $thirdParty["bois_affreteur"] = (bool) $thirdParty["bois_affreteur"];
+        $thirdParty["vrac_client"] = (bool) $thirdParty["vrac_client"];
+        $thirdParty["vrac_transporteur"] = (bool) $thirdParty["vrac_transporteur"];
+        $thirdParty["maritime_affreteur"] = (bool) $thirdParty["maritime_affreteur"];
+        $thirdParty["maritime_armateur"] = (bool) $thirdParty["maritime_armateur"];
+        $thirdParty["maritime_courtier"] = (bool) $thirdParty["maritime_courtier"];
+        $thirdParty["non_modifiable"] = (bool) $thirdParty["non_modifiable"];
+        $thirdParty["lie_agence"] = (bool) $thirdParty["lie_agence"];
+        $thirdParty["actif"] = (bool) $thirdParty["actif"];
 
         // Modififaction de l'adresse du logo
-        if ($tiers["logo"]) {
-            $tiers["logo"] = $_ENV["LOGOS_URL"] . "/" . $tiers["logo"];
+        if ($thirdParty["logo"]) {
+            $thirdParty["logo"] = $_ENV["LOGOS_URL"] . "/" . $thirdParty["logo"];
         }
 
-        $donnees = $tiers;
-
-        return $donnees;
+        return $thirdParty;
     }
 
     /**
@@ -119,41 +109,41 @@ class TiersModel extends Model
     public function create(array $input): array
     {
         // Enregistrement du logo dans le dossier images
-        $logo = $this->enregistrerLogo($input["logo"] ?? NULL) ?: NULL;
+        $logo = $this->saveLogo($input["logo"] ?? NULL) ?: NULL;
 
         $statement =
             "INSERT INTO tiers
-        VALUES(
-          NULL,
-          :nom_court,
-          :nom_complet,
-          :adresse_ligne_1,
-          :adresse_ligne_2,
-          :cp,
-          :ville,
-          :pays,
-          :telephone,
-          :commentaire,
-          :bois_fournisseur,
-          :bois_client,
-          :bois_transporteur,
-          :bois_affreteur,
-          :vrac_fournisseur,
-          :vrac_client,
-          :vrac_transporteur,
-          :maritime_armateur,
-          :maritime_affreteur,
-          :maritime_courtier,
-          :non_modifiable,
-          :lie_agence,
-          :logo,
-          :actif
-        )";
+            VALUES(
+                NULL,
+                :nom_court,
+                :nom_complet,
+                :adresse_ligne_1,
+                :adresse_ligne_2,
+                :cp,
+                :ville,
+                :pays,
+                :telephone,
+                :commentaire,
+                :bois_fournisseur,
+                :bois_client,
+                :bois_transporteur,
+                :bois_affreteur,
+                :vrac_fournisseur,
+                :vrac_client,
+                :vrac_transporteur,
+                :maritime_armateur,
+                :maritime_affreteur,
+                :maritime_courtier,
+                :non_modifiable,
+                :lie_agence,
+                :logo,
+                :actif
+            )";
 
-        $requete = $this->mysql->prepare($statement);
+        $request = $this->mysql->prepare($statement);
 
         $this->mysql->beginTransaction();
-        $requete->execute([
+        $request->execute([
             'nom_court' => $input["nom_court"] ?: $input["nom_complet"],
             'nom_complet' => $input["nom_complet"],
             'adresse_ligne_1' => $input["adresse_ligne_1"],
@@ -179,10 +169,10 @@ class TiersModel extends Model
             'actif' => 1,
         ]);
 
-        $last_id = $this->mysql->lastInsertId();
+        $lastInsertId = $this->mysql->lastInsertId();
         $this->mysql->commit();
 
-        return $this->read($last_id);
+        return $this->read($lastInsertId);
     }
 
     /**
@@ -196,40 +186,40 @@ class TiersModel extends Model
     public function update($id, array $input): array
     {
         // Enregistrement du logo dans le dossier images
-        $logo = $this->enregistrerLogo($input["logo"]);
+        $logo = $this->saveLogo($input["logo"]);
 
         // Si un logo a été ajouté, l'utiliser, sinon, ne pas changer
-        $statement_logo = $logo !== false ? ":logo" : "logo";
+        $logoStatement = $logo !== false ? ":logo" : "logo";
 
         $statement =
             "UPDATE tiers
-        SET
-          nom_court = :nom_court,
-          nom_complet = :nom_complet,
-          adresse_ligne_1 = :adresse_ligne_1,
-          adresse_ligne_2 = :adresse_ligne_2,
-          cp = :cp,
-          ville = :ville,
-          pays = :pays,
-          telephone = :telephone,
-          commentaire = :commentaire,
-          bois_fournisseur = :bois_fournisseur,
-          bois_client = :bois_client,
-          bois_transporteur = :bois_transporteur,
-          bois_affreteur = :bois_affreteur,
-          vrac_fournisseur = :vrac_fournisseur,
-          vrac_client = :vrac_client,
-          vrac_transporteur = :vrac_transporteur,
-          maritime_armateur = :maritime_armateur,
-          maritime_affreteur = :maritime_affreteur,
-          maritime_courtier = :maritime_courtier,
-          logo = $statement_logo,
-          actif = :actif
-        WHERE id = :id";
+            SET
+                nom_court = :nom_court,
+                nom_complet = :nom_complet,
+                adresse_ligne_1 = :adresse_ligne_1,
+                adresse_ligne_2 = :adresse_ligne_2,
+                cp = :cp,
+                ville = :ville,
+                pays = :pays,
+                telephone = :telephone,
+                commentaire = :commentaire,
+                bois_fournisseur = :bois_fournisseur,
+                bois_client = :bois_client,
+                bois_transporteur = :bois_transporteur,
+                bois_affreteur = :bois_affreteur,
+                vrac_fournisseur = :vrac_fournisseur,
+                vrac_client = :vrac_client,
+                vrac_transporteur = :vrac_transporteur,
+                maritime_armateur = :maritime_armateur,
+                maritime_affreteur = :maritime_affreteur,
+                maritime_courtier = :maritime_courtier,
+                logo = $logoStatement,
+                actif = :actif
+            WHERE id = :id";
 
-        $requete = $this->mysql->prepare($statement);
+        $request = $this->mysql->prepare($statement);
 
-        $champs = [
+        $fields = [
             'nom_court' => $input["nom_court"] ?: $input["nom_complet"],
             'nom_complet' => $input["nom_complet"],
             'adresse_ligne_1' => $input["adresse_ligne_1"],
@@ -254,10 +244,10 @@ class TiersModel extends Model
         ];
 
         if ($logo !== false) {
-            $champs["logo"] = $logo;
+            $fields["logo"] = $logo;
         }
 
-        $requete->execute($champs);
+        $request->execute($fields);
 
         return $this->read($id);
     }
@@ -271,66 +261,66 @@ class TiersModel extends Model
      */
     public function delete(int $id): bool
     {
-        $nombre_rdv = (new NombreRdvModel())->read($id)["nombre_rdv"];
-        if ($nombre_rdv > 0) {
-            throw new \Exception("Le tiers est concerné par $nombre_rdv rdv. Impossible de le supprimer.");
+        $numberOfAppointments = (new NombreRdvModel())->read($id)["nombre_rdv"];
+        if ($numberOfAppointments > 0) {
+            throw new ClientException("Le tiers est concerné par $numberOfAppointments rdv. Impossible de le supprimer.");
         }
 
-        $requete = $this->mysql->prepare("DELETE FROM tiers WHERE id = :id");
-        $succes = $requete->execute(["id" => $id]);
+        $deleteRequest = $this->mysql->prepare("DELETE FROM tiers WHERE id = :id");
+        $isDeleted = $deleteRequest->execute(["id" => $id]);
 
-        return $succes;
+        return $isDeleted;
     }
 
     /**
      * Enregistrer un logo dans le dossier images
      * et retourne le hash du fichier.
      * 
-     * @param array|string|null $fichier Données du fichier (null pour effacement du logo existant).
+     * @param array|string|null $file Données du fichier (null pour effacement du logo existant).
      * 
      * @return string|null|false Nom de fichier du logo si l'enregistrement a réussi, `false` sinon.
      */
-    private function enregistrerLogo(array|string|null $fichier): string|null|false
+    private function saveLogo(array|string|null $file): string|null|false
     {
         try {
             // Conservation du fichier existant
-            if (gettype($fichier) === "string") {
+            if (gettype($file) === "string") {
                 return false;
             }
 
             // Suppression du fichier existant
-            if ($fichier === null) {
+            if ($file === null) {
                 return null;
             }
 
             // Récupérer les données de l'image
             // $fichier["data"] = "data:{type mime};base64,{données}"
-            $data = explode(",", $fichier["data"])[1];
+            $data = explode(",", $file["data"])[1];
 
             // Création de l'image depuis les données
-            $image_string = base64_decode($data);
+            $imageString = base64_decode($data);
             $image = imagecreatefromstring(base64_decode($data));
 
             if (!$image) {
-                throw new \Exception("Logo : Erreur dans la création de l'image (imagecreatefromstring)");
+                throw new ServerException("Logo : Erreur dans la création de l'image (imagecreatefromstring)");
             }
 
 
             // Redimensionnement
             define("MAX_HEIGHT", 500); // Hauteur maximale de l'image à enregistrer.
 
-            [$width, $height] = getimagesizefromstring($image_string);
+            [$width, $height] = getimagesizefromstring($imageString);
             $percent = min(MAX_HEIGHT / $height, 1);
-            $new_width = (int) ($width * $percent);
-            $image_resized = imagescale($image, $new_width);
+            $newWidth = (int) ($width * $percent);
+            $imageResized = imagescale($image, $newWidth);
 
 
             // Enregistrement
             $hash = hash("md5", $data);
             $filename = $hash . ".webp";
             $filepath = LOGOS . "/$filename";
-            if (imagewebp($image_resized, $filepath, 100) === false) {
-                throw new \Exception("Erreur dans l'enregistrement du logo (imagewebp)");
+            if (imagewebp($imageResized, $filepath, 100) === false) {
+                throw new ServerException("Erreur dans l'enregistrement du logo (imagewebp)");
             }
 
             return $filename;

@@ -10,7 +10,7 @@ class RequestLogger
 {
     public static function log(): void
     {
-        $log_file = "/app/log/requests.log";
+        $logFile = "/app/log/requests.log";
 
         $mysql = new MySQL();
 
@@ -39,7 +39,7 @@ class RequestLogger
             ) . PHP_EOL;
 
         try {
-            $fh = fopen($log_file, "a");
+            $fh = fopen($logFile, "a");
             fwrite($fh, $data);
         } catch (\Throwable $e) {
             ErrorLogger::log($e);

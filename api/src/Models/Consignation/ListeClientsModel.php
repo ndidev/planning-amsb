@@ -20,12 +20,10 @@ class ListeClientsModel extends Model
             AND client <> ''
             ORDER BY client ASC";
 
-        $requete = $this->mysql->query($statement);
+        $request = $this->mysql->query($statement);
 
-        $clients = $requete->fetchAll(\PDO::FETCH_COLUMN);
+        $customersNames = $request->fetchAll(\PDO::FETCH_COLUMN);
 
-        $donnees = $clients;
-
-        return $donnees;
+        return $customersNames;
     }
 }

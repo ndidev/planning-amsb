@@ -41,17 +41,17 @@ class ListeClientsController extends Controller
     }
 
     /**
-     * Renvoie la liste des marchandises utilisées en consignation.
+     * Renvoie la liste des clients utilisés en consignation.
      */
     public function readAll()
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
-        $donnees = $this->model->readAll();
+        $customers = $this->model->readAll();
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($customers);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -61,7 +61,7 @@ class ListeClientsController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($customers))
             ->setHeaders($this->headers);
     }
 }

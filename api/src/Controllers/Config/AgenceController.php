@@ -52,9 +52,9 @@ class AgenceController extends Controller
      */
     public function readAll()
     {
-        $donnees = $this->model->readAll();
+        $agencies = $this->model->readAll();
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($agencies);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -64,7 +64,7 @@ class AgenceController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($agencies))
             ->setHeaders($this->headers);
     }
 
@@ -73,20 +73,20 @@ class AgenceController extends Controller
      * 
      * @param string $service Service de l'agence à récupérer.
      */
-    public function read(string $service, ?bool $dry_run = false)
+    public function read(string $service, ?bool $dryRun = false)
     {
-        $donnees = $this->model->read($service);
+        $agency = $this->model->read($service);
 
-        if (!$donnees && !$dry_run) {
+        if (!$agency && !$dryRun) {
             $this->response->setCode(404);
             return;
         }
 
-        if ($dry_run) {
-            return $donnees;
+        if ($dryRun) {
+            return $agency;
         }
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($agency);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -96,7 +96,7 @@ class AgenceController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($agency))
             ->setHeaders($this->headers);
     }
 
@@ -114,13 +114,13 @@ class AgenceController extends Controller
 
         $input = $this->request->body;
 
-        $donnees = $this->model->update($service, $input);
+        $updatedAgency = $this->model->update($service, $input);
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($updatedAgency))
             ->setHeaders($this->headers)
             ->flush();
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $service, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $service, $updatedAgency);
     }
 }

@@ -23,24 +23,22 @@ class ProduitModel extends Model
      */
     public function readAll(): array
     {
-        $statement_produits = "SELECT * FROM vrac_produits ORDER BY nom";
-        $statement_qualites = "SELECT * FROM vrac_qualites ORDER BY nom";
+        $productsStatement = "SELECT * FROM vrac_produits ORDER BY nom";
+        $qualitiesStatement = "SELECT * FROM vrac_qualites ORDER BY nom";
 
         // Produits
-        $requete_produits = $this->mysql->query($statement_produits);
-        $produits = $requete_produits->fetchAll();
+        $productsRequest = $this->mysql->query($productsStatement);
+        $products = $productsRequest->fetchAll();
 
         // Qualités
-        $requete_qualites = $this->mysql->query($statement_qualites);
-        $qualites = $requete_qualites->fetchAll();
+        $qualititesRequest = $this->mysql->query($qualitiesStatement);
+        $qualities = $qualititesRequest->fetchAll();
 
-        foreach ($produits as &$produit) {
-            $produit["qualites"] = array_values(array_filter($qualites, fn ($qualite) => $qualite["produit"] === $produit["id"]));
+        foreach ($products as &$product) {
+            $product["qualites"] = array_values(array_filter($qualities, fn($qualite) => $qualite["produit"] === $product["id"]));
         }
 
-        $donnees = $produits;
-
-        return $donnees;
+        return $products;
     }
 
     /**
@@ -52,36 +50,22 @@ class ProduitModel extends Model
      */
     public function read($id): ?array
     {
-        $statement_produit =
-            "SELECT
-        id,
-        nom,
-        couleur,
-        unite
-      FROM vrac_produits
-      WHERE id = :id";
-
-        $statement_qualites =
-            "SELECT *
-        FROM vrac_qualites
-        WHERE produit = :produit
-        ORDER BY nom";
+        $productStatement = "SELECT * FROM vrac_produits WHERE id = :id";
+        $qualititesStatement = "SELECT * FROM vrac_qualites WHERE produit = :produit ORDER BY nom";
 
         // Produit
-        $requete_produit = $this->mysql->prepare($statement_produit);
-        $requete_produit->execute(["id" => $id]);
-        $produit = $requete_produit->fetch();
+        $productRequest = $this->mysql->prepare($productStatement);
+        $productRequest->execute(["id" => $id]);
+        $product = $productRequest->fetch();
 
-        if (!$produit) return null;
+        if (!$product) return null;
 
         // Qualités
-        $requete_qualites = $this->mysql->prepare($statement_qualites);
-        $requete_qualites->execute(["produit" => $id]);
-        $produit["qualites"] = $requete_qualites->fetchAll();
+        $qualitiesRequest = $this->mysql->prepare($qualititesStatement);
+        $qualitiesRequest->execute(["produit" => $id]);
+        $product["qualites"] = $qualitiesRequest->fetchAll();
 
-        $donnees = $produit;
-
-        return $donnees;
+        return $product;
     }
 
     /**
@@ -93,47 +77,47 @@ class ProduitModel extends Model
      */
     public function create(array $input): array
     {
-        $statement_produit =
+        $productStatement =
             "INSERT INTO vrac_produits
-        VALUES(
-          NULL,
-          :nom,
-          :couleur,
-          :unite
-        )";
+            VALUES(
+                NULL,
+                :nom,
+                :couleur,
+                :unite
+            )";
 
-        $statement_qualites =
+        $insertQualityStatement =
             "INSERT INTO vrac_qualites
-        VALUES(
-          NULL,
-          :produit,
-          :nom,
-          :couleur
-        )";
+            VALUES(
+                NULL,
+                :produit,
+                :nom,
+                :couleur
+            )";
 
-        $requete_produit = $this->mysql->prepare($statement_produit);
+        $productRequest = $this->mysql->prepare($productStatement);
 
         $this->mysql->beginTransaction();
-        $requete_produit->execute([
+        $productRequest->execute([
             'nom' => $input["nom"],
             'couleur' => $input["couleur"],
             'unite' => $input["unite"]
         ]);
-        $last_id = $this->mysql->lastInsertId();
+        $lastInsertId = $this->mysql->lastInsertId();
         $this->mysql->commit();
 
         // Qualités
-        $requete_qualites = $this->mysql->prepare($statement_qualites);
-        $qualites = $input["qualites"] ?? [];
-        foreach ($qualites as $qualite) {
-            $requete_qualites->execute([
-                'produit' => $last_id,
-                'nom' => $qualite["nom"],
-                'couleur' => $qualite["couleur"]
+        $insertQualityRequest = $this->mysql->prepare($insertQualityStatement);
+        $qualities = $input["qualites"] ?? [];
+        foreach ($qualities as $quality) {
+            $insertQualityRequest->execute([
+                'produit' => $lastInsertId,
+                'nom' => $quality["nom"],
+                'couleur' => $quality["couleur"]
             ]);
         }
 
-        return $this->read($last_id);
+        return $this->read($lastInsertId);
     }
 
     /**
@@ -146,32 +130,32 @@ class ProduitModel extends Model
      */
     public function update($id, array $input): array
     {
-        $statement_produit =
+        $productStatement =
             "UPDATE vrac_produits
-        SET
-          nom = :nom,
-          couleur = :couleur,
-          unite = :unite
-        WHERE id = :id";
+            SET
+                nom = :nom,
+                couleur = :couleur,
+                unite = :unite
+            WHERE id = :id";
 
-        $statement_qualites_ajout =
+        $insertQualityStatement =
             "INSERT INTO vrac_qualites
-        VALUES(
-          NULL,
-          :produit,
-          :nom,
-          :couleur
-        )";
+            VALUES(
+                NULL,
+                :produit,
+                :nom,
+                :couleur
+            )";
 
-        $statement_qualites_modif =
+        $updateQualityStatement =
             "UPDATE vrac_qualites
-        SET
-          nom = :nom,
-          couleur = :couleur
-        WHERE id = :id";
+            SET
+                nom = :nom,
+                couleur = :couleur
+            WHERE id = :id";
 
-        $requete_produit = $this->mysql->prepare($statement_produit);
-        $requete_produit->execute([
+        $productRequest = $this->mysql->prepare($productStatement);
+        $productRequest->execute([
             'nom' => $input["nom"],
             'couleur' => $input["couleur"],
             'unite' => $input["unite"],
@@ -182,42 +166,33 @@ class ProduitModel extends Model
         // Suppression qualités
         // !! SUPPRESSION A LAISSER *AVANT* L'AJOUT DE QUALITE POUR EVITER SUPPRESSION IMMEDIATE APRES AJOUT !!
         // Comparaison du tableau transmis par POST avec la liste existante des qualités pour le produit concerné
-        $requete_qualites = $this->mysql->prepare("SELECT id FROM vrac_qualites WHERE produit = :produit");
-        $requete_qualites->execute(['produit' => $id]);
-        $ids_qualites_existantes = [];
-        while ($qualite = $requete_qualites->fetch()) {
-            $ids_qualites_existantes[] = $qualite['id'];
-        }
+        $existingQualitiesIdsRequest = $this->mysql->prepare("SELECT id FROM vrac_qualites WHERE produit = :produit");
+        $existingQualitiesIdsRequest->execute(['produit' => $id]);
+        $existingQualitiesIds = $existingQualitiesIdsRequest->fetchAll(\PDO::FETCH_COLUMN);
 
-        $ids_qualites_transmises = [];
-        if (isset($input['qualites'])) {
-            foreach ($input["qualites"] as $qualite) {
-                $ids_qualites_transmises[] = $qualite["id"];
-            }
-        }
-        $ids_qualites_a_supprimer = array_diff($ids_qualites_existantes, $ids_qualites_transmises);
+        $submittedQualitiesIds = array_map(fn(array $qualite) => $qualite["id"], $input["qualites"] ?? []);
+        $qualitiesIdsToBeDeleted = array_diff($existingQualitiesIds, $submittedQualitiesIds);
 
-        $requete_supprimer = $this->mysql->prepare("DELETE FROM vrac_qualites WHERE id = :id");
-        foreach ($ids_qualites_a_supprimer as $id_suppr) {
-            $requete_supprimer->execute(['id' => $id_suppr]);
+        if (count($qualitiesIdsToBeDeleted) > 0) {
+            $this->mysql->exec("DELETE FROM vrac_qualites WHERE id IN (" . implode(",", $qualitiesIdsToBeDeleted) . ")");
         }
 
         // Ajout et modification qualités
-        $requete_qualites_ajout = $this->mysql->prepare($statement_qualites_ajout);
-        $requete_qualites_modif = $this->mysql->prepare($statement_qualites_modif);
-        $qualites = $input["qualites"] ?? [];
-        foreach ($qualites as $qualite) {
-            if ($qualite["id"]) {
-                $requete_qualites_modif->execute([
-                    "nom" => $qualite["nom"],
-                    "couleur" => $qualite["couleur"],
-                    "id" => $qualite["id"]
+        $insertQualityRequest = $this->mysql->prepare($insertQualityStatement);
+        $updateQualityRequest = $this->mysql->prepare($updateQualityStatement);
+        $qualities = $input["qualites"] ?? [];
+        foreach ($qualities as $quality) {
+            if ($quality["id"]) {
+                $updateQualityRequest->execute([
+                    "nom" => $quality["nom"],
+                    "couleur" => $quality["couleur"],
+                    "id" => $quality["id"]
                 ]);
             } else {
-                $requete_qualites_ajout->execute([
+                $insertQualityRequest->execute([
                     "produit" => $id,
-                    "nom" => $qualite["nom"],
-                    "couleur" => $qualite["couleur"]
+                    "nom" => $quality["nom"],
+                    "couleur" => $quality["couleur"]
                 ]);
             }
         }
@@ -234,9 +209,9 @@ class ProduitModel extends Model
      */
     public function delete(int $id): bool
     {
-        $requete = $this->mysql->prepare("DELETE FROM vrac_produits WHERE id = :id");
-        $succes = $requete->execute(["id" => $id]);
+        $deleteRequest = $this->mysql->prepare("DELETE FROM vrac_produits WHERE id = :id");
+        $isDeleted = $deleteRequest->execute(["id" => $id]);
 
-        return $succes;
+        return $isDeleted;
     }
 }

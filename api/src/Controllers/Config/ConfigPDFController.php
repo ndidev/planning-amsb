@@ -61,16 +61,16 @@ class ConfigPDFController extends Controller
      */
     public function readAll()
     {
-        $donnees = $this->model->readAll();
+        $pdfConfigs = $this->model->readAll();
 
         // Filtre sur les catégories autorisées pour l'utilisateur
-        foreach ($donnees as $key => $ligne) {
-            if ($this->user->can_access($ligne["module"]) === false) {
-                unset($donnees[$key]);
+        foreach ($pdfConfigs as $key => $ligne) {
+            if ($this->user->canAccess($ligne["module"]) === false) {
+                unset($pdfConfigs[$key]);
             }
         }
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($pdfConfigs);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -80,7 +80,7 @@ class ConfigPDFController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($pdfConfigs))
             ->setHeaders($this->headers);
     }
 
@@ -88,28 +88,28 @@ class ConfigPDFController extends Controller
      * Récupère une configuration PDF.
      * 
      * @param int  $id      id de la configuration à récupérer.
-     * @param bool $dry_run Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param bool $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(int $id, ?bool $dry_run = false)
+    public function read(int $id, ?bool $dryRun = false)
     {
-        $donnees = $this->model->read($id);
+        $pdfConfig = $this->model->read($id);
 
-        if (!$donnees && !$dry_run) {
+        if (!$pdfConfig && !$dryRun) {
             $this->response->setCode(404);
             return;
         }
 
         if (
-            $donnees && !$this->user->can_access($donnees["module"])
+            $pdfConfig && !$this->user->canAccess($pdfConfig["module"])
         ) {
             throw new AccessException();
         }
 
-        if ($dry_run) {
-            return $donnees;
+        if ($dryRun) {
+            return $pdfConfig;
         }
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($pdfConfig);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -119,7 +119,7 @@ class ConfigPDFController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($pdfConfig))
             ->setHeaders($this->headers);
     }
 
@@ -131,24 +131,24 @@ class ConfigPDFController extends Controller
         $input = $this->request->body;
 
         if (
-            !$this->user->can_access($this->module)
-            || !$this->user->can_edit($input["module"])
+            !$this->user->canAccess($this->module)
+            || !$this->user->canEdit($input["module"])
         ) {
             throw new AccessException();
         }
 
-        $donnees = $this->model->create($input);
+        $newPdfConfig = $this->model->create($input);
 
-        $id = $donnees["id"];
+        $id = $newPdfConfig["id"];
 
         $this->headers["Location"] = $_ENV["API_URL"] . "/pdf/configs/$id";
 
         $this->response
             ->setCode(201)
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($newPdfConfig))
             ->setHeaders($this->headers);
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $newPdfConfig);
     }
 
     /**
@@ -168,20 +168,20 @@ class ConfigPDFController extends Controller
         $input = $this->request->body;
 
         if (
-            !$this->user->can_access($this->module)
-            || !$this->user->can_edit($current["module"])
-            || !$this->user->can_edit($input["module"])
+            !$this->user->canAccess($this->module)
+            || !$this->user->canEdit($current["module"])
+            || !$this->user->canEdit($input["module"])
         ) {
             throw new AccessException();
         }
 
-        $donnees = $this->model->update($id, $input);
+        $updatedPdfConfig = $this->model->update($id, $input);
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($updatedPdfConfig))
             ->setHeaders($this->headers);
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $updatedPdfConfig);
     }
 
     /**
@@ -199,15 +199,15 @@ class ConfigPDFController extends Controller
         }
 
         if (
-            !$this->user->can_access($this->module)
-            || !$this->user->can_edit($current["module"])
+            !$this->user->canAccess($this->module)
+            || !$this->user->canEdit($current["module"])
         ) {
             throw new AccessException();
         }
 
-        $succes = $this->model->delete($id);
+        $success = $this->model->delete($id);
 
-        if ($succes) {
+        if ($success) {
             $this->response->setCode(204);
             $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
         } else {

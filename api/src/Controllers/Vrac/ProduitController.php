@@ -61,13 +61,13 @@ class ProduitController extends Controller
    */
   public function readAll()
   {
-    if (!$this->user->can_access($this->module)) {
+    if (!$this->user->canAccess($this->module)) {
       throw new AccessException();
     }
 
-    $donnees = $this->model->readAll();
+    $bulkProducts = $this->model->readAll();
 
-    $etag = ETag::get($donnees);
+    $etag = ETag::get($bulkProducts);
 
     if ($this->request->etag === $etag) {
       $this->response->setCode(304);
@@ -77,7 +77,7 @@ class ProduitController extends Controller
     $this->headers["ETag"] = $etag;
 
     $this->response
-      ->setBody(json_encode($donnees))
+      ->setBody(json_encode($bulkProducts))
       ->setHeaders($this->headers);
   }
 
@@ -85,26 +85,26 @@ class ProduitController extends Controller
    * Récupère un produit vrac.
    * 
    * @param int  $id      id du produit à récupérer.
-   * @param bool $dry_run Récupérer la ressource sans renvoyer la réponse HTTP.
+   * @param bool $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
    */
-  public function read(int $id, ?bool $dry_run = false)
+  public function read(int $id, ?bool $dryRun = false)
   {
-    if (!$this->user->can_access($this->module)) {
+    if (!$this->user->canAccess($this->module)) {
       throw new AccessException();
     }
 
-    $donnees = $this->model->read($id);
+    $bulkProduct = $this->model->read($id);
 
-    if (!$donnees && !$dry_run) {
+    if (!$bulkProduct && !$dryRun) {
       $this->response->setCode(404);
       return;
     }
 
-    if ($dry_run) {
-      return $donnees;
+    if ($dryRun) {
+      return $bulkProduct;
     }
 
-    $etag = ETag::get($donnees);
+    $etag = ETag::get($bulkProduct);
 
     if ($this->request->etag === $etag) {
       $this->response->setCode(304);
@@ -114,7 +114,7 @@ class ProduitController extends Controller
     $this->headers["ETag"] = $etag;
 
     $this->response
-      ->setBody(json_encode($donnees))
+      ->setBody(json_encode($bulkProduct))
       ->setHeaders($this->headers);
   }
 
@@ -123,25 +123,25 @@ class ProduitController extends Controller
    */
   public function create()
   {
-    if (!$this->user->can_edit($this->module)) {
+    if (!$this->user->canEdit($this->module)) {
       throw new AccessException();
     }
 
     $input = $this->request->body;
 
-    $donnees = $this->model->create($input);
+    $newBulkProduct = $this->model->create($input);
 
-    $id = $donnees["id"];
+    $id = $newBulkProduct["id"];
 
     $this->headers["Location"] = $_ENV["API_URL"] . "/vrac/produits/$id";
 
     $this->response
       ->setCode(201)
-      ->setBody(json_encode($donnees))
+      ->setBody(json_encode($newBulkProduct))
       ->setHeaders($this->headers)
       ->flush();
 
-    $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $donnees);
+    $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $newBulkProduct);
   }
 
   /**
@@ -151,7 +151,7 @@ class ProduitController extends Controller
    */
   public function update(int $id)
   {
-    if (!$this->user->can_edit($this->module)) {
+    if (!$this->user->canEdit($this->module)) {
       throw new AccessException();
     }
 
@@ -162,14 +162,14 @@ class ProduitController extends Controller
 
     $input = $this->request->body;
 
-    $donnees = $this->model->update($id, $input);
+    $updatedBulkProduct = $this->model->update($id, $input);
 
     $this->response
-      ->setBody(json_encode($donnees))
+      ->setBody(json_encode($updatedBulkProduct))
       ->setHeaders($this->headers)
       ->flush();
 
-    $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $donnees);
+    $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $updatedBulkProduct);
   }
 
   /**
@@ -179,7 +179,7 @@ class ProduitController extends Controller
    */
   public function delete(int $id)
   {
-    if (!$this->user->can_edit($this->module)) {
+    if (!$this->user->canEdit($this->module)) {
       throw new AccessException();
     }
 
@@ -188,9 +188,9 @@ class ProduitController extends Controller
       return;
     }
 
-    $succes = $this->model->delete($id);
+    $success = $this->model->delete($id);
 
-    if ($succes) {
+    if ($success) {
       $this->response->setCode(204)->flush();
       $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
     } else {

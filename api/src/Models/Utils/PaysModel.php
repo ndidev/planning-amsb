@@ -16,19 +16,17 @@ class PaysModel extends Model
     public function readAll(): array
     {
         // Redis
-        $pays = json_decode($this->redis->get($this->redis_ns));
+        $countries = json_decode($this->redis->get($this->redis_ns));
 
-        if (!$pays) {
+        if (!$countries) {
             $statement = "SELECT * FROM utils_pays ORDER BY nom";
 
-            $pays = $this->mysql->query($statement)->fetchAll();
+            $countries = $this->mysql->query($statement)->fetchAll();
 
-            $this->redis->set($this->redis_ns, json_encode($pays));
+            $this->redis->set($this->redis_ns, json_encode($countries));
         }
 
-        $donnees = $pays;
-
-        return $donnees;
+        return $countries;
     }
 
     /**
@@ -40,21 +38,15 @@ class PaysModel extends Model
      */
     public function read($iso): ?array
     {
-        $statement =
-            "SELECT *
-        FROM utils_pays
-        WHERE iso = :iso";
+        $statement = "SELECT * FROM utils_pays WHERE iso = :iso";
 
-        $requete = $this->mysql->prepare($statement);
-        $requete->execute(["iso" => $iso]);
-        $pays = $requete->fetch();
+        $request = $this->mysql->prepare($statement);
+        $request->execute(["iso" => $iso]);
+        $country = $request->fetch();
 
-        if (!$pays) return null;
+        if (!$country) return null;
 
-
-        $donnees = $pays;
-
-        return $donnees;
+        return $country;
     }
 
     /**
@@ -66,27 +58,22 @@ class PaysModel extends Model
      */
     public function create(array $input): array
     {
-        $statement =
-            "INSERT INTO utils_pays
-        VALUES(
-          :iso,
-          :nom
-        )";
+        $statement = "INSERT INTO utils_pays VALUES(:iso, :nom)";
 
-        $requete = $this->mysql->prepare($statement);
+        $request = $this->mysql->prepare($statement);
 
         $this->mysql->beginTransaction();
-        $requete->execute([
+        $request->execute([
             'iso' => $input["iso"],
             'nom' => $input["nom"]
         ]);
 
-        $last_id = $this->mysql->lastInsertId();
+        $lastInsertId = $this->mysql->lastInsertId();
         $this->mysql->commit();
 
         $this->redis->del($this->redis_ns);
 
-        return $this->read($last_id);
+        return $this->read($lastInsertId);
     }
 
     /**
@@ -99,13 +86,10 @@ class PaysModel extends Model
      */
     public function update($iso, array $input): array
     {
-        $statement =
-            "UPDATE utils_pays
-        SET nom = :nom
-        WHERE iso = :iso";
+        $statement = "UPDATE utils_pays SET nom = :nom WHERE iso = :iso";
 
-        $requete = $this->mysql->prepare($statement);
-        $requete->execute([
+        $request = $this->mysql->prepare($statement);
+        $request->execute([
             'nom' => $input["nom"],
             'iso' => $iso
         ]);
@@ -124,11 +108,11 @@ class PaysModel extends Model
      */
     public function delete($iso): bool
     {
-        $requete = $this->mysql->prepare("DELETE FROM utils_pays WHERE iso = :iso");
-        $succes = $requete->execute(["iso" => $iso]);
+        $request = $this->mysql->prepare("DELETE FROM utils_pays WHERE iso = :iso");
+        $isDeleted = $request->execute(["iso" => $iso]);
 
         $this->redis->del($this->redis_ns);
 
-        return $succes;
+        return $isDeleted;
     }
 }

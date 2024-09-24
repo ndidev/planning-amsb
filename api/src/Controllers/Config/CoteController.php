@@ -51,9 +51,9 @@ class CoteController extends Controller
      */
     public function readAll()
     {
-        $donnees = $this->model->readAll();
+        $heightData = $this->model->readAll();
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($heightData);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -63,27 +63,27 @@ class CoteController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($heightData))
             ->setHeaders($this->headers);
     }
 
     /**
      * Récupère une côte.
      */
-    public function read(string $cote, ?bool $dry_run = false)
+    public function read(string $cote, ?bool $dryRun = false)
     {
-        $donnees = $this->model->read($cote);
+        $heightDatum = $this->model->read($cote);
 
-        if (!$donnees && !$dry_run) {
+        if (!$heightDatum && !$dryRun) {
             $this->response->setCode(404);
             return;
         }
 
-        if ($dry_run) {
-            return $donnees;
+        if ($dryRun) {
+            return $heightDatum;
         }
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($heightDatum);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -93,7 +93,7 @@ class CoteController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($heightDatum))
             ->setHeaders($this->headers);
     }
 
@@ -111,13 +111,13 @@ class CoteController extends Controller
 
         $input = $this->request->body;
 
-        $donnees = $this->model->update($cote, $input);
+        $updatedHeightDatum = $this->model->update($cote, $input);
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($updatedHeightDatum))
             ->setHeaders($this->headers)
             ->flush();
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $cote, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $cote, $updatedHeightDatum);
     }
 }

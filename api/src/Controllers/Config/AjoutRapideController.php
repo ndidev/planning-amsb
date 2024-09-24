@@ -61,16 +61,16 @@ class AjoutRapideController extends Controller
      */
     public function readAll()
     {
-        $donnees = $this->model->readAll();
+        $quickAppointments = $this->model->readAll();
 
         // Filtre sur les catégories autorisées pour l'utilisateur
-        foreach ($donnees as $key => $ligne) {
-            if ($this->user->can_access($ligne["module"]) === false) {
-                unset($donnees[$key]);
+        foreach ($quickAppointments as $key => $quickAppointment) {
+            if ($this->user->canAccess($quickAppointment["module"]) === false) {
+                unset($quickAppointments[$key]);
             }
         }
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($quickAppointments);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -80,7 +80,7 @@ class AjoutRapideController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($quickAppointments))
             ->setHeaders($this->headers);
     }
 
@@ -88,28 +88,28 @@ class AjoutRapideController extends Controller
      * Récupère un ajout rapide.
      * 
      * @param int  $id      id de l'ajout rapide à récupérer.
-     * @param bool $dry_run Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param bool $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(int $id, ?bool $dry_run = false)
+    public function read(int $id, ?bool $dryRun = false)
     {
-        $donnees = $this->model->read($id);
+        $quickAppointment = $this->model->read($id);
 
-        if (!$donnees && !$dry_run) {
+        if (!$quickAppointment && !$dryRun) {
             $this->response->setCode(404);
             return;
         }
 
         if (
-            $donnees && !$this->user->can_access($donnees["module"])
+            $quickAppointment && !$this->user->canAccess($quickAppointment["module"])
         ) {
             throw new AccessException();
         }
 
-        if ($dry_run) {
-            return $donnees;
+        if ($dryRun) {
+            return $quickAppointment;
         }
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($quickAppointment);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -119,7 +119,7 @@ class AjoutRapideController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($quickAppointment))
             ->setHeaders($this->headers);
     }
 
@@ -128,25 +128,25 @@ class AjoutRapideController extends Controller
      */
     public function create()
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
         $input = $this->request->body;
 
-        $donnees = $this->model->create($input);
+        $newQuickAppointment = $this->model->create($input);
 
-        $id = $donnees["id"];
+        $id = $newQuickAppointment["id"];
 
         $this->headers["Location"] = $_ENV["API_URL"] . "/ajouts-rapides/bois/$id";
 
         $this->response
             ->setCode(201)
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($newQuickAppointment))
             ->setHeaders($this->headers)
             ->flush();
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $newQuickAppointment);
     }
 
     /**
@@ -166,21 +166,21 @@ class AjoutRapideController extends Controller
         $input = $this->request->body;
 
         if (
-            !$this->user->can_access($this->module)
-            || !$this->user->can_edit($current["module"])
-            || !$this->user->can_edit($input["module"])
+            !$this->user->canAccess($this->module)
+            || !$this->user->canEdit($current["module"])
+            || !$this->user->canEdit($input["module"])
         ) {
             throw new AccessException();
         }
 
-        $donnees = $this->model->update($id, $input);
+        $updatedQuickAppointment = $this->model->update($id, $input);
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($updatedQuickAppointment))
             ->setHeaders($this->headers)
             ->flush();
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $updatedQuickAppointment);
     }
 
     /**
@@ -198,15 +198,15 @@ class AjoutRapideController extends Controller
         }
 
         if (
-            !$this->user->can_access($this->module)
-            || !$this->user->can_edit($current["module"])
+            !$this->user->canAccess($this->module)
+            || !$this->user->canEdit($current["module"])
         ) {
             throw new AccessException();
         }
 
-        $succes = $this->model->delete($id);
+        $success = $this->model->delete($id);
 
-        if ($succes) {
+        if ($success) {
             $this->response->setCode(204)->flush();
             $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
         } else {

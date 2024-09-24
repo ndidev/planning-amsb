@@ -20,12 +20,10 @@ class ListeMarchandisesModel extends Model
             AND marchandise <> ''
             ORDER BY marchandise ASC";
 
-        $requete = $this->mysql->query($statement);
+        $request = $this->mysql->query($statement);
 
-        $marchandises = $requete->fetchAll(\PDO::FETCH_COLUMN);
+        $cargoesNames = $request->fetchAll(\PDO::FETCH_COLUMN);
 
-        $donnees = $marchandises;
-
-        return $donnees;
+        return $cargoesNames;
     }
 }

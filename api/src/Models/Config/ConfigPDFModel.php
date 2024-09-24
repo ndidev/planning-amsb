@@ -15,18 +15,18 @@ class ConfigPDFModel extends Model
     {
         $statement =
             "SELECT
-          id,
-          module,
-          fournisseur,
-          envoi_auto,
-          liste_emails,
-          jours_avant,
-          jours_apres
-        FROM config_pdf";
+                id,
+                module,
+                fournisseur,
+                envoi_auto,
+                liste_emails,
+                jours_avant,
+                jours_apres
+            FROM config_pdf";
 
-        $requete = $this->mysql->query($statement);
+        $request = $this->mysql->query($statement);
 
-        $configs = $requete->fetchAll();
+        $configs = $request->fetchAll();
 
         // Rétablissement des types INT et bool
         array_walk_recursive($configs, function (&$value, $key) {
@@ -37,9 +37,7 @@ class ConfigPDFModel extends Model
             };
         });
 
-        $donnees = $configs;
-
-        return $donnees;
+        return $configs;
     }
 
     /**
@@ -53,21 +51,21 @@ class ConfigPDFModel extends Model
     {
         $statement =
             "SELECT
-          id,
-          module,
-          fournisseur,
-          envoi_auto,
-          liste_emails,
-          jours_avant,
-          jours_apres
-        FROM config_pdf
-        WHERE id = :id";
+                id,
+                module,
+                fournisseur,
+                envoi_auto,
+                liste_emails,
+                jours_avant,
+                jours_apres
+            FROM config_pdf
+            WHERE id = :id";
 
-        $requete = $this->mysql->prepare($statement);
+        $request = $this->mysql->prepare($statement);
 
-        $requete->execute(['id' => $id]);
+        $request->execute(['id' => $id]);
 
-        $config = $requete->fetch();
+        $config = $request->fetch();
 
         if (!$config) return null;
 
@@ -80,9 +78,7 @@ class ConfigPDFModel extends Model
             };
         });
 
-        $donnees = $config;
-
-        return $donnees;
+        return $config;
     }
 
     /**
@@ -96,20 +92,20 @@ class ConfigPDFModel extends Model
     {
         $statement =
             "INSERT INTO config_pdf
-        VALUES(
-          NULL,
-          :module,
-          :fournisseur,
-          :envoi_auto,
-          :liste_emails,
-          :jours_avant,
-          :jours_apres
-        )";
+            VALUES(
+                NULL,
+                :module,
+                :fournisseur,
+                :envoi_auto,
+                :liste_emails,
+                :jours_avant,
+                :jours_apres
+            )";
 
-        $requete = $this->mysql->prepare($statement);
+        $request = $this->mysql->prepare($statement);
 
         $this->mysql->beginTransaction();
-        $requete->execute([
+        $request->execute([
             "module" => $input["module"],
             "fournisseur" => $input["fournisseur"],
             "envoi_auto" => (int) $input["envoi_auto"],
@@ -118,10 +114,10 @@ class ConfigPDFModel extends Model
             "jours_apres" => $input["jours_apres"],
         ]);
 
-        $last_id = $this->mysql->lastInsertId();
+        $lastInsertId = $this->mysql->lastInsertId();
         $this->mysql->commit();
 
-        return $this->read($last_id);
+        return $this->read($lastInsertId);
     }
 
     /**
@@ -136,18 +132,17 @@ class ConfigPDFModel extends Model
     {
         $statement =
             "UPDATE config_pdf
-        SET
-          module = :module,
-          fournisseur = :fournisseur,
-          envoi_auto = :envoi_auto,
-          liste_emails = :liste_emails,
-          jours_avant = :jours_avant,
-          jours_apres = :jours_apres
-        WHERE
-          id = :id";
+            SET
+                module = :module,
+                fournisseur = :fournisseur,
+                envoi_auto = :envoi_auto,
+                liste_emails = :liste_emails,
+                jours_avant = :jours_avant,
+                jours_apres = :jours_apres
+            WHERE id = :id";
 
-        $requete = $this->mysql->prepare($statement);
-        $requete->execute([
+        $request = $this->mysql->prepare($statement);
+        $request->execute([
             "module" => $input["module"],
             "fournisseur" => $input["fournisseur"],
             "envoi_auto" => (int) $input["envoi_auto"],
@@ -169,9 +164,9 @@ class ConfigPDFModel extends Model
      */
     public function delete(int $id): bool
     {
-        $requete = $this->mysql->prepare("DELETE FROM config_pdf WHERE id = :id");
-        $succes = $requete->execute(["id" => $id]);
+        $request = $this->mysql->prepare("DELETE FROM config_pdf WHERE id = :id");
+        $isDeleted = $request->execute(["id" => $id]);
 
-        return $succes;
+        return $isDeleted;
     }
 }

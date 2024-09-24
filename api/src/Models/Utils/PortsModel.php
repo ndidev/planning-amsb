@@ -26,9 +26,7 @@ class PortsModel extends Model
             $this->redis->set($this->redis_ns, json_encode($ports));
         }
 
-        $donnees = $ports;
-
-        return $donnees;
+        return $ports;
     }
 
     /**
@@ -40,20 +38,15 @@ class PortsModel extends Model
      */
     public function read($locode): ?array
     {
-        $statement = "SELECT *
-      FROM utils_ports
-      WHERE locode = :locode";
+        $statement = "SELECT * FROM utils_ports WHERE locode = :locode";
 
-        $requete = $this->mysql->prepare($statement);
-        $requete->execute(["locode" => $locode]);
-        $port = $requete->fetch();
+        $request = $this->mysql->prepare($statement);
+        $request->execute(["locode" => $locode]);
+        $port = $request->fetch();
 
         if (!$port) return null;
 
-
-        $donnees = $port;
-
-        return $donnees;
+        return $port;
     }
 
     /**
@@ -65,16 +58,12 @@ class PortsModel extends Model
      */
     public function create(array $input): array
     {
-        $statement = "INSERT INTO utils_ports
-      VALUES(
-        :locode,
-        :nom
-      )";
+        $statement = "INSERT INTO utils_ports VALUES(:locode, :nom)";
 
-        $requete = $this->mysql->prepare($statement);
+        $request = $this->mysql->prepare($statement);
 
         $this->mysql->beginTransaction();
-        $requete->execute([
+        $request->execute([
             'locode' => $input["locode"],
             'nom' => $input["nom"]
         ]);
@@ -97,12 +86,10 @@ class PortsModel extends Model
      */
     public function update($locode, array $input): array
     {
-        $statement = "UPDATE utils_ports
-      SET nom = :nom
-      WHERE locode = :locode";
+        $statement = "UPDATE utils_ports SET nom = :nom WHERE locode = :locode";
 
-        $requete = $this->mysql->prepare($statement);
-        $requete->execute([
+        $request = $this->mysql->prepare($statement);
+        $request->execute([
             'nom' => $input["nom"],
             'locode' => $locode
         ]);
@@ -121,11 +108,11 @@ class PortsModel extends Model
      */
     public function delete($locode): bool
     {
-        $requete = $this->mysql->prepare("DELETE FROM utils_ports WHERE locode = :locode");
-        $succes = $requete->execute(["locode" => $locode]);
+        $request = $this->mysql->prepare("DELETE FROM utils_ports WHERE locode = :locode");
+        $isDeleted = $request->execute(["locode" => $locode]);
 
         $this->redis->del($this->redis_ns);
 
-        return $succes;
+        return $isDeleted;
     }
 }

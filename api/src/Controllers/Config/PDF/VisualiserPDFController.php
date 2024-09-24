@@ -26,7 +26,7 @@ class VisualiserPDFController extends Controller
 
             case 'HEAD':
             case 'GET':
-                $this->read($this->request->query);
+                $this->getPdfFile($this->request->query);
                 break;
 
             default:
@@ -40,9 +40,9 @@ class VisualiserPDFController extends Controller
      * 
      * @param array $query Détails de la requête HTTP.
      */
-    public function read(array $query)
+    public function getPdfFile(array $query)
     {
-        $donnees = $this->model->visualiser($query);
+        $donnees = $this->model->getPdfAsString($query);
 
         if (!$donnees) {
             $this->response->setCode(404);

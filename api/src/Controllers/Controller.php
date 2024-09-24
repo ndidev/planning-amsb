@@ -90,21 +90,21 @@ abstract class Controller
 
       // Session
       try {
-        $this->user = (new User)->from_session();
+        $this->user = (new User)->identifyFromSession();
       } catch (AuthException) {
         $validSession = false;
       }
 
       // Clé API
       try {
-        $this->user = (new User)->from_api_key();
+        $this->user = (new User)->identifyFromApiKey();
       } catch (AuthException) {
         $validApiKey = false;
       }
 
       // Si aucune des deux authentifications n'est valide
       if (!$validSession && !$validApiKey) {
-        Security::prevent_bruteforce();
+        Security::preventBruteforce();
 
         throw new AuthException("Unauthenticated request.");
       }

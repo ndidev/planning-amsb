@@ -11,32 +11,32 @@ class BandeauInfoModel extends Model
      * 
      * @return array Lignes du bandeau d'infos
      */
-    public function readAll(array $filtre): array
+    public function readAll(array $filter): array
     {
         // Filtre
-        $module = $filtre['module'] ?? "";
-        $pc = $filtre['pc'] ?? "";
-        $tv = $filtre['tv'] ?? "";
+        $module = $filter['module'] ?? "";
+        $pc = $filter['pc'] ?? "";
+        $tv = $filter['tv'] ?? "";
 
-        $filtre_sql = "";
-        $filtre_sql_module = $module === "" ? "" : "module = '$module'";
-        $filtre_sql_pc = $pc === "" ? "" : "pc = $pc";
-        $filtre_sql_tv = $tv === "" ? "" : "tv = $tv";
+        $sqlFilter = "";
+        $sqlModuleFilter = $module === "" ? "" : "module = '$module'";
+        $sqlPcFilter = $pc === "" ? "" : "pc = $pc";
+        $sqlTvFilter = $tv === "" ? "" : "tv = $tv";
 
-        $filtre_sql_array = [];
-        foreach ([$filtre_sql_module, $filtre_sql_pc, $filtre_sql_tv] as $filtre_composante) {
-            if ($filtre_composante !== "") {
-                array_push($filtre_sql_array, $filtre_composante);
+        $sqlFilterArray = [];
+        foreach ([$sqlModuleFilter, $sqlPcFilter, $sqlTvFilter] as $filterPart) {
+            if ($filterPart !== "") {
+                array_push($sqlFilterArray, $filterPart);
             }
         }
-        if ($filtre_sql_array !== []) {
-            $filtre_sql = "WHERE " . join(" AND ", $filtre_sql_array);
+        if ($sqlFilterArray !== []) {
+            $sqlFilter = "WHERE " . join(" AND ", $sqlFilterArray);
         }
 
-        $statement = "SELECT * FROM bandeau_info $filtre_sql";
+        $statement = "SELECT * FROM bandeau_info $sqlFilter";
 
-        $requete = $this->mysql->query($statement);
-        $infos = $requete->fetchAll();
+        $request = $this->mysql->query($statement);
+        $infos = $request->fetchAll();
 
         // Rétablissement des types INT et bool
         array_walk_recursive($infos, function (&$value, $key) {
@@ -47,9 +47,7 @@ class BandeauInfoModel extends Model
             };
         });
 
-        $donnees = $infos;
-
-        return $donnees;
+        return $infos;
     }
 
     /**
@@ -63,9 +61,9 @@ class BandeauInfoModel extends Model
     {
         $statement = "SELECT * FROM bandeau_info WHERE id = :id";
 
-        $requete = $this->mysql->prepare($statement);
-        $requete->execute(["id" => $id]);
-        $infos = $requete->fetch();
+        $request = $this->mysql->prepare($statement);
+        $request->execute(["id" => $id]);
+        $infos = $request->fetch();
 
         if (!$infos) return null;
 
@@ -78,9 +76,7 @@ class BandeauInfoModel extends Model
             };
         });
 
-        $donnees = $infos;
-
-        return $donnees;
+        return $infos;
     }
 
     /**
@@ -92,19 +88,21 @@ class BandeauInfoModel extends Model
      */
     public function create(array $input): array
     {
-        $statement = "INSERT INTO bandeau_info VALUES(
-      NULL,
-      :module,
-      :pc,
-      :tv,
-      :couleur,
-      :message
-      )";
+        $statement =
+            "INSERT INTO bandeau_info
+            VALUES(
+                NULL,
+                :module,
+                :pc,
+                :tv,
+                :couleur,
+                :message
+            )";
 
-        $requete = $this->mysql->prepare($statement);
+        $request = $this->mysql->prepare($statement);
 
         $this->mysql->beginTransaction();
-        $requete->execute([
+        $request->execute([
             'module' => $input["module"],
             'pc' => (int) $input["pc"],
             'tv' => (int) $input["tv"],
@@ -112,10 +110,10 @@ class BandeauInfoModel extends Model
             'message' => substr($input["message"], 0, 255),
         ]);
 
-        $last_id = $this->mysql->lastInsertId();
+        $lastInsertId = $this->mysql->lastInsertId();
         $this->mysql->commit();
 
-        return $this->read($last_id);
+        return $this->read($lastInsertId);
     }
 
     /**
@@ -128,17 +126,18 @@ class BandeauInfoModel extends Model
      */
     public function update($id, array $input): array
     {
-        $statement = "UPDATE bandeau_info
-      SET
-        module = :module,
-        pc = :pc,
-        tv = :tv,
-        couleur = :couleur,
-        message = :message
-      WHERE id = :id";
+        $statement =
+            "UPDATE bandeau_info
+            SET
+                module = :module,
+                pc = :pc,
+                tv = :tv,
+                couleur = :couleur,
+                message = :message
+            WHERE id = :id";
 
-        $requete = $this->mysql->prepare($statement);
-        $requete->execute([
+        $request = $this->mysql->prepare($statement);
+        $request->execute([
             'module' => $input["module"],
             'pc' => (int) $input["pc"],
             'tv' => (int) $input["tv"],
@@ -159,9 +158,9 @@ class BandeauInfoModel extends Model
      */
     public function delete(int $id): bool
     {
-        $requete = $this->mysql->prepare("DELETE FROM bandeau_info WHERE id = :id");
-        $succes = $requete->execute(["id" => $id]);
+        $request = $this->mysql->prepare("DELETE FROM bandeau_info WHERE id = :id");
+        $isDeleted = $request->execute(["id" => $id]);
 
-        return $succes;
+        return $isDeleted;
     }
 }

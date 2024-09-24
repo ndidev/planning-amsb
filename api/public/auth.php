@@ -10,7 +10,7 @@ use App\Core\Exceptions\AppException;
 use App\Core\Logger\ErrorLogger;
 
 
-if (Security::check_if_request_can_be_done() === false) {
+if (Security::checkIfRequestCanBeDone() === false) {
     (new HTTPResponse(429))
         ->addHeader("Retry-After", (string) Security::BLOCKED_IP_TIMEOUT)
         ->setType("text/plain")
@@ -94,9 +94,9 @@ try {
                     ->setBody(json_encode([
                         "uid" => $user->uid,
                         "login" => $user->login,
-                        "nom" => $user->nom,
+                        "nom" => $user->name,
                         "roles" => $user->roles,
-                        "statut" => $user->statut,
+                        "statut" => $user->status,
                     ]))
                     ->send();
             } catch (AccountPendingException $e) {
@@ -127,15 +127,15 @@ try {
                     ->send();
             }
 
-            $user = (new User)->from_session();
+            $user = (new User)->identifyFromSession();
 
             (new HTTPResponse(200))
                 ->setType("json")
                 ->setBody(json_encode([
                     "login" => $user->login,
-                    "nom" => $user->nom,
+                    "nom" => $user->name,
                     "roles" => $user->roles,
-                    "statut" => $user->statut,
+                    "statut" => $user->status,
                 ]))
                 ->send();
             break;
@@ -146,7 +146,7 @@ try {
                 (new HTTPResponse(400))->send();
             }
 
-            (new User)->first_login($_POST["login"], $_POST["password"]);
+            (new User)->initializeAccount($_POST["login"], $_POST["password"]);
 
             (new HTTPResponse(200))->send();
             break;
@@ -169,7 +169,7 @@ try {
             break;
     }
 } catch (AppException $e) {
-    (new HTTPResponse($e->http_status))
+    (new HTTPResponse($e->httpStatus))
         ->setType("text")
         ->setBody($e->getMessage())
         ->send();

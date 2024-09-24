@@ -26,11 +26,11 @@ class EnvoiPDFController extends Controller
 
             case 'HEAD':
             case 'GET':
-                $this->read($this->request->query);
+                $this->getPdfFile($this->request->query);
                 break;
 
             case 'POST':
-                $this->envoyer();
+                $this->sendPdfFileByEmail();
                 break;
 
             default:
@@ -44,16 +44,16 @@ class EnvoiPDFController extends Controller
      * 
      * @param array $query Détails de la requête HTTP.
      */
-    public function read(array $query)
+    public function getPdfFile(array $query)
     {
-        $donnees = $this->model->visualiser($query);
+        $pdfString = $this->model->getPdfAsString($query);
 
-        if (!$donnees) {
+        if (!$pdfString) {
             $this->response->setCode(404);
             return;
         }
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($pdfString);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -65,21 +65,21 @@ class EnvoiPDFController extends Controller
         $this->headers["Content-Disposition"] = "inline";
 
         $this->response
-            ->setBody($donnees)
+            ->setBody($pdfString)
             ->setHeaders($this->headers);
     }
 
     /**
      * Envoi un PDF par e-mail.
      */
-    public function envoyer()
+    public function sendPdfFileByEmail()
     {
         $input = $this->request->body;
 
-        $donnees = $this->model->envoyer($input);
+        $sendingResults = $this->model->sendPdfFileByEmail($input);
 
         $this->response
             ->setCode(200)
-            ->setBody(json_encode($donnees));
+            ->setBody(json_encode($sendingResults));
     }
 }

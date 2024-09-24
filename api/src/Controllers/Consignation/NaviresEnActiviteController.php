@@ -46,9 +46,9 @@ class NaviresEnActiviteController extends Controller
     {
         $input = $this->request->query;
 
-        $donnees = $this->model->readAll($input);
+        $shipsInOps = $this->model->readAll($input);
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($shipsInOps);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -58,7 +58,7 @@ class NaviresEnActiviteController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($shipsInOps))
             ->setHeaders($this->headers);
     }
 }

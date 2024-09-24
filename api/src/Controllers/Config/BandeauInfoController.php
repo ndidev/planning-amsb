@@ -63,17 +63,17 @@ class BandeauInfoController extends Controller
      */
     public function readAll(array $filtre)
     {
-        $donnees = $this->model->readAll($filtre);
+        $bannerEntries = $this->model->readAll($filtre);
 
         // Filtre sur les catégories autorisées pour l'utilisateur
-        $donnees =
+        $bannerEntries =
             array_values(
-                array_filter($donnees, function ($ligne) {
-                    return $this->user->can_access($ligne["module"]);
+                array_filter($bannerEntries, function ($ligne) {
+                    return $this->user->canAccess($ligne["module"]);
                 })
             );
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($bannerEntries);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304)->send();
@@ -83,7 +83,7 @@ class BandeauInfoController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($bannerEntries))
             ->setHeaders($this->headers)
             ->send();
     }
@@ -92,28 +92,28 @@ class BandeauInfoController extends Controller
      * Récupère une ligne du bandeau.
      * 
      * @param int  $id      id de la ligne à récupérer.
-     * @param bool $dry_run Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param bool $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(int $id, ?bool $dry_run = false)
+    public function read(int $id, ?bool $dryRun = false)
     {
-        $donnees = $this->model->read($id);
+        $bannerEntry = $this->model->read($id);
 
-        if (!$donnees && !$dry_run) {
+        if (!$bannerEntry && !$dryRun) {
             $this->response->setCode(404)->send();
             return;
         }
 
         if (
-            $donnees && !$this->user->can_access($donnees["module"])
+            $bannerEntry && !$this->user->canAccess($bannerEntry["module"])
         ) {
             throw new AccessException();
         }
 
-        if ($dry_run) {
-            return $donnees;
+        if ($dryRun) {
+            return $bannerEntry;
         }
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($bannerEntry);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304)->send();
@@ -123,7 +123,7 @@ class BandeauInfoController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($bannerEntry))
             ->setHeaders($this->headers)
             ->send();
     }
@@ -136,25 +136,25 @@ class BandeauInfoController extends Controller
         $input = $this->request->body;
 
         if (
-            !$this->user->can_access($this->module)
-            || !$this->user->can_edit($input["module"])
+            !$this->user->canAccess($this->module)
+            || !$this->user->canEdit($input["module"])
         ) {
             throw new AccessException();
         }
 
-        $donnees = $this->model->create($input);
+        $newBannerEntry = $this->model->create($input);
 
-        $id = $donnees["id"];
+        $id = $newBannerEntry["id"];
 
         $this->headers["Location"] = $_ENV["API_URL"] . "/bandeau-info/$id";
 
         $this->response
             ->setCode(201)
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($newBannerEntry))
             ->setHeaders($this->headers)
             ->flush();
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $newBannerEntry);
     }
 
     /**
@@ -168,8 +168,8 @@ class BandeauInfoController extends Controller
 
         if (!$current) {
             $message = "Not Found";
-            $documentation = $_ENV["API_URL"] . "/doc/#/Bois/modifierLigneBandeauInfo";
-            $body = json_encode(["message" => $message, "documentation_url" => $documentation]);
+            $docURL = $_ENV["API_URL"] . "/doc/#/Bois/modifierLigneBandeauInfo";
+            $body = json_encode(["message" => $message, "documentation_url" => $docURL]);
             $this->response->setCode(404)->setBody($body);
             return;
         }
@@ -177,21 +177,21 @@ class BandeauInfoController extends Controller
         $input = $this->request->body;
 
         if (
-            !$this->user->can_access($this->module)
-            || !$this->user->can_edit($current["module"])
-            || !$this->user->can_edit($input["module"])
+            !$this->user->canAccess($this->module)
+            || !$this->user->canEdit($current["module"])
+            || !$this->user->canEdit($input["module"])
         ) {
             throw new AccessException();
         }
 
-        $donnees = $this->model->update($id, $input);
+        $updatedBannerEntry = $this->model->update($id, $input);
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($updatedBannerEntry))
             ->setHeaders($this->headers)
             ->flush();
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $updatedBannerEntry);
     }
 
     /**
@@ -205,22 +205,22 @@ class BandeauInfoController extends Controller
 
         if (!$current) {
             $message = "Not Found";
-            $documentation = $_ENV["API_URL"] . "/doc/#/Bandeau/supprimerLigneBandeauInfo";
-            $body = json_encode(["message" => $message, "documentation_url" => $documentation]);
+            $docURL = $_ENV["API_URL"] . "/doc/#/Bandeau/supprimerLigneBandeauInfo";
+            $body = json_encode(["message" => $message, "documentation_url" => $docURL]);
             $this->response->setCode(404)->setBody($body);
             return;
         }
 
         if (
-            !$this->user->can_access($this->module)
-            || !$this->user->can_edit($current["module"])
+            !$this->user->canAccess($this->module)
+            || !$this->user->canEdit($current["module"])
         ) {
             throw new AccessException();
         }
 
-        $succes = $this->model->delete($id);
+        $success = $this->model->delete($id);
 
-        if ($succes) {
+        if ($success) {
             $this->response->setCode(204)->flush();
             $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
         } else {

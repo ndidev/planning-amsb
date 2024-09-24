@@ -48,16 +48,16 @@ class Security
     /**
      * Security measures to prevent bruteforce attacks.
      */
-    public static function prevent_bruteforce(): void
+    public static function preventBruteforce(): void
     {
         $client_ip_address = $_SERVER["REMOTE_ADDR"];
 
         // Increment the number of connection attempts and, if need be, block the IP address
-        $attempts = (int) static::redis()->incr("security:attempts:$client_ip_address");
-        static::redis()->expire("security:attempts:$client_ip_address", static::FAILED_ATTEMPTS_TIMEOUT);
+        $attempts = (int) static::getRedis()->incr("security:attempts:$client_ip_address");
+        static::getRedis()->expire("security:attempts:$client_ip_address", static::FAILED_ATTEMPTS_TIMEOUT);
 
         if ($attempts >= static::MAX_FAILED_ATTEMPTS) {
-            static::redis()->setex("security:blocked:$client_ip_address", static::BLOCKED_IP_TIMEOUT, "1");
+            static::getRedis()->setex("security:blocked:$client_ip_address", static::BLOCKED_IP_TIMEOUT, "1");
         }
 
         sleep(static::SLEEP_TIME);
@@ -69,9 +69,9 @@ class Security
      * 
      * @return bool 
      */
-    public static function check_if_request_can_be_done(): bool
+    public static function checkIfRequestCanBeDone(): bool
     {
-        if (static::is_ip_blocked() === true) {
+        if (static::isIpBlocked() === true) {
             // return false;
         }
 
@@ -81,12 +81,12 @@ class Security
     /**
      * Check if the client IP address is blocked.
      */
-    private static function is_ip_blocked(): bool
+    private static function isIpBlocked(): bool
     {
         $client_ip_address = $_SERVER["REMOTE_ADDR"];
 
-        if (static::redis()->get("security:blocked:$client_ip_address")) {
-            static::redis()->expire("security:blocked:$client_ip_address", static::BLOCKED_IP_TIMEOUT);
+        if (static::getRedis()->get("security:blocked:$client_ip_address")) {
+            static::getRedis()->expire("security:blocked:$client_ip_address", static::BLOCKED_IP_TIMEOUT);
             return true;
         }
 
@@ -98,7 +98,7 @@ class Security
      * 
      * @return Redis 
      */
-    private static function redis(): Redis
+    private static function getRedis(): Redis
     {
         if (!static::$redis) {
             static::$redis = new Redis();

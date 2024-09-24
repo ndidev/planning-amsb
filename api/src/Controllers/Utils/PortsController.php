@@ -59,9 +59,9 @@ class PortsController extends Controller
    */
   public function readAll()
   {
-    $donnees = $this->model->readAll();
+    $ports = $this->model->readAll();
 
-    $etag = ETag::get($donnees);
+    $etag = ETag::get($ports);
 
     if ($this->request->etag === $etag) {
       $this->response->setCode(304);
@@ -72,7 +72,7 @@ class PortsController extends Controller
     $this->headers["Cache-control"] = "max-age=31557600, must-revalidate";
 
     $this->response
-      ->setBody(json_encode($donnees))
+      ->setBody(json_encode($ports))
       ->setHeaders($this->headers);
   }
 
@@ -80,22 +80,22 @@ class PortsController extends Controller
    * Récupère un port.
    * 
    * @param string $locode  UNLOCODE du port à récupérer.
-   * @param bool   $dry_run Récupérer la ressource sans renvoyer la réponse HTTP.
+   * @param bool   $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
    */
-  public function read(string $locode, ?bool $dry_run = false)
+  public function read(string $locode, ?bool $dryRun = false)
   {
-    $donnees = $this->model->read($locode);
+    $port = $this->model->read($locode);
 
-    if (!$donnees && !$dry_run) {
+    if (!$port && !$dryRun) {
       $this->response->setCode(404);
       return;
     }
 
-    if ($dry_run) {
-      return $donnees;
+    if ($dryRun) {
+      return $port;
     }
 
-    $etag = ETag::get($donnees);
+    $etag = ETag::get($port);
 
     if ($this->request->etag === $etag) {
       $this->response->setCode(304);
@@ -106,7 +106,7 @@ class PortsController extends Controller
     $this->headers["Cache-control"] = "max-age=31557600, must-revalidate";
 
     $this->response
-      ->setBody(json_encode($donnees))
+      ->setBody(json_encode($port))
       ->setHeaders($this->headers);
   }
 
@@ -117,18 +117,18 @@ class PortsController extends Controller
   {
     $input = $this->request->body;
 
-    $donnees = $this->model->create($input);
+    $newPort = $this->model->create($input);
 
-    $locode = $donnees["locode"];
+    $locode = $newPort["locode"];
 
     $this->headers["Location"] = $_ENV["API_URL"] . "/ports/$locode";
 
     $this->response
       ->setCode(201)
-      ->setBody(json_encode($donnees))
+      ->setBody(json_encode($newPort))
       ->setHeaders($this->headers);
 
-    $this->sse->addEvent($this->sseEventName, __FUNCTION__, $locode, $donnees);
+    $this->sse->addEvent($this->sseEventName, __FUNCTION__, $locode, $newPort);
   }
 
   /**
@@ -145,13 +145,13 @@ class PortsController extends Controller
 
     $input = (array) json_decode(file_get_contents("php://input"), true);
 
-    $donnees = $this->model->update($locode, $input);
+    $updatedPort = $this->model->update($locode, $input);
 
     $this->response
-      ->setBody(json_encode($donnees))
+      ->setBody(json_encode($updatedPort))
       ->setHeaders($this->headers);
 
-    $this->sse->addEvent($this->sseEventName, __FUNCTION__, $locode, $donnees);
+    $this->sse->addEvent($this->sseEventName, __FUNCTION__, $locode, $updatedPort);
   }
 
   /**
@@ -166,9 +166,9 @@ class PortsController extends Controller
       return;
     }
 
-    $succes = $this->model->delete($locode);
+    $success = $this->model->delete($locode);
 
-    if ($succes) {
+    if ($success) {
       $this->response->setCode(204);
       $this->sse->addEvent($this->sseEventName, __FUNCTION__, $locode);
     } else {

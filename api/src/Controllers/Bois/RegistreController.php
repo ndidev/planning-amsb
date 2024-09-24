@@ -46,13 +46,13 @@ class RegistreController extends Controller
      */
     public function get(array $filtre)
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
-        $donnees = $this->model->readAll($filtre);
+        $appointments = $this->model->readAll($filtre);
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($appointments);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -60,9 +60,7 @@ class RegistreController extends Controller
         }
 
         $date = date('YmdHis');
-        $fichier = "registre_bois_$date.csv";
-
-        $rdvs = $donnees;
+        $filename = "registre_bois_$date.csv";
 
         $output = fopen("php://temp/maxmemory:" . (5 * 1024 * 1024), "r+");
 
@@ -86,7 +84,7 @@ class RegistreController extends Controller
                 fputcsv($output, $entete, ';', '"');
 
                 // Lignes de RDV
-                foreach ($rdvs as $rdv) {
+                foreach ($appointments as $appointment) {
 
                     /**
                      * @var string $date_rdv
@@ -101,7 +99,7 @@ class RegistreController extends Controller
                      * @var string $numero_bl
                      * @var string $transporteur
                      */
-                    extract($rdv);
+                    extract($appointment);
 
                     $mois = DateUtils::format("LLLL", new DateTime($date_rdv));
 
@@ -145,7 +143,7 @@ class RegistreController extends Controller
 
         $this->headers["ETag"] = $etag;
         $this->headers["Content-Type"] = "text/csv";
-        $this->headers["Content-Disposition"] = "attachment; filename=$fichier";
+        $this->headers["Content-Disposition"] = "attachment; filename=$filename";
         $this->headers["Cache-Control"] = "no-store, no-cache";
 
         $this->response

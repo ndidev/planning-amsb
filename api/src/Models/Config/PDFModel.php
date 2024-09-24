@@ -7,23 +7,23 @@ use App\Core\DateUtils;
 
 class PDFModel
 {
-    public function visualiser(array $query): string
+    public function getPdfAsString(array $query): string
     {
         $module = $query["module"];
-        $fournisseur = (int) $query["fournisseur"];
-        $date_debut = DateUtils::convertDate($query["date_debut"]);
-        $date_fin = DateUtils::convertDate($query["date_fin"]);
+        $supplierId = (int) $query["fournisseur"];
+        $startDate = DateUtils::convertDate($query["date_debut"]);
+        $endDate = DateUtils::convertDate($query["date_fin"]);
 
         $pdf = PDFUtils::generatePDF(
             $module,
-            $fournisseur,
-            $date_debut,
-            $date_fin
+            $supplierId,
+            $startDate,
+            $endDate
         );
 
-        $donnees = PDFUtils::stringifyPDF($pdf);
+        $pdfAsString = PDFUtils::stringifyPDF($pdf);
 
-        return $donnees;
+        return $pdfAsString;
     }
 
     /**
@@ -33,30 +33,30 @@ class PDFModel
      * 
      * @return array Résultat de l'envoi.
      */
-    public function envoyer(array $query): array
+    public function sendPdfFileByEmail(array $query): array
     {
         $module = $query["module"];
-        $fournisseur = $query["fournisseur"];
-        $liste_emails = $query["liste_emails"];
-        $date_debut = DateUtils::convertDate($query["date_debut"]);
-        $date_fin = DateUtils::convertDate($query["date_fin"]);
+        $supplierId = $query["fournisseur"];
+        $emailList = $query["liste_emails"];
+        $startDate = DateUtils::convertDate($query["date_debut"]);
+        $endDate = DateUtils::convertDate($query["date_fin"]);
 
         $pdf = PDFUtils::generatePDF(
             $module,
-            (int) $fournisseur,
-            $date_debut,
-            $date_fin
+            (int) $supplierId,
+            $startDate,
+            $endDate
         );
 
-        $resultat = PDFUtils::sendPDF(
+        $sendResult = PDFUtils::sendPDF(
             $pdf,
             $module,
-            (int) $fournisseur,
-            $liste_emails,
-            $date_debut,
-            $date_fin
+            (int) $supplierId,
+            $emailList,
+            $startDate,
+            $endDate
         );
 
-        return $resultat;
+        return $sendResult;
     }
 }

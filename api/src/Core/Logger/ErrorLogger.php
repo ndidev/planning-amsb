@@ -34,7 +34,7 @@ class ErrorLogger
             return null;
         }
 
-        $array_error = [
+        $arrayError = [
             "code" => $e->getCode(),
             "message" => $e->getMessage(),
             "file" => $e->getFile(),
@@ -43,17 +43,17 @@ class ErrorLogger
             "trace" => $e->getTrace()
         ];
 
-        $string_error = array_stringify($array_error);
+        $stringError = array_stringify($arrayError);
 
         switch ($format) {
             case 'array':
-                return $array_error;
+                return $arrayError;
 
             case 'string':
-                return $string_error;
+                return $stringError;
 
             default:
-                return $array_error;
+                return $arrayError;
         }
     }
 }

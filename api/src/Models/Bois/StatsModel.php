@@ -9,60 +9,59 @@ class StatsModel extends Model
     /**
      * Récupère les stats bois.
      * 
-     * @param array $filtre Filtre qui contient...
+     * @param array $filter Filtre qui contient...
      */
-    public function readAll(array $filtre): array
+    public function readAll(array $filter): array
     {
         // Filtre
         // $date_debut = isset($filtre['date_debut']) ? ($filtre['date_debut'] ?: date("Y-m-d")) : date("Y-m-d");
-        $date_debut = isset($filtre['date_debut']) ? ($filtre['date_debut'] ?: "0001-01-01") : "0001-01-01";
-        $date_fin = isset($filtre["date_fin"]) ? ($filtre['date_fin'] ?: "9999-12-31") : "9999-12-31";
-        $filtre_fournisseur = trim($filtre['fournisseur'] ?? "", ",");
-        $filtre_client = trim($filtre['client'] ?? "", ",");
-        $filtre_chargement = trim($filtre['chargement'] ?? "", ",");
-        $filtre_livraison = trim($filtre['livraison'] ?? "", ",");
-        $filtre_transporteur = trim($filtre['transporteur'] ?? "", ",");
-        $filtre_affreteur = trim($filtre['affreteur'] ?? "", ",");
+        $startDate = isset($filter['date_debut']) ? ($filter['date_debut'] ?: "0001-01-01") : "0001-01-01";
+        $endDate = isset($filter["date_fin"]) ? ($filter['date_fin'] ?: "9999-12-31") : "9999-12-31";
+        $supplierFilter = trim($filter['fournisseur'] ?? "", ",");
+        $clientFilter = trim($filter['client'] ?? "", ",");
+        $loadingFilter = trim($filter['chargement'] ?? "", ",");
+        $deliveryFilter = trim($filter['livraison'] ?? "", ",");
+        $transportFilter = trim($filter['transporteur'] ?? "", ",");
+        $chartererFilter = trim($filter['affreteur'] ?? "", ",");
 
-        $filtre_sql_fournisseur = $filtre_fournisseur === "" ? "" : " AND fournisseur IN ($filtre_fournisseur)";
-        $filtre_sql_client = $filtre_client === "" ? "" : " AND client IN ($filtre_client)";
-        $filtre_sql_chargement = $filtre_chargement === "" ? "" : " AND chargement IN ($filtre_chargement)";
-        $filtre_sql_livraison = $filtre_livraison === "" ? "" : " AND livraison IN ($filtre_livraison)";
-        $filtre_sql_transporteur = $filtre_transporteur === "" ? "" : " AND transporteur IN ($filtre_transporteur)";
-        $filtre_sql_affreteur = $filtre_affreteur === "" ? "" : " AND affreteur IN ($filtre_affreteur)";
+        $sqlSupplierFilter = $supplierFilter === "" ? "" : " AND fournisseur IN ($supplierFilter)";
+        $sqlClientFilter = $clientFilter === "" ? "" : " AND client IN ($clientFilter)";
+        $sqlLoadingFilter = $loadingFilter === "" ? "" : " AND chargement IN ($loadingFilter)";
+        $sqlDeliveryFilter = $deliveryFilter === "" ? "" : " AND livraison IN ($deliveryFilter)";
+        $sqlTransportFilter = $transportFilter === "" ? "" : " AND transporteur IN ($transportFilter)";
+        $sqlChartererFilter = $chartererFilter === "" ? "" : " AND affreteur IN ($chartererFilter)";
 
-        $filtre_sql =
-            $filtre_sql_fournisseur
-            . $filtre_sql_client
-            . $filtre_sql_chargement
-            . $filtre_sql_livraison
-            . $filtre_sql_transporteur
-            . $filtre_sql_affreteur;
+        $sqlFilter =
+            $sqlSupplierFilter
+            . $sqlClientFilter
+            . $sqlLoadingFilter
+            . $sqlDeliveryFilter
+            . $sqlTransportFilter
+            . $sqlChartererFilter;
 
-        $statement_rdvs =
-            "SELECT
-          date_rdv as `date`
-        FROM bois_planning
-        WHERE date_rdv BETWEEN :date_debut AND :date_fin
-        AND attente = 0
-        $filtre_sql";
+        $appointmentsStatement =
+            "SELECT date_rdv as `date`
+            FROM bois_planning
+            WHERE date_rdv BETWEEN :startDate AND :endDate
+            AND attente = 0
+            $sqlFilter";
 
 
-        $requete_rdvs = $this->mysql->prepare($statement_rdvs);
+        $appointmentsRequest = $this->mysql->prepare($appointmentsStatement);
 
-        $requete_rdvs->execute([
-            "date_debut" => $date_debut,
-            "date_fin" => $date_fin
+        $appointmentsRequest->execute([
+            "startDate" => $startDate,
+            "endDate" => $endDate
         ]);
 
-        $rdvs = $requete_rdvs->fetchAll();
+        $appointments = $appointmentsRequest->fetchAll();
 
         $stats = [
             "Total" => 0,
             "Par année" => [],
         ];
 
-        $modele_annee = [
+        $yearTemplate = [
             1 => 0,
             2 => 0,
             3 => 0,
@@ -78,21 +77,19 @@ class StatsModel extends Model
         ];
 
         // Compilation du nombre de RDV par année et par mois
-        foreach ($rdvs as $rdv) {
-            $date = explode("-", $rdv["date"]);
-            $annee = $date[0];
-            $mois = $date[1];
+        foreach ($appointments as $appointment) {
+            $date = explode("-", $appointment["date"]);
+            $year = $date[0];
+            $month = $date[1];
 
-            if (!array_key_exists($annee, $stats["Par année"])) {
-                $stats["Par année"][$annee] = $modele_annee;
+            if (!array_key_exists($year, $stats["Par année"])) {
+                $stats["Par année"][$year] = $yearTemplate;
             };
 
             $stats["Total"]++;
-            $stats["Par année"][$annee][(int) $mois]++;
+            $stats["Par année"][$year][(int) $month]++;
         }
 
-        $donnees = $stats;
-
-        return $donnees;
+        return $stats;
     }
 }

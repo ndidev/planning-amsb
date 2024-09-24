@@ -41,9 +41,9 @@ class TEController extends Controller
      */
     public function readAll()
     {
-        $donnees = $this->model->readAll();
+        $drafts = $this->model->readAll();
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($drafts);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -53,7 +53,7 @@ class TEController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($drafts))
             ->setHeaders($this->headers);
     }
 }

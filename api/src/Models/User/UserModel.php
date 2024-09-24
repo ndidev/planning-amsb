@@ -17,15 +17,13 @@ class UserModel extends Model
      */
     public function read()
     {
-        $donnees = [
+        return [
             "uid" => $this->user->uid,
             "login" => $this->user->login,
-            "nom" => $this->user->nom,
+            "nom" => $this->user->name,
             "roles" => $this->user->roles,
-            "statut" => $this->user->statut,
+            "statut" => $this->user->status,
         ];
-
-        return $donnees;
     }
 
     /**
@@ -39,33 +37,27 @@ class UserModel extends Model
     {
         $uid = $this->user->uid;
 
-        $statement_nom = "UPDATE `admin_users`
-            SET
-                nom = :nom
-            WHERE `uid` = :uid";
+        $usernameStatement = "UPDATE `admin_users` SET nom = :nom WHERE `uid` = :uid";
 
-        $statement_password = "UPDATE `admin_users`
-            SET
-                `password` = :password
-            WHERE `uid` = :uid";
+        $passwordStatement = "UPDATE `admin_users` SET `password` = :password WHERE `uid` = :uid";
 
-        $requete = $this->mysql->prepare($statement_nom);
-        $requete->execute([
+        $usernameRequest = $this->mysql->prepare($usernameStatement);
+        $usernameRequest->execute([
             "nom" => substr($input["nom"], 0, 255),
             "uid" => $uid
         ]);
 
         if ($input["password"] !== "") {
-            $requete_password = $this->mysql->prepare($statement_password);
-            $requete_password->execute([
+            $passwordRequest = $this->mysql->prepare($passwordStatement);
+            $passwordRequest->execute([
                 "password" => password_hash($input["password"], PASSWORD_DEFAULT),
                 "uid" => $uid
             ]);
         }
 
-        $this->user->update_redis();
+        $this->user->updateRedis();
 
-        $this->user->nom = substr($input["nom"], 0, 255);
+        $this->user->name = substr($input["nom"], 0, 255);
 
         return $this->read();
     }

@@ -13,10 +13,10 @@ class AgenceModel extends Model
      */
     public function readAll(): array
     {
-        $requete = $this->mysql->query("SELECT * FROM config_agence");
-        $donnees = $requete->fetchAll();
+        $request = $this->mysql->query("SELECT * FROM config_agence");
+        $agencies = $request->fetchAll();
 
-        return $donnees;
+        return $agencies;
     }
 
     /**
@@ -28,16 +28,13 @@ class AgenceModel extends Model
      */
     public function read(string $service): ?array
     {
-        $requete = $this->mysql->prepare("SELECT * FROM config_agence WHERE service = :service");
-        $requete->execute(["service" => $service]);
-        $service = $requete->fetch();
+        $request = $this->mysql->prepare("SELECT * FROM config_agence WHERE service = :service");
+        $request->execute(["service" => $service]);
+        $service = $request->fetch();
 
         if (!$service) return null;
 
-
-        $donnees = $service;
-
-        return $donnees;
+        return $service;
     }
 
     /**
@@ -51,20 +48,20 @@ class AgenceModel extends Model
     {
         $statement =
             "UPDATE config_agence
-        SET
-          nom = :nom,
-          adresse_ligne_1 = :adresse_ligne_1,
-          adresse_ligne_2 = :adresse_ligne_2,
-          cp = :cp,
-          ville = :ville,
-          pays = :pays,
-          telephone = :telephone,
-          mobile = :mobile,
-          email = :email
-        WHERE service = :service";
+            SET
+                nom = :nom,
+                adresse_ligne_1 = :adresse_ligne_1,
+                adresse_ligne_2 = :adresse_ligne_2,
+                cp = :cp,
+                ville = :ville,
+                pays = :pays,
+                telephone = :telephone,
+                mobile = :mobile,
+                email = :email
+            WHERE service = :service";
 
-        $requete = $this->mysql->prepare($statement);
-        $requete->execute([
+        $request = $this->mysql->prepare($statement);
+        $request->execute([
             "nom" => $input["nom"],
             "adresse_ligne_1" => $input["adresse_ligne_1"],
             "adresse_ligne_2" => $input["adresse_ligne_2"],

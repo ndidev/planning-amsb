@@ -42,15 +42,15 @@ class NumVoyageController extends Controller
      */
     public function read()
     {
-        if (!$this->user->can_access($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
         $input = $this->request->query;
 
-        $donnees = $this->model->read($input);
+        $voyageNumber = $this->model->read($input);
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($voyageNumber);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -60,7 +60,7 @@ class NumVoyageController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
+            ->setBody(json_encode($voyageNumber))
             ->setHeaders($this->headers);
     }
 }

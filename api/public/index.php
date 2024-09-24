@@ -39,7 +39,7 @@ use App\Controllers\User\UserController as UserManagement;
 use App\Controllers\Admin\UserAccountController as UserAccount;
 use App\Core\Logger\ErrorLogger;
 
-if (Security::check_if_request_can_be_done() === false) {
+if (Security::checkIfRequestCanBeDone() === false) {
     (new HTTPResponse(429))
         ->addHeader("Retry-After", (string) Security::BLOCKED_IP_TIMEOUT)
         ->setType("text/plain")
@@ -81,7 +81,7 @@ $routes = [
     // Utilitaires
     ["/ports/[a:locode]?", Ports::class],
     ["/pays/[a:iso]?", Pays::class],
-    ["/marees/[i:annee]?", Marees::class],
+    ["/marees/[i:year]?", Marees::class],
     ["/marees/annees", Marees::class],
 
     // Config
@@ -132,12 +132,12 @@ try {
 
     $controller->sse->notify();
 } catch (ClientException $e) {
-    $response = (new HTTPResponse($e->http_status))
+    $response = (new HTTPResponse($e->httpStatus))
         ->setType("text")
         ->setBody($e->getMessage());
 } catch (ServerException $e) {
     ErrorLogger::log($e);
-    $response = (new HTTPResponse($e->http_status))
+    $response = (new HTTPResponse($e->httpStatus))
         ->setType("text")
         ->setBody("Erreur serveur");
 } catch (\Throwable $e) {

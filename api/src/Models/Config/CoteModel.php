@@ -15,13 +15,13 @@ class CoteModel extends Model
     {
         $statement = "SELECT * FROM config_cotes";
 
-        $donnees = $this->mysql->query($statement)->fetchAll();
+        $chartData = $this->mysql->query($statement)->fetchAll();
 
-        for ($i = 0; $i < count($donnees); $i++) {
-            $donnees[$i]["valeur"] = (float) $donnees[$i]["valeur"];
+        for ($i = 0; $i < count($chartData); $i++) {
+            $chartData[$i]["valeur"] = (float) $chartData[$i]["valeur"];
         }
 
-        return $donnees;
+        return $chartData;
     }
 
     /**
@@ -33,21 +33,17 @@ class CoteModel extends Model
      */
     public function read(string $nom_cote): ?array
     {
-        $statement = "SELECT *
-      FROM config_cotes
-      WHERE cote = :cote";
+        $statement = "SELECT * FROM config_cotes WHERE cote = :cote";
 
-        $requete = $this->mysql->prepare($statement);
-        $requete->execute(["cote" => $nom_cote]);
-        $cote = $requete->fetch();
+        $request = $this->mysql->prepare($statement);
+        $request->execute(["cote" => $nom_cote]);
+        $chartDatum = $request->fetch();
 
-        if (!$cote) return null;
+        if (!$chartDatum) return null;
 
-        $cote["valeur"] = (float) $cote["valeur"];
+        $chartDatum["valeur"] = (float) $chartDatum["valeur"];
 
-        $donnees = $cote;
-
-        return $donnees;
+        return $chartDatum;
     }
 
     /**
@@ -60,12 +56,10 @@ class CoteModel extends Model
      */
     public function update(string $cote, array $input): array
     {
-        $statement = "UPDATE config_cotes
-      SET valeur = :valeur
-      WHERE cote = :cote";
+        $statement = "UPDATE config_cotes SET valeur = :valeur WHERE cote = :cote";
 
-        $requete = $this->mysql->prepare($statement);
-        $requete->execute([
+        $request = $this->mysql->prepare($statement);
+        $request->execute([
             'valeur' => (float) $input["valeur"],
             'cote' => $cote
         ]);
