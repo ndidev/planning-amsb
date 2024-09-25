@@ -53,54 +53,59 @@ export type Tiers = {
   commentaire: string;
 
   /**
-   * Le tiers est fournisseur bois.
+   * Rôles du tiers.
    */
-  bois_fournisseur: boolean;
+  roles: {
+    /**
+     * Le tiers est fournisseur bois.
+     */
+    bois_fournisseur: boolean;
 
-  /**
-   * Le tiers est client bois.
-   */
-  bois_client: boolean;
+    /**
+     * Le tiers est client bois.
+     */
+    bois_client: boolean;
 
-  /**
-   * Le tiers est transporteur bois.
-   */
-  bois_transporteur: boolean;
+    /**
+     * Le tiers est transporteur bois.
+     */
+    bois_transporteur: boolean;
 
-  /**
-   * Le tiers est affréteur bois.
-   */
-  bois_affreteur: boolean;
+    /**
+     * Le tiers est affréteur bois.
+     */
+    bois_affreteur: boolean;
 
-  /**
-   * Le tiers est fournisseur vrac.
-   */
-  vrac_fournisseur: boolean;
+    /**
+     * Le tiers est fournisseur vrac.
+     */
+    vrac_fournisseur: boolean;
 
-  /**
-   * Le tiers est client vrac.
-   */
-  vrac_client: boolean;
+    /**
+     * Le tiers est client vrac.
+     */
+    vrac_client: boolean;
 
-  /**
-   * Le tiers est transporteur vrac.
-   */
-  vrac_transporteur: boolean;
+    /**
+     * Le tiers est transporteur vrac.
+     */
+    vrac_transporteur: boolean;
 
-  /**
-   * Le tiers est armateur.
-   */
-  maritime_armateur: boolean;
+    /**
+     * Le tiers est armateur.
+     */
+    maritime_armateur: boolean;
 
-  /**
-   * Le tiers est affréteur maritime.
-   */
-  maritime_affreteur: boolean;
+    /**
+     * Le tiers est affréteur maritime.
+     */
+    maritime_affreteur: boolean;
 
-  /**
-   * Le tiers est courtier maritime.
-   */
-  maritime_courtier: boolean;
+    /**
+     * Le tiers est courtier maritime.
+     */
+    maritime_courtier: boolean;
+  };
 
   /**
    * Le tiers n'est pas modifiable.

@@ -1,16 +1,17 @@
 <?php
 
-namespace App\Controller\Tiers;
+namespace App\Controller\ThirdParty;
 
-use App\Models\Tiers\TiersModel;
 use App\Controller\Controller;
-use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AccessException;
-use App\Core\Exceptions\Server\DB\DBException;
+use App\Core\HTTP\ETag;
+use App\Core\HTTP\HTTPResponse;
+use App\Entity\ThirdParty;
+use App\Service\ThirdPartyService;
 
-class TiersController extends Controller
+class ThirdPartyController extends Controller
 {
-    private $model;
+    private ThirdPartyService $thirdPartyService;
     private $module = "tiers";
     private $sseEventName = "tiers";
 
@@ -18,7 +19,7 @@ class TiersController extends Controller
         private ?int $id = null,
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
-        $this->model = new TiersModel();
+        $this->thirdPartyService = new ThirdPartyService();
         $this->processRequest();
     }
 
@@ -26,15 +27,15 @@ class TiersController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
+                $this->response->setCode(HTTPResponse::HTTP_NO_CONTENT_204)->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
             case 'GET':
                 if ($this->id) {
-                    $this->read($this->id, $this->request->query);
+                    $this->read($this->id);
                 } else {
-                    $this->readAll($this->request->query);
+                    $this->readAll();
                 }
                 break;
 
@@ -51,19 +52,17 @@ class TiersController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", $this->supportedMethods);
+                $this->response->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)->addHeader("Allow", $this->supportedMethods);
                 break;
         }
     }
 
     /**
-     * Récupère tous les tiers.
-     * 
-     * @param array $options Options de récupérations.
+     * Retrieves all third parties.
      */
-    public function readAll(array $options)
+    public function readAll()
     {
-        $thirdParties = $this->model->readAll($options);
+        $thirdParties = $this->thirdPartyService->getThirdParties();
 
         $etag = ETag::get($thirdParties);
 
@@ -75,20 +74,19 @@ class TiersController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($thirdParties))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON(array_map(fn(ThirdParty $thirdParty) => $thirdParty->toArray(), $thirdParties));
     }
 
     /**
-     * Récupère un tiers.
+     * Retrieves a third party.
      * 
-     * @param int   $id      id du tiers à récupérer.
-     * @param array $options Options de récupération.
-     * @param bool  $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param int   $id      id of the third party to retrieve.
+     * @param bool  $dryRun Retrieve the resource without sending the HTTP response.
      */
-    public function read(int $id, ?array $options = [], ?bool $dryRun = false)
+    public function read(int $id, ?bool $dryRun = false)
     {
-        $thirdParty = $this->model->read($id, $options);
+        $thirdParty = $this->thirdPartyService->getThirdParty($id);
 
         if (!$thirdParty && !$dryRun) {
             $this->response->setCode(404);
@@ -109,12 +107,12 @@ class TiersController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($thirdParty))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($thirdParty);
     }
 
     /**
-     * Crée un tiers.
+     * Create a third party.
      */
     public function create()
     {
@@ -124,25 +122,24 @@ class TiersController extends Controller
 
         $input = $this->request->body;
 
-        $newThirdParty = $this->model->create($input);
+        $thirdParty = $this->thirdPartyService->createThirdParty($input);
 
-        $id = $newThirdParty["id"];
+        $id = $thirdParty->getId();
 
         $this->headers["Location"] = $_ENV["API_URL"] . "/tiers/$id";
 
         $this->response
             ->setCode(201)
-            ->setBody(json_encode($newThirdParty))
             ->setHeaders($this->headers)
-            ->flush();
+            ->setJSON($thirdParty);
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $newThirdParty);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $thirdParty->toArray());
     }
 
     /**
-     * Met à jour un tiers.
+     * Updates a third party.
      * 
-     * @param int $id id du tiers à modifier.
+     * @param int $id id of the third party to modify.
      */
     public function update(int $id)
     {
@@ -150,27 +147,26 @@ class TiersController extends Controller
             throw new AccessException();
         }
 
-        if (!$this->model->exists($id)) {
+        if (!$this->thirdPartyService->thirdPartyExists($id)) {
             $this->response->setCode(404);
             return;
         }
 
         $input = $this->request->body;
 
-        $updatedThirdyParty = $this->model->update($id, $input);
+        $thirdParty = $this->thirdPartyService->updateThirdParty($id, $input);
 
         $this->response
-            ->setBody(json_encode($updatedThirdyParty))
             ->setHeaders($this->headers)
-            ->flush();
+            ->setJSON($thirdParty);
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $updatedThirdyParty);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $thirdParty->toArray());
     }
 
     /**
-     * Supprime un tiers.
+     * Deletes a third party.
      * 
-     * @param int $id id du tiers à supprimer.
+     * @param int $id id of the third party to delete.
      */
     public function delete(int $id)
     {
@@ -178,18 +174,15 @@ class TiersController extends Controller
             throw new AccessException();
         }
 
-        if (!$this->model->exists($id)) {
+        if (!$this->thirdPartyService->thirdPartyExists($id)) {
             $this->response->setCode(404);
             return;
         }
 
-        $success = $this->model->delete($id);
+        $this->thirdPartyService->deleteThirdParty($id);
 
-        if ($success) {
-            $this->response->setCode(204)->flush();
-            $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
-        } else {
-            throw new DBException("Erreur lors de la suppression");
-        }
+        $this->response->setCode(204)->flush();
+
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
     }
 }

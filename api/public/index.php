@@ -23,7 +23,7 @@ use App\Controller\Consignation\ListeNaviresController as NaviresConsignation;
 use App\Controller\Consignation\ListeMarchandisesController as MarchandisesConsignation;
 use App\Controller\Consignation\ListeClientsController as ClientsConsignation;
 use App\Controller\Chartering\CharterController as AffretementMaritime;
-use App\Controller\Tiers\TiersController as Tiers;
+use App\Controller\ThirdParty\ThirdPartyController;
 use App\Controller\Tiers\NombreRdvController as NombreRdv;
 use App\Controller\Utils\PortController as Ports;
 use App\Controller\Utils\CountryController as Pays;
@@ -94,7 +94,7 @@ $routes = [
     ["/config/cotes/[a:cote]?", Cote::class],
 
     // Tiers
-    ["/tiers/[i:id]?", Tiers::class],
+    ["/tiers/[i:id]?", ThirdPartyController::class],
     ["/tiers/[i:id]?/nombre_rdv", NombreRdv::class],
 
     // Admin

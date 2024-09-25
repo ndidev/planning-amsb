@@ -166,7 +166,7 @@
     unsubscribe = tiers.subscribe((listeTiers) => {
       if (listeTiers) {
         options = [...listeTiers.values()]
-          .filter((tiers) => (role ? tiers[role] : true))
+          .filter((tiers) => (role ? tiers.roles[role] : true))
           .map((tiers): ItemFormat => {
             return {
               id: tiers.id,

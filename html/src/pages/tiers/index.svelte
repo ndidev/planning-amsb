@@ -65,16 +65,18 @@
     pays: "",
     telephone: "",
     commentaire: "",
-    bois_fournisseur: false,
-    bois_client: false,
-    bois_transporteur: false,
-    bois_affreteur: false,
-    vrac_fournisseur: false,
-    vrac_client: false,
-    vrac_transporteur: false,
-    maritime_armateur: false,
-    maritime_affreteur: false,
-    maritime_courtier: false,
+    roles: {
+      bois_fournisseur: false,
+      bois_client: false,
+      bois_transporteur: false,
+      bois_affreteur: false,
+      vrac_fournisseur: false,
+      vrac_client: false,
+      vrac_transporteur: false,
+      maritime_armateur: false,
+      maritime_affreteur: false,
+      maritime_courtier: false,
+    },
     non_modifiable: false,
     lie_agence: false,
     logo: null,
@@ -496,7 +498,7 @@
               <input
                 type="checkbox"
                 name="bois_fournisseur"
-                bind:checked={selectedTiers.bois_fournisseur}
+                bind:checked={selectedTiers.roles.bois_fournisseur}
               />
               Fournisseur
             </label>
@@ -504,7 +506,7 @@
               <input
                 type="checkbox"
                 name="bois_client"
-                bind:checked={selectedTiers.bois_client}
+                bind:checked={selectedTiers.roles.bois_client}
               />
               Client
             </label>
@@ -512,7 +514,7 @@
               <input
                 type="checkbox"
                 name="bois_transporteur"
-                bind:checked={selectedTiers.bois_transporteur}
+                bind:checked={selectedTiers.roles.bois_transporteur}
               />
               Transporteur
             </label>
@@ -520,7 +522,7 @@
               <input
                 type="checkbox"
                 name="bois_affreteur"
-                bind:checked={selectedTiers.bois_affreteur}
+                bind:checked={selectedTiers.roles.bois_affreteur}
               />
               Affréteur
             </label>
@@ -532,7 +534,7 @@
               <input
                 type="checkbox"
                 name="vrac_fournisseur"
-                bind:checked={selectedTiers.vrac_fournisseur}
+                bind:checked={selectedTiers.roles.vrac_fournisseur}
               />
               Fournisseur
             </label>
@@ -540,7 +542,7 @@
               <input
                 type="checkbox"
                 name="vrac_client"
-                bind:checked={selectedTiers.vrac_client}
+                bind:checked={selectedTiers.roles.vrac_client}
               />
               Client
             </label>
@@ -548,7 +550,7 @@
               <input
                 type="checkbox"
                 name="vrac_transporteur"
-                bind:checked={selectedTiers.vrac_transporteur}
+                bind:checked={selectedTiers.roles.vrac_transporteur}
               />
               Transporteur
             </label>
@@ -560,7 +562,7 @@
               <input
                 type="checkbox"
                 name="maritime_armateur"
-                bind:checked={selectedTiers.maritime_armateur}
+                bind:checked={selectedTiers.roles.maritime_armateur}
               />
               Armateur
             </label>
@@ -568,7 +570,7 @@
               <input
                 type="checkbox"
                 name="maritime_courtier"
-                bind:checked={selectedTiers.maritime_courtier}
+                bind:checked={selectedTiers.roles.maritime_courtier}
               />
               Courtier
             </label>
@@ -576,7 +578,7 @@
               <input
                 type="checkbox"
                 name="maritime_affreteur"
-                bind:checked={selectedTiers.maritime_affreteur}
+                bind:checked={selectedTiers.roles.maritime_affreteur}
               />
               Affréteur
             </label>

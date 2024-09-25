@@ -379,7 +379,7 @@
           name="Fournisseur"
           required
         />
-        {#if rdv.fournisseur && rdv.affreteur && rdv.fournisseur !== rdv.affreteur && $tiers.get(rdv.affreteur)?.bois_fournisseur}
+        {#if rdv.fournisseur && rdv.affreteur && rdv.fournisseur !== rdv.affreteur && $tiers?.get(rdv.affreteur)?.roles.bois_fournisseur}
           <span
             class="material-symbols-outlined warning-fournisseur"
             title="Erreur possible : vérifier que le fournisseur est correct"
