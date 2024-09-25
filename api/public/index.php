@@ -27,7 +27,7 @@ use App\Controller\Tiers\TiersController as Tiers;
 use App\Controller\Tiers\NombreRdvController as NombreRdv;
 use App\Controller\Utils\PortController as Ports;
 use App\Controller\Utils\CountryController as Pays;
-use App\Controller\Utils\MareesController as Marees;
+use App\Controller\Utils\TideController as Marees;
 use App\Controller\Config\AgenceController as Agence;
 use App\Controller\Config\BandeauInfoController as BandeauInfo;
 use App\Controller\Config\ConfigPDFController as ConfigPDF;

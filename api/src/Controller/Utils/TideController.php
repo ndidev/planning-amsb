@@ -1,16 +1,17 @@
 <?php
 
+// Path: api/src/Controller/Utils/TideController.php
+
 namespace App\Controller\Utils;
 
-use App\Models\Utils\MareesModel;
 use App\Controller\Controller;
-use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Server\DB\DBException;
+use App\Core\HTTP\ETag;
+use App\Service\TideService;
 
-class MareesController extends Controller
+class TideController extends Controller
 {
-    private $model;
-    private $module = "marees";
+    private $service;
     private $sseEventName = "marees";
 
     public function __construct(
@@ -18,7 +19,7 @@ class MareesController extends Controller
         private bool $years = false,
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, DELETE");
-        $this->model = new MareesModel();
+        $this->service = new TideService();
 
         if (str_contains($this->request->path, "/annees")) {
             $this->years = true;
@@ -37,11 +38,11 @@ class MareesController extends Controller
             case 'HEAD':
             case 'GET':
                 if ($this->years) {
-                    $this->readYears();
+                    $this->getYears();
                 } else if ($this->year) {
-                    $this->readYear($this->year);
+                    $this->getTidesByYear($this->year);
                 } else {
-                    $this->read($this->request->query);
+                    $this->getTides($this->request->query);
                 }
                 break;
 
@@ -60,13 +61,16 @@ class MareesController extends Controller
     }
 
     /**
-     * Récupère les marées.
+     * Retrieves tides.
      * 
-     * @param array $filtre
+     * @param array $filter
      */
-    public function read(?array $filtre = null)
+    public function getTides(?array $filter = []): void
     {
-        $tides = $this->model->read($filtre);
+        $start = $filter["debut"] ?? null;
+        $end = $filter["fin"] ?? null;
+
+        $tides = $this->service->getTides($start, $end);
 
         $etag = ETag::get($tides);
 
@@ -78,20 +82,20 @@ class MareesController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($tides))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($tides);
     }
 
     /**
-     * Récupère les marées d'une année.
+     * Retrieves tides for a year.
      * 
-     * @param int $annee
+     * @param int $year
      */
-    public function readYear(int $annee)
+    public function getTidesByYear(int $year): void
     {
-        $tidesOfYear = $this->model->readYear($annee);
+        $tides = $this->service->getTidesByYear($year);
 
-        $etag = ETag::get($tidesOfYear);
+        $etag = ETag::get($tides);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -101,16 +105,16 @@ class MareesController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($tidesOfYear))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($tides);
     }
 
     /**
-     * Récupère les années.
+     * Retrieves the years.
      */
-    public function readYears()
+    public function getYears(): void
     {
-        $years = $this->model->readYears();
+        $years = $this->service->getYears();
 
         $etag = ETag::get($years);
 
@@ -122,71 +126,44 @@ class MareesController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($years))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($years);
     }
 
     /**
-     * Ajoute des marées pour une année.
+     * Adds tides for a year.
      */
-    public function create()
+    public function create(): void
     {
-        if (empty($_FILES)) {
+        if (empty($_FILES) || !isset($_FILES["csv"])) {
             $this->response
                 ->setCode(400)
                 ->setHeaders($this->headers);
             return;
         }
 
-        $csv = $_FILES["csv"];
-        $content = file_get_contents($csv["tmp_name"]);
-        // Supprimer le BOM
-        $content = str_replace("\u{FEFF}", "", $content);
-        // Supprimer le carriage return produit par Windows
-        $content = str_replace("\r", "", $content);
-        $lines = explode(PHP_EOL, $content);
-
-        $separator = ";";
-
-        $tides = [];
-        foreach ($lines as $line) {
-            // Ne pas prendre en compte les lignes non conformes
-            if (strpos($line, $separator) === false) continue;
-            if (strlen($line) <= 2) continue;
-
-            // Enregistrer chaque ligne dans le tableau $tides
-            [$date, $time, $height] = str_getcsv($line, $separator);
-            array_push($tides, [
-                $date,
-                $time,
-                (float) $height
-            ]);
-        }
-
-        $year = substr($tides[0][0], 0, 4);
-
-        $this->model->create($tides);
+        $year = $this->service->addTides($_FILES["csv"]);
 
         $this->headers["Location"] = $_ENV["API_URL"] . "/marees/$year";
 
-        $newYear = ["annee" => (int) $year];
+        $data = ["annee" => (int) $year];
 
         $this->response
             ->setCode(201)
             ->setHeaders($this->headers)
-            ->setBody(json_encode($newYear));
+            ->setBody(json_encode($data));
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $year, $newYear);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $year, $data);
     }
 
     /**
-     * Supprime les marrées pour une année.
+     * Deletes tides for a year.
      * 
-     * @param int $year Année pour laquelle supprimer les marées.
+     * @param int $year Year for which to delete the tides.
      */
-    public function delete(int $year)
+    public function delete(int $year): void
     {
-        $success = $this->model->delete($year);
+        $success = $this->service->deleteTides($year);
 
         if ($success) {
             $this->response->setCode(204);

@@ -1,36 +1,40 @@
 <?php
 
-namespace App\Models\Utils;
+// Path: api/src/Repository/TideRepository.php
 
-use App\Models\Model;
-use App\Core\Constants;
+namespace App\Repository;
 
-class MareesModel extends Model
+use const App\Core\Constants\ONE_WEEK;
+
+class TideRepository extends Repository
 {
-    private $redis_ns = "marees";
+    private $redisNamespace = "marees";
 
     /**
-     * Récupère les marées en fonction du filtre.
+     * Retrieves tides based on the filter.
      * 
-     * @return array Toutes les marées récupérées.
+     * @param string|null $start Start date.
+     * @param string|null $end   End date.
+     * 
+     * @return array All retrieved tides.
      */
-    public function read(array $filter = []): array
+    public function fetchTides(?string $start, ?string $end): array
     {
-        $startDate = $filter["debut"] ?? "0001-01-01";
-        $endDate = $filter["fin"] ?? "9999-12-31";
+        $start ??= "0001-01-01";
+        $end ??= "9999-12-31";
 
-        $datesHash = md5($startDate . $endDate);
+        $datesHash = md5($start . $end);
 
         // Redis
-        $tides = json_decode($this->redis->get($this->redis_ns . ":" . $datesHash));
+        $tides = json_decode($this->redis->get($this->redisNamespace . ":" . $datesHash));
 
         if (!$tides) {
-            $statement = "SELECT * FROM marees WHERE `date` BETWEEN :debut AND :fin";
+            $statement = "SELECT * FROM marees m WHERE m.date BETWEEN :start AND :end";
 
             $request = $this->mysql->prepare($statement);
             $request->execute([
-                "debut" => $startDate,
-                "fin" => $endDate
+                "start" => $start,
+                "end" => $end,
             ]);
             $tides = $request->fetchAll();
 
@@ -41,7 +45,7 @@ class MareesModel extends Model
             }
 
             if (!empty($tides)) {
-                $this->redis->setex($this->redis_ns . ":" . $datesHash, Constants::ONE_WEEK, json_encode($tides));
+                $this->redis->setex($this->redisNamespace . ":" . $datesHash, ONE_WEEK, json_encode($tides));
             }
         }
 
@@ -53,30 +57,30 @@ class MareesModel extends Model
      * 
      * @return array Les marées de l'année.
      */
-    public function readYear(int $annee): array
+    public function fetchTidesByYear(int $year): array
     {
         // Redis
-        $tidesOfYear = json_decode($this->redis->get($this->redis_ns . ":" . $annee));
+        $tides = json_decode($this->redis->get($this->redisNamespace . ":" . $year));
 
-        if (!$tidesOfYear) {
-            $statement = "SELECT * FROM marees WHERE SUBSTRING(date, 1, 4) = :annee";
+        if (!$tides) {
+            $statement = "SELECT * FROM marees WHERE SUBSTRING(date, 1, 4) = :year";
 
             $request = $this->mysql->prepare($statement);
-            $request->execute(["annee" => $annee]);
-            $tidesOfYear = $request->fetchAll();
+            $request->execute(["year" => $year]);
+            $tides = $request->fetchAll();
 
-            for ($i = 0; $i < count($tidesOfYear); $i++) {
-                $tidesOfYear[$i]["heure"] = substr($tidesOfYear[$i]["heure"], 0, -3);
-                $tidesOfYear[$i]["te_cesson"] = (float) $tidesOfYear[$i]["te_cesson"];
-                $tidesOfYear[$i]["te_bassin"] = (float) $tidesOfYear[$i]["te_bassin"];
+            for ($i = 0; $i < count($tides); $i++) {
+                $tides[$i]["heure"] = substr($tides[$i]["heure"], 0, -3);
+                $tides[$i]["te_cesson"] = (float) $tides[$i]["te_cesson"];
+                $tides[$i]["te_bassin"] = (float) $tides[$i]["te_bassin"];
             }
 
-            if (!empty($tidesOfYear)) {
-                $this->redis->set($this->redis_ns . ":" . $annee, json_encode($tidesOfYear));
+            if (!empty($tides)) {
+                $this->redis->set($this->redisNamespace . ":" . $year, json_encode($tides));
             }
         }
 
-        return $tidesOfYear;
+        return $tides;
     }
 
     /**
@@ -84,10 +88,10 @@ class MareesModel extends Model
      * 
      * @return array Toutes les années récupérées.
      */
-    public function readYears(): array
+    public function fetchYears(): array
     {
         // Redis
-        $years = json_decode($this->redis->get($this->redis_ns . ":annees"));
+        $years = json_decode($this->redis->get($this->redisNamespace . ":annees"));
 
         if (!$years) {
             $statement = "SELECT DISTINCT SUBSTRING(date, 1, 4) AS annee FROM `utils_marees_shom`";
@@ -98,27 +102,27 @@ class MareesModel extends Model
                 $years[$i] = $years[$i]["annee"];
             }
 
-            $this->redis->set($this->redis_ns . ":annees", json_encode($years));
+            $this->redis->set($this->redisNamespace . ":annees", json_encode($years));
         }
 
         return $years;
     }
 
     /**
-     * Ajoute des marées.
+     * Add tides.
      */
-    public function create(array $tides): void
+    public function addTides(array $tides): void
     {
-        $statement = "INSERT INTO utils_marees_shom VALUES(:date, :heure, :hauteur)";
+        $statement = "INSERT INTO utils_marees_shom VALUES(:date, :time, :heightOfWater)";
 
         $request = $this->mysql->prepare($statement);
 
         $this->mysql->beginTransaction();
-        foreach ($tides as [$date, $time, $height]) {
+        foreach ($tides as [$date, $time, $heightOfWater]) {
             $request->execute([
                 "date" => $date,
-                "heure" => $time,
-                "hauteur" => $height
+                "time" => $time,
+                "heightOfWater" => $heightOfWater
             ]);
         }
         $this->mysql->commit();
@@ -146,11 +150,11 @@ class MareesModel extends Model
     /**
      * Supprime les données des marées de Redis.
      * 
-     * @throws \RedisException 
+     * @throws RedisException 
      */
     private function invalidateRedis()
     {
-        $keys = $this->redis->keys($this->redis_ns . ":*");
+        $keys = $this->redis->keys($this->redisNamespace . ":*");
 
         $this->redis->multi();
 
