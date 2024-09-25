@@ -12,8 +12,8 @@ use App\Controller\Bois\RdvBoisController;
 use App\Controller\Bois\RegistreBoisController;
 use App\Controller\Bois\StatsBoisController;
 use App\Controller\Bois\SuggestionsTransporteursController;
-use App\Controller\Vrac\RdvVracController;
-use App\Controller\Vrac\ProduitVracController;
+use App\Controller\Bulk\BulkAppointmentController;
+use App\Controller\Bulk\BulkProductController;
 use App\Controller\Consignation\EscaleController;
 use App\Controller\Consignation\NumVoyageController;
 use App\Controller\Consignation\TEController;
@@ -62,8 +62,8 @@ $routes = [
     ["/bois/suggestions-transporteurs", SuggestionsTransporteursController::class],
 
     // Vrac
-    ["/vrac/rdvs/[i:id]?", RdvVracController::class],
-    ["/vrac/produits/[i:id]?", ProduitVracController::class],
+    ["/vrac/rdvs/[i:id]?", BulkAppointmentController::class],
+    ["/vrac/produits/[i:id]?", BulkProductController::class],
 
     // Consignation
     ["/consignation/escales/[i:id]?", EscaleController::class],
