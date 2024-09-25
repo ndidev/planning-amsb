@@ -1,25 +1,25 @@
 <?php
 
-namespace App\Controller\Bois;
+namespace App\Controller\Timber;
 
-use App\Models\Bois\StatsModel;
+use App\Service\TimberService;
 use App\Controller\Controller;
 use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AccessException;
 
-class StatsBoisController extends Controller
+class TimberRegistryController extends Controller
 {
-    private $model;
-    private $module = "bois";
+    private TimberService $timberService;
+    private string $module = "bois";
 
     public function __construct()
     {
         parent::__construct();
-        $this->model = new StatsModel();
+        $this->timberService = new TimberService();
         $this->processRequest();
     }
 
-    public function processRequest()
+    public function processRequest(): void
     {
         switch ($this->request->method) {
             case 'OPTIONS':
@@ -28,7 +28,7 @@ class StatsBoisController extends Controller
 
             case 'HEAD':
             case 'GET':
-                $this->readAll($this->request->query);
+                $this->get($this->request->query);
                 break;
 
             default:
@@ -38,29 +38,35 @@ class StatsBoisController extends Controller
     }
 
     /**
-     * Récupère tous les RDV bois.
+     * Renvoie l'extrait du registre d'affrètement avec le filtre appliqué.
      * 
-     * @param array $filtre
+     * @param array $filter
      */
-    public function readAll(array $filtre)
+    public function get(array $filter)
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
-        $stats = $this->model->readAll($filtre);
+        $csv = $this->timberService->getChateringRegister($filter);
 
-        $etag = ETag::get($stats);
+        $etag = ETag::get($csv);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
             return;
         }
 
+        $date = date('YmdHis');
+        $filename = "registre_bois_{$date}.csv";
+
         $this->headers["ETag"] = $etag;
+        $this->headers["Content-Type"] = "text/csv";
+        $this->headers["Content-Disposition"] = "attachment; filename={$filename}";
+        $this->headers["Cache-Control"] = "no-store, no-cache";
 
         $this->response
-            ->setBody(json_encode($stats))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setBody($csv);
     }
 }

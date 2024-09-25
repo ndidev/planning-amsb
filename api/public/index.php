@@ -8,10 +8,10 @@ use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\ServerException;
 use App\Controller\Controller;
 use App\Controller\RootController;
-use App\Controller\Bois\RdvBoisController;
-use App\Controller\Bois\RegistreBoisController;
-use App\Controller\Bois\StatsBoisController;
-use App\Controller\Bois\SuggestionsTransporteursController;
+use App\Controller\Timber\TimberAppointmentController;
+use App\Controller\Timber\TimberRegistryController;
+use App\Controller\Timber\TimberStatsController;
+use App\Controller\Timber\TransportSuggestionsController;
 use App\Controller\Bulk\BulkAppointmentController;
 use App\Controller\Bulk\BulkProductController;
 use App\Controller\Consignation\EscaleController;
@@ -56,10 +56,10 @@ $routes = [
     ["/", RootController::class],
 
     // Bois
-    ["/bois/rdvs/[i:id]?", RdvBoisController::class],
-    ["/bois/registre", RegistreBoisController::class],
-    ["/bois/stats", StatsBoisController::class],
-    ["/bois/suggestions-transporteurs", SuggestionsTransporteursController::class],
+    ["/bois/rdvs/[i:id]?", TimberAppointmentController::class],
+    ["/bois/registre", TimberRegistryController::class],
+    ["/bois/stats", TimberStatsController::class],
+    ["/bois/suggestions-transporteurs", TransportSuggestionsController::class],
 
     // Vrac
     ["/vrac/rdvs/[i:id]?", BulkAppointmentController::class],

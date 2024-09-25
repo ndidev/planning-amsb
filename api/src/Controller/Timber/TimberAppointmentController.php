@@ -1,28 +1,27 @@
 <?php
 
-namespace App\Controller\Bois;
+namespace App\Controller\Timber;
 
-use App\Models\Bois\RdvModel;
 use App\Controller\Controller;
-use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AccessException;
-use App\Core\Exceptions\Server\DB\DBException;
+use App\Core\HTTP\ETag;
+use App\Service\TimberService;
 
-class RdvBoisController extends Controller
+class TimberAppointmentController extends Controller
 {
-    private $model;
-    private $module = "bois";
-    private $sseEventName = "bois/rdvs";
+    private TimberService $timberService;
+    private string $module = "bois";
+    private string $sse_event = "bois/rdvs";
 
     public function __construct(
-        private ?int $id = null,
+        private ?int $id = null
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE");
-        $this->model = new RdvModel();
+        $this->timberService = new TimberService();
         $this->processRequest();
     }
 
-    public function processRequest()
+    public function processRequest(): void
     {
         switch ($this->request->method) {
             case 'OPTIONS':
@@ -63,15 +62,15 @@ class RdvBoisController extends Controller
     /**
      * Récupère tous les RDV bois.
      * 
-     * @param array $filter
+     * @param array $filtre
      */
-    public function readAll(array $filter)
+    public function readAll(array $filtre)
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
-        $appointments = $this->model->readAll($filter);
+        $appointments = $this->timberService->getAppointments($filtre);
 
         $etag = ETag::get($appointments);
 
@@ -84,7 +83,7 @@ class RdvBoisController extends Controller
 
         $this->response
             ->setHeaders($this->headers)
-            ->setBody(json_encode($appointments));
+            ->setJSON($appointments);
     }
 
     /**
@@ -99,7 +98,7 @@ class RdvBoisController extends Controller
             throw new AccessException();
         }
 
-        $appointment = $this->model->read($id);
+        $appointment = $this->timberService->getAppointment($id);
 
         if (!$appointment && !$dryRun) {
             $this->response->setCode(404);
@@ -121,7 +120,7 @@ class RdvBoisController extends Controller
 
         $this->response
             ->setHeaders($this->headers)
-            ->setBody(json_encode($appointment));
+            ->setJSON($appointment);
     }
 
     /**
@@ -142,19 +141,18 @@ class RdvBoisController extends Controller
             return;
         }
 
-        $donnees = $this->model->create($input);
+        $appointment = $this->timberService->createAppointment($input);
 
-        $id = $donnees["id"];
+        $id = $appointment->getId();
 
         $this->headers["Location"] = $_ENV["API_URL"] . "/bois/rdv/$id";
 
         $this->response
             ->setCode(201)
-            ->setBody(json_encode($donnees))
             ->setHeaders($this->headers)
-            ->flush();
+            ->setJSON($appointment);
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $donnees);
+        $this->sse->addEvent($this->sse_event, __FUNCTION__, $id, $appointment);
     }
 
     /**
@@ -168,21 +166,20 @@ class RdvBoisController extends Controller
             throw new AccessException();
         }
 
-        if (!$this->model->exists($id)) {
+        if (!$this->timberService->appointmentExists($id)) {
             $this->response->setCode(404);
             return;
         }
 
         $input = $this->request->body;
 
-        $donnees = $this->model->update($id, $input);
+        $appointment = $this->timberService->updateAppointment($id, $input);
 
         $this->response
-            ->setBody(json_encode($donnees))
             ->setHeaders($this->headers)
-            ->flush();
+            ->setJSON($appointment);
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $donnees);
+        $this->sse->addEvent($this->sse_event, __FUNCTION__, $id, $appointment);
     }
 
     /**
@@ -190,27 +187,28 @@ class RdvBoisController extends Controller
      * 
      * @param int $id id du RDV à modifier.
      */
-    public function patch(int $id)
+    public function patch(?int $id)
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException();
         }
 
-        if (!$this->model->exists($id)) {
+        if ($id && !$this->timberService->appointmentExists($id)) {
             $this->response->setCode(404);
             return;
         }
 
         $input = $this->request->body;
 
-        $updatedAppointment = $this->model->patch($id, $input);
+        $appointment = $this->timberService->patchAppointment($id, $input);
 
         $this->response
-            ->setBody(json_encode($updatedAppointment))
             ->setHeaders($this->headers)
-            ->flush();
+            ->setJSON($appointment);
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $updatedAppointment);
+        if ($appointment) {
+            $this->sse->addEvent($this->sse_event, __FUNCTION__, $id, $appointment);
+        }
     }
 
     /**
@@ -224,21 +222,17 @@ class RdvBoisController extends Controller
             throw new AccessException();
         }
 
-        if (!$this->model->exists($id)) {
+        if (!$this->timberService->appointmentExists($id)) {
             $message = "Not Found";
-            $docURL = $_ENV["API_URL"] . "/doc/#/Bois/supprimerRdvBois";
-            $body = json_encode(["message" => $message, "documentation_url" => $docURL]);
+            $documentation = $_ENV["API_URL"] . "/doc/#/Bois/supprimerRdvBois";
+            $body = json_encode(["message" => $message, "documentation_url" => $documentation]);
             $this->response->setCode(404)->setBody($body);
             return;
         }
 
-        $success = $this->model->delete($id);
+        $this->timberService->deleteAppointment($id);
 
-        if ($success) {
-            $this->response->setCode(204)->flush();
-            $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
-        } else {
-            throw new DBException("Erreur lors de la suppression");
-        }
+        $this->response->setCode(204)->flush();
+        $this->sse->addEvent($this->sse_event, __FUNCTION__, $id);
     }
 }

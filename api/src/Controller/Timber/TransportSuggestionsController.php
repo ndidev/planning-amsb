@@ -1,25 +1,25 @@
 <?php
 
-namespace App\Controller\Bois;
+namespace App\Controller\Timber;
 
-use App\Models\Bois\SuggestionsTransporteursModel as Model;
 use App\Controller\Controller;
 use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Service\TimberService;
 
-class SuggestionsTransporteursController extends Controller
+class TransportSuggestionsController extends Controller
 {
-    private $model;
+    private $service;
     private $module = "bois";
 
     public function __construct()
     {
         parent::__construct();
-        $this->model = new Model();
+        $this->service = new TimberService();
         $this->processRequest();
     }
 
-    public function processRequest()
+    public function processRequest(): void
     {
         switch ($this->request->method) {
             case 'OPTIONS':
@@ -40,15 +40,18 @@ class SuggestionsTransporteursController extends Controller
     /**
      * Renvoie les suggestions de transporteurs pour un chargement et une livraison.
      * 
-     * @param array $filtre
+     * @param array $filter
      */
-    public function readAll(array $filtre)
+    public function readAll(array $filter)
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
-        $suggestions = $this->model->readAll($filtre);
+        $loadingPlaceId = $filter["chargement"] ?? 0;
+        $deliveryPlaceId = $filter["livraison"] ?? 0;
+
+        $suggestions = $this->service->getTransportSuggestions($loadingPlaceId, $deliveryPlaceId);
 
         $etag = ETag::get($suggestions);
 
@@ -60,7 +63,7 @@ class SuggestionsTransporteursController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($suggestions))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($suggestions);
     }
 }
