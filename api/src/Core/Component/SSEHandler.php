@@ -2,6 +2,7 @@
 
 namespace App\Core\Component;
 
+use App\Core\Interfaces\Arrayable;
 use App\Core\Logger\ErrorLogger;
 
 /**
@@ -25,7 +26,7 @@ class SSEHandler
             "name" => $name,
             "type" => $type,
             "id" => $id,
-            "data" => $data,
+            "data" => $data instanceof Arrayable ? $data->toArray() : $data,
             "origin" => $_SERVER["HTTP_X_SSE_CONNECTION"] ?? NULL,
         ];
     }
