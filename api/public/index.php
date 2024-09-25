@@ -7,36 +7,36 @@ use App\Core\Security;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\ServerException;
 use App\Controller\Controller;
-use App\Controller\RootController as Root;
-use App\Controller\Bois\RdvController as RdvBois;
-use App\Controller\Bois\RegistreController as RegistreBois;
-use App\Controller\Bois\StatsController as StatsBois;
-use App\Controller\Bois\SuggestionsTransporteursController as SuggestionsTransporteurs;
-use App\Controller\Vrac\RdvController as RdvVrac;
-use App\Controller\Vrac\ProduitController as VracProduit;
-use App\Controller\Consignation\EscaleController as EscaleConsignation;
-use App\Controller\Consignation\NumVoyageController as NumVoyageConsignation;
-use App\Controller\Consignation\TEController as TE;
-use App\Controller\Consignation\StatsController as StatsConsignation;
-use App\Controller\Consignation\NaviresEnActiviteController as NaviresEnActivite;
-use App\Controller\Consignation\ListeNaviresController as NaviresConsignation;
-use App\Controller\Consignation\ListeMarchandisesController as MarchandisesConsignation;
-use App\Controller\Consignation\ListeClientsController as ClientsConsignation;
-use App\Controller\Chartering\CharterController as AffretementMaritime;
+use App\Controller\RootController;
+use App\Controller\Bois\RdvBoisController;
+use App\Controller\Bois\RegistreBoisController;
+use App\Controller\Bois\StatsBoisController;
+use App\Controller\Bois\SuggestionsTransporteursController;
+use App\Controller\Vrac\RdvVracController;
+use App\Controller\Vrac\ProduitVracController;
+use App\Controller\Consignation\EscaleController;
+use App\Controller\Consignation\NumVoyageController;
+use App\Controller\Consignation\TEController;
+use App\Controller\Consignation\StatsConsignationController;
+use App\Controller\Consignation\NaviresEnActiviteController;
+use App\Controller\Consignation\ListeNaviresConsignationController;
+use App\Controller\Consignation\ListeMarchandisesConsignationController;
+use App\Controller\Consignation\ListeClientsConsignationController;
+use App\Controller\Chartering\CharterController;
 use App\Controller\ThirdParty\ThirdPartyController;
-use App\Controller\Tiers\NombreRdvController as NombreRdv;
-use App\Controller\Utils\PortController as Ports;
-use App\Controller\Utils\CountryController as Pays;
-use App\Controller\Utils\TideController as Marees;
-use App\Controller\Config\AgenceController as Agence;
-use App\Controller\Config\BandeauInfoController as BandeauInfo;
-use App\Controller\Config\ConfigPDFController as ConfigPDF;
-use App\Controller\Config\PDF\VisualiserPDFController as VisualiserPDF;
-use App\Controller\Config\PDF\EnvoiPDFController as EnvoiPDF;
-use App\Controller\Config\AjoutRapideController as AjoutRapide;
-use App\Controller\Config\CoteController as Cote;
-use App\Controller\User\UserController as UserManagement;
-use App\Controller\Admin\UserAccountController as UserAccount;
+use App\Controller\ThirdParty\AppointmentCountController;
+use App\Controller\Utils\PortController;
+use App\Controller\Utils\CountryController;
+use App\Controller\Utils\TideController;
+use App\Controller\Config\AgenceController;
+use App\Controller\Config\BandeauInfoController;
+use App\Controller\Config\ConfigPDFController;
+use App\Controller\Config\PDF\VisualiserPDFController;
+use App\Controller\Config\PDF\EnvoiPDFController;
+use App\Controller\Config\AjoutRapideController;
+use App\Controller\Config\CoteController;
+use App\Controller\User\UserController;
+use App\Controller\Admin\UserAccountController;
 use App\Core\Logger\ErrorLogger;
 
 if (Security::checkIfRequestCanBeDone() === false) {
@@ -53,55 +53,55 @@ if (Security::checkIfRequestCanBeDone() === false) {
  */
 $routes = [
     // Affichage général
-    ["/", Root::class],
+    ["/", RootController::class],
 
     // Bois
-    ["/bois/rdvs/[i:id]?", RdvBois::class],
-    ["/bois/registre", RegistreBois::class],
-    ["/bois/stats", StatsBois::class],
-    ["/bois/suggestions-transporteurs", SuggestionsTransporteurs::class],
+    ["/bois/rdvs/[i:id]?", RdvBoisController::class],
+    ["/bois/registre", RegistreBoisController::class],
+    ["/bois/stats", StatsBoisController::class],
+    ["/bois/suggestions-transporteurs", SuggestionsTransporteursController::class],
 
     // Vrac
-    ["/vrac/rdvs/[i:id]?", RdvVrac::class],
-    ["/vrac/produits/[i:id]?", VracProduit::class],
+    ["/vrac/rdvs/[i:id]?", RdvVracController::class],
+    ["/vrac/produits/[i:id]?", ProduitVracController::class],
 
     // Consignation
-    ["/consignation/escales/[i:id]?", EscaleConsignation::class],
-    ["/consignation/voyage", NumVoyageConsignation::class],
-    ["/consignation/te", TE::class],
-    ["/consignation/stats/[*:ids]?", StatsConsignation::class],
-    ["/consignation/navires", NaviresConsignation::class],
-    ["/consignation/marchandises", MarchandisesConsignation::class],
-    ["/consignation/clients", ClientsConsignation::class],
-    ["/consignation/navires-en-activite", NaviresEnActivite::class],
+    ["/consignation/escales/[i:id]?", EscaleController::class],
+    ["/consignation/voyage", NumVoyageController::class],
+    ["/consignation/te", TEController::class],
+    ["/consignation/stats/[*:ids]?", StatsConsignationController::class],
+    ["/consignation/navires", ListeNaviresConsignationController::class],
+    ["/consignation/marchandises", ListeMarchandisesConsignationController::class],
+    ["/consignation/clients", ListeClientsConsignationController::class],
+    ["/consignation/navires-en-activite", NaviresEnActiviteController::class],
 
     // Chartering
-    ["/chartering/charters/[i:id]?", AffretementMaritime::class],
+    ["/chartering/charters/[i:id]?", CharterController::class],
 
     // Utilitaires
-    ["/ports/[a:locode]?", Ports::class],
-    ["/pays/[a:iso]?", Pays::class],
-    ["/marees/[i:year]?", Marees::class],
-    ["/marees/annees", Marees::class],
+    ["/ports/[a:locode]?", PortController::class],
+    ["/pays/[a:iso]?", CountryController::class],
+    ["/marees/[i:year]?", TideController::class],
+    ["/marees/annees", TideController::class],
 
     // Config
-    ["/config/agence/[a:service]?", Agence::class],
-    ["/config/bandeau-info/[i:id]?", BandeauInfo::class],
-    ["/config/pdf/[i:id]?", ConfigPDF::class],
-    ["/config/pdf/visu", VisualiserPDF::class],
-    ["/config/pdf/envoi", EnvoiPDF::class],
-    ["/config/ajouts-rapides/[i:id]?", AjoutRapide::class],
-    ["/config/cotes/[a:cote]?", Cote::class],
+    ["/config/agence/[a:service]?", AgenceController::class],
+    ["/config/bandeau-info/[i:id]?", BandeauInfoController::class],
+    ["/config/pdf/[i:id]?", ConfigPDFController::class],
+    ["/config/pdf/visu", VisualiserPDFController::class],
+    ["/config/pdf/envoi", EnvoiPDFController::class],
+    ["/config/ajouts-rapides/[i:id]?", AjoutRapideController::class],
+    ["/config/cotes/[a:cote]?", CoteController::class],
 
     // Tiers
     ["/tiers/[i:id]?", ThirdPartyController::class],
-    ["/tiers/[i:id]?/nombre_rdv", NombreRdv::class],
+    ["/tiers/[i:id]?/nombre_rdv", AppointmentCountController::class],
 
     // Admin
-    ["/admin/users/[a:uid]?", UserAccount::class],
+    ["/admin/users/[a:uid]?", UserAccountController::class],
 
     // Utilisateur
-    ["/user", UserManagement::class],
+    ["/user", UserController::class],
 ];
 
 /**
@@ -125,7 +125,7 @@ try {
         $controller = new $controllerClass(...$params);
     } else {
         // 404 Not Found
-        $controller = new Root(true);
+        $controller = new RootController(true);
     }
 
     $response = $controller->getResponse();

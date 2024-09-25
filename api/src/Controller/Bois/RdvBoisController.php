@@ -8,7 +8,7 @@ use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Server\DB\DBException;
 
-class RdvController extends Controller
+class RdvBoisController extends Controller
 {
     private $model;
     private $module = "bois";

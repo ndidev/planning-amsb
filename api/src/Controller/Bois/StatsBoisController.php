@@ -1,24 +1,21 @@
 <?php
 
-namespace App\Controller\Consignation;
+namespace App\Controller\Bois;
 
-use App\Models\Consignation\ListeClientsModel;
+use App\Models\Bois\StatsModel;
 use App\Controller\Controller;
 use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AccessException;
 
-/**
- * Liste des clients en consignation.
- */
-class ListeClientsController extends Controller
+class StatsBoisController extends Controller
 {
     private $model;
-    private $module = "consignation";
+    private $module = "bois";
 
     public function __construct()
     {
         parent::__construct();
-        $this->model = new ListeClientsModel();
+        $this->model = new StatsModel();
         $this->processRequest();
     }
 
@@ -29,9 +26,9 @@ class ListeClientsController extends Controller
                 $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
                 break;
 
-            case 'GET':
             case 'HEAD':
-                $this->readAll();
+            case 'GET':
+                $this->readAll($this->request->query);
                 break;
 
             default:
@@ -41,17 +38,19 @@ class ListeClientsController extends Controller
     }
 
     /**
-     * Renvoie la liste des clients utilisés en consignation.
+     * Récupère tous les RDV bois.
+     * 
+     * @param array $filtre
      */
-    public function readAll()
+    public function readAll(array $filtre)
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
-        $customers = $this->model->readAll();
+        $stats = $this->model->readAll($filtre);
 
-        $etag = ETag::get($customers);
+        $etag = ETag::get($stats);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -61,7 +60,7 @@ class ListeClientsController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($customers))
+            ->setBody(json_encode($stats))
             ->setHeaders($this->headers);
     }
 }

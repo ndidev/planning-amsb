@@ -2,14 +2,15 @@
 
 namespace App\Controller\Consignation;
 
-use App\Models\Consignation\ListeNaviresModel;
+use App\Models\Consignation\ListeClientsModel;
 use App\Controller\Controller;
 use App\Core\HTTP\ETag;
+use App\Core\Exceptions\Client\Auth\AccessException;
 
 /**
- * Liste des navires ayant fait escale.
+ * Liste des clients en consignation.
  */
-class ListeNaviresController extends Controller
+class ListeClientsConsignationController extends Controller
 {
     private $model;
     private $module = "consignation";
@@ -17,7 +18,7 @@ class ListeNaviresController extends Controller
     public function __construct()
     {
         parent::__construct();
-        $this->model = new ListeNaviresModel();
+        $this->model = new ListeClientsModel();
         $this->processRequest();
     }
 
@@ -28,8 +29,8 @@ class ListeNaviresController extends Controller
                 $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
                 break;
 
-            case 'HEAD':
             case 'GET':
+            case 'HEAD':
                 $this->readAll();
                 break;
 
@@ -40,13 +41,17 @@ class ListeNaviresController extends Controller
     }
 
     /**
-     * Renvoie le dernier numéro de voyage du navire.
+     * Renvoie la liste des clients utilisés en consignation.
      */
     public function readAll()
     {
-        $shipNames = $this->model->readAll();
+        if (!$this->user->canAccess($this->module)) {
+            throw new AccessException();
+        }
 
-        $etag = ETag::get($shipNames);
+        $customers = $this->model->readAll();
+
+        $etag = ETag::get($customers);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -56,7 +61,7 @@ class ListeNaviresController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($shipNames))
+            ->setBody(json_encode($customers))
             ->setHeaders($this->headers);
     }
 }

@@ -2,15 +2,14 @@
 
 namespace App\Controller\Consignation;
 
-use App\Models\Consignation\ListeMarchandisesModel;
+use App\Models\Consignation\ListeNaviresModel;
 use App\Controller\Controller;
 use App\Core\HTTP\ETag;
-use App\Core\Exceptions\Client\Auth\AccessException;
 
 /**
- * Liste des marchandises utilisées en consignation.
+ * Liste des navires ayant fait escale.
  */
-class ListeMarchandisesController extends Controller
+class ListeNaviresConsignationController extends Controller
 {
     private $model;
     private $module = "consignation";
@@ -18,7 +17,7 @@ class ListeMarchandisesController extends Controller
     public function __construct()
     {
         parent::__construct();
-        $this->model = new ListeMarchandisesModel();
+        $this->model = new ListeNaviresModel();
         $this->processRequest();
     }
 
@@ -29,8 +28,8 @@ class ListeMarchandisesController extends Controller
                 $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
                 break;
 
-            case 'GET':
             case 'HEAD':
+            case 'GET':
                 $this->readAll();
                 break;
 
@@ -41,17 +40,13 @@ class ListeMarchandisesController extends Controller
     }
 
     /**
-     * Renvoie la liste des marchandises utilisées en consignation.
+     * Renvoie le dernier numéro de voyage du navire.
      */
     public function readAll()
     {
-        if (!$this->user->canAccess($this->module)) {
-            throw new AccessException();
-        }
+        $shipNames = $this->model->readAll();
 
-        $cargoes = $this->model->readAll();
-
-        $etag = ETag::get($cargoes);
+        $etag = ETag::get($shipNames);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -61,7 +56,7 @@ class ListeMarchandisesController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($cargoes))
+            ->setBody(json_encode($shipNames))
             ->setHeaders($this->headers);
     }
 }

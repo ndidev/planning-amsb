@@ -1,21 +1,24 @@
 <?php
 
-namespace App\Controller\Bois;
+namespace App\Controller\Consignation;
 
-use App\Models\Bois\StatsModel;
+use App\Models\Consignation\ListeMarchandisesModel;
 use App\Controller\Controller;
 use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AccessException;
 
-class StatsController extends Controller
+/**
+ * Liste des marchandises utilisées en consignation.
+ */
+class ListeMarchandisesConsignationController extends Controller
 {
     private $model;
-    private $module = "bois";
+    private $module = "consignation";
 
     public function __construct()
     {
         parent::__construct();
-        $this->model = new StatsModel();
+        $this->model = new ListeMarchandisesModel();
         $this->processRequest();
     }
 
@@ -26,9 +29,9 @@ class StatsController extends Controller
                 $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
                 break;
 
-            case 'HEAD':
             case 'GET':
-                $this->readAll($this->request->query);
+            case 'HEAD':
+                $this->readAll();
                 break;
 
             default:
@@ -38,19 +41,17 @@ class StatsController extends Controller
     }
 
     /**
-     * Récupère tous les RDV bois.
-     * 
-     * @param array $filtre
+     * Renvoie la liste des marchandises utilisées en consignation.
      */
-    public function readAll(array $filtre)
+    public function readAll()
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
-        $stats = $this->model->readAll($filtre);
+        $cargoes = $this->model->readAll();
 
-        $etag = ETag::get($stats);
+        $etag = ETag::get($cargoes);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -60,7 +61,7 @@ class StatsController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($stats))
+            ->setBody(json_encode($cargoes))
             ->setHeaders($this->headers);
     }
 }

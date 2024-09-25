@@ -9,7 +9,7 @@ use App\Core\DateUtils;
 use DateTime;
 use App\Core\Exceptions\Client\Auth\AccessException;
 
-class RegistreController extends Controller
+class RegistreBoisController extends Controller
 {
     private $model;
     private $module = "bois";

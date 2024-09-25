@@ -7,7 +7,7 @@ use App\Controller\Controller;
 use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AccessException;
 
-class StatsController extends Controller
+class StatsConsignationController extends Controller
 {
     private $model;
     private $module = "consignation";
