@@ -32,9 +32,7 @@ use App\Controller\Config\AgenceController;
 use App\Controller\Config\BandeauInfoController;
 use App\Controller\Config\ConfigPDFController;
 use App\Controller\Config\PDF\VisualiserPDFController;
-use App\Controller\Config\PDF\EnvoiPDFController;
-use App\Controller\Config\AjoutRapideController;
-use App\Controller\Config\CoteController;
+use App\Controller\Shipping\ShippingCallController;
 use App\Controller\User\UserController;
 use App\Controller\Admin\UserAccountController;
 use App\Core\Logger\ErrorLogger;
@@ -66,7 +64,7 @@ $routes = [
     ["/vrac/produits/[i:id]?", BulkProductController::class],
 
     // Consignation
-    ["/consignation/escales/[i:id]?", EscaleController::class],
+    ["/consignation/escales/[i:id]?", ShippingCallController::class],
     ["/consignation/voyage", NumVoyageController::class],
     ["/consignation/te", TEController::class],
     ["/consignation/stats/[*:ids]?", StatsConsignationController::class],
