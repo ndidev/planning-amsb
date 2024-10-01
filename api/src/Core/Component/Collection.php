@@ -14,9 +14,7 @@ class Collection implements \IteratorAggregate, \Countable, Arrayable, \JsonSeri
     /**
      * @param T[] $items
      */
-    public function __construct(private array $items = [])
-    {
-    }
+    public function __construct(private array $items = []) {}
 
     /**
      * Add an item to the collection.
@@ -53,11 +51,25 @@ class Collection implements \IteratorAggregate, \Countable, Arrayable, \JsonSeri
     /**
      * Transform the collection to an array.
      * 
+     * Every item of the collection preserves its type.
+     * 
      * @return T[]
+     */
+    public function asArray(): array
+    {
+        return $this->items;
+    }
+
+    /**
+     * Transform the collection to an array.
+     * 
+     * Every item of the collection is also transformed to an array.
+     * 
+     * @return array[]
      */
     public function toArray(): array
     {
-        return array_map(fn ($item) => $item->toArray(), $this->items);
+        return array_map(fn($item) => $item->toArray(), $this->items);
     }
 
     /**
