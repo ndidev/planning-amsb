@@ -6,6 +6,7 @@ class Port extends AbstractEntity
 {
     private string $locode;
     private string $name;
+    private string $displayName;
 
     public function __construct(array $rawData = [])
     {
@@ -39,9 +40,14 @@ class Port extends AbstractEntity
 
     public function getDisplayName(): string
     {
-        $displayName = $this->name . ", " . substr($this->locode, 0, 2);
+        return $this->displayName;
+    }
 
-        return $displayName;
+    public function setDisplayName(string $displayName): static
+    {
+        $this->displayName = $displayName;
+
+        return $this;
     }
 
     public function toArray(): array

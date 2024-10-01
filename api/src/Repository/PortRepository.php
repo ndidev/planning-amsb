@@ -31,7 +31,7 @@ class PortRepository extends Repository
 
         $portService = new PortService();
 
-        $ports = array_map(fn (array $portRaw) => $portService->makePort($portRaw), $portsRaw);
+        $ports = array_map(fn(array $portRaw) => $portService->makePortFromDatabase($portRaw), $portsRaw);
 
         return $ports;
     }
@@ -55,7 +55,7 @@ class PortRepository extends Repository
 
         $portService = new PortService();
 
-        $port = $portService->makePort($portRaw);
+        $port = $portService->makePortFromDatabase($portRaw);
 
         return $port;
     }

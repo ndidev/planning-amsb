@@ -16,11 +16,12 @@ class PortService
         $this->portRepository = new PortRepository();
     }
 
-    public function makePort(array $rawData): Port
+    public function makePortFromDatabase(array $rawData): Port
     {
         return (new Port())
             ->setLocode($rawData["locode"] ?? "")
-            ->setName($rawData["nom"] ?? "");
+            ->setName($rawData["nom"] ?? "")
+            ->setDisplayName($rawData["nom_affichage"] ?? "");
     }
 
     public function getPorts(): array
