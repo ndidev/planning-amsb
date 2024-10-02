@@ -9,14 +9,14 @@ require_once __DIR__ . "/bootstrap.php";
 
 use App\Core\Database\MySQL;
 use App\Core\Database\Redis;
-use App\Models\Admin\UserAccountModel;
+use App\Repository\UserRepository;
 use App\Core\Auth\User;
 
 $mysql = new MySQL();
 $redis = new Redis();
 
 // Users
-(new UserAccountModel(new User(null, $redis)))->readAll();
+(new UserRepository())->fetchAllUsers();
 
 // Pays
 $statement = "SELECT * FROM utils_pays ORDER BY nom";

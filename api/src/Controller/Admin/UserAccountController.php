@@ -2,17 +2,15 @@
 
 namespace App\Controller\Admin;
 
-use App\Models\Admin\UserAccountModel;
 use App\Controller\Controller;
-use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AdminException;
 use App\Core\Exceptions\Client\Auth\ForbiddenException;
-use App\Core\Exceptions\Server\DB\DBException;
+use App\Core\HTTP\ETag;
+use App\Service\UserService;
 
 class UserAccountController extends Controller
 {
-    private $model;
-    private $module = "admin";
+    private UserService $userService;
     private $sseEventName = "admin/users";
 
     public function __construct(
@@ -24,7 +22,7 @@ class UserAccountController extends Controller
             throw new AdminException();
         }
 
-        $this->model = new UserAccountModel(admin: $this->user);
+        $this->userService = new UserService($this->sse);
         $this->processRequest();
     }
 
@@ -67,9 +65,9 @@ class UserAccountController extends Controller
      */
     public function readAll()
     {
-        $donnees = $this->model->readAll();
+        $users = $this->userService->getUsers();
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($users);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -79,8 +77,8 @@ class UserAccountController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($users);
     }
 
     /**
@@ -91,18 +89,18 @@ class UserAccountController extends Controller
      */
     public function read(string $uid, ?bool $dryRun = false)
     {
-        $donnees = $this->model->read($uid);
+        $user = $this->userService->getUser($uid);
 
-        if (!$donnees && !$dryRun) {
+        if (!$user && !$dryRun) {
             $this->response->setCode(404);
             return;
         }
 
         if ($dryRun) {
-            return $donnees;
+            return $user;
         }
 
-        $etag = ETag::get($donnees);
+        $etag = ETag::get($user);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -112,8 +110,8 @@ class UserAccountController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($donnees))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($user);
     }
 
     /**
@@ -128,18 +126,18 @@ class UserAccountController extends Controller
             return;
         }
 
-        $donnees = $this->model->create($input);
+        $newUser = $this->userService->createUser($input, $this->user->name);
 
-        $uid = $donnees["uid"];
+        $uid = $newUser->getUid();
 
         $this->headers["Location"] = $_ENV["API_URL"] . "/admin/users/$uid";
 
         $this->response
             ->setCode(201)
-            ->setBody(json_encode($donnees))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($newUser);
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $uid, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $uid, $newUser);
     }
 
     /**
@@ -156,13 +154,13 @@ class UserAccountController extends Controller
 
         $input = $this->request->body;
 
-        $donnees = $this->model->update($uid, $input);
+        $updatedUser = $this->userService->updateUser($uid, $input, $this->user);
 
         $this->response
-            ->setBody(json_encode($donnees))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($updatedUser);
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $uid, $donnees);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $uid, $updatedUser);
     }
 
     /**
@@ -182,13 +180,9 @@ class UserAccountController extends Controller
             return;
         }
 
-        $success = $this->model->delete($uid);
+        $this->userService->deleteUser($uid, $this->user->name);
 
-        if ($success) {
-            $this->response->setCode(204);
-            $this->sse->addEvent($this->sseEventName, __FUNCTION__, $uid);
-        } else {
-            throw new DBException("Erreur lors de la suppression");
-        }
+        $this->response->setCode(204);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $uid);
     }
 }
