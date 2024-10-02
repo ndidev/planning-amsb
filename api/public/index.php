@@ -14,14 +14,14 @@ use App\Controller\Config\ConfigPDFController;
 use App\Controller\Config\CoteController;
 use App\Controller\Config\PDF\EnvoiPDFController;
 use App\Controller\Config\PDF\VisualiserPDFController;
-use App\Controller\Shipping\ShippingCallController;
 use App\Controller\Consignation\ListeClientsConsignationController;
 use App\Controller\Consignation\ListeMarchandisesConsignationController;
 use App\Controller\Consignation\ListeNaviresConsignationController;
 use App\Controller\Consignation\NaviresEnActiviteController;
-use App\Controller\Consignation\NumVoyageController;
 use App\Controller\Consignation\StatsConsignationController;
 use App\Controller\Consignation\TEController;
+use App\Controller\Shipping\ShippingCallController;
+use App\Controller\Shipping\VoyageNumberController;
 use App\Controller\ThirdParty\AppointmentCountController;
 use App\Controller\ThirdParty\ThirdPartyController;
 use App\Controller\Timber\TimberAppointmentController;
@@ -67,7 +67,7 @@ $routes = [
 
     // Consignation
     ["/consignation/escales/[i:id]?", ShippingCallController::class],
-    ["/consignation/voyage", NumVoyageController::class],
+    ["/consignation/voyage", VoyageNumberController::class],
     ["/consignation/te", TEController::class],
     ["/consignation/stats/[*:ids]?", StatsConsignationController::class],
     ["/consignation/navires", ListeNaviresConsignationController::class],

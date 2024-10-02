@@ -163,7 +163,7 @@
         {
           params: {
             navire: escale.navire,
-            id: id.toString(),
+            id: id ? id.toString() : "",
           },
         }
       );

@@ -498,4 +498,40 @@ class ShippingRepository extends Repository
 
         return $success;
     }
+
+    /**
+     * Récupère un numéro de voyage pour un navire.
+     * 
+     * @param string $shipName Nom du navire.
+     * @param int    $id       ID de l'escale.
+     * 
+     * @return string Dernier numéro de voyage du navire.
+     */
+    public function fetchLastVoyageNumber(string $shipName, ?int $id): string
+    {
+        // Si un id d'escale est fourni, récupérer le dernier numéro de voyage
+        // de l'escale précédente :
+        //  - id !== id fourni
+        //  - eta <= eta de l'id fourni
+        //  - etc <= etc de l'id fourni (permet de gérer les escale avec backload)
+        $sql = is_null($id)
+            ? ""
+            : " AND NOT id = '$id'
+                AND eta_date <= (SELECT eta_date FROM consignation_planning WHERE id = '$id')
+                AND eta_date <= COALESCE((SELECT eta_date FROM consignation_planning WHERE id = '$id'), '9999-12-31')";
+
+        $statement =
+            "SELECT voyage
+            FROM consignation_planning
+            WHERE navire = :navire
+            $sql
+            ORDER BY eta_date DESC, etc_date DESC
+            LIMIT 1";
+
+        $voyageNumberRequest = $this->mysql->prepare($statement);
+        $voyageNumberRequest->execute(["navire" => $shipName]);
+        $voyageNumber = $voyageNumberRequest->fetch(\PDO::FETCH_COLUMN) ?: "";
+
+        return $voyageNumber;
+    }
 }

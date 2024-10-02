@@ -171,4 +171,11 @@ class ShippingService
     {
         $this->shippingRepository->deleteCall($id);
     }
+
+    public function getLastVoyageNumber(string $shipName, string $idAsString): string
+    {
+        $id = $idAsString === "" ? null : (int) $idAsString;
+
+        return $this->shippingRepository->fetchLastVoyageNumber($shipName, $id);
+    }
 }

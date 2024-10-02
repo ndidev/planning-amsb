@@ -1,21 +1,21 @@
 <?php
 
-namespace App\Controller\Consignation;
+namespace App\Controller\Shipping;
 
-use App\Models\Consignation\NumVoyageModel;
 use App\Controller\Controller;
-use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\HTTP\ETag;
+use App\Service\ShippingService;
 
-class NumVoyageController extends Controller
+class VoyageNumberController extends Controller
 {
-    private $model;
+    private ShippingService $shippingService;
     private $module = "consignation";
 
     public function __construct()
     {
         parent::__construct();
-        $this->model = new NumVoyageModel();
+        $this->shippingService = new ShippingService();
         $this->processRequest();
     }
 
@@ -48,7 +48,10 @@ class NumVoyageController extends Controller
 
         $input = $this->request->query;
 
-        $voyageNumber = $this->model->read($input);
+        $shipName = $input["navire"] ?? "";
+        $id = $input["id"] ?? "";
+
+        $voyageNumber = $this->shippingService->getLastVoyageNumber($shipName, $id);
 
         $etag = ETag::get($voyageNumber);
 
@@ -60,7 +63,7 @@ class NumVoyageController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($voyageNumber))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON(['voyage' => $voyageNumber]);
     }
 }
