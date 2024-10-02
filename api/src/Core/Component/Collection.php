@@ -28,12 +28,17 @@ class Collection implements \IteratorAggregate, \Countable, Arrayable, \JsonSeri
         return $this;
     }
 
-    // public function remove(Identifiable $item): static
-    // {
-    //     $this->items = array_filter($this->items, fn($i) => $i->getId() !== $item->getId());
+    /**
+     * Remove an item from the collection.
+     * 
+     * @param T $item 
+     */
+    public function remove(mixed $item): static
+    {
+        $this->items = array_filter($this->items, fn($i) => $i !== $item);
 
-    //     return $this;
-    // }
+        return $this;
+    }
 
     /**
      * @return T[]
