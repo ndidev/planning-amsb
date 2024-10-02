@@ -64,6 +64,11 @@
   }
 
   async function recupererDetails(ids: number[]) {
+    if (ids.length === 0) {
+      details = [];
+      return;
+    }
+
     const escales = await fetcher<EscaleConsignation[]>(
       `consignation/stats/${ids.join(",")}`
     );
@@ -109,6 +114,10 @@
 
         <tbody>
           {#each Object.entries(stats["Par année"]) as [annee, statsAnnee]}
+            {@const totalAnnee = Object.values(statsAnnee)
+              .map(({ nombre }) => nombre)
+              .reduce((sum, current) => sum + current, 0)}
+
             <tr>
               <th scope="row">{annee}</th>
               {#each Object.entries(statsAnnee) as [mois, statsMois]}
@@ -121,20 +130,24 @@
 
               <!-- Total par année -->
               <td class="total">
-                <button
-                  class="bold"
-                  on:click={() =>
-                    recupererDetails(
-                      Object.values(statsAnnee)
-                        .map(({ ids }) => ids)
-                        .reduce((prev, current) => [...current, ...prev], [])
-                    )}
-                >
-                  {Object.values(statsAnnee)
-                    .map(({ nombre }) => nombre)
-                    .reduce((sum, current) => sum + current, 0)
-                    .toLocaleString("fr-FR")}
-                </button>
+                {#if totalAnnee > 0}
+                  <button
+                    class="bold"
+                    on:click={() =>
+                      recupererDetails(
+                        Object.values(statsAnnee)
+                          .map(({ ids }) => ids)
+                          .reduce((prev, current) => [...current, ...prev], [])
+                      )}
+                  >
+                    {Object.values(statsAnnee)
+                      .map(({ nombre }) => nombre)
+                      .reduce((sum, current) => sum + current, 0)
+                      .toLocaleString("fr-FR")}
+                  </button>
+                {:else}
+                  0
+                {/if}
               </td>
             </tr>
           {/each}
@@ -167,9 +180,9 @@
                       .map((annee) =>
                         Object.values(annee)
                           .map(({ ids }) => ids)
-                          .reduce((prev, current) => [...prev, ...current])
+                          .reduce((prev, current) => [...prev, ...current], [])
                       )
-                      .reduce((prev, current) => [...prev, ...current])
+                      .reduce((prev, current) => [...prev, ...current], [])
                   )}
               >
                 {stats.Total.toLocaleString("fr-FR")}
