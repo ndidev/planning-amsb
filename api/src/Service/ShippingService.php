@@ -178,4 +178,53 @@ class ShippingService
 
         return $this->shippingRepository->fetchLastVoyageNumber($shipName, $id);
     }
+
+    public function getDraftsPerTonnage(): array
+    {
+        return $this->shippingRepository->fetchDraftsPerTonnage();
+    }
+
+    public function getStatsSummary(array $filter): array
+    {
+        return $this->shippingRepository->fetchStatsSummary($filter);
+    }
+
+    public function getStatsDetails(string|array $ids): array
+    {
+        $ids = is_array($ids) ? $ids : explode(",", $ids);
+
+        return $this->shippingRepository->fetchStatsDetails($ids);
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getAllShipNames(): array
+    {
+        return $this->shippingRepository->fetchAllShipNames();
+    }
+
+    public function getShipsInOps(array $query): array
+    {
+        $startDate = isset($query['date_debut']) ? new \DateTimeImmutable($query['date_debut']) : null;
+        $endDate = isset($query['date_fin']) ? new \DateTimeImmutable($query['date_fin']) : null;
+
+        return $this->shippingRepository->fetchShipsInOps($startDate, $endDate);
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getAllCargoNames(): array
+    {
+        return $this->shippingRepository->fetchAllCargoNames();
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getAllCustomersNames(): array
+    {
+        return $this->shippingRepository->fetchAllCustomersNames();
+    }
 }

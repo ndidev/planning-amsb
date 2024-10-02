@@ -1,22 +1,22 @@
 <?php
 
-namespace App\Controller\Consignation;
+namespace App\Controller\Shipping;
 
-use App\Models\Consignation\StatsModel;
 use App\Controller\Controller;
-use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\HTTP\ETag;
+use App\Service\ShippingService;
 
-class StatsConsignationController extends Controller
+class ShippingStatsController extends Controller
 {
-    private $model;
+    private ShippingService $shippingService;
     private $module = "consignation";
 
     public function __construct(
         private ?string $ids = null,
     ) {
         parent::__construct();
-        $this->model = new StatsModel();
+        $this->shippingService = new ShippingService();
         $this->processRequest();
     }
 
@@ -32,7 +32,7 @@ class StatsConsignationController extends Controller
                 if ($this->ids) {
                     $this->readDetails($this->ids);
                 } else {
-                    $this->readAll($this->request->query);
+                    $this->readSummary($this->request->query);
                 }
                 break;
 
@@ -45,15 +45,15 @@ class StatsConsignationController extends Controller
     /**
      * Récupère toutes les escales consignation.
      * 
-     * @param array $filtre
+     * @param array $filter
      */
-    public function readAll(array $filtre)
+    public function readSummary(array $filter)
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
-        $stats = $this->model->readAll($filtre);
+        $stats = $this->shippingService->getStatsSummary($filter);
 
         $etag = ETag::get($stats);
 
@@ -65,8 +65,8 @@ class StatsConsignationController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($stats))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($stats);
     }
 
     /**
@@ -74,13 +74,13 @@ class StatsConsignationController extends Controller
      * 
      * @param array $filtre
      */
-    public function readDetails($ids)
+    public function readDetails(string $ids)
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
-        $stats = $this->model->readDetails($ids);
+        $stats = $this->shippingService->getStatsDetails($ids);
 
         $etag = ETag::get($stats);
 
@@ -92,7 +92,7 @@ class StatsConsignationController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($stats))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($stats);
     }
 }

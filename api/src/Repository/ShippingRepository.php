@@ -534,4 +534,264 @@ class ShippingRepository extends Repository
 
         return $voyageNumber;
     }
+
+    /**
+     * Récupère tous les tirants d'eau du planning consignation.
+     * 
+     * @return array Tous les tirants d'eau récupérés
+     */
+    public function fetchDraftsPerTonnage(): array
+    {
+        $statement = "SELECT * FROM drafts_par_tonnage";
+
+        $draftsPerTonnage = $this->mysql->query($statement)->fetchAll();
+
+        return $draftsPerTonnage;
+    }
+
+    /**
+     * Récupère les stats consignation.
+     * 
+     * @param array $filter Filtre qui contient...
+     * 
+     * @return array Stats consignation.
+     */
+    public function fetchStatsSummary(array $filter): array
+    {
+        // Filtre
+        $startDate = isset($filter['date_debut']) ? ($filter['date_debut'] ?: "0001-01-01") : "0001-01-01";
+        $endDate = isset($filter["date_fin"]) ? ($filter['date_fin'] ?: "9999-12-31") : "9999-12-31";
+        $shipFilter = trim(preg_replace("/([^,]+),?/", "'$1',", $filter['navire'] ?? ""), ",");
+        $shipOwnerFilter = trim($filter['armateur'] ?? "", ",");
+        $cargoFilter = trim(preg_replace("/([^,]+),?/", "'$1',", $filter['marchandise'] ?? ""), ",");
+        $customerFilter = trim(preg_replace("/([^,]+),?/", "'$1',", $filter['client'] ?? ""), ",");
+        $lastPortFilter = trim(preg_replace("/([^,]+),?/", "'$1',", $filter['last_port'] ?? ""), ",");
+        $nextPortFilter = trim(preg_replace("/([^,]+),?/", "'$1',", $filter['next_port'] ?? ""), ",");
+
+        $sqlShipFilter = $shipFilter === "" ? "" : " AND cp.navire IN ($shipFilter)";
+        $sqlShipOwnerFilter = $shipOwnerFilter === "" ? "" : " AND cp.armateur IN ($shipOwnerFilter)";
+        $sqlCargoFilter = $cargoFilter === "" ? "" : " AND cem.marchandise IN ($cargoFilter)";
+        $sqlCustomerFilter = $customerFilter === "" ? "" : " AND cem.client IN ($customerFilter)";
+        $sqlLastPortFilter = $lastPortFilter === "" ? "" : " AND cp.last_port IN ($lastPortFilter)";
+        $sqlNextPortFilter = $nextPortFilter === "" ? "" : " AND cp.next_port IN ($nextPortFilter)";
+
+        $sqlFilter =
+            $sqlShipFilter
+            . $sqlCargoFilter
+            . $sqlShipOwnerFilter
+            . $sqlCustomerFilter
+            . $sqlLastPortFilter
+            . $sqlNextPortFilter;
+
+        $callsStatement =
+            "SELECT
+                cp.id,
+                cp.etc_date as `date`
+            FROM consignation_planning cp
+            LEFT JOIN consignation_escales_marchandises cem ON cem.escale_id = cp.id
+            WHERE cp.etc_date BETWEEN :date_debut AND :date_fin
+            $sqlFilter
+            GROUP BY cp.id";
+
+        $callsRequest = $this->mysql->prepare($callsStatement);
+
+        $callsRequest->execute([
+            "date_debut" => $startDate,
+            "date_fin" => $endDate
+        ]);
+
+        $calls = $callsRequest->fetchAll();
+
+        $stats = [
+            "Total" => count($calls),
+            "Par année" => [],
+        ];
+
+        $yearTemplate = [
+            1 => ["nombre" => 0, "ids" => []],
+            2 => ["nombre" => 0, "ids" => []],
+            3 => ["nombre" => 0, "ids" => []],
+            4 => ["nombre" => 0, "ids" => []],
+            5 => ["nombre" => 0, "ids" => []],
+            6 => ["nombre" => 0, "ids" => []],
+            7 => ["nombre" => 0, "ids" => []],
+            8 => ["nombre" => 0, "ids" => []],
+            9 => ["nombre" => 0, "ids" => []],
+            10 => ["nombre" => 0, "ids" => []],
+            11 => ["nombre" => 0, "ids" => []],
+            12 => ["nombre" => 0, "ids" => []],
+        ];
+
+        // Compilation du nombre de RDV par année et par mois
+        foreach ($calls as $call) {
+            $date = explode("-", $call["date"]);
+            $year = $date[0];
+            $month = $date[1];
+
+            if (!array_key_exists($year, $stats["Par année"])) {
+                $stats["Par année"][$year] = $yearTemplate;
+            };
+
+            // $stats["Total"]++;
+            $stats["Par année"][$year][(int) $month]["nombre"]++;
+            $stats["Par année"][$year][(int) $month]["ids"][] = $call["id"];
+        }
+
+        return $stats;
+    }
+
+    /**
+     * Récupère les détails des stats consignation.
+     * 
+     * @param array $ids Identifiants des escales.
+     * 
+     * @return array Détails des stats.
+     */
+    public function fetchStatsDetails(array $ids): array
+    {
+        if (count($ids) === 0) {
+            return [];
+        }
+
+        // Filtre
+        $idsAsString = join(",", $ids);
+
+        $callsStatement =
+            "SELECT
+                cp.id,
+                cp.navire,
+                cp.ops_date,
+                cp.etc_date,
+                IFNULL(cem.marchandise, '') as marchandise,
+                IFNULL(cem.client, '') as client,
+                cem.tonnage_bl,
+                cem.tonnage_outturn,
+                cem.cubage_bl,
+                cem.cubage_outturn,
+                cem.nombre_bl,
+                cem.nombre_outturn
+            FROM consignation_planning cp
+            LEFT JOIN consignation_escales_marchandises cem ON cem.escale_id = cp.id
+            WHERE cp.id IN ($idsAsString)
+            ORDER BY cp.etc_date DESC";
+
+        $callsRequest = $this->mysql->query($callsStatement);
+
+        $calls = $callsRequest->fetchAll();
+
+        $groupedCalls = [];
+
+        // Grouper par escale
+        foreach ($calls as $call) {
+            if (!array_key_exists($call["id"], $groupedCalls)) {
+                $groupedCalls[$call["id"]] = [
+                    "id" => $call["id"],
+                    "navire" => $call["navire"],
+                    "ops_date" => $call["ops_date"],
+                    "etc_date" => $call["etc_date"],
+                    "marchandises" => [],
+                ];
+            }
+
+            $groupedCalls[$call["id"]]["marchandises"][] = [
+                "marchandise" => $call["marchandise"],
+                "client" => $call["client"],
+                "tonnage_outturn" => $call["tonnage_outturn"] ?: $call["tonnage_bl"],
+                "cubage_outturn" => $call["cubage_outturn"] ?: $call["cubage_bl"],
+                "nombre_outturn" => $call["nombre_outturn"] ?: $call["nombre_bl"],
+            ];
+        }
+
+        return array_values($groupedCalls);
+    }
+
+    /**
+     * Récupère la liste des tous les noms de navire.
+     * 
+     * @return string[] Liste des noms de navire.
+     */
+    public function fetchAllShipNames(): array
+    {
+        $statement =
+            "SELECT DISTINCT navire
+            FROM consignation_planning
+            WHERE navire IS NOT NULL
+            AND navire <> ''
+            ORDER BY navire ASC";
+
+        $request = $this->mysql->query($statement);
+
+        $shipsNames = $request->fetchAll(\PDO::FETCH_COLUMN);
+
+        return $shipsNames;
+    }
+
+    /**
+     * Récupère la liste des navires en activité entre deux dates.
+     * 
+     * @param array $query
+     * 
+     * @return array Liste des navires en activité.
+     */
+    public function fetchShipsInOps(
+        ?\DateTimeImmutable $startDate = null,
+        ?\DateTimeImmutable $endDate = null,
+    ): array {
+        $statement =
+            "SELECT navire, ops_date AS debut, etc_date AS fin
+            FROM consignation_planning
+            WHERE ops_date <= :date_fin AND etc_date >= :date_debut
+            ORDER BY debut";
+
+        $request = $this->mysql->prepare($statement);
+        $request->execute([
+            "date_debut" => $startDate ? $startDate->format("Y-m-d") : date("Y-m-d"),
+            "date_fin" => $endDate ? $endDate->format("Y-m-d") : "9999-12-31",
+        ]);
+        $shipsInOps = $request->fetchAll();
+
+        return $shipsInOps;
+    }
+
+    /**
+     * Récupère la liste des marchandises utilisées en consignation.
+     * 
+     * @return string[] Liste des marchandises.
+     */
+    public function fetchAllCargoNames(): array
+    {
+        $statement =
+            "SELECT DISTINCT marchandise
+            FROM consignation_escales_marchandises
+            WHERE marchandise IS NOT NULL
+            AND marchandise <> ''
+            ORDER BY marchandise ASC";
+
+        $request = $this->mysql->query($statement);
+
+        $cargoNames = $request->fetchAll(\PDO::FETCH_COLUMN);
+
+        return $cargoNames;
+    }
+
+    /**
+     * Récupère la liste des clients en consignation.
+     * 
+     * @return string[] Liste des clients.
+     */
+    public function fetchAllCustomersNames()
+    {
+        $statement =
+            "SELECT DISTINCT client
+            FROM consignation_escales_marchandises
+            WHERE client IS NOT NULL
+            AND client <> ''
+            ORDER BY client ASC";
+
+        $request = $this->mysql->query($statement);
+
+        $customersNames = $request->fetchAll(\PDO::FETCH_COLUMN);
+
+        return $customersNames;
+    }
 }

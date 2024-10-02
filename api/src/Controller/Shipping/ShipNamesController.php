@@ -1,23 +1,24 @@
 <?php
 
-namespace App\Controller\Consignation;
+namespace App\Controller\Shipping;
 
-use App\Models\Consignation\NaviresEnActiviteModel;
 use App\Controller\Controller;
+use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\HTTP\ETag;
+use App\Service\ShippingService;
 
 /**
- * Liste des navires en opération entre deux dates.
+ * Liste des navires ayant fait escale.
  */
-class NaviresEnActiviteController extends Controller
+class ShipNamesController extends Controller
 {
-    private $model;
+    private ShippingService $shippingService;
     private $module = "consignation";
 
     public function __construct()
     {
         parent::__construct();
-        $this->model = new NaviresEnActiviteModel();
+        $this->shippingService = new ShippingService();
         $this->processRequest();
     }
 
@@ -30,7 +31,7 @@ class NaviresEnActiviteController extends Controller
 
             case 'HEAD':
             case 'GET':
-                $this->readAll();
+                $this->readAllShipNames();
                 break;
 
             default:
@@ -42,13 +43,15 @@ class NaviresEnActiviteController extends Controller
     /**
      * Renvoie le dernier numéro de voyage du navire.
      */
-    public function readAll()
+    public function readAllShipNames()
     {
-        $input = $this->request->query;
+        if (!$this->user->canAccess($this->module)) {
+            throw new AccessException();
+        }
 
-        $shipsInOps = $this->model->readAll($input);
+        $shipNames = $this->shippingService->getAllShipNames();
 
-        $etag = ETag::get($shipsInOps);
+        $etag = ETag::get($shipNames);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -58,7 +61,7 @@ class NaviresEnActiviteController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($shipsInOps))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($shipNames);
     }
 }

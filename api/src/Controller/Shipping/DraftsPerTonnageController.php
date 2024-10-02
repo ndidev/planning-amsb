@@ -1,24 +1,23 @@
 <?php
 
-namespace App\Controller\Consignation;
+// Path: api/src/Controller/Shipping/DraftsPerTonnageController.php
 
-use App\Models\Consignation\ListeMarchandisesModel;
+namespace App\Controller\Shipping;
+
 use App\Controller\Controller;
-use App\Core\HTTP\ETag;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\HTTP\ETag;
+use App\Service\ShippingService;
 
-/**
- * Liste des marchandises utilisées en consignation.
- */
-class ListeMarchandisesConsignationController extends Controller
+class DraftsPerTonnageController extends Controller
 {
-    private $model;
+    private ShippingService $shippingService;
     private $module = "consignation";
 
     public function __construct()
     {
         parent::__construct();
-        $this->model = new ListeMarchandisesModel();
+        $this->shippingService = new ShippingService();
         $this->processRequest();
     }
 
@@ -29,8 +28,8 @@ class ListeMarchandisesConsignationController extends Controller
                 $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
                 break;
 
-            case 'GET':
             case 'HEAD':
+            case 'GET':
                 $this->readAll();
                 break;
 
@@ -41,7 +40,7 @@ class ListeMarchandisesConsignationController extends Controller
     }
 
     /**
-     * Renvoie la liste des marchandises utilisées en consignation.
+     * Renvoie les tirants d'eau du planning consignation.
      */
     public function readAll()
     {
@@ -49,9 +48,9 @@ class ListeMarchandisesConsignationController extends Controller
             throw new AccessException();
         }
 
-        $cargoes = $this->model->readAll();
+        $draftsPerTonnage = $this->shippingService->getDraftsPerTonnage();
 
-        $etag = ETag::get($cargoes);
+        $etag = ETag::get($draftsPerTonnage);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -61,7 +60,7 @@ class ListeMarchandisesConsignationController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($cargoes))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($draftsPerTonnage);
     }
 }

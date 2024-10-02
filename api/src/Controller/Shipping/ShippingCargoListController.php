@@ -1,20 +1,24 @@
 <?php
 
-namespace App\Controller\Consignation;
+namespace App\Controller\Shipping;
 
-use App\Models\Consignation\TEModel;
 use App\Controller\Controller;
 use App\Core\HTTP\ETag;
+use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Service\ShippingService;
 
-class TEController extends Controller
+/**
+ * Liste des marchandises utilisées en consignation.
+ */
+class ShippingCargoListController extends Controller
 {
-    private $model;
+    private ShippingService $shippingService;
     private $module = "consignation";
 
     public function __construct()
     {
         parent::__construct();
-        $this->model = new TEModel();
+        $this->shippingService = new ShippingService();
         $this->processRequest();
     }
 
@@ -25,8 +29,8 @@ class TEController extends Controller
                 $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
                 break;
 
-            case 'HEAD':
             case 'GET':
+            case 'HEAD':
                 $this->readAll();
                 break;
 
@@ -37,13 +41,17 @@ class TEController extends Controller
     }
 
     /**
-     * Renvoie les tirants d'eau du planning consignation.
+     * Renvoie la liste des marchandises utilisées en consignation.
      */
     public function readAll()
     {
-        $drafts = $this->model->readAll();
+        if (!$this->user->canAccess($this->module)) {
+            throw new AccessException();
+        }
 
-        $etag = ETag::get($drafts);
+        $cargoes = $this->shippingService->getAllCargoNames();
+
+        $etag = ETag::get($cargoes);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -53,7 +61,7 @@ class TEController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($drafts))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($cargoes);
     }
 }

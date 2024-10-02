@@ -14,12 +14,12 @@ use App\Controller\Config\ConfigPDFController;
 use App\Controller\Config\CoteController;
 use App\Controller\Config\PDF\EnvoiPDFController;
 use App\Controller\Config\PDF\VisualiserPDFController;
-use App\Controller\Consignation\ListeClientsConsignationController;
-use App\Controller\Consignation\ListeMarchandisesConsignationController;
-use App\Controller\Consignation\ListeNaviresConsignationController;
-use App\Controller\Consignation\NaviresEnActiviteController;
-use App\Controller\Consignation\StatsConsignationController;
-use App\Controller\Consignation\TEController;
+use App\Controller\Shipping\ShipNamesController;
+use App\Controller\Shipping\ShipsInOpsController;
+use App\Controller\Shipping\ShippingCargoListController;
+use App\Controller\Shipping\ShippingCustomersListController;
+use App\Controller\Shipping\ShippingStatsController;
+use App\Controller\Shipping\DraftsPerTonnageController;
 use App\Controller\Shipping\ShippingCallController;
 use App\Controller\Shipping\VoyageNumberController;
 use App\Controller\ThirdParty\AppointmentCountController;
@@ -68,12 +68,12 @@ $routes = [
     // Consignation
     ["/consignation/escales/[i:id]?", ShippingCallController::class],
     ["/consignation/voyage", VoyageNumberController::class],
-    ["/consignation/te", TEController::class],
-    ["/consignation/stats/[*:ids]?", StatsConsignationController::class],
-    ["/consignation/navires", ListeNaviresConsignationController::class],
-    ["/consignation/marchandises", ListeMarchandisesConsignationController::class],
-    ["/consignation/clients", ListeClientsConsignationController::class],
-    ["/consignation/navires-en-activite", NaviresEnActiviteController::class],
+    ["/consignation/te", DraftsPerTonnageController::class],
+    ["/consignation/stats/[*:ids]?", ShippingStatsController::class],
+    ["/consignation/navires", ShipNamesController::class],
+    ["/consignation/marchandises", ShippingCargoListController::class],
+    ["/consignation/clients", ShippingCustomersListController::class],
+    ["/consignation/navires-en-activite", ShipsInOpsController::class],
 
     // Chartering
     ["/chartering/charters/[i:id]?", CharterController::class],
