@@ -67,7 +67,7 @@ class ThirdParty extends AbstractEntity
 
     public function setShortName(string $shortName): static
     {
-        $this->shortName = $shortName;
+        $this->shortName = trim($shortName);
 
         return $this;
     }
@@ -79,7 +79,7 @@ class ThirdParty extends AbstractEntity
 
     public function setFullName(string $fullName): static
     {
-        $this->fullName = $fullName;
+        $this->fullName = trim($fullName);
 
         return $this;
     }
@@ -91,7 +91,7 @@ class ThirdParty extends AbstractEntity
 
     public function setAddressLine1(string $addressLine1): static
     {
-        $this->addressLine1 = $addressLine1;
+        $this->addressLine1 = trim($addressLine1);
 
         return $this;
     }
@@ -103,7 +103,7 @@ class ThirdParty extends AbstractEntity
 
     public function setAddressLine2(string $addressLine2): static
     {
-        $this->addressLine2 = $addressLine2;
+        $this->addressLine2 = trim($addressLine2);
 
         return $this;
     }
@@ -115,7 +115,7 @@ class ThirdParty extends AbstractEntity
 
     public function setPostCode(string $postCode): static
     {
-        $this->postCode = $postCode;
+        $this->postCode = trim($postCode);
 
         return $this;
     }
@@ -127,7 +127,7 @@ class ThirdParty extends AbstractEntity
 
     public function setCity(string $city): static
     {
-        $this->city = $city;
+        $this->city = trim($city);
 
         return $this;
     }
@@ -155,7 +155,7 @@ class ThirdParty extends AbstractEntity
 
     public function setPhone(string $phone): static
     {
-        $this->phone = $phone;
+        $this->phone = trim($phone);
 
         return $this;
     }
