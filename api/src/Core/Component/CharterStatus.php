@@ -6,15 +6,28 @@ namespace App\Core\Component;
 
 enum CharterStatus: int
 {
+    /**
+     * Plannifié (pas confirmé).
+     */
     case PENDING = 0;
-    case CONFIRMED = 1;
-    case CHARTERED = 2;
-    case LOADED = 3;
-    case COMPLETED = 4;
 
-    // { value: 0, text: "Plannifié (pas confirmé)" },
-    // { value: 1, text: "Confirmé par l'affréteur" },
-    // { value: 2, text: "Affrété" },
-    // { value: 3, text: "Chargement effectué" },
-    // { value: 4, text: "Voyage terminé" },
+    /**
+     * Confirmé par l'affréteur.
+     */
+    case CONFIRMED = 1;
+
+    /**
+     * Affrété.
+     */
+    case CHARTERED = 2;
+
+    /**
+     * Chargement effectué.
+     */
+    case LOADED = 3;
+
+    /**
+     * Voyage terminé.
+     */
+    case COMPLETED = 4;
 }

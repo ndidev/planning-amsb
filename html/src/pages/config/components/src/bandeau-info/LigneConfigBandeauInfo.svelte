@@ -46,6 +46,7 @@
       Notiflix.Notify.success("La ligne d'information a été ajoutée");
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
+    } finally {
       Notiflix.Block.remove([ligne]);
     }
   }
@@ -117,9 +118,9 @@
   onMount(() => {
     // Si changement d'une ligne, activation de la classe "modificationEnCours"
     ligne
-      .querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
-        "input, textarea"
-      )
+      .querySelectorAll<
+        HTMLInputElement | HTMLTextAreaElement
+      >("input, textarea")
       .forEach((input) => {
         input.onchange = () => (modificationEnCours = true);
         input.oninput = () => (modificationEnCours = true);

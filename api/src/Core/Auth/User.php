@@ -2,6 +2,7 @@
 
 namespace App\Core\Auth;
 
+use App\Core\Component\Module;
 use App\Core\Component\SSEHandler;
 use App\Core\Database\MySQL;
 use App\Core\Database\Redis;
@@ -17,8 +18,8 @@ use App\Core\Exceptions\Client\Auth\InvalidApiKeyException;
 use App\Core\Exceptions\Client\Auth\LoginException;
 use App\Core\Exceptions\Client\Auth\MaxLoginAttemptsException;
 use App\Core\Exceptions\Client\Auth\SessionException;
-use App\Core\Security;
 
+use App\Core\Security;
 use const App\Core\Constants\ONE_WEEK;
 
 /**
@@ -150,23 +151,18 @@ class User
 
             case AccountStatus::PENDING:
                 throw new AccountPendingException();
-                break;
 
             case AccountStatus::INACTIVE:
                 throw new AccountInactiveException();
-                break;
 
             case AccountStatus::LOCKED:
                 throw new AccountLockedException();
-                break;
 
             case AccountStatus::DELETED:
                 throw new AccountDeletedException();
-                break;
 
             default:
                 throw new AccountStatusException($this->status);
-                break;
         }
 
         // Si tout est OK :
@@ -231,7 +227,8 @@ class User
             ->execute([
                 "uid" => $this->uid,
                 "password" => password_hash($password, PASSWORD_DEFAULT),
-                "statut" => AccountStatus::ACTIVE->value
+                // "statut" => AccountStatus::ACTIVE->value
+                "statut" => AccountStatus::ACTIVE,
             ]);
 
         $this->updateRedis();
@@ -346,28 +343,32 @@ class User
     /**
      * Vérifie si l'utilisateur peut accéder à une rubrique.
      * 
-     * @param ?string Rubrique dont l'accès doit être vérifié.
+     * @param ?Module Rubrique dont l'accès doit être vérifié.
      * 
      * @return bool `true` si l'utilisateur peut accéder à la rubrique, `false` sinon.
      */
-    public function canAccess(?string $rubrique): bool
+    public function canAccess(?Module $module): bool
     {
         // Accès à l'accueil et à l'écran individuel de modification du nom/mdp
-        if ($rubrique === null || $rubrique === "user") return true;
+        if ($module === null || $module === Module::USER) return true;
 
-        return ($this->roles->$rubrique ?? -1) >= UserRoles::ACCESS->value;
+        $moduleName = $module->value;
+
+        return ($this->roles->$moduleName ?? -1) >= UserRoles::ACCESS->value;
     }
 
     /**
      * Vérifie si l'utilisateur peut éditer une rubrique.
      * 
-     * @param ?string Rubrique dont l'accès doit être vérifié.
+     * @param ?Module Rubrique dont l'accès doit être vérifié.
      * 
      * @return bool `true` si l'utilisateur peut éditer la rubrique, `false` sinon.
      */
-    public function canEdit(?string $rubrique): bool
+    public function canEdit(?Module $module): bool
     {
-        return ($this->roles->$rubrique ?? -1) >= UserRoles::EDIT->value;
+        $moduleName = $module->value;
+
+        return ($this->roles->$moduleName ?? -1) >= UserRoles::EDIT->value;
     }
 
     /**

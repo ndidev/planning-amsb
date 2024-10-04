@@ -2,6 +2,7 @@
 
 namespace App\Models\Config;
 
+use App\Core\Component\Module;
 use App\Core\PDF\PDFUtils;
 use App\Core\DateUtils;
 
@@ -9,7 +10,7 @@ class PDFModel
 {
     public function getPdfAsString(array $query): string
     {
-        $module = $query["module"];
+        $module = Module::tryFrom($query["module"]);
         $supplierId = (int) $query["fournisseur"];
         $startDate = DateUtils::convertDate($query["date_debut"]);
         $endDate = DateUtils::convertDate($query["date_fin"]);
@@ -35,7 +36,7 @@ class PDFModel
      */
     public function sendPdfFileByEmail(array $query): array
     {
-        $module = $query["module"];
+        $module = Module::tryFrom($query["module"]);
         $supplierId = $query["fournisseur"];
         $emailList = $query["liste_emails"];
         $startDate = DateUtils::convertDate($query["date_debut"]);

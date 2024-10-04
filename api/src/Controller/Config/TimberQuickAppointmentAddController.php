@@ -2,23 +2,24 @@
 
 namespace App\Controller\Config;
 
-use App\Models\Config\AjoutRapideBoisModel;
 use App\Controller\Controller;
-use App\Core\HTTP\ETag;
+use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
-use App\Core\Exceptions\Server\DB\DBException;
+use App\Core\Exceptions\Client\NotFoundException;
+use App\Core\HTTP\ETag;
+use App\Service\QuickAppointmentAddService;
 
-class AjoutRapideController extends Controller
+class TimberQuickAppointmentAddController extends Controller
 {
-    private $model;
-    private $module = "config";
-    private $sseEventName = "config/ajouts-rapides";
+    private QuickAppointmentAddService $quickAppointmentAddService;
+    private Module $module = Module::CONFIG;
+    private string $sseEventName = "config/ajouts-rapides";
 
     public function __construct(
         private ?int $id = null,
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
-        $this->model = new AjoutRapideBoisModel();
+        $this->quickAppointmentAddService = new QuickAppointmentAddService();
         $this->processRequest();
     }
 
@@ -32,22 +33,22 @@ class AjoutRapideController extends Controller
             case 'HEAD':
             case 'GET':
                 if ($this->id) {
-                    $this->read($this->id);
+                    $this->readConfig($this->id);
                 } else {
-                    $this->readAll();
+                    $this->readAllConfigs();
                 }
                 break;
 
             case 'POST':
-                $this->create();
+                $this->createConfig();
                 break;
 
             case 'PUT':
-                $this->update($this->id);
+                $this->updateConfig($this->id);
                 break;
 
             case 'DELETE':
-                $this->delete($this->id);
+                $this->deleteConfig($this->id);
                 break;
 
             default:
@@ -59,18 +60,15 @@ class AjoutRapideController extends Controller
     /**
      * Récupère tous les ajouts rapides.
      */
-    public function readAll()
+    public function readAllConfigs()
     {
-        $quickAppointments = $this->model->readAll();
-
-        // Filtre sur les catégories autorisées pour l'utilisateur
-        foreach ($quickAppointments as $key => $quickAppointment) {
-            if ($this->user->canAccess($quickAppointment["module"]) === false) {
-                unset($quickAppointments[$key]);
-            }
+        if (!$this->user->canAccess($this->module)) {
+            throw new AccessException();
         }
 
-        $etag = ETag::get($quickAppointments);
+        $quickAdds = $this->quickAppointmentAddService->getAllTimberQuickAppointmentAdds();
+
+        $etag = ETag::get($quickAdds);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -80,8 +78,8 @@ class AjoutRapideController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($quickAppointments))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($quickAdds);
     }
 
     /**
@@ -90,23 +88,16 @@ class AjoutRapideController extends Controller
      * @param int  $id      id de l'ajout rapide à récupérer.
      * @param bool $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(int $id, ?bool $dryRun = false)
+    public function readConfig(int $id)
     {
-        $quickAppointment = $this->model->read($id);
-
-        if (!$quickAppointment && !$dryRun) {
-            $this->response->setCode(404);
-            return;
-        }
-
-        if (
-            $quickAppointment && !$this->user->canAccess($quickAppointment["module"])
-        ) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
-        if ($dryRun) {
-            return $quickAppointment;
+        $quickAppointment = $this->quickAppointmentAddService->getTimberQuickAppointmentAdd($id);
+
+        if (!$quickAppointment) {
+            throw new NotFoundException("La configuration n'existe pas.");
         }
 
         $etag = ETag::get($quickAppointment);
@@ -119,14 +110,14 @@ class AjoutRapideController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($quickAppointment))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($quickAppointment);
     }
 
     /**
      * Crée un ajout rapide.
      */
-    public function create()
+    public function createConfig()
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
@@ -134,17 +125,16 @@ class AjoutRapideController extends Controller
 
         $input = $this->request->body;
 
-        $newQuickAppointment = $this->model->create($input);
+        $newQuickAppointment = $this->quickAppointmentAddService->createTimberQuickAppointmentAdd($input);
 
-        $id = $newQuickAppointment["id"];
+        $id = $newQuickAppointment->getId();
 
         $this->headers["Location"] = $_ENV["API_URL"] . "/ajouts-rapides/bois/$id";
 
         $this->response
             ->setCode(201)
-            ->setBody(json_encode($newQuickAppointment))
             ->setHeaders($this->headers)
-            ->flush();
+            ->setJSON($newQuickAppointment);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $newQuickAppointment);
     }
@@ -154,31 +144,26 @@ class AjoutRapideController extends Controller
      * 
      * @param int $id id de l'ajout rapide à modifier.
      */
-    public function update(int $id)
+    public function updateConfig(int $id)
     {
-        $current = $this->read($id, true);
-
-        if (!$current) {
-            $this->response->setCode(404);
-            return;
-        }
-
-        $input = $this->request->body;
-
         if (
             !$this->user->canAccess($this->module)
-            || !$this->user->canEdit($current["module"])
-            || !$this->user->canEdit($input["module"])
+            || !$this->user->canEdit(Module::TIMBER)
         ) {
             throw new AccessException();
         }
 
-        $updatedQuickAppointment = $this->model->update($id, $input);
+        if (!$this->quickAppointmentAddService->quickAddExists(Module::TIMBER, $id)) {
+            throw new NotFoundException("La configuration n'existe pas.");
+        }
+
+        $input = $this->request->body;
+
+        $updatedQuickAppointment = $this->quickAppointmentAddService->updateTimberQuickAppointmentAdd($id, $input);
 
         $this->response
-            ->setBody(json_encode($updatedQuickAppointment))
             ->setHeaders($this->headers)
-            ->flush();
+            ->setJSON($updatedQuickAppointment);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $updatedQuickAppointment);
     }
@@ -188,29 +173,22 @@ class AjoutRapideController extends Controller
      * 
      * @param int $id id de l'ajout rapide à supprimer.
      */
-    public function delete(int $id)
+    public function deleteConfig(int $id)
     {
-        $current = $this->read($id, true);
-
-        if (!$current) {
-            $this->response->setCode(404);
-            return;
-        }
-
         if (
             !$this->user->canAccess($this->module)
-            || !$this->user->canEdit($current["module"])
+            || !$this->user->canEdit(Module::TIMBER)
         ) {
             throw new AccessException();
         }
 
-        $success = $this->model->delete($id);
-
-        if ($success) {
-            $this->response->setCode(204)->flush();
-            $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
-        } else {
-            throw new DBException("Erreur lors de la suppression");
+        if (!$this->quickAppointmentAddService->quickAddExists(Module::TIMBER, $id)) {
+            throw new NotFoundException("La configuration n'existe pas.");
         }
+
+        $this->quickAppointmentAddService->deleteTimberQuickAppointmentAdd($id);
+
+        $this->response->setCode(204);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
     }
 }

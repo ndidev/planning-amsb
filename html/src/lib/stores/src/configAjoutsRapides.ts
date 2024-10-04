@@ -16,7 +16,8 @@ type TypeConfig = AjoutRapide;
 type CollectionAjoutsRapides = Collection<TypeConfig>;
 
 const empty: CollectionAjoutsRapides = {
-  bois: new Map() /*, vrac: new Map() */,
+  bois: new Map(),
+  // vrac: new Map(),
 };
 
 const modelesAjoutsRapides: AjoutsRapides = {
@@ -77,12 +78,18 @@ export const configAjoutsRapides = (function () {
    */
   async function fetchAll() {
     try {
-      const configs: TypeConfig[] = await fetcher(endpoint);
+      // const configs: TypeConfig[] = await fetcher(endpoint);
+      const configs: AjoutsRapides = await fetcher(endpoint);
 
       const updated = structuredClone(empty);
 
-      for (const config of configs) {
-        updated[config.module].set(config.id, config);
+      // for (const config of configs) {
+      //   updated[config.module].set(config.id, config);
+      // }
+      for (const module in configs) {
+        for (const config of configs[module]) {
+          updated[module].set(config.id, config);
+        }
       }
 
       set(updated);
@@ -132,22 +139,25 @@ export const configAjoutsRapides = (function () {
    * Créer un RDV rapide.
    * (= valider un ajout de nouvelle config)
    *
-   * @param data Données du RDV rapide
+   * @param config Données du RDV rapide
    */
-  async function _dbCreate(data: TypeConfig) {
-    const nouvelleConfig: TypeConfig = await fetcher(endpoint, {
-      requestInit: {
-        method: "POST",
-        body: JSON.stringify(data),
-      },
-    });
+  async function _dbCreate(config: TypeConfig) {
+    const nouvelleConfig: TypeConfig = await fetcher(
+      `${endpoint}/${config.module}`,
+      {
+        requestInit: {
+          method: "POST",
+          body: JSON.stringify(config),
+        },
+      }
+    );
 
     update((configs) => {
       // Suppression de la config temporaire
-      configs[data.module].delete(data.id);
+      configs[config.module].delete(config.id);
 
       // Ajout de la nouvelle config
-      configs[data.module].set(nouvelleConfig.id, nouvelleConfig);
+      configs[config.module].set(nouvelleConfig.id, nouvelleConfig);
 
       return configs;
     });
@@ -156,32 +166,32 @@ export const configAjoutsRapides = (function () {
   /**
    * Mettre à jour une config.
    *
-   * @param data Données de la config
+   * @param config Données de la config
    */
-  async function _dbUpdate(data: TypeConfig) {
-    await fetcher(`${endpoint}/${data.id}`, {
+  async function _dbUpdate(config: TypeConfig) {
+    await fetcher(`${endpoint}/${config.module}/${config.id}`, {
       requestInit: {
         method: "PUT",
-        body: JSON.stringify(data),
+        body: JSON.stringify(config),
       },
     });
 
-    _update(data);
+    _update(config);
   }
 
   /**
    * Supprimer une config.
    *
-   * @param id Identifiant de la config
+   * @param config Configuration à supprimer
    */
-  async function _dbDelete(id: TypeConfig["id"]) {
-    await fetcher(`${endpoint}/${id}`, {
+  async function _dbDelete(config: TypeConfig) {
+    await fetcher(`${endpoint}/${config.module}/${config.id}`, {
       requestInit: {
         method: "DELETE",
       },
     });
 
-    _delete(id);
+    _delete(config.id);
   }
 
   /**

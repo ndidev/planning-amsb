@@ -41,12 +41,13 @@ class MySQL extends \PDO
     /**
      * Vérifie si une entrée existe dans la base de données.
      * 
-     * @param string $table Nom de la table.
-     * @param int    $id    Identifiant de l'entrée.
+     * @param string     $table    Nom de la table.
+     * @param int|string $id       Identifiant de l'entrée.
+     * @param string     $idColumn Optional. Nom de la colonne de l'identifiant.
      */
-    public function exists(string $table, int $id)
+    public function exists(string $table, int|string $id, string $idColumn = "id"): bool
     {
-        $statement = "SELECT EXISTS (SELECT * FROM `$table` WHERE id = :id)";
+        $statement = "SELECT EXISTS (SELECT * FROM `$table` WHERE `$idColumn` = :id)";
 
         $request = $this->prepare($statement);
         $request->execute(["id" => $id]);

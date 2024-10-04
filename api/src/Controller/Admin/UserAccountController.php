@@ -11,7 +11,7 @@ use App\Service\UserService;
 class UserAccountController extends Controller
 {
     private UserService $userService;
-    private $sseEventName = "admin/users";
+    private string $sseEventName = "admin/users";
 
     public function __construct(
         private ?string $uid = null,
@@ -87,17 +87,13 @@ class UserAccountController extends Controller
      * @param string $uid     UID du compte à récupérer.
      * @param bool   $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(string $uid, ?bool $dryRun = false)
+    public function read(string $uid)
     {
         $user = $this->userService->getUser($uid);
 
-        if (!$user && !$dryRun) {
+        if (!$user) {
             $this->response->setCode(404);
             return;
-        }
-
-        if ($dryRun) {
-            return $user;
         }
 
         $etag = ETag::get($user);
@@ -147,7 +143,7 @@ class UserAccountController extends Controller
      */
     public function update(string $uid)
     {
-        if (!$this->read($uid, true)) {
+        if (!$this->userService->userExists($uid)) {
             $this->response->setCode(404);
             return;
         }
@@ -175,9 +171,11 @@ class UserAccountController extends Controller
             throw new ForbiddenException("Un administrateur ne peut pas supprimer son propre compte.");
         }
 
-        if (!$this->read($uid, true)) {
+        if (!$this->userService->userExists($uid)) {
             $this->response->setCode(404);
             return;
+
+            // TODO: use NotFoundException
         }
 
         $this->userService->deleteUser($uid, $this->user->name);

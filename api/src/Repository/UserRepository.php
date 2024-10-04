@@ -12,6 +12,11 @@ use App\Service\UserService;
 
 class UserRepository extends Repository
 {
+    public function userExists(string $uid): bool
+    {
+        return $this->mysql->exists("admin_users", $uid, "uid");
+    }
+
     /**
      * Récupère tous les comptes utilisateurs.
      * 

@@ -620,7 +620,7 @@
                 </div>
                 <div class="pure-control-group">
                   <label>
-                    Operation*
+                    Opération*
                     <select
                       class="operation"
                       bind:value={marchandise.operation}

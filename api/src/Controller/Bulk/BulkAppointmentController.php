@@ -2,16 +2,17 @@
 
 namespace App\Controller\Bulk;
 
-use App\Service\BulkService;
 use App\Controller\Controller;
-use App\Core\HTTP\ETag;
+use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
+use App\Service\BulkService;
 
 class BulkAppointmentController extends Controller
 {
     private BulkService $bulkService;
-    private string $module = "vrac";
+    private Module $module = Module::BULK;
     private string $sseEventName = "vrac/rdvs";
 
     public function __construct(
@@ -90,10 +91,9 @@ class BulkAppointmentController extends Controller
     /**
      * Récupère un RDV vrac.
      * 
-     * @param int  $id      id du RDV à récupérer.
-     * @param bool $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param int  $id ID du RDV à récupérer.
      */
-    public function read(int $id, ?bool $dryRun = false)
+    public function read(int $id)
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
@@ -101,13 +101,9 @@ class BulkAppointmentController extends Controller
 
         $appointment = $this->bulkService->getAppointment($id);
 
-        if (!$appointment && !$dryRun) {
+        if (!$appointment) {
             $this->response->setCode(404);
             return;
-        }
-
-        if ($dryRun) {
-            return $appointment;
         }
 
         $etag = ETag::get($appointment);
@@ -221,7 +217,7 @@ class BulkAppointmentController extends Controller
 
         $this->bulkService->deleteAppointment($id);
 
-        $this->response->setCode(204)->flush();
+        $this->response->setCode(204);
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
     }
 }

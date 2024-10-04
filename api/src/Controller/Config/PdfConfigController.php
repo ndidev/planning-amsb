@@ -2,23 +2,23 @@
 
 namespace App\Controller\Config;
 
-use App\Models\Config\ConfigPDFModel;
 use App\Controller\Controller;
-use App\Core\HTTP\ETag;
+use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
-use App\Core\Exceptions\Server\DB\DBException;
+use App\Core\HTTP\ETag;
+use App\Service\PdfService;
 
-class ConfigPDFController extends Controller
+class PdfConfigController extends Controller
 {
-    private $model;
-    private $module = "config";
-    private $sseEventName = "config/pdf";
+    private PdfService $pdfConfigService;
+    private Module $module = Module::CONFIG;
+    private string $sseEventName = "config/pdf";
 
     public function __construct(
         private ?int $id = null,
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
-        $this->model = new ConfigPDFModel();
+        $this->pdfConfigService = new PdfService();
         $this->processRequest();
     }
 
@@ -61,12 +61,12 @@ class ConfigPDFController extends Controller
      */
     public function readAll()
     {
-        $pdfConfigs = $this->model->readAll();
+        $pdfConfigs = $this->pdfConfigService->getAllConfigs();
 
         // Filtre sur les catégories autorisées pour l'utilisateur
-        foreach ($pdfConfigs as $key => $ligne) {
-            if ($this->user->canAccess($ligne["module"]) === false) {
-                unset($pdfConfigs[$key]);
+        foreach ($pdfConfigs as $config) {
+            if (!$this->user->canAccess($config->getModule())) {
+                $pdfConfigs->remove($config);
             }
         }
 
@@ -80,33 +80,26 @@ class ConfigPDFController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($pdfConfigs))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($pdfConfigs);
     }
 
     /**
      * Récupère une configuration PDF.
      * 
-     * @param int  $id      id de la configuration à récupérer.
-     * @param bool $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param int  $id id de la configuration à récupérer.
      */
-    public function read(int $id, ?bool $dryRun = false)
+    public function read(int $id)
     {
-        $pdfConfig = $this->model->read($id);
+        $pdfConfig = $this->pdfConfigService->getConfig($id);
 
-        if (!$pdfConfig && !$dryRun) {
+        if (!$pdfConfig) {
             $this->response->setCode(404);
             return;
         }
 
-        if (
-            $pdfConfig && !$this->user->canAccess($pdfConfig["module"])
-        ) {
+        if (!$this->user->canAccess($pdfConfig->getModule())) {
             throw new AccessException();
-        }
-
-        if ($dryRun) {
-            return $pdfConfig;
         }
 
         $etag = ETag::get($pdfConfig);
@@ -119,8 +112,8 @@ class ConfigPDFController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($pdfConfig))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($pdfConfig);
     }
 
     /**
@@ -132,21 +125,21 @@ class ConfigPDFController extends Controller
 
         if (
             !$this->user->canAccess($this->module)
-            || !$this->user->canEdit($input["module"])
+            || !$this->user->canEdit(Module::tryFrom($input["module"]))
         ) {
             throw new AccessException();
         }
 
-        $newPdfConfig = $this->model->create($input);
+        $newPdfConfig = $this->pdfConfigService->createConfig($input);
 
-        $id = $newPdfConfig["id"];
+        $id = $newPdfConfig->getId();
 
         $this->headers["Location"] = $_ENV["API_URL"] . "/pdf/configs/$id";
 
         $this->response
             ->setCode(201)
-            ->setBody(json_encode($newPdfConfig))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($newPdfConfig);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $newPdfConfig);
     }
@@ -158,7 +151,7 @@ class ConfigPDFController extends Controller
      */
     public function update(int $id)
     {
-        $current = $this->read($id, true);
+        $current = $this->pdfConfigService->getConfig($id);
 
         if (!$current) {
             $this->response->setCode(404);
@@ -169,17 +162,17 @@ class ConfigPDFController extends Controller
 
         if (
             !$this->user->canAccess($this->module)
-            || !$this->user->canEdit($current["module"])
-            || !$this->user->canEdit($input["module"])
+            || !$this->user->canEdit($current->getModule())
+            || !$this->user->canEdit(Module::tryFrom($input["module"]))
         ) {
             throw new AccessException();
         }
 
-        $updatedPdfConfig = $this->model->update($id, $input);
+        $updatedPdfConfig = $this->pdfConfigService->updateConfig($id, $input);
 
         $this->response
-            ->setBody(json_encode($updatedPdfConfig))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($updatedPdfConfig);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $updatedPdfConfig);
     }
@@ -191,27 +184,23 @@ class ConfigPDFController extends Controller
      */
     public function delete(int $id)
     {
-        $current = $this->read($id, true);
+        $config = $this->pdfConfigService->getConfig($id);
 
-        if (!$current) {
+        if (!$config) {
             $this->response->setCode(404);
             return;
         }
 
         if (
             !$this->user->canAccess($this->module)
-            || !$this->user->canEdit($current["module"])
+            || !$this->user->canEdit($config->getModule())
         ) {
             throw new AccessException();
         }
 
-        $success = $this->model->delete($id);
+        $this->pdfConfigService->deleteConfig($id);
 
-        if ($success) {
-            $this->response->setCode(204);
-            $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
-        } else {
-            throw new DBException("Erreur lors de la suppression");
-        }
+        $this->response->setCode(204);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
     }
 }

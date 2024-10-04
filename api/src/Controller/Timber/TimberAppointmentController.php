@@ -3,6 +3,7 @@
 namespace App\Controller\Timber;
 
 use App\Controller\Controller;
+use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\HTTP\ETag;
 use App\Service\TimberService;
@@ -10,7 +11,7 @@ use App\Service\TimberService;
 class TimberAppointmentController extends Controller
 {
     private TimberService $timberService;
-    private string $module = "bois";
+    private Module $module = Module::TIMBER;
     private string $sse_event = "bois/rdvs";
 
     public function __construct(
@@ -232,7 +233,7 @@ class TimberAppointmentController extends Controller
 
         $this->timberService->deleteAppointment($id);
 
-        $this->response->setCode(204)->flush();
+        $this->response->setCode(204);
         $this->sse->addEvent($this->sse_event, __FUNCTION__, $id);
     }
 }

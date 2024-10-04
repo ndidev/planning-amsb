@@ -11,8 +11,8 @@ use App\Service\TideService;
 
 class TideController extends Controller
 {
-    private $service;
-    private $sseEventName = "marees";
+    private TideService $service;
+    private string $sseEventName = "marees";
 
     public function __construct(
         private ?int $year = 0,

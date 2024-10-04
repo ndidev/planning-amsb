@@ -66,12 +66,8 @@ class ShippingCallCargo extends AbstractEntity
         return $this;
     }
 
-    public function getOperation(bool $value = false): CargoOperation|string
+    public function getOperation(): CargoOperation
     {
-        if (true === $value) {
-            return $this->operation->value;
-        }
-
         return $this->operation;
     }
 
@@ -181,7 +177,7 @@ class ShippingCallCargo extends AbstractEntity
             'escale_id' => $this->getShippingCall()?->getId(),
             'marchandise' => $this->getCargoName(),
             'client' => $this->getCustomer(),
-            'operation' => $this->getOperation(true),
+            'operation' => $this->getOperation(),
             'environ' => $this->isApproximate(),
             'tonnage_bl' => $this->getBlTonnage(),
             'cubage_bl' => $this->getBlVolume(),

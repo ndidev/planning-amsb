@@ -2,22 +2,24 @@
 
 namespace App\Controller\Config;
 
-use App\Models\Config\AgenceModel;
 use App\Controller\Controller;
+use App\Core\Component\Module;
+use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\HTTP\ETag;
+use App\Service\AgencyService;
 
-class AgenceController extends Controller
+class AgencyController extends Controller
 {
-    private $model;
-    private $module = "config";
-    private $sseEventName = "config/agence";
+    private AgencyService $agencyService;
+    private Module $module = Module::CONFIG;
+    private string $sseEventName = "config/agence";
 
     public function __construct(
         private ?string $service = null,
 
     ) {
         parent::__construct("OPTIONS, HEAD, GET, PUT");
-        $this->model = new AgenceModel();
+        $this->agencyService = new AgencyService();
         $this->processRequest();
     }
 
@@ -52,9 +54,9 @@ class AgenceController extends Controller
      */
     public function readAll()
     {
-        $agencies = $this->model->readAll();
+        $departments = $this->agencyService->getAllDepartments();
 
-        $etag = ETag::get($agencies);
+        $etag = ETag::get($departments);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -64,29 +66,25 @@ class AgenceController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($agencies))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($departments);
     }
 
     /**
      * Renvoie les données d'un service de l'agence.
      * 
-     * @param string $service Service de l'agence à récupérer.
+     * @param string $departmentName Service de l'agence à récupérer.
      */
-    public function read(string $service, ?bool $dryRun = false)
+    public function read(string $departmentName)
     {
-        $agency = $this->model->read($service);
+        $department = $this->agencyService->getDepartment($departmentName);
 
-        if (!$agency && !$dryRun) {
+        if (!$department) {
             $this->response->setCode(404);
             return;
         }
 
-        if ($dryRun) {
-            return $agency;
-        }
-
-        $etag = ETag::get($agency);
+        $etag = ETag::get($department);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -96,31 +94,34 @@ class AgenceController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($agency))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($department);
     }
 
     /**
      * Met à jour les données d'un service de l'agence.
      * 
-     * @param string $service Service de l'agence à modifier.
+     * @param string $departmentName Service de l'agence à modifier.
      */
-    public function update(string $service)
+    public function update(string $departmentName)
     {
-        if (!$this->read($service, true)) {
+        if (!$this->user->canAccess($this->module)) {
+            throw new AccessException();
+        }
+
+        if (!$this->agencyService->departmentExists($departmentName)) {
             $this->response->setCode(404);
             return;
         }
 
         $input = $this->request->body;
 
-        $updatedAgency = $this->model->update($service, $input);
+        $updatedDepartment = $this->agencyService->updateDepartment($departmentName, $input);
 
         $this->response
-            ->setBody(json_encode($updatedAgency))
             ->setHeaders($this->headers)
-            ->flush();
+            ->setJSON($updatedDepartment);
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $service, $updatedAgency);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $departmentName, $updatedDepartment);
     }
 }

@@ -20,7 +20,7 @@ class CharteringService
     {
         $charter = (new Charter())
             ->setId($rawData["id"] ?? null)
-            ->setStatus($rawData["statut"] ?? null)
+            ->setStatus($rawData["statut"] ?? 0)
             ->setLaycanStart($rawData["lc_debut"] ?? null)
             ->setLaycanEnd($rawData["lc_fin"] ?? null)
             ->setCpDate($rawData['cp_date'] ?? null)
@@ -48,7 +48,7 @@ class CharteringService
     {
         $charter = (new Charter())
             ->setId($rawData["id"] ?? null)
-            ->setStatus($rawData["statut"] ?? null)
+            ->setStatus($rawData["statut"] ?? 0)
             ->setLaycanStart($rawData["lc_debut"] ?? null)
             ->setLaycanEnd($rawData["lc_fin"] ?? null)
             ->setCpDate($rawData['cp_date'] ?? null)

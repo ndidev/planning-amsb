@@ -7,11 +7,12 @@ use App\Controller\Admin\UserAccountController;
 use App\Controller\Bulk\BulkAppointmentController;
 use App\Controller\Bulk\BulkProductController;
 use App\Controller\Chartering\CharterController;
-use App\Controller\Config\AgenceController;
-use App\Controller\Config\AjoutRapideController;
-use App\Controller\Config\BandeauInfoController;
-use App\Controller\Config\ConfigPDFController;
-use App\Controller\Config\CoteController;
+use App\Controller\Config\AgencyController;
+use App\Controller\Config\QuickAppointmentAddController;
+use App\Controller\Config\TimberQuickAppointmentAddController;
+use App\Controller\Config\InfoBannerController;
+use App\Controller\Config\PdfConfigController;
+use App\Controller\Config\ChartDatumController;
 use App\Controller\Config\PDF\EnvoiPDFController;
 use App\Controller\Config\PDF\VisualiserPDFController;
 use App\Controller\Shipping\ShipNamesController;
@@ -85,13 +86,14 @@ $routes = [
     ["/marees/annees", TideController::class],
 
     // Config
-    ["/config/agence/[a:service]?", AgenceController::class],
-    ["/config/bandeau-info/[i:id]?", BandeauInfoController::class],
-    ["/config/pdf/[i:id]?", ConfigPDFController::class],
+    ["/config/agence/[a:service]?", AgencyController::class],
+    ["/config/bandeau-info/[i:id]?", InfoBannerController::class],
+    ["/config/pdf/[i:id]?", PdfConfigController::class],
     ["/config/pdf/visu", VisualiserPDFController::class],
     ["/config/pdf/envoi", EnvoiPDFController::class],
-    ["/config/ajouts-rapides/[i:id]?", AjoutRapideController::class],
-    ["/config/cotes/[a:cote]?", CoteController::class],
+    ["/config/ajouts-rapides", QuickAppointmentAddController::class],
+    ["/config/ajouts-rapides/bois/[i:id]?", TimberQuickAppointmentAddController::class],
+    ["/config/cotes/[a:cote]?", ChartDatumController::class],
 
     // Tiers
     ["/tiers/[i:id]?", ThirdPartyController::class],

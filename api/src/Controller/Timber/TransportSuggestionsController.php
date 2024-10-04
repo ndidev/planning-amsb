@@ -3,14 +3,15 @@
 namespace App\Controller\Timber;
 
 use App\Controller\Controller;
-use App\Core\HTTP\ETag;
+use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\HTTP\ETag;
 use App\Service\TimberService;
 
 class TransportSuggestionsController extends Controller
 {
-    private $service;
-    private $module = "bois";
+    private TimberService $service;
+    private Module $module = Module::TIMBER;
 
     public function __construct()
     {

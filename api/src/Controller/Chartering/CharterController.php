@@ -2,15 +2,17 @@
 
 namespace App\Controller\Chartering;
 
-use App\Service\CharteringService;
 use App\Controller\Controller;
-use App\Core\HTTP\ETag;
+use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Client\NotFoundException;
+use App\Core\HTTP\ETag;
+use App\Service\CharteringService;
 
 class CharterController extends Controller
 {
     private CharteringService $charteringService;
-    private string $module = "chartering";
+    private Module $module = Module::CHARTERING;
     private string $sseEventName = "chartering/charters";
 
     public function __construct(
@@ -88,7 +90,7 @@ class CharterController extends Controller
      * @param int  $id      id de l'affrètement à récupérer.
      * @param bool $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(int $id, ?bool $dryRun = false)
+    public function read(int $id)
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
@@ -96,13 +98,8 @@ class CharterController extends Controller
 
         $charter = $this->charteringService->getCharter($id);
 
-        if (!$charter && !$dryRun) {
-            $this->response->setCode(404);
-            return;
-        }
-
-        if ($dryRun) {
-            return $charter;
+        if (!$charter) {
+            throw new NotFoundException("L'affrètement n'existe pas.");
         }
 
         $etag = ETag::get($charter);
@@ -156,8 +153,7 @@ class CharterController extends Controller
         }
 
         if (!$this->charteringService->charterExists($id)) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("L'affrètement n'existe pas.");
         }
 
         $input = $this->request->body;
@@ -183,8 +179,7 @@ class CharterController extends Controller
         }
 
         if (!$this->charteringService->charterExists($id)) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("L'affrètement n'existe pas.");
         }
 
         $this->charteringService->deleteCharter($id);

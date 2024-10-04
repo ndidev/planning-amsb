@@ -3,16 +3,17 @@
 namespace App\Controller\Bulk;
 
 use App\Controller\Controller;
-use App\Service\BulkService;
-use App\Core\HTTP\ETag;
+use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
+use App\Service\BulkService;
 
 class BulkProductController extends Controller
 {
     private BulkService $bulkService;
-    private $module = "vrac";
-    private $sseEventName = "vrac/produits";
+    private Module $module = Module::BULK;
+    private string $sseEventName = "vrac/produits";
 
     public function __construct(
         private ?int $id = null
@@ -85,9 +86,8 @@ class BulkProductController extends Controller
      * Récupère un produit vrac.
      * 
      * @param int  $id      id du produit à récupérer.
-     * @param bool $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(int $id, ?bool $dryRun = false)
+    public function read(int $id)
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
@@ -95,13 +95,9 @@ class BulkProductController extends Controller
 
         $product = $this->bulkService->getProduct($id);
 
-        if (!$product && !$dryRun) {
+        if (!$product) {
             $this->response->setCode(404);
             return;
-        }
-
-        if ($dryRun) {
-            return $product;
         }
 
         $etag = ETag::get($product);
@@ -165,7 +161,7 @@ class BulkProductController extends Controller
 
         $this->response
             ->setHeaders($this->headers)
-            ->setJSON($product->toArray());
+            ->setJSON($product);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $product);
     }
@@ -188,7 +184,7 @@ class BulkProductController extends Controller
 
         $this->bulkService->deleteProduct($id);
 
-        $this->response->setCode(204)->flush();
+        $this->response->setCode(204);
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
     }
 }

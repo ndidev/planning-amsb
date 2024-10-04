@@ -3,6 +3,7 @@
 namespace App\Controller\ThirdParty;
 
 use App\Controller\Controller;
+use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
@@ -12,8 +13,8 @@ use App\Service\ThirdPartyService;
 class ThirdPartyController extends Controller
 {
     private ThirdPartyService $thirdPartyService;
-    private $module = "tiers";
-    private $sseEventName = "tiers";
+    private Module $module = Module::THIRD_PARTY;
+    private string $sseEventName = "tiers";
 
     public function __construct(
         private ?int $id = null,
@@ -181,7 +182,7 @@ class ThirdPartyController extends Controller
 
         $this->thirdPartyService->deleteThirdParty($id);
 
-        $this->response->setCode(204)->flush();
+        $this->response->setCode(204);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
     }

@@ -2,21 +2,23 @@
 
 namespace App\Controller\Config;
 
-use App\Models\Config\CoteModel;
 use App\Controller\Controller;
+use App\Core\Component\Module;
+use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\HTTP\ETag;
+use App\Service\ChartDatumService;
 
-class CoteController extends Controller
+class ChartDatumController extends Controller
 {
-    private $model;
-    private $module = "config";
-    private $sseEventName = "config/cotes";
+    private ChartDatumService $chartDatumService;
+    private Module $module = Module::CONFIG;
+    private string $sseEventName = "config/cotes";
 
     public function __construct(
         private ?string $cote = null,
     ) {
         parent::__construct("OPTIONS, HEAD, GET, PUT");
-        $this->model = new CoteModel();
+        $this->chartDatumService = new ChartDatumService();
         $this->processRequest();
     }
 
@@ -51,7 +53,7 @@ class CoteController extends Controller
      */
     public function readAll()
     {
-        $heightData = $this->model->readAll();
+        $heightData = $this->chartDatumService->getAllData();
 
         $etag = ETag::get($heightData);
 
@@ -63,24 +65,20 @@ class CoteController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($heightData))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($heightData);
     }
 
     /**
      * Récupère une côte.
      */
-    public function read(string $cote, ?bool $dryRun = false)
+    public function read(string $name)
     {
-        $heightDatum = $this->model->read($cote);
+        $heightDatum = $this->chartDatumService->getDatum($name);
 
-        if (!$heightDatum && !$dryRun) {
+        if (!$heightDatum) {
             $this->response->setCode(404);
             return;
-        }
-
-        if ($dryRun) {
-            return $heightDatum;
         }
 
         $etag = ETag::get($heightDatum);
@@ -93,31 +91,37 @@ class CoteController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($heightDatum))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($heightDatum);
     }
 
     /**
      * Met à jour une côte.
      * 
-     * @param string $cote Côte à modifier.
+     * @param string $name Côte à modifier.
      */
-    public function update(string $cote)
+    public function update(string $name)
     {
-        if (!$this->read($cote, true)) {
+        if (
+            !$this->user->canAccess($this->module)
+            && !$this->user->canEdit(Module::SHIPPING)
+        ) {
+            throw new AccessException();
+        }
+
+        if (!$this->chartDatumService->datumExists($name)) {
             $this->response->setCode(404);
             return;
         }
 
         $input = $this->request->body;
 
-        $updatedHeightDatum = $this->model->update($cote, $input);
+        $updatedHeightDatum = $this->chartDatumService->updateDatumValue($name, $input);
 
         $this->response
-            ->setBody(json_encode($updatedHeightDatum))
             ->setHeaders($this->headers)
-            ->flush();
+            ->setJSON($updatedHeightDatum);
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $cote, $updatedHeightDatum);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $name, $updatedHeightDatum);
     }
 }

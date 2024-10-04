@@ -5,6 +5,7 @@
 namespace App\Controller\Shipping;
 
 use App\Controller\Controller;
+use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
@@ -13,8 +14,8 @@ use App\Service\ShippingService;
 class ShippingCallController extends Controller
 {
     private ShippingService $shippingService;
-    private $module = "consignation";
-    private $sseEventName = "consignation/escales";
+    private Module $module = Module::SHIPPING;
+    private string $sseEventName = "consignation/escales";
 
     public function __construct(
         private ?int $id = null,

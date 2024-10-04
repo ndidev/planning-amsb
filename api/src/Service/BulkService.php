@@ -146,12 +146,10 @@ class BulkService
      * Delete a bulk appointment.
      * 
      * @param int $id ID of the appointment to delete.
-     * 
-     * @return bool TRUE if successful, FALSE if error.
      */
-    public function deleteAppointment(int $id): bool
+    public function deleteAppointment(int $id): void
     {
-        return $this->appointmentRepository->deleteAppointment($id);
+        $this->appointmentRepository->deleteAppointment($id);
     }
 
     /**
@@ -168,7 +166,7 @@ class BulkService
             ->setColor($rawData["couleur"] ?? "")
             ->setUnit($rawData["unite"] ?? "");
 
-        $qualities = array_map(fn ($quality) => $this->makeQualityFromDatabase($quality), $rawData["qualites"] ?? []);
+        $qualities = array_map(fn($quality) => $this->makeQualityFromDatabase($quality), $rawData["qualites"] ?? []);
 
         $product->setQualities($qualities);
 
@@ -183,7 +181,7 @@ class BulkService
             ->setColor($rawData["couleur"] ?? "")
             ->setUnit($rawData["unite"] ?? "");
 
-        $qualities = array_map(fn ($quality) => $this->makeQualityFromFormData($quality), $rawData["qualites"] ?? []);
+        $qualities = array_map(fn($quality) => $this->makeQualityFromFormData($quality), $rawData["qualites"] ?? []);
 
         $product->setQualities($qualities);
 

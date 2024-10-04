@@ -55,7 +55,7 @@ class BulkAppointmentRepository extends Repository
         $bulkService = new BulkService();
 
         $appointments = array_map(
-            fn (array $appointmentRaw) => $bulkService->makeBulkAppointmentFromDatabase($appointmentRaw),
+            fn(array $appointmentRaw) => $bulkService->makeBulkAppointmentFromDatabase($appointmentRaw),
             $appointmentsRaw
         );
 
@@ -227,17 +227,15 @@ class BulkAppointmentRepository extends Repository
      * 
      * @param int $id ID du RDV à supprimer
      * 
-     * @return bool TRUE si succès, FALSE si erreur
+     * @throws DBException Erreur lors de la suppression.
      */
-    public function deleteAppointment(int $id): bool
+    public function deleteAppointment(int $id): void
     {
         $request = $this->mysql->prepare("DELETE FROM vrac_planning WHERE id = :id");
-        $success = $request->execute(["id" => $id]);
+        $isDeleted = $request->execute(["id" => $id]);
 
-        if (!$success) {
+        if (!$isDeleted) {
             throw new DBException("Erreur lors de la suppression");
         }
-
-        return $success;
     }
 }

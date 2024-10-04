@@ -4,10 +4,10 @@
 
 namespace App\Service;
 
+use App\Core\Auth\User as AuthUser;
 use App\Core\Component\SSEHandler;
 use App\Entity\User;
 use App\Repository\UserRepository;
-use App\Core\Auth\User as AuthUser;
 
 class UserService
 {
@@ -45,6 +45,11 @@ class UserService
             ->setComments($rawData["commentaire"] ?? '');
 
         return $user;
+    }
+
+    public function userExists(string $uid): bool
+    {
+        return $this->userRepository->userExists($uid);
     }
 
     /**

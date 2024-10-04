@@ -40,19 +40,8 @@ class Charter extends AbstractEntity
         $this->legs = new Collection();
     }
 
-    /**
-     * Get the value of the status.
-     * 
-     * @param bool $value 
-     * 
-     * @return CharterStatus|int
-     */
-    public function getStatus(bool $value = false): CharterStatus|int
+    public function getStatus(): CharterStatus
     {
-        if (true === $value) {
-            return $this->status->value;
-        }
-
         return $this->status;
     }
 
@@ -302,7 +291,7 @@ class Charter extends AbstractEntity
     {
         return [
             "id" => $this->id,
-            "statut" => $this->getStatus(true),
+            "statut" => $this->getStatus(),
             "lc_debut" => $this->getLaycanStart()?->format("Y-m-d"),
             "lc_fin" => $this->getLaycanEnd()?->format("Y-m-d"),
             "cp_date" => $this->getCpDate()?->format("Y-m-d"),

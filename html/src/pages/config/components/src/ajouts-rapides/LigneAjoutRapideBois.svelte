@@ -105,7 +105,7 @@
           Notiflix.Block.dots([ligne], notiflixOptions.texts.suppression);
           ligne.style.minHeight = "initial";
 
-          await configAjoutsRapides.delete(ajoutRapide.id);
+          await configAjoutsRapides.delete(ajoutRapide);
 
           Notiflix.Notify.success("La configuration a été supprimée");
         } catch (erreur) {

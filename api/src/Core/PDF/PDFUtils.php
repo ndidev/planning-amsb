@@ -2,6 +2,7 @@
 
 namespace App\Core\PDF;
 
+use App\Core\Component\Module;
 use \DateTime;
 use \tFPDF;
 use App\Core\Database\MySQL;
@@ -16,7 +17,7 @@ class PDFUtils
     /**
      * Génère un PDF client.
      * 
-     * @param string   $module      id du module.
+     * @param Module   $module      id du module.
      * @param int      $fournisseur id du fournisseur.
      * @param DateTime $date_debut  Date de début des RDV.
      * @param DateTime $date_fin    Date de fin des RDV.
@@ -25,7 +26,7 @@ class PDFUtils
      * @throws PDOException 
      */
     public static function generatePDF(
-        string $module,
+        Module $module,
         int $fournisseur,
         DateTime $date_debut,
         DateTime $date_fin
@@ -46,7 +47,7 @@ class PDFUtils
         /**
          * Vrac
          */
-        if ($module === "vrac") {
+        if ($module === Module::BULK) {
             // RDV vrac
             $requete_rdvs_vrac = $mysql->prepare(
                 "SELECT
@@ -93,7 +94,7 @@ class PDFUtils
         /**
          * Bois
          */
-        if ($module === "bois") {
+        if ($module === Module::TIMBER) {
             // RDV bois planifiés
             $requete_rdvs_bois_non_attente = $mysql->prepare(
                 "SELECT
@@ -200,7 +201,7 @@ class PDFUtils
      * Envoie un PDF par e-mail.
      * 
      * @param tFPDF    $pdf          PDF à envoyer.
-     * @param string   $module       Id du module.
+     * @param Module   $module       Id du module.
      * @param int      $fournisseur  Id du fournisseur.
      * @param string   $liste_emails Adresses e-mail des destinataires.
      * @param DateTime $date_debut   Date de début des RDV.
@@ -210,7 +211,7 @@ class PDFUtils
      */
     public static function sendPDF(
         tFPDF $pdf,
-        string $module,
+        Module $module,
         int $fournisseur,
         string $liste_emails,
         DateTime $date_debut,
@@ -220,7 +221,7 @@ class PDFUtils
          * @var array $resultat Résultat de l'envoi.
          */
         $resultat = [
-            "module" => $module,
+            "module" => $module->value,
             "fournisseur" => $fournisseur,
             "statut" => null,
             "message" => null,

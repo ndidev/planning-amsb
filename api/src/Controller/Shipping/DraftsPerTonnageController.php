@@ -5,6 +5,7 @@
 namespace App\Controller\Shipping;
 
 use App\Controller\Controller;
+use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\HTTP\ETag;
 use App\Service\ShippingService;
@@ -12,7 +13,7 @@ use App\Service\ShippingService;
 class DraftsPerTonnageController extends Controller
 {
     private ShippingService $shippingService;
-    private $module = "consignation";
+    private Module $module = Module::SHIPPING;
 
     public function __construct()
     {

@@ -10,8 +10,7 @@ use App\Core\Exceptions\Client\Auth\AuthException;
 class UserController extends Controller
 {
     private $model;
-    private $module = "user";
-    private $sseEventName = "admin/users";
+    private string $sseEventName = "admin/users";
 
     public function __construct()
     {
