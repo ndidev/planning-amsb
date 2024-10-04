@@ -52,7 +52,7 @@ class MySQL extends \PDO
         $request = $this->prepare($statement);
         $request->execute(["id" => $id]);
 
-        $exists = (bool) $request->fetch();
+        $exists = (bool) $request->fetch(\PDO::FETCH_COLUMN);
 
         return $exists;
     }
