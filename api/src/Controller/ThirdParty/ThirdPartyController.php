@@ -76,7 +76,7 @@ class ThirdPartyController extends Controller
 
         $this->response
             ->setHeaders($this->headers)
-            ->setJSON(array_map(fn(ThirdParty $thirdParty) => $thirdParty->toArray(), $thirdParties));
+            ->setJSON($thirdParties);
     }
 
     /**

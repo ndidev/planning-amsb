@@ -4,8 +4,11 @@
 
 namespace App\Service;
 
-use App\Repository\ThirdPartyRepository;
+use App\Core\Component\Collection;
+use App\Core\Exceptions\Server\ServerException;
+use App\Core\Logger\ErrorLogger;
 use App\Entity\ThirdParty;
+use App\Repository\ThirdPartyRepository;
 
 class ThirdPartyService
 {
@@ -26,12 +29,38 @@ class ThirdPartyService
             ->setAddressLine2($rawData["adresse_ligne_2"] ?? "")
             ->setPostCode($rawData["cp"] ?? "")
             ->setCity($rawData["ville"] ?? "")
-            ->setCountry($rawData["pays"] ?? [])
+            ->setCountry($rawData["pays"] ?? null)
             ->setPhone($rawData["telephone"] ?? "")
             ->setComments($rawData["commentaire"] ?? "")
             ->setIsNonEditable($rawData["non_modifiable"] ?? false)
             ->setIsAgency($rawData["lie_agence"] ?? false)
             ->setLogo($rawData["logo"] ?? null)
+            ->setIsActive($rawData["actif"] ?? true)
+            ->setAppointmentCount($rawData["nombre_rdv"] ?? 0);
+
+        foreach ($thirdParty->getRoles() as $role => $value) {
+            $thirdParty->setRole($role, $rawData[$role] ?? false);
+        }
+
+        return $thirdParty;
+    }
+
+    public function makeThirdPartyFromForm(array $rawData): ThirdParty
+    {
+        $thirdParty = (new ThirdParty())
+            ->setId($rawData["id"] ?? null)
+            ->setShortName($rawData["nom_court"] ?? "")
+            ->setFullName($rawData["nom_complet"] ?? "")
+            ->setAddressLine1($rawData["adresse_ligne_1"] ?? "")
+            ->setAddressLine2($rawData["adresse_ligne_2"] ?? "")
+            ->setPostCode($rawData["cp"] ?? "")
+            ->setCity($rawData["ville"] ?? "")
+            ->setCountry($rawData["pays"] ?? [])
+            ->setPhone($rawData["telephone"] ?? "")
+            ->setComments($rawData["commentaire"] ?? "")
+            ->setIsNonEditable($rawData["non_modifiable"] ?? false)
+            ->setIsAgency($rawData["lie_agence"] ?? false)
+            ->setLogo($this->saveLogo($rawData["logo"] ?? null))
             ->setIsActive($rawData["actif"] ?? true)
             ->setAppointmentCount($rawData["nombre_rdv"] ?? 0);
 
@@ -55,24 +84,23 @@ class ThirdPartyService
     /**
      * Récupère tous les tiers.
      * 
-     * @return ThirdParty[] Liste des tiers.
+     * @return Collection<ThirdParty> Liste des tiers.
      */
-    public function getThirdParties(): array
+    public function getThirdParties(): Collection
     {
-        return $this->thirdPartyRepository->getThirdParties();
+        return $this->thirdPartyRepository->fetchAllThirdParties();
     }
 
     /**
      * Récupère un tiers.
      * 
-     * @param int   $id      ID du tiers à récupérer.
-     * @param array $options Options de récupération.
+     * @param int $id ID du tiers à récupérer.
      * 
      * @return ?ThirdParty Tiers récupéré.
      */
     public function getThirdParty(int $id): ?ThirdParty
     {
-        return $this->thirdPartyRepository->getThirdParty($id);
+        return $this->thirdPartyRepository->fetchThirdParty($id);
     }
 
     /**
@@ -84,7 +112,9 @@ class ThirdPartyService
      */
     public function createThirdParty(array $input): ThirdParty
     {
-        return $this->thirdPartyRepository->createThirdParty($input);
+        $thirdParty = $this->makeThirdPartyFromForm($input);
+
+        return $this->thirdPartyRepository->createThirdParty($thirdParty);
     }
 
     /**
@@ -97,7 +127,9 @@ class ThirdPartyService
      */
     public function updateThirdParty($id, array $input): ThirdParty
     {
-        return $this->thirdPartyRepository->updateThirdParty($id, $input);
+        $thirdParty = $this->makeThirdPartyFromForm($input)->setId($id);
+
+        return $this->thirdPartyRepository->updateThirdParty($thirdParty);
     }
 
     /**
@@ -122,5 +154,63 @@ class ThirdPartyService
     public function getAppointmentCount(?int $id = null): array
     {
         return $this->thirdPartyRepository->getAppointmentCount($id);
+    }
+
+    /**
+     * Enregistrer un logo dans le dossier images
+     * et retourne le hash du fichier.
+     * 
+     * @param array|string|null $file Données du fichier (null pour effacement du logo existant).
+     * 
+     * @return string|null|false Nom de fichier du logo si l'enregistrement a réussi, `false` sinon.
+     */
+    private function saveLogo(array|string|null $file): string|null|false
+    {
+        try {
+            // Conservation du fichier existant
+            if (gettype($file) === "string") {
+                return false;
+            }
+
+            // Suppression du fichier existant
+            if ($file === null) {
+                return null;
+            }
+
+            // Récupérer les données de l'image
+            // $fichier["data"] = "data:{type mime};base64,{données}"
+            $data = explode(",", $file["data"])[1];
+
+            // Création de l'image depuis les données
+            $imageString = base64_decode($data);
+            $image = imagecreatefromstring(base64_decode($data));
+
+            if (!$image) {
+                throw new ServerException("Logo : Erreur dans la création de l'image (imagecreatefromstring)");
+            }
+
+
+            // Redimensionnement
+            define("MAX_HEIGHT", 500); // Hauteur maximale de l'image à enregistrer.
+
+            [$width, $height] = getimagesizefromstring($imageString);
+            $percent = min(MAX_HEIGHT / $height, 1);
+            $newWidth = (int) ($width * $percent);
+            $imageResized = imagescale($image, $newWidth);
+
+
+            // Enregistrement
+            $hash = hash("md5", $data);
+            $filename = $hash . ".webp";
+            $filepath = LOGOS . "/$filename";
+            if (imagewebp($imageResized, $filepath, 100) === false) {
+                throw new ServerException("Erreur dans l'enregistrement du logo (imagewebp)");
+            }
+
+            return $filename;
+        } catch (\Throwable $e) {
+            ErrorLogger::log($e);
+            return false;
+        }
     }
 }

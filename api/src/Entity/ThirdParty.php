@@ -11,15 +11,15 @@ class ThirdParty extends AbstractEntity
 {
     use IdentifierTrait;
 
-    private string $shortName;
-    private string $fullName;
-    private string $addressLine1;
-    private string $addressLine2;
-    private string $postCode;
-    private string $city;
-    private Country $country;
-    private string $phone;
-    private string $comments;
+    private string $shortName = '';
+    private string $fullName = '';
+    private string $addressLine1 = '';
+    private string $addressLine2 = '';
+    private string $postCode = '';
+    private string $city = '';
+    private ?Country $country = null;
+    private string $phone = '';
+    private string $comments = '';
     private array $roles = [
         "bois_fournisseur" => false,
         "bois_client" => false,
@@ -32,33 +32,13 @@ class ThirdParty extends AbstractEntity
         "maritime_affreteur" => false,
         "maritime_courtier" => false,
     ];
-    private bool $isNonEditable;
-    private bool $isAgency;
-    private ?string $logo;
-    private bool $isActive;
+    private bool $isNonEditable = false;
+    private bool $isAgency = false;
+    private string|null|false $logo = null;
+    private bool $isActive = true;
     private int $appointmentCount = 0;
 
-    public function __construct(array $rawData = [])
-    {
-        $this->setId($rawData["id"] ?? null);
-        $this->setShortName($rawData["nom_court"] ?? "");
-        $this->setFullName($rawData["nom_complet"] ?? "");
-        $this->setAddressLine1($rawData["adresse_ligne_1"] ?? "");
-        $this->setAddressLine2($rawData["adresse_ligne_2"] ?? "");
-        $this->setPostCode($rawData["cp"] ?? "");
-        $this->setCity($rawData["ville"] ?? "");
-        $this->setCountry((new Country())->setISO($rawData["pays"] ?? ""));
-        $this->setPhone($rawData["telephone"] ?? "");
-        $this->setComments($rawData["commentaire"] ?? "");
-        foreach ($this->roles as $role => $value) {
-            $this->setRole($role, $rawData[$role] ?? false);
-        }
-        $this->setIsNonEditable($rawData["non_modifiable"] ?? false);
-        $this->setIsAgency($rawData["lie_agence"] ?? false);
-        $this->setLogo($rawData["logo"] ?? null);
-        $this->setIsActive($rawData["actif"] ?? true);
-        $this->setAppointmentCount($rawData["nombre_rdv"] ?? 0);
-    }
+    public function __construct() {}
 
     public function getShortName(): string
     {
@@ -132,18 +112,18 @@ class ThirdParty extends AbstractEntity
         return $this;
     }
 
-    public function getCountry(): Country
+    public function getCountry(): ?Country
     {
         return $this->country;
     }
 
-    public function setCountry(Country|array $country): static
+    public function setCountry(Country|string|null $country): static
     {
-        if (is_array($country)) {
-            $country = (new CountryService())->makeCountry($country);
+        if (is_string($country)) {
+            $this->country = (new CountryService())->getCountry($country);
+        } else {
+            $this->country = $country;
         }
-
-        $this->country = $country;
 
         return $this;
     }
@@ -213,18 +193,36 @@ class ThirdParty extends AbstractEntity
         return $this;
     }
 
-    public function getLogo(): ?string
+    /**
+     * Get the logo.
+     * 
+     * @return string|null|false Filename of the logo, or `null` if no logo, or `false` if the logo if left unchanged.
+     */
+    public function getLogoFilename(): string|null|false
     {
         return $this->logo;
     }
 
-    public function setLogo(?string $logo): static
+    /**
+     * Get the URL of the logo.
+     */
+    public function getLogoURL(): ?string
     {
-        if (is_null($logo)) {
-            $this->logo = null;
-        } else {
-            $this->logo = $_ENV["LOGOS_URL"] . "/" . $logo;
+        if (!$this->logo) {
+            return null;
         }
+
+        return $_ENV["LOGOS_URL"] . "/" . $this->logo;
+    }
+
+    /**
+     * Set the logo.
+     * 
+     * @param string|null|false $logo Filename of the logo, or null if no logo, or false if the logo if left unchanged.
+     */
+    public function setLogo(string|null|false $logo): static
+    {
+        $this->logo = $logo;
 
         return $this;
     }
@@ -263,13 +261,13 @@ class ThirdParty extends AbstractEntity
             "adresse_ligne_2" => $this->getAddressLine2(),
             "cp" => $this->getPostCode(),
             "ville" => $this->getCity(),
-            "pays" => $this->country->getISO(),
+            "pays" => $this->getCountry()?->getISO(),
             "telephone" => $this->getPhone(),
             "commentaire" => $this->getComments(),
             "roles" => $this->getRoles(),
             "non_modifiable" => $this->isNonEditable(),
             "lie_agence" => $this->isAgency(),
-            "logo" => $this->getLogo(),
+            "logo" => $this->getLogoURL(),
             "actif" => $this->isActive(),
             "nombre_rdv" => $this->getAppointmentCount(),
         ];

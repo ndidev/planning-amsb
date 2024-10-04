@@ -2,11 +2,11 @@
 
 namespace App\Repository;
 
+use App\Core\Component\Collection;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\DB\DBException;
-use App\Core\Exceptions\Server\ServerException;
-use App\Core\Logger\ErrorLogger;
 use App\Entity\ThirdParty;
+use App\Service\ThirdPartyService;
 
 class ThirdPartyRepository extends Repository
 {
@@ -28,30 +28,34 @@ class ThirdPartyRepository extends Repository
     /**
      * Récupère tous les tiers.
      * 
-     * @return ThirdParty[] Liste des tiers
+     * @return Collection<ThirdParty> Liste des tiers
      */
-    public function getThirdParties(): array
+    public function fetchAllThirdParties(): Collection
     {
         $statement = "SELECT * FROM tiers ORDER BY nom_court, ville";
 
         $thirdPartiesRaw = $this->mysql->query($statement)->fetchAll();
 
-        $thirdParties = array_map(fn(array $thirdPartyRaw) => new ThirdParty($thirdPartyRaw), $thirdPartiesRaw);
+        $thirdPartyService = new ThirdPartyService();
+
+        $thirdParties = array_map(
+            fn(array $thirdPartyRaw) => $thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw),
+            $thirdPartiesRaw
+        );
 
         static::$cache = $thirdParties;
 
-        return $thirdParties;
+        return new Collection($thirdParties);
     }
 
     /**
      * Récupère un tiers.
      * 
-     * @param int   $id      ID du tiers à récupérer
-     * @param array $options Options de récupération
+     * @param int $id ID du tiers à récupérer
      * 
      * @return ?ThirdParty Tiers récupéré
      */
-    public function getThirdParty(int $id): ?ThirdParty
+    public function fetchThirdParty(int $id): ?ThirdParty
     {
         // Vérifier si le tiers est déjà en cache
         $thirdParty = array_filter(
@@ -71,7 +75,9 @@ class ThirdPartyRepository extends Repository
 
         if (!$thirdPartyRaw) return null;
 
-        $thirdParty = new ThirdParty($thirdPartyRaw);
+        $thirdPartyService = new ThirdPartyService();
+
+        $thirdParty = $thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw);
 
         array_push(static::$cache, $thirdParty);
 
@@ -81,107 +87,94 @@ class ThirdPartyRepository extends Repository
     /**
      * Crée un tiers.
      * 
-     * @param array $input Eléments du tiers à créer
+     * @param ThirdParty $thirdParty Eléments du tiers à créer
      * 
      * @return ThirdParty Tiers créé
      */
-    public function createThirdParty(array $input): ThirdParty
+    public function createThirdParty(ThirdParty $thirdParty): ThirdParty
     {
-        // Enregistrement du logo dans le dossier images
-        $logoFilename = $this->saveLogo($input["logo"] ?? NULL) ?: NULL;
-
         $statement =
             "INSERT INTO tiers
-            VALUES(
-            NULL,
-                :nom_court,
-                :nom_complet,
-                :adresse_ligne_1,
-                :adresse_ligne_2,
-                :cp,
-                :ville,
-                :pays,
-                :telephone,
-                :commentaire,
-                :bois_fournisseur,
-                :bois_client,
-                :bois_transporteur,
-                :bois_affreteur,
-                :vrac_fournisseur,
-                :vrac_client,
-                :vrac_transporteur,
-                :maritime_armateur,
-                :maritime_affreteur,
-                :maritime_courtier,
-                :non_modifiable,
-                :lie_agence,
-                :logo,
-                :actif
-            )";
+            SET
+                nom_court = :shortName,
+                nom_complet = :fullName,
+                adresse_ligne_1 = :addressLine1,
+                adresse_ligne_2 = :addressLine2,
+                cp = :postCode,
+                ville = :city,
+                pays = :country,
+                telephone = :phone,
+                commentaire = :comments,
+                bois_fournisseur = :bois_fournisseur,
+                bois_client = :bois_client,
+                bois_transporteur = :bois_transporteur,
+                bois_affreteur = :bois_affreteur,
+                vrac_fournisseur = :vrac_fournisseur,
+                vrac_client = :vrac_client,
+                vrac_transporteur = :vrac_transporteur,
+                maritime_armateur = :maritime_armateur,
+                maritime_affreteur = :maritime_affreteur,
+                maritime_courtier = :maritime_courtier,
+                logo = :logo,
+                actif = :active";
 
         $request = $this->mysql->prepare($statement);
 
         $this->mysql->beginTransaction();
         $request->execute([
-            'nom_court' => $input["nom_court"] ?: $input["nom_complet"],
-            'nom_complet' => $input["nom_complet"],
-            'adresse_ligne_1' => $input["adresse_ligne_1"],
-            'adresse_ligne_2' => $input["adresse_ligne_2"],
-            'cp' => $input["cp"],
-            'ville' => $input["ville"],
-            'pays' => $input["pays"],
-            'telephone' => $input["telephone"],
-            'commentaire' => $input["commentaire"],
-            'bois_fournisseur' => (int) $input["roles"]["bois_fournisseur"],
-            'bois_client' => (int) $input["roles"]["bois_client"],
-            'bois_transporteur' => (int) $input["roles"]["bois_transporteur"],
-            'bois_affreteur' => (int) $input["roles"]["bois_affreteur"],
-            'vrac_fournisseur' => (int) $input["roles"]["vrac_fournisseur"],
-            'vrac_client' => (int) $input["roles"]["vrac_client"],
-            'vrac_transporteur' => (int) $input["roles"]["vrac_transporteur"],
-            'maritime_armateur' => (int) $input["roles"]["maritime_armateur"],
-            'maritime_affreteur' => (int) $input["roles"]["maritime_affreteur"],
-            'maritime_courtier' => (int) $input["roles"]["maritime_courtier"],
-            'non_modifiable' => (int) $input["non_modifiable"],
-            'lie_agence' => 0,
-            'logo' => $logoFilename,
-            'actif' => 1,
+            'shortName' => $thirdParty->getShortName() ?: $thirdParty->getFullName(),
+            'fullName' => $thirdParty->getFullName(),
+            'addressLine1' => $thirdParty->getAddressLine1(),
+            'addressLine2' => $thirdParty->getAddressLine2(),
+            'postCode' => $thirdParty->getPostCode(),
+            'city' => $thirdParty->getCity(),
+            'country' => $thirdParty->getCountry()->getISO(),
+            'phone' => $thirdParty->getPhone(),
+            'comments' => $thirdParty->getComments(),
+            'bois_fournisseur' => (int) $thirdParty->getRole("bois_fournisseur"),
+            'bois_client' => (int) $thirdParty->getRole("bois_client"),
+            'bois_transporteur' => (int) $thirdParty->getRole("bois_transporteur"),
+            'bois_affreteur' => (int) $thirdParty->getRole("bois_affreteur"),
+            'vrac_fournisseur' => (int) $thirdParty->getRole("vrac_fournisseur"),
+            'vrac_client' => (int) $thirdParty->getRole("vrac_client"),
+            'vrac_transporteur' => (int) $thirdParty->getRole("vrac_transporteur"),
+            'maritime_armateur' => (int) $thirdParty->getRole("maritime_armateur"),
+            'maritime_affreteur' => (int) $thirdParty->getRole("maritime_affreteur"),
+            'maritime_courtier' => (int) $thirdParty->getRole("maritime_courtier"),
+            'logo' => $thirdParty->getLogoFilename(),
+            'active' => (int) $thirdParty->isActive(),
         ]);
 
         $lastInsertId = $this->mysql->lastInsertId();
         $this->mysql->commit();
 
-        return $this->getThirdParty($lastInsertId);
+        return $this->fetchThirdParty($lastInsertId);
     }
 
     /**
      * Met à jour un tiers.
      * 
-     * @param int   $id ID du tiers à modifier
-     * @param array $input  Eléments du tiers à modifier
+     * @param ThirdParty $thirdParty  Eléments du tiers à modifier
      * 
      * @return ThirdParty tiers modifié
      */
-    public function updateThirdParty($id, array $input): ThirdParty
+    public function updateThirdParty(ThirdParty $thirdParty): ThirdParty
     {
-        // Enregistrement du logo dans le dossier images
-        $logoFilename = $this->saveLogo($input["logo"]);
-
         // Si un logo a été ajouté, l'utiliser, sinon, ne pas changer
-        $logoStatement = $logoFilename !== false ? ":logo" : "logo";
+        $logoStatement = $thirdParty->getLogoFilename() !== false ? ":logo" : "logo";
 
         $thirdPartyStatement =
             "UPDATE tiers
             SET
-                nom_court = :nom_court,
-                nom_complet = :nom_complet,
-                adresse_ligne_1 = :adresse_ligne_1,
-                adresse_ligne_2 = :adresse_ligne_2,
-                cp = :cp,
-                ville = :ville,
-                pays = :pays,
-                telephone = :telephone,
-                commentaire = :commentaire,
+                nom_court = :shortName,
+                nom_complet = :fullName,
+                adresse_ligne_1 = :addressLine1,
+                adresse_ligne_2 = :addressLine2,
+                cp = :postCode,
+                ville = :city,
+                pays = :country,
+                telephone = :phone,
+                commentaire = :comments,
                 bois_fournisseur = :bois_fournisseur,
                 bois_client = :bois_client,
                 bois_transporteur = :bois_transporteur,
@@ -193,42 +186,42 @@ class ThirdPartyRepository extends Repository
                 maritime_affreteur = :maritime_affreteur,
                 maritime_courtier = :maritime_courtier,
                 logo = $logoStatement,
-                actif = :actif
+                actif = :active
             WHERE id = :id";
 
         $request = $this->mysql->prepare($thirdPartyStatement);
 
         $fields = [
-            'nom_court' => $input["nom_court"] ?: $input["nom_complet"],
-            'nom_complet' => $input["nom_complet"],
-            'adresse_ligne_1' => $input["adresse_ligne_1"],
-            'adresse_ligne_2' => $input["adresse_ligne_2"],
-            'cp' => $input["cp"],
-            'ville' => $input["ville"],
-            'pays' => $input["pays"],
-            'telephone' => $input["telephone"],
-            'commentaire' => $input["commentaire"],
-            'bois_fournisseur' => (int) $input["roles"]["bois_fournisseur"],
-            'bois_client' => (int) $input["roles"]["bois_client"],
-            'bois_transporteur' => (int) $input["roles"]["bois_transporteur"],
-            'bois_affreteur' => (int) $input["roles"]["bois_affreteur"],
-            'vrac_fournisseur' => (int) $input["roles"]["vrac_fournisseur"],
-            'vrac_client' => (int) $input["roles"]["vrac_client"],
-            'vrac_transporteur' => (int) $input["roles"]["vrac_transporteur"],
-            'maritime_armateur' => (int) $input["roles"]["maritime_armateur"],
-            'maritime_affreteur' => (int) $input["roles"]["maritime_affreteur"],
-            'maritime_courtier' => (int) $input["roles"]["maritime_courtier"],
-            'actif' => (int) $input["actif"],
-            'id' => $id,
+            'shortName' => $thirdParty->getShortName() ?: $thirdParty->getFullName(),
+            'fullName' => $thirdParty->getFullName(),
+            'addressLine1' => $thirdParty->getAddressLine1(),
+            'addressLine2' => $thirdParty->getAddressLine2(),
+            'postCode' => $thirdParty->getPostCode(),
+            'city' => $thirdParty->getCity(),
+            'country' => $thirdParty->getCountry()->getISO(),
+            'phone' => $thirdParty->getPhone(),
+            'comments' => $thirdParty->getComments(),
+            'bois_fournisseur' => (int) $thirdParty->getRole("bois_fournisseur"),
+            'bois_client' => (int) $thirdParty->getRole("bois_client"),
+            'bois_transporteur' => (int) $thirdParty->getRole("bois_transporteur"),
+            'bois_affreteur' => (int) $thirdParty->getRole("bois_affreteur"),
+            'vrac_fournisseur' => (int) $thirdParty->getRole("vrac_fournisseur"),
+            'vrac_client' => (int) $thirdParty->getRole("vrac_client"),
+            'vrac_transporteur' => (int) $thirdParty->getRole("vrac_transporteur"),
+            'maritime_armateur' => (int) $thirdParty->getRole("maritime_armateur"),
+            'maritime_affreteur' => (int) $thirdParty->getRole("maritime_affreteur"),
+            'maritime_courtier' => (int) $thirdParty->getRole("maritime_courtier"),
+            'active' => (int) $thirdParty->isActive(),
+            'id' => $thirdParty->getId(),
         ];
 
-        if ($logoFilename !== false) {
-            $fields["logo"] = $logoFilename;
+        if ($thirdParty->getLogoFilename() !== false) {
+            $fields["logo"] = $thirdParty->getLogoFilename();
         }
 
         $request->execute($fields);
 
-        return $this->getThirdParty($id);
+        return $this->fetchThirdParty($thirdParty->getId());
     }
 
     /**
@@ -240,7 +233,7 @@ class ThirdPartyRepository extends Repository
      */
     public function deleteThirdParty(int $id): bool
     {
-        $appointmentCount = $this->getAppointmentCount($id);
+        $appointmentCount = $this->getAppointmentCount($id)["nombre_rdv"];
         if ($appointmentCount > 0) {
             throw new ClientException("Le tiers est concerné par {$appointmentCount} rdv. Impossible de le supprimer.");
         }
@@ -256,71 +249,13 @@ class ThirdPartyRepository extends Repository
     }
 
     /**
-     * Enregistrer un logo dans le dossier images
-     * et retourne le hash du fichier.
-     * 
-     * @param array|string|null $file Données du fichier (null pour effacement du logo existant).
-     * 
-     * @return string|null|false Nom de fichier du logo si l'enregistrement a réussi, `false` sinon.
-     */
-    private function saveLogo(array|string|null $file): string|null|false
-    {
-        try {
-            // Conservation du fichier existant
-            if (gettype($file) === "string") {
-                return false;
-            }
-
-            // Suppression du fichier existant
-            if ($file === null) {
-                return null;
-            }
-
-            // Récupérer les données de l'image
-            // $fichier["data"] = "data:{type mime};base64,{données}"
-            $data = explode(",", $file["data"])[1];
-
-            // Création de l'image depuis les données
-            $imageString = base64_decode($data);
-            $image = imagecreatefromstring(base64_decode($data));
-
-            if (!$image) {
-                throw new ServerException("Logo : Erreur dans la création de l'image (imagecreatefromstring)");
-            }
-
-
-            // Redimensionnement
-            define("MAX_HEIGHT", 500); // Hauteur maximale de l'image à enregistrer.
-
-            [$width, $height] = getimagesizefromstring($imageString);
-            $percent = min(MAX_HEIGHT / $height, 1);
-            $newWidth = (int) ($width * $percent);
-            $imageResized = imagescale($image, $newWidth);
-
-
-            // Enregistrement
-            $hash = hash("md5", $data);
-            $filename = $hash . ".webp";
-            $filepath = LOGOS . "/$filename";
-            if (imagewebp($imageResized, $filepath, 100) === false) {
-                throw new ServerException("Erreur dans l'enregistrement du logo (imagewebp)");
-            }
-
-            return $filename;
-        } catch (\Throwable $e) {
-            ErrorLogger::log($e);
-            return false;
-        }
-    }
-
-    /**
      * Récupère le nombre de RDV pour un tiers ou tous les tiers.
      * 
      * @param int $id Optionnel. ID du tiers à récupérer.
      * 
-     * @return array Nombre de RDV pour le(s) tiers.
+     * @return array|false Nombre de RDV pour le(s) tiers, indexé par ID. FALSE si aucun tiers n'a de RDV.
      */
-    public function getAppointmentCount(?int $id = null): array
+    public function getAppointmentCount(?int $id = null): array|false
     {
         $statementWithoutId =
             "SELECT 
