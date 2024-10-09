@@ -9,7 +9,7 @@ define('UNIFONTS', FONTS . '/unifont');
 define('LOGOS', ROOTPATH . '/logos');
 
 require_once __DIR__ . "/vendor/autoload.php";
-require_once __DIR__ . "/src/Core/Constants.php";
+require_once __DIR__ . "/src/Core/Component/Constants.php";
 
 // Chargement des variables d'environnement
 $dotenv = Dotenv\Dotenv::createImmutable(ROOTPATH, ".env");
