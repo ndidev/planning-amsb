@@ -1,17 +1,17 @@
 <?php
 
-namespace App\Core\PDF;
+namespace App\DTO\PDF;
 
-use \Exception;
-use \tFPDF;
+use App\Entity\Config\AgencyDepartment;
+use App\Entity\ThirdParty;
 
 define("_SYSTEM_TTFONTS", UNIFONTS . "/");
 
-class PDFPlanning extends tFPDF
+abstract class PlanningPDF extends \tFPDF
 {
     public function __construct(
-        protected array $fournisseur,
-        protected array $agence
+        protected ThirdParty $supplier,
+        protected AgencyDepartment $agencyDepartment
     ) {
         parent::__construct('P', 'mm', 'A4');
 
@@ -21,16 +21,18 @@ class PDFPlanning extends tFPDF
         $this->AddFont("RobotoI", "", "Roboto-Italic.ttf", true);
     }
 
+    abstract protected function generatePDF(): void;
+
     /**
      * Constrution de l'en-tête du PDF.
      */
     function Header(): void
     {
         // Logo
-        if ($this->fournisseur["logo"] && file_exists(LOGOS . "/" . $this->fournisseur["logo"])) {
+        if ($this->supplier->getLogoFilename() && file_exists(LOGOS . "/" . $this->supplier->getLogoFilename())) {
             // Si nécessaire, redimmensionnement pour ne pas être trop large ou trop haute
-            $tmp = imagecreatefromwebp(LOGOS . "/" . $this->fournisseur["logo"]);
-            [$width_px, $height_px] = getimagesize(LOGOS . "/" . $this->fournisseur["logo"]);
+            $tmp = imagecreatefromwebp(LOGOS . "/" . $this->supplier->getLogoFilename());
+            [$width_px, $height_px] = getimagesize(LOGOS . "/" . $this->supplier->getLogoFilename());
             [$res_w, $res_h] = imageresolution($tmp);
 
             $ratio = $width_px / $height_px;
@@ -50,7 +52,7 @@ class PDFPlanning extends tFPDF
             $pdf_height_mm = min($pdf_height_mm, MAX_HEIGHT);
             $pdf_width_mm = $pdf_height_mm * $ratio;
 
-            $this->Image(LOGOS . "/" . $this->fournisseur["logo"], 10, 6, $pdf_width_mm, $pdf_height_mm);
+            $this->Image(LOGOS . "/" . $this->supplier->getLogoFilename(), 10, 6, $pdf_width_mm, $pdf_height_mm);
         }
         // Police Arial gras 15
         $this->SetFont('RobotoB', '', 15);
@@ -59,7 +61,7 @@ class PDFPlanning extends tFPDF
         // Décalage à droite
         $this->Cell(70);
         // Titre
-        $this->Cell(70, 10, "Planning {$this->fournisseur['nom']} ({$this->agence['ville']})", 'B', 0, 'C');
+        $this->Cell(70, 10, "Planning {$this->supplier->getShortName()} ({$this->agencyDepartment->getCity()})", 'B', 0, 'C');
         // Saut de ligne
         $this->Ln(20);
     }
@@ -80,12 +82,19 @@ class PDFPlanning extends tFPDF
     }
 
     /**
+     * Renvoie un PDF sous forme `string` pour visualisation (téléchargement).
+     */
+    public function stringifyPDF(): string
+    {
+        return $this->Output('S');
+    }
+
+    /**
      * Prise en charge des images WebP.
      * 
      * @param string $file Chemin du fichier WebP.
      * 
      * @return array 
-     * @throws Exception 
      */
     protected function _parsewebp(string $file): array
     {

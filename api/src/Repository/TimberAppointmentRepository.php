@@ -3,10 +3,11 @@
 namespace App\Repository;
 
 use App\Core\Component\Collection;
-use App\Core\DateUtils;
+use App\Core\Component\DateUtils;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\DTO\TimberRegistryEntryDTO;
+use App\Entity\ThirdParty;
 use App\Entity\Timber\TimberAppointment;
 use App\Service\TimberService;
 
@@ -101,7 +102,7 @@ class TimberAppointmentRepository extends Repository
         $timberService = new TimberService();
 
         $appointments = array_map(
-            fn(array $appointmentRaw) => $timberService->makeTimberAppointment($appointmentRaw),
+            fn(array $appointmentRaw) => $timberService->makeTimberAppointmentFromDatabase($appointmentRaw),
             $rdvsRaw
         );
 
@@ -146,7 +147,7 @@ class TimberAppointmentRepository extends Repository
 
         $timberService = new TimberService();
 
-        $rdv = $timberService->makeTimberAppointment($rdvRaw);
+        $rdv = $timberService->makeTimberAppointmentFromDatabase($rdvRaw);
 
         return $rdv;
     }
@@ -770,5 +771,81 @@ class TimberAppointmentRepository extends Repository
         }
 
         return $stats;
+    }
+
+    /**
+     * Récupère les RDV vrac à exporter en PDF.
+     * 
+     * @return array<string, Collection<BulkAppointment>> RDV vrac à exporter.
+     */
+    public function getPdfAppointments(
+        ThirdParty $supplier,
+        \DateTimeInterface $startDate,
+        \DateTimeInterface $endDate,
+    ): array {
+        $scheduledStatement =
+            "SELECT
+                pl.date_rdv,
+                pl.numero_bl,
+                pl.commentaire_public,
+                pl.chargement,
+                pl.client,
+                pl.livraison,
+                pl.affreteur
+            FROM bois_planning pl
+            LEFT JOIN tiers c ON c.id = pl.client
+            WHERE date_rdv
+            BETWEEN :startDate
+            AND :endDate
+            AND attente = 0
+            AND fournisseur = :supplierId
+            ORDER BY
+                date_rdv,
+                numero_bl,
+                c.nom_court";
+
+        $onHoldStatement =
+            "SELECT
+                pl.date_rdv,
+                pl.commentaire_public,
+                pl.chargement,
+                pl.client,
+                pl.livraison
+            FROM bois_planning pl
+            LEFT JOIN tiers c ON c.id = pl.client
+            WHERE attente = 1
+            AND fournisseur = :supplierId
+            ORDER BY
+                -date_rdv DESC,
+                c.nom_court";
+
+        $scheduledRequest = $this->mysql->prepare($scheduledStatement);
+        $scheduledRequest->execute([
+            "supplierId" => $supplier->getId(),
+            "startDate" => $startDate->format("Y-m-d"),
+            "endDate" => $endDate->format("Y-m-d"),
+        ]);
+        $scheduledAppointmentsRaw = $scheduledRequest->fetchAll();
+
+        $onHoldRequest = $this->mysql->prepare($onHoldStatement);
+        $onHoldRequest->execute(["supplierId" => $supplier->getId()]);
+        $onHoldAppointmentsRaw = $onHoldRequest->fetchAll();
+
+        $timberService = new TimberService();
+
+        $scheduledAppointments = array_map(
+            fn(array $appointmentRaw) => $timberService->makeTimberAppointmentFromDatabase($appointmentRaw),
+            $scheduledAppointmentsRaw
+        );
+
+        $onHoldAppointments = array_map(
+            fn(array $appointmentRaw) => $timberService->makeTimberAppointmentFromDatabase($appointmentRaw),
+            $onHoldAppointmentsRaw
+        );
+
+        return [
+            "non_attente" => new Collection($scheduledAppointments),
+            "attente" => new Collection($onHoldAppointments),
+        ];
     }
 }

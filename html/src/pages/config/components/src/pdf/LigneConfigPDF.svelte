@@ -80,11 +80,10 @@
           Notiflix.Block.dots([ligne], notiflixOptions.texts.telechargement);
           ligne.style.minHeight = "initial";
 
-          const blob: Blob = await fetcher("config/pdf/visu", {
+          const blob: Blob = await fetcher("config/pdf/generer", {
             accept: "blob",
             params: {
-              module: config.module,
-              fournisseur: config.fournisseur.toString(),
+              config: config.id.toString(),
               date_debut:
                 document.querySelector<HTMLInputElement>(".date_debut").value,
               date_fin:
@@ -141,19 +140,17 @@
           ligne.style.minHeight = "initial";
 
           const resultat: { statut: string } = await fetcher(
-            "config/pdf/envoi",
+            "config/pdf/generer",
             {
               requestInit: {
                 method: "POST",
                 body: JSON.stringify({
-                  module: config.module,
-                  fournisseur: config.fournisseur.toString(),
+                  config: config.id.toString(),
                   date_debut:
                     document.querySelector<HTMLInputElement>(".date_debut")
                       .value,
                   date_fin:
                     document.querySelector<HTMLInputElement>(".date_fin").value,
-                  liste_emails: config.liste_emails,
                 }),
               },
             }

@@ -3,6 +3,7 @@
 namespace App\Controller\ThirdParty;
 
 use App\Controller\Controller;
+use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\ThirdPartyService;
@@ -45,8 +46,7 @@ class AppointmentCountController extends Controller
     private function read(?int $id)
     {
         if ($id && !$this->service->thirdPartyExists($id)) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("Le tiers n'existe pas.");
         }
 
         $appointmentCount = $this->service->getAppointmentCount($id);

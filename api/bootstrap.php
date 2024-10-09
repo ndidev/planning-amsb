@@ -2,7 +2,7 @@
 setlocale(LC_ALL, "fr_FR.utf8", "fr-FR"); // Seul "fr_FR.utf8" fonctionne sur le serveur Axiom, seul "fr-FR" fonctionne en local
 date_default_timezone_set('Europe/Paris');
 
-define("ROOTPATH", __DIR__ . "/../");
+define("ROOTPATH", __DIR__ . "/..");
 define('API', __DIR__);
 define('FONTS', API . '/font');
 define('UNIFONTS', FONTS . '/unifont');

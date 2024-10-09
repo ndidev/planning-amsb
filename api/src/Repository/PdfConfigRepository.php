@@ -38,10 +38,10 @@ class PdfConfigRepository extends Repository
 
         $configsRaw = $request->fetchAll();
 
-        $pdfConfigService = new PdfService();
+        $pdfService = new PdfService();
 
         $configs = array_map(
-            fn(array $config) => $pdfConfigService->makeConfigFromDatabase($config),
+            fn(array $config) => $pdfService->makeConfigFromDatabase($config),
             $configsRaw
         );
 
@@ -77,18 +77,9 @@ class PdfConfigRepository extends Repository
 
         if (!$configRaw) return null;
 
-        $pdfConfigService = new PdfService();
+        $pdfService = new PdfService();
 
-        $config = $pdfConfigService->makeConfigFromDatabase($configRaw);
-
-        // // Rétablissement des types INT et bool
-        // array_walk_recursive($configRaw, function (&$value, $key) {
-        //     $value = match ($key) {
-        //         "id", "fournisseur", "jours_avant", "jours_apres" => (int) $value,
-        //         "envoi_auto" => (bool) $value,
-        //         default => $value,
-        //     };
-        // });
+        $config = $pdfService->makeConfigFromDatabase($configRaw);
 
         return $config;
     }

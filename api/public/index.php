@@ -10,11 +10,10 @@ use App\Controller\Chartering\CharterController;
 use App\Controller\Config\AgencyController;
 use App\Controller\Config\QuickAppointmentAddController;
 use App\Controller\Config\TimberQuickAppointmentAddController;
+use App\Controller\Config\ChartDatumController;
 use App\Controller\Config\InfoBannerController;
 use App\Controller\Config\PdfConfigController;
-use App\Controller\Config\ChartDatumController;
-use App\Controller\Config\PDF\EnvoiPDFController;
-use App\Controller\Config\PDF\VisualiserPDFController;
+use App\Controller\Config\PdfViewerController;
 use App\Controller\Shipping\ShipNamesController;
 use App\Controller\Shipping\ShipsInOpsController;
 use App\Controller\Shipping\ShippingCargoListController;
@@ -89,8 +88,7 @@ $routes = [
     ["/config/agence/[a:service]?", AgencyController::class],
     ["/config/bandeau-info/[i:id]?", InfoBannerController::class],
     ["/config/pdf/[i:id]?", PdfConfigController::class],
-    ["/config/pdf/visu", VisualiserPDFController::class],
-    ["/config/pdf/envoi", EnvoiPDFController::class],
+    ["/config/pdf/generer", PdfViewerController::class],
     ["/config/ajouts-rapides", QuickAppointmentAddController::class],
     ["/config/ajouts-rapides/bois/[i:id]?", TimberQuickAppointmentAddController::class],
     ["/config/cotes/[a:cote]?", ChartDatumController::class],

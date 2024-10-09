@@ -5,7 +5,7 @@
 namespace App\Repository;
 
 use App\Core\Component\Collection;
-use App\Core\ETAConverter;
+use App\Core\Component\ETAConverter;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\Shipping\ShippingCall;
 use App\Entity\Shipping\ShippingCallCargo;

@@ -4,7 +4,7 @@ namespace App\Core;
 
 use App\Core\Database\Redis;
 
-use const App\Core\Constants\{ONE_SECOND, ONE_MINUTE};
+use const App\Core\Component\Constants\{ONE_SECOND, ONE_MINUTE};
 
 /**
  * Security utilities.

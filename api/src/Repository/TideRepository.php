@@ -4,7 +4,7 @@
 
 namespace App\Repository;
 
-use const App\Core\Constants\ONE_WEEK;
+use const App\Core\Component\Constants\ONE_WEEK;
 
 class TideRepository extends Repository
 {

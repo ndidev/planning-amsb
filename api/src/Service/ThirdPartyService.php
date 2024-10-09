@@ -65,7 +65,7 @@ class ThirdPartyService
             ->setAppointmentCount($rawData["nombre_rdv"] ?? 0);
 
         foreach ($thirdParty->getRoles() as $role => $value) {
-            $thirdParty->setRole($role, $rawData[$role] ?? false);
+            $thirdParty->setRole($role, $rawData["roles"][$role] ?? false);
         }
 
         return $thirdParty;

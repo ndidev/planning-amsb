@@ -1,19 +1,20 @@
 <?php
 
-namespace App\Controller\Config\PDF;
+namespace App\Controller\Config;
 
-use App\Models\Config\PDFModel;
 use App\Controller\Controller;
+use App\Core\Component\DateUtils;
 use App\Core\HTTP\ETag;
+use App\Service\PdfService;
 
-class EnvoiPDFController extends Controller
+class PdfViewerController extends Controller
 {
-    private $model;
+    private PdfService $pdfService;
 
     public function __construct()
     {
-        parent::__construct();
-        $this->model = new PDFModel();
+        parent::__construct("OPTIONS, HEAD, GET, POST");
+        $this->pdfService = new PdfService();
         $this->processRequest();
     }
 
@@ -46,14 +47,15 @@ class EnvoiPDFController extends Controller
      */
     public function getPdfFile(array $query)
     {
-        $pdfString = $this->model->getPdfAsString($query);
+        $configId = $query["config"] ?? null;
+        $startDate = DateUtils::convertDate($query["date_debut"]);
+        $endDate = DateUtils::convertDate($query["date_fin"]);
 
-        if (!$pdfString) {
-            $this->response->setCode(404);
-            return;
-        }
+        $pdf = $this->pdfService->generatePDF($configId, $startDate, $endDate);
 
-        $etag = ETag::get($pdfString);
+        $pdfAsString = $pdf->stringifyPDF();
+
+        $etag = ETag::get($pdfAsString);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(304);
@@ -65,8 +67,8 @@ class EnvoiPDFController extends Controller
         $this->headers["Content-Disposition"] = "inline";
 
         $this->response
-            ->setBody($pdfString)
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setBody($pdfAsString);
     }
 
     /**
@@ -76,10 +78,14 @@ class EnvoiPDFController extends Controller
     {
         $input = $this->request->body;
 
-        $sendingResults = $this->model->sendPdfFileByEmail($input);
+        $configId = $input["config"] ?? null;
+        $startDate = DateUtils::convertDate($input["date_debut"]);
+        $endDate = DateUtils::convertDate($input["date_fin"]);
+
+        $sendingResults = $this->pdfService->sendPdfByEmail($configId, $startDate, $endDate);
 
         $this->response
             ->setCode(200)
-            ->setBody(json_encode($sendingResults));
+            ->setJSON($sendingResults);
     }
 }

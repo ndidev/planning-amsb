@@ -2,7 +2,7 @@
 
 namespace App\DTO;
 
-use App\Core\DateUtils;
+use App\Core\Component\DateUtils;
 
 class TimberRegistryEntryDTO
 {

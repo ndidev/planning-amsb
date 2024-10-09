@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Core\Constants;
+namespace App\Core\Component\Constants;
 
 // Time
 

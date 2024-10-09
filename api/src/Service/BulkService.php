@@ -6,8 +6,11 @@ use App\Core\Component\Collection;
 use App\Entity\Bulk\BulkAppointment;
 use App\Entity\Bulk\BulkProduct;
 use App\Entity\Bulk\BulkQuality;
+use App\Entity\ThirdParty;
 use App\Repository\BulkAppointmentRepository;
 use App\Repository\BulkProductRepository;
+use DateTimeInterface;
+use PDOException;
 
 class BulkService
 {

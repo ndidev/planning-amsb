@@ -10,7 +10,7 @@ use App\Service\PdfService;
 
 class PdfConfigController extends Controller
 {
-    private PdfService $pdfConfigService;
+    private PdfService $pdfService;
     private Module $module = Module::CONFIG;
     private string $sseEventName = "config/pdf";
 
@@ -18,7 +18,7 @@ class PdfConfigController extends Controller
         private ?int $id = null,
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
-        $this->pdfConfigService = new PdfService();
+        $this->pdfService = new PdfService();
         $this->processRequest();
     }
 
@@ -61,7 +61,7 @@ class PdfConfigController extends Controller
      */
     public function readAll()
     {
-        $pdfConfigs = $this->pdfConfigService->getAllConfigs();
+        $pdfConfigs = $this->pdfService->getAllConfigs();
 
         // Filtre sur les catégories autorisées pour l'utilisateur
         foreach ($pdfConfigs as $config) {
@@ -91,7 +91,7 @@ class PdfConfigController extends Controller
      */
     public function read(int $id)
     {
-        $pdfConfig = $this->pdfConfigService->getConfig($id);
+        $pdfConfig = $this->pdfService->getConfig($id);
 
         if (!$pdfConfig) {
             $this->response->setCode(404);
@@ -130,7 +130,7 @@ class PdfConfigController extends Controller
             throw new AccessException();
         }
 
-        $newPdfConfig = $this->pdfConfigService->createConfig($input);
+        $newPdfConfig = $this->pdfService->createConfig($input);
 
         $id = $newPdfConfig->getId();
 
@@ -151,7 +151,7 @@ class PdfConfigController extends Controller
      */
     public function update(int $id)
     {
-        $current = $this->pdfConfigService->getConfig($id);
+        $current = $this->pdfService->getConfig($id);
 
         if (!$current) {
             $this->response->setCode(404);
@@ -168,7 +168,7 @@ class PdfConfigController extends Controller
             throw new AccessException();
         }
 
-        $updatedPdfConfig = $this->pdfConfigService->updateConfig($id, $input);
+        $updatedPdfConfig = $this->pdfService->updateConfig($id, $input);
 
         $this->response
             ->setHeaders($this->headers)
@@ -184,7 +184,7 @@ class PdfConfigController extends Controller
      */
     public function delete(int $id)
     {
-        $config = $this->pdfConfigService->getConfig($id);
+        $config = $this->pdfService->getConfig($id);
 
         if (!$config) {
             $this->response->setCode(404);
@@ -198,7 +198,7 @@ class PdfConfigController extends Controller
             throw new AccessException();
         }
 
-        $this->pdfConfigService->deleteConfig($id);
+        $this->pdfService->deleteConfig($id);
 
         $this->response->setCode(204);
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);

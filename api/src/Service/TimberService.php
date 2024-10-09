@@ -6,6 +6,7 @@ use App\Core\Component\Collection;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\ServerException;
 use App\DTO\TimberRegistryEntryDTO;
+use App\Entity\ThirdParty;
 use App\Entity\Timber\TimberAppointment;
 use App\Repository\TimberAppointmentRepository;
 
@@ -18,7 +19,7 @@ class TimberService
         $this->timberAppointmentRepository = new TimberAppointmentRepository();
     }
 
-    public function makeTimberAppointment(array $rawData): TimberAppointment
+    public function makeTimberAppointmentFromDatabase(array $rawData): TimberAppointment
     {
         $rdv = (new TimberAppointment())
             ->setId($rawData["id"] ?? null)
@@ -26,10 +27,33 @@ class TimberService
             ->setDate($rawData["date_rdv"] ?? null)
             ->setArrivalTime($rawData["heure_arrivee"] ?? null)
             ->setDepartureTime($rawData["heure_depart"] ?? null)
-            ->setSupplier($rawData["fournisseur"] ?? [])
-            ->setLoadingPlace($rawData["chargement"] ?? [])
-            ->setDeliveryPlace($rawData["livraison"] ?? [])
-            ->setCustomer($rawData["client"] ?? [])
+            ->setSupplier($rawData["fournisseur"] ?? null)
+            ->setLoadingPlace($rawData["chargement"] ?? null)
+            ->setDeliveryPlace($rawData["livraison"] ?? null)
+            ->setCustomer($rawData["client"] ?? null)
+            ->setTransport($rawData["transporteur"] ?? null)
+            ->setTransportBroker($rawData["affreteur"] ?? null)
+            ->setReady($rawData["commande_prete"] ?? false)
+            ->setCharteringConfirmationSent($rawData["confirmation_affretement"] ?? false)
+            ->setDeliveryNoteNumber($rawData["numero_bl"] ?? "")
+            ->setPublicComment($rawData["commentaire_public"] ?? "")
+            ->setPrivateComment($rawData["commentaire_cache"] ?? "");
+
+        return $rdv;
+    }
+
+    public function makeTimberAppointmentFromForm(array $rawData): TimberAppointment
+    {
+        $rdv = (new TimberAppointment())
+            ->setId($rawData["id"] ?? null)
+            ->setOnHold($rawData["attente"] ?? false)
+            ->setDate($rawData["date_rdv"] ?? null)
+            ->setArrivalTime($rawData["heure_arrivee"] ?? null)
+            ->setDepartureTime($rawData["heure_depart"] ?? null)
+            ->setSupplier($rawData["fournisseur"] ?? null)
+            ->setLoadingPlace($rawData["chargement"] ?? null)
+            ->setDeliveryPlace($rawData["livraison"] ?? null)
+            ->setCustomer($rawData["client"] ?? null)
             ->setTransport($rawData["transporteur"] ?? null)
             ->setTransportBroker($rawData["affreteur"] ?? null)
             ->setReady($rawData["commande_prete"] ?? false)
@@ -102,7 +126,7 @@ class TimberService
      */
     public function createAppointment(array $input): TimberAppointment
     {
-        $rdv = $this->makeTimberAppointment($input);
+        $rdv = $this->makeTimberAppointmentFromForm($input);
 
         return $this->timberAppointmentRepository->createAppointment($rdv);
     }
@@ -117,7 +141,7 @@ class TimberService
      */
     public function updateAppointment($id, array $input): TimberAppointment
     {
-        $rdv = $this->makeTimberAppointment($input)->setId($id);
+        $rdv = $this->makeTimberAppointmentFromForm($input)->setId($id);
 
         return $this->timberAppointmentRepository->updateAppointment($rdv);
     }

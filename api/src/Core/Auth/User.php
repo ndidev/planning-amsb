@@ -6,7 +6,7 @@ use App\Core\Component\Module;
 use App\Core\Component\SSEHandler;
 use App\Core\Database\MySQL;
 use App\Core\Database\Redis;
-use App\Core\DateUtils;
+use App\Core\Component\DateUtils;
 use App\Core\Exceptions\Client\Auth\AccountDeletedException;
 use App\Core\Exceptions\Client\Auth\AccountInactiveException;
 use App\Core\Exceptions\Client\Auth\AccountLockedException;
@@ -20,7 +20,7 @@ use App\Core\Exceptions\Client\Auth\MaxLoginAttemptsException;
 use App\Core\Exceptions\Client\Auth\SessionException;
 
 use App\Core\Security;
-use const App\Core\Constants\ONE_WEEK;
+use const App\Core\Component\Constants\ONE_WEEK;
 
 /**
  * Classe contenant toutes les propriétés d'un compte utilisateur.

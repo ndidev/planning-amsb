@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Core;
+namespace App\Core\Component;
 
 /**
  * Convertit une couleur RGB en couleur hexadécimal ou vice versa

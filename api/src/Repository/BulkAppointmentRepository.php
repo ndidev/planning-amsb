@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\Bulk\BulkAppointment;
+use App\Entity\ThirdParty;
 use App\Service\BulkService;
 
 class BulkAppointmentRepository extends Repository
@@ -237,5 +238,59 @@ class BulkAppointmentRepository extends Repository
         if (!$isDeleted) {
             throw new DBException("Erreur lors de la suppression");
         }
+    }
+
+    /**
+     * Récupère les RDV vrac à exporter en PDF.
+     * 
+     * @return Collection<BulkAppointment> RDV vrac à exporter.
+     */
+    public function getPdfAppointments(
+        ThirdParty $supplier,
+        \DateTimeInterface $startDate,
+        \DateTimeInterface $endDate,
+    ): Collection {
+        $statement =
+            "SELECT
+                pl.id,
+                pl.date_rdv,
+                SUBSTRING(pl.heure, 1, 5) AS heure,
+                pl.produit,
+                pl.qualite,
+                pl.client,
+                pl.transporteur,
+                pl.num_commande
+            FROM vrac_planning pl
+            LEFT JOIN vrac_produits p ON p.id = pl.produit
+            LEFT JOIN vrac_qualites q ON q.id = pl.qualite
+            LEFT JOIN tiers c ON c.id = pl.client
+            WHERE date_rdv
+            BETWEEN :startDate
+            AND :endDate
+            AND fournisseur = :supplierId
+            ORDER BY
+                date_rdv,
+                -heure DESC,
+                p.nom,
+                q.nom,
+                c.nom_court";
+
+        $request = $this->mysql->prepare($statement);
+        $request->execute([
+            "supplierId" => $supplier->getId(),
+            "startDate" => $startDate->format("Y-m-d"),
+            "endDate" => $endDate->format("Y-m-d"),
+        ]);
+
+        $appointmentsRaw = $request->fetchAll();
+
+        $bulkService = new BulkService();
+
+        $appointments = array_map(
+            fn(array $appointmentRaw) => $bulkService->makeBulkAppointmentFromDatabase($appointmentRaw),
+            $appointmentsRaw
+        );
+
+        return new Collection($appointments);
     }
 }
