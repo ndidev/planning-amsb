@@ -43,6 +43,8 @@ class RequestLogger
             fwrite($fh, $data);
         } catch (\Throwable $e) {
             ErrorLogger::log($e);
+        } finally {
+            fclose($fh);
         }
     }
 }
