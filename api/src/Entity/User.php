@@ -7,7 +7,6 @@ namespace App\Entity;
 use App\Core\Auth\AccountStatus;
 use App\Core\Auth\UserRoles;
 use App\Core\Component\Module;
-use DateTimeImmutable;
 
 class User extends AbstractEntity
 {

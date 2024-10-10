@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { url } from "@roxi/routify";
+  import { url, goto } from "@roxi/routify";
 
   import Notiflix from "notiflix";
 
@@ -13,6 +13,7 @@
     try {
       await $currentUser.logout();
       currentUser.set(new User());
+      $goto("/");
     } catch (error: any) {
       Notiflix.Notify.failure(error.message);
       console.error(error);

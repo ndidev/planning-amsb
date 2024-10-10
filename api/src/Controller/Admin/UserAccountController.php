@@ -22,7 +22,7 @@ class UserAccountController extends Controller
             throw new AdminException();
         }
 
-        $this->userService = new UserService($this->sse);
+        $this->userService = new UserService(sse: $this->sse);
         $this->processRequest();
     }
 

@@ -2,20 +2,19 @@
 
 namespace App\Controller\User;
 
-use App\Models\User\UserModel;
 use App\Controller\Controller;
 use App\Core\HTTP\ETag;
-use App\Core\Exceptions\Client\Auth\AuthException;
+use App\Service\UserService;
 
 class UserController extends Controller
 {
-    private $model;
+    private UserService $userService;
     private string $sseEventName = "admin/users";
 
     public function __construct()
     {
         parent::__construct("OPTIONS, HEAD, GET, PUT");
-        $this->model = new UserModel($this->user);
+        $this->userService = new UserService(currentUser: $this->user);
         $this->processRequest();
     }
 
@@ -46,12 +45,7 @@ class UserController extends Controller
      */
     public function read()
     {
-        try {
-            $user = $this->model->read();
-        } catch (AuthException) {
-            $this->response->setCode(401);
-            return;
-        }
+        $user = $this->userService->getCurrentUserInfo();
 
         if (!$user) {
             $this->response->setCode(404);
@@ -68,8 +62,8 @@ class UserController extends Controller
         $this->headers["ETag"] = $etag;
 
         $this->response
-            ->setBody(json_encode($user))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($user);
     }
 
     /**
@@ -79,16 +73,11 @@ class UserController extends Controller
     {
         $input = $this->request->body;
 
-        try {
-            $updatedUser = $this->model->update($input);
-        } catch (AuthException) {
-            $this->response->setCode(401);
-            return;
-        }
+        $updatedUser = $this->userService->updateCurrentUser($input);
 
         $this->response
-            ->setBody(json_encode($updatedUser))
-            ->setHeaders($this->headers);
+            ->setHeaders($this->headers)
+            ->setJSON($updatedUser);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $this->user->uid, $updatedUser);
     }

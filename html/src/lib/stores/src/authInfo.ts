@@ -7,7 +7,7 @@ import type { LoginInfo } from "@app/types";
 export const authInfo = readable<LoginInfo>(
   {
     MAX_LOGIN_ATTEMPTS: 0,
-    LONGUEUR_MINI_PASSWORD: 0,
+    LONGUEUR_MINI_PASSWORD: 8,
   },
   (set) => {
     const url = new URL(appURLs.auth);

@@ -13,11 +13,6 @@
 
   let validerButton: BoutonAction;
 
-  /**
-   * Longueur minimum du mot de passe.
-   */
-  const { LONGUEUR_MINI_PASSWORD } = $authInfo;
-
   let password: string = "";
   let passwordConfirm: string = "";
   let passwordMessage: string = "";
@@ -48,7 +43,7 @@
      * Champs mdp et confirmation identiques
      */
     const conditions = {
-      longueur: password.length >= LONGUEUR_MINI_PASSWORD,
+      longueur: password.length >= $authInfo.LONGUEUR_MINI_PASSWORD,
       differentIdentifiant: password !== $currentUser.login,
       identiques: password === passwordConfirm,
     };
@@ -84,8 +79,8 @@
   ) {
     // Longueur
     passwordMessage = longueur
-      ? `✔ Le mot de passe fait ${LONGUEUR_MINI_PASSWORD} caractères ou plus`
-      : `❌ Le mot de passe doit faire ${LONGUEUR_MINI_PASSWORD} caractères au minimum`;
+      ? `✔ Le mot de passe fait ${$authInfo.LONGUEUR_MINI_PASSWORD} caractères ou plus`
+      : `❌ Le mot de passe doit faire ${$authInfo.LONGUEUR_MINI_PASSWORD} caractères au minimum`;
 
     // Différent de l'identifiant
     passwordMessage = differentIdentifiant
@@ -182,7 +177,7 @@
           placeholder="Mot de passe"
           autocomplete="new-password"
           bind:value={password}
-          minlength={LONGUEUR_MINI_PASSWORD}
+          minlength={$authInfo.LONGUEUR_MINI_PASSWORD}
         />
         <span class="pure-form-message-inline">
           {passwordMessage}

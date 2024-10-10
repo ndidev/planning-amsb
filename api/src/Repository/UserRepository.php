@@ -5,8 +5,10 @@
 namespace App\Repository;
 
 use App\Core\Auth\AccountStatus;
+use App\Core\Auth\User as AuthUser;
 use App\Core\Exceptions\Client\Auth\InvalidAccountException;
 use App\Core\Exceptions\Server\DB\DBException;
+use App\DTO\CurrentUserFormDTO;
 use App\Entity\User;
 use App\Service\UserService;
 
@@ -184,16 +186,6 @@ class UserRepository extends Repository
                     commentaire = :commentaire
                 WHERE uid = :uid";
 
-            // // Rétablissement des types int pour les rôles
-            // foreach ($input["roles"] as $role => &$value) {
-            //     $value = (int) $value;
-            // }
-
-            // // Conservation du rôle admin : un admin ne peut pas changer lui-même son statut admin
-            // if ($uid === $this->admin->uid) {
-            //     $user->getRoles()->admin = $user->getRoles()->admin ?? 0;
-            // }
-
             $request = $this->mysql->prepare($statement);
             $request->execute([
                 "login" => substr($user->getLogin(), 0, 255),
@@ -329,5 +321,32 @@ class UserRepository extends Repository
             }
         }
         $this->redis->exec();
+    }
+
+    public function updateCurrentUser(CurrentUserFormDTO $user): User
+    {
+        $uid = $user->getUid();
+
+        $usernameStatement = "UPDATE `admin_users` SET nom = :nom WHERE `uid` = :uid";
+
+        $passwordStatement = "UPDATE `admin_users` SET `password` = :password WHERE `uid` = :uid";
+
+        $usernameRequest = $this->mysql->prepare($usernameStatement);
+        $usernameRequest->execute([
+            "nom" => substr($user->getName(), 0, 255),
+            "uid" => $uid,
+        ]);
+
+        if ($user->getPasswordHash() !== null) {
+            $passwordRequest = $this->mysql->prepare($passwordStatement);
+            $passwordRequest->execute([
+                "password" => $user->getPasswordHash(),
+                "uid" => $uid,
+            ]);
+        }
+
+        $this->updateRedis($uid);
+
+        return $this->fetchUserByUid($uid);
     }
 }

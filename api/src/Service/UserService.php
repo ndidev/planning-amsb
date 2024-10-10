@@ -6,6 +6,9 @@ namespace App\Service;
 
 use App\Core\Auth\User as AuthUser;
 use App\Core\Component\SSEHandler;
+use App\Core\Exceptions\Client\ClientException;
+use App\DTO\CurrentUserFormDTO;
+use App\DTO\CurrentUserInfoDTO;
 use App\Entity\User;
 use App\Repository\UserRepository;
 
@@ -13,8 +16,10 @@ class UserService
 {
     private UserRepository $userRepository;
 
-    public function __construct(private ?SSEHandler $sse = null)
-    {
+    public function __construct(
+        private ?SSEHandler $sse = null,
+        private ?AuthUser $currentUser = null,
+    ) {
         $this->userRepository = new UserRepository();
     }
 
@@ -45,6 +50,16 @@ class UserService
             ->setComments($rawData["commentaire"] ?? '');
 
         return $user;
+    }
+
+    public function makeCurrentUserDTO(array $rawData): CurrentUserFormDTO
+    {
+        $currentUserDTO = (new CurrentUserFormDTO())
+            ->setUid($this->currentUser->uid)
+            ->setName($rawData["nom"] ?? $this->currentUser->name)
+            ->setPassword($rawData["password"] ?? null);
+
+        return $currentUserDTO;
     }
 
     public function userExists(string $uid): bool
@@ -132,5 +147,36 @@ class UserService
 
         // Clôturer les connexions SSE
         $this->sse?->addEvent("admin/sessions", "close", "uid:{$uid}");
+    }
+
+    public function getCurrentUserInfo(): ?array
+    {
+        if (!$this->currentUser) {
+            return null;
+        }
+
+        return [
+            "uid" => $this->currentUser->uid,
+            "login" => $this->currentUser->login,
+            "nom" => $this->currentUser->name,
+            "roles" => $this->currentUser->roles,
+            "statut" => $this->currentUser->status,
+        ];
+    }
+
+    public function updateCurrentUser(array $input): CurrentUserInfoDTO
+    {
+        $currentUserDTO = $this->makeCurrentUserDTO($input);
+
+        if (
+            $currentUserDTO->getPassword()
+            && strlen($currentUserDTO->getPassword()) < $_ENV["AUTH_LONGUEUR_MINI_PASSWORD"]
+        ) {
+            throw new ClientException("Le mot de passe doit contenir au moins {$_ENV["AUTH_LONGUEUR_MINI_PASSWORD"]} caractères.");
+        }
+
+        $updatedUser = $this->userRepository->updateCurrentUser($currentUserDTO);
+
+        return new CurrentUserInfoDTO($updatedUser);
     }
 }
