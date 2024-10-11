@@ -142,8 +142,8 @@ class UserRepository extends Repository
 
         $request->execute([
             "uid" => $uid,
-            "login" => substr($user->getLogin(), 0, 255),
-            "nom" => substr($user->getName(), 0, 255),
+            "login" => mb_substr($user->getLogin(), 0, 255),
+            "nom" => mb_substr($user->getName(), 0, 255),
             "statut" => AccountStatus::PENDING->value,
             "roles" => json_encode($user->getRoles()),
             "commentaire" => $user->getComments(),
@@ -188,8 +188,8 @@ class UserRepository extends Repository
 
             $request = $this->mysql->prepare($statement);
             $request->execute([
-                "login" => substr($user->getLogin(), 0, 255),
-                "nom" => substr($user->getName(), 0, 255),
+                "login" => mb_substr($user->getLogin(), 0, 255),
+                "nom" => mb_substr($user->getName(), 0, 255),
                 "commentaire" => $user->getComments(),
                 "roles" => json_encode($user->getRoles()),
                 "uid" => $uid,
@@ -333,7 +333,7 @@ class UserRepository extends Repository
 
         $usernameRequest = $this->mysql->prepare($usernameStatement);
         $usernameRequest->execute([
-            "nom" => substr($user->getName(), 0, 255),
+            "nom" => mb_substr($user->getName(), 0, 255),
             "uid" => $uid,
         ]);
 

@@ -105,7 +105,7 @@ class InfoBannerRepository extends Repository
             'pc' => (int) $line->isPc(),
             'tv' => (int) $line->isTv(),
             'color' => $line->getColor(),
-            'message' => substr($line->getMessage(), 0, 255),
+            'message' => mb_substr($line->getMessage(), 0, 255),
         ]);
 
         $lastInsertId = $this->mysql->lastInsertId();
@@ -139,7 +139,7 @@ class InfoBannerRepository extends Repository
             'pc' => (int) $line->isPc(),
             'tv' => (int) $line->isTv(),
             'color' => $line->getColor(),
-            'message' => substr($line->getMessage(), 0, 255),
+            'message' => mb_substr($line->getMessage(), 0, 255),
             'id' => $line->getId(),
         ]);
 
