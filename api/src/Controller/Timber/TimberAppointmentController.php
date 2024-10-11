@@ -24,7 +24,7 @@ class TimberAppointmentController extends Controller
         $this->processRequest();
     }
 
-    public function processRequest(): void
+    private function processRequest(): void
     {
         switch ($this->request->method) {
             case 'OPTIONS':

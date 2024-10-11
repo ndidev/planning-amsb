@@ -14,6 +14,7 @@ use App\Controller\Config\ChartDatumController;
 use App\Controller\Config\InfoBannerController;
 use App\Controller\Config\PdfConfigController;
 use App\Controller\Config\PdfViewerController;
+use App\Controller\ErrorController;
 use App\Controller\Shipping\ShipNamesController;
 use App\Controller\Shipping\ShipsInOpsController;
 use App\Controller\Shipping\ShippingCargoListController;
@@ -34,10 +35,9 @@ use App\Controller\Utils\PortController;
 use App\Controller\Utils\TideController;
 use App\Core\Router;
 use App\Core\Security;
-use App\Core\Exceptions\Client\ClientException;
-use App\Core\Exceptions\Server\ServerException;
 use App\Core\HTTP\HTTPResponse;
-use App\Core\Logger\ErrorLogger;
+
+set_exception_handler([ErrorController::class, "handleEmergency"]);
 
 if (Security::checkIfRequestCanBeDone() === false) {
     (new HTTPResponse(HTTPResponse::HTTP_TOO_MANY_REQUESTS_429))
@@ -107,7 +107,7 @@ $routes = [
 /**
  * @var HTTPResponse $response
  */
-$response = null;
+$response = new HTTPResponse();
 
 /**
  * Routeur
@@ -131,20 +131,8 @@ try {
     $response = $controller->getResponse();
 
     $controller->sse->notify();
-} catch (ClientException $e) {
-    $response = (new HTTPResponse($e->httpStatus))
-        ->setType("text")
-        ->setBody($e->getMessage());
-} catch (ServerException $e) {
-    ErrorLogger::log($e);
-    $response = (new HTTPResponse($e->httpStatus))
-        ->setType("text")
-        ->setBody("Erreur serveur");
 } catch (\Throwable $e) {
-    ErrorLogger::log($e);
-    $response = (new HTTPResponse(HTTPResponse::HTTP_INTERNAL_SERVER_ERROR_500))
-        ->setType("text")
-        ->setBody("Erreur serveur");
+    $response = (new ErrorController($e))->getResponse();
 }
 
 $response->send();

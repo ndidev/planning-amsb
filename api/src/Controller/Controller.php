@@ -53,8 +53,6 @@ abstract class Controller
     $this->authenticateUser();
   }
 
-  abstract function processRequest();
-
   public function getResponse(): HTTPResponse
   {
     return $this->response;

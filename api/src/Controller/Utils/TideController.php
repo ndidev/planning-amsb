@@ -30,7 +30,7 @@ class TideController extends Controller
         $this->processRequest();
     }
 
-    public function processRequest()
+    private function processRequest()
     {
         switch ($this->request->method) {
             case 'OPTIONS':
