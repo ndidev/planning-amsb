@@ -5,6 +5,7 @@ namespace App\Controller\Bulk;
 use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\BulkService;
@@ -27,7 +28,9 @@ class BulkAppointmentController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(HTTPResponse::HTTP_NO_CONTENT_204)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -56,7 +59,9 @@ class BulkAppointmentController extends Controller
                 break;
 
             default:
-                $this->response->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
         }
     }
@@ -69,7 +74,7 @@ class BulkAppointmentController extends Controller
     public function readAll(array $query)
     {
         if (!$this->user->canAccess($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour accéder aux RDVs vrac.");
         }
 
         $appointments = $this->bulkService->getAppointments($query);
@@ -77,14 +82,12 @@ class BulkAppointmentController extends Controller
         $etag = ETag::get($appointments);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($appointments);
     }
 
@@ -96,27 +99,24 @@ class BulkAppointmentController extends Controller
     public function read(int $id)
     {
         if (!$this->user->canAccess($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour accéder aux RDVs vrac.");
         }
 
         $appointment = $this->bulkService->getAppointment($id);
 
         if (!$appointment) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("Le RDV n'existe pas.");
         }
 
         $etag = ETag::get($appointment);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($appointment);
     }
 
@@ -126,20 +126,18 @@ class BulkAppointmentController extends Controller
     public function create()
     {
         if (!$this->user->canEdit($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour créer un RDV vrac.");
         }
 
-        $input = $this->request->body;
+        $input = $this->request->getBody();
 
         $appointment = $this->bulkService->createAppointment($input);
 
         $id = $appointment->getId();
 
-        $this->headers["Location"] = $_ENV["API_URL"] . "/vrac/rdv/$id";
-
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)
-            ->setHeaders($this->headers)
+            ->addHeader("Location", $_ENV["API_URL"] . "/vrac/rdvs/$id")
             ->setJSON($appointment);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $appointment);
@@ -153,21 +151,18 @@ class BulkAppointmentController extends Controller
     public function update(int $id)
     {
         if (!$this->user->canEdit($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour modifier un RDV vrac.");
         }
 
         if (!$this->bulkService->appointmentExists($id)) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("Le RDV n'existe pas.");
         }
 
-        $input = $this->request->body;
+        $input = $this->request->getBody();
 
         $appointment = $this->bulkService->updateAppointment($id, $input);
 
-        $this->response
-            ->setHeaders($this->headers)
-            ->setJSON($appointment);
+        $this->response->setJSON($appointment);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $appointment);
     }
@@ -180,21 +175,18 @@ class BulkAppointmentController extends Controller
     public function patch(int $id)
     {
         if (!$this->user->canEdit($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour modifier un RDV vrac.");
         }
 
         if (!$this->bulkService->appointmentExists($id)) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("Le RDV n'existe pas.");
         }
 
-        $input = $this->request->body;
+        $input = $this->request->getBody();
 
         $appointment = $this->bulkService->patchAppointment($id, $input);
 
-        $this->response
-            ->setHeaders($this->headers)
-            ->setJSON($appointment);
+        $this->response->setJSON($appointment);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $appointment);
     }
@@ -207,17 +199,16 @@ class BulkAppointmentController extends Controller
     public function delete(int $id)
     {
         if (!$this->user->canEdit($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour supprimer un RDV vrac.");
         }
 
         if (!$this->bulkService->appointmentExists($id)) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("Le RDV n'existe pas.");
         }
 
         $this->bulkService->deleteAppointment($id);
 
-        $this->response->setCode(204);
+        $this->response->setCode(HTTPResponse::HTTP_NO_CONTENT_204);
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
     }
 }

@@ -6,6 +6,7 @@ use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\HTTP\ETag;
+use App\Core\HTTP\HTTPResponse;
 use App\Service\TimberService;
 
 class TimberStatsController extends Controller
@@ -24,7 +25,9 @@ class TimberStatsController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -33,7 +36,9 @@ class TimberStatsController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
         }
     }
@@ -54,14 +59,12 @@ class TimberStatsController extends Controller
         $etag = ETag::get($stats);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($stats);
     }
 }

@@ -5,8 +5,10 @@
 namespace App\Controller\Utils;
 
 use App\Controller\Controller;
+use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\Core\HTTP\ETag;
+use App\Core\HTTP\HTTPResponse;
 use App\Service\TideService;
 
 class TideController extends Controller
@@ -32,7 +34,9 @@ class TideController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -55,7 +59,9 @@ class TideController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
         }
     }
@@ -75,14 +81,12 @@ class TideController extends Controller
         $etag = ETag::get($tides);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($tides);
     }
 
@@ -98,14 +102,12 @@ class TideController extends Controller
         $etag = ETag::get($tides);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($tides);
     }
 
@@ -119,14 +121,12 @@ class TideController extends Controller
         $etag = ETag::get($years);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($years);
     }
 
@@ -136,22 +136,17 @@ class TideController extends Controller
     public function create(): void
     {
         if (empty($_FILES) || !isset($_FILES["csv"])) {
-            $this->response
-                ->setCode(400)
-                ->setHeaders($this->headers);
-            return;
+            throw new ClientException("Fichier CSV manquant");
         }
 
         $year = $this->service->addTides($_FILES["csv"]);
 
-        $this->headers["Location"] = $_ENV["API_URL"] . "/marees/$year";
-
         $data = ["annee" => (int) $year];
 
         $this->response
-            ->setCode(201)
-            ->setHeaders($this->headers)
-            ->setBody(json_encode($data));
+            ->setCode(HTTPResponse::HTTP_CREATED_201)
+            ->addHeader("Location", $_ENV["API_URL"] . "/marees/$year")
+            ->setJSON($data);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $year, $data);
     }
@@ -166,7 +161,7 @@ class TideController extends Controller
         $success = $this->service->deleteTides($year);
 
         if ($success) {
-            $this->response->setCode(204);
+            $this->response->setCode(HTTPResponse::HTTP_NO_CONTENT_204);
             $this->sse->addEvent($this->sseEventName, __FUNCTION__, $year);
         } else {
             throw new DBException("Erreur lors de la suppression");

@@ -5,7 +5,9 @@
 namespace App\Controller\Utils;
 
 use App\Controller\Controller;
+use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
+use App\Core\HTTP\HTTPResponse;
 use App\Entity\Port;
 use App\Service\PortService;
 
@@ -25,7 +27,9 @@ class PortController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -38,7 +42,9 @@ class PortController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
         }
     }
@@ -53,45 +59,39 @@ class PortController extends Controller
         $etag = ETag::get($ports);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-        $this->headers["Cache-control"] = "max-age=31557600, must-revalidate";
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
+            ->addHeader("Cache-control", "max-age=31557600, must-revalidate")
             ->setJSON(array_map(fn(Port $port) => $port->toArray(), $ports));
     }
 
     /**
      * Récupère un port.
      * 
-     * @param string $locode  UNLOCODE du port à récupérer.
-     * @param bool   $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param string $locode UNLOCODE du port à récupérer.
      */
-    public function read(string $locode, ?bool $dryRun = false)
+    public function read(string $locode)
     {
         $port = $this->service->getPort($locode);
 
         if (!$port) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("Ce port n'existe pas.");
         }
 
         $etag = ETag::get($port);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-        $this->headers["Cache-control"] = "max-age=31557600, must-revalidate";
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
+            ->addHeader("Cache-control", "max-age=31557600, must-revalidate")
             ->setJSON($port);
     }
 }

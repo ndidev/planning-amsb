@@ -3,6 +3,7 @@
 namespace App\Core\Exceptions\Server;
 
 use App\Core\Exceptions\AppException;
+use App\Core\HTTP\HTTPResponse;
 
 /**
  * Exception d'erreur serveur.
@@ -10,7 +11,7 @@ use App\Core\Exceptions\AppException;
 class ServerException extends AppException
 {
     private const DEFAULT_MESSAGE = "Erreur serveur";
-    private const HTTP_STATUS = 500;
+    private const HTTP_STATUS = HTTPResponse::HTTP_INTERNAL_SERVER_ERROR_500;
 
     public function __construct(
         string $message = self::DEFAULT_MESSAGE,

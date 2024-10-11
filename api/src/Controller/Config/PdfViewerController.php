@@ -5,6 +5,7 @@ namespace App\Controller\Config;
 use App\Controller\Controller;
 use App\Core\Component\DateUtils;
 use App\Core\HTTP\ETag;
+use App\Core\HTTP\HTTPResponse;
 use App\Service\PdfService;
 
 class PdfViewerController extends Controller
@@ -22,7 +23,9 @@ class PdfViewerController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -35,7 +38,9 @@ class PdfViewerController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
         }
     }
@@ -58,16 +63,14 @@ class PdfViewerController extends Controller
         $etag = ETag::get($pdfAsString);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-        $this->headers["Content-Type"] = "application/pdf";
-        $this->headers["Content-Disposition"] = "inline";
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
+            ->setType('pdf')
+            ->addHeader("Content-Disposition", "inline")
             ->setBody($pdfAsString);
     }
 
@@ -76,7 +79,7 @@ class PdfViewerController extends Controller
      */
     public function sendPdfFileByEmail()
     {
-        $input = $this->request->body;
+        $input = $this->request->getBody();
 
         $configId = $input["config"] ?? null;
         $startDate = DateUtils::convertDate($input["date_debut"]);
@@ -84,8 +87,6 @@ class PdfViewerController extends Controller
 
         $sendingResults = $this->pdfService->sendPdfByEmail($configId, $startDate, $endDate);
 
-        $this->response
-            ->setCode(200)
-            ->setJSON($sendingResults);
+        $this->response->setJSON($sendingResults);
     }
 }

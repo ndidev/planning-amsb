@@ -30,11 +30,6 @@ abstract class Controller
   protected HTTPResponse $response;
 
   /**
-   * En-têtes personnalisés de la réponse HTTP.
-   */
-  protected array $headers = [];
-
-  /**
    * Supported HTTP methods.
    */
   protected string $supportedMethods;
@@ -46,7 +41,6 @@ abstract class Controller
 
   public function __construct(string $supportedMethods = "OPTIONS, HEAD, GET")
   {
-    // $this->user = $GLOBALS["user"];
     $this->request = new HTTPRequest();
     $this->response = new HTTPResponse();
 

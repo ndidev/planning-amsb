@@ -5,7 +5,9 @@ namespace App\Controller\Config;
 use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
+use App\Core\HTTP\HTTPResponse;
 use App\Service\PdfService;
 
 class PdfConfigController extends Controller
@@ -26,7 +28,9 @@ class PdfConfigController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -51,7 +55,9 @@ class PdfConfigController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
         }
     }
@@ -73,14 +79,12 @@ class PdfConfigController extends Controller
         $etag = ETag::get($pdfConfigs);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($pdfConfigs);
     }
 
@@ -94,25 +98,22 @@ class PdfConfigController extends Controller
         $pdfConfig = $this->pdfService->getConfig($id);
 
         if (!$pdfConfig) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("Cette configuration PDF n'existe pas.");
         }
 
         if (!$this->user->canAccess($pdfConfig->getModule())) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour accéder à cette configuration PDF.");
         }
 
         $etag = ETag::get($pdfConfig);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($pdfConfig);
     }
 
@@ -121,24 +122,23 @@ class PdfConfigController extends Controller
      */
     public function create()
     {
-        $input = $this->request->body;
+        if (!$this->user->canAccess($this->module)) {
+            throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
+        }
 
-        if (
-            !$this->user->canAccess($this->module)
-            || !$this->user->canEdit(Module::tryFrom($input["module"]))
-        ) {
-            throw new AccessException();
+        $input = $this->request->getBody();
+
+        if (!$this->user->canEdit(Module::tryFrom($input["module"]))) {
+            throw new AccessException("Vous n'avez pas les droits pour créer une configuration PDF {$input["module"]}.");
         }
 
         $newPdfConfig = $this->pdfService->createConfig($input);
 
         $id = $newPdfConfig->getId();
 
-        $this->headers["Location"] = $_ENV["API_URL"] . "/pdf/configs/$id";
-
         $this->response
-            ->setCode(201)
-            ->setHeaders($this->headers)
+            ->setCode(HTTPResponse::HTTP_CREATED_201)
+            ->addHeader("Location", $_ENV["API_URL"] . "/pdf/configs/$id")
             ->setJSON($newPdfConfig);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $newPdfConfig);
@@ -151,28 +151,28 @@ class PdfConfigController extends Controller
      */
     public function update(int $id)
     {
+        if (!$this->user->canAccess($this->module)) {
+            throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
+        }
+
         $current = $this->pdfService->getConfig($id);
 
         if (!$current) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("Cette configuration PDF n'existe pas.");
         }
 
-        $input = $this->request->body;
+        $input = $this->request->getBody();
 
         if (
-            !$this->user->canAccess($this->module)
-            || !$this->user->canEdit($current->getModule())
+            !$this->user->canEdit($current->getModule())
             || !$this->user->canEdit(Module::tryFrom($input["module"]))
         ) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour modifier cette configuration PDF.");
         }
 
         $updatedPdfConfig = $this->pdfService->updateConfig($id, $input);
 
-        $this->response
-            ->setHeaders($this->headers)
-            ->setJSON($updatedPdfConfig);
+        $this->response->setJSON($updatedPdfConfig);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $updatedPdfConfig);
     }
@@ -184,23 +184,23 @@ class PdfConfigController extends Controller
      */
     public function delete(int $id)
     {
+        if (!$this->user->canAccess($this->module)) {
+            throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
+        }
+
         $config = $this->pdfService->getConfig($id);
 
         if (!$config) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("Cette configuration PDF n'existe pas.");
         }
 
-        if (
-            !$this->user->canAccess($this->module)
-            || !$this->user->canEdit($config->getModule())
-        ) {
-            throw new AccessException();
+        if (!$this->user->canEdit($config->getModule())) {
+            throw new AccessException("Vous n'avez pas les droits pour supprimer cette configuration PDF.");
         }
 
         $this->pdfService->deleteConfig($id);
 
-        $this->response->setCode(204);
+        $this->response->setCode(HTTPResponse::HTTP_NO_CONTENT_204);
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
     }
 }

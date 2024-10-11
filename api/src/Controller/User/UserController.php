@@ -3,7 +3,9 @@
 namespace App\Controller\User;
 
 use App\Controller\Controller;
+use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
+use App\Core\HTTP\HTTPResponse;
 use App\Service\UserService;
 
 class UserController extends Controller
@@ -22,7 +24,9 @@ class UserController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -35,7 +39,9 @@ class UserController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
         }
     }
@@ -48,21 +54,18 @@ class UserController extends Controller
         $user = $this->userService->getCurrentUserInfo();
 
         if (!$user) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException();
         }
 
         $etag = ETag::get($user);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($user);
     }
 
@@ -71,13 +74,17 @@ class UserController extends Controller
      */
     public function update()
     {
-        $input = $this->request->body;
+        $user = $this->userService->getCurrentUserInfo();
+
+        if (!$user) {
+            throw new NotFoundException();
+        }
+
+        $input = $this->request->getBody();
 
         $updatedUser = $this->userService->updateCurrentUser($input);
 
-        $this->response
-            ->setHeaders($this->headers)
-            ->setJSON($updatedUser);
+        $this->response->setJSON($updatedUser);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $this->user->uid, $updatedUser);
     }

@@ -5,7 +5,9 @@ namespace App\Controller\Admin;
 use App\Controller\Controller;
 use App\Core\Exceptions\Client\Auth\AdminException;
 use App\Core\Exceptions\Client\Auth\ForbiddenException;
+use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
+use App\Core\HTTP\HTTPResponse;
 use App\Service\UserService;
 
 class UserAccountController extends Controller
@@ -30,7 +32,9 @@ class UserAccountController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -55,7 +59,9 @@ class UserAccountController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
         }
     }
@@ -70,14 +76,12 @@ class UserAccountController extends Controller
         $etag = ETag::get($users);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($users);
     }
 
@@ -92,21 +96,18 @@ class UserAccountController extends Controller
         $user = $this->userService->getUser($uid);
 
         if (!$user) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("L'utilisateur n'existe pas.");
         }
 
         $etag = ETag::get($user);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($user);
     }
 
@@ -115,22 +116,15 @@ class UserAccountController extends Controller
      */
     public function create()
     {
-        $input = $this->request->body;
-
-        if (empty($input)) {
-            $this->response->setCode(400);
-            return;
-        }
+        $input = $this->request->getBody();
 
         $newUser = $this->userService->createUser($input, $this->user->name);
 
         $uid = $newUser->getUid();
 
-        $this->headers["Location"] = $_ENV["API_URL"] . "/admin/users/$uid";
-
         $this->response
-            ->setCode(201)
-            ->setHeaders($this->headers)
+            ->setCode(HTTPResponse::HTTP_CREATED_201)
+            ->addHeader("Location", $_ENV["API_URL"] . "/admin/users/$uid")
             ->setJSON($newUser);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $uid, $newUser);
@@ -144,17 +138,14 @@ class UserAccountController extends Controller
     public function update(string $uid)
     {
         if (!$this->userService->userExists($uid)) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("L'utilisateur n'existe pas.");
         }
 
-        $input = $this->request->body;
+        $input = $this->request->getBody();
 
         $updatedUser = $this->userService->updateUser($uid, $input, $this->user);
 
-        $this->response
-            ->setHeaders($this->headers)
-            ->setJSON($updatedUser);
+        $this->response->setJSON($updatedUser);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $uid, $updatedUser);
     }
@@ -172,15 +163,12 @@ class UserAccountController extends Controller
         }
 
         if (!$this->userService->userExists($uid)) {
-            $this->response->setCode(404);
-            return;
-
-            // TODO: use NotFoundException
+            throw new NotFoundException("L'utilisateur n'existe pas.");
         }
 
         $this->userService->deleteUser($uid, $this->user->name);
 
-        $this->response->setCode(204);
+        $this->response->setCode(HTTPResponse::HTTP_NO_CONTENT_204);
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $uid);
     }
 }

@@ -90,22 +90,20 @@ try {
                 $user = (new User)->login($_POST["login"], $_POST["password"]);
 
                 (new HTTPResponse(HTTPResponse::HTTP_OK_200))
-                    ->setType("json")
-                    ->setBody(json_encode([
+                    ->setJSON([
                         "uid" => $user->uid,
                         "login" => $user->login,
                         "nom" => $user->name,
                         "roles" => $user->roles,
                         "statut" => $user->status,
-                    ]))
+                    ])
                     ->send();
             } catch (AccountPendingException $e) {
                 (new HTTPResponse(HTTPResponse::HTTP_OK_200))
-                    ->setType("json")
-                    ->setBody(json_encode([
+                    ->setJSON([
                         "message" => $e->getMessage(),
                         "statut" => $e->getStatut()
-                    ]))
+                    ])
                     ->send();
             }
             break;
@@ -122,7 +120,6 @@ try {
             // Bypass pour développement
             if ($_ENV["AUTH"] === "OFF") {
                 (new HTTPResponse(HTTPResponse::HTTP_OK_200))
-                    ->setType("html")
                     ->setBody("Auth OFF")
                     ->send();
             }
@@ -130,13 +127,12 @@ try {
             $user = (new User)->identifyFromSession();
 
             (new HTTPResponse(HTTPResponse::HTTP_OK_200))
-                ->setType("json")
-                ->setBody(json_encode([
+                ->setJSON([
                     "login" => $user->login,
                     "nom" => $user->name,
                     "roles" => $user->roles,
                     "statut" => $user->status,
-                ]))
+                ])
                 ->send();
             break;
 

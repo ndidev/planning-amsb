@@ -4,10 +4,12 @@
 
 namespace App\Controller\Utils;
 
-use App\Service\CountryService;
 use App\Controller\Controller;
+use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
+use App\Core\HTTP\HTTPResponse;
 use App\Entity\Country;
+use App\Service\CountryService;
 
 class CountryController extends Controller
 {
@@ -25,7 +27,9 @@ class CountryController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -38,7 +42,9 @@ class CountryController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
         }
     }
@@ -53,15 +59,13 @@ class CountryController extends Controller
         $etag = ETag::get($countries);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-        $this->headers["Cache-control"] = "max-age=31557600, must-revalidate";
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
+            ->addHeader("Cache-control", "max-age=31557600, must-revalidate")
             ->setJSON(array_map(fn(Country $country) => $country->toArray(), $countries));
     }
 
@@ -76,25 +80,19 @@ class CountryController extends Controller
         $country = $this->countryService->getCountry($iso);
 
         if (!$country) {
-            $message = "Not Found";
-            $documentation = $_ENV["API_URL"] . "/doc/#/Consignation/lireEscaleConsignation";
-            $body = json_encode(["message" => $message, "documentation_url" => $documentation]);
-            $this->response->setCode(404)->setBody($body);
-            return;
+            throw new NotFoundException("Ce pays n'existe pas.");
         }
 
         $etag = ETag::get($country);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-        $this->headers["Cache-control"] = "max-age=31557600, must-revalidate";
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
+            ->addHeader("Cache-control", "max-age=31557600, must-revalidate")
             ->setJSON($country);
     }
 }

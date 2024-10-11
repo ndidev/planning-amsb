@@ -2,13 +2,15 @@
 
 namespace App\Core\Exceptions\Client;
 
+use App\Core\HTTP\HTTPResponse;
+
 /**
  * Exception lancée lorsqu'une ressource n'est pas trouvée.
  */
 class NotFoundException extends ClientException
 {
     private const DEFAULT_MESSAGE = "Non trouvé";
-    private const HTTP_STATUS = 404;
+    private const HTTP_STATUS = HTTPResponse::HTTP_NOT_FOUND_404;
 
     public function __construct(
         string $message = self::DEFAULT_MESSAGE,

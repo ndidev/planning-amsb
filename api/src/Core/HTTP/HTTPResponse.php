@@ -80,12 +80,11 @@ class HTTPResponse
 
 
 
-    private int $code = 200;
+    private int $code = self::HTTP_OK_200;
     private array $headers = [];
     private ?string $body = null;
     private bool $compression = true;
-    private string $type = 'application/json; charset=UTF-8';
-    private bool $exit = true;
+    private string $type = 'text/html; charset=UTF-8';
     private bool $isSent = false;
     private bool $preflightHeadersAdded = false;
 
@@ -116,39 +115,6 @@ class HTTPResponse
         if ($this->body && $_SERVER["REQUEST_METHOD"] !== "HEAD") {
             echo $this->body;
         }
-
-        $this->isSent = true;
-
-        // Sortie de script
-        if ($this->exit) {
-            exit;
-        }
-    }
-
-    /**
-     * Envoi de la réponse HTTP sans quitter le script.
-     * 
-     * Permet la continuité de l'exécution après l'envoi.
-     */
-    public function flush(): void
-    {
-        @ob_start();
-
-        if ($this->compression) {
-            $this->compressResponse();
-        }
-
-        $this->applyStatusCode();
-        $this->applyHeaders();
-
-        // Corps de la réponse
-        if ($this->body && $_SERVER["REQUEST_METHOD"] !== "HEAD") {
-            echo $this->body;
-        }
-
-        ob_end_flush();
-        @ob_flush();
-        flush();
 
         $this->isSent = true;
     }
@@ -260,6 +226,8 @@ class HTTPResponse
             'html' => 'text/html; charset=UTF-8',
             'json' => 'application/json; charset=UTF-8',
             'yaml' => 'application/x-yaml',
+            'pdf'  => 'application/pdf',
+            'csv'  => 'text/csv',
             default => $type
         };
 
@@ -269,27 +237,11 @@ class HTTPResponse
     }
 
     /**
-     * Set if the script must exit after sending the HTTP reponse.
-     * 
-     * Default is `TRUE`.
-     * 
-     * @param bool $exit 
-     * 
-     * @return HTTPResponse
-     */
-    public function setExit(bool $exit = true): HTTPResponse
-    {
-        $this->exit = $exit;
-
-        return $this;
-    }
-
-    /**
      * Envoyer une réponse à la requête preflight.
      */
     public function sendCorsPreflight(string $supportedMethods = "OPTIONS, HEAD, GET"): void
     {
-        $this->setCode(204);
+        $this->setCode(HTTPResponse::HTTP_NO_CONTENT_204);
         $this->applyStatusCode();
         $this->addCorsHeaders(true, $supportedMethods);
         $this->applyHeaders();

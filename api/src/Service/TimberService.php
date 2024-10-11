@@ -219,7 +219,7 @@ class TimberService
         }
 
         try {
-            $entreesRegistre = $this->timberAppointmentRepository->getCharteringRegister($filtre);
+            $registryEntries = $this->timberAppointmentRepository->getCharteringRegister($filtre);
 
             // UTF-8 BOM
             $bom = chr(0xEF) . chr(0xBB) . chr(0xBF);
@@ -239,17 +239,17 @@ class TimberService
             fputcsv($output, $entete, ';', '"');
 
             // Lignes de RDV
-            foreach ($entreesRegistre as $entree) {
+            foreach ($registryEntries as $entry) {
 
                 $ligne = [
-                    $entree->getDate(),
-                    $entree->getMonth(),
-                    $entree->getSupplierName(),
+                    $entry->getDate(),
+                    $entry->getMonth(),
+                    $entry->getSupplierName(),
                     "1 COMPLET DE BOIS",
-                    $entree->getLoadingPlace(),
-                    $entree->getDeliveryPlace(),
-                    $entree->getDeliveryNoteNumber(),
-                    $entree->getTransport(),
+                    $entry->getLoadingPlace(),
+                    $entry->getDeliveryPlace(),
+                    $entry->getDeliveryNoteNumber(),
+                    $entry->getTransport(),
                 ];
 
                 fputcsv($output, $ligne, ';', '"');

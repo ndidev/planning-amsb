@@ -7,6 +7,7 @@ use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
+use App\Core\HTTP\HTTPResponse;
 use App\Service\CharteringService;
 
 class CharterController extends Controller
@@ -27,7 +28,9 @@ class CharterController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -52,7 +55,9 @@ class CharterController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
         }
     }
@@ -65,7 +70,7 @@ class CharterController extends Controller
     public function readAll(array $query)
     {
         if (!$this->user->canAccess($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour accéder aux affrètements.");
         }
 
         $charters = $this->charteringService->getCharters($query);
@@ -73,14 +78,12 @@ class CharterController extends Controller
         $etag = ETag::get($charters);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($charters);
     }
 
@@ -93,7 +96,7 @@ class CharterController extends Controller
     public function read(int $id)
     {
         if (!$this->user->canAccess($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour accéder aux affrètements.");
         }
 
         $charter = $this->charteringService->getCharter($id);
@@ -105,14 +108,12 @@ class CharterController extends Controller
         $etag = ETag::get($charter);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($charter);
     }
 
@@ -122,20 +123,18 @@ class CharterController extends Controller
     public function create()
     {
         if (!$this->user->canEdit($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour créer un affrètement.");
         }
 
-        $input = $this->request->body;
+        $input = $this->request->getBody();
 
         $newCharter = $this->charteringService->createCharter($input);
 
         $id = $newCharter->getId();
 
-        $this->headers["Location"] = $_ENV["API_URL"] . "/chartering/charters/$id";
-
         $this->response
-            ->setCode(201)
-            ->setHeaders($this->headers)
+            ->setCode(HTTPResponse::HTTP_CREATED_201)
+            ->addHeader("Location", $_ENV["API_URL"] . "/chartering/charters/$id")
             ->setJSON($newCharter);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $newCharter);
@@ -149,20 +148,18 @@ class CharterController extends Controller
     public function update(int $id)
     {
         if (!$this->user->canEdit($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour modifier un affrètement.");
         }
 
         if (!$this->charteringService->charterExists($id)) {
             throw new NotFoundException("L'affrètement n'existe pas.");
         }
 
-        $input = $this->request->body;
+        $input = $this->request->getBody();
 
         $updatedCharter = $this->charteringService->updateCharter($id, $input);
 
-        $this->response
-            ->setHeaders($this->headers)
-            ->setJSON($updatedCharter);
+        $this->response->setJSON($updatedCharter);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $updatedCharter);
     }
@@ -175,7 +172,7 @@ class CharterController extends Controller
     public function delete(int $id)
     {
         if (!$this->user->canEdit($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour supprimer un affrètement.");
         }
 
         if (!$this->charteringService->charterExists($id)) {
@@ -184,7 +181,7 @@ class CharterController extends Controller
 
         $this->charteringService->deleteCharter($id);
 
-        $this->response->setCode(204);
+        $this->response->setCode(HTTPResponse::HTTP_NO_CONTENT_204);
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
     }
 }

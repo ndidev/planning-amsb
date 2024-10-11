@@ -5,7 +5,9 @@ namespace App\Controller\Config;
 use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
+use App\Core\HTTP\HTTPResponse;
 use App\Service\ChartDatumService;
 
 class ChartDatumController extends Controller
@@ -26,7 +28,9 @@ class ChartDatumController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -43,7 +47,9 @@ class ChartDatumController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
         }
     }
@@ -58,14 +64,12 @@ class ChartDatumController extends Controller
         $etag = ETag::get($heightData);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($heightData);
     }
 
@@ -77,21 +81,18 @@ class ChartDatumController extends Controller
         $heightDatum = $this->chartDatumService->getDatum($name);
 
         if (!$heightDatum) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("Cette côte n'existe pas.");
         }
 
         $etag = ETag::get($heightDatum);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($heightDatum);
     }
 
@@ -102,25 +103,23 @@ class ChartDatumController extends Controller
      */
     public function update(string $name)
     {
-        if (
-            !$this->user->canAccess($this->module)
-            && !$this->user->canEdit(Module::SHIPPING)
-        ) {
-            throw new AccessException();
+        if (!$this->user->canAccess($this->module)) {
+            throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
+        }
+
+        if (!$this->user->canEdit(Module::SHIPPING)) {
+            throw new AccessException("Vous n'avez pas les droits pour modifier les côtes.");
         }
 
         if (!$this->chartDatumService->datumExists($name)) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("Cette côte n'existe pas.");
         }
 
-        $input = $this->request->body;
+        $input = $this->request->getBody();
 
         $updatedHeightDatum = $this->chartDatumService->updateDatumValue($name, $input);
 
-        $this->response
-            ->setHeaders($this->headers)
-            ->setJSON($updatedHeightDatum);
+        $this->response->setJSON($updatedHeightDatum);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $name, $updatedHeightDatum);
     }

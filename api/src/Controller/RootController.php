@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Core\HTTP\ETag;
+use App\Core\HTTP\HTTPResponse;
 
 /**
  * Réponse à appliquer en cas d'appel à l'endpoint "/".
@@ -20,7 +21,9 @@ class RootController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -29,7 +32,9 @@ class RootController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
         }
     }
@@ -44,15 +49,14 @@ class RootController extends Controller
         $etag = ETag::get($endpointsList);
 
         if (isset($_SERVER["HTTP_IF_NONE_MATCH"]) && $etag === $_SERVER["HTTP_IF_NONE_MATCH"]) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
         $this->response
             ->setCode($this->_404 ? 404 : 200)
             ->addHeader("ETag", $etag)
-            ->setType("json")
-            ->setBody(json_encode($endpointsList));
+            ->setJSON($endpointsList);
     }
 
 

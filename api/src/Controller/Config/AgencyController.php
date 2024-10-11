@@ -5,7 +5,9 @@ namespace App\Controller\Config;
 use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
+use App\Core\HTTP\HTTPResponse;
 use App\Service\AgencyService;
 
 class AgencyController extends Controller
@@ -27,7 +29,9 @@ class AgencyController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -44,7 +48,9 @@ class AgencyController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
         }
     }
@@ -59,14 +65,12 @@ class AgencyController extends Controller
         $etag = ETag::get($departments);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($departments);
     }
 
@@ -80,21 +84,18 @@ class AgencyController extends Controller
         $department = $this->agencyService->getDepartment($departmentName);
 
         if (!$department) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("Ce service n'existe pas.");
         }
 
         $etag = ETag::get($department);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($department);
     }
 
@@ -106,21 +107,18 @@ class AgencyController extends Controller
     public function update(string $departmentName)
     {
         if (!$this->user->canAccess($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
         }
 
         if (!$this->agencyService->departmentExists($departmentName)) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("Ce service n'existe pas.");
         }
 
-        $input = $this->request->body;
+        $input = $this->request->getBody();
 
         $updatedDepartment = $this->agencyService->updateDepartment($departmentName, $input);
 
-        $this->response
-            ->setHeaders($this->headers)
-            ->setJSON($updatedDepartment);
+        $this->response->setJSON($updatedDepartment);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $departmentName, $updatedDepartment);
     }

@@ -7,6 +7,7 @@ use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
+use App\Core\HTTP\HTTPResponse;
 use App\Service\QuickAppointmentAddService;
 
 class TimberQuickAppointmentAddController extends Controller
@@ -27,7 +28,9 @@ class TimberQuickAppointmentAddController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -52,7 +55,9 @@ class TimberQuickAppointmentAddController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
         }
     }
@@ -63,7 +68,7 @@ class TimberQuickAppointmentAddController extends Controller
     public function readAllConfigs()
     {
         if (!$this->user->canAccess($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
         }
 
         $quickAdds = $this->quickAppointmentAddService->getAllTimberQuickAppointmentAdds();
@@ -71,14 +76,12 @@ class TimberQuickAppointmentAddController extends Controller
         $etag = ETag::get($quickAdds);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($quickAdds);
     }
 
@@ -91,26 +94,24 @@ class TimberQuickAppointmentAddController extends Controller
     public function readConfig(int $id)
     {
         if (!$this->user->canAccess($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
         }
 
         $quickAppointment = $this->quickAppointmentAddService->getTimberQuickAppointmentAdd($id);
 
         if (!$quickAppointment) {
-            throw new NotFoundException("La configuration n'existe pas.");
+            throw new NotFoundException("L'ajout rapide n'existe pas.");
         }
 
         $etag = ETag::get($quickAppointment);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($quickAppointment);
     }
 
@@ -120,20 +121,18 @@ class TimberQuickAppointmentAddController extends Controller
     public function createConfig()
     {
         if (!$this->user->canAccess($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
         }
 
-        $input = $this->request->body;
+        $input = $this->request->getBody();
 
         $newQuickAppointment = $this->quickAppointmentAddService->createTimberQuickAppointmentAdd($input);
 
         $id = $newQuickAppointment->getId();
 
-        $this->headers["Location"] = $_ENV["API_URL"] . "/ajouts-rapides/bois/$id";
-
         $this->response
-            ->setCode(201)
-            ->setHeaders($this->headers)
+            ->setCode(HTTPResponse::HTTP_CREATED_201)
+            ->addHeader("Location", $_ENV["API_URL"] . "/ajouts-rapides/bois/$id")
             ->setJSON($newQuickAppointment);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $newQuickAppointment);
@@ -146,24 +145,23 @@ class TimberQuickAppointmentAddController extends Controller
      */
     public function updateConfig(int $id)
     {
-        if (
-            !$this->user->canAccess($this->module)
-            || !$this->user->canEdit(Module::TIMBER)
-        ) {
-            throw new AccessException();
+        if (!$this->user->canAccess($this->module)) {
+            throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
+        }
+
+        if (!$this->user->canEdit(Module::TIMBER)) {
+            throw new AccessException("Vous n'avez pas les droits pour modifier un ajout rapide bois.");
         }
 
         if (!$this->quickAppointmentAddService->quickAddExists(Module::TIMBER, $id)) {
-            throw new NotFoundException("La configuration n'existe pas.");
+            throw new NotFoundException("L'ajout rapide n'existe pas.");
         }
 
-        $input = $this->request->body;
+        $input = $this->request->getBody();
 
         $updatedQuickAppointment = $this->quickAppointmentAddService->updateTimberQuickAppointmentAdd($id, $input);
 
-        $this->response
-            ->setHeaders($this->headers)
-            ->setJSON($updatedQuickAppointment);
+        $this->response->setJSON($updatedQuickAppointment);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $updatedQuickAppointment);
     }
@@ -175,20 +173,21 @@ class TimberQuickAppointmentAddController extends Controller
      */
     public function deleteConfig(int $id)
     {
-        if (
-            !$this->user->canAccess($this->module)
-            || !$this->user->canEdit(Module::TIMBER)
-        ) {
-            throw new AccessException();
+        if (!$this->user->canAccess($this->module)) {
+            throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
+        }
+
+        if (!$this->user->canEdit(Module::TIMBER)) {
+            throw new AccessException("Vous n'avez pas les droits pour supprimer un ajout rapide bois.");
         }
 
         if (!$this->quickAppointmentAddService->quickAddExists(Module::TIMBER, $id)) {
-            throw new NotFoundException("La configuration n'existe pas.");
+            throw new NotFoundException("L'ajout rapide n'existe pas.");
         }
 
         $this->quickAppointmentAddService->deleteTimberQuickAppointmentAdd($id);
 
-        $this->response->setCode(204);
+        $this->response->setCode(HTTPResponse::HTTP_NO_CONTENT_204);
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
     }
 }

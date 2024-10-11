@@ -3,6 +3,7 @@
 namespace App\Core\Exceptions\Server\DB;
 
 use App\Core\Exceptions\Server\ServerException;
+use App\Core\HTTP\HTTPResponse;
 
 /**
  * Exception générique de base de données.
@@ -10,7 +11,7 @@ use App\Core\Exceptions\Server\ServerException;
 class DBException extends ServerException
 {
     private const DEFAULT_MESSAGE = "Erreur générique de la base de données";
-    private const HTTP_STATUS = 500;
+    private const HTTP_STATUS = HTTPResponse::HTTP_INTERNAL_SERVER_ERROR_500;
 
     public function __construct(
         string $message = self::DEFAULT_MESSAGE,

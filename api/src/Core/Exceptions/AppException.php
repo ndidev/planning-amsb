@@ -2,6 +2,8 @@
 
 namespace App\Core\Exceptions;
 
+use App\Core\HTTP\HTTPResponse;
+
 /**
  * Exception générique de l'application.
  * 
@@ -10,7 +12,7 @@ namespace App\Core\Exceptions;
 abstract class AppException extends \Exception
 {
     private const DEFAULT_MESSAGE = "Erreur générique de l'application";
-    private const HTTP_STATUS = 500;
+    private const HTTP_STATUS = HTTPResponse::HTTP_INTERNAL_SERVER_ERROR_500;
 
     public function __construct(
         string $message = self::DEFAULT_MESSAGE,

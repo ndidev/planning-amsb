@@ -2,6 +2,8 @@
 
 namespace App\Core\HTTP;
 
+use App\Core\Exceptions\Client\ClientException;
+
 class HTTPRequest
 {
 
@@ -33,7 +35,7 @@ class HTTPRequest
     /**
      * Request body.
      */
-    public array $body;
+    private array $body;
 
     /**
      * `true` if the request is a CORS preflight request.
@@ -42,7 +44,7 @@ class HTTPRequest
 
     public function __construct()
     {
-        $this->method = $_SERVER["REQUEST_METHOD"];
+        $this->method = strtoupper($_SERVER["REQUEST_METHOD"]);
 
         $this->headers = getallheaders();
 
@@ -64,5 +66,23 @@ class HTTPRequest
         } else {
             $this->isPreflight = false;
         }
+    }
+
+    /**
+     * Get a request body.
+     * 
+     * @param bool $allowEmpty Allow an empty body.
+     * 
+     * @return array Request body.
+     * 
+     * @throws ClientException If the body is empty and `$allowEmpty` is `false`.
+     */
+    public function getBody(bool $allowEmpty = false): array
+    {
+        if (!$allowEmpty && empty($this->body)) {
+            throw new ClientException("Le corps de la requête est vide.");
+        }
+
+        return $this->body;
     }
 }

@@ -559,11 +559,11 @@ class TimberAppointmentRepository extends Repository
                 f.nom_court AS fournisseur,
                 c.nom_court AS chargement_nom,
                 c.ville AS chargement_ville,
-                cpays.nom AS loadingPlaceCountry,
+                cpays.nom AS chargement_pays,
                 l.nom_court AS livraison_nom,
-                l.cp AS deliveryPlacePostCode,
+                l.cp AS livraison_cp,
                 l.ville AS livraison_ville,
-                lpays.nom AS deliveryPlaceCountry,
+                lpays.nom AS livraison_pays,
                 p.numero_bl,
                 t.nom_court AS transporteur
             FROM bois_planning p
@@ -588,13 +588,13 @@ class TimberAppointmentRepository extends Repository
             "endDate" => $endDate
         ]);
 
-        $appointmentsRaw = $request->fetchAll();
+        $entriesRaw = $request->fetchAll();
 
         $timberService = new TimberService();
 
         $registryEntries = array_map(
-            fn(array $rdvRaw) => $timberService->makeTimberRegisterEntryDTO($rdvRaw),
-            $appointmentsRaw
+            fn(array $entryRaw) => $timberService->makeTimberRegisterEntryDTO($entryRaw),
+            $entriesRaw
         );
 
         return $registryEntries;

@@ -5,6 +5,7 @@ namespace App\Controller\Bulk;
 use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\BulkService;
@@ -27,7 +28,9 @@ class BulkProductController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(HTTPResponse::HTTP_NO_CONTENT_204)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -52,7 +55,9 @@ class BulkProductController extends Controller
                 break;
 
             default:
-                $this->response->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
         }
     }
@@ -63,7 +68,7 @@ class BulkProductController extends Controller
     public function readAll()
     {
         if (!$this->user->canAccess($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour accéder aux produits vrac.");
         }
 
         $products = $this->bulkService->getProducts();
@@ -71,14 +76,12 @@ class BulkProductController extends Controller
         $etag = ETag::get($products);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($products);
     }
 
@@ -90,27 +93,24 @@ class BulkProductController extends Controller
     public function read(int $id)
     {
         if (!$this->user->canAccess($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour accéder aux produits vrac.");
         }
 
         $product = $this->bulkService->getProduct($id);
 
         if (!$product) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("Le produit n'existe pas.");
         }
 
         $etag = ETag::get($product);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($product);
     }
 
@@ -120,20 +120,18 @@ class BulkProductController extends Controller
     public function create()
     {
         if (!$this->user->canEdit($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour créer un produit vrac.");
         }
 
-        $input = $this->request->body;
+        $input = $this->request->getBody();
 
         $product = $this->bulkService->createProduct($input);
 
         $id = $product->getId();
 
-        $this->headers["Location"] = $_ENV["API_URL"] . "/vrac/produits/$id";
-
         $this->response
-            ->setCode(201)
-            ->setHeaders($this->headers)
+            ->setCode(HTTPResponse::HTTP_CREATED_201)
+            ->addHeader("Location", $_ENV["API_URL"] . "/vrac/produits/$id")
             ->setJSON($product);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $product);
@@ -147,21 +145,18 @@ class BulkProductController extends Controller
     public function update(int $id)
     {
         if (!$this->user->canEdit($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour modifier un produit vrac.");
         }
 
         if (!$this->bulkService->productExists($id)) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("Le produit n'existe pas.");
         }
 
-        $input = $this->request->body;
+        $input = $this->request->getBody();
 
         $product = $this->bulkService->updateProduct($id, $input);
 
-        $this->response
-            ->setHeaders($this->headers)
-            ->setJSON($product);
+        $this->response->setJSON($product);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $product);
     }
@@ -174,17 +169,16 @@ class BulkProductController extends Controller
     public function delete(int $id)
     {
         if (!$this->user->canEdit($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour supprimer un produit vrac.");
         }
 
         if (!$this->bulkService->productExists($id)) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("Le produit n'existe pas.");
         }
 
         $this->bulkService->deleteProduct($id);
 
-        $this->response->setCode(204);
+        $this->response->setCode(HTTPResponse::HTTP_NO_CONTENT_204);
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
     }
 }

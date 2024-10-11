@@ -5,7 +5,9 @@ namespace App\Controller\Timber;
 use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
+use App\Core\HTTP\HTTPResponse;
 use App\Service\TimberService;
 
 class TimberAppointmentController extends Controller
@@ -26,7 +28,9 @@ class TimberAppointmentController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -55,7 +59,9 @@ class TimberAppointmentController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
         }
     }
@@ -68,7 +74,7 @@ class TimberAppointmentController extends Controller
     public function readAll(array $filtre)
     {
         if (!$this->user->canAccess($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour accéder aux RDVs bois.");
         }
 
         $appointments = $this->timberService->getAppointments($filtre);
@@ -76,14 +82,12 @@ class TimberAppointmentController extends Controller
         $etag = ETag::get($appointments);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($appointments);
     }
 
@@ -96,14 +100,13 @@ class TimberAppointmentController extends Controller
     public function read(int $id, ?bool $dryRun = false)
     {
         if (!$this->user->canAccess($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour accéder aux RDVs bois.");
         }
 
         $appointment = $this->timberService->getAppointment($id);
 
         if (!$appointment && !$dryRun) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("Ce RDV bois n'existe pas.");
         }
 
         if ($dryRun) {
@@ -113,14 +116,12 @@ class TimberAppointmentController extends Controller
         $etag = ETag::get($appointment);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($appointment);
     }
 
@@ -130,27 +131,18 @@ class TimberAppointmentController extends Controller
     public function create()
     {
         if (!$this->user->canEdit($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour créer un RDV bois.");
         }
 
-        $input = $this->request->body;
-
-        if (empty($input)) {
-            $this->response
-                ->setCode(400)
-                ->setHeaders($this->headers);
-            return;
-        }
+        $input = $this->request->getBody();
 
         $appointment = $this->timberService->createAppointment($input);
 
         $id = $appointment->getId();
 
-        $this->headers["Location"] = $_ENV["API_URL"] . "/bois/rdv/$id";
-
         $this->response
-            ->setCode(201)
-            ->setHeaders($this->headers)
+            ->setCode(HTTPResponse::HTTP_CREATED_201)
+            ->addHeader("Location", $_ENV["API_URL"] . "/bois/rdvs/$id")
             ->setJSON($appointment);
 
         $this->sse->addEvent($this->sse_event, __FUNCTION__, $id, $appointment);
@@ -164,21 +156,18 @@ class TimberAppointmentController extends Controller
     public function update(int $id)
     {
         if (!$this->user->canEdit($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour modifier un RDV bois.");
         }
 
         if (!$this->timberService->appointmentExists($id)) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("Le RDV n'existe pas.");
         }
 
-        $input = $this->request->body;
+        $input = $this->request->getBody();
 
         $appointment = $this->timberService->updateAppointment($id, $input);
 
-        $this->response
-            ->setHeaders($this->headers)
-            ->setJSON($appointment);
+        $this->response->setJSON($appointment);
 
         $this->sse->addEvent($this->sse_event, __FUNCTION__, $id, $appointment);
     }
@@ -191,21 +180,18 @@ class TimberAppointmentController extends Controller
     public function patch(?int $id)
     {
         if (!$this->user->canEdit($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour modifier un RDV bois.");
         }
 
         if ($id && !$this->timberService->appointmentExists($id)) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("Le RDV n'existe pas.");
         }
 
-        $input = $this->request->body;
+        $input = $this->request->getBody();
 
         $appointment = $this->timberService->patchAppointment($id, $input);
 
-        $this->response
-            ->setHeaders($this->headers)
-            ->setJSON($appointment);
+        $this->response->setJSON($appointment);
 
         if ($appointment) {
             $this->sse->addEvent($this->sse_event, __FUNCTION__, $id, $appointment);
@@ -220,20 +206,16 @@ class TimberAppointmentController extends Controller
     public function delete(int $id)
     {
         if (!$this->user->canEdit($this->module)) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour supprimer un RDV bois.");
         }
 
         if (!$this->timberService->appointmentExists($id)) {
-            $message = "Not Found";
-            $documentation = $_ENV["API_URL"] . "/doc/#/Bois/supprimerRdvBois";
-            $body = json_encode(["message" => $message, "documentation_url" => $documentation]);
-            $this->response->setCode(404)->setBody($body);
-            return;
+            throw new NotFoundException("Le RDV n'existe pas.");
         }
 
         $this->timberService->deleteAppointment($id);
 
-        $this->response->setCode(204);
+        $this->response->setCode(HTTPResponse::HTTP_NO_CONTENT_204);
         $this->sse->addEvent($this->sse_event, __FUNCTION__, $id);
     }
 }

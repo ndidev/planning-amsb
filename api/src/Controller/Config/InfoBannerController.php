@@ -5,7 +5,9 @@ namespace App\Controller\Config;
 use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
+use App\Core\HTTP\HTTPResponse;
 use App\Service\InfoBannerService;
 
 class InfoBannerController extends Controller
@@ -26,7 +28,9 @@ class InfoBannerController extends Controller
     {
         switch ($this->request->method) {
             case 'OPTIONS':
-                $this->response->setCode(204)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
 
             case 'HEAD':
@@ -51,7 +55,9 @@ class InfoBannerController extends Controller
                 break;
 
             default:
-                $this->response->setCode(405)->addHeader("Allow", $this->supportedMethods);
+                $this->response
+                    ->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)
+                    ->addHeader("Allow", $this->supportedMethods);
                 break;
         }
     }
@@ -75,14 +81,12 @@ class InfoBannerController extends Controller
         $etag = ETag::get($lines);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($lines);
     }
 
@@ -96,25 +100,22 @@ class InfoBannerController extends Controller
         $line = $this->infoBannerService->getLine($id);
 
         if (!$line) {
-            $this->response->setCode(404);
-            return;
+            throw new NotFoundException("Cette ligne de bandeau d'information n'existe pas.");
         }
 
         if (!$this->user->canAccess($line->getModule())) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour accéder aux informations {$line->getModule()->value}.");
         }
 
         $etag = ETag::get($line);
 
         if ($this->request->etag === $etag) {
-            $this->response->setCode(304);
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
 
-        $this->headers["ETag"] = $etag;
-
         $this->response
-            ->setHeaders($this->headers)
+            ->addHeader("ETag", $etag)
             ->setJSON($line);
     }
 
@@ -123,25 +124,23 @@ class InfoBannerController extends Controller
      */
     public function create()
     {
-        $input = $this->request->body;
-
-        if (
-            !$this->user->canAccess($this->module)
-            || !$this->user->canEdit(Module::tryFrom($input["module"]))
-        ) {
-            throw new AccessException();
+        if (!$this->user->canAccess($this->module)) {
+            throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
         }
 
-        // $newLine = $this->model->create($input);
+        $input = $this->request->getBody();
+
+        if (!$this->user->canEdit(Module::tryFrom($input["module"]))) {
+            throw new AccessException("Vous n'avez pas les droits pour modifier les informations de ce module.");
+        }
+
         $newLine = $this->infoBannerService->createLine($input);
 
         $id = $newLine->getId();
 
-        $this->headers["Location"] = $_ENV["API_URL"] . "/bandeau-info/$id";
-
         $this->response
-            ->setCode(201)
-            ->setHeaders($this->headers)
+            ->setCode(HTTPResponse::HTTP_CREATED_201)
+            ->addHeader("Location", $_ENV["API_URL"] . "/bandeau-info/$id")
             ->setJSON($newLine);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $newLine);
@@ -154,32 +153,28 @@ class InfoBannerController extends Controller
      */
     public function update(int $id)
     {
+        if (!$this->user->canAccess($this->module)) {
+            throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
+        }
+
         $current = $this->infoBannerService->getLine($id);
 
         if (!$current) {
-            $message = "Not Found";
-            $docURL = $_ENV["API_URL"] . "/doc/#/Bois/modifierLigneBandeauInfo";
-            $body = json_encode(["message" => $message, "documentation_url" => $docURL]);
-            $this->response->setCode(404)->setBody($body);
-            return;
+            throw new NotFoundException("Cette ligne de bandeau d'information n'existe pas.");
         }
 
-        $input = $this->request->body;
+        $input = $this->request->getBody();
 
         if (
-            !$this->user->canAccess($this->module)
-            || !$this->user->canEdit($current->getModule())
+            !$this->user->canEdit($current->getModule())
             || !$this->user->canEdit(Module::tryFrom($input["module"]))
         ) {
-            throw new AccessException();
+            throw new AccessException("Vous n'avez pas les droits pour modifier les informations de ce module.");
         }
 
-        // $updatedBannerEntry = $this->model->update($id, $input);
         $updatedLine = $this->infoBannerService->updateLine($id, $input);
 
-        $this->response
-            ->setBody(json_encode($updatedLine))
-            ->setHeaders($this->headers);
+        $this->response->setJSON($updatedLine);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $updatedLine);
     }
@@ -191,26 +186,23 @@ class InfoBannerController extends Controller
      */
     public function delete(int $id)
     {
+        if (!$this->user->canAccess($this->module)) {
+            throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
+        }
+
         $line = $this->infoBannerService->getLine($id);
 
         if (!$line) {
-            $message = "Not Found";
-            $docURL = $_ENV["API_URL"] . "/doc/#/Bandeau/supprimerLigneBandeauInfo";
-            $body = json_encode(["message" => $message, "documentation_url" => $docURL]);
-            $this->response->setCode(404)->setBody($body);
-            return;
+            throw new NotFoundException("Cette ligne de bandeau d'information n'existe pas.");
         }
 
-        if (
-            !$this->user->canAccess($this->module)
-            || !$this->user->canEdit($line->getModule())
-        ) {
-            throw new AccessException();
+        if (!$this->user->canEdit($line->getModule())) {
+            throw new AccessException("Vous n'avez pas les droits pour supprimer les informations {$line->getModule()->value}.");
         }
 
         $this->infoBannerService->deleteLine($id);
 
-        $this->response->setCode(204);
+        $this->response->setCode(HTTPResponse::HTTP_NO_CONTENT_204);
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
     }
 }
