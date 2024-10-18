@@ -3,7 +3,7 @@
   import { onMount, onDestroy } from "svelte";
 
   import { LigneDate, LigneRdv, Placeholder } from "./components";
-  import { BandeauInfo, ConnexionSSE } from "@app/components";
+  import { BandeauInfo, SseConnection } from "@app/components";
 
   import { fetcher } from "@app/utils";
 
@@ -172,7 +172,7 @@
 
 <!-- routify:options guard="vrac" -->
 
-<ConnexionSSE
+<SseConnection
   subscriptions={[
     "vrac/rdvs",
     "vrac/produits",

@@ -7,7 +7,7 @@
     BandeauInfo,
     CoteCesson,
     Chargement,
-    ConnexionSSE,
+    SseConnection,
   } from "@app/components";
   import { LigneEscale } from "./components";
 
@@ -39,7 +39,7 @@
 <!-- routify:options query-params-is-page -->
 <!-- routify:options guard="consignation" -->
 
-<ConnexionSSE
+<SseConnection
   subscriptions={[
     "consignation/escales",
     "tiers",

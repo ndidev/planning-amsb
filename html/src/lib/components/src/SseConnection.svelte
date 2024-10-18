@@ -29,12 +29,12 @@
 
   export let subscriptions: string[] = [];
 
-  let source: EventSource;
+  let source: EventSource = null;
 
   /**
    * @param subscriptions Liste des modules souscrits
    */
-  function demarrerConnexionSSE(subscriptions: string[]): EventSource {
+  function startSseConnection(subscriptions: string[]) {
     // Création d'un identifiant unique pour la connexion
     const id = uuid();
     sessionStorage.setItem("sseId", id);
@@ -51,24 +51,31 @@
 
     url.search = new URLSearchParams(params).toString();
 
-    let connected = false;
-
-    const source = new EventSource(url, { withCredentials: true });
+    source = new EventSource(url, { withCredentials: true });
 
     source.onopen = (event) => {
-      console.log("SSE : Connexion établie");
-      connected = true;
+      console.debug(
+        "SSE : Connexion établie (souscriptions : ",
+        subscriptions.join(", "),
+        ")"
+      );
     };
 
     source.onerror = (error) => {
-      console.error("SSE : Échec");
+      if (source.readyState === source.CONNECTING) {
+        console.warn("SSE : Connexion perdue, nouvelle tentative...");
+      }
+
+      if (source.readyState === source.CLOSED) {
+        console.error("SSE : Connexion perdue, redémarrage...");
+        restartSseConnection();
+      }
     };
 
     source.onmessage = (event) => {};
 
     source.addEventListener("close", (event) => {
-      source.close();
-      connected = false;
+      closeSseConnection();
       console.warn("SSE : connexion fermée à la demande du serveur");
     });
 
@@ -78,9 +85,7 @@
       // N'envoyer l'événement que si la page est visible actuellement,
       // sinon, mettre l'événement en attente
       if (document.visibilityState === "visible") {
-        document.dispatchEvent(
-          new CustomEvent(`planning:${data.name}`, { detail: data })
-        );
+        applyUpdate(data);
       } else {
         pendingUpdates.add(data.name);
       }
@@ -89,21 +94,39 @@
     // Envoi des événements en attente lorsque la page redevient visible
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") {
-        pendingUpdates.forEach((name) => {
-          document.dispatchEvent(new CustomEvent(`planning:${name}`));
-          pendingUpdates.delete(name);
-        });
+        console.debug("SSE : Page visible, envoi des événements en attente");
+        applyPendingUpdates(pendingUpdates);
       }
     });
+  }
 
-    return source;
+  function closeSseConnection() {
+    source.close();
+  }
+
+  function restartSseConnection() {
+    closeSseConnection();
+    startSseConnection(subscriptions);
+  }
+
+  function applyUpdate(data: DBEventData<any>) {
+    document.dispatchEvent(
+      new CustomEvent(`planning:${data.name}`, { detail: data })
+    );
+  }
+
+  function applyPendingUpdates(pendingUpdates: Set<string>) {
+    pendingUpdates.forEach((name) => {
+      document.dispatchEvent(new CustomEvent(`planning:${name}`));
+      pendingUpdates.delete(name);
+    });
   }
 
   onMount(() => {
-    source = demarrerConnexionSSE(subscriptions);
+    startSseConnection(subscriptions);
   });
 
   onDestroy(() => {
-    source.close();
+    closeSseConnection();
   });
 </script>

@@ -3,7 +3,7 @@
   import { onDestroy, setContext, getContext } from "svelte";
   import { writable } from "svelte/store";
 
-  import { BandeauInfo, ConnexionSSE } from "@app/components";
+  import { BandeauInfo, SseConnection } from "@app/components";
   import {
     ExtractionRegistre,
     Filtre as BandeauFiltre,
@@ -168,7 +168,7 @@
 
 <!-- routify:options guard="bois" -->
 
-<ConnexionSSE
+<SseConnection
   subscriptions={[
     "bois/rdvs",
     "tiers",

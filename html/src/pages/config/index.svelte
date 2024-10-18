@@ -11,7 +11,7 @@
 
   import { currentUser } from "@app/stores";
 
-  import { ConnexionSSE } from "@app/components";
+  import { SseConnection } from "@app/components";
 
   import type { ModuleId } from "@app/types";
 
@@ -63,7 +63,7 @@
 
 <!-- routify:options guard="config" -->
 
-<ConnexionSSE
+<SseConnection
   subscriptions={[
     "config/bandeau-info",
     "config/pdf",

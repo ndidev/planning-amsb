@@ -1,7 +1,7 @@
 <!-- routify:options title="Planning AMSB - Vrac" -->
 <script lang="ts">
   import { LigneDate, LigneRdv } from "./components";
-  import { BandeauInfo, ConnexionSSE } from "@app/components";
+  import { BandeauInfo, SseConnection } from "@app/components";
 
   import { vracRdvs, vracProduits, currentUser } from "@app/stores";
 
@@ -77,7 +77,7 @@
 </script>
 
 {#if $currentUser.canUseApp && $currentUser.canAccess("vrac")}
-  <ConnexionSSE
+  <SseConnection
     subscriptions={[
       "vrac/rdvs",
       "vrac/produits",

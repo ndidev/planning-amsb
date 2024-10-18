@@ -4,7 +4,7 @@
   import {
     Menu,
     OfflineBanner,
-    ConnexionSSE,
+    SseConnection,
     EnvFooter,
   } from "@app/components";
 
@@ -18,7 +18,7 @@
 </script>
 
 <!-- Connexion SSE pour les infos utilisateur -->
-<ConnexionSSE />
+<SseConnection />
 
 <SessionChecker />
 

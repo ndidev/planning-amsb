@@ -13,7 +13,7 @@
   Chart.register(ScatterController, PointElement, LinearScale, Tooltip);
 
   import { fetcher, locale } from "@app/utils";
-  import { ConnexionSSE } from "@app/components";
+  import { SseConnection } from "@app/components";
 
   type TE = {
     navire: string;
@@ -85,7 +85,7 @@
 
 <!-- routify:options guard="consignation" -->
 
-<ConnexionSSE subscriptions={["consignation/escales"]} />
+<SseConnection subscriptions={["consignation/escales"]} />
 
 <main>
   <div id="canvas">

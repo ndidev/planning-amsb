@@ -15,7 +15,7 @@
   import { currentUser } from "@app/stores";
 
   import { sitemap } from "@app/utils";
-  import { ConnexionSSE } from "@app/components";
+  import { SseConnection } from "@app/components";
 
   const screen: Writable<string> = getContext("screen");
 
@@ -30,7 +30,7 @@
   });
 </script>
 
-<ConnexionSSE />
+<SseConnection />
 
 <div class="choix-conteneur pure-g">
   {#each [...sitemap] as [rubrique, { affichage, tree: { href, children } }]}

@@ -24,7 +24,7 @@
     MaterialButton,
     Svelecte,
     BoutonAction,
-    ConnexionSSE,
+    SseConnection,
   } from "@app/components";
 
   import { tiers } from "@app/stores";
@@ -292,7 +292,7 @@
 
 <!-- routify:options guard="tiers" -->
 
-<ConnexionSSE subscriptions={["tiers"]} />
+<SseConnection subscriptions={["tiers"]} />
 
 <main class="formulaire">
   <h1>Tiers</h1>

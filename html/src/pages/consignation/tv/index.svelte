@@ -2,7 +2,7 @@
 <script lang="ts">
   import { getContext } from "svelte";
 
-  import { BandeauInfo, CoteCesson, ConnexionSSE } from "@app/components";
+  import { BandeauInfo, CoteCesson, SseConnection } from "@app/components";
   import { LigneEscale } from "./components";
 
   import type { Stores } from "@app/types";
@@ -11,7 +11,7 @@
 </script>
 
 {#if $currentUser.canUseApp && $currentUser.canAccess("consignation")}
-  <ConnexionSSE
+  <SseConnection
     subscriptions={[
       "consignation/escales",
       "tiers",

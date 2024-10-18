@@ -4,7 +4,7 @@
   import { writable } from "svelte/store";
   import { params } from "@roxi/routify";
 
-  import { Chargement, BandeauInfo, ConnexionSSE } from "@app/components";
+  import { Chargement, BandeauInfo, SseConnection } from "@app/components";
   import { Filtre as BandeauFiltre, LigneCharter } from "./components";
 
   import { Filtre } from "@app/utils";
@@ -48,7 +48,7 @@
 <!-- routify:options query-params-is-page -->
 <!-- routify:options guard="chartering" -->
 
-<ConnexionSSE
+<SseConnection
   subscriptions={["chartering/charters", "tiers", "config/bandeau-info"]}
 />
 

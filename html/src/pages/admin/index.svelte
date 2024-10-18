@@ -1,7 +1,7 @@
 <!-- routify:options title="Planning AMSB - Administration" -->
 <script lang="ts">
   import { LigneCompteUtilisateur } from "./components";
-  import { Chargement, ConnexionSSE } from "@app/components";
+  import { Chargement, SseConnection } from "@app/components";
   import { adminUsers } from "@app/stores";
 
   $: comptes = [...$adminUsers.values()].sort((a, b) =>
@@ -11,7 +11,7 @@
 
 <!-- routify:options guard="admin" -->
 
-<ConnexionSSE subscriptions={["admin/users"]} />
+<SseConnection subscriptions={["admin/users"]} />
 
 <main class="formulaire">
   <h1>Administration</h1>
