@@ -30,6 +30,7 @@
   export let subscriptions: string[] = [];
 
   let source: EventSource = null;
+  let isReconnect = false;
 
   /**
    * @param subscriptions Liste des modules souscrits
@@ -59,16 +60,24 @@
         subscriptions.join(", "),
         ")"
       );
+
+      if (isReconnect) {
+        console.debug("SSE : Connexion rétablie");
+        document.dispatchEvent(new CustomEvent(`planning:sse-reconnect`));
+        isReconnect = false;
+      }
     };
 
     source.onerror = (error) => {
       if (source.readyState === source.CONNECTING) {
         console.warn("SSE : Connexion perdue, nouvelle tentative...");
+        isReconnect = true;
       }
 
       if (source.readyState === source.CLOSED) {
         console.error("SSE : Connexion perdue, redémarrage...");
         restartSseConnection();
+        isReconnect = true;
       }
     };
 
