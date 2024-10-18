@@ -1,4 +1,4 @@
-import { createFlatStore } from "./generics/flatStore";
+import { createFlatStore } from "../generics/flatStore";
 import type { Charter } from "@app/types";
 import type { FetcherOptions } from "@app/utils";
 

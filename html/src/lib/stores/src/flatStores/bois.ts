@@ -1,4 +1,4 @@
-import { createFlatStore } from "./generics/flatStore";
+import { createFlatStore } from "../generics/flatStore";
 import type { RdvBois, FiltreBois } from "@app/types";
 import { DateUtils, type FetcherOptions } from "@app/utils";
 

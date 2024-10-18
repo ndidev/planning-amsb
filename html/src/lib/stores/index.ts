@@ -9,19 +9,19 @@ export { authInfo } from "./src/authInfo";
 export { currentUser } from "./src/currentUser";
 
 // Bois
-export { boisRdvs } from "./src/bois";
+export { boisRdvs } from "./src/flatStores/bois";
 
 // Vrac
-export { vracRdvs, vracProduits } from "./src/vrac";
+export { vracRdvs, vracProduits } from "./src/flatStores/vrac";
 
 // Consignation
-export { consignationEscales } from "./src/consignation";
+export { consignationEscales } from "./src/flatStores/consignation";
 
 // Chartering
-export { charteringCharters } from "./src/chartering";
+export { charteringCharters } from "./src/flatStores/chartering";
 
 // Tiers
-export { tiers } from "./src/tiers";
+export { tiers } from "./src/flatStores/tiers";
 
 // Config - BandeauInfo
 export { configBandeauInfo } from "./src/configBandeauInfo";

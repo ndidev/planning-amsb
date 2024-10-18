@@ -15,9 +15,12 @@ export const currentUser = writable<User>(new User(initial), () => {
   fetchAll();
 
   document.addEventListener(`planning:${endpoint}`, handleDBEvent);
+  document.addEventListener(`planning:sse-reconnect`, fetchAll);
 
-  return () =>
+  return () => {
     document.removeEventListener(`planning:${endpoint}`, handleDBEvent);
+    document.removeEventListener(`planning:sse-reconnect`, fetchAll);
+  };
 });
 
 // FONCTIONS

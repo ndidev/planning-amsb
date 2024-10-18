@@ -1,4 +1,4 @@
-import { createFlatStore } from "./generics/flatStore";
+import { createFlatStore } from "../generics/flatStore";
 import type { RdvVrac, ProduitVrac } from "@app/types";
 
 /**

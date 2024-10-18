@@ -36,12 +36,14 @@ export function createFlatStore<T extends { id: string | number }>(
     fetchAll();
 
     document.addEventListener(`planning:${endpoint}`, handleDBEvent);
+    document.addEventListener(`planning:sse-reconnect`, fetchAll);
     for (const event of additionalEvents) {
       document.addEventListener(`planning:${event}`, fetchAll);
     }
 
     return () => {
       document.removeEventListener(`planning:${endpoint}`, handleDBEvent);
+      document.removeEventListener(`planning:sse-reconnect`, fetchAll);
       for (const event of additionalEvents) {
         document.removeEventListener(`planning:${event}`, () => fetchAll);
       }
@@ -55,6 +57,7 @@ export function createFlatStore<T extends { id: string | number }>(
     update: _dbUpdate,
     patch: _dbPatch,
     delete: _dbDelete,
+    refresh: fetchAll,
     setParams,
     endpoint,
   };
