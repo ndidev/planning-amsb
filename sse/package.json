@@ -18,7 +18,7 @@
     "@rollup/plugin-commonjs": "^28.0.1",
     "@rollup/plugin-node-resolve": "^15.0.1",
     "@rollup/plugin-typescript": "^12.0.0",
-    "@tsconfig/node-lts": "^18.12.1",
+    "@tsconfig/node20": "^20.1.4",
     "@types/md5": "^2.3.2",
     "@types/node": "20.10.0",
     "@types/uuid": "^10.0.0",
