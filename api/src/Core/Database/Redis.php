@@ -13,10 +13,14 @@ class Redis extends \Redis
     {
         try {
             parent::__construct();
-            $this->pconnect($_ENV["REDIS_HOST"], $_ENV["REDIS_PORT"]);
+            $this->pconnect(
+                host: $_ENV["REDIS_HOST"],
+                port: $_ENV["REDIS_PORT"],
+                read_timeout: 1,
+            );
             $this->ping(); // Vérifier la connexion à la base Redis
-        } catch (\RedisException $redis_exception) {
-            throw new DBConnectionException(previous: $redis_exception);
+        } catch (\RedisException $redisException) {
+            throw new DBConnectionException(previous: $redisException);
         }
     }
 

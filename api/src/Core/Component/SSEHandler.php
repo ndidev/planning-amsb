@@ -43,7 +43,8 @@ class SSEHandler
                 "http" => [
                     "header" => "Content-type: application/json\r\n",
                     "method" => "POST",
-                    "content" => json_encode($event)
+                    "content" => json_encode($event),
+                    "timeout" => 0.5,
                 ]
             ];
 

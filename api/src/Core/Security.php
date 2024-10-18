@@ -53,12 +53,16 @@ class Security
     {
         $client_ip_address = $_SERVER["REMOTE_ADDR"];
 
-        // Increment the number of connection attempts and, if need be, block the IP address
-        $attempts = (int) static::getRedis()->incr("security:attempts:$client_ip_address");
-        static::getRedis()->expire("security:attempts:$client_ip_address", static::FAILED_ATTEMPTS_TIMEOUT);
+        try {
+            // Increment the number of connection attempts and, if need be, block the IP address
+            $attempts = (int) static::getRedis()->incr("security:attempts:$client_ip_address");
+            static::getRedis()->expire("security:attempts:$client_ip_address", static::FAILED_ATTEMPTS_TIMEOUT);
 
-        if ($attempts >= static::MAX_FAILED_ATTEMPTS) {
-            static::getRedis()->setex("security:blocked:$client_ip_address", static::BLOCKED_IP_TIMEOUT, "1");
+            if ($attempts >= static::MAX_FAILED_ATTEMPTS) {
+                static::getRedis()->setex("security:blocked:$client_ip_address", static::BLOCKED_IP_TIMEOUT, "1");
+            }
+        } catch (\RedisException $redisException) {
+            return;
         }
 
         sleep(static::SLEEP_TIME);
@@ -86,9 +90,13 @@ class Security
     {
         $client_ip_address = $_SERVER["REMOTE_ADDR"];
 
-        if (static::getRedis()->get("security:blocked:$client_ip_address")) {
-            static::getRedis()->expire("security:blocked:$client_ip_address", static::BLOCKED_IP_TIMEOUT);
-            return true;
+        try {
+            if (static::getRedis()->get("security:blocked:$client_ip_address")) {
+                static::getRedis()->expire("security:blocked:$client_ip_address", static::BLOCKED_IP_TIMEOUT);
+                return true;
+            }
+        } catch (\RedisException $redisException) {
+            return false;
         }
 
         return false;
