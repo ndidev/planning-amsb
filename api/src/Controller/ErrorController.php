@@ -14,7 +14,7 @@ class ErrorController extends Controller
     public function __construct(
         private \Throwable $exception,
     ) {
-        parent::__construct();
+        parent::__construct(error: true);
         $this->processRequest();
     }
 

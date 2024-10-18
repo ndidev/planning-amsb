@@ -39,10 +39,16 @@ abstract class Controller
    */
   public SSEHandler $sse;
 
-  public function __construct(string $supportedMethods = "OPTIONS, HEAD, GET")
-  {
+  public function __construct(
+    string $supportedMethods = "OPTIONS, HEAD, GET",
+    bool $error = false
+  ) {
     $this->request = new HTTPRequest();
     $this->response = new HTTPResponse();
+
+    if ($error) {
+      return;
+    }
 
     $this->supportedMethods = $supportedMethods;
 
