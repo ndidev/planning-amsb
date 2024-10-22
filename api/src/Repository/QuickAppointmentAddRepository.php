@@ -29,7 +29,7 @@ class QuickAppointmentAddRepository extends Repository
     public function fetchAllQuickAppointmentAdds(): array
     {
         return [
-            Module::TIMBER->value => $this->fetchAllTimberQuickAppointmentAdds()
+            Module::TIMBER->value => $this->fetchAllTimberQuickAppointmentAdds(),
         ];
     }
 

@@ -8,6 +8,8 @@ use App\Core\Interfaces\Arrayable;
 
 /**
  * @template T
+ * 
+ * @implements \IteratorAggregate<T>
  */
 class Collection implements \IteratorAggregate, \Countable, Arrayable, \JsonSerializable
 {
@@ -41,7 +43,7 @@ class Collection implements \IteratorAggregate, \Countable, Arrayable, \JsonSeri
     }
 
     /**
-     * @return T[]
+     * @return \ArrayIterator<T>
      */
     public function getIterator(): \ArrayIterator
     {

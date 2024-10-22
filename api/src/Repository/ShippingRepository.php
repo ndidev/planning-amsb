@@ -18,7 +18,7 @@ class ShippingRepository extends Repository
      * 
      * @param int $id Identifiant de l'entrée.
      */
-    public function exists(int $id)
+    public function exists(int $id): bool
     {
         return $this->mysql->exists("consignation_planning", $id);
     }
@@ -502,23 +502,23 @@ class ShippingRepository extends Repository
     /**
      * Récupère un numéro de voyage pour un navire.
      * 
-     * @param string $shipName Nom du navire.
-     * @param int    $id       ID de l'escale.
+     * @param string $shipName      Nom du navire.
+     * @param int    $currentCallId ID de l'escale.
      * 
      * @return string Dernier numéro de voyage du navire.
      */
-    public function fetchLastVoyageNumber(string $shipName, ?int $id): string
+    public function fetchLastVoyageNumber(string $shipName, ?int $currentCallId): string
     {
         // Si un id d'escale est fourni, récupérer le dernier numéro de voyage
         // de l'escale précédente :
         //  - id !== id fourni
         //  - eta <= eta de l'id fourni
         //  - etc <= etc de l'id fourni (permet de gérer les escale avec backload)
-        $sql = is_null($id)
+        $sql = is_null($currentCallId)
             ? ""
-            : " AND NOT id = '$id'
-                AND eta_date <= (SELECT eta_date FROM consignation_planning WHERE id = '$id')
-                AND eta_date <= COALESCE((SELECT eta_date FROM consignation_planning WHERE id = '$id'), '9999-12-31')";
+            : " AND NOT id = '$currentCallId'
+                AND eta_date <= (SELECT eta_date FROM consignation_planning WHERE id = '$currentCallId')
+                AND eta_date <= COALESCE((SELECT eta_date FROM consignation_planning WHERE id = '$currentCallId'), '9999-12-31')";
 
         $statement =
             "SELECT voyage
@@ -779,7 +779,7 @@ class ShippingRepository extends Repository
      * 
      * @return string[] Liste des clients.
      */
-    public function fetchAllCustomersNames()
+    public function fetchAllCustomersNames(): array
     {
         $statement =
             "SELECT DISTINCT client

@@ -7,6 +7,7 @@ namespace App\Service;
 use App\Core\Component\Collection;
 use App\Core\Component\Module;
 use App\Core\Component\PdfEmail;
+use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Exceptions\Server\ServerException;
 use App\Core\Logger\ErrorLogger;
@@ -106,10 +107,14 @@ class PdfService
      * @return PlanningPDF
      */
     public function generatePDF(
-        int $configId,
+        ?int $configId,
         \DateTimeInterface $startDate,
         \DateTimeInterface $endDate
     ): PlanningPDF {
+        if (!$configId) {
+            throw new ClientException("Identifiant de configuration PDF manquant");
+        }
+
         $config = $this->getConfig($configId);
 
         if (!$config) {

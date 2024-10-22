@@ -11,7 +11,7 @@ const TODAY = new \DateTime();
 echo PHP_EOL . DateUtils::format(DateUtils::DATETIME_FULL, TODAY) . PHP_EOL;
 
 // Si la page est appelée automatiquement un jour non ouvré, l'envoi de mail n'a pas lieu
-if (empty($_POST) && !DateUtils::checkWorkingDay(TODAY)) {
+if (empty($_POST) && !DateUtils::isWorkingDay(TODAY)) {
     echo "Jour non ouvré, pas d'envoi" . PHP_EOL . PHP_EOL;
     return false;
 }
@@ -44,8 +44,8 @@ foreach ($configs as $config) {
      * Calcul des dates si la page est appelée automatiquement
      * (ex : si elle est appelée par CronJob)
      */
-    $startDate = DateUtils::previousWorkingDay(TODAY, $config->getDaysBefore());
-    $endDate = DateUtils::nextWorkingDay(TODAY, $config->getDaysAfter());
+    $startDate = DateUtils::getPreviousWorkingDay(TODAY, $config->getDaysBefore());
+    $endDate = DateUtils::getNextWorkingDay(TODAY, $config->getDaysAfter());
 
     // Envoi du PDF
     $resultat = $pdfService->sendPdfByEmail(

@@ -345,9 +345,7 @@ class TimberAppointmentRepository extends Repository
             $numero_bl_nouveau = is_numeric($numero_bl_precedent) ? $numero_bl_precedent + 1 : '';
             if ($numero_bl_actuel === '' && $numero_bl_nouveau) {
                 $request = $this->mysql->prepare(
-                    "UPDATE bois_planning
-            SET numero_bl = :numero_bl
-            WHERE id = :id"
+                    "UPDATE bois_planning SET numero_bl = :numero_bl WHERE id = :id"
                 );
 
                 $request->execute([
@@ -530,6 +528,12 @@ class TimberAppointmentRepository extends Repository
             $dbResult = $request->fetch();
 
             $deliveryNoteExists = (bool) $dbResult["bl_existe"];
+            $idOfExistingDeliveryNote = $dbResult["id"];
+
+            // Si le numéro de BL existe déjà (pour Stora Enso), message d'erreur
+            if ($deliveryNoteExists && $id != $idOfExistingDeliveryNote) {
+                throw new ClientException("Le numéro de BL $deliveryNoteNumber existe déjà pour {$supplierData["nom"]}.");
+            }
         }
 
         if ($id && !$deliveryNoteExists && !$dryRun) {
@@ -543,11 +547,6 @@ class TimberAppointmentRepository extends Repository
                     'deliveryNoteNumber' => $deliveryNoteNumber,
                     'id' => (int) $id
                 ]);
-        }
-
-        // Si le numéro de BL existe déjà (pour Stora Enso), message d'erreur
-        if ($deliveryNoteExists && $id != $dbResult["id"]) {
-            throw new ClientException("Le numéro de BL $deliveryNoteNumber existe déjà pour {$supplierData["nom"]}.");
         }
 
         return $id ? $this->getAppointment($id) : null;
@@ -581,7 +580,7 @@ class TimberAppointmentRepository extends Repository
      */
     public function getCharteringRegister(array $filter): array
     {
-        $defaultStartDate = DateUtils::format(DateUtils::SQL_DATE, DateUtils::previousWorkingDay(new \DateTimeImmutable()));
+        $defaultStartDate = DateUtils::format(DateUtils::SQL_DATE, DateUtils::getPreviousWorkingDay(new \DateTimeImmutable()));
         $defaultEndDate = date("Y-m-d");
 
         // Filtre

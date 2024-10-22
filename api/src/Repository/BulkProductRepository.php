@@ -67,7 +67,7 @@ class BulkProductRepository extends Repository
                 $productRaw["qualites"] = array_values(
                     array_filter(
                         $qualitiesRaw,
-                        fn (array $qualityRaw) => $qualityRaw["produit"] === $productRaw["id"]
+                        fn(array $qualityRaw) => $qualityRaw["produit"] === $productRaw["id"]
                     )
                 );
 
@@ -94,7 +94,7 @@ class BulkProductRepository extends Repository
     {
         $cachedProducts = array_values(array_filter(
             static::$productsCache,
-            fn (BulkProduct $cachedProduct) => $cachedProduct->getId() === $id
+            fn(BulkProduct $cachedProduct) => $cachedProduct->getId() === $id
         ));
 
         $product = $cachedProducts[0] ?? null;
@@ -157,7 +157,7 @@ class BulkProductRepository extends Repository
         $bulkService = new BulkService();
 
         $qualities = array_map(
-            fn (array $qualityRaw) => $bulkService->makeQualityFromDatabase($qualityRaw),
+            fn(array $qualityRaw) => $bulkService->makeQualityFromDatabase($qualityRaw),
             $qualitiesRaw
         );
 
@@ -178,7 +178,7 @@ class BulkProductRepository extends Repository
     {
         $cachedQualities = array_values(array_filter(
             static::$qualitiesCache,
-            fn (BulkQuality $cachedQuality) => $cachedQuality->getId() === $id
+            fn(BulkQuality $cachedQuality) => $cachedQuality->getId() === $id
         ));
 
         $quality = $cachedQualities[0] ?? null;
@@ -309,7 +309,7 @@ class BulkProductRepository extends Repository
         $qualitiesRequest->execute(['productId' => $product->getId()]);
         $existingQualitiesIds = $qualitiesRequest->fetchAll(\PDO::FETCH_COLUMN, 0);
 
-        $submittedQualitiesIds = array_map(fn (BulkQuality $quality) => $quality->getId(), $product->getQualities());
+        $submittedQualitiesIds = array_map(fn(BulkQuality $quality) => $quality->getId(), $product->getQualities());
         $qualitiesIdsToBeDeleted = array_diff($existingQualitiesIds, $submittedQualitiesIds);
 
         if (!empty($qualitiesIdsToBeDeleted)) {

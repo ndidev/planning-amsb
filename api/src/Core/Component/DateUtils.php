@@ -105,7 +105,7 @@ class DateUtils
      * 
      * @return bool `true` if public holiday, `false` otherwise.
      */
-    public static function checkPublicHoliday(\DateTimeInterface|string $date): bool
+    public static function isPublicHoliday(\DateTimeInterface|string $date): bool
     {
         $date = self::convertDate($date);
 
@@ -154,11 +154,11 @@ class DateUtils
      * 
      * @return bool `true` if working day, `false` otherwise.
      */
-    public static function checkWorkingDay(\DateTimeInterface|string $date): bool
+    public static function isWorkingDay(\DateTimeInterface|string $date): bool
     {
         $date = self::convertDate($date);
 
-        if (self::checkPublicHoliday($date)) {
+        if (self::isPublicHoliday($date)) {
             return false;
         }
 
@@ -190,7 +190,7 @@ class DateUtils
      * 
      * @return \DateTime
      */
-    public static function previousWorkingDay(
+    public static function getPreviousWorkingDay(
         \DateTimeInterface|string $date,
         ?int $offset = 1
     ): \DateTime {
@@ -201,7 +201,7 @@ class DateUtils
         for ($i = 0; $i < $offset; $i++) {
             do {
                 $previous_working_day->sub(new \DateInterval("P1D"));
-            } while (!self::checkWorkingDay($previous_working_day));
+            } while (!self::isWorkingDay($previous_working_day));
         }
 
         return $previous_working_day;
@@ -221,7 +221,7 @@ class DateUtils
      * 
      * @return \DateTime
      */
-    public static function nextWorkingDay(
+    public static function getNextWorkingDay(
         \DateTimeInterface|string $date,
         ?int $offset = 1
     ): \DateTime {
@@ -232,7 +232,7 @@ class DateUtils
         for ($i = 0; $i < $offset; $i++) {
             do {
                 $next_working_day->add(new \DateInterval("P1D"));
-            } while (!self::checkWorkingDay($next_working_day));
+            } while (!self::isWorkingDay($next_working_day));
         }
 
         return $next_working_day;

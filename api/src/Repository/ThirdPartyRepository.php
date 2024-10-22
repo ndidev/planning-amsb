@@ -20,7 +20,7 @@ class ThirdPartyRepository extends Repository
      * 
      * @param int $id Identifiant de l'entrée.
      */
-    public function thirdPartyExists(int $id)
+    public function thirdPartyExists(int $id): bool
     {
         return $this->mysql->exists("tiers", $id);
     }

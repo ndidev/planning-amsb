@@ -152,7 +152,7 @@ class TideRepository extends Repository
      * 
      * @throws RedisException 
      */
-    private function invalidateRedis()
+    private function invalidateRedis(): void
     {
         $keys = $this->redis->keys($this->redisNamespace . ":*");
 

@@ -92,9 +92,6 @@ function lzw_decompress(string $binary)
 	$word = "";
 	foreach ($codes as $i => $code) {
 		$element = $dictionary[$code];
-		if (!isset($element)) {
-			$element = $word . $word[0];
-		}
 		$return .= $element;
 		if ($i) {
 			$dictionary[] = $word . $element[0];
