@@ -89,6 +89,8 @@ export const configAjoutsRapides = (function () {
       //   updated[config.module].set(config.id, config);
       // }
       for (const module in configs) {
+        if (!(module in updated)) continue;
+
         for (const config of configs[module]) {
           updated[module].set(config.id, config);
         }

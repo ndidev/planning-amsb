@@ -13,7 +13,9 @@ use App\Core\Logger\ErrorLogger;
 use App\DTO\PDF\BulkPDF;
 use App\DTO\PDF\PlanningPDF;
 use App\DTO\PDF\TimberPDF;
+use App\Entity\Config\AgencyDepartment;
 use App\Entity\Config\PdfConfig;
+use App\Entity\ThirdParty;
 use App\Repository\BulkAppointmentRepository;
 use App\Repository\PdfConfigRepository;
 use App\Repository\TimberAppointmentRepository;
@@ -125,27 +127,37 @@ class PdfService
         // Récupération données du service de l'agence.
         $agencyInfo = (new AgencyService())->getDepartment("transit");
 
-        /**
-         * Vrac
-         */
-        if ($module === Module::BULK) {
-            $bulkRepository = new BulkAppointmentRepository();
+        return match ($module) {
+            Module::BULK => $this->generateBulkPdf($supplier, $startDate, $endDate, $agencyInfo),
+            Module::TIMBER => $this->generateTimberPdf($supplier, $startDate, $endDate, $agencyInfo),
+            default => throw new ServerException("Le module spécifié n'est pas pris en charge"),
+        };
+    }
 
-            $appointments = $bulkRepository->getPdfAppointments($supplier, $startDate, $endDate);
+    private function generateBulkPdf(
+        ThirdParty $supplier,
+        \DateTimeInterface $startDate,
+        \DateTimeInterface $endDate,
+        AgencyDepartment $agencyInfo,
+    ): BulkPDF {
+        $bulkRepository = new BulkAppointmentRepository();
 
-            return new BulkPDF($supplier, $appointments, $startDate, $endDate, $agencyInfo);
-        }
+        $appointments = $bulkRepository->getPdfAppointments($supplier, $startDate, $endDate);
 
-        /**
-         * Bois
-         */
-        if ($module === Module::TIMBER) {
-            $timberRepository = new TimberAppointmentRepository();
+        return new BulkPDF($supplier, $appointments, $startDate, $endDate, $agencyInfo);
+    }
 
-            $appointments = $timberRepository->getPdfAppointments($supplier, $startDate, $endDate);
+    private function generateTimberPdf(
+        ThirdParty $supplier,
+        \DateTimeInterface $startDate,
+        \DateTimeInterface $endDate,
+        AgencyDepartment $agencyInfo,
+    ): TimberPDF {
+        $timberRepository = new TimberAppointmentRepository();
 
-            return new TimberPDF($supplier, $appointments, $startDate, $endDate, $agencyInfo);
-        }
+        $appointments = $timberRepository->getPdfAppointments($supplier, $startDate, $endDate);
+
+        return new TimberPDF($supplier, $appointments, $startDate, $endDate, $agencyInfo);
     }
 
     /**

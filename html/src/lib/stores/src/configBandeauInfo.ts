@@ -69,6 +69,8 @@ export const configBandeauInfo = (function () {
       const updated = structuredClone(empty);
 
       for (const config of configs) {
+        if (!(config.module in updated)) continue;
+
         updated[config.module].set(config.id, config);
       }
 
