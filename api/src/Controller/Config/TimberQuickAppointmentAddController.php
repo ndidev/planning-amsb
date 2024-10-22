@@ -10,7 +10,7 @@ use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\QuickAppointmentAddService;
 
-class TimberQuickAppointmentAddController extends Controller
+final class TimberQuickAppointmentAddController extends Controller
 {
     private QuickAppointmentAddService $quickAppointmentAddService;
     private Module $module = Module::CONFIG;

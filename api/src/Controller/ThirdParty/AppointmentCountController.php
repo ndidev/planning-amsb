@@ -8,7 +8,7 @@ use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\ThirdPartyService;
 
-class AppointmentCountController extends Controller
+final class AppointmentCountController extends Controller
 {
     private ThirdPartyService $service;
 

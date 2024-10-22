@@ -11,7 +11,7 @@ use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\ThirdPartyService;
 
-class ThirdPartyController extends Controller
+final class ThirdPartyController extends Controller
 {
     private ThirdPartyService $thirdPartyService;
     private Module $module = Module::THIRD_PARTY;

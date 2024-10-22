@@ -8,7 +8,7 @@ use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\QuickAppointmentAddService;
 
-class QuickAppointmentAddController extends Controller
+final class QuickAppointmentAddController extends Controller
 {
     private QuickAppointmentAddService $quickAppointmentAddService;
 

@@ -10,7 +10,7 @@ use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\AgencyService;
 
-class AgencyController extends Controller
+final class AgencyController extends Controller
 {
     private AgencyService $agencyService;
     private Module $module = Module::CONFIG;

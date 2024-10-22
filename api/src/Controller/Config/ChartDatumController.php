@@ -10,7 +10,7 @@ use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\ChartDatumService;
 
-class ChartDatumController extends Controller
+final class ChartDatumController extends Controller
 {
     private ChartDatumService $chartDatumService;
     private Module $module = Module::CONFIG;

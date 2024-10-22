@@ -11,7 +11,7 @@ use App\Core\Exceptions\Client\ClientException;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\TimberService;
 
-class TimberDeliveryNoteController extends Controller
+final class TimberDeliveryNoteController extends Controller
 {
     private TimberService $timberService;
     private Module $module = Module::TIMBER;

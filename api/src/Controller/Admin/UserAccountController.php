@@ -10,7 +10,7 @@ use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\UserService;
 
-class UserAccountController extends Controller
+final class UserAccountController extends Controller
 {
     private UserService $userService;
     private string $sseEventName = "admin/users";

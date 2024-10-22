@@ -11,7 +11,7 @@ use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\TideService;
 
-class TideController extends Controller
+final class TideController extends Controller
 {
     private TideService $service;
     private string $sseEventName = "marees";

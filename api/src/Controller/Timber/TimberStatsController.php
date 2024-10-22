@@ -9,7 +9,7 @@ use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\TimberService;
 
-class TimberStatsController extends Controller
+final class TimberStatsController extends Controller
 {
     private TimberService $service;
     private Module $module = Module::TIMBER;

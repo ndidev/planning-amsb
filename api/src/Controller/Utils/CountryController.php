@@ -11,7 +11,7 @@ use App\Core\HTTP\HTTPResponse;
 use App\Entity\Country;
 use App\Service\CountryService;
 
-class CountryController extends Controller
+final class CountryController extends Controller
 {
     private CountryService $countryService;
 

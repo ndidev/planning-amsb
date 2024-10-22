@@ -9,7 +9,7 @@ use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\ShippingService;
 
-class VoyageNumberController extends Controller
+final class VoyageNumberController extends Controller
 {
     private ShippingService $shippingService;
     private Module $module = Module::SHIPPING;

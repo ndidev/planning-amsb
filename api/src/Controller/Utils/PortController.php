@@ -11,7 +11,7 @@ use App\Core\HTTP\HTTPResponse;
 use App\Entity\Port;
 use App\Service\PortService;
 
-class PortController extends Controller
+final class PortController extends Controller
 {
     private PortService $service;
 

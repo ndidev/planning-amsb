@@ -14,7 +14,7 @@ use App\Service\ShippingService;
 /**
  * Liste des clients en consignation.
  */
-class ShippingCustomersListController extends Controller
+final class ShippingCustomersListController extends Controller
 {
     private ShippingService $shippingService;
     private Module $module = Module::SHIPPING;

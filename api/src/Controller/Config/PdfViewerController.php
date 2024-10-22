@@ -8,7 +8,7 @@ use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\PdfService;
 
-class PdfViewerController extends Controller
+final class PdfViewerController extends Controller
 {
     private PdfService $pdfService;
 

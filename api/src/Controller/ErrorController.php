@@ -9,7 +9,7 @@ use App\Core\Exceptions\Server\ServerException;
 use App\Core\HTTP\HTTPResponse;
 use App\Core\Logger\ErrorLogger;
 
-class ErrorController extends Controller
+final class ErrorController extends Controller
 {
     public function __construct(
         private \Throwable $exception,

@@ -12,7 +12,7 @@ use App\Service\ShippingService;
 /**
  * Liste des marchandises utilisées en consignation.
  */
-class ShippingCargoListController extends Controller
+final class ShippingCargoListController extends Controller
 {
     private ShippingService $shippingService;
     private Module $module = Module::SHIPPING;

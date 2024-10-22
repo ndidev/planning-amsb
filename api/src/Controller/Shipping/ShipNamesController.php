@@ -12,7 +12,7 @@ use App\Service\ShippingService;
 /**
  * Liste des navires ayant fait escale.
  */
-class ShipNamesController extends Controller
+final class ShipNamesController extends Controller
 {
     private ShippingService $shippingService;
     private Module $module = Module::SHIPPING;

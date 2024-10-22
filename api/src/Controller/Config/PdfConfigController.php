@@ -10,7 +10,7 @@ use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\PdfService;
 
-class PdfConfigController extends Controller
+final class PdfConfigController extends Controller
 {
     private PdfService $pdfService;
     private Module $module = Module::CONFIG;

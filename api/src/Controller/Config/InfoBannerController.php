@@ -10,7 +10,7 @@ use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\InfoBannerService;
 
-class InfoBannerController extends Controller
+final class InfoBannerController extends Controller
 {
     private InfoBannerService $infoBannerService;
     private Module $module = Module::CONFIG;

@@ -8,7 +8,7 @@ use App\Core\HTTP\HTTPResponse;
 /**
  * Réponse à appliquer en cas d'appel à l'endpoint "/".
  */
-class RootController extends Controller
+final class RootController extends Controller
 {
     public function __construct(
         private bool $_404 = false,

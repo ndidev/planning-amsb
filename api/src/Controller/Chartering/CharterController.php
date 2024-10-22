@@ -10,7 +10,7 @@ use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\CharteringService;
 
-class CharterController extends Controller
+final class CharterController extends Controller
 {
     private CharteringService $charteringService;
     private Module $module = Module::CHARTERING;

@@ -10,7 +10,7 @@ use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\BulkService;
 
-class BulkAppointmentController extends Controller
+final class BulkAppointmentController extends Controller
 {
     private BulkService $bulkService;
     private Module $module = Module::BULK;

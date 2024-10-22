@@ -11,7 +11,7 @@ use App\Service\ShippingService;
 /**
  * Liste des navires en opération entre deux dates.
  */
-class ShipsInOpsController extends Controller
+final class ShipsInOpsController extends Controller
 {
     private ShippingService $shippingService;
     private Module $module = Module::SHIPPING;

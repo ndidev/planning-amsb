@@ -12,7 +12,7 @@ use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\ShippingService;
 
-class ShippingCallController extends Controller
+final class ShippingCallController extends Controller
 {
     private ShippingService $shippingService;
     private Module $module = Module::SHIPPING;
