@@ -29,6 +29,7 @@ use App\Controller\Timber\TimberAppointmentController;
 use App\Controller\Timber\TimberRegistryController;
 use App\Controller\Timber\TimberStatsController;
 use App\Controller\Timber\TransportSuggestionsController;
+use App\Controller\Timber\TimberDeliveryNoteController;
 use App\Controller\User\UserController;
 use App\Controller\Utils\CountryController;
 use App\Controller\Utils\PortController;
@@ -60,6 +61,7 @@ $routes = [
     ["/bois/registre", TimberRegistryController::class],
     ["/bois/stats", TimberStatsController::class],
     ["/bois/suggestions-transporteurs", TransportSuggestionsController::class],
+    ["/bois/check-delivery-note-available", TimberDeliveryNoteController::class],
 
     // Vrac
     ["/vrac/rdvs/[i:id]?", BulkAppointmentController::class],

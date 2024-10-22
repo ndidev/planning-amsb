@@ -278,4 +278,39 @@ class TimberService
     {
         return $this->timberAppointmentRepository->getStats($filtre);
     }
+
+    public function isDeliveryNoteNumberAvailable(
+        string $deliveryNoteNumber,
+        int $supplierId,
+        ?int $appointmentId = null,
+    ): bool {
+        if (!$this->isSupplierWithUniqueDeliveryNoteNumbers($supplierId)) {
+            return true;
+        }
+
+        return $this->timberAppointmentRepository->isDeliveryNoteNumberAvailable(
+            $deliveryNoteNumber,
+            $supplierId,
+            $appointmentId,
+        );
+    }
+
+    /**
+     * Récupère les fournisseurs avec des numéros de BL uniques.
+     * 
+     * @return array{supplierId: int, regexp: string} Fournisseurs avec des numéros de BL uniques.
+     */
+    public function getSuppliersWithUniqueDeliveryNoteNumbers(): array
+    {
+        return [
+            292 => '\d{6}', // Stora Enso
+        ];
+    }
+
+    public function isSupplierWithUniqueDeliveryNoteNumbers(int $supplierId): bool
+    {
+        $suppliersWithUniqueDeliveryNoteNumber = $this->getSuppliersWithUniqueDeliveryNoteNumbers();
+
+        return array_key_exists($supplierId, $suppliersWithUniqueDeliveryNoteNumber);
+    }
 }

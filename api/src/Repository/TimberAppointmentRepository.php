@@ -413,6 +413,35 @@ class TimberAppointmentRepository extends Repository
         return $this->getAppointment($id);
     }
 
+    public function isDeliveryNoteNumberAvailable(
+        string $deliveryNoteNumber,
+        int $supplierId,
+        ?int $currentAppointmentId,
+    ): bool {
+        $request = $this->mysql->prepare(
+            "SELECT COUNT(id), id
+            FROM bois_planning
+            WHERE numero_bl LIKE CONCAT('%', :deliveryNoteNumber, '%')
+            AND fournisseur = :supplierId
+            "
+        );
+
+        $request->execute([
+            "deliveryNoteNumber" => $deliveryNoteNumber,
+            "supplierId" => $supplierId,
+        ]);
+
+        [$deliveryNoteNumberExists, $id] = $request->fetch(\PDO::FETCH_NUM);
+
+        if ($deliveryNoteNumberExists && $id !== $currentAppointmentId) {
+            $deliveryNoteNumberIsAvailable = false;
+        } else {
+            $deliveryNoteNumberIsAvailable = true;
+        }
+
+        return $deliveryNoteNumberIsAvailable;
+    }
+
     /**
      * Définit l'heure d'arrivée pour un rendez-vous bois.
      * 

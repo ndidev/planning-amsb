@@ -128,24 +128,32 @@
    */
   async function verifierNumeroBL() {
     try {
-      await fetcher(`bois/rdvs/${rdv.id}`, {
-        requestInit: {
-          method: "PATCH",
-          body: JSON.stringify({
-            numero_bl,
-            dry_run: "true",
-          }),
-        },
-      });
+      const isDeliveryNoteNumberAvailable: boolean = await fetcher(
+        `bois/check-delivery-note-available`,
+        {
+          params: {
+            supplierId: rdv.fournisseur.toString(),
+            deliveryNoteNumber: numero_bl,
+            currentAppointmentId: rdv.id.toString(),
+          },
+        }
+      );
 
-      rdv.numero_bl = numero_bl;
+      if (isDeliveryNoteNumberAvailable) {
+        rdv.numero_bl = numero_bl;
+      } else {
+        const supplierName = $tiers.get(rdv.fournisseur)?.nom_court;
+
+        Notiflix.Report.failure(
+          "Erreur",
+          `Le numéro BL ${numero_bl} est déjà utilisé pour ${supplierName}.`,
+          "OK"
+        );
+        numero_bl = rdv.numero_bl;
+      }
     } catch (err: unknown) {
       const error = err as HTTP.Error | Error;
-      if (error instanceof HTTP.BadRequest) {
-        Notiflix.Report.failure("Erreur", error.message, "OK");
-      } else {
-        Notiflix.Notify.failure(error.message);
-      }
+      Notiflix.Notify.failure(error.message);
       numero_bl = rdv.numero_bl;
     }
   }
