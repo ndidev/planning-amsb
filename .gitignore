@@ -1,17 +1,15 @@
+# Local
 .vscode/
 .DS_Store
 docker/
 node_modules/
 vendor/
-.parcel-cache/
 dist/
 logos/
 .env
 .env.*
 !.env.example
-backup/
 .routify
 
-# Temp
-_src
-_html
+# PHPUnit
+.phpunit.cache
