@@ -71,8 +71,9 @@ class RootController extends Controller
             // Bois
             "rdvs_bois" => "bois/rdvs/{id}{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}&client={client}&livraison={livraison}&fournisseur={fournisseur}&affreteur={affreteur}&transporteur={transporteur}}",
             "registre" => "bois/registre/{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}",
-            "stats" => "bois/stats/{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}&client={client}&livraison={livraison}&fournisseur={fournisseur}&affreteur={affreteur}&transporteur={transporteur}}",
+            "stats_bois" => "bois/stats/{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}&client={client}&livraison={livraison}&fournisseur={fournisseur}&affreteur={affreteur}&transporteur={transporteur}}",
             "suggestions-transporteurs" => "suggestions-transporteurs?chargement={id}&livraison={id}",
+            "check-delivery-note-available" => "check-delivery-note-available?supplierId={id}&deliveryNoteNumber={number}&currentAppointmentId={id}",
             // Vrac
             "rdvs_vrac" => "vrac/rdvs/{id}",
             "produits_vrac" => "vrac/produits/{id}",
@@ -80,7 +81,7 @@ class RootController extends Controller
             "escales" => "consignation/escales/{id}",
             "escales_archives" => "consignation/escales?archives",
             "te" => "consignation/te",
-            "stats" => "consignation/stats/{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}&armateur={armateur}}",
+            "stats_consignation" => "consignation/stats/{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}&armateur={armateur}}",
             "stats_details" => "consignation/stats/{periode}/{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}&armateur={armateur}}",
             "navires" => "consignation/navires",
             "marchandises" => "consignation/marchandises",
