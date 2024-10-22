@@ -71,8 +71,6 @@ class Email extends PHPMailer
      * @param array $to   Adresses e-mail des destinataires.
      * @param array $cc   Adresses e-mail en copie.
      * @param array $bcc  Adresses e-mail en copie cachée.
-     * 
-     * @return array Liste des adresses e-mail réellement ajoutées.
      */
     public function addAddresses(
         array $from = [
@@ -112,7 +110,12 @@ class Email extends PHPMailer
         }
     }
 
-    public function getAllAddresses()
+    /**
+     * Récupération des adresses e-mail ajoutées.
+     * 
+     * @return array Liste des adresses e-mail réellement ajoutées.
+     */
+    public function getAllAddresses(): array
     {
         return [
             "from" => base64_decode(str_replace(["=?utf-8?B?", "?="], "", $this->FromName)) . " &lt;" . $this->From . "&gt;",

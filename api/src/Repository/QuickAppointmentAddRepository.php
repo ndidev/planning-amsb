@@ -11,7 +11,7 @@ use App\Entity\Config\QuickAppointmentAdd;
 use App\Entity\Config\TimberQuickAppointmentAdd;
 use App\Service\QuickAppointmentAddService;
 
-class QuickAppointmentAddRepository extends Repository
+final class QuickAppointmentAddRepository extends Repository
 {
     public function quickAddExists(Module $module, int $id): bool
     {

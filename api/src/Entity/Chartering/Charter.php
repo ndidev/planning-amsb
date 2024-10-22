@@ -261,7 +261,7 @@ class Charter extends AbstractEntity
     }
 
     /**
-     * @param Collection<ChaterLeg>|CharterLeg[] $legs 
+     * @param Collection<CharterLeg>|CharterLeg[] $legs 
      */
     public function setLegs(Collection|array $legs): static
     {

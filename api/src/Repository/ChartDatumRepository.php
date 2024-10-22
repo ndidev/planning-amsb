@@ -8,7 +8,7 @@ use App\Core\Component\Collection;
 use App\Entity\ChartDatum;
 use App\Service\ChartDatumService;
 
-class ChartDatumRepository extends Repository
+final class ChartDatumRepository extends Repository
 {
     public function datumExists(string $name): bool
     {
@@ -39,7 +39,7 @@ class ChartDatumRepository extends Repository
     /**
      * Récupère une côte.
      * 
-     * @param string $cote Nom de la côte à récupérer.
+     * @param string $name Nom de la côte à récupérer.
      * 
      * @return ChartDatum Côte récupérée.
      */

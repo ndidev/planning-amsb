@@ -38,15 +38,15 @@ class DateUtils
     /**
      * Format a date.
      * 
-     * @param string                   $pattern     Date format (valid formats: https://unicode-org.github.io/icu/userguide/format_parse/datetime/).
-     * @param string|DateTimeInterface $date        Date as a string or `\DateTimeInterface`.
-     * @param string                   $locale      Optional. Locale.
+     * @param string                    $pattern     Date format (valid formats: https://unicode-org.github.io/icu/userguide/format_parse/datetime/).
+     * @param string|\DateTimeInterface $date        Date as a string or `\DateTimeInterface`.
+     * @param ?string                   $locale      Optional. Locale.
      * 
      * @return string Formated date.
      */
     public static function format(
         string $pattern,
-        \DateTimeInterface|string $date,
+        string|\DateTimeInterface $date,
         ?string $locale = "fr_FR"
     ): string {
         $timezone = new \DateTimeZone(self::TIMEZONE);

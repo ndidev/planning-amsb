@@ -8,16 +8,22 @@ use App\Entity\Timber\TimberAppointment;
 use App\Entity\Config\AgencyDepartment;
 use App\Entity\ThirdParty;
 
+/**
+ * @phpstan-type TimberPdfAppointments array{
+ *                                       attente: Collection<TimberAppointment>,
+ *                                       non_attente: Collection<TimberAppointment>
+ *                                     }
+ */
 final class TimberPDF extends PlanningPDF
 {
     /**
      * Génère un PDF bois.
      * 
-     * @param ThirdParty                                   $supplier         Infos sur le fournisseur.
-     * @param array<string, Collection<TimberAppointment>> $appointments     RDVs à inclure dans le PDF.
-     * @param \DateTimeInterface                           $startDate        Date de début des RDV.
-     * @param \DateTimeInterface                           $endDate          Date de fin des RDV.
-     * @param AgencyDepartment                             $agencyDepartment Infos sur l'agence.
+     * @param ThirdParty            $supplier         Infos sur le fournisseur.
+     * @param TimberPdfAppointments $appointments     RDVs à inclure dans le PDF.
+     * @param \DateTimeInterface    $startDate        Date de début des RDV.
+     * @param \DateTimeInterface    $endDate          Date de fin des RDV.
+     * @param AgencyDepartment      $agencyDepartment Infos sur l'agence.
      */
     public function __construct(
         protected ThirdParty $supplier,
@@ -41,11 +47,14 @@ final class TimberPDF extends PlanningPDF
          * S'il y a des RDV sur la période, peuplement des lignes
          * Sinon, affichage de "Aucun RDV"
          */
-        if (count($this->appointments["non_attente"]) > 0) {
+        $appointmentsOnHold = $this->appointments["attente"];
+        $confirmedAppointments = $this->appointments["non_attente"];
+
+        if (count($confirmedAppointments) > 0) {
             /** @var ?\DateTimeInterface */
             $previousDate = null;
 
-            foreach ($this->appointments["non_attente"] as $appointment) {
+            foreach ($confirmedAppointments as $appointment) {
                 $formattedDate = DateUtils::format(DateUtils::DATE_FULL, $appointment->getDate());
 
                 $loadingPlace = $appointment->getLoadingPlace();
@@ -124,8 +133,8 @@ final class TimberPDF extends PlanningPDF
          * S'il y a des RDV sur la période, peuplement des lignes
          * Sinon, affichage de "Aucun RDV"
          */
-        if (count($this->appointments["attente"]) > 0) {
-            foreach ($this->appointments["attente"] as $appointment) {
+        if (count($appointmentsOnHold) > 0) {
+            foreach ($appointmentsOnHold as $appointment) {
                 if ($appointment->getDate() === NULL) {
                     $formattedDate = "Pas de date";
                 } else {
@@ -198,37 +207,17 @@ final class TimberPDF extends PlanningPDF
     /**
      * Ajout d'une ligne de date.
      * 
-     * @param string $date_mise_en_forme Date mise en forme.
+     * @param string $formattedDate Date mise en forme.
      */
-    private function AddDate(string $date_mise_en_forme): void
+    private function AddDate(string $formattedDate): void
     {
         $this->SetFont('RobotoB', '', 12);
         $this->SetTextColor(88, 200, 95);
-        $this->Cell(0, 10, $date_mise_en_forme, 0, 1);
+        $this->Cell(0, 10, $formattedDate, 0, 1);
     }
 
     /**
      * Ajout d'une ligne RDV.
-     * 
-     * @param string $loadingId 
-     * @param string $loadingName 
-     * @param string $loadingPostCode 
-     * @param string $loadingCity 
-     * @param string $loadingCountry 
-     * @param string $customerId 
-     * @param string $customerName 
-     * @param string $customerPostCode 
-     * @param string $customerCity 
-     * @param string $customerCountry 
-     * @param string $deliveryId 
-     * @param string $deliveryName 
-     * @param string $deliveryPostCode 
-     * @param string $deliveryCity 
-     * @param string $deliveryCountry 
-     * @param string $chartererIsLinkedToAgency 
-     * @param string $chartererName 
-     * @param string $deliveryNoteNumber 
-     * @param string $publicComments 
      */
     private function AddLine(
         ?int    $loadingId,

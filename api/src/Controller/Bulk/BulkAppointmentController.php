@@ -38,7 +38,7 @@ final class BulkAppointmentController extends Controller
                 if ($this->id) {
                     $this->read($this->id);
                 } else {
-                    $this->readAll($this->request->query);
+                    $this->readAll();
                 }
                 break;
 
@@ -68,16 +68,14 @@ final class BulkAppointmentController extends Controller
 
     /**
      * Récupère tous les RDV vrac.
-     * 
-     * @param array $query Détails de la requête.
      */
-    public function readAll(array $query)
+    public function readAll()
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour accéder aux RDVs vrac.");
         }
 
-        $appointments = $this->bulkService->getAppointments($query);
+        $appointments = $this->bulkService->getAppointments();
 
         $etag = ETag::get($appointments);
 

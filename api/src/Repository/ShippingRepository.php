@@ -11,7 +11,7 @@ use App\Entity\Shipping\ShippingCall;
 use App\Entity\Shipping\ShippingCallCargo;
 use App\Service\ShippingService;
 
-class ShippingRepository extends Repository
+final class ShippingRepository extends Repository
 {
     /**
      * Vérifie si une entrée existe dans la base de données.
@@ -332,7 +332,7 @@ class ShippingRepository extends Repository
                 'escale_id' => $lastInsertId,
                 'marchandise' => $cargo->getCargoName(),
                 'client' => $cargo->getCustomer(),
-                'operation' => $cargo->getOperation(true),
+                'operation' => $cargo->getOperation()->value,
                 'environ' => (int) $cargo->isApproximate(),
                 'tonnage_bl' => $cargo->getBlTonnage(),
                 'cubage_bl' => $cargo->getBlVolume(),
@@ -466,7 +466,7 @@ class ShippingRepository extends Repository
                 'escale_id' => $call->getId(),
                 'marchandise' => $cargo->getCargoName(),
                 'client' => $cargo->getCustomer(),
-                'operation' => $cargo->getOperation(true),
+                'operation' => $cargo->getOperation()->value,
                 'environ' => (int) $cargo->isApproximate(),
                 'tonnage_bl' => $cargo->getBlTonnage(),
                 'cubage_bl' => $cargo->getBlVolume(),
@@ -729,9 +729,16 @@ class ShippingRepository extends Repository
     /**
      * Récupère la liste des navires en activité entre deux dates.
      * 
-     * @param array $query
+     * @param \DateTimeImmutable|null $startDate Date de début.
+     * @param \DateTimeImmutable|null $endDate   Date de fin.
      * 
-     * @return array Liste des navires en activité.
+     * @return array{
+     *          array{
+     *            navire: string,
+     *            debut: string,
+     *            fin: string
+     *          }
+     *         } Liste des navires en activité.
      */
     public function fetchShipsInOps(
         ?\DateTimeImmutable $startDate = null,
@@ -749,6 +756,10 @@ class ShippingRepository extends Repository
             "date_fin" => $endDate ? $endDate->format("Y-m-d") : "9999-12-31",
         ]);
         $shipsInOps = $request->fetchAll();
+
+        if ($shipsInOps === false) {
+            throw new DBException("Erreur lors de la récupération des navires en activité");
+        }
 
         return $shipsInOps;
     }

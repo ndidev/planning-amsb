@@ -7,7 +7,7 @@ namespace App\Repository;
 use App\Entity\Port;
 use App\Service\PortService;
 
-class PortRepository extends Repository
+final class PortRepository extends Repository
 {
     private $redisNamespace = "ports";
 

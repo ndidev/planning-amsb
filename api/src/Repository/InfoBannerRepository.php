@@ -9,7 +9,7 @@ use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\Config\InfoBannerLine;
 use App\Service\InfoBannerService;
 
-class InfoBannerRepository extends Repository
+final class InfoBannerRepository extends Repository
 {
     public function lineExists(int $id): bool
     {

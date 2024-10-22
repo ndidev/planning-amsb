@@ -9,7 +9,7 @@ use const App\Core\Component\Constants\{ONE_SECOND, ONE_MINUTE};
 /**
  * Security utilities.
  */
-class Security
+final class Security
 {
     /**
      * Waiting time before sending the response

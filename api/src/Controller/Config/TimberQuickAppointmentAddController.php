@@ -88,8 +88,7 @@ final class TimberQuickAppointmentAddController extends Controller
     /**
      * Récupère un ajout rapide.
      * 
-     * @param int  $id      id de l'ajout rapide à récupérer.
-     * @param bool $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param int  $id ID de l'ajout rapide à récupérer.
      */
     public function readConfig(int $id)
     {

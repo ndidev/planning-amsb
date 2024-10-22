@@ -9,7 +9,7 @@ use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\Config\PdfConfig;
 use App\Service\PdfService;
 
-class PdfConfigRepository extends Repository
+final class PdfConfigRepository extends Repository
 {
     public function configExists(int $id): bool
     {

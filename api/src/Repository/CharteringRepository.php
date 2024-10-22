@@ -8,7 +8,7 @@ use App\Entity\Chartering\Charter;
 use App\Entity\Chartering\CharterLeg;
 use App\Service\CharteringService;
 
-class CharteringRepository extends Repository
+final class CharteringRepository extends Repository
 {
     /**
      * Vérifie si une entrée existe dans la base de données.
@@ -236,7 +236,7 @@ class CharteringRepository extends Repository
 
         $this->mysql->beginTransaction();
         $charterRequest->execute([
-            "statut" => $charter->getStatus(true),
+            "statut" => $charter->getStatus()->value,
             // Laycan
             "lc_debut" => $charter->getLaycanStart(true),
             "lc_fin" => $charter->getLaycanEnd(true),
@@ -338,7 +338,7 @@ class CharteringRepository extends Repository
 
         $charterRequest = $this->mysql->prepare($charterStatement);
         $charterRequest->execute([
-            "statut" => $charter->getStatus(true),
+            "statut" => $charter->getStatus()->value,
             // Laycan
             "lc_debut" => $charter->getLaycanStart(true),
             "lc_fin" => $charter->getLaycanEnd(true),

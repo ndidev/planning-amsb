@@ -90,8 +90,7 @@ final class CharterController extends Controller
     /**
      * Récupère un affrètement maritime.
      * 
-     * @param int  $id      id de l'affrètement à récupérer.
-     * @param bool $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param int  $id ID de l'affrètement à récupérer.
      */
     public function read(int $id)
     {

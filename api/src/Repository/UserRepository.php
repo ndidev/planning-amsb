@@ -12,7 +12,7 @@ use App\DTO\CurrentUserFormDTO;
 use App\Entity\User;
 use App\Service\UserService;
 
-class UserRepository extends Repository
+final class UserRepository extends Repository
 {
     public function userExists(string $uid): bool
     {
@@ -49,7 +49,7 @@ class UserRepository extends Repository
     /**
      * Récupère un compte utilisateur.
      * 
-     * @param int  $uid  UID du compte à récupérer.
+     * @param string $uid UID du compte à récupérer.
      * 
      * @return User Compte utilisateur récupéré
      */

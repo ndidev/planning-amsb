@@ -22,37 +22,37 @@ abstract class Repository
 
     private function getMySQLConnection(): MySQL
     {
-        if (!static::$staticMysql) {
+        if (!self::$staticMysql) {
             $this->makeMySQLConnection();
         }
 
-        return static::$staticMysql;
+        return self::$staticMysql;
     }
 
     private function makeMySQLConnection(): void
     {
-        if (static::$staticMysql instanceof MySQL) {
+        if (self::$staticMysql instanceof MySQL) {
             return;
         }
 
-        static::$staticMysql = new MySQL();
+        self::$staticMysql = new MySQL();
     }
 
     private function getRedisConnection(): Redis
     {
-        if (!static::$staticRedis) {
+        if (!self::$staticRedis) {
             $this->makeRedisConnection();
         }
 
-        return static::$staticRedis;
+        return self::$staticRedis;
     }
 
     private function makeRedisConnection(): void
     {
-        if (static::$staticRedis instanceof Redis) {
+        if (self::$staticRedis instanceof Redis) {
             return;
         }
 
-        static::$staticRedis = new Redis();
+        self::$staticRedis = new Redis();
     }
 }

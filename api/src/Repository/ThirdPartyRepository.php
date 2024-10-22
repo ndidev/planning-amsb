@@ -8,7 +8,7 @@ use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\ThirdParty;
 use App\Service\ThirdPartyService;
 
-class ThirdPartyRepository extends Repository
+final class ThirdPartyRepository extends Repository
 {
     /**
      * @var ThirdParty[]

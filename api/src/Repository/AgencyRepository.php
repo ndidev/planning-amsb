@@ -8,7 +8,7 @@ use App\Core\Component\Collection;
 use App\Entity\Config\AgencyDepartment;
 use App\Service\AgencyService;
 
-class AgencyRepository extends Repository
+final class AgencyRepository extends Repository
 {
     /**
      * Vérifie si une entrée existe dans la base de données.
@@ -65,7 +65,7 @@ class AgencyRepository extends Repository
     /**
      * Met à jour les données d'un service de l'agence.
      * 
-     * @param string $departmentName Identifiant du service de l'agence.
+     * @param AgencyDepartment $department Service de l'agence.
      * 
      * @return AgencyDepartment Données du service
      */

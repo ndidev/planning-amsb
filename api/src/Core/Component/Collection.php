@@ -43,7 +43,7 @@ class Collection implements \IteratorAggregate, \Countable, Arrayable, \JsonSeri
     }
 
     /**
-     * @return \ArrayIterator<T>
+     * @return \ArrayIterator<int, T>
      */
     public function getIterator(): \ArrayIterator
     {

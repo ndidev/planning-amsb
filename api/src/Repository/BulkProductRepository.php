@@ -10,7 +10,7 @@ use App\Entity\Bulk\BulkProduct;
 use App\Entity\Bulk\BulkQuality;
 use App\Service\BulkService;
 
-class BulkProductRepository extends Repository
+final class BulkProductRepository extends Repository
 {
     /**
      * @var BulkProduct[]

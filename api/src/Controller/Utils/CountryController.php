@@ -72,8 +72,7 @@ final class CountryController extends Controller
     /**
      * Récupère un pays.
      * 
-     * @param string $iso     Code ISO du pays à récupérer.
-     * @param bool   $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param string $iso Code ISO du pays à récupérer.
      */
     public function read(string $iso): void
     {

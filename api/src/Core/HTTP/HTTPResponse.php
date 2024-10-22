@@ -772,8 +772,6 @@ class HTTPResponse
      * Réponse 406 (Not Acceptable).
      *
      * @link https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/406
-     *  
-     * @return array Contenu de la réponse HTTP
      */
     private function _406_NotAcceptable(): void
     {

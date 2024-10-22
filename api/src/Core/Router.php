@@ -45,7 +45,7 @@ class Router
      * @param array $routes
      * @param string $basePath
      * @param array $matchTypes
-     * @throws RuntimeException
+     * @throws \RuntimeException
      */
     public function __construct(
         array $routes = [],
@@ -80,7 +80,7 @@ class Router
      *
      * @param array $routes
      * @return void
-     * @throws RuntimeException
+     * @throws \RuntimeException
      * @author Koen Punt
      */
     public function addRoutes(array $routes): void
@@ -119,7 +119,7 @@ class Router
      * @param string $route The route regex, custom regex must start with an @. You can use multiple pre-set regex filters, like [i:id]
      * @param mixed $target The target where this route should point to. Can be anything.
      * @param string $name Optional name of this route. Supply if you want to reverse route this url in your application.
-     * @throws RuntimeException
+     * @throws \RuntimeException
      */
     public function map(string $route, mixed $target, ?string $name = null): void
     {
@@ -142,9 +142,11 @@ class Router
      * Generate the URL for a named route. Replace regexes with supplied parameters
      *
      * @param string $routeName The name of the route.
-     * @param array @params Associative array of parameters to replace placeholders with.
+     * @param array  $params    Associative array of parameters to replace placeholders with.
+     * 
      * @return string The URL of the route with named parameters in place.
-     * @throws RuntimeException
+     * 
+     * @throws \RuntimeException
      */
     public function generate(string $routeName, array $params = []): string
     {
@@ -185,9 +187,10 @@ class Router
     }
 
     /**
-     * Match a given Request Url against stored routes
-     * @param string $requestUrl
-     * @param string $requestMethod
+     * Match a given Request Url against stored routes.
+     * 
+     * @param string $requestUrl The request url to match.
+     * 
      * @return array{target: string, params: array, name: string}|false Array with route information on success, false on failure (no match).
      */
     public function match(string $requestUrl = null): array|false

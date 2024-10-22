@@ -343,9 +343,9 @@ class BulkService
      * 
      * @return BulkQuality[] Retrieved qualities.
      */
-    public function getQualities(int $produitId): array
+    public function getQualities(int $productId): array
     {
-        return $this->productRepository->getProductQualities($produitId);
+        return $this->productRepository->getProductQualities($productId);
     }
 
     /**

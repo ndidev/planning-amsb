@@ -6,7 +6,7 @@ include_once __DIR__ . "/../Functions/array_stringify.php";
 
 use function App\Core\Functions\array_stringify;
 
-class ErrorLogger
+final class ErrorLogger
 {
     /**
      * Custom error logger.

@@ -1,5 +1,2 @@
 grumphp:
-    tasks: {
-            # phpstan: null,
-            phpunit: null,
-        }
+    tasks: { phpstan: null, phpunit: null }

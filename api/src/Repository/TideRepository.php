@@ -6,7 +6,7 @@ namespace App\Repository;
 
 use const App\Core\Component\Constants\ONE_WEEK;
 
-class TideRepository extends Repository
+final class TideRepository extends Repository
 {
     private $redisNamespace = "marees";
 
@@ -150,7 +150,7 @@ class TideRepository extends Repository
     /**
      * Supprime les données des marées de Redis.
      * 
-     * @throws RedisException 
+     * @throws \RedisException 
      */
     private function invalidateRedis(): void
     {

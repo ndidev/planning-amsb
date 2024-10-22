@@ -74,9 +74,9 @@ final class ShippingStatsController extends Controller
     }
 
     /**
-     * Récupère toutes les escales consignation.
+     * Récupère le détails d'escales consignation.
      * 
-     * @param array $filtre
+     * @param string $ids Liste des identifiants.
      */
     public function readDetails(string $ids)
     {

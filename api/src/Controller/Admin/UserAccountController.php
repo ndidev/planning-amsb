@@ -88,8 +88,7 @@ final class UserAccountController extends Controller
     /**
      * Récupère un compte utilisateur.
      * 
-     * @param string $uid     UID du compte à récupérer.
-     * @param bool   $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param string $uid UID du compte à récupérer.
      */
     public function read(string $uid): void
     {

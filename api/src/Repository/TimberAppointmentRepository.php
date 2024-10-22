@@ -4,7 +4,6 @@ namespace App\Repository;
 
 use App\Core\Component\Collection;
 use App\Core\Component\DateUtils;
-use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\DTO\SupplierWithUniqueDeliveryNoteNumber;
 use App\DTO\TimberRegistryEntryDTO;
@@ -12,7 +11,13 @@ use App\Entity\ThirdParty;
 use App\Entity\Timber\TimberAppointment;
 use App\Service\TimberService;
 
-class TimberAppointmentRepository extends Repository
+/**
+ * @phpstan-type TimberPdfAppointments array{
+ *                                       attente: Collection<TimberAppointment>,
+ *                                       non_attente: Collection<TimberAppointment>
+ *                                     }
+ */
+final class TimberAppointmentRepository extends Repository
 {
     /**
      * @var TimberAppointment[]
@@ -263,10 +268,10 @@ class TimberAppointmentRepository extends Repository
     /**
      * Met à jour l'état de préparation d'une commande.
      * 
-     * @param int   $id     id du RDV à modifier
-     * @param array $status Statut de la commande
+     * @param int  $id     ID du RDV à modifier.
+     * @param bool $status Statut de la commande.
      * 
-     * @return TimberAppointment RDV modifié
+     * @return TimberAppointment RDV modifié.
      */
     public function setOrderReady(int $id, bool $status): TimberAppointment
     {
@@ -287,10 +292,10 @@ class TimberAppointmentRepository extends Repository
     /**
      * Met à jour l'état de confirmation d'affrètement.
      * 
-     * @param int   $id     id du RDV à modifier
-     * @param array $status Statut de la confirmation d'affrètement
+     * @param int  $id     ID du RDV à modifier.
+     * @param bool $status Statut de la confirmation d'affrètement.
      * 
-     * @return TimberAppointment RDV modifié
+     * @return TimberAppointment RDV modifié.
      */
     public function setCharteringConfirmationSent(int $id, bool $status): TimberAppointment
     {
@@ -426,7 +431,7 @@ class TimberAppointmentRepository extends Repository
     /**
      * Définit l'heure d'arrivée pour un rendez-vous bois.
      * 
-     * @param null|int $id               ID du rendez-vous.
+     * @param int    $id                 ID du rendez-vous.
      * @param string $deliveryNoteNumber Numéro BL.
      * 
      * @return TimberAppointment Rendez-vous mis à jour.
@@ -708,9 +713,12 @@ class TimberAppointmentRepository extends Repository
     }
 
     /**
-     * Récupère les RDV vrac à exporter en PDF.
+     * Récupère les RDVs bois à exporter en PDF.
      * 
-     * @return array<string, Collection<BulkAppointment>> RDV vrac à exporter.
+     * @return array{
+     *           attente: Collection<TimberAppointment>,
+     *           non_attente: Collection<TimberAppointment>
+     *         } RDVs à exporter.
      */
     public function getPdfAppointments(
         ThirdParty $supplier,

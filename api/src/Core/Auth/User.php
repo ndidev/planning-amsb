@@ -343,7 +343,7 @@ class User
     /**
      * Vérifie si l'utilisateur peut accéder à une rubrique.
      * 
-     * @param Module|null Rubrique dont l'accès doit être vérifié.
+     * @param ?Module Rubrique dont l'accès doit être vérifié.
      * 
      * @return bool `true` si l'utilisateur peut accéder à la rubrique, `false` sinon.
      */
@@ -360,7 +360,7 @@ class User
     /**
      * Vérifie si l'utilisateur peut éditer une rubrique.
      * 
-     * @param Module|null Rubrique dont l'accès doit être vérifié.
+     * @param ?Module Rubrique dont l'accès doit être vérifié.
      * 
      * @return bool `true` si l'utilisateur peut éditer la rubrique, `false` sinon.
      */

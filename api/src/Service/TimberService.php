@@ -413,8 +413,8 @@ class TimberService
             return null;
         }
 
-        $nextDeliveryNoteNumber = $lastDeliveryNoteNumber + 1;
+        $nextDeliveryNoteNumber = (int) $lastDeliveryNoteNumber + 1;
 
-        return $nextDeliveryNoteNumber;
+        return (string) $nextDeliveryNoteNumber;
     }
 }

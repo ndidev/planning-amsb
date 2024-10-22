@@ -6,7 +6,7 @@ namespace App\Repository;
 
 use App\Entity\Country;
 
-class CountryRepository extends Repository
+final class CountryRepository extends Repository
 {
     private $redisNamespace = "countries";
 
@@ -28,7 +28,7 @@ class CountryRepository extends Repository
             $this->redis->set($this->redisNamespace, json_encode($countriesRaw));
         }
 
-        $countries = array_map(fn (array $countryRaw) => new Country($countryRaw), $countriesRaw);
+        $countries = array_map(fn(array $countryRaw) => new Country($countryRaw), $countriesRaw);
 
         return $countries;
     }

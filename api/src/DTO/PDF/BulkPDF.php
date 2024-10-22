@@ -98,8 +98,6 @@ class BulkPDF extends PlanningPDF
      * @param string $productColor 
      * @param string $qualityName 
      * @param string $qualityColor 
-     * @param string $quantite 
-     * @param string $unite 
      * @param string $clientName 
      * @param string $clientCity 
      * @param string $transportName 

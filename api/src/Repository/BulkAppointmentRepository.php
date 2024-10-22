@@ -8,7 +8,7 @@ use App\Entity\Bulk\BulkAppointment;
 use App\Entity\ThirdParty;
 use App\Service\BulkService;
 
-class BulkAppointmentRepository extends Repository
+final class BulkAppointmentRepository extends Repository
 {
     /**
      * @var BulkAppointment[]
@@ -202,8 +202,8 @@ class BulkAppointmentRepository extends Repository
     /**
      * Met à jour l'état de préparation d'une commande.
      * 
-     * @param int   $id     id du RDV à modifier
-     * @param array $status Statut de la commande
+     * @param int  $id     ID du RDV à modifier
+     * @param bool $status Statut de la commande
      * 
      * @return BulkAppointment RDV modifié
      */
