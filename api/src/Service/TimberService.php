@@ -5,8 +5,8 @@ namespace App\Service;
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\ServerException;
+use App\DTO\SupplierWithUniqueDeliveryNoteNumber;
 use App\DTO\TimberRegistryEntryDTO;
-use App\Entity\ThirdParty;
 use App\Entity\Timber\TimberAppointment;
 use App\Repository\TimberAppointmentRepository;
 
@@ -153,44 +153,100 @@ class TimberService
     /**
      * Met à jour certaines proriétés d'un RDV bois.
      * 
-     * @param ?int   $id   id du RDV à modifier.
-     * @param array $input Données à modifier.
+     * @param int     $appointmentId                id du RDV à modifier.
+     * @param ?bool   $isOrderReady                 Commande prête.
+     * @param ?bool   $isCharteringConfirmationSent Confirmation d'affrètement envoyée.
+     * @param ?string $deliveryNoteNumber           Numéro de BL.
+     * @param bool    $setArrivalTime               Heure d'arrivée.
+     * @param bool    $setDepartureTime             Heure de départ.
      * 
      * @return TimberAppointment RDV modifié.
      * 
      * @throws ClientException Si l'identifiant du RDV n'est pas fourni.
      */
-    public function patchAppointment(?int $id, array $input): TimberAppointment
-    {
-        if (!$id) {
-            throw new ClientException("L'identifiant du RDV est requis pour effectuer une modification.");
-        }
+    public function patchAppointment(
+        int $appointmentId,
+        ?bool $isOrderReady = null,
+        ?bool $isCharteringConfirmationSent = null,
+        ?string $deliveryNoteNumber = null,
+        bool $setArrivalTime = false,
+        bool $setDepartureTime = false,
+    ): TimberAppointment {
+        $appointment = $this->getAppointment($appointmentId);
 
-        if (isset($input["commande_prete"])) {
-            return $this->timberAppointmentRepository->setOrderReady(
-                $id,
-                (bool) $input["commande_prete"]
+        if (!is_null($isOrderReady)) {
+            $appointment = $this->timberAppointmentRepository->setOrderReady(
+                $appointmentId,
+                $isOrderReady
             );
         }
 
-        if (isset($input["confirmation_affretement"])) {
-            return $this->timberAppointmentRepository->setCharteringConfirmationSent(
-                $id,
-                (bool) $input["confirmation_affretement"]
+        if (!is_null($isCharteringConfirmationSent)) {
+            $appointment = $this->timberAppointmentRepository->setCharteringConfirmationSent(
+                $appointmentId,
+                $isCharteringConfirmationSent
             );
         }
 
-        if (isset($input["numero_bl"])) {
-            return $this->timberAppointmentRepository->setDeliveryNoteNumber($id, $input);
+        if (!is_null($deliveryNoteNumber)) {
+            $appointment = $this->getAppointment($appointmentId);
+            $supplier = $appointment->getSupplier();
+            $supplierId = $supplier?->getId();
+
+            // Check if the delivery note number is available
+            if (
+                $deliveryNoteNumber !== "" &&
+                !$this->isDeliveryNoteNumberAvailable($deliveryNoteNumber, $supplierId, $appointmentId)
+            ) {
+                throw new ClientException(
+                    "Le numéro de BL {$deliveryNoteNumber} est déjà utilisé pour {$supplier->getShortName()}."
+                );
+            }
+
+            $appointment = $this->timberAppointmentRepository->setDeliveryNoteNumber(
+                $appointmentId,
+                $deliveryNoteNumber
+            );
         }
 
-        if (isset($input["heure_arrivee"])) {
-            return $this->timberAppointmentRepository->setArrivalTime($id);
+        if ($setArrivalTime) {
+            $arrivalTime = new \DateTimeImmutable();
+
+            $appointment = $this->timberAppointmentRepository->setArrivalTime(
+                $appointmentId,
+                $arrivalTime
+            );
+
+            // If the supplier has unique delivery note numbers
+            // and the loading place is the agency
+            // and the delivery note number is not set
+            // set the next delivery note number
+            $supplierId = $appointment->getSupplier()?->getId();
+
+            if (
+                $appointment->getSupplier()?->getId()
+                && $this->isSupplierWithUniqueDeliveryNoteNumbers($supplierId)
+                && $appointment->getLoadingPlace()?->getId() === 1
+                && $appointment->getDeliveryNoteNumber() === ""
+                && $nextDeliveryNoteNumber = $this->getNextDeliveryNoteNumber($supplierId)
+            ) {
+                $appointment = $this->timberAppointmentRepository->setDeliveryNoteNumber(
+                    $appointmentId,
+                    $nextDeliveryNoteNumber
+                );
+            }
         }
 
-        if (isset($input["heure_depart"])) {
-            return $this->timberAppointmentRepository->setDepartureTime($id);
+        if ($setDepartureTime) {
+            $departureTime = new \DateTimeImmutable();
+
+            $appointment = $this->timberAppointmentRepository->setDepartureTime(
+                $appointmentId,
+                $departureTime
+            );
         }
+
+        return $appointment;
     }
 
     /**
@@ -219,7 +275,7 @@ class TimberService
         }
 
         try {
-            $registryEntries = $this->timberAppointmentRepository->getCharteringRegister($filtre);
+            $registryEntries = $this->timberAppointmentRepository->getCharteringRegistryEntries($filtre);
 
             // UTF-8 BOM
             $bom = chr(0xEF) . chr(0xBB) . chr(0xBF);
@@ -281,9 +337,17 @@ class TimberService
 
     public function isDeliveryNoteNumberAvailable(
         string $deliveryNoteNumber,
-        int $supplierId,
+        ?int $supplierId,
         ?int $appointmentId = null,
     ): bool {
+        if ($deliveryNoteNumber === "") {
+            return true;
+        }
+
+        if (!$supplierId) {
+            return true;
+        }
+
         if (!$this->isSupplierWithUniqueDeliveryNoteNumbers($supplierId)) {
             return true;
         }
@@ -298,13 +362,34 @@ class TimberService
     /**
      * Récupère les fournisseurs avec des numéros de BL uniques.
      * 
-     * @return array{supplierId: int, regexp: string} Fournisseurs avec des numéros de BL uniques.
+     * @return SupplierWithUniqueDeliveryNoteNumber[] Fournisseurs avec des numéros de BL uniques.
      */
     public function getSuppliersWithUniqueDeliveryNoteNumbers(): array
     {
-        return [
-            292 => '\d{6}', // Stora Enso
+        $suppliersWithUniqueDeliveryNoteNumbers = [
+            [
+                // Stora Enso
+                'supplierId' => 292,
+                'regexp' => '\d{6}',
+            ],
         ];
+
+        $dtoArray = [];
+
+        foreach ($suppliersWithUniqueDeliveryNoteNumbers as $info) {
+            $dtoArray[$info["supplierId"]] = (new SupplierWithUniqueDeliveryNoteNumber())
+                ->setId($info["supplierId"])
+                ->setRegexp($info["regexp"]);
+        }
+
+        return $dtoArray;
+    }
+
+    public function getSuppliersWithUniqueDeliveryNoteNumbersDTO(int $supplierId): ?SupplierWithUniqueDeliveryNoteNumber
+    {
+        $suppliersWithUniqueDeliveryNoteNumbers = $this->getSuppliersWithUniqueDeliveryNoteNumbers();
+
+        return $suppliersWithUniqueDeliveryNoteNumbers[$supplierId] ?? null;
     }
 
     public function isSupplierWithUniqueDeliveryNoteNumbers(int $supplierId): bool
@@ -316,11 +401,13 @@ class TimberService
 
     public function getNextDeliveryNoteNumber(int $supplierId): ?string
     {
-        if (!$this->isSupplierWithUniqueDeliveryNoteNumbers($supplierId)) {
+        $supplierDto = $this->getSuppliersWithUniqueDeliveryNoteNumbersDTO($supplierId);
+
+        if (!$supplierDto) {
             return null;
         }
 
-        $lastDeliveryNoteNumber = $this->timberAppointmentRepository->getLastDeliveryNoteNumber($supplierId);
+        $lastDeliveryNoteNumber = $this->timberAppointmentRepository->getLastDeliveryNoteNumber($supplierDto);
 
         if (!$lastDeliveryNoteNumber) {
             return null;

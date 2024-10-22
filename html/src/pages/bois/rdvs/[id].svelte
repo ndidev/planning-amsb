@@ -128,6 +128,11 @@
    */
   async function verifierNumeroBL() {
     try {
+      if (numero_bl === rdv.numero_bl || numero_bl === "") {
+        rdv.numero_bl = numero_bl;
+        return;
+      }
+
       const isDeliveryNoteNumberAvailable: boolean = await fetcher(
         `bois/check-delivery-note-available`,
         {
@@ -149,6 +154,7 @@
           `Le numéro BL ${numero_bl} est déjà utilisé pour ${supplierName}.`,
           "OK"
         );
+
         numero_bl = rdv.numero_bl;
       }
     } catch (err: unknown) {

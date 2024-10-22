@@ -57,16 +57,8 @@ final class TimberDeliveryNoteController extends Controller
         $input = $this->request->query;
 
         $supplierId = $input["supplierId"] ?? null;
-        $deliveryNoteNumber = $input["deliveryNoteNumber"] ?? null;
+        $deliveryNoteNumber = $input["deliveryNoteNumber"] ?? '';
         $currentAppointmentId = $input["currentAppointmentId"] ?? null;
-
-        if (!$supplierId) {
-            throw new ClientException("L'identifiant du fournisseur est obligatoire.");
-        }
-
-        if (!$deliveryNoteNumber) {
-            throw new ClientException("Le numéro de BL est obligatoire.");
-        }
 
         $isDeliveryNoteNumberAvailable = $this->timberService->isDeliveryNoteNumberAvailable(
             $deliveryNoteNumber,

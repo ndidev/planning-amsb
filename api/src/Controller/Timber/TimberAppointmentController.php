@@ -178,13 +178,24 @@ final class TimberAppointmentController extends Controller
             throw new AccessException("Vous n'avez pas les droits pour modifier un RDV bois.");
         }
 
+        if (!$id) {
+            throw new NotFoundException("L'identifiant du RDV est requis.");
+        }
+
         if ($id && !$this->timberService->appointmentExists($id)) {
             throw new NotFoundException("Le RDV n'existe pas.");
         }
 
         $input = $this->request->getBody();
 
-        $appointment = $this->timberService->patchAppointment($id, $input);
+        $appointment = $this->timberService->patchAppointment(
+            appointmentId: $id,
+            isOrderReady: $input["commande_prete"] ?? null,
+            isCharteringConfirmationSent: $input["confirmation_affretement"] ?? null,
+            deliveryNoteNumber: $input["numero_bl"] ?? null,
+            setArrivalTime: isset($input["heure_arrivee"]),
+            setDepartureTime: isset($input["heure_depart"]),
+        );
 
         $this->response->setJSON($appointment);
 

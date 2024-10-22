@@ -6,6 +6,7 @@ use App\Core\Component\Collection;
 use App\Core\Component\DateUtils;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\DB\DBException;
+use App\DTO\SupplierWithUniqueDeliveryNoteNumber;
 use App\DTO\TimberRegistryEntryDTO;
 use App\Entity\ThirdParty;
 use App\Entity\Timber\TimberAppointment;
@@ -307,53 +308,22 @@ class TimberAppointmentRepository extends Repository
         return $this->getAppointment($id);
     }
 
-    public function setArrivalTime(int $id): ?TimberAppointment
+    /**
+     * Définit l'heure d'arrivée pour un rendez-vous bois.
+     * 
+     * @param int                $id          ID du RDV à modifier
+     * @param \DateTimeInterface $arrivalTime Heure d'arrivée.
+     * 
+     * @return TimberAppointment RDV modifié
+     */
+    public function setArrivalTime(int $id, \DateTimeInterface $arrivalTime): TimberAppointment
     {
-        // Heure
-        $heure = date('H:i:s');
         $this->mysql
             ->prepare("UPDATE bois_planning SET heure_arrivee = :time WHERE id = :id")
             ->execute([
-                'time' => $heure,
+                'time' => $arrivalTime->format('H:i:s'),
                 'id' => $id
             ]);
-
-
-        // Numéro BL automatique (Stora Enso)      
-        $rdv = $this->getAppointment($id);
-
-        if (!$rdv) return null;
-
-        if (
-            $rdv->getSupplier()?->getId() === 292 /* Stora Enso */
-            && $rdv->getLoadingPlace()?->getId() === 1 /* AMSB */
-        ) {
-            // Récupération du numéro de BL du RDV à modifier (si déjà renseigné)
-            $reponse_bl_actuel = $this->mysql->prepare(
-                "SELECT numero_bl
-                FROM bois_planning
-                WHERE id = :id"
-            );
-            $reponse_bl_actuel->execute(["id" => $id]);
-            $reponse_bl_actuel = $reponse_bl_actuel->fetch();
-            $numero_bl_actuel = $reponse_bl_actuel["numero_bl"];
-
-            $numero_bl_precedent = $this->getLastDeliveryNoteNumber($rdv->getSupplier()->getId());
-
-            // Calcul du nouveau numéro de BL (si possible)
-            // Insertion du nouveau numéro de BL si numéro non déjà renseigné
-            $numero_bl_nouveau = is_numeric($numero_bl_precedent) ? $numero_bl_precedent + 1 : '';
-            if ($numero_bl_actuel === '' && $numero_bl_nouveau) {
-                $request = $this->mysql->prepare(
-                    "UPDATE bois_planning SET numero_bl = :numero_bl WHERE id = :id"
-                );
-
-                $request->execute([
-                    'numero_bl' => $numero_bl_nouveau,
-                    'id' => $id
-                ]);
-            }
-        }
 
         return $this->getAppointment($id);
     }
@@ -361,25 +331,26 @@ class TimberAppointmentRepository extends Repository
     /**
      * Définit l'heure de départ pour un rendez-vous bois.
      *
-     * @param int $id L'ID du rendez-vous.
+     * @param int                $id            L'ID du rendez-vous.
+     * @param \DateTimeInterface $departureTime L'heure de départ.
      * 
      * @return TimberAppointment L'objet de rendez-vous mis à jour.
      */
-    public function setDepartureTime(int $id): TimberAppointment
+    public function setDepartureTime(int $id, \DateTimeInterface $departureTime): TimberAppointment
     {
-        $time = date('H:i:s');
         $this->mysql
             ->prepare("UPDATE bois_planning SET heure_depart = :time WHERE id = :id")
             ->execute([
-                'time' => $time,
+                'time' => $departureTime->format('H:i:s'),
                 'id' => $id
             ]);
 
         return $this->getAppointment($id);
     }
 
-    public function getLastDeliveryNoteNumber(int $supplierId): ?string
-    {
+    public function getLastDeliveryNoteNumber(
+        SupplierWithUniqueDeliveryNoteNumber $supplierDto
+    ): ?string {
         // Dernier numéro de BL :
         // - enregistrement des 10 derniers numéros dans un tableau
         // - tri du tableau
@@ -399,9 +370,9 @@ class TimberAppointmentRepository extends Repository
                 LIMIT 10"
         );
 
-        $previousDeliveryNotesRequest->execute(["supplierId" => $supplierId]);
+        $previousDeliveryNotesRequest->execute(["supplierId" => $supplierDto->getId()]);
 
-        $previousDeliveryNotesResponse = $previousDeliveryNotesRequest->fetchAll();
+        $previousDeliveryNotesResponse = $previousDeliveryNotesRequest->fetchAll(\PDO::FETCH_COLUMN);
 
         $previousDeliveryNotesNumbers = [];
 
@@ -409,7 +380,9 @@ class TimberAppointmentRepository extends Repository
             // Si le dernier numéro de BL est composé (ex: "200101 + 200102")
             // alors séparation/tri de la chaîne de caractères puis récupération du numéro le plus élevé
             $matches = NULL; // Tableau pour récupérer les numéros de BL
-            preg_match_all("/\d{6}/", $deliveryNoteNumber["numero_bl"], $matches); // Filtre sur les numéros valides (6 chiffres)
+            $regexp = $supplierDto->getRegexp(); // Récupération de l'expression régulière
+            // preg_match_all("/\d{6}/", $deliveryNoteNumber["numero_bl"], $matches); // Filtre sur les numéros valides (6 chiffres)
+            preg_match_all("/$regexp/", $deliveryNoteNumber, $matches); // Filtre sur les numéros valides (6 chiffres)
             $matches = $matches[0]; // Extraction des résultats
             sort($matches); // Tri des numéros
             $previousDeliveryNotesNumbers[] = array_pop($matches); // Récupération du numéro le plus élevé
@@ -431,8 +404,7 @@ class TimberAppointmentRepository extends Repository
             "SELECT COUNT(id), id
             FROM bois_planning
             WHERE numero_bl LIKE CONCAT('%', :deliveryNoteNumber, '%')
-            AND fournisseur = :supplierId
-            "
+            AND fournisseur = :supplierId"
         );
 
         $request->execute([
@@ -454,102 +426,25 @@ class TimberAppointmentRepository extends Repository
     /**
      * Définit l'heure d'arrivée pour un rendez-vous bois.
      * 
-     * @param null|int $id ID du rendez-vous.
-     * @param array $input Données du rendez-vous.
+     * @param null|int $id               ID du rendez-vous.
+     * @param string $deliveryNoteNumber Numéro BL.
      * 
-     * @return null|TimberAppointment Rendez-vous mis à jour.
+     * @return TimberAppointment Rendez-vous mis à jour.
      */
-    public function setDeliveryNoteNumber(?int $id, array $input): ?TimberAppointment
+    public function setDeliveryNoteNumber(int $id, string $deliveryNoteNumber): TimberAppointment
     {
-        $deliveryNoteNumber = $input['numero_bl'];
-        $supplierData = [
-            "id" => $input['fournisseur'] ?? null,
-            "nom" => "",
-        ];
-        $dryRun = $input["dry_run"] ?? false;
-
-        // Si pas d'identifiant de RDV ni d'identifiant de fournisseur, ne rien faire
-        if (!$id && !$supplierData["id"]) {
-            return null;
-        }
-
-        $deliveryNoteExists = false;
-
-        // Fournisseurs dont le numéro de BL doit être unique
-        $suppliersWithUniqueDeliveryNoteNumber = [
-            292 // Stora Enso
-        ];
-
-        // Si le fournisseur n'est pas dans la liste des fournisseurs dont le numéro de BL doit être unique, ne rien faire
-        if ($supplierData["id"] && !in_array($supplierData["id"], $suppliersWithUniqueDeliveryNoteNumber)) {
-            return null;
-        }
-
-        if ($id && !$supplierData["id"]) {
-            $supplierRequest = $this->mysql
-                ->prepare(
-                    "SELECT p.fournisseur as id, f.nom_court AS nom
-                            FROM bois_planning p
-                            JOIN tiers f ON f.id = p.fournisseur
-                            WHERE p.id = :id"
-                );
-        } else {
-            $supplierRequest = $this->mysql
-                ->prepare(
-                    "SELECT t.id, t.nom_court AS nom
-                            FROM tiers t
-                            WHERE t.id = :id"
-                );
-        }
-
-        $supplierRequest->execute(["id" => $supplierData["id"] ?? (int) $id]);
-        $supplierData = $supplierRequest->fetch();
-
-
-        // Vérifier si le numéro de BL existe déjà (pour Stora Enso)
-        if (
-            in_array($supplierData["id"], $suppliersWithUniqueDeliveryNoteNumber)
-            && $deliveryNoteNumber !== ""
-            && $deliveryNoteNumber !== "-"
-        ) {
-            $request = $this->mysql->prepare(
-                "SELECT COUNT(id) AS bl_existe, id
-                    FROM bois_planning
-                    WHERE numero_bl LIKE CONCAT('%', :deliveryNoteNumber, '%')
-                    AND fournisseur = :supplierId
-                    AND NOT id = :id"
-            );
-            $request->execute([
-                "deliveryNoteNumber" => $deliveryNoteNumber,
-                "supplierId" => $supplierData["id"],
-                "id" => (int) $id,
-            ]);
-
-            $dbResult = $request->fetch();
-
-            $deliveryNoteExists = (bool) $dbResult["bl_existe"];
-            $idOfExistingDeliveryNote = $dbResult["id"];
-
-            // Si le numéro de BL existe déjà (pour Stora Enso), message d'erreur
-            if ($deliveryNoteExists && $id != $idOfExistingDeliveryNote) {
-                throw new ClientException("Le numéro de BL $deliveryNoteNumber existe déjà pour {$supplierData["nom"]}.");
-            }
-        }
-
-        if ($id && !$deliveryNoteExists && !$dryRun) {
-            $this->mysql
-                ->prepare(
-                    "UPDATE bois_planning
+        $this->mysql
+            ->prepare(
+                "UPDATE bois_planning
                         SET numero_bl = :deliveryNoteNumber
                         WHERE id = :id"
-                )
-                ->execute([
-                    'deliveryNoteNumber' => $deliveryNoteNumber,
-                    'id' => (int) $id
-                ]);
-        }
+            )
+            ->execute([
+                'deliveryNoteNumber' => $deliveryNoteNumber,
+                'id' => (int) $id
+            ]);
 
-        return $id ? $this->getAppointment($id) : null;
+        return $this->getAppointment($id);
     }
 
     /**
@@ -578,7 +473,7 @@ class TimberAppointmentRepository extends Repository
      * 
      * @return TimberRegistryEntryDTO[] Extrait du registre d'affrètement.
      */
-    public function getCharteringRegister(array $filter): array
+    public function getCharteringRegistryEntries(array $filter): array
     {
         $defaultStartDate = DateUtils::format(DateUtils::SQL_DATE, DateUtils::getPreviousWorkingDay(new \DateTimeImmutable()));
         $defaultEndDate = date("Y-m-d");
