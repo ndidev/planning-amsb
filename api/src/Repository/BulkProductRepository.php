@@ -202,7 +202,7 @@ class BulkProductRepository extends Repository
 
         if (!$qualityRaw) return null;
 
-        $quality = new BulkQuality($qualityRaw);
+        $quality = (new BulkService())->makeQualityFromDatabase($qualityRaw);
 
         array_push(static::$qualitiesCache, $quality);
 

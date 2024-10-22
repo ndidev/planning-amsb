@@ -64,9 +64,9 @@ class BulkPDF extends PlanningPDF
                     $appointment->getProduct()->getColor(),
                     $appointment->getQuality()->getName(),
                     $appointment->getQuality()->getColor(),
-                    $appointment->getClient()->getShortName(),
-                    $appointment->getClient()->getCity(),
-                    $appointment->getTransport()?->getShortName() ?? "",
+                    $appointment->getCustomer()->getShortName(),
+                    $appointment->getCustomer()->getCity(),
+                    $appointment->getCarrier()?->getShortName() ?? "",
                     $appointment->getOrderNumber()
                 );
 

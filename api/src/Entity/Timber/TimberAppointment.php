@@ -21,7 +21,7 @@ class TimberAppointment extends AbstractEntity
     private ?ThirdParty $loadingPlace = null;
     private ?ThirdParty $deliveryPlace = null;
     private ?ThirdParty $customer = null;
-    private ?ThirdParty $transport = null;
+    private ?ThirdParty $carrier = null;
     private ?ThirdParty $transportBroker = null;
     private bool $isReady = false;
     private bool $charteringConfirmationSent = false;
@@ -106,13 +106,9 @@ class TimberAppointment extends AbstractEntity
         return $this->supplier;
     }
 
-    public function setSupplier(ThirdParty|int|null $supplier): static
+    public function setSupplier(?ThirdParty $supplier): static
     {
-        if (is_int($supplier)) {
-            $this->supplier = (new ThirdPartyService())->getThirdParty($supplier);
-        } else {
-            $this->supplier = $supplier;
-        }
+        $this->supplier = $supplier;
 
         return $this;
     }
@@ -122,13 +118,9 @@ class TimberAppointment extends AbstractEntity
         return $this->loadingPlace;
     }
 
-    public function setLoadingPlace(ThirdParty|int|null $loadingPlace): static
+    public function setLoadingPlace(?ThirdParty $loadingPlace): static
     {
-        if (is_int($loadingPlace)) {
-            $this->loadingPlace = (new ThirdPartyService())->getThirdParty($loadingPlace);
-        } else {
-            $this->loadingPlace = $loadingPlace;
-        }
+        $this->loadingPlace = $loadingPlace;
 
         return $this;
     }
@@ -138,13 +130,9 @@ class TimberAppointment extends AbstractEntity
         return $this->deliveryPlace;
     }
 
-    public function setDeliveryPlace(ThirdParty|int|null $livraison): static
+    public function setDeliveryPlace(?ThirdParty $deliveryPlace): static
     {
-        if (is_int($livraison)) {
-            $this->deliveryPlace = (new ThirdPartyService())->getThirdParty($livraison);
-        } else {
-            $this->deliveryPlace = $livraison;
-        }
+        $this->deliveryPlace = $deliveryPlace;
 
         return $this;
     }
@@ -154,29 +142,21 @@ class TimberAppointment extends AbstractEntity
         return $this->customer;
     }
 
-    public function setCustomer(ThirdParty|int|null $customer): static
+    public function setCustomer(?ThirdParty $customer): static
     {
-        if (is_int($customer)) {
-            $this->customer = (new ThirdPartyService())->getThirdParty($customer);
-        } else {
-            $this->customer = $customer;
-        }
+        $this->customer = $customer;
 
         return $this;
     }
 
-    public function getTransport(): ?ThirdParty
+    public function getCarrier(): ?ThirdParty
     {
-        return $this->transport;
+        return $this->carrier;
     }
 
-    public function setTransport(ThirdParty|int|null $transporteur): static
+    public function setCarrier(?ThirdParty $carrier): static
     {
-        if (is_int($transporteur)) {
-            $this->transport = (new ThirdPartyService())->getThirdParty($transporteur);
-        } else {
-            $this->transport = $transporteur;
-        }
+        $this->carrier = $carrier;
 
         return $this;
     }
@@ -186,13 +166,9 @@ class TimberAppointment extends AbstractEntity
         return $this->transportBroker;
     }
 
-    public function setTransportBroker(ThirdParty|int|null $transportBroker): static
+    public function setTransportBroker(?ThirdParty $transportBroker): static
     {
-        if (is_int($transportBroker)) {
-            $this->transportBroker = (new ThirdPartyService())->getThirdParty($transportBroker);
-        } else {
-            $this->transportBroker = $transportBroker;
-        }
+        $this->transportBroker = $transportBroker;
 
         return $this;
     }
@@ -209,7 +185,7 @@ class TimberAppointment extends AbstractEntity
         return $this;
     }
 
-    public function getCharteringConfirmationSent(): bool
+    public function isCharteringConfirmationSent(): bool
     {
         return $this->charteringConfirmationSent;
     }
@@ -269,10 +245,10 @@ class TimberAppointment extends AbstractEntity
             "chargement" => $this->getLoadingPlace()?->getId(),
             "livraison" => $this->getDeliveryPlace()?->getId(),
             "client" => $this->getCustomer()?->getId(),
-            "transporteur" => $this->getTransport()?->getId(),
+            "transporteur" => $this->getCarrier()?->getId(),
             "affreteur" => $this->getTransportBroker()?->getId(),
             "commande_prete" => $this->isReady(),
-            "confirmation_affretement" => $this->getCharteringConfirmationSent(),
+            "confirmation_affretement" => $this->isCharteringConfirmationSent(),
             "numero_bl" => $this->getDeliveryNoteNumber(),
             "commentaire_public" => $this->getPublicComment(),
             "commentaire_cache" => $this->getPrivateComment(),

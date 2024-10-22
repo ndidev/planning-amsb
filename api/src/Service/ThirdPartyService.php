@@ -94,12 +94,16 @@ class ThirdPartyService
     /**
      * Récupère un tiers.
      * 
-     * @param int $id ID du tiers à récupérer.
+     * @param ?int $id ID du tiers à récupérer.
      * 
      * @return ?ThirdParty Tiers récupéré.
      */
-    public function getThirdParty(int $id): ?ThirdParty
+    public function getThirdParty(?int $id): ?ThirdParty
     {
+        if ($id === null) {
+            return null;
+        }
+
         return $this->thirdPartyRepository->fetchThirdParty($id);
     }
 

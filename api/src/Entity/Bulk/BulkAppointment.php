@@ -6,8 +6,6 @@ namespace App\Entity\Bulk;
 
 use App\Entity\AbstractEntity;
 use App\Entity\ThirdParty;
-use App\Service\BulkService;
-use App\Service\ThirdPartyService;
 use App\Core\Traits\IdentifierTrait;
 
 class BulkAppointment extends AbstractEntity
@@ -21,8 +19,8 @@ class BulkAppointment extends AbstractEntity
     private ?BulkQuantity $quantity = null;
     private bool $ready = false;
     private ?ThirdParty $supplier = null;
-    private ?ThirdParty $client = null;
-    private ?ThirdParty $transport = null;
+    private ?ThirdParty $customer = null;
+    private ?ThirdParty $carrier = null;
     private string $orderNumber = "";
     private string $comments = "";
 
@@ -66,13 +64,9 @@ class BulkAppointment extends AbstractEntity
         }
     }
 
-    public function setProduct(BulkProduct|int|null $product): static
+    public function setProduct(?BulkProduct $product): static
     {
-        if (is_int($product)) {
-            $this->product = (new BulkService())->getProduct($product);
-        } else {
-            $this->product = $product;
-        }
+        $this->product = $product;
 
         return $this;
     }
@@ -82,13 +76,9 @@ class BulkAppointment extends AbstractEntity
         return $this->product;
     }
 
-    public function setQuality(BulkQuality|int|null $qualite): static
+    public function setQuality(?BulkQuality $qualite): static
     {
-        if (is_int($qualite)) {
-            $this->quality = (new BulkService())->getQuality($qualite);
-        } else {
-            $this->quality = $qualite;
-        }
+        $this->quality = $qualite;
 
         return $this;
     }
@@ -100,11 +90,9 @@ class BulkAppointment extends AbstractEntity
 
     public function setQuantity(int $value, bool $max): static
     {
-        if (!isset($this->quantity)) {
-            $this->quantity = new BulkQuantity($value, $max);
-        } else {
-            $this->quantity->setValue($value)->setMax($max);
-        }
+        $this->quantity ??= new BulkQuantity();
+
+        $this->quantity->setValue($value)->setMax($max);
 
         return $this;
     }
@@ -126,13 +114,9 @@ class BulkAppointment extends AbstractEntity
         return $this->ready;
     }
 
-    public function setSupplier(ThirdParty|int|null $supplier): static
+    public function setSupplier(?ThirdParty $supplier): static
     {
-        if (is_int($supplier)) {
-            $this->supplier = (new ThirdPartyService())->getThirdParty($supplier);
-        } else {
-            $this->supplier = $supplier;
-        }
+        $this->supplier = $supplier;
 
         return $this;
     }
@@ -142,36 +126,28 @@ class BulkAppointment extends AbstractEntity
         return $this->supplier;
     }
 
-    public function setClient(ThirdParty|int|null $client): static
+    public function setCustomer(?ThirdParty $customer): static
     {
-        if (is_int($client)) {
-            $this->client = (new ThirdPartyService())->getThirdParty($client);
-        } else {
-            $this->client = $client;
-        }
+        $this->customer = $customer;
 
         return $this;
     }
 
-    public function getClient(): ?ThirdParty
+    public function getCustomer(): ?ThirdParty
     {
-        return $this->client;
+        return $this->customer;
     }
 
-    public function setTransport(ThirdParty|int|null $transport): static
+    public function setCarrier(?ThirdParty $carrier): static
     {
-        if (is_int($transport)) {
-            $this->transport = (new ThirdPartyService())->getThirdParty($transport);
-        } else {
-            $this->transport = $transport;
-        }
+        $this->carrier = $carrier;
 
         return $this;
     }
 
-    public function getTransport(): ?ThirdParty
+    public function getCarrier(): ?ThirdParty
     {
-        return $this->transport;
+        return $this->carrier;
     }
 
     public function setOrderNumber(string $orderNUmber): static
@@ -210,8 +186,8 @@ class BulkAppointment extends AbstractEntity
             "max" => $this->getQuantity()?->isMax() ?? false,
             "commande_prete" => $this->isReady(),
             "fournisseur" => $this->getSupplier()?->getId(),
-            "client" => $this->getClient()?->getId(),
-            "transporteur" => $this->getTransport()?->getId(),
+            "client" => $this->getCustomer()?->getId(),
+            "transporteur" => $this->getCarrier()?->getId(),
             "num_commande" => $this->getOrderNumber(),
             "commentaire" => $this->getComments(),
         ];

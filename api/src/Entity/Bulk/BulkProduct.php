@@ -17,18 +17,6 @@ class BulkProduct extends AbstractEntity
     /** @var BulkQuality[] */
     private array $qualities = [];
 
-    public function setId(?int $id): static
-    {
-        $this->id = $id;
-
-        return $this;
-    }
-
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
-
     public function setName(string $name): static
     {
         $this->name = $name;
@@ -98,7 +86,7 @@ class BulkProduct extends AbstractEntity
             "couleur" => $this->getColor(),
             "unite" => $this->getUnit(),
             "qualites" => array_map(
-                fn (BulkQuality $quality) => $quality->toArray(),
+                fn(BulkQuality $quality) => $quality->toArray(),
                 $this->getQualities()
             ),
         ];

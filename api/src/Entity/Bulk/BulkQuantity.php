@@ -7,11 +7,7 @@ class BulkQuantity
     private int $value = 0;
     private bool $max = false;
 
-    public function __construct(int $value, bool $max)
-    {
-        $this->setValue($value);
-        $this->setMax($max);
-    }
+    public function __construct() {}
 
     public function getValue(): int
     {

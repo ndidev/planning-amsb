@@ -21,53 +21,57 @@ class TimberService
 
     public function makeTimberAppointmentFromDatabase(array $rawData): TimberAppointment
     {
-        $rdv = (new TimberAppointment())
+        $thirdPartyService = new ThirdPartyService();
+
+        $appointment = (new TimberAppointment())
             ->setId($rawData["id"] ?? null)
             ->setOnHold($rawData["attente"] ?? false)
             ->setDate($rawData["date_rdv"] ?? null)
             ->setArrivalTime($rawData["heure_arrivee"] ?? null)
             ->setDepartureTime($rawData["heure_depart"] ?? null)
-            ->setSupplier($rawData["fournisseur"] ?? null)
-            ->setLoadingPlace($rawData["chargement"] ?? null)
-            ->setDeliveryPlace($rawData["livraison"] ?? null)
-            ->setCustomer($rawData["client"] ?? null)
-            ->setTransport($rawData["transporteur"] ?? null)
-            ->setTransportBroker($rawData["affreteur"] ?? null)
+            ->setSupplier($thirdPartyService->getThirdParty($rawData["fournisseur"] ?? null))
+            ->setLoadingPlace($thirdPartyService->getThirdParty($rawData["chargement"] ?? null))
+            ->setDeliveryPlace($thirdPartyService->getThirdParty($rawData["livraison"] ?? null))
+            ->setCustomer($thirdPartyService->getThirdParty($rawData["client"] ?? null))
+            ->setCarrier($thirdPartyService->getThirdParty($rawData["transporteur"] ?? null))
+            ->setTransportBroker($thirdPartyService->getThirdParty($rawData["affreteur"] ?? null))
             ->setReady($rawData["commande_prete"] ?? false)
             ->setCharteringConfirmationSent($rawData["confirmation_affretement"] ?? false)
             ->setDeliveryNoteNumber($rawData["numero_bl"] ?? "")
             ->setPublicComment($rawData["commentaire_public"] ?? "")
             ->setPrivateComment($rawData["commentaire_cache"] ?? "");
 
-        return $rdv;
+        return $appointment;
     }
 
     public function makeTimberAppointmentFromForm(array $rawData): TimberAppointment
     {
-        $rdv = (new TimberAppointment())
+        $thirdPartyService = new ThirdPartyService();
+
+        $appointment = (new TimberAppointment())
             ->setId($rawData["id"] ?? null)
             ->setOnHold($rawData["attente"] ?? false)
             ->setDate($rawData["date_rdv"] ?? null)
             ->setArrivalTime($rawData["heure_arrivee"] ?? null)
             ->setDepartureTime($rawData["heure_depart"] ?? null)
-            ->setSupplier($rawData["fournisseur"] ?? null)
-            ->setLoadingPlace($rawData["chargement"] ?? null)
-            ->setDeliveryPlace($rawData["livraison"] ?? null)
-            ->setCustomer($rawData["client"] ?? null)
-            ->setTransport($rawData["transporteur"] ?? null)
-            ->setTransportBroker($rawData["affreteur"] ?? null)
+            ->setSupplier($thirdPartyService->getThirdParty($rawData["fournisseur"] ?? null))
+            ->setLoadingPlace($thirdPartyService->getThirdParty($rawData["chargement"] ?? null))
+            ->setDeliveryPlace($thirdPartyService->getThirdParty($rawData["livraison"] ?? null))
+            ->setCustomer($thirdPartyService->getThirdParty($rawData["client"] ?? null))
+            ->setCarrier($thirdPartyService->getThirdParty($rawData["transporteur"] ?? null))
+            ->setTransportBroker($thirdPartyService->getThirdParty($rawData["affreteur"] ?? null))
             ->setReady($rawData["commande_prete"] ?? false)
             ->setCharteringConfirmationSent($rawData["confirmation_affretement"] ?? false)
             ->setDeliveryNoteNumber($rawData["numero_bl"] ?? "")
             ->setPublicComment($rawData["commentaire_public"] ?? "")
             ->setPrivateComment($rawData["commentaire_cache"] ?? "");
 
-        return $rdv;
+        return $appointment;
     }
 
     public function makeTimberRegisterEntryDTO(array $rawData): TimberRegistryEntryDTO
     {
-        $entree = (new TimberRegistryEntryDTO())
+        $registryEntry = (new TimberRegistryEntryDTO())
             ->setDate($rawData["date_rdv"] ?? "")
             ->setSupplierName($rawData["fournisseur"] ?? "")
             ->setLoadingPlaceName($rawData["chargement_nom"] ?? "")
@@ -80,7 +84,7 @@ class TimberService
             ->setDeliveryNoteNumber($rawData["numero_bl"] ?? "")
             ->setTransport($rawData["transporteur"] ?? "");
 
-        return $entree;
+        return $registryEntry;
     }
 
     /**
@@ -308,5 +312,22 @@ class TimberService
         $suppliersWithUniqueDeliveryNoteNumber = $this->getSuppliersWithUniqueDeliveryNoteNumbers();
 
         return array_key_exists($supplierId, $suppliersWithUniqueDeliveryNoteNumber);
+    }
+
+    public function getNextDeliveryNoteNumber(int $supplierId): ?string
+    {
+        if (!$this->isSupplierWithUniqueDeliveryNoteNumbers($supplierId)) {
+            return null;
+        }
+
+        $lastDeliveryNoteNumber = $this->timberAppointmentRepository->getLastDeliveryNoteNumber($supplierId);
+
+        if (!$lastDeliveryNoteNumber) {
+            return null;
+        }
+
+        $nextDeliveryNoteNumber = $lastDeliveryNoteNumber + 1;
+
+        return $nextDeliveryNoteNumber;
     }
 }

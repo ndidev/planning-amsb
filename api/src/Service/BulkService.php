@@ -6,11 +6,8 @@ use App\Core\Component\Collection;
 use App\Entity\Bulk\BulkAppointment;
 use App\Entity\Bulk\BulkProduct;
 use App\Entity\Bulk\BulkQuality;
-use App\Entity\ThirdParty;
 use App\Repository\BulkAppointmentRepository;
 use App\Repository\BulkProductRepository;
-use DateTimeInterface;
-use PDOException;
 
 class BulkService
 {
@@ -23,33 +20,49 @@ class BulkService
         $this->productRepository = new BulkProductRepository();
     }
 
-    /**
-     * ============
-     * Appointments
-     * ============
-     */
+    // ============
+    // Appointments
+    // ============
 
+    /**
+     * Creates a bulk appointment from database data.
+     *
+     * @param array $rawData 
+     *
+     * @return BulkAppointment 
+     */
     public function makeBulkAppointmentFromDatabase(array $rawData): BulkAppointment
     {
+        $thirdPartyService = new ThirdPartyService();
+
         $appointment = (new BulkAppointment())
             ->setId($rawData["id"] ?? null)
             ->setDate($rawData["date_rdv"] ?? new \DateTimeImmutable("now"))
             ->setTime($rawData["heure"] ?? null)
-            ->setProduct($rawData["produit"] ?? null)
-            ->setQuality($rawData["qualite"] ?? null)
+            ->setProduct($this->getProduct($rawData["produit"] ?? null))
+            ->setQuality($this->getQuality($rawData["qualite"] ?? null))
             ->setQuantity($rawData["quantite"] ?? 0, $rawData["max"] ?? false)
             ->setReady($rawData["commande_prete"] ?? false)
-            ->setSupplier($rawData["fournisseur"] ?? null)
-            ->setClient($rawData["client"] ?? null)
-            ->setTransport($rawData["transporteur"] ?? null)
+            ->setSupplier($thirdPartyService->getThirdParty($rawData["fournisseur"] ?? null))
+            ->setCustomer($thirdPartyService->getThirdParty($rawData["client"] ?? null))
+            ->setCarrier($thirdPartyService->getThirdParty($rawData["transporteur"] ?? null))
             ->setOrderNumber($rawData["num_commande"] ?? "")
             ->setComments($rawData["commentaire"] ?? "");
 
         return $appointment;
     }
 
+    /**
+     * Creates a bulk appointment from form data.
+     * 
+     * @param array $rawData
+     * 
+     * @return BulkAppointment
+     */
     public function makeBulkAppointmentFromFormData(array $rawData): BulkAppointment
     {
+        $thirdPartyService = new ThirdPartyService();
+
         $appointment = (new BulkAppointment())
             ->setId($rawData["id"] ?? null)
             ->setDate($rawData["date_rdv"] ?? new \DateTimeImmutable("now"))
@@ -58,9 +71,9 @@ class BulkService
             ->setQuality($rawData["qualite"] ?? null)
             ->setQuantity($rawData["quantite"] ?? 0, $rawData["max"] ?? false)
             ->setReady($rawData["commande_prete"] ?? false)
-            ->setSupplier($rawData["fournisseur"] ?? null)
-            ->setClient($rawData["client"] ?? null)
-            ->setTransport($rawData["transporteur"] ?? null)
+            ->setSupplier($thirdPartyService->getThirdParty($rawData["fournisseur"] ?? null))
+            ->setCustomer($thirdPartyService->getThirdParty($rawData["client"] ?? null))
+            ->setCarrier($thirdPartyService->getThirdParty($rawData["transporteur"] ?? null))
             ->setOrderNumber($rawData["num_commande"] ?? "")
             ->setComments($rawData["commentaire"] ?? "");
 
@@ -102,11 +115,11 @@ class BulkService
     }
 
     /**
-     * Crée un RDV vrac.
+     * Create a bulk appointment.
      * 
-     * @param array $input Eléments du RDV à créer
+     * @param array $input Elements of the appointment to create.
      * 
-     * @return BulkAppointment Rendez-vous créé
+     * @return BulkAppointment Created appointment.
      */
     public function createAppointment(array $input): BulkAppointment
     {
@@ -118,8 +131,8 @@ class BulkService
     /**
      * Update a bulk appointment.
      * 
-     * @param int   $id ID of the appointment to update.
-     * @param array $input  Elements of the appointment to update.
+     * @param int   $id    ID of the appointment to update.
+     * @param array $input Elements of the appointment to update.
      * 
      * @return BulkAppointment Updated appointment.
      */
@@ -143,6 +156,8 @@ class BulkService
         if (isset($input["commande_prete"])) {
             return $this->appointmentRepository->setIsReady($id, (bool) $input["commande_prete"]);
         }
+
+        return $this->getAppointment($id);
     }
 
     /**
@@ -155,12 +170,17 @@ class BulkService
         $this->appointmentRepository->deleteAppointment($id);
     }
 
-    /**
-     * ========
-     * Products
-     * ========
-     */
+    // ========
+    // Products
+    // ========
 
+    /**
+     * Creates a bulk product from database data.
+     * 
+     * @param array $rawData 
+     * 
+     * @return BulkProduct 
+     */
     public function makeProductFromDatabase(array $rawData): BulkProduct
     {
         $product = (new BulkProduct())
@@ -176,6 +196,13 @@ class BulkService
         return $product;
     }
 
+    /**
+     * Creates a bulk product from form data.
+     * 
+     * @param array $rawData 
+     * 
+     * @return BulkProduct 
+     */
     public function makeProductFromFormData(array $rawData): BulkProduct
     {
         $product = (new BulkProduct())
@@ -216,12 +243,16 @@ class BulkService
     /**
      * Retrieves a bulk product.
      * 
-     * @param int $id ID of the product to retrieve.
+     * @param ?int $id ID of the product to retrieve.
      * 
      * @return ?BulkProduct Retrieved product.
      */
-    public function getProduct(int $id): ?BulkProduct
+    public function getProduct(?int $id): ?BulkProduct
     {
+        if ($id === null) {
+            return null;
+        }
+
         return $this->productRepository->getProduct($id);
     }
 
@@ -266,12 +297,18 @@ class BulkService
         return $this->productRepository->deleteProduct($id);
     }
 
-    /**
-     * =========
-     * Qualities
-     * =========
-     */
 
+    // =========
+    // Qualities
+    // =========
+
+    /**
+     * Creates a bulk quality from database data.
+     *
+     * @param array $rawData 
+     *
+     * @return BulkQuality 
+     */
     public function makeQualityFromDatabase(array $rawData): BulkQuality
     {
         $quality = (new BulkQuality())
@@ -282,6 +319,13 @@ class BulkService
         return $quality;
     }
 
+    /**
+     * Creates a bulk quality from form data.
+     * 
+     * @param array $rawData 
+     * 
+     * @return BulkQuality 
+     */
     public function makeQualityFromFormData(array $rawData): BulkQuality
     {
         $quality = (new BulkQuality())
@@ -307,12 +351,16 @@ class BulkService
     /**
      * Get a bulk quality.
      * 
-     * @param int $id ID of the quality to get.
+     * @param ?int $id ID of the quality to get.
      * 
      * @return ?BulkQuality Fetched quality.
      */
-    public function getQuality(int $id): ?BulkQuality
+    public function getQuality(?int $id): ?BulkQuality
     {
+        if ($id === null) {
+            return null;
+        }
+
         return $this->productRepository->getQuality($id);
     }
 }

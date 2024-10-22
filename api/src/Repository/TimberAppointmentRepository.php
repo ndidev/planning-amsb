@@ -192,11 +192,11 @@ class TimberAppointmentRepository extends Repository
             'chargement' => $rdv->getLoadingPlace()->getId(),
             'client' => $rdv->getCustomer()->getId(),
             'livraison' => $rdv->getDeliveryPlace()->getId(),
-            'transporteur' => $rdv->getTransport()?->getId(),
+            'transporteur' => $rdv->getCarrier()?->getId(),
             'affreteur' => $rdv->getTransportBroker()?->getId(),
             'fournisseur' => $rdv->getSupplier()->getId(),
             'commande_prete' => (int) $rdv->isReady(),
-            'confirmation_affretement' => (int) $rdv->getCharteringConfirmationSent(),
+            'confirmation_affretement' => (int) $rdv->isCharteringConfirmationSent(),
             'numero_bl' => $rdv->getDeliveryNoteNumber(),
             'commentaire_public' => $rdv->getPublicComment(),
             'commentaire_cache' => $rdv->getPrivateComment(),
@@ -245,11 +245,11 @@ class TimberAppointmentRepository extends Repository
             'chargement' => $appointment->getLoadingPlace()->getId(),
             'client' => $appointment->getCustomer()->getId(),
             'livraison' => $appointment->getDeliveryPlace()->getId(),
-            'transporteur' => $appointment->getTransport()?->getId(),
+            'transporteur' => $appointment->getCarrier()?->getId(),
             'affreteur' => $appointment->getTransportBroker()?->getId(),
             'fournisseur' => $appointment->getSupplier()->getId(),
             'commande_prete' => (int) $appointment->isReady(),
-            'confirmation_affretement' => (int) $appointment->getCharteringConfirmationSent(),
+            'confirmation_affretement' => (int) $appointment->isCharteringConfirmationSent(),
             'numero_bl' => $appointment->getDeliveryNoteNumber(),
             'commentaire_public' => $appointment->getPublicComment(),
             'commentaire_cache' => $appointment->getPrivateComment(),
@@ -338,40 +338,7 @@ class TimberAppointmentRepository extends Repository
             $reponse_bl_actuel = $reponse_bl_actuel->fetch();
             $numero_bl_actuel = $reponse_bl_actuel["numero_bl"];
 
-            // Dernier numéro de BL de Stora Enso :
-            // - enregistrement des 10 derniers numéros dans un tableau
-            // - tri du tableau
-            // - récupération du numéro le plus élevé
-            // Ceci permet de prendre en compte les cas où le dernier numéro
-            // renseigné n'est pas le plus haut numériquement
-            // Permet aussi de prendre en compte les éventuels bons sans numéro "numérique"
-            $reponse_bl_precedent = $this->mysql->query(
-                "SELECT numero_bl
-                FROM bois_planning
-                WHERE fournisseur = {$rdv->getSupplier()->getId()}
-                AND numero_bl != ''
-                ORDER BY
-                    date_rdv DESC,
-                    heure_arrivee DESC,
-                    numero_bl DESC
-                LIMIT 10"
-            )->fetchAll();
-
-            $numeros_bl_precedents = [];
-
-            foreach ($reponse_bl_precedent as $numero_bl) {
-                // Si le dernier numéro de BL est composé (ex: "200101 + 200102")
-                // alors séparation/tri de la chaîne de caractères puis récupération du numéro le plus élevé
-                $matches = NULL; // Tableau pour récupérer les numéros de BL
-                preg_match_all("/\d{6}/", $numero_bl["numero_bl"], $matches); // Filtre sur les numéros valides (6 chiffres)
-                $matches = $matches[0]; // Extraction des résultats
-                sort($matches); // Tri des numéros
-                $numeros_bl_precedents[] = array_pop($matches); // Récupération du numéro le plus élevé
-            }
-
-            // Tri des 10 derniers numéros de BL puis récupération du plus élevé
-            sort($numeros_bl_precedents);
-            $numero_bl_precedent = array_pop($numeros_bl_precedents);
+            $numero_bl_precedent = $this->getLastDeliveryNoteNumber($rdv->getSupplier()->getId());
 
             // Calcul du nouveau numéro de BL (si possible)
             // Insertion du nouveau numéro de BL si numéro non déjà renseigné
@@ -411,6 +378,50 @@ class TimberAppointmentRepository extends Repository
             ]);
 
         return $this->getAppointment($id);
+    }
+
+    public function getLastDeliveryNoteNumber(int $supplierId): ?string
+    {
+        // Dernier numéro de BL :
+        // - enregistrement des 10 derniers numéros dans un tableau
+        // - tri du tableau
+        // - récupération du numéro le plus élevé
+        // Ceci permet de prendre en compte les cas où le dernier numéro
+        // renseigné n'est pas le plus haut numériquement
+        // Permet aussi de prendre en compte les éventuels bons sans numéro "numérique"
+        $previousDeliveryNotesRequest = $this->mysql->prepare(
+            "SELECT numero_bl
+                FROM bois_planning
+                WHERE fournisseur = :supplierId
+                AND numero_bl != ''
+                ORDER BY
+                    date_rdv DESC,
+                    heure_arrivee DESC,
+                    numero_bl DESC
+                LIMIT 10"
+        );
+
+        $previousDeliveryNotesRequest->execute(["supplierId" => $supplierId]);
+
+        $previousDeliveryNotesResponse = $previousDeliveryNotesRequest->fetchAll();
+
+        $previousDeliveryNotesNumbers = [];
+
+        foreach ($previousDeliveryNotesResponse as $deliveryNoteNumber) {
+            // Si le dernier numéro de BL est composé (ex: "200101 + 200102")
+            // alors séparation/tri de la chaîne de caractères puis récupération du numéro le plus élevé
+            $matches = NULL; // Tableau pour récupérer les numéros de BL
+            preg_match_all("/\d{6}/", $deliveryNoteNumber["numero_bl"], $matches); // Filtre sur les numéros valides (6 chiffres)
+            $matches = $matches[0]; // Extraction des résultats
+            sort($matches); // Tri des numéros
+            $previousDeliveryNotesNumbers[] = array_pop($matches); // Récupération du numéro le plus élevé
+        }
+
+        // Tri des 10 derniers numéros de BL puis récupération du plus élevé
+        sort($previousDeliveryNotesNumbers);
+        $previousDeliveryNoteNumber = array_pop($previousDeliveryNotesNumbers);
+
+        return $previousDeliveryNoteNumber;
     }
 
     public function isDeliveryNoteNumberAvailable(
