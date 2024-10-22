@@ -25,7 +25,7 @@ class AgencyController extends Controller
         $this->processRequest();
     }
 
-    private function processRequest()
+    private function processRequest(): void
     {
         switch ($this->request->method) {
             case 'OPTIONS':
@@ -39,7 +39,7 @@ class AgencyController extends Controller
                 if ($this->service) {
                     $this->read($this->service);
                 } else {
-                    $this->readAll($this->request->query);
+                    $this->readAll();
                 }
                 break;
 

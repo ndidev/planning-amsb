@@ -24,7 +24,7 @@ class PdfConfigController extends Controller
         $this->processRequest();
     }
 
-    private function processRequest()
+    private function processRequest(): void
     {
         switch ($this->request->method) {
             case 'OPTIONS':
@@ -38,7 +38,7 @@ class PdfConfigController extends Controller
                 if ($this->id) {
                     $this->read($this->id);
                 } else {
-                    $this->readAll($this->request->query);
+                    $this->readAll();
                 }
                 break;
 
@@ -65,7 +65,7 @@ class PdfConfigController extends Controller
     /**
      * Récupère toutes les configurations PDF.
      */
-    public function readAll()
+    public function readAll(): void
     {
         $pdfConfigs = $this->pdfService->getAllConfigs();
 
@@ -93,7 +93,7 @@ class PdfConfigController extends Controller
      * 
      * @param int  $id id de la configuration à récupérer.
      */
-    public function read(int $id)
+    public function read(int $id): void
     {
         $pdfConfig = $this->pdfService->getConfig($id);
 
@@ -120,7 +120,7 @@ class PdfConfigController extends Controller
     /**
      * Crée une configuration PDF.
      */
-    public function create()
+    public function create(): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
@@ -149,7 +149,7 @@ class PdfConfigController extends Controller
      * 
      * @param int $id id de la configuration à modifier.
      */
-    public function update(int $id)
+    public function update(int $id): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
@@ -182,7 +182,7 @@ class PdfConfigController extends Controller
      * 
      * @param int $id id de la configuration PDF à supprimer.
      */
-    public function delete(int $id)
+    public function delete(int $id): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");

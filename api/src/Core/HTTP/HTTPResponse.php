@@ -549,7 +549,7 @@ class HTTPResponse
             // self::$response["headers"]["Upgrade"] = null; // Inclure le nouveau protocole dans ce header
 
         } else {
-            $this->_200_OK("");
+            $this->_200_OK();
         }
     }
 

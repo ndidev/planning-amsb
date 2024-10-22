@@ -20,7 +20,7 @@ class AppointmentCountController extends Controller
         $this->processRequest();
     }
 
-    private function processRequest()
+    private function processRequest(): void
     {
         switch ($this->request->method) {
             case 'OPTIONS':
@@ -47,7 +47,7 @@ class AppointmentCountController extends Controller
      * 
      * @param ?int $id Optional. The id of the third party to retrieve.
      */
-    private function read(?int $id)
+    private function read(?int $id): void
     {
         if ($id && !$this->service->thirdPartyExists($id)) {
             throw new NotFoundException("Le tiers n'existe pas.");

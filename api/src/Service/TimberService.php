@@ -88,7 +88,7 @@ class TimberService
      * 
      * @param int $id Identifiant du RDV bois.
      */
-    public function appointmentExists(int $id)
+    public function appointmentExists(int $id): bool
     {
         return $this->timberAppointmentRepository->appointmentExists($id);
     }
@@ -149,27 +149,31 @@ class TimberService
     /**
      * Met à jour certaines proriétés d'un RDV bois.
      * 
-     * @param ?int   $id    id du RDV à modifier
-     * @param array $input Données à modifier
+     * @param ?int   $id   id du RDV à modifier.
+     * @param array $input Données à modifier.
      * 
-     * @return null|TimberAppointment RDV modifié
+     * @return TimberAppointment RDV modifié.
+     * 
+     * @throws ClientException Si l'identifiant du RDV n'est pas fourni.
      */
-    public function patchAppointment(?int $id, array $input): ?TimberAppointment
+    public function patchAppointment(?int $id, array $input): TimberAppointment
     {
-        if (isset($input["commande_prete"])) {
-            if (!$id) {
-                throw new ClientException("L'identifiant du RDV est requis pour marquer la commande comme prête.");
-            }
+        if (!$id) {
+            throw new ClientException("L'identifiant du RDV est requis pour effectuer une modification.");
+        }
 
-            return $this->timberAppointmentRepository->setOrderReady($id, (bool) $input["commande_prete"]);
+        if (isset($input["commande_prete"])) {
+            return $this->timberAppointmentRepository->setOrderReady(
+                $id,
+                (bool) $input["commande_prete"]
+            );
         }
 
         if (isset($input["confirmation_affretement"])) {
-            if (!$id) {
-                throw new ClientException("L'identifiant du RDV est requis pour confirmer l'affrètement.");
-            }
-
-            return $this->timberAppointmentRepository->setCharteringConfirmationSent($id, (bool) $input["confirmation_affretement"]);
+            return $this->timberAppointmentRepository->setCharteringConfirmationSent(
+                $id,
+                (bool) $input["confirmation_affretement"]
+            );
         }
 
         if (isset($input["numero_bl"])) {
@@ -177,18 +181,10 @@ class TimberService
         }
 
         if (isset($input["heure_arrivee"])) {
-            if (!$id) {
-                throw new ClientException("L'identifiant du RDV est requis pour enregistrer l'heure d'arrivée.");
-            }
-
             return $this->timberAppointmentRepository->setArrivalTime($id);
         }
 
         if (isset($input["heure_depart"])) {
-            if (!$id) {
-                throw new ClientException("L'identifiant du RDV est requis pour enregistrer l'heure de départ.");
-            }
-
             return $this->timberAppointmentRepository->setDepartureTime($id);
         }
     }

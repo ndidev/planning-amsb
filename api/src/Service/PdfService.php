@@ -218,11 +218,10 @@ class PdfService
         } catch (PHPMailerException $e) {
             $resultat["statut"] = "echec";
             $resultat["message"] = "Erreur : " . mb_convert_encoding($mail->ErrorInfo, 'UTF-8');
-            $resultat["erreur"] = $e->errorMessage();
             ErrorLogger::log($e);
         } catch (\Exception $e) {
             $resultat["statut"] = "echec";
-            $resultat["message"] = "Erreur : " . $mail->ErrorInfo;
+            $resultat["message"] = "Erreur : " . $e->getMessage();
             ErrorLogger::log($e);
         } finally {
             unset($mail);

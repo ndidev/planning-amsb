@@ -3,13 +3,13 @@ setlocale(LC_ALL, "fr_FR.utf8", "fr-FR"); // Seul "fr_FR.utf8" fonctionne sur le
 date_default_timezone_set('Europe/Paris');
 
 define("ROOTPATH", __DIR__ . "/..");
-define('API', __DIR__);
+define('API', ROOTPATH . '/api');
 define('FONTS', API . '/font');
 define('UNIFONTS', FONTS . '/unifont');
 define('LOGOS', ROOTPATH . '/logos');
 
-require_once __DIR__ . "/vendor/autoload.php";
-require_once __DIR__ . "/src/Core/Component/Constants.php";
+require_once API . "/vendor/autoload.php";
+require_once API . "/src/Core/Component/Constants.php";
 
 // Chargement des variables d'environnement
 $dotenv = Dotenv\Dotenv::createImmutable(ROOTPATH, ".env");

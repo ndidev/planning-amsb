@@ -24,7 +24,7 @@ class ShipNamesController extends Controller
         $this->processRequest();
     }
 
-    private function processRequest()
+    private function processRequest(): void
     {
         switch ($this->request->method) {
             case 'OPTIONS':

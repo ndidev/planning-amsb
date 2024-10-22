@@ -28,7 +28,7 @@ class UserAccountController extends Controller
         $this->processRequest();
     }
 
-    private function processRequest()
+    private function processRequest(): void
     {
         switch ($this->request->method) {
             case 'OPTIONS':
@@ -69,7 +69,7 @@ class UserAccountController extends Controller
     /**
      * Récupère tous comptes utilisateurs.
      */
-    public function readAll()
+    public function readAll(): void
     {
         $users = $this->userService->getUsers();
 
@@ -91,7 +91,7 @@ class UserAccountController extends Controller
      * @param string $uid     UID du compte à récupérer.
      * @param bool   $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(string $uid)
+    public function read(string $uid): void
     {
         $user = $this->userService->getUser($uid);
 
@@ -114,7 +114,7 @@ class UserAccountController extends Controller
     /**
      * Crée un compte utilisateur.
      */
-    public function create()
+    public function create(): void
     {
         $input = $this->request->getBody();
 
@@ -135,7 +135,7 @@ class UserAccountController extends Controller
      * 
      * @param string $uid UID du compte à modifier.
      */
-    public function update(string $uid)
+    public function update(string $uid): void
     {
         if (!$this->userService->userExists($uid)) {
             throw new NotFoundException("L'utilisateur n'existe pas.");
@@ -155,7 +155,7 @@ class UserAccountController extends Controller
      * 
      * @param string $uid UID du compte à supprimer.
      */
-    public function delete(string $uid)
+    public function delete(string $uid): void
     {
         // Un utilisateur ne peut pas se supprimer lui-même
         if ($this->user->uid === $uid) {

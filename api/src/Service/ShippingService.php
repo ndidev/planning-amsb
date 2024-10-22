@@ -174,11 +174,11 @@ class ShippingService
         $this->shippingRepository->deleteCall($id);
     }
 
-    public function getLastVoyageNumber(string $shipName, string $idAsString): string
+    public function getLastVoyageNumber(string $shipName, string $currentCallIdAsString): string
     {
-        $id = $idAsString === "" ? null : (int) $idAsString;
+        $currentCallId = $currentCallIdAsString === "" ? null : (int) $currentCallIdAsString;
 
-        return $this->shippingRepository->fetchLastVoyageNumber($shipName, $id);
+        return $this->shippingRepository->fetchLastVoyageNumber($shipName, $currentCallId);
     }
 
     public function getDraftsPerTonnage(): array

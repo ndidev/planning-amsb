@@ -76,7 +76,7 @@ class ThirdPartyService
      * 
      * @param int $id Identifiant du tiers.
      */
-    public function thirdPartyExists(int $id)
+    public function thirdPartyExists(int $id): bool
     {
         return $this->thirdPartyRepository->thirdPartyExists($id);
     }

@@ -23,7 +23,7 @@ class CountryController extends Controller
         $this->processRequest();
     }
 
-    private function processRequest()
+    private function processRequest(): void
     {
         switch ($this->request->method) {
             case 'OPTIONS':
@@ -52,7 +52,7 @@ class CountryController extends Controller
     /**
      * Récupère tous les pays.
      */
-    public function readAll()
+    public function readAll(): void
     {
         $countries = $this->countryService->getCountries();
 
@@ -75,7 +75,7 @@ class CountryController extends Controller
      * @param string $iso     Code ISO du pays à récupérer.
      * @param bool   $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
      */
-    public function read(string $iso)
+    public function read(string $iso): void
     {
         $country = $this->countryService->getCountry($iso);
 

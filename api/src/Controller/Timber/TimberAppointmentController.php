@@ -71,7 +71,7 @@ class TimberAppointmentController extends Controller
      * 
      * @param array $filtre
      */
-    public function readAll(array $filtre)
+    public function readAll(array $filtre): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour accéder aux RDVs bois.");
@@ -94,10 +94,9 @@ class TimberAppointmentController extends Controller
     /**
      * Récupère un RDV bois.
      * 
-     * @param int $id      id du RDV à récupérer.
-     * @param bool $dryRun Récupérer la ressource sans renvoyer la réponse HTTP.
+     * @param int $id Identifiant du RDV à récupérer.
      */
-    public function read(int $id, ?bool $dryRun = false)
+    public function read(int $id): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour accéder aux RDVs bois.");
@@ -105,12 +104,8 @@ class TimberAppointmentController extends Controller
 
         $appointment = $this->timberService->getAppointment($id);
 
-        if (!$appointment && !$dryRun) {
+        if (!$appointment) {
             throw new NotFoundException("Ce RDV bois n'existe pas.");
-        }
-
-        if ($dryRun) {
-            return $appointment;
         }
 
         $etag = ETag::get($appointment);
@@ -128,7 +123,7 @@ class TimberAppointmentController extends Controller
     /**
      * Crée un RDV bois.
      */
-    public function create()
+    public function create(): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour créer un RDV bois.");
@@ -153,7 +148,7 @@ class TimberAppointmentController extends Controller
      * 
      * @param int $id id du RDV à modifier.
      */
-    public function update(int $id)
+    public function update(int $id): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier un RDV bois.");
@@ -177,7 +172,7 @@ class TimberAppointmentController extends Controller
      * 
      * @param int $id id du RDV à modifier.
      */
-    public function patch(?int $id)
+    public function patch(?int $id): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier un RDV bois.");
@@ -203,7 +198,7 @@ class TimberAppointmentController extends Controller
      * 
      * @param int $id id du RDV à supprimer.
      */
-    public function delete(int $id)
+    public function delete(int $id): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour supprimer un RDV bois.");

@@ -67,7 +67,7 @@ abstract class Controller
   /**
    * Process a CORS preflight request.
    */
-  private function processCORSpreflight()
+  private function processCORSpreflight(): void
   {
     if (!$this->request->isPreflight) {
       return;
@@ -79,8 +79,10 @@ abstract class Controller
   /**
    * Vérification de l'authentification
    * 2 méthodes : session ou clé API
+   * 
+   * @throws AuthException
    */
-  private function authenticateUser()
+  private function authenticateUser(): void
   {
     if ($_ENV["AUTH"] === "ON") {
       $validSession = true;

@@ -19,7 +19,7 @@ class PdfViewerController extends Controller
         $this->processRequest();
     }
 
-    private function processRequest()
+    private function processRequest(): void
     {
         switch ($this->request->method) {
             case 'OPTIONS':
@@ -53,8 +53,8 @@ class PdfViewerController extends Controller
     public function getPdfFile(array $query)
     {
         $configId = $query["config"] ?? null;
-        $startDate = DateUtils::convertDate($query["date_debut"]);
-        $endDate = DateUtils::convertDate($query["date_fin"]);
+        $startDate = DateUtils::convertDate($query["date_debut"] ?? new \DateTime());
+        $endDate = DateUtils::convertDate($query["date_fin"] ?? new \DateTime());
 
         $pdf = $this->pdfService->generatePDF($configId, $startDate, $endDate);
 

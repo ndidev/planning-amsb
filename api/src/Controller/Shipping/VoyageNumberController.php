@@ -21,7 +21,7 @@ class VoyageNumberController extends Controller
         $this->processRequest();
     }
 
-    private function processRequest()
+    private function processRequest(): void
     {
         switch ($this->request->method) {
             case 'OPTIONS':
@@ -55,19 +55,10 @@ class VoyageNumberController extends Controller
         $input = $this->request->query;
 
         $shipName = $input["navire"] ?? "";
-        $id = $input["id"] ?? "";
+        $currentCallId = $input["id"] ?? "";
 
-        $voyageNumber = $this->shippingService->getLastVoyageNumber($shipName, $id);
+        $voyageNumber = $this->shippingService->getLastVoyageNumber($shipName, $currentCallId);
 
-        $etag = ETag::get($voyageNumber);
-
-        if ($this->request->etag === $etag) {
-            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
-            return;
-        }
-
-        $this->response
-            ->addHeader("ETag", $etag)
-            ->setJSON(['voyage' => $voyageNumber]);
+        $this->response->setJSON(['voyage' => $voyageNumber]);
     }
 }
