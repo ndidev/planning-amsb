@@ -13,7 +13,7 @@ use App\Service\ChartDatumService;
 final class ChartDatumController extends Controller
 {
     private ChartDatumService $chartDatumService;
-    private Module $module = Module::CONFIG;
+    private string $module = Module::CONFIG;
     private string $sseEventName = "config/cotes";
 
     public function __construct(

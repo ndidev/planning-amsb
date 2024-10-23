@@ -55,7 +55,7 @@ foreach ($configs as $config) {
     );
 
     // Mise à jour du rapport
-    $rapport .= "• {$config->getModule()->value}/{$config->getSupplier()->getId()} : {$resultat['statut']}" . PHP_EOL;
+    $rapport .= "• {$config->getModule()}/{$config->getSupplier()->getId()} : {$resultat['statut']}" . PHP_EOL;
     $rapport .= "  Message : {$resultat['message']}" . PHP_EOL;
     $rapport .= "  Dates : du " . DateUtils::format(DateUtils::DATE_FULL, $startDate) . " au " . DateUtils::format(DateUtils::DATE_FULL, $endDate) . PHP_EOL;
     if ($resultat["statut"] === "succes") {

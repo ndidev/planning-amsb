@@ -107,7 +107,7 @@ final class PdfConfigRepository extends Repository
 
         $this->mysql->beginTransaction();
         $request->execute([
-            "module" => $config->getModule()?->value,
+            "module" => $config->getModule(),
             "supplierId" => $config->getSupplier()?->getId(),
             "autoSend" => (int) $config->isAutoSend(),
             "emails" => $config->getEmailsAsString(),
@@ -143,7 +143,7 @@ final class PdfConfigRepository extends Repository
 
         $request = $this->mysql->prepare($statement);
         $request->execute([
-            "module" => $config->getModule()?->value,
+            "module" => $config->getModule(),
             "supplierId" => $config->getSupplier()?->getId(),
             "autoSend" => (int) $config->isAutoSend(),
             "emails" => $config->getEmailsAsString(),

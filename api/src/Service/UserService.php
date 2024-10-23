@@ -89,10 +89,8 @@ class UserService
      * Récupère un utilisateur.
      * 
      * @param string $uid Identifiant de l'utilisateur.
-     * 
-     * @return User 
      */
-    public function getUser(string $uid): User
+    public function getUser(string $uid): ?User
     {
         return $this->userRepository->fetchUserByUid($uid);
     }
@@ -117,7 +115,7 @@ class UserService
 
         // Conservation du rôle admin : un admin ne peut pas changer lui-même son statut admin
         if ($uid === $admin->uid) {
-            $user->getRoles()->admin = (int) $admin->isAdmin ?? 0;
+            $user->getRoles()->admin = (int) ($admin->isAdmin ?? 0);
         }
 
         return $this->userRepository->updateUser($user, $admin->name);

@@ -13,7 +13,7 @@ use App\Service\AgencyService;
 final class AgencyController extends Controller
 {
     private AgencyService $agencyService;
-    private Module $module = Module::CONFIG;
+    private string $module = Module::CONFIG;
     private string $sseEventName = "config/agence";
 
     public function __construct(

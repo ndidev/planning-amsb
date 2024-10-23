@@ -4,13 +4,32 @@
 
 namespace App\Core\Component;
 
-enum Module: string
+abstract class Module
 {
-    case BULK = "vrac";
-    case CHARTERING = "chartering";
-    case CONFIG = "config";
-    case SHIPPING = "consignation";
-    case TIMBER = "bois";
-    case THIRD_PARTY = "tiers";
-    case USER = "user";
+    const BULK = "vrac";
+    const CHARTERING = "chartering";
+    const CONFIG = "config";
+    const SHIPPING = "consignation";
+    const TIMBER = "bois";
+    const THIRD_PARTY = "tiers";
+    const USER = "user";
+
+    /**
+     * Attempts to convert a module name to a constant.
+     * 
+     * @param string $temptativeModuleName
+     */
+    public static function tryFrom(string $temptativeModuleName): ?string
+    {
+        return match (strtolower($temptativeModuleName)) {
+            "vrac" => self::BULK,
+            "chartering" => self::CHARTERING,
+            "config" => self::CONFIG,
+            "consignation" => self::SHIPPING,
+            "bois" => self::TIMBER,
+            "tiers" => self::THIRD_PARTY,
+            "user" => self::USER,
+            default => null,
+        };
+    }
 }

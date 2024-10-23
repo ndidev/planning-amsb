@@ -13,7 +13,7 @@ use App\Service\BulkService;
 final class BulkAppointmentController extends Controller
 {
     private BulkService $bulkService;
-    private Module $module = Module::BULK;
+    private string $module = Module::BULK;
     private string $sseEventName = "vrac/rdvs";
 
     public function __construct(

@@ -38,7 +38,7 @@ class CharterLeg extends AbstractEntity
         return $this;
     }
 
-    public function getBlDate(bool $sqlFormat = false): ?\DateTimeImmutable
+    public function getBlDate(bool $sqlFormat = false): \DateTimeImmutable|string|null
     {
         if (true === $sqlFormat) {
             return $this->blDate?->format("Y-m-d");

@@ -13,7 +13,7 @@ use App\Service\TimberService;
 final class TimberAppointmentController extends Controller
 {
     private TimberService $timberService;
-    private Module $module = Module::TIMBER;
+    private string $module = Module::TIMBER;
     private string $sse_event = "bois/rdvs";
 
     public function __construct(
@@ -182,7 +182,7 @@ final class TimberAppointmentController extends Controller
             throw new NotFoundException("L'identifiant du RDV est requis.");
         }
 
-        if ($id && !$this->timberService->appointmentExists($id)) {
+        if (!$this->timberService->appointmentExists($id)) {
             throw new NotFoundException("Le RDV n'existe pas.");
         }
 
@@ -199,9 +199,7 @@ final class TimberAppointmentController extends Controller
 
         $this->response->setJSON($appointment);
 
-        if ($appointment) {
-            $this->sse->addEvent($this->sse_event, __FUNCTION__, $id, $appointment);
-        }
+        $this->sse->addEvent($this->sse_event, __FUNCTION__, $id, $appointment);
     }
 
     /**

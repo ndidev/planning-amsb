@@ -11,11 +11,6 @@ use App\Service\BulkService;
 final class BulkAppointmentRepository extends Repository
 {
     /**
-     * @var BulkAppointment[]
-     */
-    static private array $cache = [];
-
-    /**
      * Vérifie si une entrée existe dans la base de données.
      * 
      * @param int $id Identifiant de l'entrée.
@@ -92,25 +87,25 @@ final class BulkAppointmentRepository extends Repository
 
         $request = $this->mysql->prepare($statement);
         $request->execute(["id" => $id]);
-        $rdvRaw = $request->fetch();
+        $appointmentRaw = $request->fetch();
 
-        if (!$rdvRaw) return null;
+        if (!$appointmentRaw) return null;
 
         $bulkService = new BulkService();
 
-        $rdv = $bulkService->makeBulkAppointmentFromDatabase($rdvRaw);
+        $appointment = $bulkService->makeBulkAppointmentFromDatabase($appointmentRaw);
 
-        return $rdv;
+        return $appointment;
     }
 
     /**
      * Crée un RDV vrac.
      * 
-     * @param BulkAppointment $rdv RDV à créer
+     * @param BulkAppointment $appointment RDV à créer
      * 
      * @return BulkAppointment Rendez-vous créé
      */
-    public function createAppointment(BulkAppointment $rdv): BulkAppointment
+    public function createAppointment(BulkAppointment $appointment): BulkAppointment
     {
         $statement =
             "INSERT INTO vrac_planning
@@ -133,18 +128,18 @@ final class BulkAppointmentRepository extends Repository
 
         $this->mysql->beginTransaction();
         $request->execute([
-            'date_rdv' => $rdv->getDate(true),
-            'heure' => $rdv->getTime(true),
-            'produit' => $rdv->getProduct()->getId(),
-            'qualite' => $rdv->getQuality()?->getId(),
-            'quantite' => $rdv->getQuantity()->getValue(),
-            'max' => (int) $rdv->getQuantity()->isMax(),
-            'commande_prete' => (int) $rdv->isReady(),
-            'fournisseur' => $rdv->getSupplier()->getId(),
-            'client' => $rdv->getCustomer()->getId(),
-            'transporteur' => $rdv->getCarrier()?->getId(),
-            'num_commande' => $rdv->getOrderNumber(),
-            'commentaire' => $rdv->getComments(),
+            'date_rdv' => $appointment->getDate(true),
+            'heure' => $appointment->getTime(true),
+            'produit' => $appointment->getProduct()->getId(),
+            'qualite' => $appointment->getQuality()?->getId(),
+            'quantite' => $appointment->getQuantity()->getValue(),
+            'max' => (int) $appointment->getQuantity()->isMax(),
+            'commande_prete' => (int) $appointment->isReady(),
+            'fournisseur' => $appointment->getSupplier()->getId(),
+            'client' => $appointment->getCustomer()->getId(),
+            'transporteur' => $appointment->getCarrier()?->getId(),
+            'num_commande' => $appointment->getOrderNumber(),
+            'commentaire' => $appointment->getComments(),
         ]);
 
         $lastInsertId = $this->mysql->lastInsertId();
@@ -156,11 +151,11 @@ final class BulkAppointmentRepository extends Repository
     /**
      * Met à jour un RDV vrac.
      * 
-     * @param BulkAppointment $rdv RDV à modifier
+     * @param BulkAppointment $appointment RDV à modifier
      * 
      * @return BulkAppointment RDV modifié
      */
-    public function updateAppointment(BulkAppointment $rdv): BulkAppointment
+    public function updateAppointment(BulkAppointment $appointment): BulkAppointment
     {
         $statement =
             "UPDATE vrac_planning
@@ -181,22 +176,22 @@ final class BulkAppointmentRepository extends Repository
 
         $request = $this->mysql->prepare($statement);
         $request->execute([
-            'date_rdv' => $rdv->getDate(true),
-            'heure' => $rdv->getTime(true),
-            'produit' => $rdv->getProduct()->getId(),
-            'qualite' => $rdv->getQuality()?->getId(),
-            'quantite' => $rdv->getQuantity()->getValue(),
-            'max' => (int) $rdv->getQuantity()->isMax(),
-            'commande_prete' => (int) $rdv->isReady(),
-            'fournisseur' => $rdv->getSupplier()->getId(),
-            'client' => $rdv->getCustomer()->getId(),
-            'transporteur' => $rdv->getCarrier()?->getId(),
-            'num_commande' => $rdv->getOrderNumber(),
-            'commentaire' => $rdv->getComments(),
-            'id' => $rdv->getId(),
+            'date_rdv' => $appointment->getDate(true),
+            'heure' => $appointment->getTime(true),
+            'produit' => $appointment->getProduct()->getId(),
+            'qualite' => $appointment->getQuality()?->getId(),
+            'quantite' => $appointment->getQuantity()->getValue(),
+            'max' => (int) $appointment->getQuantity()->isMax(),
+            'commande_prete' => (int) $appointment->isReady(),
+            'fournisseur' => $appointment->getSupplier()->getId(),
+            'client' => $appointment->getCustomer()->getId(),
+            'transporteur' => $appointment->getCarrier()?->getId(),
+            'num_commande' => $appointment->getOrderNumber(),
+            'commentaire' => $appointment->getComments(),
+            'id' => $appointment->getId(),
         ]);
 
-        return $this->getAppointment($rdv->getId());
+        return $this->getAppointment($appointment->getId());
     }
 
     /**

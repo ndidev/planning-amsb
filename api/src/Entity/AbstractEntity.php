@@ -12,6 +12,7 @@ abstract class AbstractEntity implements Arrayable, \JsonSerializable
     {
         $array = [];
 
+        // @phpstan-ignore foreach.nonIterable
         foreach ($this as $key => $value) {
             if ($value instanceof Arrayable) {
                 $array[$key] = $value->toArray();

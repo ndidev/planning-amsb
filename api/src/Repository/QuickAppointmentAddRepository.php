@@ -7,13 +7,12 @@ namespace App\Repository;
 use App\Core\Component\Collection;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Server\DB\DBException;
-use App\Entity\Config\QuickAppointmentAdd;
 use App\Entity\Config\TimberQuickAppointmentAdd;
 use App\Service\QuickAppointmentAddService;
 
 final class QuickAppointmentAddRepository extends Repository
 {
-    public function quickAddExists(Module $module, int $id): bool
+    public function quickAddExists(string $module, int $id): bool
     {
         return match ($module) {
             Module::TIMBER => $this->mysql->exists("config_ajouts_rapides_bois", $id),
@@ -24,19 +23,19 @@ final class QuickAppointmentAddRepository extends Repository
     /**
      * Récupère tous les ajouts rapides.
      * 
-     * @return array<string, Collection<QuickAppointmentAdd>> Ajouts rapides récupérés.
+     * @return array{bois: Collection<TimberQuickAppointmentAdd>} Ajouts rapides récupérés.
      */
     public function fetchAllQuickAppointmentAdds(): array
     {
         return [
-            Module::TIMBER->value => $this->fetchAllTimberQuickAppointmentAdds(),
+            Module::TIMBER => $this->fetchAllTimberQuickAppointmentAdds(),
         ];
     }
 
     /**
      * Récupère tous les ajouts rapides bois.
      * 
-     * @return Collection<QuickAppointmentAdd> Ajouts rapides récupérés.
+     * @return Collection<TimberQuickAppointmentAdd> Ajouts rapides récupérés.
      */
     public function fetchAllTimberQuickAppointmentAdds(): Collection
     {
@@ -104,7 +103,7 @@ final class QuickAppointmentAddRepository extends Repository
 
         $this->mysql->beginTransaction();
         $request->execute([
-            'module' => $quickAdd->getModule()->value,
+            'module' => $quickAdd->getModule(),
             'supplierId' => $quickAdd->getSupplier()?->getId(),
             'carrierId' => $quickAdd->getCarrier()?->getId(),
             'chartererId' => $quickAdd->getCharterer()?->getId(),

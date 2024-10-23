@@ -123,9 +123,9 @@ class BulkService
      */
     public function createAppointment(array $input): BulkAppointment
     {
-        $rdv = $this->makeBulkAppointmentFromFormData($input);
+        $appointment = $this->makeBulkAppointmentFromFormData($input);
 
-        return $this->appointmentRepository->createAppointment($rdv);
+        return $this->appointmentRepository->createAppointment($appointment);
     }
 
     /**
@@ -138,9 +138,9 @@ class BulkService
      */
     public function updateAppointment($id, array $input): BulkAppointment
     {
-        $rdv = $this->makeBulkAppointmentFromFormData($input)->setId($id);
+        $appointment = $this->makeBulkAppointmentFromFormData($input)->setId($id);
 
-        return $this->appointmentRepository->updateAppointment($rdv);
+        return $this->appointmentRepository->updateAppointment($appointment);
     }
 
     /**

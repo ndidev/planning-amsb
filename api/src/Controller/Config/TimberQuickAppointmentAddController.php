@@ -13,7 +13,7 @@ use App\Service\QuickAppointmentAddService;
 final class TimberQuickAppointmentAddController extends Controller
 {
     private QuickAppointmentAddService $quickAppointmentAddService;
-    private Module $module = Module::CONFIG;
+    private string $module = Module::CONFIG;
     private string $sseEventName = "config/ajouts-rapides";
 
     public function __construct(

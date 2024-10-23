@@ -13,7 +13,7 @@ use App\Service\CharteringService;
 final class CharterController extends Controller
 {
     private CharteringService $charteringService;
-    private Module $module = Module::CHARTERING;
+    private string $module = Module::CHARTERING;
     private string $sseEventName = "chartering/charters";
 
     public function __construct(

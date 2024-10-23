@@ -14,7 +14,7 @@ class PdfConfig extends AbstractEntity
 {
     use IdentifierTrait;
 
-    private ?Module $module = null;
+    private ?string $module = null;
     private ?ThirdParty $supplier = null;
     private bool $autoSend = false;
     /** @var string[] */
@@ -22,12 +22,15 @@ class PdfConfig extends AbstractEntity
     private int $daysBefore = 0;
     private int $daysAfter = 0;
 
-    public function getModule(): ?Module
+    /**
+     * @return Module::*|null
+     */
+    public function getModule(): ?string
     {
         return $this->module;
     }
 
-    public function setModule(Module|string|null $module): static
+    public function setModule(?string $module): static
     {
         if (is_string($module)) {
             $this->module = Module::tryFrom($module);

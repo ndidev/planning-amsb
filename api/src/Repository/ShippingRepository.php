@@ -757,10 +757,6 @@ final class ShippingRepository extends Repository
         ]);
         $shipsInOps = $request->fetchAll();
 
-        if ($shipsInOps === false) {
-            throw new DBException("Erreur lors de la récupération des navires en activité");
-        }
-
         return $shipsInOps;
     }
 

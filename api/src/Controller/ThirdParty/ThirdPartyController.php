@@ -14,7 +14,7 @@ use App\Service\ThirdPartyService;
 final class ThirdPartyController extends Controller
 {
     private ThirdPartyService $thirdPartyService;
-    private Module $module = Module::THIRD_PARTY;
+    private string $module = Module::THIRD_PARTY;
     private string $sseEventName = "tiers";
 
     public function __construct(

@@ -101,7 +101,7 @@ final class InfoBannerRepository extends Repository
 
         $this->mysql->beginTransaction();
         $request->execute([
-            'module' => $line->getModule()->value,
+            'module' => $line->getModule(),
             'pc' => (int) $line->isPc(),
             'tv' => (int) $line->isTv(),
             'color' => $line->getColor(),
@@ -135,7 +135,7 @@ final class InfoBannerRepository extends Repository
 
         $request = $this->mysql->prepare($statement);
         $request->execute([
-            'module' => $line->getModule()->value,
+            'module' => $line->getModule(),
             'pc' => (int) $line->isPc(),
             'tv' => (int) $line->isTv(),
             'color' => $line->getColor(),

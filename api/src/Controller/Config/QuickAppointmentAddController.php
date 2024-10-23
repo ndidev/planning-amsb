@@ -50,7 +50,7 @@ final class QuickAppointmentAddController extends Controller
 
         // Filtre sur les catégories autorisées pour l'utilisateur
         foreach ($quickAdds as $moduleName => $collection) {
-            if (!$this->user->canAccess(Module::from($moduleName))) {
+            if (!$this->user->canAccess(Module::tryFrom($moduleName))) {
                 unset($quickAdds[$moduleName]);
             }
         }

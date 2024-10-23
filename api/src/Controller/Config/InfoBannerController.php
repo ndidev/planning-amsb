@@ -13,7 +13,7 @@ use App\Service\InfoBannerService;
 final class InfoBannerController extends Controller
 {
     private InfoBannerService $infoBannerService;
-    private Module $module = Module::CONFIG;
+    private string $module = Module::CONFIG;
     private string $sseEventName = "config/bandeau-info";
 
     public function __construct(
@@ -104,7 +104,7 @@ final class InfoBannerController extends Controller
         }
 
         if (!$this->user->canAccess($line->getModule())) {
-            throw new AccessException("Vous n'avez pas les droits pour accéder aux informations {$line->getModule()->value}.");
+            throw new AccessException("Vous n'avez pas les droits pour accéder aux informations {$line->getModule()}.");
         }
 
         $etag = ETag::get($line);
@@ -197,7 +197,7 @@ final class InfoBannerController extends Controller
         }
 
         if (!$this->user->canEdit($line->getModule())) {
-            throw new AccessException("Vous n'avez pas les droits pour supprimer les informations {$line->getModule()->value}.");
+            throw new AccessException("Vous n'avez pas les droits pour supprimer les informations {$line->getModule()}.");
         }
 
         $this->infoBannerService->deleteLine($id);

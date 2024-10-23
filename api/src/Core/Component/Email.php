@@ -10,7 +10,7 @@ use PHPMailer\PHPMailer\SMTP;
 
 class Email extends PHPMailer
 {
-    public function __construct(private bool $debug = false)
+    public function __construct()
     {
         parent::__construct(true); // Passing `true` enables exceptions
 

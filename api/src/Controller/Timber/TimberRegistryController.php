@@ -12,7 +12,7 @@ use App\Service\TimberService;
 final class TimberRegistryController extends Controller
 {
     private TimberService $timberService;
-    private Module $module = Module::TIMBER;
+    private string $module = Module::TIMBER;
 
     public function __construct()
     {

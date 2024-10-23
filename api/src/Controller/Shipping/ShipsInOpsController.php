@@ -3,7 +3,6 @@
 namespace App\Controller\Shipping;
 
 use App\Controller\Controller;
-use App\Core\Component\Module;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\ShippingService;
@@ -14,7 +13,6 @@ use App\Service\ShippingService;
 final class ShipsInOpsController extends Controller
 {
     private ShippingService $shippingService;
-    private Module $module = Module::SHIPPING;
 
     public function __construct()
     {

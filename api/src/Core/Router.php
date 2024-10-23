@@ -78,16 +78,12 @@ class Router
      * ];
      * ```
      *
-     * @param array $routes
-     * @return void
-     * @throws \RuntimeException
+     * @param array|\Traversable $routes
+     * 
      * @author Koen Punt
      */
-    public function addRoutes(array $routes): void
+    public function addRoutes(array|\Traversable $routes): void
     {
-        if (!is_array($routes) && !$routes instanceof \Traversable) {
-            throw new \RuntimeException('Routes should be an array or an instance of Traversable');
-        }
         foreach ($routes as $route) {
             call_user_func_array([$this, 'map'], $route);
         }

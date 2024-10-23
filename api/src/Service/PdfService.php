@@ -194,7 +194,7 @@ class PdfService
          * @var array $resultat Résultat de l'envoi.
          */
         $resultat = [
-            "module" => $config->getModule()->value,
+            "module" => $config->getModule(),
             "fournisseur" => $config->getSupplier()->getId(),
             "statut" => null,
             "message" => null,

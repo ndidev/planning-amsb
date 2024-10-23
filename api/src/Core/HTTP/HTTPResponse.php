@@ -4,8 +4,6 @@ namespace App\Core\HTTP;
 
 use App\Core\Logger\ErrorLogger;
 
-use function App\Core\Functions\lzw_compress;
-
 /**
  * Réponses HTTP.
  * 
@@ -267,7 +265,7 @@ class HTTPResponse
 
         /**
          * Méthodes de compression acceptées par le client.
-         * @var string
+         * @var ?string
          */
         $clientAcceptEncoding = $_SERVER["HTTP_ACCEPT_ENCODING"] ?? null;
 
@@ -310,7 +308,7 @@ class HTTPResponse
         $serverSupportedMethods = [
             "gzip" => true,
             "deflate" => true,
-            "compress" => false, // La fonction ne prend en charge que la table ASCII
+            "compress" => false,
             "br" => false, // Voir ci-dessous pour implémentation
             "identity" => true
         ];
@@ -348,7 +346,8 @@ class HTTPResponse
                 case 'compress':
                     // HTTP Compress (== LZW compress)
                     // https://code.google.com/archive/p/php-lzw/
-                    $this->body = lzw_compress($this->body);
+                    // Pas trouvé d'implémentation satisfaisante
+                    // Compression jamais utilisée
                     break;
 
                 case 'br':

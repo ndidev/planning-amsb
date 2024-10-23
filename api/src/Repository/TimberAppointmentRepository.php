@@ -20,11 +20,6 @@ use App\Service\TimberService;
 final class TimberAppointmentRepository extends Repository
 {
     /**
-     * @var TimberAppointment[]
-     */
-    static private array $cache = [];
-
-    /**
      * Vérifie si une entrée existe dans la base de données.
      * 
      * @param int $id Identifiant de l'entrée.
@@ -103,13 +98,13 @@ final class TimberAppointmentRepository extends Repository
             "date_fin" => $endDate
         ]);
 
-        $rdvsRaw = $requete->fetchAll();
+        $appointmentsRaw = $requete->fetchAll();
 
         $timberService = new TimberService();
 
         $appointments = array_map(
             fn(array $appointmentRaw) => $timberService->makeTimberAppointmentFromDatabase($appointmentRaw),
-            $rdvsRaw
+            $appointmentsRaw
         );
 
         return new Collection($appointments);
@@ -147,25 +142,25 @@ final class TimberAppointmentRepository extends Repository
 
         $request = $this->mysql->prepare($statement);
         $request->execute(["id" => $id]);
-        $rdvRaw = $request->fetch();
+        $appointmentRaw = $request->fetch();
 
-        if (!$rdvRaw) return null;
+        if (!$appointmentRaw) return null;
 
         $timberService = new TimberService();
 
-        $rdv = $timberService->makeTimberAppointmentFromDatabase($rdvRaw);
+        $appointment = $timberService->makeTimberAppointmentFromDatabase($appointmentRaw);
 
-        return $rdv;
+        return $appointment;
     }
 
     /**
      * Crée un RDV bois.
      * 
-     * @param TimberAppointment $rdv RDV à créer
+     * @param TimberAppointment $appointment RDV à créer
      * 
      * @return TimberAppointment Rendez-vous créé
      */
-    public function createAppointment(TimberAppointment $rdv): TimberAppointment
+    public function createAppointment(TimberAppointment $appointment): TimberAppointment
     {
         $statement = "INSERT INTO bois_planning
             VALUES(
@@ -191,21 +186,21 @@ final class TimberAppointmentRepository extends Repository
 
         $this->mysql->beginTransaction();
         $request->execute([
-            'attente' => (int) $rdv->isOnHold(),
-            'date_rdv' => $rdv->getDate(true),
-            'heure_arrivee' => $rdv->getArrivalTime(true),
-            'heure_depart' => $rdv->getDepartureTime(true),
-            'chargement' => $rdv->getLoadingPlace()->getId(),
-            'client' => $rdv->getCustomer()->getId(),
-            'livraison' => $rdv->getDeliveryPlace()->getId(),
-            'transporteur' => $rdv->getCarrier()?->getId(),
-            'affreteur' => $rdv->getTransportBroker()?->getId(),
-            'fournisseur' => $rdv->getSupplier()->getId(),
-            'commande_prete' => (int) $rdv->isReady(),
-            'confirmation_affretement' => (int) $rdv->isCharteringConfirmationSent(),
-            'numero_bl' => $rdv->getDeliveryNoteNumber(),
-            'commentaire_public' => $rdv->getPublicComment(),
-            'commentaire_cache' => $rdv->getPrivateComment(),
+            'attente' => (int) $appointment->isOnHold(),
+            'date_rdv' => $appointment->getDate(true),
+            'heure_arrivee' => $appointment->getArrivalTime(true),
+            'heure_depart' => $appointment->getDepartureTime(true),
+            'chargement' => $appointment->getLoadingPlace()->getId(),
+            'client' => $appointment->getCustomer()->getId(),
+            'livraison' => $appointment->getDeliveryPlace()->getId(),
+            'transporteur' => $appointment->getCarrier()?->getId(),
+            'affreteur' => $appointment->getTransportBroker()?->getId(),
+            'fournisseur' => $appointment->getSupplier()->getId(),
+            'commande_prete' => (int) $appointment->isReady(),
+            'confirmation_affretement' => (int) $appointment->isCharteringConfirmationSent(),
+            'numero_bl' => $appointment->getDeliveryNoteNumber(),
+            'commentaire_public' => $appointment->getPublicComment(),
+            'commentaire_cache' => $appointment->getPrivateComment(),
         ]);
 
         $lastInsertId = $this->mysql->lastInsertId();

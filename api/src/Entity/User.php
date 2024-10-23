@@ -228,32 +228,28 @@ class User extends AbstractEntity
     /**
      * Vérifie si l'utilisateur peut accéder à une rubrique.
      * 
-     * @param ?Module Rubrique dont l'accès doit être vérifié.
+     * @param ?Module::* $module Rubrique dont l'accès doit être vérifié.
      * 
      * @return bool `true` si l'utilisateur peut accéder à la rubrique, `false` sinon.
      */
-    public function canAccess(?Module $module): bool
+    public function canAccess(?string $module): bool
     {
         // Accès à l'accueil et à l'écran individuel de modification du nom/mdp
         if ($module === null || $module === Module::USER) return true;
 
-        $moduleName = $module->value;
-
-        return ($this->roles->$moduleName ?? -1) >= UserRoles::ACCESS->value;
+        return ($this->roles->$module ?? -1) >= UserRoles::ACCESS->value;
     }
 
     /**
      * Vérifie si l'utilisateur peut éditer une rubrique.
      * 
-     * @param ?Module Rubrique dont l'accès doit être vérifié.
+     * @param ?Module::* $module Rubrique dont l'accès doit être vérifié.
      * 
      * @return bool `true` si l'utilisateur peut éditer la rubrique, `false` sinon.
      */
-    public function canEdit(?Module $module): bool
+    public function canEdit(?string $module): bool
     {
-        $moduleName = $module->value;
-
-        return ($this->roles->$moduleName ?? -1) >= UserRoles::EDIT->value;
+        return ($this->roles->$module ?? -1) >= UserRoles::EDIT->value;
     }
 
     /**

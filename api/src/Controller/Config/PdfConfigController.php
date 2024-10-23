@@ -13,7 +13,7 @@ use App\Service\PdfService;
 final class PdfConfigController extends Controller
 {
     private PdfService $pdfService;
-    private Module $module = Module::CONFIG;
+    private string $module = Module::CONFIG;
     private string $sseEventName = "config/pdf";
 
     public function __construct(

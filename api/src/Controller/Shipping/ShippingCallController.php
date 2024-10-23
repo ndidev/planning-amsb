@@ -15,7 +15,7 @@ use App\Service\ShippingService;
 final class ShippingCallController extends Controller
 {
     private ShippingService $shippingService;
-    private Module $module = Module::SHIPPING;
+    private string $module = Module::SHIPPING;
     private string $sseEventName = "consignation/escales";
 
     public function __construct(

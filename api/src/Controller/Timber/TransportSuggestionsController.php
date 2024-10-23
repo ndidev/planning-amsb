@@ -12,7 +12,7 @@ use App\Service\TimberService;
 final class TransportSuggestionsController extends Controller
 {
     private TimberService $service;
-    private Module $module = Module::TIMBER;
+    private string $module = Module::TIMBER;
 
     public function __construct()
     {

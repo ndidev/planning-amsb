@@ -47,7 +47,7 @@ class QuickAppointmentAddService
         return $quickAppointmentAdd;
     }
 
-    public function quickAddExists(Module $module, int $id): bool
+    public function quickAddExists(string $module, int $id): bool
     {
         return $this->quickAppointmentAddRepository->quickAddExists($module, $id);
     }
@@ -57,7 +57,7 @@ class QuickAppointmentAddService
     // =============
 
     /**
-     * @return array<string, Collection<QuickAppointmentAdd>>
+     * @return array<string, Collection<covariant QuickAppointmentAdd>>
      */
     public function getAllQuickAppointmentAdds(): array
     {

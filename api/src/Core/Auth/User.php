@@ -166,11 +166,9 @@ class User
         }
 
         // Si tout est OK :
-        // - remise à zéro des tentatives de connexions
         // - mise à jour de la dernière connexion
         // - enregistrement de la session
         // - envoi du cookie
-        $this->resetLoginAttempts();
 
         $now = DateUtils::format(DateUtils::SQL_TIMESTAMP, new \DateTime());
 
@@ -343,32 +341,28 @@ class User
     /**
      * Vérifie si l'utilisateur peut accéder à une rubrique.
      * 
-     * @param ?Module Rubrique dont l'accès doit être vérifié.
+     * @param ?Module::* $module Rubrique dont l'accès doit être vérifié.
      * 
      * @return bool `true` si l'utilisateur peut accéder à la rubrique, `false` sinon.
      */
-    public function canAccess(?Module $module): bool
+    public function canAccess(?string $module): bool
     {
         // Accès à l'accueil et à l'écran individuel de modification du nom/mdp
         if ($module === null || $module === Module::USER) return true;
 
-        $moduleName = $module->value;
-
-        return ($this->roles->$moduleName ?? -1) >= UserRoles::ACCESS->value;
+        return ($this->roles->$module ?? -1) >= UserRoles::ACCESS->value;
     }
 
     /**
      * Vérifie si l'utilisateur peut éditer une rubrique.
      * 
-     * @param ?Module Rubrique dont l'accès doit être vérifié.
+     * @param ?Module::* $module Rubrique dont l'accès doit être vérifié.
      * 
      * @return bool `true` si l'utilisateur peut éditer la rubrique, `false` sinon.
      */
-    public function canEdit(?Module $module): bool
+    public function canEdit(?string $module): bool
     {
-        $moduleName = $module->value;
-
-        return ($this->roles->$moduleName ?? -1) >= UserRoles::EDIT->value;
+        return ($this->roles->$module ?? -1) >= UserRoles::EDIT->value;
     }
 
     /**
@@ -549,94 +543,6 @@ class User
         ]);
 
         $this->sse->addEvent("admin/sessions", "close", "sid:{$sid}");
-    }
-
-    /**
-     * Incrémente le nombre de tentatives de connexions de l'utilisateur.
-     *
-     * @return int Nombre de tentatives de connexion.
-     *
-     * @throws \PDOException 
-     * @throws \RedisException 
-     */
-    private function incrementLoginAttempts(): int
-    {
-        (new MySQL)
-            ->query(
-                "UPDATE admin_users
-          SET login_attempts = login_attempts + 1
-          WHERE uid = '{$this->uid}'"
-            );
-
-        $login_attempts = $this->redis->hIncrBy("admin:users:{$this->uid}", "login_attempts", 1);
-
-        return $login_attempts;
-    }
-
-    /**
-     * Réinitialise le nombre de tentatives de connexions pour un utilisateur.
-     * 
-     * @throws \PDOException 
-     * @throws \RedisException 
-     */
-    private function resetLoginAttempts(): void
-    {
-        (new MySQL)
-            ->query("UPDATE admin_users SET login_attempts = 0 WHERE uid = '{$this->uid}'");
-
-        $this->redis->hSet("admin:users:{$this->uid}", "login_attempts", 0);
-    }
-
-    /**
-     * Bloque le compte d'un utilisateur.
-     * 
-     * @param string $raison Raison du blocage du compte.
-     * 
-     * @throws \PDOException 
-     * @throws \RedisException 
-     */
-    private function lockAccount(string $raison = ""): void
-    {
-        // Si le compte est déjà bloqué, ne rien faire
-        if ($this->status === AccountStatus::LOCKED) {
-            return;
-        }
-
-        (new MySQL)
-            ->prepare(
-                "UPDATE admin_users
-          SET
-            statut = :statut,
-            historique = CONCAT(historique, '\n', :raison)
-          WHERE uid = :uid"
-            )
-            ->execute([
-                "statut" => AccountStatus::LOCKED->value,
-                "raison" => $raison,
-                "uid" => $this->uid
-            ]);
-
-        $this->redis->hMSet(
-            "admin:users:{$this->uid}",
-            [
-                "statut" => AccountStatus::LOCKED->value,
-                "historique" => $this->redis->hGet("admin:users:{$this->uid}", "historique") . PHP_EOL . $raison
-            ]
-        );
-
-        // Notification SSE
-        $user = $this->redis->hGetAll("admin:users:{$this->uid}");
-        unset($user["password"]);
-        unset($user["can_login"]);
-        unset($user["login_attempts"]);
-        // Rétablissement des types int pour les rôles
-        $user["roles"] = json_decode($user["roles"]);
-        foreach ($user["roles"] as $role => &$value) {
-            $value = (int) $value;
-        }
-        $this->sse->addEvent("admin/users", "update", $this->uid, $user);
-
-        $this->clearSessions();
     }
 
     /**

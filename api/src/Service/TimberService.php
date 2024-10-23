@@ -130,9 +130,9 @@ class TimberService
      */
     public function createAppointment(array $input): TimberAppointment
     {
-        $rdv = $this->makeTimberAppointmentFromForm($input);
+        $appointment = $this->makeTimberAppointmentFromForm($input);
 
-        return $this->timberAppointmentRepository->createAppointment($rdv);
+        return $this->timberAppointmentRepository->createAppointment($appointment);
     }
 
     /**
@@ -145,9 +145,9 @@ class TimberService
      */
     public function updateAppointment($id, array $input): TimberAppointment
     {
-        $rdv = $this->makeTimberAppointmentFromForm($input)->setId($id);
+        $appointment = $this->makeTimberAppointmentFromForm($input)->setId($id);
 
-        return $this->timberAppointmentRepository->updateAppointment($rdv);
+        return $this->timberAppointmentRepository->updateAppointment($appointment);
     }
 
     /**

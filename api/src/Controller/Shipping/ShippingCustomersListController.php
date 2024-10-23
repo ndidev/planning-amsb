@@ -17,7 +17,7 @@ use App\Service\ShippingService;
 final class ShippingCustomersListController extends Controller
 {
     private ShippingService $shippingService;
-    private Module $module = Module::SHIPPING;
+    private string $module = Module::SHIPPING;
 
     public function __construct()
     {

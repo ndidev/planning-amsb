@@ -12,24 +12,20 @@ class InfoBannerLine extends AbstractEntity
 {
     use IdentifierTrait;
 
-    private Module $module;
-    private bool $pc;
-    private bool $tv;
-    private string $message;
-    private string $color;
+    private ?string $module = null;
+    private bool $pc = false;
+    private bool $tv = false;
+    private string $message = '';
+    private string $color = '';
 
-    public function getModule(): Module
+    public function getModule(): ?string
     {
         return $this->module;
     }
 
-    public function setModule(Module|string $module): static
+    public function setModule(string $module): static
     {
-        if (is_string($module)) {
-            $this->module = Module::tryFrom($module);
-        } else {
-            $this->module = $module;
-        }
+        $this->module = Module::tryFrom($module);
 
         return $this;
     }

@@ -51,9 +51,9 @@ final class UserRepository extends Repository
      * 
      * @param string $uid UID du compte à récupérer.
      * 
-     * @return User Compte utilisateur récupéré
+     * @return ?User Compte utilisateur récupéré
      */
-    public function fetchUserByUid(string $uid): User
+    public function fetchUserByUid(string $uid): ?User
     {
         // Tentative Redis
         $userRaw = $this->redis->hGetAll("admin:users:{$uid}");
@@ -71,7 +71,7 @@ final class UserRepository extends Repository
             $userRaw = $request->fetch();
 
             if (!$userRaw) {
-                throw new InvalidAccountException();
+                return null;
             }
 
             // Update Redis
