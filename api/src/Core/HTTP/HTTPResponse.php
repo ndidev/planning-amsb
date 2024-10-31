@@ -9,7 +9,7 @@ use App\Core\Logger\ErrorLogger;
  * 
  * Construction des réponses HTTP, avec compression du corps.
  */
-class HTTPResponse
+final class HTTPResponse
 {
     // HTTP status codes constants
     public const HTTP_CONTINUE_100 = 100;
@@ -79,6 +79,7 @@ class HTTPResponse
 
 
     private int $code = self::HTTP_OK_200;
+    /** @var array<string, string> $headers */
     private array $headers = [];
     private ?string $body = null;
     private bool $compression = true;
@@ -110,7 +111,7 @@ class HTTPResponse
         $this->applyHeaders();
 
         // Corps de la réponse
-        if ($this->body && $_SERVER["REQUEST_METHOD"] !== "HEAD") {
+        if ($this->body !== null && $_SERVER["REQUEST_METHOD"] !== "HEAD") {
             echo $this->body;
         }
 
@@ -129,20 +130,6 @@ class HTTPResponse
     public function setCode(int $code): HTTPResponse
     {
         $this->code = $code;
-
-        return $this;
-    }
-
-    /**
-     * Set HTTP reponse headers.
-     * 
-     * @param array $headers Array of HTTP headers `[name => value]`.
-     * 
-     * @return HTTPResponse
-     */
-    public function setHeaders(array $headers): HTTPResponse
-    {
-        $this->headers = $headers;
 
         return $this;
     }
