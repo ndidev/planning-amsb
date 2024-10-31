@@ -50,7 +50,7 @@ if (Security::checkIfRequestCanBeDone() === false) {
 
 /**
  * Routes de l'API.
- * @var array{{string, string}} $routes
+ * @var list<array{0: string, 1: string}> $routes
  */
 $routes = [
     // Affichage général
@@ -88,7 +88,7 @@ $routes = [
 
     // Config
     ["/config/agence/[a:service]?", AgencyController::class],
-    ["/config/bandeau-info/[i:id]?", InfoBannerController::class],
+    ["/config/bandeau-info", InfoBannerController::class],
     ["/config/pdf/[i:id]?", PdfConfigController::class],
     ["/config/pdf/generer", PdfViewerController::class],
     ["/config/ajouts-rapides", QuickAppointmentAddController::class],

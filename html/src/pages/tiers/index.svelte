@@ -127,10 +127,7 @@
   let logoJustDeleted = false;
   let logoJustRestored = false;
 
-  type NombreRdv = {
-    id: number;
-    nombre_rdv: number;
-  };
+  type NombreRdv = number;
 
   /**
    * Au changement de la liste déroulante,
@@ -148,9 +145,9 @@
     // Récupère le nombre de RDV pour le tiers sélectionné.
     try {
       if (!isNaN(parseInt(selectedId))) {
-        selectedTiers.nombre_rdv = (
-          await fetcher<NombreRdv>(`tiers/${selectedId}/nombre_rdv`)
-        ).nombre_rdv;
+        selectedTiers.nombre_rdv = await fetcher<NombreRdv>(
+          `tiers/${selectedId}/nombre_rdv`
+        );
       }
     } catch (error) {
       Notiflix.Notify.failure(error.message);

@@ -23,7 +23,7 @@ final class VoyageNumberController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -46,13 +46,13 @@ final class VoyageNumberController extends Controller
     /**
      * Renvoie le dernier numéro de voyage du navire.
      */
-    public function read()
+    public function read(): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
-        $input = $this->request->query;
+        $input = $this->request->getQuery();
 
         $shipName = $input["navire"] ?? "";
         $currentCallId = $input["id"] ?? "";

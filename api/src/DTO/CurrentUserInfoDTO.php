@@ -10,7 +10,7 @@ class CurrentUserInfoDTO implements \JsonSerializable
 {
     public function __construct(private User $user) {}
 
-    public function jsonSerialize(): array
+    public function jsonSerialize(): mixed
     {
         return [
             "uid" => $this->user->getUid(),

@@ -4,14 +4,8 @@ namespace App\Entity;
 
 class Country extends AbstractEntity
 {
-    private string $iso;
-    private string $name;
-
-    public function __construct(array $rawData = [])
-    {
-        $this->setISO($rawData["iso"] ?? "");
-        $this->setName($rawData["nom"] ?? "");
-    }
+    private string $iso = '';
+    private string $name = '';
 
     public function getISO(): string
     {

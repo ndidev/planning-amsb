@@ -7,6 +7,20 @@ namespace App\Entity;
 use App\Core\Traits\IdentifierTrait;
 use App\Service\CountryService;
 
+/**
+ * @phpstan-type ThirdPartyRoles array{
+ *                                 bois_fournisseur: bool,
+ *                                 bois_client: bool,
+ *                                 bois_transporteur: bool,
+ *                                 bois_affreteur: bool,
+ *                                 vrac_fournisseur: bool,
+ *                                 vrac_client: bool,
+ *                                 vrac_transporteur: bool,
+ *                                 maritime_armateur: bool,
+ *                                 maritime_affreteur: bool,
+ *                                 maritime_courtier: bool,
+ *                               }
+ */
 class ThirdParty extends AbstractEntity
 {
     use IdentifierTrait;
@@ -20,6 +34,7 @@ class ThirdParty extends AbstractEntity
     private ?Country $country = null;
     private string $phone = '';
     private string $comments = '';
+    /** @phpstan-var ThirdPartyRoles $roles */
     private array $roles = [
         "bois_fournisseur" => false,
         "bois_client" => false,
@@ -152,6 +167,13 @@ class ThirdParty extends AbstractEntity
         return $this;
     }
 
+    /**
+     * Get the roles.
+     * 
+     * @return array<string, bool>
+     * 
+     * @phpstan-return ThirdPartyRoles
+     */
     public function getRoles(): array
     {
         return $this->roles;

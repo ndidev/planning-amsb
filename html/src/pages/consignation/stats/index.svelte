@@ -29,7 +29,7 @@
 
   type Stats = {
     Total: number;
-    "Par année": {
+    ByYear: {
       [annee: string]: {
         "1": { nombre: number; ids: number[] };
         "2": { nombre: number; ids: number[] };
@@ -113,34 +113,34 @@
         </thead>
 
         <tbody>
-          {#each Object.entries(stats["Par année"]) as [annee, statsAnnee]}
-            {@const totalAnnee = Object.values(statsAnnee)
+          {#each Object.entries(stats.ByYear) as [year, yearStats]}
+            {@const yearTotal = Object.values(yearStats)
               .map(({ nombre }) => nombre)
               .reduce((sum, current) => sum + current, 0)}
 
             <tr>
-              <th scope="row">{annee}</th>
-              {#each Object.entries(statsAnnee) as [mois, statsMois]}
+              <th scope="row">{year}</th>
+              {#each Object.entries(yearStats) as [monthIndex, monthStats]}
                 <td>
-                  <button on:click={() => recupererDetails(statsMois.ids)}
-                    >{statsMois.nombre.toLocaleString("fr-FR")}</button
+                  <button on:click={() => recupererDetails(monthStats.ids)}
+                    >{monthStats.nombre.toLocaleString("fr-FR")}</button
                   >
                 </td>
               {/each}
 
               <!-- Total par année -->
               <td class="total">
-                {#if totalAnnee > 0}
+                {#if yearTotal > 0}
                   <button
                     class="bold"
                     on:click={() =>
                       recupererDetails(
-                        Object.values(statsAnnee)
+                        Object.values(yearStats)
                           .map(({ ids }) => ids)
                           .reduce((prev, current) => [...current, ...prev], [])
                       )}
                   >
-                    {Object.values(statsAnnee)
+                    {Object.values(yearStats)
                       .map(({ nombre }) => nombre)
                       .reduce((sum, current) => sum + current, 0)
                       .toLocaleString("fr-FR")}
@@ -157,16 +157,16 @@
         <tfoot>
           <tr>
             <th>Moyenne</th>
-            {#each [...Array(12).keys()] as mois}
+            {#each [...Array(12).keys()] as monthIndex}
               <td>
                 {Math.round(
                   // Total des escales par mois
-                  Object.values(stats["Par année"])
-                    .map((statsAnnee) => statsAnnee[mois + 1].nombre)
+                  Object.values(stats.ByYear)
+                    .map((statsAnnee) => statsAnnee[monthIndex + 1].nombre)
                     .reduce((total, valeur) => total + valeur, 0) /
                     // Nombre d'années (ignorer les années à zéro escale)
-                    (Object.values(stats["Par année"])
-                      .map((statsAnnee) => statsAnnee[mois + 1])
+                    (Object.values(stats.ByYear)
+                      .map((yearStats) => yearStats[monthIndex + 1])
                       .filter((valeur) => valeur).length || 1)
                 ).toLocaleString("fr-FR")}
               </td>
@@ -176,9 +176,9 @@
                 class="bold"
                 on:click={() =>
                   recupererDetails(
-                    Object.values(stats["Par année"])
-                      .map((annee) =>
-                        Object.values(annee)
+                    Object.values(stats.ByYear)
+                      .map((year) =>
+                        Object.values(year)
                           .map(({ ids }) => ids)
                           .reduce((prev, current) => [...prev, ...current], [])
                       )

@@ -538,7 +538,7 @@ class User
     {
         $this->redis->del("admin:sessions:{$sid}");
 
-        setcookie($_ENV["SESSION_COOKIE_NAME"], false, [
+        setcookie($_ENV["SESSION_COOKIE_NAME"], "", [
             "path" => $_ENV["SESSION_COOKIE_PATH"]
         ]);
 

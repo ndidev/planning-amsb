@@ -23,7 +23,7 @@ final class TransportSuggestionsController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -32,7 +32,7 @@ final class TransportSuggestionsController extends Controller
 
             case 'HEAD':
             case 'GET':
-                $this->readAll($this->request->query);
+                $this->readAll();
                 break;
 
             default:
@@ -45,17 +45,17 @@ final class TransportSuggestionsController extends Controller
 
     /**
      * Renvoie les suggestions de transporteurs pour un chargement et une livraison.
-     * 
-     * @param array $filter
      */
-    public function readAll(array $filter)
+    public function readAll(): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
-        $loadingPlaceId = $filter["chargement"] ?? 0;
-        $deliveryPlaceId = $filter["livraison"] ?? 0;
+        $query = $this->request->getQuery();
+
+        $loadingPlaceId = (int) ($query["chargement"] ?? 0);
+        $deliveryPlaceId = (int) ($query["livraison"] ?? 0);
 
         $suggestions = $this->service->getTransportSuggestions($loadingPlaceId, $deliveryPlaceId);
 

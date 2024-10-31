@@ -23,7 +23,7 @@ final class ShipsInOpsController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -46,11 +46,14 @@ final class ShipsInOpsController extends Controller
     /**
      * Renvoie le dernier numéro de voyage du navire.
      */
-    public function readAll()
+    public function readAll(): void
     {
-        $query = $this->request->query;
+        $query = $this->request->getQuery();
 
-        $shipsInOps = $this->shippingService->getShipsInOps($query);
+        $startDate = new \DateTimeImmutable($query["date_debut"] ?? '');
+        $endDate = new \DateTimeImmutable($query["date_fin"] ?? '9999-12-31');
+
+        $shipsInOps = $this->shippingService->getShipsInOps($startDate, $endDate);
 
         $etag = ETag::get($shipsInOps);
 

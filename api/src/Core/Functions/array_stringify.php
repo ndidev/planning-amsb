@@ -5,10 +5,10 @@ namespace App\Core\Functions;
 /**
  * Stringify an array.
  * 
- * @param array $array       Array to be stringified.
- * @param int   $indentation Indentation spaces for the string output.
- * @param int   $depth       Current depth of the array.
- * @param int   $maxDepth    Maximum depth of the array to be stringified.
+ * @param array<mixed> $array       Array to be stringified.
+ * @param int          $indentation Indentation spaces for the string output.
+ * @param int          $depth       Current depth of the array.
+ * @param int          $maxDepth    Maximum depth of the array to be stringified.
  * 
  * @return string Stringified array
  */
@@ -33,7 +33,7 @@ function array_stringify(
         }
 
         if (is_object($value)) {
-            $value = print_r($value, 1);
+            $value = print_r($value, true);
         }
 
         $string .= $indentation_spaces . "$key => $value" . PHP_EOL;

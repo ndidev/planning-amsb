@@ -30,7 +30,7 @@ final class UserAccountController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)

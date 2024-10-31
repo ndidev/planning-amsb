@@ -26,7 +26,7 @@ final class ShipNamesController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -49,7 +49,7 @@ final class ShipNamesController extends Controller
     /**
      * Renvoie le dernier numéro de voyage du navire.
      */
-    public function readAllShipNames()
+    public function readAllShipNames(): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();

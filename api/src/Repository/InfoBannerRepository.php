@@ -21,36 +21,16 @@ final class InfoBannerRepository extends Repository
      * 
      * @return Collection<InfoBannerLine> Lignes du bandeau d'infos.
      */
-    public function fetchAllLines(array $filter): Collection
+    public function fetchAllLines(): Collection
     {
-        // Filtre
-        $module = $filter['module'] ?? "";
-        $pc = $filter['pc'] ?? "";
-        $tv = $filter['tv'] ?? "";
-
-        $sqlFilter = "";
-        $sqlModuleFilter = $module === "" ? "" : "module = '$module'";
-        $sqlPcFilter = $pc === "" ? "" : "pc = $pc";
-        $sqlTvFilter = $tv === "" ? "" : "tv = $tv";
-
-        $sqlFilterArray = [];
-        foreach ([$sqlModuleFilter, $sqlPcFilter, $sqlTvFilter] as $filterPart) {
-            if ($filterPart !== "") {
-                array_push($sqlFilterArray, $filterPart);
-            }
-        }
-        if ($sqlFilterArray !== []) {
-            $sqlFilter = "WHERE " . join(" AND ", $sqlFilterArray);
-        }
-
-        $statement = "SELECT * FROM bandeau_info $sqlFilter";
-
-        $request = $this->mysql->query($statement);
-        $linesRaw = $request->fetchAll();
+        $linesRaw = $this->mysql->query("SELECT * FROM bandeau_info")->fetchAll();
 
         $infoBannerService = new InfoBannerService();
 
-        $lines = array_map(fn(array $line) => $infoBannerService->makeLineFromDatabase($line), $linesRaw);
+        $lines = array_map(
+            fn(array $line) => $infoBannerService->makeLineFromDatabase($line),
+            $linesRaw
+        );
 
         return new Collection($lines);
     }
@@ -108,7 +88,7 @@ final class InfoBannerRepository extends Repository
             'message' => mb_substr($line->getMessage(), 0, 255),
         ]);
 
-        $lastInsertId = $this->mysql->lastInsertId();
+        $lastInsertId = (int) $this->mysql->lastInsertId();
         $this->mysql->commit();
 
         return $this->fetchLine($lastInsertId);

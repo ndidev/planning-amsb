@@ -12,7 +12,22 @@ use App\DTO\CurrentUserInfoDTO;
 use App\Entity\User;
 use App\Repository\UserRepository;
 
-class UserService
+/**
+ * @phpstan-type UserArray array{
+ *                           uid?: string,
+ *                           login?: string,
+ *                           nom?: string,
+ *                           can_login?: bool,
+ *                           roles?: string|array<string, int>,
+ *                           statut?: string,
+ *                           last_connection?: string,
+ *                           commentaire?: string,
+ *                           historique?: string,
+ *                         }
+ * 
+ * @phpstan-import-type UserRolesObject from \App\Entity\User
+ */
+final class UserService
 {
     private UserRepository $userRepository;
 
@@ -23,6 +38,15 @@ class UserService
         $this->userRepository = new UserRepository();
     }
 
+    /**
+     * Crée un objet User à partir des données brutes de la base de données.
+     * 
+     * @param array $rawData 
+     * 
+     * @phpstan-param UserArray $rawData
+     * 
+     * @return User 
+     */
     public function makeUserFromDatabase(array $rawData): User
     {
         $user = (new User())
@@ -39,6 +63,15 @@ class UserService
         return $user;
     }
 
+    /**
+     * Crée un objet User à partir des données d'un formulaire.
+     * 
+     * @param array $rawData 
+     * 
+     * @phpstan-param UserArray $rawData
+     * 
+     * @return User 
+     */
     public function makeUserFromForm(array $rawData): User
     {
         $user = (new User())
@@ -52,6 +85,13 @@ class UserService
         return $user;
     }
 
+    /**
+     * Crée un DTO pour la mise à jour des informations de l'utilisateur courant.
+     * 
+     * @param array{nom?: string, password?: string} $rawData 
+     * 
+     * @return CurrentUserFormDTO 
+     */
     public function makeCurrentUserDTO(array $rawData): CurrentUserFormDTO
     {
         $currentUserDTO = (new CurrentUserFormDTO())
@@ -98,7 +138,10 @@ class UserService
     /**
      * Crée un utilisateur.
      * 
-     * @param array $input 
+     * @param array $input
+     * @param string $adminName
+     * 
+     * @phpstan-param UserArray $input
      * 
      * @return User 
      */
@@ -109,6 +152,17 @@ class UserService
         return $this->userRepository->createUser($user, $adminName);
     }
 
+    /**
+     * Met à jour un utilisateur.
+     * 
+     * @param string $uid 
+     * @param array $input 
+     * @param AuthUser $admin 
+     * 
+     * @phpstan-param UserArray $input
+     * 
+     * @return User 
+     */
     public function updateUser(string $uid, array $input, AuthUser $admin): User
     {
         $user = $this->makeUserFromForm($input)->setUid($uid);
@@ -147,6 +201,17 @@ class UserService
         $this->sse?->addEvent("admin/sessions", "close", "uid:{$uid}");
     }
 
+    /**
+     * Récupère les informations de l'utilisateur courant.
+     * 
+     * @return null|array{
+     *                uid: string,
+     *                login: string,
+     *                nom: string,
+     *                roles: UserRolesObject,
+     *                statut: string,
+     *              }
+     */
     public function getCurrentUserInfo(): ?array
     {
         if (!$this->currentUser) {
@@ -162,6 +227,13 @@ class UserService
         ];
     }
 
+    /**
+     * Met à jour les informations de l'utilisateur courant.
+     * 
+     * @param array{nom?: string, password?: string} $input
+     * 
+     * @return CurrentUserInfoDTO
+     */
     public function updateCurrentUser(array $input): CurrentUserInfoDTO
     {
         $currentUserDTO = $this->makeCurrentUserDTO($input);

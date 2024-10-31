@@ -26,7 +26,7 @@ final class ShippingCargoListController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -49,7 +49,7 @@ final class ShippingCargoListController extends Controller
     /**
      * Renvoie la liste des marchandises utilisées en consignation.
      */
-    public function readAll()
+    public function readAll(): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();

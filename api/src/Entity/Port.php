@@ -4,15 +4,9 @@ namespace App\Entity;
 
 class Port extends AbstractEntity
 {
-    private string $locode;
-    private string $name;
-    private string $displayName;
-
-    public function __construct(array $rawData = [])
-    {
-        $this->setLocode($rawData["locode"] ?? "");
-        $this->setName($rawData["nom"] ?? "");
-    }
+    private string $locode = '';
+    private string $name = '';
+    private string $displayName = '';
 
     public function getLocode(): string
     {

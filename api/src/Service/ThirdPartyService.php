@@ -10,7 +10,29 @@ use App\Core\Logger\ErrorLogger;
 use App\Entity\ThirdParty;
 use App\Repository\ThirdPartyRepository;
 
-class ThirdPartyService
+/**
+ * @phpstan-type ThirdPartyData array{
+ *                                id?: int,
+ *                                nom_court?: string,
+ *                                nom_complet?: string,
+ *                                adresse_ligne_1?: string,
+ *                                adresse_ligne_2?: string,
+ *                                cp?: string,
+ *                                ville?: string,
+ *                                pays?: string,
+ *                                telephone?: string,
+ *                                commentaire?: string,
+ *                                non_modifiable?: bool,
+ *                                lie_agence?: bool,
+ *                                roles?: ThirdPartyRoles,
+ *                                logo?: string,
+ *                                actif?: bool,
+ *                                nombre_rdv?: int
+ *                              }
+ * 
+ * @phpstan-import-type ThirdPartyRoles from \App\Entity\ThirdParty
+ */
+final class ThirdPartyService
 {
     private ThirdPartyRepository $thirdPartyRepository;
 
@@ -19,6 +41,15 @@ class ThirdPartyService
         $this->thirdPartyRepository = new ThirdPartyRepository();
     }
 
+    /**
+     * Creates a ThirdParty object from raw data.
+     * 
+     * @param array $rawData 
+     * 
+     * @phpstan-param ThirdPartyData $rawData
+     * 
+     * @return ThirdParty 
+     */
     public function makeThirdPartyFromDatabase(array $rawData): ThirdParty
     {
         $thirdParty = (new ThirdParty())
@@ -38,13 +69,24 @@ class ThirdPartyService
             ->setIsActive($rawData["actif"] ?? true)
             ->setAppointmentCount($rawData["nombre_rdv"] ?? 0);
 
-        foreach ($thirdParty->getRoles() as $role => $value) {
-            $thirdParty->setRole($role, $rawData[$role] ?? false);
+        $roles = json_decode($rawData["roles"] ?? "[]", true);
+
+        foreach ($thirdParty->getRoles() as $role => $default) {
+            $thirdParty->setRole($role, $roles[$role] ?? $default);
         }
 
         return $thirdParty;
     }
 
+    /**
+     * Creates a ThirdParty object from form data.
+     * 
+     * @param array $rawData 
+     * 
+     * @phpstan-param ThirdPartyData $rawData
+     * 
+     * @return ThirdParty 
+     */
     public function makeThirdPartyFromForm(array $rawData): ThirdParty
     {
         $thirdParty = (new ThirdParty())
@@ -112,6 +154,8 @@ class ThirdPartyService
      * 
      * @param array $input Elements of the third party to create.
      * 
+     * @phpstan-param ThirdPartyData $input
+     * 
      * @return ThirdParty Created third party.
      */
     public function createThirdParty(array $input): ThirdParty
@@ -126,6 +170,8 @@ class ThirdPartyService
      * 
      * @param int   $id    ID of the third party to update.
      * @param array $input Elements of the third party to update.
+     * 
+     * @phpstan-param ThirdPartyData $input
      * 
      * @return ThirdParty Updated third party.
      */
@@ -149,22 +195,33 @@ class ThirdPartyService
     }
 
     /**
+     * Retrieves the number of appointments for all third parties.
+     * 
+     * @return array<string, int> Number of appointments for each third party.
+     */
+    public function getAllAppointmentCounts(): array
+    {
+        return $this->thirdPartyRepository->getAllAppointmentCounts();
+    }
+
+    /**
      * Retrieves the number of appointments for a third party or all third parties.
      * 
-     * @param int $id Optional. ID of the third party to retrieve.
+     * @param int $id ID of the third party to retrieve.
      * 
-     * @return array Number of appointments for the third party(s).
+     * @return int|false Number of appointments for the third party(s).
+     *                   `false` if the third party does not exist.
      */
-    public function getAppointmentCount(?int $id = null): array
+    public function getAppointmentCountForId(int $id): int|false
     {
-        return $this->thirdPartyRepository->getAppointmentCount($id);
+        return $this->thirdPartyRepository->getAppointmentCountForId($id);
     }
 
     /**
      * Enregistrer un logo dans le dossier images
      * et retourne le hash du fichier.
      * 
-     * @param array|string|null $file Données du fichier (null pour effacement du logo existant).
+     * @param array{data: string}|string|null $file Données du fichier (null pour effacement du logo existant).
      * 
      * @return string|null|false Nom de fichier du logo si l'enregistrement a réussi, `false` sinon.
      */

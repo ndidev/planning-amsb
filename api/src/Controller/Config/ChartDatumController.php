@@ -26,7 +26,7 @@ final class ChartDatumController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -57,7 +57,7 @@ final class ChartDatumController extends Controller
     /**
      * Récupère toutes les côtes.
      */
-    public function readAll()
+    public function readAll(): void
     {
         $heightData = $this->chartDatumService->getAllData();
 
@@ -76,7 +76,7 @@ final class ChartDatumController extends Controller
     /**
      * Récupère une côte.
      */
-    public function read(string $name)
+    public function read(string $name): void
     {
         $heightDatum = $this->chartDatumService->getDatum($name);
 
@@ -101,7 +101,7 @@ final class ChartDatumController extends Controller
      * 
      * @param string $name Côte à modifier.
      */
-    public function update(string $name)
+    public function update(string $name): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");

@@ -6,11 +6,48 @@ use App\Core\Component\Collection;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\ServerException;
 use App\DTO\SupplierWithUniqueDeliveryNoteNumber;
+use App\DTO\TimberFilterDTO;
 use App\DTO\TimberRegistryEntryDTO;
+use App\DTO\TimberStatsDTO;
+use App\DTO\TimberTransportSuggestionsDTO;
 use App\Entity\Timber\TimberAppointment;
 use App\Repository\TimberAppointmentRepository;
 
-class TimberService
+/**
+ * @phpstan-type TimberAppointmentArray array{
+ *                                        id?: int,
+ *                                        attente?: bool,
+ *                                        date_rdv?: string,
+ *                                        heure_arrivee?: string,
+ *                                        heure_depart?: string,
+ *                                        fournisseur?: int,
+ *                                        chargement?: int,
+ *                                        livraison?: int,
+ *                                        client?: int,
+ *                                        transporteur?: int,
+ *                                        affreteur?: int,
+ *                                        commande_prete?: bool,
+ *                                        confirmation_affretement?: bool,
+ *                                        numero_bl?: string,
+ *                                        commentaire_public?: string,
+ *                                        commentaire_cache?: string,
+ *                                      }
+ * 
+ * @phpstan-type TimberRegistryEntryArray array{
+ *                                          date_rdv?: string,
+ *                                          fournisseur?: string,
+ *                                          chargement_nom?: string,
+ *                                          chargement_ville?: string,
+ *                                          chargement_pays?: string,
+ *                                          livraison_nom?: string,
+ *                                          livraison_cp?: string,
+ *                                          livraison_ville?: string,
+ *                                          livraison_pays?: string,
+ *                                          numero_bl?: string,
+ *                                          transporteur?: string,
+ *                                        }
+ */
+final class TimberService
 {
     private TimberAppointmentRepository $timberAppointmentRepository;
 
@@ -19,6 +56,15 @@ class TimberService
         $this->timberAppointmentRepository = new TimberAppointmentRepository();
     }
 
+    /**
+     * Crée un RDV bois à partir des données brutes de la base de données.
+     * 
+     * @param array $rawData Données brutes du RDV bois.
+     * 
+     * @phpstan-param TimberAppointmentArray $rawData
+     * 
+     * @return TimberAppointment RDV bois créé.
+     */
     public function makeTimberAppointmentFromDatabase(array $rawData): TimberAppointment
     {
         $thirdPartyService = new ThirdPartyService();
@@ -44,6 +90,15 @@ class TimberService
         return $appointment;
     }
 
+    /**
+     * Crée un RDV bois à partir des données brutes du formulaire.
+     * 
+     * @param array $rawData Données brutes du RDV bois.
+     * 
+     * @phpstan-param TimberAppointmentArray $rawData
+     * 
+     * @return TimberAppointment RDV bois créé.
+     */
     public function makeTimberAppointmentFromForm(array $rawData): TimberAppointment
     {
         $thirdPartyService = new ThirdPartyService();
@@ -69,6 +124,15 @@ class TimberService
         return $appointment;
     }
 
+    /**
+     * Crée un DTO d'entrée de registre bois à partir des données brutes.
+     * 
+     * @param array $rawData Données brutes de l'entrée de registre bois.
+     * 
+     * @phpstan-param TimberRegistryEntryArray $rawData
+     * 
+     * @return TimberRegistryEntryDTO 
+     */
     public function makeTimberRegisterEntryDTO(array $rawData): TimberRegistryEntryDTO
     {
         $registryEntry = (new TimberRegistryEntryDTO())
@@ -100,13 +164,13 @@ class TimberService
     /**
      * Récupère tous les RDV bois.
      * 
-     * @param array $query Paramètres de recherche.
+     * @param TimberFilterDTO $filter Paramètres de recherche.
      * 
      * @return Collection<TimberAppointment> Tous les RDV récupérés.
      */
-    public function getAppointments(array $query): Collection
+    public function getAppointments(TimberFilterDTO $filter): Collection
     {
-        return $this->timberAppointmentRepository->getAppointments($query);
+        return $this->timberAppointmentRepository->getAppointments($filter);
     }
 
     /**
@@ -126,6 +190,8 @@ class TimberService
      * 
      * @param array $input Eléments du RDV à créer
      * 
+     * @phpstan-param TimberAppointmentArray $input
+     * 
      * @return TimberAppointment Rendez-vous créé
      */
     public function createAppointment(array $input): TimberAppointment
@@ -140,6 +206,8 @@ class TimberService
      * 
      * @param int   $id ID du RDV à modifier
      * @param array $input  Eléments du RDV à modifier
+     * 
+     * @phpstan-param TimberAppointmentArray $input
      * 
      * @return TimberAppointment RDV modifié
      */
@@ -264,10 +332,15 @@ class TimberService
     /**
      * Renvoie l'extrait du registre d'affrètement avec le filtre appliqué.
      * 
-     * @param array $filtre 
+     * @param \DateTimeInterface $startDate Date de début du filtre.
+     * @param \DateTimeInterface $endDate   Date de fin du filtre.
+     * 
+     * @return string Extrait du registre d'affrètement au format CSV.
      */
-    public function getChateringRegister(array $filtre): string
-    {
+    public function getChateringRegister(
+        \DateTimeInterface $startDate,
+        \DateTimeInterface $endDate,
+    ): string {
         $output = fopen("php://temp/maxmemory:" . (5 * 1024 * 1024), "r+");
 
         if (!$output) {
@@ -275,7 +348,10 @@ class TimberService
         }
 
         try {
-            $registryEntries = $this->timberAppointmentRepository->getCharteringRegistryEntries($filtre);
+            $registryEntries =
+                $this
+                ->timberAppointmentRepository
+                ->getCharteringRegistryEntries($startDate, $endDate);
 
             // UTF-8 BOM
             $bom = chr(0xEF) . chr(0xBB) . chr(0xBF);
@@ -325,14 +401,16 @@ class TimberService
         }
     }
 
-    public function getTransportSuggestions(int $loadingPlaceId, int $deliveryPlaceId): array
-    {
+    public function getTransportSuggestions(
+        int $loadingPlaceId,
+        int $deliveryPlaceId
+    ): TimberTransportSuggestionsDTO {
         return $this->timberAppointmentRepository->getTransportSuggestions($loadingPlaceId, $deliveryPlaceId);
     }
 
-    public function getStats(array $filtre): array
+    public function getStats(TimberFilterDTO $filter): TimberStatsDTO
     {
-        return $this->timberAppointmentRepository->getStats($filtre);
+        return $this->timberAppointmentRepository->getStats($filter);
     }
 
     public function isDeliveryNoteNumberAvailable(

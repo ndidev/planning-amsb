@@ -8,6 +8,7 @@ use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
+use App\DTO\TimberFilterDTO;
 use App\Service\TimberService;
 
 final class TimberAppointmentController extends Controller
@@ -26,7 +27,7 @@ final class TimberAppointmentController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -38,7 +39,7 @@ final class TimberAppointmentController extends Controller
                 if ($this->id) {
                     $this->read($this->id);
                 } else {
-                    $this->readAll($this->request->query);
+                    $this->readAll();
                 }
                 break;
 
@@ -68,16 +69,16 @@ final class TimberAppointmentController extends Controller
 
     /**
      * Récupère tous les RDV bois.
-     * 
-     * @param array $filtre
      */
-    public function readAll(array $filtre): void
+    public function readAll(): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour accéder aux RDVs bois.");
         }
 
-        $appointments = $this->timberService->getAppointments($filtre);
+        $filter = new TimberFilterDTO($this->request->getQuery());
+
+        $appointments = $this->timberService->getAppointments($filter);
 
         $etag = ETag::get($appointments);
 

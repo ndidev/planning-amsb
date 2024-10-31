@@ -26,7 +26,7 @@ final class BulkProductController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -65,7 +65,7 @@ final class BulkProductController extends Controller
     /**
      * Récupère tous les produits vrac.
      */
-    public function readAll()
+    public function readAll(): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour accéder aux produits vrac.");
@@ -90,7 +90,7 @@ final class BulkProductController extends Controller
      * 
      * @param int  $id      id du produit à récupérer.
      */
-    public function read(int $id)
+    public function read(int $id): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour accéder aux produits vrac.");
@@ -117,7 +117,7 @@ final class BulkProductController extends Controller
     /**
      * Crée un produit vrac.
      */
-    public function create()
+    public function create(): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour créer un produit vrac.");
@@ -142,7 +142,7 @@ final class BulkProductController extends Controller
      * 
      * @param int $id id du produit à modifier.
      */
-    public function update(int $id)
+    public function update(int $id): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier un produit vrac.");
@@ -166,7 +166,7 @@ final class BulkProductController extends Controller
      * 
      * @param int $id id du produit à supprimer.
      */
-    public function delete(int $id)
+    public function delete(int $id): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour supprimer un produit vrac.");

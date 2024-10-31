@@ -72,7 +72,7 @@ class DateUtils
     /**
      * Convert a string to a `DateTime` object.
      * 
-     * If the date is already a `DateTime` object, return the date untouched.
+     * If the date is already a `DateTimeInterface` object, return the date untouched.
      * 
      * @param \DateTimeInterface|string $date 
      * 
@@ -84,13 +84,13 @@ class DateUtils
             $datetime = \DateTime::createFromInterface($date);
         } else {
             if (str_contains($date, "/")) {
-                $date_array = explode("/", $date);
-                $date_ymd = join("-", array_reverse($date_array));
+                $dateArray = explode("/", $date);
+                $dateYmd = join("-", array_reverse($dateArray));
             } else {
-                $date_ymd = $date;
+                $dateYmd = $date;
             }
 
-            $datetime = new \DateTime($date_ymd);
+            $datetime = new \DateTime($dateYmd);
         }
 
         return $datetime;

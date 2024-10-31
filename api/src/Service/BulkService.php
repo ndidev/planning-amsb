@@ -9,7 +9,38 @@ use App\Entity\Bulk\BulkQuality;
 use App\Repository\BulkAppointmentRepository;
 use App\Repository\BulkProductRepository;
 
-class BulkService
+/**
+ * @phpstan-type BulkAppointmentArray array{
+ *                                      id?: int,
+ *                                      date_rdv?: string,
+ *                                      heure?: string,
+ *                                      produit?: int,
+ *                                      qualite?: int,
+ *                                      quantite?: int,
+ *                                      max?: bool,
+ *                                      commande_prete?: bool,
+ *                                      fournisseur?: int,
+ *                                      client?: int,
+ *                                      transporteur?: int,
+ *                                      num_commande?: string,
+ *                                      commentaire?: string,
+ *                                    }
+ * 
+ * @phpstan-type BulkProductArray array{
+ *                                  id?: int,
+ *                                  nom?: string,
+ *                                  couleur?: string,
+ *                                  unite?: string,
+ *                                  qualites?: BulkQualityArray[],
+ *                                }
+ * 
+ * @phpstan-type BulkQualityArray array{
+ *                                  id?: int,
+ *                                  nom?: string,
+ *                                  couleur?: string,
+ *                                }
+ */
+final class BulkService
 {
     private BulkAppointmentRepository $appointmentRepository;
     private BulkProductRepository $productRepository;
@@ -28,6 +59,8 @@ class BulkService
      * Creates a bulk appointment from database data.
      *
      * @param array $rawData 
+     * 
+     * @phpstan-param BulkAppointmentArray $rawData 
      *
      * @return BulkAppointment 
      */
@@ -57,6 +90,8 @@ class BulkService
      * 
      * @param array $rawData
      * 
+     * @phpstan-param BulkAppointmentArray $rawData
+     * 
      * @return BulkAppointment
      */
     public function makeBulkAppointmentFromFormData(array $rawData): BulkAppointment
@@ -67,8 +102,8 @@ class BulkService
             ->setId($rawData["id"] ?? null)
             ->setDate($rawData["date_rdv"] ?? new \DateTimeImmutable("now"))
             ->setTime($rawData["heure"] ?? null)
-            ->setProduct($rawData["produit"] ?? null)
-            ->setQuality($rawData["qualite"] ?? null)
+            ->setProduct($this->getProduct($rawData["produit"] ?? null))
+            ->setQuality($this->getQuality($rawData["qualite"] ?? null))
             ->setQuantity($rawData["quantite"] ?? 0, $rawData["max"] ?? false)
             ->setReady($rawData["commande_prete"] ?? false)
             ->setSupplier($thirdPartyService->getThirdParty($rawData["fournisseur"] ?? null))
@@ -119,6 +154,8 @@ class BulkService
      * 
      * @param array $input Elements of the appointment to create.
      * 
+     * @phpstan-param BulkAppointmentArray $input
+     * 
      * @return BulkAppointment Created appointment.
      */
     public function createAppointment(array $input): BulkAppointment
@@ -134,6 +171,8 @@ class BulkService
      * @param int   $id    ID of the appointment to update.
      * @param array $input Elements of the appointment to update.
      * 
+     * @phpstan-param BulkAppointmentArray $input
+     * 
      * @return BulkAppointment Updated appointment.
      */
     public function updateAppointment($id, array $input): BulkAppointment
@@ -148,6 +187,8 @@ class BulkService
      * 
      * @param int   $id    ID of the appointment to update.
      * @param array $input Data to update.
+     * 
+     * @phpstan-param array{commande_prete?: int} $input
      * 
      * @return BulkAppointment Updated appointment.
      */
@@ -179,6 +220,8 @@ class BulkService
      * 
      * @param array $rawData 
      * 
+     * @phpstan-param BulkProductArray $rawData
+     * 
      * @return BulkProduct 
      */
     public function makeProductFromDatabase(array $rawData): BulkProduct
@@ -200,6 +243,8 @@ class BulkService
      * Creates a bulk product from form data.
      * 
      * @param array $rawData 
+     * 
+     * @phpstan-param BulkProductArray $rawData
      * 
      * @return BulkProduct 
      */
@@ -261,6 +306,8 @@ class BulkService
      * 
      * @param array $input Elements of the product to create.
      * 
+     * @phpstan-param BulkProductArray $input
+     * 
      * @return BulkProduct Created product.
      */
     public function createProduct(array $input): BulkProduct
@@ -275,6 +322,8 @@ class BulkService
      * 
      * @param int   $id     ID of the product to update.
      * @param array $input  Elements of the product to update.
+     * 
+     * @phpstan-param BulkProductArray $input
      * 
      * @return BulkProduct Updated product.
      */
@@ -307,6 +356,8 @@ class BulkService
      *
      * @param array $rawData 
      *
+     * @phpstan-param BulkQualityArray $rawData
+     * 
      * @return BulkQuality 
      */
     public function makeQualityFromDatabase(array $rawData): BulkQuality
@@ -323,6 +374,8 @@ class BulkService
      * Creates a bulk quality from form data.
      * 
      * @param array $rawData 
+     * 
+     * @phpstan-param BulkQualityArray $rawData
      * 
      * @return BulkQuality 
      */

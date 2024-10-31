@@ -25,8 +25,8 @@
 
   type Stats = {
     Total: number;
-    "Par année": {
-      [annee: string]: {
+    ByYear: {
+      [year: string]: {
         "1": number;
         "2": number;
         "3": number;
@@ -96,16 +96,16 @@
         </thead>
 
         <tbody>
-          {#each Object.entries(stats["Par année"]) as [annee, statsAnnee]}
+          {#each Object.entries(stats.ByYear) as [year, yearStats]}
             <tr>
-              <th scope="row">{annee}</th>
-              {#each Object.entries(statsAnnee) as [mois, camions]}
-                <td>{camions.toLocaleString("fr-FR")}</td>
+              <th scope="row">{year}</th>
+              {#each Object.entries(yearStats) as [monthNumber, numberOfTrucks]}
+                <td>{numberOfTrucks.toLocaleString("fr-FR")}</td>
               {/each}
 
               <!-- Total par année -->
               <td class="total">
-                {Object.values(statsAnnee)
+                {Object.values(yearStats)
                   .reduce((sum, current) => sum + current, 0)
                   .toLocaleString("fr-FR")}
               </td>
@@ -117,17 +117,20 @@
         <tfoot>
           <tr>
             <th>Moyenne</th>
-            {#each [...Array(12).keys()] as mois}
+            {#each [...Array(12).keys()] as monthIndex}
               <td>
                 {Math.round(
                   // Total des camions par mois
-                  Object.values(stats["Par année"])
-                    .map((statsAnnee) => statsAnnee[mois + 1])
-                    .reduce((total, valeur) => total + valeur, 0) /
+                  Object.values(stats.ByYear)
+                    .map((yearStats) => yearStats[monthIndex + 1])
+                    .reduce(
+                      (total, numberOfTrucks) => total + numberOfTrucks,
+                      0
+                    ) /
                     // Nombre d'années (ignorer les années à zéro camion)
-                    (Object.values(stats["Par année"])
-                      .map((statsAnnee) => statsAnnee[mois + 1])
-                      .filter((valeur) => valeur).length || 1)
+                    (Object.values(stats.ByYear)
+                      .map((yearStats) => yearStats[monthIndex + 1])
+                      .filter((value) => value).length || 1)
                 ).toLocaleString("fr-FR")}
               </td>
             {/each}

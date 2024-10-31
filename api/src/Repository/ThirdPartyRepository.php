@@ -105,16 +105,7 @@ final class ThirdPartyRepository extends Repository
                 pays = :country,
                 telephone = :phone,
                 commentaire = :comments,
-                bois_fournisseur = :bois_fournisseur,
-                bois_client = :bois_client,
-                bois_transporteur = :bois_transporteur,
-                bois_affreteur = :bois_affreteur,
-                vrac_fournisseur = :vrac_fournisseur,
-                vrac_client = :vrac_client,
-                vrac_transporteur = :vrac_transporteur,
-                maritime_armateur = :maritime_armateur,
-                maritime_affreteur = :maritime_affreteur,
-                maritime_courtier = :maritime_courtier,
+                roles = := roles,
                 logo = :logo,
                 actif = :active";
 
@@ -131,21 +122,12 @@ final class ThirdPartyRepository extends Repository
             'country' => $thirdParty->getCountry()->getISO(),
             'phone' => $thirdParty->getPhone(),
             'comments' => $thirdParty->getComments(),
-            'bois_fournisseur' => (int) $thirdParty->getRole("bois_fournisseur"),
-            'bois_client' => (int) $thirdParty->getRole("bois_client"),
-            'bois_transporteur' => (int) $thirdParty->getRole("bois_transporteur"),
-            'bois_affreteur' => (int) $thirdParty->getRole("bois_affreteur"),
-            'vrac_fournisseur' => (int) $thirdParty->getRole("vrac_fournisseur"),
-            'vrac_client' => (int) $thirdParty->getRole("vrac_client"),
-            'vrac_transporteur' => (int) $thirdParty->getRole("vrac_transporteur"),
-            'maritime_armateur' => (int) $thirdParty->getRole("maritime_armateur"),
-            'maritime_affreteur' => (int) $thirdParty->getRole("maritime_affreteur"),
-            'maritime_courtier' => (int) $thirdParty->getRole("maritime_courtier"),
+            'roles' => json_encode($thirdParty->getRoles()),
             'logo' => $thirdParty->getLogoFilename(),
             'active' => (int) $thirdParty->isActive(),
         ]);
 
-        $lastInsertId = $this->mysql->lastInsertId();
+        $lastInsertId = (int) $this->mysql->lastInsertId();
         $this->mysql->commit();
 
         return $this->fetchThirdParty($lastInsertId);
@@ -175,16 +157,7 @@ final class ThirdPartyRepository extends Repository
                 pays = :country,
                 telephone = :phone,
                 commentaire = :comments,
-                bois_fournisseur = :bois_fournisseur,
-                bois_client = :bois_client,
-                bois_transporteur = :bois_transporteur,
-                bois_affreteur = :bois_affreteur,
-                vrac_fournisseur = :vrac_fournisseur,
-                vrac_client = :vrac_client,
-                vrac_transporteur = :vrac_transporteur,
-                maritime_armateur = :maritime_armateur,
-                maritime_affreteur = :maritime_affreteur,
-                maritime_courtier = :maritime_courtier,
+                roles = :roles,
                 logo = $logoStatement,
                 actif = :active
             WHERE id = :id";
@@ -201,16 +174,7 @@ final class ThirdPartyRepository extends Repository
             'country' => $thirdParty->getCountry()->getISO(),
             'phone' => $thirdParty->getPhone(),
             'comments' => $thirdParty->getComments(),
-            'bois_fournisseur' => (int) $thirdParty->getRole("bois_fournisseur"),
-            'bois_client' => (int) $thirdParty->getRole("bois_client"),
-            'bois_transporteur' => (int) $thirdParty->getRole("bois_transporteur"),
-            'bois_affreteur' => (int) $thirdParty->getRole("bois_affreteur"),
-            'vrac_fournisseur' => (int) $thirdParty->getRole("vrac_fournisseur"),
-            'vrac_client' => (int) $thirdParty->getRole("vrac_client"),
-            'vrac_transporteur' => (int) $thirdParty->getRole("vrac_transporteur"),
-            'maritime_armateur' => (int) $thirdParty->getRole("maritime_armateur"),
-            'maritime_affreteur' => (int) $thirdParty->getRole("maritime_affreteur"),
-            'maritime_courtier' => (int) $thirdParty->getRole("maritime_courtier"),
+            'roles' => json_encode($thirdParty->getRoles()),
             'active' => (int) $thirdParty->isActive(),
             'id' => $thirdParty->getId(),
         ];
@@ -233,7 +197,7 @@ final class ThirdPartyRepository extends Repository
      */
     public function deleteThirdParty(int $id): bool
     {
-        $appointmentCount = $this->getAppointmentCount($id)["nombre_rdv"];
+        $appointmentCount = $this->getAppointmentCountForId($id);
         if ($appointmentCount > 0) {
             throw new ClientException("Le tiers est concerné par {$appointmentCount} rdv. Impossible de le supprimer.");
         }
@@ -249,15 +213,13 @@ final class ThirdPartyRepository extends Repository
     }
 
     /**
-     * Récupère le nombre de RDV pour un tiers ou tous les tiers.
+     * Récupère le nombre de RDV pour tous les tiers.
      * 
-     * @param int $id Optionnel. ID du tiers à récupérer.
-     * 
-     * @return array|false Nombre de RDV pour le(s) tiers, indexé par ID. FALSE si aucun tiers n'a de RDV.
+     * @return array<string, int> Nombre de RDV pour le(s) tiers, indexé par ID.
      */
-    public function getAppointmentCount(?int $id = null): array|false
+    public function getAllAppointmentCounts(): array
     {
-        $statementWithoutId =
+        $statement =
             "SELECT 
                 t.id,
                 (
@@ -301,9 +263,32 @@ final class ThirdPartyRepository extends Repository
             FROM tiers t
             ";
 
-        $statementWithId =
+        $request = $this->mysql->query($statement);
+        /** @var list<array{id: int, nombre_rdv: int}> $appointmentCountWithoutKeys */
+        $appointmentCountWithoutKeys = $request->fetchAll();
+
+        /** @var array<string, int> $appointmentCountWithKeys */
+        $appointmentCountWithKeys = [];
+        foreach ($appointmentCountWithoutKeys as $appointmentCount) {
+            if ($appointmentCount["nombre_rdv"] > 0) {
+                $appointmentCountWithKeys[(string) $appointmentCount["id"]] = $appointmentCount["nombre_rdv"];
+            }
+        }
+
+        return $appointmentCountWithKeys;
+    }
+
+    /**
+     * Récupère le nombre de RDV pour un tiers.
+     * 
+     * @param int $id Optionnel. ID du tiers à récupérer.
+     * 
+     * @return int|false 
+     */
+    public function getAppointmentCountForId(int $id): int|false
+    {
+        $statement =
             "SELECT 
-                t.id,
                 (
                 (SELECT COUNT(v.id)
                     FROM vrac_planning v
@@ -346,22 +331,11 @@ final class ThirdPartyRepository extends Repository
             WHERE t.id = :id
             ";
 
-        if (is_null($id)) {
-            $request = $this->mysql->query($statementWithoutId);
-            $appointmentCountWithoutKeys = $request->fetchAll();
+        $request = $this->mysql->prepare($statement);
+        $request->execute(["id" => $id]);
+        /** @var int|false $appointmentCount */
+        $appointmentCount = $request->fetch(\PDO::FETCH_COLUMN);
 
-            $appointmentCountWithKeys = [];
-            foreach ($appointmentCountWithoutKeys as $appointmentCount) {
-                if ($appointmentCount["nombre_rdv"] > 0) {
-                    $appointmentCountWithKeys[$appointmentCount["id"]] = $appointmentCount["nombre_rdv"];
-                }
-            }
-        } else {
-            $request = $this->mysql->prepare($statementWithId);
-            $request->execute(["id" => $id]);
-            $appointmentCountWithKeys = $request->fetch();
-        }
-
-        return $appointmentCountWithKeys;
+        return $appointmentCount ?: 0;
     }
 }

@@ -7,10 +7,33 @@ namespace App\Repository;
 use App\Core\Component\Collection;
 use App\Core\Component\ETAConverter;
 use App\Core\Exceptions\Server\DB\DBException;
+use App\DTO\ShippingFilterDTO;
+use App\DTO\ShippingStatsDetailsDTO;
+use App\DTO\ShippingStatsSummaryDTO;
 use App\Entity\Shipping\ShippingCall;
 use App\Entity\Shipping\ShippingCallCargo;
 use App\Service\ShippingService;
 
+/**
+ * @phpstan-type DraftsPerTonnage array{
+ *                                  navire: string,
+ *                                  date: string,
+ *                                  te: float,
+ *                                  tonnage: float,
+ *                                }
+ * 
+ * @phpstan-type ShippingStatsSummary array{
+ *                                      Total: int,
+                                        "Par année": array{int, array{int, array{nombre: int, ids: int[]}}},
+ *                                    }
+ * 
+ * @phpstan-type ShipsInOps list<array{
+ *                                 navire: string,
+ *                                 debut: string,
+ *                                 fin: string
+ *                               }>
+ * 
+ */
 final class ShippingRepository extends Repository
 {
     /**
@@ -28,11 +51,11 @@ final class ShippingRepository extends Repository
      * 
      * @return Collection<ShippingCall> Toutes les escale récupérées
      */
-    public function fetchAllCalls(array $filter = []): Collection
+    public function fetchAllCalls(bool $archives = false): Collection
     {
         $yesterday = (new \DateTime())->sub(new \DateInterval("P1D"))->format("Y-m-d");
 
-        if (array_key_exists("archives", $filter)) {
+        if ($archives) {
             $callsStatement =
                 "SELECT
                     id,
@@ -321,7 +344,7 @@ final class ShippingRepository extends Repository
             'commentaire' => $call->getComment(),
         ]);
 
-        $lastInsertId = $this->mysql->lastInsertId();
+        $lastInsertId = (int) $this->mysql->lastInsertId();
         $this->mysql->commit();
 
         // Marchandises
@@ -539,6 +562,8 @@ final class ShippingRepository extends Repository
      * Récupère tous les tirants d'eau du planning consignation.
      * 
      * @return array Tous les tirants d'eau récupérés
+     * 
+     * @phpstan-return DraftsPerTonnage
      */
     public function fetchDraftsPerTonnage(): array
     {
@@ -552,36 +577,19 @@ final class ShippingRepository extends Repository
     /**
      * Récupère les stats consignation.
      * 
-     * @param array $filter Filtre qui contient...
+     * @param ShippingFilterDTO $filter
      * 
-     * @return array Stats consignation.
+     * @return ShippingStatsSummaryDTO Stats consignation.
      */
-    public function fetchStatsSummary(array $filter): array
+    public function fetchStatsSummary(ShippingFilterDTO $filter): ShippingStatsSummaryDTO
     {
-        // Filtre
-        $startDate = isset($filter['date_debut']) ? ($filter['date_debut'] ?: "0001-01-01") : "0001-01-01";
-        $endDate = isset($filter["date_fin"]) ? ($filter['date_fin'] ?: "9999-12-31") : "9999-12-31";
-        $shipFilter = trim(preg_replace("/([^,]+),?/", "'$1',", $filter['navire'] ?? ""), ",");
-        $shipOwnerFilter = trim($filter['armateur'] ?? "", ",");
-        $cargoFilter = trim(preg_replace("/([^,]+),?/", "'$1',", $filter['marchandise'] ?? ""), ",");
-        $customerFilter = trim(preg_replace("/([^,]+),?/", "'$1',", $filter['client'] ?? ""), ",");
-        $lastPortFilter = trim(preg_replace("/([^,]+),?/", "'$1',", $filter['last_port'] ?? ""), ",");
-        $nextPortFilter = trim(preg_replace("/([^,]+),?/", "'$1',", $filter['next_port'] ?? ""), ",");
-
-        $sqlShipFilter = $shipFilter === "" ? "" : " AND cp.navire IN ($shipFilter)";
-        $sqlShipOwnerFilter = $shipOwnerFilter === "" ? "" : " AND cp.armateur IN ($shipOwnerFilter)";
-        $sqlCargoFilter = $cargoFilter === "" ? "" : " AND cem.marchandise IN ($cargoFilter)";
-        $sqlCustomerFilter = $customerFilter === "" ? "" : " AND cem.client IN ($customerFilter)";
-        $sqlLastPortFilter = $lastPortFilter === "" ? "" : " AND cp.last_port IN ($lastPortFilter)";
-        $sqlNextPortFilter = $nextPortFilter === "" ? "" : " AND cp.next_port IN ($nextPortFilter)";
-
         $sqlFilter =
-            $sqlShipFilter
-            . $sqlCargoFilter
-            . $sqlShipOwnerFilter
-            . $sqlCustomerFilter
-            . $sqlLastPortFilter
-            . $sqlNextPortFilter;
+            $filter->getSqlShipFilter()
+            . $filter->getSqlCargoFilter()
+            . $filter->getSqlShipOwnerFilter()
+            . $filter->getSqlCustomerFilter()
+            . $filter->getSqlLastPortFilter()
+            . $filter->getSqlNextPortFilter();
 
         $callsStatement =
             "SELECT
@@ -589,53 +597,21 @@ final class ShippingRepository extends Repository
                 cp.etc_date as `date`
             FROM consignation_planning cp
             LEFT JOIN consignation_escales_marchandises cem ON cem.escale_id = cp.id
-            WHERE cp.etc_date BETWEEN :date_debut AND :date_fin
+            WHERE cp.etc_date BETWEEN :startDate AND :endDate
             $sqlFilter
-            GROUP BY cp.id";
+            GROUP BY cp.id -- Permet de ne pas compter plusieurs fois le même RDV si plusieurs marchandises
+            ";
 
         $callsRequest = $this->mysql->prepare($callsStatement);
 
         $callsRequest->execute([
-            "date_debut" => $startDate,
-            "date_fin" => $endDate
+            "startDate" => $filter->getSqlStartDate(),
+            "endDate" => $filter->getSqlEndDate()
         ]);
 
         $calls = $callsRequest->fetchAll();
 
-        $stats = [
-            "Total" => count($calls),
-            "Par année" => [],
-        ];
-
-        $yearTemplate = [
-            1 => ["nombre" => 0, "ids" => []],
-            2 => ["nombre" => 0, "ids" => []],
-            3 => ["nombre" => 0, "ids" => []],
-            4 => ["nombre" => 0, "ids" => []],
-            5 => ["nombre" => 0, "ids" => []],
-            6 => ["nombre" => 0, "ids" => []],
-            7 => ["nombre" => 0, "ids" => []],
-            8 => ["nombre" => 0, "ids" => []],
-            9 => ["nombre" => 0, "ids" => []],
-            10 => ["nombre" => 0, "ids" => []],
-            11 => ["nombre" => 0, "ids" => []],
-            12 => ["nombre" => 0, "ids" => []],
-        ];
-
-        // Compilation du nombre de RDV par année et par mois
-        foreach ($calls as $call) {
-            $date = explode("-", $call["date"]);
-            $year = $date[0];
-            $month = $date[1];
-
-            if (!array_key_exists($year, $stats["Par année"])) {
-                $stats["Par année"][$year] = $yearTemplate;
-            };
-
-            // $stats["Total"]++;
-            $stats["Par année"][$year][(int) $month]["nombre"]++;
-            $stats["Par année"][$year][(int) $month]["ids"][] = $call["id"];
-        }
+        $stats = new ShippingStatsSummaryDTO($calls);
 
         return $stats;
     }
@@ -643,14 +619,14 @@ final class ShippingRepository extends Repository
     /**
      * Récupère les détails des stats consignation.
      * 
-     * @param array $ids Identifiants des escales.
+     * @param int[] $ids Identifiants des escales.
      * 
-     * @return array Détails des stats.
+     * @return ShippingStatsDetailsDTO Détails des stats.
      */
-    public function fetchStatsDetails(array $ids): array
+    public function fetchStatsDetails(array $ids): ShippingStatsDetailsDTO
     {
         if (count($ids) === 0) {
-            return [];
+            return new ShippingStatsDetailsDTO([]);
         }
 
         // Filtre
@@ -679,30 +655,9 @@ final class ShippingRepository extends Repository
 
         $calls = $callsRequest->fetchAll();
 
-        $groupedCalls = [];
+        $statsDetails = new ShippingStatsDetailsDTO($calls);
 
-        // Grouper par escale
-        foreach ($calls as $call) {
-            if (!array_key_exists($call["id"], $groupedCalls)) {
-                $groupedCalls[$call["id"]] = [
-                    "id" => $call["id"],
-                    "navire" => $call["navire"],
-                    "ops_date" => $call["ops_date"],
-                    "etc_date" => $call["etc_date"],
-                    "marchandises" => [],
-                ];
-            }
-
-            $groupedCalls[$call["id"]]["marchandises"][] = [
-                "marchandise" => $call["marchandise"],
-                "client" => $call["client"],
-                "tonnage_outturn" => $call["tonnage_outturn"] ?: $call["tonnage_bl"],
-                "cubage_outturn" => $call["cubage_outturn"] ?: $call["cubage_bl"],
-                "nombre_outturn" => $call["nombre_outturn"] ?: $call["nombre_bl"],
-            ];
-        }
-
-        return array_values($groupedCalls);
+        return $statsDetails;
     }
 
     /**
@@ -729,32 +684,30 @@ final class ShippingRepository extends Repository
     /**
      * Récupère la liste des navires en activité entre deux dates.
      * 
-     * @param \DateTimeImmutable|null $startDate Date de début.
-     * @param \DateTimeImmutable|null $endDate   Date de fin.
+     * @param \DateTimeInterface $startDate Date de début.
+     * @param \DateTimeInterface $endDate   Date de fin.
      * 
-     * @return array{
-     *          array{
-     *            navire: string,
-     *            debut: string,
-     *            fin: string
-     *          }
-     *         } Liste des navires en activité.
+     * @return array Liste des navires en activité.
+     * 
+     * @phpstan-return ShipsInOps
      */
     public function fetchShipsInOps(
-        ?\DateTimeImmutable $startDate = null,
-        ?\DateTimeImmutable $endDate = null,
+        \DateTimeInterface $startDate,
+        \DateTimeInterface $endDate,
     ): array {
         $statement =
             "SELECT navire, ops_date AS debut, etc_date AS fin
             FROM consignation_planning
-            WHERE ops_date <= :date_fin AND etc_date >= :date_debut
+            WHERE ops_date <= :endDate AND etc_date >= :startDate
             ORDER BY debut";
 
         $request = $this->mysql->prepare($statement);
         $request->execute([
-            "date_debut" => $startDate ? $startDate->format("Y-m-d") : date("Y-m-d"),
-            "date_fin" => $endDate ? $endDate->format("Y-m-d") : "9999-12-31",
+            "startDate" => $startDate->format("Y-m-d"),
+            "endDate" => $endDate->format("Y-m-d"),
         ]);
+
+        /** @phpstan-var ShipsInOps */
         $shipsInOps = $request->fetchAll();
 
         return $shipsInOps;

@@ -9,7 +9,7 @@ use App\Entity\Bulk\BulkAppointment;
 use App\Entity\Config\AgencyDepartment;
 use App\Entity\ThirdParty;
 
-class BulkPDF extends PlanningPDF
+final class BulkPDF extends PlanningPDF
 {
     /**
      * Génère un PDF vrac.
@@ -142,10 +142,10 @@ class BulkPDF extends PlanningPDF
     /**
      * Affichage d'un message "Aucun RDV".
      * 
-     * @param \DateTimeImmutable $startDate Date de début.
-     * @param \DateTimeImmutable $endDate   Date de fin.
+     * @param \DateTimeInterface $startDate Date de début.
+     * @param \DateTimeInterface $endDate   Date de fin.
      */
-    private function AucunRDV(\DateTimeImmutable $startDate, \DateTimeImmutable $endDate): void
+    private function AucunRDV(\DateTimeInterface $startDate, \DateTimeInterface $endDate): void
     {
         $this->SetFont('Roboto', '', 12);
         $this->SetTextColor(0, 0, 0);

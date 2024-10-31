@@ -139,25 +139,34 @@
           Notiflix.Block.dots([ligne], notiflixOptions.texts.envoi);
           ligne.style.minHeight = "initial";
 
-          const resultat: { statut: string } = await fetcher(
-            "config/pdf/generer",
-            {
-              requestInit: {
-                method: "POST",
-                body: JSON.stringify({
-                  config: config.id.toString(),
-                  date_debut:
-                    document.querySelector<HTMLInputElement>(".date_debut")
-                      .value,
-                  date_fin:
-                    document.querySelector<HTMLInputElement>(".date_fin").value,
-                }),
-              },
-            }
-          );
+          type SendingResult = {
+            statut: "succes" | "echec";
+            message: string;
+            module: string;
+            fournisseur: number;
+            adresses: {
+              from: string;
+              to: string[];
+              cc: [];
+              bcc: [];
+            };
+          };
+
+          const resultat: SendingResult = await fetcher("config/pdf/generer", {
+            requestInit: {
+              method: "POST",
+              body: JSON.stringify({
+                config: config.id.toString(),
+                date_debut:
+                  document.querySelector<HTMLInputElement>(".date_debut").value,
+                date_fin:
+                  document.querySelector<HTMLInputElement>(".date_fin").value,
+              }),
+            },
+          });
 
           if (resultat.statut === "succes") {
-            Notiflix.Notify.success("Le PDF a bien été envoyé");
+            Notiflix.Notify.success(resultat.message);
           }
 
           if (resultat.statut === "echec") {

@@ -67,10 +67,10 @@ class Email extends PHPMailer
     /**
      * Ajout des adresses depuis la liste entrée en paramètre
      * 
-     * @param array $from Adresse e-mail et nom de l'expéditeur.
-     * @param array $to   Adresses e-mail des destinataires.
-     * @param array $cc   Adresses e-mail en copie.
-     * @param array $bcc  Adresses e-mail en copie cachée.
+     * @param array{email: ?string, name: ?string} $from Adresse e-mail et nom de l'expéditeur.
+     * @param string[] $to   Adresses e-mail des destinataires.
+     * @param string[] $cc   Adresses e-mail en copie.
+     * @param string[] $bcc  Adresses e-mail en copie cachée.
      */
     public function addAddresses(
         array $from = [
@@ -113,7 +113,12 @@ class Email extends PHPMailer
     /**
      * Récupération des adresses e-mail ajoutées.
      * 
-     * @return array Liste des adresses e-mail réellement ajoutées.
+     * @return array{
+     *           from: string,
+     *           to: string[],
+     *           cc: string[],
+     *           bcc: string[],
+     *         } Liste des adresses e-mail réellement ajoutées.
      */
     public function getAllAddresses(): array
     {

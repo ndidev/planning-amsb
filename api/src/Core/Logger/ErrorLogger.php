@@ -23,10 +23,17 @@ final class ErrorLogger
     /**
      * Gets all the info from an Exception.
      * 
-     * @param \Throwable $e     Exception.
-     * @param string    $format Output format (`array` or `string`).
+     * @param ?\Throwable $e      Exception.
+     * @param string      $format Output format (`array` or `string`).
      * 
-     * @return array|string|null Exception information or null if no exception.
+     * @return array{
+     *           code: int,
+     *           message: string,
+     *           file: string,
+     *           line: int,
+     *           previous: array{mixed}|null,
+     *           trace: array{mixed}
+     *         }|string|null Exception information or null if no exception.
      */
     private static function formatError(?\Throwable $e, string $format = "array"): array|string|null
     {
@@ -45,15 +52,10 @@ final class ErrorLogger
 
         $stringError = array_stringify($arrayError);
 
-        switch ($format) {
-            case 'array':
-                return $arrayError;
-
-            case 'string':
-                return $stringError;
-
-            default:
-                return $arrayError;
-        }
+        return match ($format) {
+            "array" => $arrayError,
+            "string" => $stringError,
+            default => $arrayError,
+        };
     }
 }

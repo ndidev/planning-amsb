@@ -27,7 +27,7 @@ final class ThirdPartyController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -66,7 +66,7 @@ final class ThirdPartyController extends Controller
     /**
      * Retrieves all third parties.
      */
-    public function readAll()
+    public function readAll(): void
     {
         $thirdParties = $this->thirdPartyService->getThirdParties();
 
@@ -87,7 +87,7 @@ final class ThirdPartyController extends Controller
      * 
      * @param int $id id of the third party to retrieve.
      */
-    public function read(int $id)
+    public function read(int $id): void
     {
         $thirdParty = $this->thirdPartyService->getThirdParty($id);
 
@@ -110,7 +110,7 @@ final class ThirdPartyController extends Controller
     /**
      * Create a third party.
      */
-    public function create()
+    public function create(): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour créer un tiers.");
@@ -139,7 +139,7 @@ final class ThirdPartyController extends Controller
      * 
      * @param int $id id of the third party to modify.
      */
-    public function update(int $id)
+    public function update(int $id): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier un tiers.");
@@ -163,7 +163,7 @@ final class ThirdPartyController extends Controller
      * 
      * @param int $id id of the third party to delete.
      */
-    public function delete(int $id)
+    public function delete(int $id): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour supprimer un tiers.");

@@ -4,9 +4,11 @@
 
 namespace App\Service;
 
+use App\DTO\NewTidesDTO;
+use App\DTO\TidesDTO;
 use App\Repository\TideRepository;
 
-class TideService
+final class TideService
 {
     private TideRepository $tideRepository;
 
@@ -18,22 +20,26 @@ class TideService
     /**
      * Retrieves the tides within the specified time range.
      *
-     * @param string|null $start The start date of the time range (optional).
-     * @param string|null $end The end date of the time range (optional).
-     * @return array An array of tides within the specified time range.
+     * @param \DateTimeInterface $startDate The start date of the time range.
+     * @param \DateTimeInterface $endDate   The end date of the time range.
+     * 
+     * @return TidesDTO Tides within the specified time range.
      */
-    public function getTides(?string $start, ?string $end): array
-    {
-        return $this->tideRepository->fetchTides($start, $end);
+    public function getTides(
+        \DateTimeInterface $startDate,
+        \DateTimeInterface $endDate
+    ): TidesDTO {
+        return $this->tideRepository->fetchTides($startDate, $endDate);
     }
 
     /**
      * Retrieves an array of tides for a given year.
      *
      * @param int $year The year for which to retrieve the tides.
-     * @return array An array of tides for the specified year.
+     * 
+     * @return TidesDTO Tides for the specified year.
      */
-    public function getTidesByYear(int $year): array
+    public function getTidesByYear(int $year): TidesDTO
     {
         return $this->tideRepository->fetchTidesByYear($year);
     }
@@ -41,7 +47,7 @@ class TideService
     /**
      * Retrieves the years from the tide repository.
      *
-     * @return array The years fetched from the tide repository.
+     * @return string[] The years fetched from the tide repository.
      */
     public function getYears(): array
     {
@@ -65,7 +71,8 @@ class TideService
 
         $separator = ";";
 
-        $tides = [];
+        /** @var list<array{0: string, 1: string, 2: float}> */
+        $newTides = [];
         foreach ($lines as $line) {
             // Skip the line if it doesn't match the expected format (YYYY-MM-DD;HH:MM:SS;HH.HH)
             if (!preg_match("/^\d{4}-\d{2}-\d{2};\d{2}:\d{2}:\d{2};\d+(?:\.\d+)?$/", $line)) {
@@ -73,17 +80,17 @@ class TideService
             }
 
             // Push each line into the tides array
-            [$date, $heure, $hauteur] = str_getcsv($line, $separator);
-            array_push($tides, [
+            [$date, $time, $heightOfWater] = str_getcsv($line, $separator);
+            array_push($newTides, [
                 $date,
-                $heure,
-                (float) $hauteur
+                $time,
+                (float) $heightOfWater,
             ]);
         }
 
-        $year = substr($tides[0][0], 0, 4);
+        $year = substr($newTides[0][0], 0, 4);
 
-        $this->tideRepository->addTides($tides);
+        $this->tideRepository->addTides($newTides);
 
         return $year;
     }

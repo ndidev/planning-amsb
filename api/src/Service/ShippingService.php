@@ -5,11 +5,64 @@
 namespace App\Service;
 
 use App\Core\Component\Collection;
+use App\DTO\ShippingFilterDTO;
+use App\DTO\ShippingStatsDetailsDTO;
+use App\DTO\ShippingStatsSummaryDTO;
 use App\Entity\Shipping\ShippingCall;
 use App\Entity\Shipping\ShippingCallCargo;
 use App\Repository\ShippingRepository;
 
-class ShippingService
+/**
+ * @phpstan-type ShippingCallArray array{
+ *                                   id?: int,
+ *                                   navire?: string,
+ *                                   voyage?: string,
+ *                                   armateur?: int|null,
+ *                                   eta_date?: string,
+ *                                   eta_heure?: string,
+ *                                   nor_date?: string,
+ *                                   nor_heure?: string,
+ *                                   pob_date?: string,
+ *                                   pob_heure?: string,
+ *                                   etb_date?: string,
+ *                                   etb_heure?: string,
+ *                                   ops_date?: string,
+ *                                   ops_heure?: string,
+ *                                   etc_date?: string,
+ *                                   etc_heure?: string,
+ *                                   etd_date?: string,
+ *                                   etd_heure?: string,
+ *                                   te_arrivee?: float,
+ *                                   te_depart?: float,
+ *                                   last_port?: string,
+ *                                   next_port?: string,
+ *                                   call_port?: string,
+ *                                   quai?: string,
+ *                                   commentaire?: string,
+ *                                   marchandises?: ShippingCallCargoArray[],
+ *                                 }
+ * 
+ * @phpstan-type ShippingCallCargoArray array{
+ *                                        id?: int,
+ *                                        marchandise?: string,
+ *                                        client?: string,
+ *                                        operation?: string,
+ *                                        environ?: bool,
+ *                                        tonnage_bl?: float|null,
+ *                                        cubage_bl?: float|null,
+ *                                        nombre_bl?: int|null,
+ *                                        tonnage_outturn?: float|null,
+ *                                        cubage_outturn?: float|null,
+ *                                        nombre_outturn?: int|null,
+ *                                      }
+ * 
+ * @phpstan-import-type DraftsPerTonnage from \App\Repository\ShippingRepository
+ * 
+ * @phpstan-import-type ShippingStatsSummary from \App\Repository\ShippingRepository
+ * 
+ * @phpstan-import-type ShipsInOps from \App\Repository\ShippingRepository
+ */
+final class ShippingService
 {
     private ShippingRepository $shippingRepository;
 
@@ -18,6 +71,15 @@ class ShippingService
         $this->shippingRepository = new ShippingRepository();
     }
 
+    /**
+     * Creates a ShippingCall object from database data.
+     * 
+     * @param array $rawData Raw data from the database.
+     * 
+     * @phpstan-param ShippingCallArray $rawData
+     * 
+     * @return ShippingCall
+     */
     public function makeShippingCallFromDatabase(array $rawData): ShippingCall
     {
         $shippingCall = (new ShippingCall())
@@ -56,6 +118,15 @@ class ShippingService
         return $shippingCall;
     }
 
+    /**
+     * Creates a ShippingCall object from form data.
+     * 
+     * @param array $rawData Raw data from the form.
+     * 
+     * @phpstan-param ShippingCallArray $rawData
+     * 
+     * @return ShippingCall
+     */
     public function makeShippingCallFromForm(array $rawData): ShippingCall
     {
         $shippingCall = (new ShippingCall())
@@ -94,6 +165,15 @@ class ShippingService
         return $shippingCall;
     }
 
+    /**
+     * Creates a ShippingCallCargo object from database data.
+     * 
+     * @param array $rawData Raw data from the database.
+     * 
+     * @phpstan-param ShippingCallCargoArray $rawData
+     * 
+     * @return ShippingCallCargo 
+     */
     public function makeShippingCallCargoFromDatabase(array $rawData): ShippingCallCargo
     {
         $cargo = (new ShippingCallCargo())
@@ -112,6 +192,15 @@ class ShippingService
         return $cargo;
     }
 
+    /**
+     * Creates a ShippingCallCargo object from form data.
+     * 
+     * @param array $rawData Raw data from the form.
+     * 
+     * @phpstan-param ShippingCallCargoArray $rawData
+     * 
+     * @return ShippingCallCargo 
+     */
     public function makeShippingCallCargoFromForm(array $rawData): ShippingCallCargo
     {
         $cargo = (new ShippingCallCargo())
@@ -145,9 +234,9 @@ class ShippingService
     /**
      * @return Collection<ShippingCall>
      */
-    public function getShippingCalls(array $filter): Collection
+    public function getShippingCalls(bool $archives = false): Collection
     {
-        return $this->shippingRepository->fetchAllCalls($filter);
+        return $this->shippingRepository->fetchAllCalls($archives);
     }
 
     public function getShippingCall(int $id): ?ShippingCall
@@ -155,6 +244,15 @@ class ShippingService
         return $this->shippingRepository->fetchCall($id);
     }
 
+    /**
+     * Creates a shipping call.
+     * 
+     * @param array $input Raw data from the form.
+     * 
+     * @phpstan-param ShippingCallArray $input
+     * 
+     * @return ShippingCall
+     */
     public function createShippingCall(array $input): ShippingCall
     {
         $call = $this->makeShippingCallFromForm($input);
@@ -162,6 +260,16 @@ class ShippingService
         return $this->shippingRepository->createCall($call);
     }
 
+    /**
+     * Updates a shipping call.
+     * 
+     * @param int $id 
+     * @param array $input 
+     * 
+     * @phpstan-param ShippingCallArray $input
+     * 
+     * @return ShippingCall 
+     */
     public function updateShippingCall(int $id, array $input): ShippingCall
     {
         $call = $this->makeShippingCallFromForm($input)->setId($id);
@@ -181,19 +289,36 @@ class ShippingService
         return $this->shippingRepository->fetchLastVoyageNumber($shipName, $currentCallId);
     }
 
+    /**
+     * @phpstan-return DraftsPerTonnage
+     */
     public function getDraftsPerTonnage(): array
     {
         return $this->shippingRepository->fetchDraftsPerTonnage();
     }
 
-    public function getStatsSummary(array $filter): array
+    /**
+     * @param ShippingFilterDTO $filter 
+     * 
+     * @return ShippingStatsSummaryDTO
+     */
+    public function getStatsSummary(ShippingFilterDTO $filter): ShippingStatsSummaryDTO
     {
         return $this->shippingRepository->fetchStatsSummary($filter);
     }
 
-    public function getStatsDetails(string|array $ids): array
+    /**
+     * Get the details of the shipping stats.
+     * 
+     * @param string|int[] $ids 
+     * 
+     * @return ShippingStatsDetailsDTO 
+     */
+    public function getStatsDetails(string|array $ids): ShippingStatsDetailsDTO
     {
-        $ids = is_array($ids) ? $ids : explode(",", $ids);
+        $ids = is_array($ids)
+            ? $ids
+            : array_map(fn(string $id) => (int) $id, explode(",", $ids));
 
         return $this->shippingRepository->fetchStatsDetails($ids);
     }
@@ -206,11 +331,15 @@ class ShippingService
         return $this->shippingRepository->fetchAllShipNames();
     }
 
-    public function getShipsInOps(array $query): array
-    {
-        $startDate = isset($query['date_debut']) ? new \DateTimeImmutable($query['date_debut']) : null;
-        $endDate = isset($query['date_fin']) ? new \DateTimeImmutable($query['date_fin']) : null;
-
+    /**
+     * @return array
+     * 
+     * @phpstan-return ShipsInOps
+     */
+    public function getShipsInOps(
+        \DateTimeInterface $startDate,
+        \DateTimeInterface $endDate,
+    ): array {
         return $this->shippingRepository->fetchShipsInOps($startDate, $endDate);
     }
 

@@ -12,6 +12,40 @@ use App\Entity\ThirdParty;
 use App\Service\PortService;
 use App\Service\ThirdPartyService;
 
+/**
+ * Represents a shipping call.
+ * 
+ * @phpstan-type ShippingCallArray array{
+ *                                   id: ?int,
+ *                                   navire: string,
+ *                                   voyage: string,
+ *                                   armateur: ?int,
+ *                                   eta_date: string,
+ *                                   eta_heure: string,
+ *                                   nor_date: string,
+ *                                   nor_heure: string,
+ *                                   pob_date: string,
+ *                                   pob_heure: string,
+ *                                   etb_date: string,
+ *                                   etb_heure: string,
+ *                                   ops_date: string,
+ *                                   ops_heure: string,
+ *                                   etc_date: string,
+ *                                   etc_heure: string,
+ *                                   etd_date: string,
+ *                                   etd_heure: string,
+ *                                   te_arrivee: ?float,
+ *                                   te_depart: ?float,
+ *                                   last_port: string,
+ *                                   next_port: string,
+ *                                   call_port: string,
+ *                                   quai: string,
+ *                                   commentaire: string,
+ *                                   marchandises: ShippingCallCargoArray[],
+ *                                 }
+ * 
+ * @phpstan-import-type ShippingCallCargoArray from \App\Entity\Shipping\ShippingCallCargo
+ */
 class ShippingCall extends AbstractEntity
 {
     use IdentifierTrait;
@@ -403,17 +437,13 @@ class ShippingCall extends AbstractEntity
     }
 
     /**
-     * @param Collection<ShippingCallCargo>|ShippingCallCargo[] $cargoes 
+     * @param ShippingCallCargo[] $cargoes 
      */
-    public function setCargoes(Collection|array $cargoes): static
+    public function setCargoes(array $cargoes): static
     {
-        if (is_array($cargoes)) {
-            $this->cargoes = new Collection(
-                array_map(fn(ShippingCallCargo $cargo) => $cargo->setShippingCall($this), $cargoes)
-            );
-        } else {
-            $this->cargoes = $cargoes;
-        }
+        $this->cargoes = new Collection(
+            array_map(fn(ShippingCallCargo $cargo) => $cargo->setShippingCall($this), $cargoes)
+        );
 
         return $this;
     }
@@ -426,6 +456,9 @@ class ShippingCall extends AbstractEntity
         return $this->cargoes;
     }
 
+    /**
+     * @phpstan-return ShippingCallArray
+     */
     public function toArray(): array
     {
         return [

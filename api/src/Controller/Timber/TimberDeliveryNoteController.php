@@ -7,7 +7,6 @@ namespace App\Controller\Timber;
 use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
-use App\Core\Exceptions\Client\ClientException;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\TimberService;
 
@@ -25,7 +24,7 @@ final class TimberDeliveryNoteController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -48,17 +47,17 @@ final class TimberDeliveryNoteController extends Controller
     /**
      * Récupère  RDV bois.
      */
-    public function read()
+    public function read(): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour accéder aux RDVs bois.");
         }
 
-        $input = $this->request->query;
+        $request = $this->request;
 
-        $supplierId = $input["supplierId"] ?? null;
-        $deliveryNoteNumber = $input["deliveryNoteNumber"] ?? '';
-        $currentAppointmentId = $input["currentAppointmentId"] ?? null;
+        $supplierId = $request->getQueryParam('supplierId', type: 'int');
+        $deliveryNoteNumber = $request->getQueryParam('deliveryNoteNumber', '');
+        $currentAppointmentId = $request->getQueryParam('currentAppointmentId', type: 'int');
 
         $isDeliveryNoteNumberAvailable = $this->timberService->isDeliveryNoteNumberAvailable(
             $deliveryNoteNumber,

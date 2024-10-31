@@ -2,8 +2,10 @@
 
 namespace App\Repository;
 
+use App\Core\Component\CharterStatus;
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\DB\DBException;
+use App\DTO\CharteringFilterDTO;
 use App\Entity\Chartering\Charter;
 use App\Entity\Chartering\CharterLeg;
 use App\Service\CharteringService;
@@ -23,32 +25,19 @@ final class CharteringRepository extends Repository
     /**
      * Récupère tous les affrètements maritimes.
      * 
-     * @param array $filter
+     * @param CharteringFilterDTO $filter Filtre à appliquer.
      * 
-     * @return Collection<Charter> Tous les affrètements récupérés
+     * @return Collection<Charter> Tous les affrètements récupérés.
      */
-    public function fetchCharters(array $filter = []): Collection
+    public function fetchCharters(CharteringFilterDTO $filter): Collection
     {
-        // Filtre
-        $startDate = isset($filter["date_debut"]) ? $filter['date_debut'] : "0001-01-01";
-        $endDate = isset($filter["date_fin"]) ? $filter['date_fin'] : "9999-12-31";
-        $statusFilter = $filter["statut"] ?? "";
-        $chartererFilter = trim($filter['affreteur'] ?? "", ",");
-        $ownerFilter = trim($filter['armateur'] ?? "", ",");
-        $brokerFilter = trim($filter['courtier'] ?? "", ",");
-
-        $sqlStatusFilter = $statusFilter === "" ? "" : " AND statut IN ($statusFilter)";
-        $sqlChartererFilter = $chartererFilter === "" ? "" : " AND affreteur IN ($chartererFilter)";
-        $sqlOwnerFilter = $ownerFilter === "" ? "" : " AND armateur IN ($ownerFilter)";
-        $sqlBrokerFilter = $brokerFilter === "" ? "" : " AND courtier IN ($brokerFilter)";
-
         $sqlFilter =
-            $sqlStatusFilter
-            . $sqlChartererFilter
-            . $sqlOwnerFilter
-            . $sqlBrokerFilter;
+            $filter->getSqlStatusFilter()
+            . $filter->getSqlChartererFilter()
+            . $filter->getSqlOwnerFilter()
+            . $filter->getSqlBrokerFilter();
 
-        $archiveFilter = (int) array_key_exists("archives", $filter);
+        $archiveFilter = (int) $filter->isArchive();
 
         $chartersStatement =
             "SELECT
@@ -75,8 +64,8 @@ final class CharteringRepository extends Repository
                 archive
             FROM chartering_registre
             WHERE archive = $archiveFilter
-            AND (lc_debut <= :date_fin OR lc_debut IS NULL)
-            AND (lc_fin >= :date_debut OR lc_fin IS NULL)
+            AND (lc_debut <= :endDate OR lc_debut IS NULL)
+            AND (lc_fin >= :startDate OR lc_fin IS NULL)
             $sqlFilter
             ORDER BY " . ($archiveFilter ? "-lc_debut ASC, -lc_fin ASC" : "-lc_debut DESC, -lc_fin DESC");
 
@@ -84,8 +73,8 @@ final class CharteringRepository extends Repository
         // Charters
         $chartersRequest = $this->mysql->prepare($chartersStatement);
         $chartersRequest->execute([
-            "date_debut" => $startDate,
-            "date_fin" => $endDate
+            "startDate" => $filter->getSqlStartDate(),
+            "endDate" => $filter->getSqlEndDate(),
         ]);
         $chartersRaw = $chartersRequest->fetchAll();
 
@@ -258,7 +247,7 @@ final class CharteringRepository extends Repository
             "archive" => (int) $charter->isArchive(),
         ]);
 
-        $lastInsertId = $this->mysql->lastInsertId();
+        $lastInsertId = (int) $this->mysql->lastInsertId();
         $this->mysql->commit();
 
         // Détails

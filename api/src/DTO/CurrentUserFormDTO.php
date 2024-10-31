@@ -4,6 +4,8 @@
 
 namespace App\DTO;
 
+use App\Core\Exceptions\Client\BadRequestException;
+
 class CurrentUserFormDTO
 {
     private ?string $uid = null;
@@ -30,6 +32,10 @@ class CurrentUserFormDTO
 
     public function setName(?string $name): static
     {
+        if (!$name) {
+            throw new BadRequestException('Le nom est requis.');
+        }
+
         $this->name = $name;
 
         return $this;

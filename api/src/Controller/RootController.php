@@ -19,7 +19,7 @@ final class RootController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -42,7 +42,7 @@ final class RootController extends Controller
     /**
      * Affiche la liste des url disponibles pour l'API.
      */
-    private function showIndex()
+    private function showIndex(): void
     {
         $endpointsList = $this->buildIndex();
 
@@ -98,7 +98,7 @@ final class RootController extends Controller
             "marees_annees" => "marees/annees",
             // Config
             "modules" => "config/modules",
-            "bandeau-info" => "config/bandeau/{id}",
+            "bandeau-info" => "config/bandeau",
             "pdf_configs" => "config/pdf",
             "pdf_visu" => "config/pdf/generer/{?config={configId}&date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}}",
             "pdf_envoi" => "config/pdf/generer/",

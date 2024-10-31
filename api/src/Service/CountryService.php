@@ -4,10 +4,17 @@
 
 namespace App\Service;
 
+use App\Core\Component\Collection;
 use App\Entity\Country;
 use App\Repository\CountryRepository;
 
-class CountryService
+/**
+ * @phpstan-type CountryArray array{
+ *                              iso?: string,
+ *                              nom?: string,
+ *                            }
+ */
+final class CountryService
 {
     private CountryRepository $countryRepository;
 
@@ -16,6 +23,15 @@ class CountryService
         $this->countryRepository = new CountryRepository();
     }
 
+    /**
+     * Creates a Country object from database data.
+     * 
+     * @param array $rawData 
+     * 
+     * @phpstan-param CountryArray $rawData
+     * 
+     * @return Country 
+     */
     public function makeCountry(array $rawData): Country
     {
         return (new Country())
@@ -26,9 +42,9 @@ class CountryService
     /**
      * Fetches all countries.
      * 
-     * @return Country[] All fetched countries.
+     * @return Collection<Country> All fetched countries.
      */
-    public function getCountries(): array
+    public function getCountries(): Collection
     {
         return $this->countryRepository->fetchAll();
     }

@@ -244,7 +244,7 @@ final class BulkProductRepository extends Repository
             'couleur' => $product->getColor(),
             'unite' => $product->getUnit(),
         ]);
-        $lastInsertId = $this->mysql->lastInsertId();
+        $lastInsertId = (int) $this->mysql->lastInsertId();
         $this->mysql->commit();
 
         // Qualities

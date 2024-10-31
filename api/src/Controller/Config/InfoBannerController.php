@@ -26,7 +26,7 @@ final class InfoBannerController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -35,11 +35,7 @@ final class InfoBannerController extends Controller
 
             case 'HEAD':
             case 'GET':
-                if ($this->id) {
-                    $this->read($this->id);
-                } else {
-                    $this->readAll($this->request->query);
-                }
+                $this->readAll();
                 break;
 
             case 'POST':
@@ -64,12 +60,10 @@ final class InfoBannerController extends Controller
 
     /**
      * Récupère toutes les lignes du bandeau.
-     * 
-     * @param array $filter
      */
-    public function readAll(array $filter)
+    public function readAll(): void
     {
-        $lines = $this->infoBannerService->getAllLines($filter);
+        $lines = $this->infoBannerService->getAllLines();
 
         // Filtre sur les catégories autorisées pour l'utilisateur
         foreach ($lines as $line) {
@@ -91,38 +85,9 @@ final class InfoBannerController extends Controller
     }
 
     /**
-     * Récupère une ligne du bandeau.
-     * 
-     * @param int  $id ID de la ligne à récupérer.
-     */
-    public function read(int $id)
-    {
-        $line = $this->infoBannerService->getLine($id);
-
-        if (!$line) {
-            throw new NotFoundException("Cette ligne de bandeau d'information n'existe pas.");
-        }
-
-        if (!$this->user->canAccess($line->getModule())) {
-            throw new AccessException("Vous n'avez pas les droits pour accéder aux informations {$line->getModule()}.");
-        }
-
-        $etag = ETag::get($line);
-
-        if ($this->request->etag === $etag) {
-            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
-            return;
-        }
-
-        $this->response
-            ->addHeader("ETag", $etag)
-            ->setJSON($line);
-    }
-
-    /**
      * Crée une ligne de bandeau d'informations.
      */
-    public function create()
+    public function create(): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
@@ -151,7 +116,7 @@ final class InfoBannerController extends Controller
      * 
      * @param int $id id de la ligne à modifier.
      */
-    public function update(int $id)
+    public function update(int $id): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
@@ -184,7 +149,7 @@ final class InfoBannerController extends Controller
      * 
      * @param int $id id de la ligne à supprimer.
      */
-    public function delete(int $id)
+    public function delete(int $id): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");

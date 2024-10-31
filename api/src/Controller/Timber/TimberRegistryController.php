@@ -3,6 +3,7 @@
 namespace App\Controller\Timber;
 
 use App\Controller\Controller;
+use App\Core\Component\DateUtils;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\HTTP\ETag;
@@ -23,7 +24,7 @@ final class TimberRegistryController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -32,7 +33,7 @@ final class TimberRegistryController extends Controller
 
             case 'HEAD':
             case 'GET':
-                $this->get($this->request->query);
+                $this->get();
                 break;
 
             default:
@@ -45,16 +46,32 @@ final class TimberRegistryController extends Controller
 
     /**
      * Renvoie l'extrait du registre d'affrètement avec le filtre appliqué.
-     * 
-     * @param array $filter
      */
-    public function get(array $filter)
+    public function get(): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
 
-        $csv = $this->timberService->getChateringRegister($filter);
+        $query = $this->request->getQuery();
+
+        $defaultStartDate = DateUtils::format(DateUtils::SQL_DATE, DateUtils::getPreviousWorkingDay(new \DateTimeImmutable()));
+        $defaultEndDate = date("Y-m-d");
+
+        // Filtre
+        $startDate = new \DateTimeImmutable(
+            isset($query['date_debut'])
+                ? ($query['date_debut'] ?: $defaultStartDate)
+                : $defaultStartDate
+        );
+
+        $endDate = new \DateTimeImmutable(
+            isset($query['date_fin'])
+                ? ($query['date_fin'] ?: $defaultEndDate)
+                : $defaultEndDate
+        );
+
+        $csv = $this->timberService->getChateringRegister($startDate, $endDate);
 
         $etag = ETag::get($csv);
 

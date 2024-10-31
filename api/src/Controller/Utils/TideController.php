@@ -32,7 +32,7 @@ final class TideController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -46,7 +46,7 @@ final class TideController extends Controller
                 } else if ($this->year) {
                     $this->getTidesByYear($this->year);
                 } else {
-                    $this->getTides($this->request->query);
+                    $this->getTides();
                 }
                 break;
 
@@ -68,15 +68,15 @@ final class TideController extends Controller
 
     /**
      * Retrieves tides.
-     * 
-     * @param array $filter
      */
-    public function getTides(?array $filter = []): void
+    public function getTides(): void
     {
-        $start = $filter["debut"] ?? null;
-        $end = $filter["fin"] ?? null;
+        $query = $this->request->getQuery();
 
-        $tides = $this->service->getTides($start, $end);
+        $startDate = new \DateTimeImmutable($query["debut"] ?? '0001-01-01');
+        $endDate = new \DateTimeImmutable($query["fin"] ?? '9999-12-31');
+
+        $tides = $this->service->getTides($startDate, $endDate);
 
         $etag = ETag::get($tides);
 

@@ -7,6 +7,7 @@ use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
+use App\DTO\ShippingFilterDTO;
 use App\Service\ShippingService;
 
 final class ShippingStatsController extends Controller
@@ -24,7 +25,7 @@ final class ShippingStatsController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -36,7 +37,7 @@ final class ShippingStatsController extends Controller
                 if ($this->ids) {
                     $this->readDetails($this->ids);
                 } else {
-                    $this->readSummary($this->request->query);
+                    $this->readSummary();
                 }
                 break;
 
@@ -50,14 +51,14 @@ final class ShippingStatsController extends Controller
 
     /**
      * Récupère toutes les escales consignation.
-     * 
-     * @param array $filter
      */
-    public function readSummary(array $filter)
+    public function readSummary(): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
+
+        $filter = new ShippingFilterDTO($this->request->getQuery());
 
         $stats = $this->shippingService->getStatsSummary($filter);
 
@@ -78,7 +79,7 @@ final class ShippingStatsController extends Controller
      * 
      * @param string $ids Liste des identifiants.
      */
-    public function readDetails(string $ids)
+    public function readDetails(string $ids): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();

@@ -7,6 +7,7 @@ use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
+use App\DTO\TimberFilterDTO;
 use App\Service\TimberService;
 
 final class TimberStatsController extends Controller
@@ -23,7 +24,7 @@ final class TimberStatsController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -32,7 +33,7 @@ final class TimberStatsController extends Controller
 
             case 'HEAD':
             case 'GET':
-                $this->readAll($this->request->query);
+                $this->readAll();
                 break;
 
             default:
@@ -45,14 +46,14 @@ final class TimberStatsController extends Controller
 
     /**
      * Récupère tous les RDV bois.
-     * 
-     * @param array $filter
      */
-    public function readAll(array $filter)
+    public function readAll(): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();
         }
+
+        $filter = new TimberFilterDTO($this->request->getQuery());
 
         $stats = $this->service->getStats($filter);
 

@@ -21,7 +21,7 @@ final class PdfViewerController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -30,7 +30,7 @@ final class PdfViewerController extends Controller
 
             case 'HEAD':
             case 'GET':
-                $this->getPdfFile($this->request->query);
+                $this->getPdfFile();
                 break;
 
             case 'POST':
@@ -47,12 +47,13 @@ final class PdfViewerController extends Controller
 
     /**
      * Récupère un PDF.
-     * 
-     * @param array $query Détails de la requête HTTP.
      */
-    public function getPdfFile(array $query)
+    public function getPdfFile(): void
     {
-        $configId = $query["config"] ?? null;
+        $query = $this->request->getQuery();
+
+        /** @var ?int $configId */
+        $configId = $this->request->getQueryParam("config", null, "int");
         $startDate = DateUtils::convertDate($query["date_debut"] ?? new \DateTime());
         $endDate = DateUtils::convertDate($query["date_fin"] ?? new \DateTime());
 
@@ -77,13 +78,13 @@ final class PdfViewerController extends Controller
     /**
      * Envoi un PDF par e-mail.
      */
-    public function sendPdfFileByEmail()
+    public function sendPdfFileByEmail(): void
     {
         $input = $this->request->getBody();
 
         $configId = $input["config"] ?? null;
-        $startDate = DateUtils::convertDate($input["date_debut"]);
-        $endDate = DateUtils::convertDate($input["date_fin"]);
+        $startDate = DateUtils::convertDate($input["date_debut"] ?? new \DateTimeImmutable());
+        $endDate = DateUtils::convertDate($input["date_fin"] ?? new \DateTimeImmutable());
 
         $sendingResults = $this->pdfService->sendPdfByEmail($configId, $startDate, $endDate);
 

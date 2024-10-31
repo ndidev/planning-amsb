@@ -4,18 +4,20 @@
 
 namespace App\Repository;
 
+use App\Core\Component\Collection;
 use App\Entity\Country;
+use App\Service\CountryService;
 
 final class CountryRepository extends Repository
 {
-    private $redisNamespace = "countries";
+    private string $redisNamespace = "countries";
 
     /**
      * Fetches all countries.
      * 
-     * @return Country[] All fetched countries.
+     * @return Collection<Country> All fetched countries.
      */
-    public function fetchAll(): array
+    public function fetchAll(): Collection
     {
         // Redis
         $countriesRaw = json_decode($this->redis->get($this->redisNamespace), true);
@@ -28,9 +30,14 @@ final class CountryRepository extends Repository
             $this->redis->set($this->redisNamespace, json_encode($countriesRaw));
         }
 
-        $countries = array_map(fn(array $countryRaw) => new Country($countryRaw), $countriesRaw);
+        $countryService = new CountryService();
 
-        return $countries;
+        $countries = array_map(
+            fn(array $countryRaw) => $countryService->makeCountry($countryRaw),
+            $countriesRaw
+        );
+
+        return new Collection($countries);
     }
 
     /**
@@ -50,7 +57,7 @@ final class CountryRepository extends Repository
 
         if (!$paysRaw) return null;
 
-        $pays = new Country($paysRaw);
+        $pays = (new CountryService())->makeCountry($paysRaw);
 
         return $pays;
     }

@@ -26,7 +26,7 @@ final class TimberQuickAppointmentAddController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -65,7 +65,7 @@ final class TimberQuickAppointmentAddController extends Controller
     /**
      * Récupère tous les ajouts rapides.
      */
-    public function readAllConfigs()
+    public function readAllConfigs(): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
@@ -90,7 +90,7 @@ final class TimberQuickAppointmentAddController extends Controller
      * 
      * @param int  $id ID de l'ajout rapide à récupérer.
      */
-    public function readConfig(int $id)
+    public function readConfig(int $id): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
@@ -117,7 +117,7 @@ final class TimberQuickAppointmentAddController extends Controller
     /**
      * Crée un ajout rapide.
      */
-    public function createConfig()
+    public function createConfig(): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
@@ -142,7 +142,7 @@ final class TimberQuickAppointmentAddController extends Controller
      * 
      * @param int $id id de l'ajout rapide à modifier.
      */
-    public function updateConfig(int $id)
+    public function updateConfig(int $id): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
@@ -170,7 +170,7 @@ final class TimberQuickAppointmentAddController extends Controller
      * 
      * @param int $id id de l'ajout rapide à supprimer.
      */
-    public function deleteConfig(int $id)
+    public function deleteConfig(int $id): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");

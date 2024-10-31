@@ -8,7 +8,6 @@ use App\Core\Component\Module;
 use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
 use App\Entity\ThirdParty;
-use App\Service\ThirdPartyService;
 
 class PdfConfig extends AbstractEntity
 {
@@ -46,13 +45,9 @@ class PdfConfig extends AbstractEntity
         return $this->supplier;
     }
 
-    public function setSupplier(ThirdParty|int|null $supplier): static
+    public function setSupplier(?ThirdParty $supplier): static
     {
-        if (is_int($supplier)) {
-            $this->supplier = (new ThirdPartyService())->getThirdParty($supplier);
-        } else {
-            $this->supplier = $supplier;
-        }
+        $this->supplier = $supplier;
 
         return $this;
     }
@@ -69,6 +64,11 @@ class PdfConfig extends AbstractEntity
         return $this;
     }
 
+    /**
+     * Get the list of emails.
+     * 
+     * @return string[]
+     */
     public function getEmails(): array
     {
         return $this->emails;
@@ -79,6 +79,11 @@ class PdfConfig extends AbstractEntity
         return implode(PHP_EOL, $this->emails);
     }
 
+    /**
+     * Set the list of emails.
+     * 
+     * @param string[]|string $emails 
+     */
     public function setEmails(array|string $emails): static
     {
         if (is_string($emails)) {

@@ -20,9 +20,21 @@ use App\Entity\ThirdParty;
 use App\Repository\BulkAppointmentRepository;
 use App\Repository\PdfConfigRepository;
 use App\Repository\TimberAppointmentRepository;
+use PDOException;
 use PHPMailer\PHPMailer\Exception as PHPMailerException;
 
-class PdfService
+/**
+ * @phpstan-type PdfConfigArray array{
+ *                                id?: int,
+ *                                module?: string,
+ *                                fournisseur?: int,
+ *                                envoi_auto?: bool|int,
+ *                                liste_emails?: string|string[],
+ *                                jours_avant?: int,
+ *                                jours_apres?: int,
+ *                              }
+ */
+final class PdfService
 {
     private PdfConfigRepository $pdfConfigRepository;
 
@@ -31,12 +43,23 @@ class PdfService
         $this->pdfConfigRepository = new PdfConfigRepository();
     }
 
+    /**
+     * Creates a PDF configuration from database data.
+     * 
+     * @param array $rawData Raw data from the database.
+     * 
+     * @phpstan-param PdfConfigArray $rawData
+     * 
+     * @return PdfConfig 
+     */
     public function makeConfigFromDatabase(array $rawData): PdfConfig
     {
+        $thirdPartyService = new ThirdPartyService();
+
         $config = (new PdfConfig())
             ->setId($rawData['id'] ?? null)
             ->setModule($rawData['module'] ?? null)
-            ->setSupplier($rawData['fournisseur'] ?? null)
+            ->setSupplier($thirdPartyService->getThirdParty($rawData['fournisseur'] ?? null))
             ->setAutoSend($rawData['envoi_auto'] ?? false)
             ->setEmails($rawData['liste_emails'] ?? [])
             ->setDaysBefore($rawData['jours_avant'] ?? 0)
@@ -45,11 +68,22 @@ class PdfService
         return $config;
     }
 
+    /**
+     * Creates a PDF configuration from form data.
+     * 
+     * @param array $rawData 
+     * 
+     * @phpstan-param PdfConfigArray $rawData
+     * 
+     * @return PdfConfig 
+     */
     public function makeConfigFromForm(array $rawData): PdfConfig
     {
+        $thirdPartyService = new ThirdPartyService();
+
         $config = (new PdfConfig())
             ->setModule($rawData['module'] ?? null)
-            ->setSupplier($rawData['fournisseur'] ?? null)
+            ->setSupplier($thirdPartyService->getThirdParty($rawData['fournisseur'] ?? null))
             ->setAutoSend($rawData['envoi_auto'] ?? false)
             ->setEmails($rawData['liste_emails'] ?? [])
             ->setDaysBefore($rawData['jours_avant'] ?? 0)
@@ -78,6 +112,16 @@ class PdfService
         return $this->pdfConfigRepository->fetchConfig($id);
     }
 
+    /**
+     * Updates a PDF configuration.
+     * 
+     * @param int   $id      
+     * @param array $rawData 
+     *
+     * @phpstan-param PdfConfigArray $rawData
+     *  
+     * @return PdfConfig 
+     */
     public function updateConfig(int $id, array $rawData): PdfConfig
     {
         $config = $this->makeConfigFromForm($rawData)->setId($id);
@@ -85,6 +129,15 @@ class PdfService
         return $this->pdfConfigRepository->updateConfig($config);
     }
 
+    /**
+     * Creates a PDF configuration.
+     * 
+     * @param array $rawData 
+     * 
+     * @phpstan-param PdfConfigArray $rawData
+     * 
+     * @return PdfConfig 
+     */
     public function createConfig(array $rawData): PdfConfig
     {
         $config = $this->makeConfigFromForm($rawData);
@@ -172,7 +225,18 @@ class PdfService
      * @param \DateTimeInterface $startDate Date de début des RDV.
      * @param \DateTimeInterface $endDate   Date de fin des RDV.
      * 
-     * @return array Résultat de l'envoi.
+     * @return array{
+     *           module: string,
+     *           fournisseur: int,
+     *           statut: 'succes'|'echec',
+     *           message: string|null,
+     *           adresses: array{
+     *                       from:string,
+     *                       to:string[],
+     *                       cc:string[],
+     *                       bcc:string[]
+     *                     }|null,
+     *         } Résultat de l'envoi.
      */
     public function sendPdfByEmail(
         int $configId,
@@ -190,16 +254,12 @@ class PdfService
         // Récupération données du service de l'agence.
         $agencyInfo = (new AgencyService())->getDepartment("transit");
 
-        /**
-         * @var array $resultat Résultat de l'envoi.
-         */
         $resultat = [
             "module" => $config->getModule(),
             "fournisseur" => $config->getSupplier()->getId(),
-            "statut" => null,
+            "statut" => "echec",
             "message" => null,
             "adresses" => null,
-            "erreur" => null
         ];
 
         try {
@@ -221,11 +281,9 @@ class PdfService
             $resultat["message"] = "Le PDF a été envoyé avec succès.";
             $resultat["adresses"] = $mail->getAllAddresses();
         } catch (PHPMailerException $e) {
-            $resultat["statut"] = "echec";
             $resultat["message"] = "Erreur : " . mb_convert_encoding($mail->ErrorInfo, 'UTF-8');
             ErrorLogger::log($e);
         } catch (\Exception $e) {
-            $resultat["statut"] = "echec";
             $resultat["message"] = "Erreur : " . $e->getMessage();
             ErrorLogger::log($e);
         } finally {

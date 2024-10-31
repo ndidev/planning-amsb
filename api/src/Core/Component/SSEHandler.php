@@ -11,6 +11,18 @@ use App\Core\Logger\ErrorLogger;
  */
 class SSEHandler
 {
+    /**
+     * Events to be sent to the SSE server.
+     * @var list<
+     *        array{
+     *          name: string,
+     *          type: string,
+     *          id: int|string,
+     *          data: mixed,
+     *          origin: string|null,
+     *        }
+     *      >
+     */
     private array $events = [];
 
     /**
@@ -27,7 +39,7 @@ class SSEHandler
             "type" => $type,
             "id" => $id,
             "data" => $data instanceof Arrayable ? $data->toArray() : $data,
-            "origin" => $_SERVER["HTTP_X_SSE_CONNECTION"] ?? NULL,
+            "origin" => $_SERVER["HTTP_X_SSE_CONNECTION"] ?? null,
         ];
     }
 

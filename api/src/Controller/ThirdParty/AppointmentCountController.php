@@ -22,7 +22,7 @@ final class AppointmentCountController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -31,7 +31,11 @@ final class AppointmentCountController extends Controller
 
             case 'HEAD':
             case 'GET':
-                $this->read($this->id);
+                if ($this->id === null) {
+                    $this->readAll();
+                } else {
+                    $this->read($this->id);
+                }
                 break;
 
             default:
@@ -43,17 +47,37 @@ final class AppointmentCountController extends Controller
     }
 
     /**
-     * Retrieves the number of appointments for a third party or all third parties.
-     * 
-     * @param ?int $id Optional. The id of the third party to retrieve.
+     * Retrieves the number of appointments for all third parties.
      */
-    private function read(?int $id): void
+    public function readAll(): void
     {
-        if ($id && !$this->service->thirdPartyExists($id)) {
+        $appointmentCounts = $this->service->getAllAppointmentCounts();
+
+        $etag = ETag::get($appointmentCounts);
+
+        if ($this->request->etag === $etag) {
+            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
+            return;
+        }
+
+        $this->response
+            ->addHeader("ETag", $etag)
+            ->setJSON($appointmentCounts);
+    }
+
+    /**
+     * Retrieves the number of appointments for a third party.
+     * 
+     * @param int $id The id of the third party to retrieve.
+     */
+    private function read(int $id): void
+    {
+        if (!$this->service->thirdPartyExists($id)) {
             throw new NotFoundException("Le tiers n'existe pas.");
         }
 
-        $appointmentCount = $this->service->getAppointmentCount($id);
+        /** @var int $appointmentCount */
+        $appointmentCount = $this->service->getAppointmentCountForId($id);
 
         $etag = ETag::get($appointmentCount);
 

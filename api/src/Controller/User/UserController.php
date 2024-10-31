@@ -22,7 +22,7 @@ final class UserController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -49,7 +49,7 @@ final class UserController extends Controller
     /**
      * Récupère l'utilisateur courant.
      */
-    public function read()
+    public function read(): void
     {
         $user = $this->userService->getCurrentUserInfo();
 
@@ -72,7 +72,7 @@ final class UserController extends Controller
     /**
      * Met à jour l"utilisateur courant.
      */
-    public function update()
+    public function update(): void
     {
         $user = $this->userService->getCurrentUserInfo();
 

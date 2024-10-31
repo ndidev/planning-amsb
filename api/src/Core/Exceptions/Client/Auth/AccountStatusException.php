@@ -18,7 +18,7 @@ class AccountStatusException extends ForbiddenException
         parent::__construct($message);
     }
 
-    public function getStatut()
+    public function getStatut(): string
     {
         return $this->statut;
     }

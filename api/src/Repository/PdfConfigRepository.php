@@ -115,7 +115,7 @@ final class PdfConfigRepository extends Repository
             "daysAfter" => $config->getDaysAfter(),
         ]);
 
-        $lastInsertId = $this->mysql->lastInsertId();
+        $lastInsertId = (int) $this->mysql->lastInsertId();
         $this->mysql->commit();
 
         return $this->fetchConfig($lastInsertId);

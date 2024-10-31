@@ -28,7 +28,7 @@ final class ShippingCallController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -40,7 +40,7 @@ final class ShippingCallController extends Controller
                 if ($this->id) {
                     $this->read($this->id);
                 } else {
-                    $this->readAll($this->request->query);
+                    $this->readAll();
                 }
                 break;
 
@@ -66,14 +66,14 @@ final class ShippingCallController extends Controller
 
     /**
      * Récupère tous les escale consignation.
-     * 
-     * @param array $archives
      */
-    public function readAll(array $archives)
+    public function readAll(): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour accéder aux escales.");
         }
+
+        $archives = array_key_exists("archives", $this->request->getQuery());
 
         $calls = $this->shippingService->getShippingCalls($archives);
 
@@ -94,7 +94,7 @@ final class ShippingCallController extends Controller
      * 
      * @param int $id id de l'escale à récupérer.
      */
-    public function read(int $id)
+    public function read(int $id): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour accéder aux escales.");
@@ -121,7 +121,7 @@ final class ShippingCallController extends Controller
     /**
      * Crée une escale consignation.
      */
-    public function create()
+    public function create(): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour créer une escale.");
@@ -146,7 +146,7 @@ final class ShippingCallController extends Controller
      * 
      * @param int $id id de l'escale à modifier.
      */
-    public function update(int $id)
+    public function update(int $id): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier une escale.");
@@ -170,7 +170,7 @@ final class ShippingCallController extends Controller
      * 
      * @param int $id id de l'escale à supprimer.
      */
-    public function delete(int $id)
+    public function delete(int $id): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour supprimer une escale.");

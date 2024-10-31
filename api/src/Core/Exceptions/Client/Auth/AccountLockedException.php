@@ -16,7 +16,7 @@ class AccountLockedException extends AccountStatusException
         parent::__construct($this->getStatut(), $message);
     }
 
-    public function getStatut()
+    public function getStatut(): string
     {
         return AccountStatus::LOCKED->value;
     }

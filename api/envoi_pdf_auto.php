@@ -56,7 +56,7 @@ foreach ($configs as $config) {
 
     // Mise à jour du rapport
     $rapport .= "• {$config->getModule()}/{$config->getSupplier()->getId()} : {$resultat['statut']}" . PHP_EOL;
-    $rapport .= "  Message : {$resultat['message']}" . PHP_EOL;
+    $rapport .= "  " . ($resultat["statut"] === "succes" ? "Message" : "Erreur") . " : {$resultat['message']}" . PHP_EOL;
     $rapport .= "  Dates : du " . DateUtils::format(DateUtils::DATE_FULL, $startDate) . " au " . DateUtils::format(DateUtils::DATE_FULL, $endDate) . PHP_EOL;
     if ($resultat["statut"] === "succes") {
         $rapport .= "  Adresses : " . PHP_EOL;
@@ -73,9 +73,6 @@ foreach ($configs as $config) {
         foreach ($resultat["adresses"]["bcc"] as $address) {
             $rapport .= "      $address" . PHP_EOL;
         }
-    }
-    if ($resultat["statut"] === "echec") {
-        $rapport .= "  Erreur : " . print_r($resultat['erreur'], true) . PHP_EOL;
     }
 
     // Affichage du rapport

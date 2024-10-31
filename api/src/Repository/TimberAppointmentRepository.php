@@ -6,7 +6,10 @@ use App\Core\Component\Collection;
 use App\Core\Component\DateUtils;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\DTO\SupplierWithUniqueDeliveryNoteNumber;
+use App\DTO\TimberFilterDTO;
 use App\DTO\TimberRegistryEntryDTO;
+use App\DTO\TimberStatsDTO;
+use App\DTO\TimberTransportSuggestionsDTO;
 use App\Entity\ThirdParty;
 use App\Entity\Timber\TimberAppointment;
 use App\Service\TimberService;
@@ -32,36 +35,19 @@ final class TimberAppointmentRepository extends Repository
     /**
      * Récupère tous les RDV bois.
      * 
-     * @param array $query Paramètres de recherche.
+     * @param TimberFilterDTO $filter Paramètres de recherche.
      * 
      * @return Collection<TimberAppointment> Tous les RDV récupérés
      */
-    public function getAppointments(array $query): Collection
+    public function getAppointments(TimberFilterDTO $filter): Collection
     {
-        // Filtre
-        $startDate = isset($query['date_debut']) ? ($query['date_debut'] ?: date("Y-m-d")) : date("Y-m-d");
-        $endDate = isset($query['date_fin']) ? ($query['date_fin'] ?: "9999-12-31") : "9999-12-31";
-        $supplierFilter = trim($query['fournisseur'] ?? "", ",");
-        $customerFilter = trim($query['client'] ?? "", ",");
-        $loadingPlaceFilter = trim($query['chargement'] ?? "", ",");
-        $deliveryPlaceFilter = trim($query['livraison'] ?? "", ",");
-        $transportFilter = trim($query['transporteur'] ?? "", ",");
-        $chartererFilter = trim($query['affreteur'] ?? "", ",");
-
-        $sqlSupplierFilter = $supplierFilter === "" ? "" : " AND fournisseur IN ($supplierFilter)";
-        $sqlCustomerFilter = $customerFilter === "" ? "" : " AND client IN ($customerFilter)";
-        $sqlLoadingPlaceFilter = $loadingPlaceFilter === "" ? "" : " AND chargement IN ($loadingPlaceFilter)";
-        $sqlDeliveryPlaceFilter = $deliveryPlaceFilter === "" ? "" : " AND livraison IN ($deliveryPlaceFilter)";
-        $sqlTransportFilter = $transportFilter === "" ? "" : " AND transporteur IN ($transportFilter)";
-        $sqlChartererFilter = $chartererFilter === "" ? "" : " AND affreteur IN ($chartererFilter)";
-
         $sqlFilter =
-            $sqlSupplierFilter
-            . $sqlCustomerFilter
-            . $sqlLoadingPlaceFilter
-            . $sqlDeliveryPlaceFilter
-            . $sqlTransportFilter
-            . $sqlChartererFilter;
+            $filter->getSqlSupplierFilter()
+            . $filter->getSqlCustomerFilter()
+            . $filter->getSqlLoadingPlaceFilter()
+            . $filter->getSqlDeliveryPlaceFilter()
+            . $filter->getSqlTransportFilter()
+            . $filter->getSqlChartererFilter();
 
         $statement =
             "SELECT
@@ -84,7 +70,7 @@ final class TimberAppointmentRepository extends Repository
             FROM bois_planning
             WHERE 
             (
-                (date_rdv BETWEEN :date_debut AND :date_fin)
+                (date_rdv BETWEEN :startDate AND :endDate)
                 OR date_rdv IS NULL
                 OR attente = 1
             )
@@ -94,8 +80,8 @@ final class TimberAppointmentRepository extends Repository
         $requete = $this->mysql->prepare($statement);
 
         $requete->execute([
-            "date_debut" => $startDate,
-            "date_fin" => $endDate
+            "startDate" => $filter->getSqlStartDate(),
+            "endDate" => $filter->getSqlEndDate(),
         ]);
 
         $appointmentsRaw = $requete->fetchAll();
@@ -203,7 +189,7 @@ final class TimberAppointmentRepository extends Repository
             'commentaire_cache' => $appointment->getPrivateComment(),
         ]);
 
-        $lastInsertId = $this->mysql->lastInsertId();
+        $lastInsertId = (int) $this->mysql->lastInsertId();
         $this->mysql->commit();
 
         return $this->getAppointment($lastInsertId);
@@ -469,24 +455,15 @@ final class TimberAppointmentRepository extends Repository
     /**
      * Renvoie l'extrait du registre d'affrètement avec le filtre appliqué.
      *
-     * @param array $filter 
+     * @param \DateTimeInterface $startDate Date de début du filtre.
+     * @param \DateTimeInterface $endDate   Date de fin du filtre.
      * 
      * @return TimberRegistryEntryDTO[] Extrait du registre d'affrètement.
      */
-    public function getCharteringRegistryEntries(array $filter): array
-    {
-        $defaultStartDate = DateUtils::format(DateUtils::SQL_DATE, DateUtils::getPreviousWorkingDay(new \DateTimeImmutable()));
-        $defaultEndDate = date("Y-m-d");
-
-        // Filtre
-        $startDate = isset($filter['date_debut'])
-            ? ($filter['date_debut'] ?: $defaultStartDate)
-            : $defaultStartDate;
-
-        $endDate = isset($filter['date_fin'])
-            ? ($filter['date_fin'] ?: $defaultEndDate)
-            : $defaultEndDate;
-
+    public function getCharteringRegistryEntries(
+        \DateTimeInterface $startDate,
+        \DateTimeInterface $endDate,
+    ): array {
         $statement =
             "SELECT
                 p.date_rdv,
@@ -518,8 +495,8 @@ final class TimberAppointmentRepository extends Repository
         $request = $this->mysql->prepare($statement);
 
         $request->execute([
-            "startDate" => $startDate,
-            "endDate" => $endDate
+            "startDate" => $startDate->format("Y-m-d"),
+            "endDate" => $endDate->format("Y-m-d"),
         ]);
 
         $entriesRaw = $request->fetchAll();
@@ -534,8 +511,10 @@ final class TimberAppointmentRepository extends Repository
         return $registryEntries;
     }
 
-    public function getTransportSuggestions(int $loadingPlaceId, int $deliveryPlaceId): array
-    {
+    public function getTransportSuggestions(
+        int $loadingPlaceId,
+        int $deliveryPlaceId
+    ): TimberTransportSuggestionsDTO {
         // Récupérer les infos du lieu de chargement et de livraison
         $locationStatement =
             "SELECT
@@ -548,9 +527,15 @@ final class TimberAppointmentRepository extends Repository
         $locationRequest = $this->mysql->prepare($locationStatement);
 
         $locationRequest->execute(["id" => $loadingPlaceId]);
+        /**
+         * @var array{id: int, cp: string, pays: string} $loadingPlaceData
+         */
         $loadingPlaceData = $locationRequest->fetch();
 
         $locationRequest->execute(["id" => $deliveryPlaceId]);
+        /**
+         * @var array{id: int, cp: string, pays: string} $deliveryPlaceData
+         */
         $deliveryPlaceData = $locationRequest->fetch();
 
 
@@ -599,9 +584,9 @@ final class TimberAppointmentRepository extends Repository
             ORDER BY transports DESC
             LIMIT 10";
 
-        $requete_transporteurs = $this->mysql->prepare($transportStatement);
+        $transportRequest = $this->mysql->prepare($transportStatement);
 
-        $requete_transporteurs->execute([
+        $transportRequest->execute([
             "loadingPlaceId" => $loadingPlaceId,
             "loadingPlacePostCode" => $loadingPlaceData["cp"],
             "loadingPlaceCountry" => $loadingPlaceData["pays"],
@@ -610,13 +595,16 @@ final class TimberAppointmentRepository extends Repository
             "deliveryPlaceCountry" => $deliveryPlaceData["pays"],
         ]);
 
-        $transportData = $requete_transporteurs->fetchAll();
+        /**
+         * @var list<array{transports: int, nom: string, telephone: string}> $transportData
+         */
+        $transportData = $transportRequest->fetchAll();
 
-        $suggestions = [
-            "chargement" => $loadingPlaceData,
-            "livraison" => $deliveryPlaceData,
-            "transporteurs" => $transportData
-        ];
+        $suggestions = new TimberTransportSuggestionsDTO(
+            $loadingPlaceData,
+            $deliveryPlaceData,
+            $transportData,
+        );
 
         return $suggestions;
     }
@@ -624,37 +612,22 @@ final class TimberAppointmentRepository extends Repository
     /**
      * Récupère les stats bois.
      * 
-     * @param array $filter Filtre qui contient...
+     * @param TimberFilterDTO $filter
+     * 
+     * @return TimberStatsDTO
      */
-    public function getStats(array $filter): array
+    public function getStats(TimberFilterDTO $filter): TimberStatsDTO
     {
-        // Filter
-        $startDate = isset($filter['date_debut']) ? ($filter['date_debut'] ?: "0001-01-01") : "0001-01-01";
-        $endDate = isset($filter["date_fin"]) ? ($filter['date_fin'] ?: "9999-12-31") : "9999-12-31";
-        $supplierFilter = trim($filter['fournisseur'] ?? "", ",");
-        $customerFilter = trim($filter['client'] ?? "", ",");
-        $loadingPlaceFilter = trim($filter['chargement'] ?? "", ",");
-        $deliveryPlaceFilter = trim($filter['livraison'] ?? "", ",");
-        $transportFilter = trim($filter['transporteur'] ?? "", ",");
-        $chartererFilter = trim($filter['affreteur'] ?? "", ",");
-
-        $sqlSupplierFilter = $supplierFilter === "" ? "" : " AND fournisseur IN ($supplierFilter)";
-        $sqlCustomerFilter = $customerFilter === "" ? "" : " AND client IN ($customerFilter)";
-        $sqlLoadingPlaceFilter = $loadingPlaceFilter === "" ? "" : " AND chargement IN ($loadingPlaceFilter)";
-        $sqlDeliveryPlaceFilter = $deliveryPlaceFilter === "" ? "" : " AND livraison IN ($deliveryPlaceFilter)";
-        $sqlTransportFilter = $transportFilter === "" ? "" : " AND transporteur IN ($transportFilter)";
-        $sqlChartererFilter = $chartererFilter === "" ? "" : " AND affreteur IN ($chartererFilter)";
-
         $sqlFilter =
-            $sqlSupplierFilter
-            . $sqlCustomerFilter
-            . $sqlLoadingPlaceFilter
-            . $sqlDeliveryPlaceFilter
-            . $sqlTransportFilter
-            . $sqlChartererFilter;
+            $filter->getSqlSupplierFilter()
+            . $filter->getSqlCustomerFilter()
+            . $filter->getSqlLoadingPlaceFilter()
+            . $filter->getSqlDeliveryPlaceFilter()
+            . $filter->getSqlTransportFilter()
+            . $filter->getSqlChartererFilter();
 
         $appointmentsStatement =
-            "SELECT date_rdv as `date`
+            "SELECT date_rdv
             FROM bois_planning
             WHERE date_rdv BETWEEN :startDate AND :endDate
             AND attente = 0
@@ -664,45 +637,14 @@ final class TimberAppointmentRepository extends Repository
         $appointmentsRequest = $this->mysql->prepare($appointmentsStatement);
 
         $appointmentsRequest->execute([
-            "startDate" => $startDate,
-            "endDate" => $endDate
+            "startDate" => $filter->getSqlStartDate(),
+            "endDate" => $filter->getSqlEndDate(),
         ]);
 
-        $appointments = $appointmentsRequest->fetchAll();
+        /** @var string[] */
+        $dates = $appointmentsRequest->fetchAll(\PDO::FETCH_COLUMN);
 
-        $stats = [
-            "Total" => 0,
-            "Par année" => [],
-        ];
-
-        $yearTemplate = [
-            1 => 0,
-            2 => 0,
-            3 => 0,
-            4 => 0,
-            5 => 0,
-            6 => 0,
-            7 => 0,
-            8 => 0,
-            9 => 0,
-            10 => 0,
-            11 => 0,
-            12 => 0,
-        ];
-
-        // Compilation du nombre de RDV par année et par mois
-        foreach ($appointments as $appointment) {
-            $date = explode("-", $appointment["date"]);
-            $year = $date[0];
-            $month = $date[1];
-
-            if (!array_key_exists($year, $stats["Par année"])) {
-                $stats["Par année"][$year] = $yearTemplate;
-            };
-
-            $stats["Total"]++;
-            $stats["Par année"][$year][(int) $month]++;
-        }
+        $stats = new TimberStatsDTO($dates);
 
         return $stats;
     }

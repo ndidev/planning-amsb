@@ -4,16 +4,17 @@ namespace App\Core\HTTP;
 
 use App\Core\Exceptions\Client\ClientException;
 
-class HTTPRequest
+final class HTTPRequest
 {
 
     /**
      * HTTP request method.
      */
-    public string $method;
+    private string $method;
 
     /**
      * HTTP request headers.
+     * @var array<string, string>
      */
     protected array $headers = [];
 
@@ -29,11 +30,13 @@ class HTTPRequest
 
     /**
      * Request query parameters (after "?").
+     * @var array<string, string>
      */
-    public array $query = [];
+    private array $query = [];
 
     /**
      * Request body.
+     * @var array<string, mixed>
      */
     private array $body;
 
@@ -46,7 +49,9 @@ class HTTPRequest
     {
         $this->method = strtoupper($_SERVER["REQUEST_METHOD"]);
 
-        $this->headers = getallheaders();
+        if (function_exists('getallheaders')) {
+            $this->headers = getallheaders();
+        }
 
         $url = parse_url($_SERVER['REQUEST_URI']);
         $this->path = $url["path"];
@@ -68,12 +73,70 @@ class HTTPRequest
         }
     }
 
+    public function getMethod(): string
+    {
+        return $this->method;
+    }
+
+    /**
+     * Get the request query parameters.
+     * 
+     * @return array<string, string> Request query.
+     */
+    public function getQuery(): array
+    {
+        return $this->query;
+    }
+
+    /**
+     * Get a query parameter.
+     * 
+     * @param string $name       Name of the query parameter.
+     * @param mixed  $default    Default value if the query parameter is not set.
+     * @param string $type       Type of the query parameter. Default is 'string'.
+     * @param bool   $allowEmpty Allow an empty query parameter.
+     * 
+     * @return mixed Query parameter with the desired type.
+     * 
+     * @phpstan-return ($type is 'string' ? string : ($type is 'int' ? int : ($type is 'float' ? float : ($type is 'bool' ? bool : mixed))))
+     */
+    public function getQueryParam(
+        string $name,
+        mixed $default = null,
+        string $type = 'string',
+        bool $allowEmpty = false
+    ): mixed {
+        if (isset($this->query[$name])) {
+            $paramValue = $this->query[$name];
+        } else {
+            $paramValue = $default;
+        }
+
+        if (!$allowEmpty && empty($paramValue)) {
+            $paramValue = $default;
+        }
+
+        // If null is expected as default, return null
+        if ($paramValue === null) {
+            return null;
+        }
+
+        return match ($type) {
+            "string" => (string) $paramValue,
+            "int" => (int) $paramValue,
+            "float" => (float) $paramValue,
+            "bool" => (bool) $paramValue,
+            "datetime" => new \DateTime($paramValue),
+            default => $paramValue,
+        };
+    }
+
     /**
      * Get a request body.
      * 
      * @param bool $allowEmpty Allow an empty body.
      * 
-     * @return array Request body.
+     * @return array<string, mixed> Request body.
      * 
      * @throws ClientException If the body is empty and `$allowEmpty` is `false`.
      */

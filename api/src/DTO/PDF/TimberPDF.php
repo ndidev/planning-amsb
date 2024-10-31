@@ -276,7 +276,7 @@ final class TimberPDF extends PlanningPDF
         $this->Cell(0, 4, '', 0, 1); // Espace avant le prochain rdv pour la lisibilité
     }
 
-    function AddHeaderAttente()
+    function AddHeaderAttente(): void
     {
         $this->SetFont('Roboto', '', 12);
         $this->SetTextColor(0, 0, 0);
@@ -286,23 +286,23 @@ final class TimberPDF extends PlanningPDF
 
     private function AddLineAttente(
         string $formattedDate,
-        string $loadingId,
+        int    $loadingId,
         string $loadingName,
         string $loadingPostCode,
         string $loadingCity,
         string $loadingCountry,
-        string $customerId,
+        int    $customerId,
         string $customerName,
         string $customerPostCode,
         string $customerCity,
         string $customerCountry,
-        string $deliveryId,
+        int    $deliveryId,
         string $deliveryName,
         string $deliveryPostCode,
         string $deliveryCity,
         string $deliveryCountry,
         string $publicComments
-    ) {
+    ): void {
         $this->SetFont('Roboto', '', 10);
         $this->SetTextColor(100, 100, 100);
         $this->Cell(10, 6); // Décalage de 1cm
@@ -333,10 +333,10 @@ final class TimberPDF extends PlanningPDF
     /**
      * Affichage d'un message "Aucun RDV".
      * 
-     * @param \DateTime $startDate Date de début.
-     * @param \DateTime $endDate   Date de fin.
+     * @param \DateTimeInterface $startDate Date de début.
+     * @param \DateTimeInterface $endDate   Date de fin.
      */
-    private function AucunRDV(\DateTime $startDate, \DateTime $endDate): void
+    private function AucunRDV(\DateTimeInterface $startDate, \DateTimeInterface $endDate): void
     {
         $this->SetFont('Roboto', '', 12);
         $this->SetTextColor(0, 0, 0);

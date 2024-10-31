@@ -5,7 +5,6 @@
 namespace App\Repository;
 
 use App\Core\Auth\AccountStatus;
-use App\Core\Auth\User as AuthUser;
 use App\Core\Exceptions\Client\Auth\InvalidAccountException;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\DTO\CurrentUserFormDTO;
@@ -65,9 +64,6 @@ final class UserRepository extends Repository
             $request = $this->mysql->prepare($statement);
             $request->execute(["uid" => $uid]);
 
-            /**
-             * @var array|null|false $userRaw
-             */
             $userRaw = $request->fetch();
 
             if (!$userRaw) {

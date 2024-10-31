@@ -21,7 +21,7 @@ final class QuickAppointmentAddController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -44,7 +44,7 @@ final class QuickAppointmentAddController extends Controller
     /**
      * Récupère tous les ajouts rapides.
      */
-    public function readAllConfigs()
+    public function readAllConfigs(): void
     {
         $quickAdds = $this->quickAppointmentAddService->getAllQuickAppointmentAdds();
 

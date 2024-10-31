@@ -27,13 +27,9 @@ class CharterLeg extends AbstractEntity
         return $this->charter;
     }
 
-    public function setCharter(Charter|int|null $charter): static
+    public function setCharter(?Charter $charter): static
     {
-        if (is_int($charter)) {
-            $this->charter = (new CharteringService())->getCharter($charter);
-        } else {
-            $this->charter = $charter;
-        }
+        $this->charter = $charter;
 
         return $this;
     }

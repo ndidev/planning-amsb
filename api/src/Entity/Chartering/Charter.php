@@ -137,13 +137,9 @@ class Charter extends AbstractEntity
         return $this->charterer;
     }
 
-    public function setCharterer(ThirdParty|int|null $charterer): static
+    public function setCharterer(?ThirdParty $charterer): static
     {
-        if (is_int($charterer)) {
-            $this->charterer = (new ThirdPartyService())->getThirdParty($charterer);
-        } else {
-            $this->charterer = $charterer;
-        }
+        $this->charterer = $charterer;
 
         return $this;
     }
@@ -153,13 +149,9 @@ class Charter extends AbstractEntity
         return $this->shipOperator;
     }
 
-    public function setShipOperator(ThirdParty|int|null $shipOperator): static
+    public function setShipOperator(?ThirdParty $shipOperator): static
     {
-        if (is_int($shipOperator)) {
-            $this->shipOperator = (new ThirdPartyService())->getThirdParty($shipOperator);
-        } else {
-            $this->shipOperator = $shipOperator;
-        }
+        $this->shipOperator = $shipOperator;
 
         return $this;
     }
@@ -169,13 +161,9 @@ class Charter extends AbstractEntity
         return $this->shipbroker;
     }
 
-    public function setShipbroker(ThirdParty|int|null $shipbroker): static
+    public function setShipbroker(?ThirdParty $shipbroker): static
     {
-        if (is_int($shipbroker)) {
-            $this->shipbroker = (new ThirdPartyService())->getThirdParty($shipbroker);
-        } else {
-            $this->shipbroker = $shipbroker;
-        }
+        $this->shipbroker = $shipbroker;
 
         return $this;
     }
@@ -261,17 +249,13 @@ class Charter extends AbstractEntity
     }
 
     /**
-     * @param Collection<CharterLeg>|CharterLeg[] $legs 
+     * @param CharterLeg[] $legs 
      */
-    public function setLegs(Collection|array $legs): static
+    public function setLegs(array $legs): static
     {
-        if (is_array($legs)) {
-            $this->legs = new Collection(
-                array_map(fn(CharterLeg $leg) => $leg->setCharter($this), $legs)
-            );
-        } else {
-            $this->legs = $legs;
-        }
+        $this->legs = new Collection(
+            array_map(fn(CharterLeg $leg) => $leg->setCharter($this), $legs)
+        );
 
         return $this;
     }

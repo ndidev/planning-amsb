@@ -25,7 +25,7 @@ final class CountryController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -66,7 +66,7 @@ final class CountryController extends Controller
         $this->response
             ->addHeader("ETag", $etag)
             ->addHeader("Cache-control", "max-age=31557600, must-revalidate")
-            ->setJSON(array_map(fn(Country $country) => $country->toArray(), $countries));
+            ->setJSON($countries);
     }
 
     /**

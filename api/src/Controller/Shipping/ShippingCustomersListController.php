@@ -28,7 +28,7 @@ final class ShippingCustomersListController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -51,7 +51,7 @@ final class ShippingCustomersListController extends Controller
     /**
      * Renvoie la liste des clients utilisés en consignation.
      */
-    public function readAll()
+    public function readAll(): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException();

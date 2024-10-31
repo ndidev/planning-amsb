@@ -4,26 +4,30 @@
 
 namespace App\Repository;
 
+use App\DTO\NewTidesDTO;
+use App\DTO\TidesDTO;
 use const App\Core\Component\Constants\ONE_WEEK;
 
+/**
+ * Repository for the tide data.
+ */
 final class TideRepository extends Repository
 {
-    private $redisNamespace = "marees";
+    private string $redisNamespace = "marees";
 
     /**
      * Retrieves tides based on the filter.
      * 
-     * @param string|null $start Start date.
-     * @param string|null $end   End date.
+     * @param \DateTimeInterface $startDate The start date of the time range.
+     * @param \DateTimeInterface $endDate   The end date of the time range.
      * 
-     * @return array All retrieved tides.
+     * @return TidesDTO All retrieved tides.
      */
-    public function fetchTides(?string $start, ?string $end): array
-    {
-        $start ??= "0001-01-01";
-        $end ??= "9999-12-31";
-
-        $datesHash = md5($start . $end);
+    public function fetchTides(
+        \DateTimeInterface $startDate,
+        \DateTimeInterface $endDate
+    ): TidesDTO {
+        $datesHash = md5($startDate->format('Y-m-d') . $endDate->format('Y-m-d'));
 
         // Redis
         $tides = json_decode($this->redis->get($this->redisNamespace . ":" . $datesHash));
@@ -33,31 +37,40 @@ final class TideRepository extends Repository
 
             $request = $this->mysql->prepare($statement);
             $request->execute([
-                "start" => $start,
-                "end" => $end,
+                "start" => $startDate->format('Y-m-d'),
+                "end" => $endDate->format('Y-m-d'),
             ]);
+
+            /**
+             * @var list<array{
+             *             date: string,
+             *             heure: string,
+             *             te_cesson: string,
+             *             te_bassin: string
+             *           }>
+             */
             $tides = $request->fetchAll();
 
-            for ($i = 0; $i < count($tides); $i++) {
-                $tides[$i]["heure"] = substr($tides[$i]["heure"], 0, -3);
-                $tides[$i]["te_cesson"] = (float) $tides[$i]["te_cesson"];
-                $tides[$i]["te_bassin"] = (float) $tides[$i]["te_bassin"];
-            }
-
             if (!empty($tides)) {
-                $this->redis->setex($this->redisNamespace . ":" . $datesHash, ONE_WEEK, json_encode($tides));
+                $this->redis->setex(
+                    $this->redisNamespace . ":" . $datesHash,
+                    ONE_WEEK,
+                    json_encode($tides)
+                );
             }
         }
 
-        return $tides;
+        $tidesDTO = new TidesDTO($tides);
+
+        return $tidesDTO;
     }
 
     /**
      * Récupère les marées d'une année.
      * 
-     * @return array Les marées de l'année.
+     * @return TidesDTO Les marées de l'année.
      */
-    public function fetchTidesByYear(int $year): array
+    public function fetchTidesByYear(int $year): TidesDTO
     {
         // Redis
         $tides = json_decode($this->redis->get($this->redisNamespace . ":" . $year));
@@ -65,28 +78,33 @@ final class TideRepository extends Repository
         if (!$tides) {
             $statement = "SELECT * FROM marees WHERE SUBSTRING(date, 1, 4) = :year";
 
-            $request = $this->mysql->prepare($statement);
-            $request->execute(["year" => $year]);
-            $tides = $request->fetchAll();
+            $tidesRequest = $this->mysql->prepare($statement);
+            $tidesRequest->execute(["year" => $year]);
 
-            for ($i = 0; $i < count($tides); $i++) {
-                $tides[$i]["heure"] = substr($tides[$i]["heure"], 0, -3);
-                $tides[$i]["te_cesson"] = (float) $tides[$i]["te_cesson"];
-                $tides[$i]["te_bassin"] = (float) $tides[$i]["te_bassin"];
-            }
+            /**
+             * @var list<array{
+             *             date: string,
+             *             heure: string,
+             *             te_cesson: string,
+             *             te_bassin: string
+             *           }>
+             */
+            $tides = $tidesRequest->fetchAll();
 
             if (!empty($tides)) {
                 $this->redis->set($this->redisNamespace . ":" . $year, json_encode($tides));
             }
         }
 
-        return $tides;
+        $tidesDTO = new TidesDTO($tides);
+
+        return $tidesDTO;
     }
 
     /**
      * Récupère toutes les années des marées.
      * 
-     * @return array Toutes les années récupérées.
+     * @return string[] Toutes les années récupérées.
      */
     public function fetchYears(): array
     {
@@ -110,6 +128,8 @@ final class TideRepository extends Repository
 
     /**
      * Add tides.
+     * 
+     * @param list<array{0: string, 1: string, 2: float}> $tides The tides to add.
      */
     public function addTides(array $tides): void
     {
@@ -133,14 +153,14 @@ final class TideRepository extends Repository
     /**
      * Supprime les marrées pour une année.
      * 
-     * @param int $annee Année pour laquelle supprimer les marées.
+     * @param int $year Année pour laquelle supprimer les marées.
      * 
      * @return bool `true` si succès, `false` sinon
      */
-    public function delete(int $annee): bool
+    public function delete(int $year): bool
     {
-        $request = $this->mysql->prepare("DELETE FROM utils_marees_shom WHERE SUBSTRING(date, 1, 4) = :annee");
-        $isDeleted = $request->execute(["annee" => $annee]);
+        $request = $this->mysql->prepare("DELETE FROM utils_marees_shom WHERE SUBSTRING(date, 1, 4) = :year");
+        $isDeleted = $request->execute(["year" => $year]);
 
         $this->invalidateRedis();
 

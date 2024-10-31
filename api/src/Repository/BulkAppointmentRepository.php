@@ -142,7 +142,7 @@ final class BulkAppointmentRepository extends Repository
             'commentaire' => $appointment->getComments(),
         ]);
 
-        $lastInsertId = $this->mysql->lastInsertId();
+        $lastInsertId = (int) $this->mysql->lastInsertId();
         $this->mysql->commit();
 
         return $this->getAppointment($lastInsertId);

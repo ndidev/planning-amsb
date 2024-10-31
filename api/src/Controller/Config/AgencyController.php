@@ -27,7 +27,7 @@ final class AgencyController extends Controller
 
     private function processRequest(): void
     {
-        switch ($this->request->method) {
+        switch ($this->request->getMethod()) {
             case 'OPTIONS':
                 $this->response
                     ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
@@ -58,7 +58,7 @@ final class AgencyController extends Controller
     /**
      * Récupère les données des services de l'agence.
      */
-    public function readAll()
+    public function readAll(): void
     {
         $departments = $this->agencyService->getAllDepartments();
 
@@ -79,7 +79,7 @@ final class AgencyController extends Controller
      * 
      * @param string $departmentName Service de l'agence à récupérer.
      */
-    public function read(string $departmentName)
+    public function read(string $departmentName): void
     {
         $department = $this->agencyService->getDepartment($departmentName);
 
@@ -104,7 +104,7 @@ final class AgencyController extends Controller
      * 
      * @param string $departmentName Service de l'agence à modifier.
      */
-    public function update(string $departmentName)
+    public function update(string $departmentName): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");

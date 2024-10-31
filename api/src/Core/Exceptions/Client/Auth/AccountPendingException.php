@@ -16,7 +16,7 @@ class AccountPendingException extends AccountStatusException
         parent::__construct($this->getStatut(), $message);
     }
 
-    public function getStatut()
+    public function getStatut(): string
     {
         return AccountStatus::PENDING->value;
     }

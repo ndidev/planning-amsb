@@ -9,7 +9,25 @@ use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
 use App\Service\ShippingService;
 
-class ShippingCallCargo extends AbstractEntity
+/**
+ * Represents a cargo for a shipping call.
+ * 
+ * @phpstan-type ShippingCallCargoArray array{
+ *                                        id: ?int,
+ *                                        escale_id: ?int,
+ *                                        marchandise: string,
+ *                                        client: string,
+ *                                        operation: value-of<CargoOperation>,
+ *                                        environ: bool,
+ *                                        tonnage_bl: float,
+ *                                        cubage_bl: float,
+ *                                        nombre_bl: float,
+ *                                        tonnage_outturn: float,
+ *                                        cubage_outturn: float,
+ *                                        nombre_outturn: float,
+ *                                      }
+ */
+final class ShippingCallCargo extends AbstractEntity
 {
     use IdentifierTrait;
 
@@ -170,6 +188,9 @@ class ShippingCallCargo extends AbstractEntity
         return $this;
     }
 
+    /**
+     * @phpstan-return ShippingCallCargoArray
+     */
     public function toArray(): array
     {
         return [
@@ -177,7 +198,7 @@ class ShippingCallCargo extends AbstractEntity
             'escale_id' => $this->getShippingCall()?->getId(),
             'marchandise' => $this->getCargoName(),
             'client' => $this->getCustomer(),
-            'operation' => $this->getOperation(),
+            'operation' => $this->getOperation()->value,
             'environ' => $this->isApproximate(),
             'tonnage_bl' => $this->getBlTonnage(),
             'cubage_bl' => $this->getBlVolume(),

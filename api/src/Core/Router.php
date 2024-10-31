@@ -9,16 +9,20 @@ namespace App\Core;
  * to better suit the needs of the application.
  * 
  * @link http://altorouter.com/
+ * 
+ * @phpstan-type Route array{0: string, 1: mixed, 2?: string}
  */
 class Router
 {
     /**
      * Array of all routes (incl. named routes).
+     * @phpstan-var Route[]
      */
     protected array $routes = [];
 
     /**
      * Array of all named routes.
+     * @phpstan-var array<string, string>
      */
     protected array $namedRoutes = [];
 
@@ -29,6 +33,14 @@ class Router
 
     /**
      * Array of default match types (regex helpers)
+     * @var array{
+     *        i: string,
+     *        a: string,
+     *        h: string,
+     *        '*': string,
+     *        '**': string,
+     *        '': string, 
+     *      }
      */
     protected array $matchTypes = [
         'i'  => '[0-9]++',
@@ -44,8 +56,9 @@ class Router
      *
      * @param array $routes
      * @param string $basePath
-     * @param array $matchTypes
-     * @throws \RuntimeException
+     * @param array<string, string> $matchTypes
+     * 
+     * @phpstan-param Route[] $routes
      */
     public function __construct(
         array $routes = [],
@@ -60,7 +73,10 @@ class Router
     /**
      * Retrieves all routes.
      * Useful if you want to process or display routes.
+     * 
      * @return array All routes.
+     * 
+     * @phpstan-return Route[]
      */
     public function getRoutes(): array
     {
@@ -79,6 +95,8 @@ class Router
      * ```
      *
      * @param array|\Traversable $routes
+     * 
+     * @phpstan-param array<Route>|\Traversable<Route> $routes
      * 
      * @author Koen Punt
      */
@@ -102,9 +120,9 @@ class Router
     /**
      * Add named match types. It uses array_merge so keys can be overwritten.
      *
-     * @param array $matchTypes The key is the name and the value is the regex.
+     * @param array<string, string> $matchTypes The key is the name and the value is the regex.
      */
-    public function addMatchTypes(array $matchTypes)
+    public function addMatchTypes(array $matchTypes): void
     {
         $this->matchTypes = array_merge($this->matchTypes, $matchTypes);
     }
@@ -115,6 +133,7 @@ class Router
      * @param string $route The route regex, custom regex must start with an @. You can use multiple pre-set regex filters, like [i:id]
      * @param mixed $target The target where this route should point to. Can be anything.
      * @param string $name Optional name of this route. Supply if you want to reverse route this url in your application.
+     * 
      * @throws \RuntimeException
      */
     public function map(string $route, mixed $target, ?string $name = null): void
@@ -137,8 +156,8 @@ class Router
      *
      * Generate the URL for a named route. Replace regexes with supplied parameters
      *
-     * @param string $routeName The name of the route.
-     * @param array  $params    Associative array of parameters to replace placeholders with.
+     * @param string                $routeName The name of the route.
+     * @param array<string, string> $params    Associative array of parameters to replace placeholders with.
      * 
      * @return string The URL of the route with named parameters in place.
      * 
@@ -187,9 +206,9 @@ class Router
      * 
      * @param string $requestUrl The request url to match.
      * 
-     * @return array{target: string, params: array, name: string}|false Array with route information on success, false on failure (no match).
+     * @return array{target: string, params: array<string, mixed>, name: string}|false Array with route information on success, false on failure (no match).
      */
-    public function match(string $requestUrl = null): array|false
+    public function match(?string $requestUrl = null): array|false
     {
 
         $params = [];
@@ -255,10 +274,12 @@ class Router
 
     /**
      * Compile the regex for a given route (EXPENSIVE)
-     * @param $route
+     * 
+     * @param string $route
+     * 
      * @return string
      */
-    protected function compileRoute($route)
+    protected function compileRoute(string $route): string
     {
         if (preg_match_all('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`', $route, $matches, PREG_SET_ORDER)) {
             $matchTypes = $this->matchTypes;

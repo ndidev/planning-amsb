@@ -27,7 +27,7 @@ class PdfEmail extends Email
   /**
    * Ajouter le sujet du message.
    */
-  private function addSubject()
+  private function addSubject(): void
   {
     $formattedStartDate = DateUtils::format("dd MMMM yyyy", $this->startDate);
     $formattedEndDate = DateUtils::format("dd MMMM yyyy", $this->endDate);
@@ -110,7 +110,7 @@ HTML;
   /**
    * Ajout du PDF en pièce jointe.
    */
-  private function addPdfAttachment()
+  private function addPdfAttachment(): void
   {
     $this->addStringAttachment($this->pdf->stringifyPDF(), $this->Subject . '.pdf', 'base64', 'application/pdf');
   }

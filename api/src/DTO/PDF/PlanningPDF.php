@@ -94,7 +94,18 @@ abstract class PlanningPDF extends \tFPDF
      * 
      * @param string $file Chemin du fichier WebP.
      * 
-     * @return array 
+     * @return array{
+     *           w: mixed,
+     *           h: mixed,
+     *           cs: string,
+     *           bpc: int,
+     *           f: string,
+     *           dp: string,
+     *           pal: string,
+     *           trns: string|int[],
+     *           smask: string|false,
+     *           data: string|false
+     *         }
      */
     protected function _parsewebp(string $file): array
     {

@@ -4,10 +4,18 @@
 
 namespace App\Service;
 
+use App\Core\Component\Collection;
 use App\Entity\Port;
 use App\Repository\PortRepository;
 
-class PortService
+/**
+ * @phpstan-type PortArray array{
+ *                           locode?: string,
+ *                           nom?: string,
+ *                           nom_affichage?: string,
+ *                         }
+ */
+final class PortService
 {
     private PortRepository $portRepository;
 
@@ -16,6 +24,15 @@ class PortService
         $this->portRepository = new PortRepository();
     }
 
+    /**
+     * Creates a Port object from database data.
+     * 
+     * @param array $rawData 
+     * 
+     * @phpstan-param PortArray $rawData
+     * 
+     * @return Port 
+     */
     public function makePortFromDatabase(array $rawData): Port
     {
         return (new Port())
@@ -24,13 +41,18 @@ class PortService
             ->setDisplayName($rawData["nom_affichage"] ?? "");
     }
 
-    public function getPorts(): array
+    /**
+     * Fetches all ports.
+     * 
+     * @return Collection<Port> All fetched ports.
+     */
+    public function getPorts(): Collection
     {
-        return $this->portRepository->fetchAll();
+        return $this->portRepository->fetchAllPorts();
     }
 
     public function getPort(string $locode): ?Port
     {
-        return $this->portRepository->fetchByLocode($locode);
+        return $this->portRepository->fetchPortByLocode($locode);
     }
 }

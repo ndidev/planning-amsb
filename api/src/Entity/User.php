@@ -8,6 +8,28 @@ use App\Core\Auth\AccountStatus;
 use App\Core\Auth\UserRoles;
 use App\Core\Component\Module;
 
+/**
+ * @phpstan-type UserArray array{
+ *                           uid: string,
+ *                           login: string,
+ *                           nom: string,
+ *                           roles: UserRolesObject,
+ *                           statut: string,
+ *                           commentaire: string,
+ *                           historique: string,
+ *                           last_connection: string,
+ *                         }
+ * 
+ * @phpstan-type UserRolesObject object{
+ *                                 bois: 0|1|2,
+ *                                 vrac: 0|1|2,
+ *                                 consignation: 0|1|2,
+ *                                 chartering: 0|1|2,
+ *                                 config: 0|1,
+ *                                 tiers: 0|1,
+ *                                 admin: 0|1,
+ *                               }
+ */
 class User extends AbstractEntity
 {
     /**
@@ -260,6 +282,11 @@ class User extends AbstractEntity
         return (bool) ($this->roles?->admin ?? false);
     }
 
+    /**
+     * @return array 
+     * 
+     * @phpstan-return UserArray
+     */
     public function toArray(): array
     {
         return [

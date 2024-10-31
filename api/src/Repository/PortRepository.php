@@ -4,19 +4,20 @@
 
 namespace App\Repository;
 
+use App\Core\Component\Collection;
 use App\Entity\Port;
 use App\Service\PortService;
 
 final class PortRepository extends Repository
 {
-    private $redisNamespace = "ports";
+    private string $redisNamespace = "ports";
 
     /**
      * Récupère tous les ports.
      * 
-     * @return Port[] Tous les ports récupérés.
+     * @return Collection<Port> Tous les ports récupérés.
      */
-    public function fetchAll(): array
+    public function fetchAllPorts(): Collection
     {
         // Redis
         $portsRaw = json_decode($this->redis->get($this->redisNamespace), true);
@@ -33,7 +34,7 @@ final class PortRepository extends Repository
 
         $ports = array_map(fn(array $portRaw) => $portService->makePortFromDatabase($portRaw), $portsRaw);
 
-        return $ports;
+        return new Collection($ports);
     }
 
     /**
@@ -43,7 +44,7 @@ final class PortRepository extends Repository
      * 
      * @return ?Port Port récupéré
      */
-    public function fetchByLocode(string $locode): ?Port
+    public function fetchPortByLocode(string $locode): ?Port
     {
         $statement = "SELECT * FROM utils_ports WHERE locode = :locode";
 

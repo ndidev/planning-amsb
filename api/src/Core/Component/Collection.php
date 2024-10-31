@@ -72,11 +72,13 @@ class Collection implements \IteratorAggregate, \Countable, Arrayable, \JsonSeri
      * 
      * Every item of the collection is also transformed to an array.
      * 
-     * @return array[]
+     * @return array<mixed>
      */
     public function toArray(): array
     {
-        return array_map(fn($item) => $item->toArray(), $this->items);
+        return array_map(function ($item) {
+            return $item instanceof Arrayable ? $item->toArray() : $item;
+        }, $this->items);
     }
 
     /**
