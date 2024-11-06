@@ -5,8 +5,10 @@
 namespace App\Controller\Utils;
 
 use App\Controller\Controller;
+use App\Core\Component\Module;
+use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\ClientException;
-use App\Core\Exceptions\Server\DB\DBException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\TideService;
@@ -71,10 +73,10 @@ final class TideController extends Controller
      */
     public function getTides(): void
     {
-        $query = $this->request->getQuery();
-
-        $startDate = new \DateTimeImmutable($query["debut"] ?? '0001-01-01');
-        $endDate = new \DateTimeImmutable($query["fin"] ?? '9999-12-31');
+        /** @var \DateTime $startDate */
+        $startDate = $this->request->getQuery()->getParam('debut', '0001-01-01', 'datetime');
+        /** @var \DateTime $endDate */
+        $endDate = $this->request->getQuery()->getParam('fin', '9999-12-31', 'datetime');
 
         $tides = $this->service->getTides($startDate, $endDate);
 
@@ -154,17 +156,21 @@ final class TideController extends Controller
     /**
      * Deletes tides for a year.
      * 
-     * @param int $year Year for which to delete the tides.
+     * @param ?int $year Year for which to delete the tides.
      */
-    public function delete(int $year): void
+    public function delete(?int $year = null): void
     {
-        $success = $this->service->deleteTides($year);
-
-        if ($success) {
-            $this->response->setCode(HTTPResponse::HTTP_NO_CONTENT_204);
-            $this->sse->addEvent($this->sseEventName, __FUNCTION__, $year);
-        } else {
-            throw new DBException("Erreur lors de la suppression");
+        if (!$this->user->canAccess(Module::CONFIG)) {
+            throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
         }
+
+        if (!$year) {
+            throw new BadRequestException("L'année est obligatoire.");
+        }
+
+        $this->service->deleteTides($year);
+
+        $this->response->setCode(HTTPResponse::HTTP_NO_CONTENT_204);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $year);
     }
 }

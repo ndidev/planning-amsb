@@ -10,10 +10,10 @@ use App\Service\ThirdPartyService;
 
 final class ThirdPartyRepository extends Repository
 {
-    /**
-     * @var ThirdParty[]
-     */
-    static private array $cache = [];
+    public function __construct(private ThirdPartyService $thirdPartyService)
+    {
+        parent::__construct();
+    }
 
     /**
      * Vérifie si une entrée existe dans la base de données.
@@ -34,16 +34,18 @@ final class ThirdPartyRepository extends Repository
     {
         $statement = "SELECT * FROM tiers ORDER BY nom_court, ville";
 
-        $thirdPartiesRaw = $this->mysql->query($statement)->fetchAll();
+        $thirdPartiesRequest = $this->mysql->query($statement);
 
-        $thirdPartyService = new ThirdPartyService();
+        if (!$thirdPartiesRequest) {
+            throw new DBException("Impossible de récupérer les tiers.");
+        }
+
+        $thirdPartiesRaw = $thirdPartiesRequest->fetchAll();
 
         $thirdParties = array_map(
-            fn(array $thirdPartyRaw) => $thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw),
+            fn($thirdPartyRaw) => $this->thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw),
             $thirdPartiesRaw
         );
-
-        static::$cache = $thirdParties;
 
         return new Collection($thirdParties);
     }
@@ -57,16 +59,6 @@ final class ThirdPartyRepository extends Repository
      */
     public function fetchThirdParty(int $id): ?ThirdParty
     {
-        // Vérifier si le tiers est déjà en cache
-        $thirdParty = array_filter(
-            static::$cache,
-            fn(ThirdParty $cachedThirdParty) => $cachedThirdParty->getId() === $id
-        )[0] ?? null;
-
-        if ($thirdParty) {
-            return $thirdParty;
-        }
-
         $statement = "SELECT * FROM tiers WHERE id = :id";
 
         $request = $this->mysql->prepare($statement);
@@ -75,11 +67,7 @@ final class ThirdPartyRepository extends Repository
 
         if (!$thirdPartyRaw) return null;
 
-        $thirdPartyService = new ThirdPartyService();
-
-        $thirdParty = $thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw);
-
-        array_push(static::$cache, $thirdParty);
+        $thirdParty = $this->thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw);
 
         return $thirdParty;
     }
@@ -119,7 +107,7 @@ final class ThirdPartyRepository extends Repository
             'addressLine2' => $thirdParty->getAddressLine2(),
             'postCode' => $thirdParty->getPostCode(),
             'city' => $thirdParty->getCity(),
-            'country' => $thirdParty->getCountry()->getISO(),
+            'country' => $thirdParty->getCountry()?->getISO(),
             'phone' => $thirdParty->getPhone(),
             'comments' => $thirdParty->getComments(),
             'roles' => json_encode($thirdParty->getRoles()),
@@ -130,7 +118,10 @@ final class ThirdPartyRepository extends Repository
         $lastInsertId = (int) $this->mysql->lastInsertId();
         $this->mysql->commit();
 
-        return $this->fetchThirdParty($lastInsertId);
+        /** @var ThirdParty */
+        $newThirdParty = $this->fetchThirdParty($lastInsertId);
+
+        return $newThirdParty;
     }
 
     /**
@@ -142,6 +133,12 @@ final class ThirdPartyRepository extends Repository
      */
     public function updateThirdParty(ThirdParty $thirdParty): ThirdParty
     {
+        $id = $thirdParty->getId();
+
+        if (!$id) {
+            throw new ClientException("Impossible de mettre à jour un tiers sans ID.");
+        }
+
         // Si un logo a été ajouté, l'utiliser, sinon, ne pas changer
         $logoStatement = $thirdParty->getLogoFilename() !== false ? ":logo" : "logo";
 
@@ -171,7 +168,7 @@ final class ThirdPartyRepository extends Repository
             'addressLine2' => $thirdParty->getAddressLine2(),
             'postCode' => $thirdParty->getPostCode(),
             'city' => $thirdParty->getCity(),
-            'country' => $thirdParty->getCountry()->getISO(),
+            'country' => $thirdParty->getCountry()?->getISO(),
             'phone' => $thirdParty->getPhone(),
             'comments' => $thirdParty->getComments(),
             'roles' => json_encode($thirdParty->getRoles()),
@@ -185,7 +182,10 @@ final class ThirdPartyRepository extends Repository
 
         $request->execute($fields);
 
-        return $this->fetchThirdParty($thirdParty->getId());
+        /** @var ThirdParty */
+        $updatedThirdParty = $this->fetchThirdParty($id);
+
+        return $updatedThirdParty;
     }
 
     /**
@@ -210,72 +210,6 @@ final class ThirdPartyRepository extends Repository
         }
 
         return $isDeleted;
-    }
-
-    /**
-     * Récupère le nombre de RDV pour tous les tiers.
-     * 
-     * @return array<string, int> Nombre de RDV pour le(s) tiers, indexé par ID.
-     */
-    public function getAllAppointmentCounts(): array
-    {
-        $statement =
-            "SELECT 
-                t.id,
-                (
-                (SELECT COUNT(v.id)
-                    FROM vrac_planning v
-                    WHERE t.id IN (
-                    v.client,
-                    v.transporteur,
-                    v.fournisseur
-                    )
-                )
-                +
-                (SELECT COUNT(b.id)
-                    FROM bois_planning b
-                    WHERE t.id IN (
-                    b.client,
-                    b.chargement,
-                    b.livraison,
-                    b.transporteur,
-                    b.affreteur,
-                    b.fournisseur
-                    )
-                )
-                +
-                (SELECT COUNT(c.id)
-                    FROM consignation_planning c
-                    WHERE t.id IN (
-                    c.armateur
-                    )
-                )
-                +
-                (SELECT COUNT(ch.id)
-                    FROM chartering_registre ch
-                    WHERE t.id IN (
-                    ch.armateur,
-                    ch.affreteur,
-                    ch.courtier
-                    )
-                )
-                ) AS nombre_rdv
-            FROM tiers t
-            ";
-
-        $request = $this->mysql->query($statement);
-        /** @var list<array{id: int, nombre_rdv: int}> $appointmentCountWithoutKeys */
-        $appointmentCountWithoutKeys = $request->fetchAll();
-
-        /** @var array<string, int> $appointmentCountWithKeys */
-        $appointmentCountWithKeys = [];
-        foreach ($appointmentCountWithoutKeys as $appointmentCount) {
-            if ($appointmentCount["nombre_rdv"] > 0) {
-                $appointmentCountWithKeys[(string) $appointmentCount["id"]] = $appointmentCount["nombre_rdv"];
-            }
-        }
-
-        return $appointmentCountWithKeys;
     }
 
     /**

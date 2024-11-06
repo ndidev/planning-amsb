@@ -6,10 +6,12 @@ namespace App\Service;
 
 use App\Core\Auth\User as AuthUser;
 use App\Core\Component\SSEHandler;
+use App\Core\Exceptions\Client\Auth\UnauthorizedException;
+use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\ClientException;
 use App\DTO\CurrentUserFormDTO;
 use App\DTO\CurrentUserInfoDTO;
-use App\Entity\User;
+use App\Entity\UserAccount;
 use App\Repository\UserRepository;
 
 /**
@@ -25,7 +27,7 @@ use App\Repository\UserRepository;
  *                           historique?: string,
  *                         }
  * 
- * @phpstan-import-type UserRolesObject from \App\Entity\User
+ * @phpstan-import-type UserRolesObject from \App\Entity\UserAccount
  */
 final class UserService
 {
@@ -35,30 +37,38 @@ final class UserService
         private ?SSEHandler $sse = null,
         private ?AuthUser $currentUser = null,
     ) {
-        $this->userRepository = new UserRepository();
+        $this->userRepository = new UserRepository($this);
     }
 
     /**
      * Crée un objet User à partir des données brutes de la base de données.
      * 
-     * @param array $rawData 
+     * @param array{
+     *          uid: string,
+     *          login: string,
+     *          nom: string,
+     *          can_login: int,
+     *          roles: string,
+     *          statut: string,
+     *          last_connection: string,
+     *          commentaire: string,
+     *          historique: string,
+     *        } $rawData 
      * 
-     * @phpstan-param UserArray $rawData
-     * 
-     * @return User 
+     * @return UserAccount 
      */
-    public function makeUserFromDatabase(array $rawData): User
+    public function makeUserFromDatabase(array $rawData): UserAccount
     {
-        $user = (new User())
-            ->setUid($rawData["uid"] ?? null)
-            ->setLogin($rawData["login"] ?? null)
-            ->setName($rawData["nom"] ?? '')
-            ->setCanLogin($rawData["can_login"] ?? false)
-            ->setRoles(json_decode($rawData["roles"]) ?? '{}')
-            ->setStatus($rawData["statut"] ?? '')
-            ->setLastLogin($rawData["last_connection"] ?? null)
-            ->setComments($rawData["commentaire"] ?? '')
-            ->setHistory($rawData["historique"] ?? '');
+        $user = (new UserAccount())
+            ->setUid($rawData["uid"])
+            ->setLogin($rawData["login"])
+            ->setName($rawData["nom"])
+            ->setCanLogin((bool) $rawData["can_login"])
+            ->setRoles(json_decode($rawData["roles"]) ?: '{}')
+            ->setStatus($rawData["statut"])
+            ->setLastLogin($rawData["last_connection"])
+            ->setComments($rawData["commentaire"])
+            ->setHistory($rawData["historique"]);
 
         return $user;
     }
@@ -70,16 +80,16 @@ final class UserService
      * 
      * @phpstan-param UserArray $rawData
      * 
-     * @return User 
+     * @return UserAccount 
      */
-    public function makeUserFromForm(array $rawData): User
+    public function makeUserFromForm(array $rawData): UserAccount
     {
-        $user = (new User())
+        $user = (new UserAccount())
             ->setUid($rawData["uid"] ?? null)
-            ->setLogin($rawData["login"] ?? null)
+            ->setLogin($rawData["login"] ?? '')
             ->setName($rawData["nom"] ?? '')
+            ->setRoles(json_decode(json_encode($rawData["roles"] ?? []) ?: '[]'))
             ->setStatus($rawData["statut"] ?? '')
-            ->setRoles(json_decode(json_encode($rawData["roles"] ?? [])))
             ->setComments($rawData["commentaire"] ?? '');
 
         return $user;
@@ -94,8 +104,12 @@ final class UserService
      */
     public function makeCurrentUserDTO(array $rawData): CurrentUserFormDTO
     {
+        if (!$this->currentUser) {
+            throw new UnauthorizedException("Utilisateur non connecté.");
+        }
+
         $currentUserDTO = (new CurrentUserFormDTO())
-            ->setUid($this->currentUser->uid)
+            ->setUid((string) $this->currentUser->uid)
             ->setName($rawData["nom"] ?? $this->currentUser->name)
             ->setPassword($rawData["password"] ?? null);
 
@@ -112,7 +126,7 @@ final class UserService
      * 
      * @param bool $canLoginOnly `true` pour récupérer uniquement les utilisateurs pouvant se connecter.
      * 
-     * @return User[]
+     * @return UserAccount[]
      */
     public function getUsers(bool $canLoginOnly = true): array
     {
@@ -130,7 +144,7 @@ final class UserService
      * 
      * @param string $uid Identifiant de l'utilisateur.
      */
-    public function getUser(string $uid): ?User
+    public function getUser(string $uid): ?UserAccount
     {
         return $this->userRepository->fetchUserByUid($uid);
     }
@@ -143,11 +157,19 @@ final class UserService
      * 
      * @phpstan-param UserArray $input
      * 
-     * @return User 
+     * @return UserAccount 
      */
-    public function createUser(array $input, string $adminName): User
+    public function createUser(array $input, string $adminName): UserAccount
     {
         $user = $this->makeUserFromForm($input);
+
+        if (!$user->getLogin()) {
+            throw new BadRequestException("Le login est obligatoire.");
+        }
+
+        if (!$user->getName()) {
+            throw new BadRequestException("Le nom est obligatoire.");
+        }
 
         return $this->userRepository->createUser($user, $adminName);
     }
@@ -161,15 +183,15 @@ final class UserService
      * 
      * @phpstan-param UserArray $input
      * 
-     * @return User 
+     * @return UserAccount 
      */
-    public function updateUser(string $uid, array $input, AuthUser $admin): User
+    public function updateUser(string $uid, array $input, AuthUser $admin): UserAccount
     {
         $user = $this->makeUserFromForm($input)->setUid($uid);
 
         // Conservation du rôle admin : un admin ne peut pas changer lui-même son statut admin
         if ($uid === $admin->uid) {
-            $user->getRoles()->admin = (int) ($admin->isAdmin ?? 0);
+            $user->setAdmin($admin->isAdmin);
         }
 
         return $this->userRepository->updateUser($user, $admin->name);
@@ -180,14 +202,6 @@ final class UserService
         $this->userRepository->deleteUser($uid, $adminName);
 
         $this->clearSessions($uid);
-    }
-
-    /**
-     * Met à jours les informations de l'utilisateur dans Redis.
-     */
-    public function updateRedis(string $uid): void
-    {
-        $this->userRepository->updateRedis($uid);
     }
 
     /**
@@ -205,8 +219,8 @@ final class UserService
      * Récupère les informations de l'utilisateur courant.
      * 
      * @return null|array{
-     *                uid: string,
-     *                login: string,
+     *                uid: string|null,
+     *                login: string|null,
      *                nom: string,
      *                roles: UserRolesObject,
      *                statut: string,
@@ -223,7 +237,7 @@ final class UserService
             "login" => $this->currentUser->login,
             "nom" => $this->currentUser->name,
             "roles" => $this->currentUser->roles,
-            "statut" => $this->currentUser->status,
+            "statut" => $this->currentUser->status->value,
         ];
     }
 

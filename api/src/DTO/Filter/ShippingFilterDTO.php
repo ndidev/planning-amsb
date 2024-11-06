@@ -1,13 +1,15 @@
 <?php
 
-// Path: api/src/DTO/ShippingFilterDTO.php
+// Path: api/src/DTO/Filter/ShippingFilterDTO.php
 
-namespace App\DTO;
+namespace App\DTO\Filter;
+
+use App\Core\HTTP\HTTPRequestQuery;
 
 final readonly class ShippingFilterDTO
 {
-    private \DateTimeImmutable $startDate;
-    private \DateTimeImmutable $endDate;
+    private \DateTimeInterface $startDate;
+    private \DateTimeInterface $endDate;
     private string $shipFilter;
     private string $shipOwnerFilter;
     private string $cargoFilter;
@@ -21,42 +23,35 @@ final readonly class ShippingFilterDTO
     /**
      * ShippingFilterDTO constructor.
      * 
-     * @param array{
-     *     date_debut?: string,
-     *     date_fin?: string,
-     *     navire?: string,
-     *     armateur?: string,
-     *     marchandise?: string,
-     *     client?: string,
-     *     last_port?: string,
-     *     next_port?: string
-     * } $query 
+     * @param HTTPRequestQuery $query
      */
-    public function __construct(array $query)
+    public function __construct(HTTPRequestQuery $query)
     {
-        $this->startDate = new \DateTimeImmutable(
-            isset($query['date_debut'])
-                ? ($query['date_debut'] ?: self::DEFAULT_START_DATE)
-                : self::DEFAULT_START_DATE
+        $this->startDate = $query->getParam('date_debut', self::DEFAULT_START_DATE, 'datetime');
+
+        $this->endDate = $query->getParam('date_fin', self::DEFAULT_END_DATE, 'datetime');
+
+        /** @var string */
+        $shipFilter = preg_replace(
+            "/([^,]+),?/",
+            "'$1',",
+            $query->getParam('navire', '', 'string', true)
         );
+        $this->shipFilter = trim($shipFilter, ",");
 
-        $this->endDate = new \DateTimeImmutable(
-            isset($query['date_fin'])
-                ? ($query['date_fin'] ?: self::DEFAULT_END_DATE)
-                : self::DEFAULT_END_DATE
-        );
+        $this->shipOwnerFilter = trim($query->getParam('armateur', ''));
 
-        $this->shipFilter = trim(preg_replace("/([^,]+),?/", "'$1',", $query['navire'] ?? ""), ",");
+        $this->cargoFilter =
+            trim($this->splitStringParameters($query->getParam('marchandise', '')), ",");
 
-        $this->shipOwnerFilter = trim($query['armateur'] ?? "", ",");
+        $this->customerFilter =
+            trim($this->splitStringParameters($query->getParam('client', '')), ",");
 
-        $this->cargoFilter = trim(preg_replace("/([^,]+),?/", "'$1',", $query['marchandise'] ?? ""), ",");
+        $this->lastPortFilter =
+            trim($this->splitStringParameters($query->getParam('last_port', '')), ",");
 
-        $this->customerFilter = trim(preg_replace("/([^,]+),?/", "'$1',", $query['client'] ?? ""), ",");
-
-        $this->lastPortFilter = trim(preg_replace("/([^,]+),?/", "'$1',", $query['last_port'] ?? ""), ",");
-
-        $this->nextPortFilter = trim(preg_replace("/([^,]+),?/", "'$1',", $query['next_port'] ?? ""), ",");
+        $this->nextPortFilter =
+            trim($this->splitStringParameters($query->getParam('next_port', '')), ",");
     }
 
     public function getSqlStartDate(): string
@@ -109,5 +104,10 @@ final readonly class ShippingFilterDTO
         return $this->nextPortFilter === ""
             ? ""
             : " AND {$table}.next_port IN ($this->nextPortFilter)";
+    }
+
+    private function splitStringParameters(string $param): string
+    {
+        return (string) preg_replace("/([^,]+),?/", "'$1',", $param);
     }
 }

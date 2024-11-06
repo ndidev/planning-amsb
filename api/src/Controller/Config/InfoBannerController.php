@@ -5,6 +5,7 @@ namespace App\Controller\Config;
 use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
@@ -13,6 +14,7 @@ use App\Service\InfoBannerService;
 final class InfoBannerController extends Controller
 {
     private InfoBannerService $infoBannerService;
+    /** @phpstan-var Module::* $module */
     private string $module = Module::CONFIG;
     private string $sseEventName = "config/bandeau-info";
 
@@ -101,6 +103,7 @@ final class InfoBannerController extends Controller
 
         $newLine = $this->infoBannerService->createLine($input);
 
+        /** @var int $id */
         $id = $newLine->getId();
 
         $this->response
@@ -114,12 +117,16 @@ final class InfoBannerController extends Controller
     /**
      * Met à jour une ligne du bandeau d'informations.
      * 
-     * @param int $id id de la ligne à modifier.
+     * @param ?int $id id de la ligne à modifier.
      */
-    public function update(int $id): void
+    public function update(?int $id = null): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
+        }
+
+        if (!$id) {
+            throw new BadRequestException("L'identifiant de la ligne est obligatoire.");
         }
 
         $current = $this->infoBannerService->getLine($id);
@@ -147,12 +154,16 @@ final class InfoBannerController extends Controller
     /**
      * Supprime une ligne du bandeau d'informations.
      * 
-     * @param int $id id de la ligne à supprimer.
+     * @param ?int $id id de la ligne à supprimer.
      */
-    public function delete(int $id): void
+    public function delete(?int $id = null): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
+        }
+
+        if (!$id) {
+            throw new BadRequestException("L'identifiant de la ligne est obligatoire.");
         }
 
         $line = $this->infoBannerService->getLine($id);

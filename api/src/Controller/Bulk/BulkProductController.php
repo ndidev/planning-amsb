@@ -5,6 +5,7 @@ namespace App\Controller\Bulk;
 use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
@@ -13,6 +14,7 @@ use App\Service\BulkService;
 final class BulkProductController extends Controller
 {
     private BulkService $bulkService;
+    /** @phpstan-var Module::* $module */
     private string $module = Module::BULK;
     private string $sseEventName = "vrac/produits";
 
@@ -127,6 +129,7 @@ final class BulkProductController extends Controller
 
         $product = $this->bulkService->createProduct($input);
 
+        /** @var int $id */
         $id = $product->getId();
 
         $this->response
@@ -140,12 +143,16 @@ final class BulkProductController extends Controller
     /**
      * Met à jour un produit.
      * 
-     * @param int $id id du produit à modifier.
+     * @param ?int $id id du produit à modifier.
      */
-    public function update(int $id): void
+    public function update(?int $id = null): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier un produit vrac.");
+        }
+
+        if (!$id) {
+            throw new BadRequestException("L'identifiant du produit vrac est obligatoire.");
         }
 
         if (!$this->bulkService->productExists($id)) {
@@ -164,12 +171,16 @@ final class BulkProductController extends Controller
     /**
      * Supprime un produit.
      * 
-     * @param int $id id du produit à supprimer.
+     * @param ?int $id id du produit à supprimer.
      */
-    public function delete(int $id): void
+    public function delete(?int $id = null): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour supprimer un produit vrac.");
+        }
+
+        if (!$id) {
+            throw new BadRequestException("L'identifiant du produit vrac est obligatoire.");
         }
 
         if (!$this->bulkService->productExists($id)) {

@@ -48,29 +48,33 @@ final class BulkPDF extends PlanningPDF
             $previousDate = null;
 
             foreach ($this->appointments as $appointment) {
-                $formattedTime =
-                    $appointment->getTime()
-                    ? DateUtils::format(DateUtils::ISO_TIME, $appointment->getTime())
+                $appointmentDate = $appointment->getDate();
+                $appointmentTime = $appointment->getTime();
+
+                $formattedTime = $appointmentTime
+                    ? DateUtils::format(DateUtils::ISO_TIME, $appointmentTime)
                     : "";
 
-                if ($appointment->getDate() != $previousDate) {
-                    $formattedDate = DateUtils::format(DateUtils::DATE_FULL, $appointment->getDate());
+                if ($appointmentDate != $previousDate) {
+                    $formattedDate = $appointmentDate
+                        ? DateUtils::format(DateUtils::DATE_FULL, $appointmentDate)
+                        : "Pas de date";
                     $this->AddDate($formattedDate);
                 }
 
                 $this->AddLine(
                     $formattedTime,
-                    $appointment->getProduct()->getName(),
-                    $appointment->getProduct()->getColor(),
-                    $appointment->getQuality()->getName(),
-                    $appointment->getQuality()->getColor(),
-                    $appointment->getCustomer()->getShortName(),
-                    $appointment->getCustomer()->getCity(),
+                    $appointment->getProduct()?->getName(),
+                    $appointment->getProduct()?->getColor(),
+                    $appointment->getQuality()?->getName(),
+                    $appointment->getQuality()?->getColor(),
+                    $appointment->getCustomer()?->getShortName(),
+                    $appointment->getCustomer()?->getCity(),
                     $appointment->getCarrier()?->getShortName() ?? "",
                     $appointment->getOrderNumber()
                 );
 
-                $previousDate = $appointment->getDate();
+                $previousDate = $appointmentDate;
             }
         } else {
             // Affichage de "Aucun RDV"
@@ -120,7 +124,7 @@ final class BulkPDF extends PlanningPDF
         $this->SetTextColor($r, $g, $b);
         $this->Cell(15, 6, $time);
         // Produit
-        [$r, $g, $b] = explode(',', ColorConverter::hexToRgb($productColor));
+        [$r, $g, $b] = explode(',', ColorConverter::hexToRgb((string) $productColor));
         $this->SetTextColor($r, $g, $b);
         $this->Cell(20, 6, $productName);
         // Qualité

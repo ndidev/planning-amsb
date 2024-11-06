@@ -35,41 +35,56 @@ use App\Repository\ThirdPartyRepository;
 final class ThirdPartyService
 {
     private ThirdPartyRepository $thirdPartyRepository;
+    private CountryService $countryService;
 
     public function __construct()
     {
-        $this->thirdPartyRepository = new ThirdPartyRepository();
+        $this->thirdPartyRepository = new ThirdPartyRepository($this);
+        $this->countryService = new CountryService();
     }
 
     /**
      * Creates a ThirdParty object from raw data.
      * 
-     * @param array $rawData 
-     * 
-     * @phpstan-param ThirdPartyData $rawData
+     * @param array{
+     *          id: int,
+     *          nom_court: string,
+     *          nom_complet: string,
+     *          adresse_ligne_1: string,
+     *          adresse_ligne_2: string,
+     *          cp: string,
+     *          ville: string,
+     *          pays: string,
+     *          telephone: string,
+     *          commentaire: string,
+     *          non_modifiable: int,
+     *          lie_agence: int,
+     *          roles: string,
+     *          logo: string,
+     *          actif: int,
+     *        } $rawData 
      * 
      * @return ThirdParty 
      */
     public function makeThirdPartyFromDatabase(array $rawData): ThirdParty
     {
         $thirdParty = (new ThirdParty())
-            ->setId($rawData["id"] ?? null)
-            ->setShortName($rawData["nom_court"] ?? "")
-            ->setFullName($rawData["nom_complet"] ?? "")
-            ->setAddressLine1($rawData["adresse_ligne_1"] ?? "")
-            ->setAddressLine2($rawData["adresse_ligne_2"] ?? "")
-            ->setPostCode($rawData["cp"] ?? "")
-            ->setCity($rawData["ville"] ?? "")
-            ->setCountry($rawData["pays"] ?? null)
-            ->setPhone($rawData["telephone"] ?? "")
-            ->setComments($rawData["commentaire"] ?? "")
-            ->setIsNonEditable($rawData["non_modifiable"] ?? false)
-            ->setIsAgency($rawData["lie_agence"] ?? false)
-            ->setLogo($rawData["logo"] ?? null)
-            ->setIsActive($rawData["actif"] ?? true)
-            ->setAppointmentCount($rawData["nombre_rdv"] ?? 0);
+            ->setId($rawData["id"])
+            ->setShortName($rawData["nom_court"])
+            ->setFullName($rawData["nom_complet"])
+            ->setAddressLine1($rawData["adresse_ligne_1"])
+            ->setAddressLine2($rawData["adresse_ligne_2"])
+            ->setPostCode($rawData["cp"])
+            ->setCity($rawData["ville"])
+            ->setCountry($this->countryService->getCountry($rawData["pays"]))
+            ->setPhone($rawData["telephone"])
+            ->setComments($rawData["commentaire"])
+            ->setIsNonEditable($rawData["non_modifiable"])
+            ->setIsAgency($rawData["lie_agence"])
+            ->setLogo($rawData["logo"])
+            ->setIsActive($rawData["actif"]);
 
-        $roles = json_decode($rawData["roles"] ?? "[]", true);
+        $roles = json_decode($rawData["roles"] ?: "{}", true);
 
         foreach ($thirdParty->getRoles() as $role => $default) {
             $thirdParty->setRole($role, $roles[$role] ?? $default);
@@ -97,7 +112,7 @@ final class ThirdPartyService
             ->setAddressLine2($rawData["adresse_ligne_2"] ?? "")
             ->setPostCode($rawData["cp"] ?? "")
             ->setCity($rawData["ville"] ?? "")
-            ->setCountry($rawData["pays"] ?? [])
+            ->setCountry($this->countryService->getCountry($rawData["pays"] ?? ''))
             ->setPhone($rawData["telephone"] ?? "")
             ->setComments($rawData["commentaire"] ?? "")
             ->setIsNonEditable($rawData["non_modifiable"] ?? false)
@@ -195,16 +210,6 @@ final class ThirdPartyService
     }
 
     /**
-     * Retrieves the number of appointments for all third parties.
-     * 
-     * @return array<string, int> Number of appointments for each third party.
-     */
-    public function getAllAppointmentCounts(): array
-    {
-        return $this->thirdPartyRepository->getAllAppointmentCounts();
-    }
-
-    /**
      * Retrieves the number of appointments for a third party or all third parties.
      * 
      * @param int $id ID of the third party to retrieve.
@@ -254,10 +259,28 @@ final class ThirdPartyService
             // Redimensionnement
             define("MAX_HEIGHT", 500); // Hauteur maximale de l'image à enregistrer.
 
-            [$width, $height] = getimagesizefromstring($imageString);
+            $imageInfo = getimagesizefromstring($imageString);
+
+            if (!$imageInfo) {
+                ErrorLogger::log(
+                    new ServerException("Logo : Erreur dans la récupération des informations de l'image (getimagesizefromstring)")
+                );
+
+                return false;
+            }
+
+            [$width, $height] = $imageInfo;
             $percent = min(MAX_HEIGHT / $height, 1);
             $newWidth = (int) ($width * $percent);
             $imageResized = imagescale($image, $newWidth);
+
+            if (!$imageResized) {
+                ErrorLogger::log(
+                    new ServerException("Logo : Erreur dans le redimensionnement de l'image (imagescale)")
+                );
+
+                return false;
+            }
 
 
             // Enregistrement

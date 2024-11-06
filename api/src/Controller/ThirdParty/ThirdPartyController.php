@@ -5,6 +5,7 @@ namespace App\Controller\ThirdParty;
 use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
@@ -14,6 +15,7 @@ use App\Service\ThirdPartyService;
 final class ThirdPartyController extends Controller
 {
     private ThirdPartyService $thirdPartyService;
+    /** @phpstan-var Module::* $module */
     private string $module = Module::THIRD_PARTY;
     private string $sseEventName = "tiers";
 
@@ -124,6 +126,7 @@ final class ThirdPartyController extends Controller
 
         $thirdParty = $this->thirdPartyService->createThirdParty($input);
 
+        /** @var int $id */
         $id = $thirdParty->getId();
 
         $this->response
@@ -137,12 +140,16 @@ final class ThirdPartyController extends Controller
     /**
      * Updates a third party.
      * 
-     * @param int $id id of the third party to modify.
+     * @param ?int $id id of the third party to modify.
      */
-    public function update(int $id): void
+    public function update(?int $id = null): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier un tiers.");
+        }
+
+        if (!$id) {
+            throw new BadRequestException("L'identifiant du tiers est obligatoire.");
         }
 
         if (!$this->thirdPartyService->thirdPartyExists($id)) {
@@ -161,12 +168,16 @@ final class ThirdPartyController extends Controller
     /**
      * Deletes a third party.
      * 
-     * @param int $id id of the third party to delete.
+     * @param ?int $id id of the third party to delete.
      */
-    public function delete(int $id): void
+    public function delete(?int $id = null): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour supprimer un tiers.");
+        }
+
+        if (!$id) {
+            throw new BadRequestException("L'identifiant du tiers est obligatoire.");
         }
 
         if (!$this->thirdPartyService->thirdPartyExists($id)) {

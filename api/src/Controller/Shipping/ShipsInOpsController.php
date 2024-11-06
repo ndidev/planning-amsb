@@ -48,10 +48,10 @@ final class ShipsInOpsController extends Controller
      */
     public function readAll(): void
     {
-        $query = $this->request->getQuery();
-
-        $startDate = new \DateTimeImmutable($query["date_debut"] ?? '');
-        $endDate = new \DateTimeImmutable($query["date_fin"] ?? '9999-12-31');
+        /** @var \DateTime $startDate */
+        $startDate = $this->request->getQuery()->getParam('date_debut', 'now', 'datetime');
+        /** @var \DateTime $endDate */
+        $endDate = $this->request->getQuery()->getParam('date_fin', '9999-12-31', 'datetime');
 
         $shipsInOps = $this->shippingService->getShipsInOps($startDate, $endDate);
 

@@ -5,6 +5,7 @@ namespace App\Controller\Config;
 use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
@@ -13,6 +14,7 @@ use App\Service\PdfService;
 final class PdfConfigController extends Controller
 {
     private PdfService $pdfService;
+    /** @phpstan-var Module::* $module */
     private string $module = Module::CONFIG;
     private string $sseEventName = "config/pdf";
 
@@ -134,6 +136,7 @@ final class PdfConfigController extends Controller
 
         $newPdfConfig = $this->pdfService->createConfig($input);
 
+        /** @var int $id */
         $id = $newPdfConfig->getId();
 
         $this->response
@@ -147,12 +150,16 @@ final class PdfConfigController extends Controller
     /**
      * Met à jour une configuration PDF.
      * 
-     * @param int $id id de la configuration à modifier.
+     * @param ?int $id id de la configuration à modifier.
      */
-    public function update(int $id): void
+    public function update(?int $id = null): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
+        }
+
+        if (!$id) {
+            throw new BadRequestException("L'identifiant de la configuration est obligatoire.");
         }
 
         $current = $this->pdfService->getConfig($id);
@@ -180,12 +187,16 @@ final class PdfConfigController extends Controller
     /**
      * Supprime une configuration PDF.
      * 
-     * @param int $id id de la configuration PDF à supprimer.
+     * @param ?int $id id de la configuration PDF à supprimer.
      */
-    public function delete(int $id): void
+    public function delete(?int $id = null): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
+        }
+
+        if (!$id) {
+            throw new BadRequestException("L'identifiant de la configuration est obligatoire.");
         }
 
         $config = $this->pdfService->getConfig($id);

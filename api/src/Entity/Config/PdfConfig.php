@@ -13,6 +13,7 @@ class PdfConfig extends AbstractEntity
 {
     use IdentifierTrait;
 
+    /** @var ?Module::* $module */
     private ?string $module = null;
     private ?ThirdParty $supplier = null;
     private bool $autoSend = false;

@@ -12,6 +12,11 @@ use App\Service\BulkService;
 
 final class BulkProductRepository extends Repository
 {
+    public function __construct(private BulkService $bulkService)
+    {
+        parent::__construct();
+    }
+
     /**
      * @var BulkProduct[]
      */
@@ -54,16 +59,24 @@ final class BulkProductRepository extends Repository
 
         // Products
         $productsRequest = $this->mysql->query($productsStatement);
+
+        if (!$productsRequest) {
+            throw new DBException("Impossible de récupérer les produits vrac.");
+        }
+
         $productsRaw = $productsRequest->fetchAll();
 
         // Qualities
         $qualitiesRequest = $this->mysql->query($qualitiesStatement);
+
+        if (!$qualitiesRequest) {
+            throw new DBException("Impossible de récupérer les qualités vrac.");
+        }
+
         $qualitiesRaw = $qualitiesRequest->fetchAll();
 
-        $bulkService = new BulkService();
-
         $products = array_map(
-            function (array $productRaw) use ($bulkService, $qualitiesRaw) {
+            function (array $productRaw) use ($qualitiesRaw) {
                 $productRaw["qualites"] = array_values(
                     array_filter(
                         $qualitiesRaw,
@@ -71,7 +84,7 @@ final class BulkProductRepository extends Repository
                     )
                 );
 
-                $product = $bulkService->makeProductFromDatabase($productRaw);
+                $product = $this->bulkService->makeProductFromDatabase($productRaw);
 
                 return $product;
             },
@@ -119,9 +132,7 @@ final class BulkProductRepository extends Repository
 
         if (!$productRaw) return null;
 
-        $bulkService = new BulkService();
-
-        $product = $bulkService->makeProductFromDatabase($productRaw);
+        $product = $this->bulkService->makeProductFromDatabase($productRaw);
 
         // Qualities
         $qualities = $this->getProductQualities($id);
@@ -154,10 +165,8 @@ final class BulkProductRepository extends Repository
         $qualitiesRequest->execute(["productId" => $productId]);
         $qualitiesRaw = $qualitiesRequest->fetchAll();
 
-        $bulkService = new BulkService();
-
         $qualities = array_map(
-            fn(array $qualityRaw) => $bulkService->makeQualityFromDatabase($qualityRaw),
+            fn(array $qualityRaw) => $this->bulkService->makeQualityFromDatabase($qualityRaw),
             $qualitiesRaw
         );
 
@@ -202,7 +211,7 @@ final class BulkProductRepository extends Repository
 
         if (!$qualityRaw) return null;
 
-        $quality = (new BulkService())->makeQualityFromDatabase($qualityRaw);
+        $quality = $this->bulkService->makeQualityFromDatabase($qualityRaw);
 
         array_push(static::$qualitiesCache, $quality);
 
@@ -257,7 +266,10 @@ final class BulkProductRepository extends Repository
             ]);
         }
 
-        return $this->getProduct($lastInsertId);
+        /** @var BulkProduct */
+        $newProduct = $this->getProduct($lastInsertId);
+
+        return $newProduct;
     }
 
     /**
@@ -337,7 +349,13 @@ final class BulkProductRepository extends Repository
             }
         }
 
-        return $this->getProduct($product->getId());
+        /** @var int */
+        $id = $product->getId();
+
+        /** @var BulkProduct */
+        $updatedProduct = $this->getProduct($id);
+
+        return $updatedProduct;
     }
 
     /**

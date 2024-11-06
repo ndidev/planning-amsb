@@ -10,6 +10,11 @@ use App\Service\BulkService;
 
 final class BulkAppointmentRepository extends Repository
 {
+    public function __construct(private BulkService $bulkService)
+    {
+        parent::__construct();
+    }
+
     /**
      * Vérifie si une entrée existe dans la base de données.
      * 
@@ -46,12 +51,15 @@ final class BulkAppointmentRepository extends Repository
             ORDER BY date_rdv";
 
         $request = $this->mysql->query($statement);
+
+        if (!$request) {
+            throw new DBException("Impossible de récupérer les RDV vrac.");
+        }
+
         $appointmentsRaw = $request->fetchAll();
 
-        $bulkService = new BulkService();
-
         $appointments = array_map(
-            fn(array $appointmentRaw) => $bulkService->makeBulkAppointmentFromDatabase($appointmentRaw),
+            fn(array $appointmentRaw) => $this->bulkService->makeBulkAppointmentFromDatabase($appointmentRaw),
             $appointmentsRaw
         );
 
@@ -91,9 +99,7 @@ final class BulkAppointmentRepository extends Repository
 
         if (!$appointmentRaw) return null;
 
-        $bulkService = new BulkService();
-
-        $appointment = $bulkService->makeBulkAppointmentFromDatabase($appointmentRaw);
+        $appointment = $this->bulkService->makeBulkAppointmentFromDatabase($appointmentRaw);
 
         return $appointment;
     }
@@ -130,13 +136,13 @@ final class BulkAppointmentRepository extends Repository
         $request->execute([
             'date_rdv' => $appointment->getDate(true),
             'heure' => $appointment->getTime(true),
-            'produit' => $appointment->getProduct()->getId(),
+            'produit' => $appointment->getProduct()?->getId(),
             'qualite' => $appointment->getQuality()?->getId(),
-            'quantite' => $appointment->getQuantity()->getValue(),
-            'max' => (int) $appointment->getQuantity()->isMax(),
+            'quantite' => $appointment->getQuantity()?->getValue(),
+            'max' => (int) $appointment->getQuantity()?->isMax(),
             'commande_prete' => (int) $appointment->isReady(),
-            'fournisseur' => $appointment->getSupplier()->getId(),
-            'client' => $appointment->getCustomer()->getId(),
+            'fournisseur' => $appointment->getSupplier()?->getId(),
+            'client' => $appointment->getCustomer()?->getId(),
             'transporteur' => $appointment->getCarrier()?->getId(),
             'num_commande' => $appointment->getOrderNumber(),
             'commentaire' => $appointment->getComments(),
@@ -145,7 +151,10 @@ final class BulkAppointmentRepository extends Repository
         $lastInsertId = (int) $this->mysql->lastInsertId();
         $this->mysql->commit();
 
-        return $this->getAppointment($lastInsertId);
+        /** @var BulkAppointment */
+        $newAppointment = $this->getAppointment($lastInsertId);
+
+        return $newAppointment;
     }
 
     /**
@@ -178,20 +187,26 @@ final class BulkAppointmentRepository extends Repository
         $request->execute([
             'date_rdv' => $appointment->getDate(true),
             'heure' => $appointment->getTime(true),
-            'produit' => $appointment->getProduct()->getId(),
+            'produit' => $appointment->getProduct()?->getId(),
             'qualite' => $appointment->getQuality()?->getId(),
-            'quantite' => $appointment->getQuantity()->getValue(),
-            'max' => (int) $appointment->getQuantity()->isMax(),
+            'quantite' => $appointment->getQuantity()?->getValue(),
+            'max' => (int) $appointment->getQuantity()?->isMax(),
             'commande_prete' => (int) $appointment->isReady(),
-            'fournisseur' => $appointment->getSupplier()->getId(),
-            'client' => $appointment->getCustomer()->getId(),
+            'fournisseur' => $appointment->getSupplier()?->getId(),
+            'client' => $appointment->getCustomer()?->getId(),
             'transporteur' => $appointment->getCarrier()?->getId(),
             'num_commande' => $appointment->getOrderNumber(),
             'commentaire' => $appointment->getComments(),
             'id' => $appointment->getId(),
         ]);
 
-        return $this->getAppointment($appointment->getId());
+        /** @var int */
+        $id = $appointment->getId();
+
+        /** @var BulkAppointment */
+        $updatedAppointment = $this->getAppointment($id);
+
+        return $updatedAppointment;
     }
 
     /**
@@ -215,7 +230,10 @@ final class BulkAppointmentRepository extends Repository
                 'id' => $id,
             ]);
 
-        return $this->getAppointment($id);
+        /** @var BulkAppointment */
+        $updatedAppointment = $this->getAppointment($id);
+
+        return $updatedAppointment;
     }
 
     /**
@@ -279,10 +297,8 @@ final class BulkAppointmentRepository extends Repository
 
         $appointmentsRaw = $request->fetchAll();
 
-        $bulkService = new BulkService();
-
         $appointments = array_map(
-            fn(array $appointmentRaw) => $bulkService->makeBulkAppointmentFromDatabase($appointmentRaw),
+            fn(array $appointmentRaw) => $this->bulkService->makeBulkAppointmentFromDatabase($appointmentRaw),
             $appointmentsRaw
         );
 

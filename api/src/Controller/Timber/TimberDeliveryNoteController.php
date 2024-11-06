@@ -13,6 +13,7 @@ use App\Service\TimberService;
 final class TimberDeliveryNoteController extends Controller
 {
     private TimberService $timberService;
+    /** @phpstan-var Module::* $module */
     private string $module = Module::TIMBER;
 
     public function __construct()
@@ -55,9 +56,9 @@ final class TimberDeliveryNoteController extends Controller
 
         $request = $this->request;
 
-        $supplierId = $request->getQueryParam('supplierId', type: 'int');
-        $deliveryNoteNumber = $request->getQueryParam('deliveryNoteNumber', '');
-        $currentAppointmentId = $request->getQueryParam('currentAppointmentId', type: 'int');
+        $supplierId = $request->getQuery()->getParam('supplierId', type: 'int');
+        $deliveryNoteNumber = $request->getQuery()->getParam('deliveryNoteNumber', '');
+        $currentAppointmentId = $request->getQuery()->getParam('currentAppointmentId', type: 'int');
 
         $isDeliveryNoteNumberAvailable = $this->timberService->isDeliveryNoteNumberAvailable(
             $deliveryNoteNumber,

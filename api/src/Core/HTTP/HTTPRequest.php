@@ -4,6 +4,11 @@ namespace App\Core\HTTP;
 
 use App\Core\Exceptions\Client\ClientException;
 
+/**
+ * Represents an HTTP request.
+ * 
+ * @phpstan-import-type QueryArray from HTTPRequestQuery
+ */
 final class HTTPRequest
 {
 
@@ -30,9 +35,8 @@ final class HTTPRequest
 
     /**
      * Request query parameters (after "?").
-     * @var array<string, string>
      */
-    private array $query = [];
+    private HTTPRequestQuery $query;
 
     /**
      * Request body.
@@ -54,10 +58,18 @@ final class HTTPRequest
         }
 
         $url = parse_url($_SERVER['REQUEST_URI']);
-        $this->path = $url["path"];
-        parse_str($url["query"] ?? "", $this->query);
+        $this->path = $url["path"] ?? '';
 
-        $this->body = !empty($_POST) ? $_POST : (array) json_decode(file_get_contents("php://input"), true);
+        $query = [];
+        if (!empty($_GET)) {
+            $query = $_GET;
+        } else {
+            parse_str($url["query"] ?? '', $query);
+        }
+
+        $this->query = new HTTPRequestQuery($query);
+
+        $this->body = !empty($_POST) ? $_POST : (array) json_decode(file_get_contents("php://input") ?: '', true);
 
         $this->etag = $this->headers["If-None-Match"] ?? null;
 
@@ -81,54 +93,11 @@ final class HTTPRequest
     /**
      * Get the request query parameters.
      * 
-     * @return array<string, string> Request query.
+     * @return HTTPRequestQuery Request query object.
      */
-    public function getQuery(): array
+    public function getQuery(): HTTPRequestQuery
     {
         return $this->query;
-    }
-
-    /**
-     * Get a query parameter.
-     * 
-     * @param string $name       Name of the query parameter.
-     * @param mixed  $default    Default value if the query parameter is not set.
-     * @param string $type       Type of the query parameter. Default is 'string'.
-     * @param bool   $allowEmpty Allow an empty query parameter.
-     * 
-     * @return mixed Query parameter with the desired type.
-     * 
-     * @phpstan-return ($type is 'string' ? string : ($type is 'int' ? int : ($type is 'float' ? float : ($type is 'bool' ? bool : mixed))))
-     */
-    public function getQueryParam(
-        string $name,
-        mixed $default = null,
-        string $type = 'string',
-        bool $allowEmpty = false
-    ): mixed {
-        if (isset($this->query[$name])) {
-            $paramValue = $this->query[$name];
-        } else {
-            $paramValue = $default;
-        }
-
-        if (!$allowEmpty && empty($paramValue)) {
-            $paramValue = $default;
-        }
-
-        // If null is expected as default, return null
-        if ($paramValue === null) {
-            return null;
-        }
-
-        return match ($type) {
-            "string" => (string) $paramValue,
-            "int" => (int) $paramValue,
-            "float" => (float) $paramValue,
-            "bool" => (bool) $paramValue,
-            "datetime" => new \DateTime($paramValue),
-            default => $paramValue,
-        };
     }
 
     /**

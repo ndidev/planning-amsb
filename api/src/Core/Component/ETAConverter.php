@@ -40,16 +40,19 @@ class ETAConverter
      * 
      * Utilisé dans le planning consignation.
      * 
-     * @param string $heure Heure à modifier si nécessaire.
+     * @param string $time Heure à modifier si nécessaire.
      * 
      * @return string Heure convertie en chiffres.
      */
-    public static function toDigits(string $heure): string
+    public static function toDigits(string $time): string
     {
+        $convertedTime = $time;
+
         foreach (self::CORRESPONDANCE_ETA as $letters => $digits) {
-            $heure = preg_replace("/\b$letters\b/i", "$digits~", $heure);
+            $convertedTime = preg_replace("/\b$letters\b/i", "$digits~", $time);
         }
-        return $heure;
+
+        return $convertedTime ?? $time;
     }
 
 
@@ -67,9 +70,12 @@ class ETAConverter
      */
     public static function toLetters(string $time): string
     {
+        $convertedTime = $time;
+
         foreach (self::CORRESPONDANCE_ETA as $letters => $digits) {
-            $time = preg_replace("/\b$digits~/i", $letters, $time);
+            $convertedTime = preg_replace("/\b$digits~/i", $letters, $time);
         }
-        return $time;
+
+        return $convertedTime ?? $time;
     }
 }

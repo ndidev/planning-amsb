@@ -36,6 +36,10 @@ final class PdfConfigRepository extends Repository
 
         $request = $this->mysql->query($statement);
 
+        if (!$request) {
+            throw new DBException("Impossible de récupérer les configurations PDF.");
+        }
+
         $configsRaw = $request->fetchAll();
 
         $pdfService = new PdfService();
@@ -118,7 +122,10 @@ final class PdfConfigRepository extends Repository
         $lastInsertId = (int) $this->mysql->lastInsertId();
         $this->mysql->commit();
 
-        return $this->fetchConfig($lastInsertId);
+        /** @var PdfConfig */
+        $newConfig = $this->fetchConfig($lastInsertId);
+
+        return $newConfig;
     }
 
     /**
@@ -152,7 +159,13 @@ final class PdfConfigRepository extends Repository
             "id" => $config->getId(),
         ]);
 
-        return $this->fetchConfig($config->getId());
+        /** @var int */
+        $id = $config->getId();
+
+        /** @var PdfConfig */
+        $updatedConfig = $this->fetchConfig($id);
+
+        return $updatedConfig;
     }
 
     /**

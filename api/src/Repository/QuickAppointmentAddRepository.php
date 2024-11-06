@@ -41,12 +41,18 @@ final class QuickAppointmentAddRepository extends Repository
     {
         $statement = "SELECT * FROM config_ajouts_rapides_bois";
 
-        $quickAddConfigsRaw = $this->mysql->query($statement)->fetchAll();
+        $quickAddConfigsRequest = $this->mysql->query($statement);
+
+        if (!$quickAddConfigsRequest) {
+            throw new DBException("Impossible de récupérer les ajouts rapides bois.");
+        }
+
+        $quickAddConfigsRaw = $quickAddConfigsRequest->fetchAll();
 
         $quickAppointmentAddService = new QuickAppointmentAddService();
 
         $quickAddConfigs = array_map(
-            fn(array $quickAddRaw) => $quickAppointmentAddService->makeTimberQuickAppointmentAddFromDatabase($quickAddRaw),
+            fn($quickAddRaw) => $quickAppointmentAddService->makeTimberQuickAppointmentAddFromDatabase($quickAddRaw),
             $quickAddConfigsRaw
         );
 
@@ -115,7 +121,10 @@ final class QuickAppointmentAddRepository extends Repository
         $lastInsertId = (int) $this->mysql->lastInsertId();
         $this->mysql->commit();
 
-        return $this->fetchImtberQuickAppointmentAdd($lastInsertId);
+        /** @var TimberQuickAppointmentAdd */
+        $newTimberQuickAppointmentAdd = $this->fetchImtberQuickAppointmentAdd($lastInsertId);
+
+        return $newTimberQuickAppointmentAdd;
     }
 
     /**
@@ -149,7 +158,13 @@ final class QuickAppointmentAddRepository extends Repository
             'id' => $quickAdd->getId(),
         ]);
 
-        return $this->fetchImtberQuickAppointmentAdd($quickAdd->getId());
+        /** @var int */
+        $id = $quickAdd->getId();
+
+        /** @var TimberQuickAppointmentAdd */
+        $updatedQuickAdd = $this->fetchImtberQuickAppointmentAdd($id);
+
+        return $updatedQuickAdd;
     }
 
     /**

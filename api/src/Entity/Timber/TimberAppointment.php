@@ -43,7 +43,7 @@ class TimberAppointment extends AbstractEntity
 
     public function getDate(bool $sqlFormat = false): \DateTimeImmutable|string|null
     {
-        if (true === $sqlFormat) {
+        if (true === $sqlFormat && null !== $this->date) {
             return $this->date->format("Y-m-d");
         } else {
             return $this->date;

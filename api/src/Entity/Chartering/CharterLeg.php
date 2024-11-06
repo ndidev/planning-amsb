@@ -34,6 +34,13 @@ class CharterLeg extends AbstractEntity
         return $this;
     }
 
+    /**
+     * @param bool $sqlFormat 
+     * 
+     * @return \DateTimeImmutable|string|null 
+     * 
+     * @phpstan-return ($sqlFormat is false ? \DateTimeImmutable|null :string|null)
+     */
     public function getBlDate(bool $sqlFormat = false): \DateTimeImmutable|string|null
     {
         if (true === $sqlFormat) {

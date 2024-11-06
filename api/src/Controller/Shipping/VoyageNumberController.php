@@ -12,6 +12,7 @@ use App\Service\ShippingService;
 final class VoyageNumberController extends Controller
 {
     private ShippingService $shippingService;
+    /** @phpstan-var Module::* $module */
     private string $module = Module::SHIPPING;
 
     public function __construct()
@@ -52,10 +53,8 @@ final class VoyageNumberController extends Controller
             throw new AccessException();
         }
 
-        $input = $this->request->getQuery();
-
-        $shipName = $input["navire"] ?? "";
-        $currentCallId = $input["id"] ?? "";
+        $shipName = $this->request->getQuery()->getParam("navire", "", "string");
+        $currentCallId = $this->request->getQuery()->getParam("id", null, "int");
 
         $voyageNumber = $this->shippingService->getLastVoyageNumber($shipName, $currentCallId);
 

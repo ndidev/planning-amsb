@@ -4,14 +4,19 @@ namespace App\Service;
 
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Client\ClientException;
+use App\Core\Exceptions\Client\NotFoundException;
+use App\Core\Exceptions\Server\DB\DBException;
 use App\Core\Exceptions\Server\ServerException;
+use App\DTO\Filter\TimberFilterDTO;
 use App\DTO\SupplierWithUniqueDeliveryNoteNumber;
-use App\DTO\TimberFilterDTO;
 use App\DTO\TimberRegistryEntryDTO;
 use App\DTO\TimberStatsDTO;
 use App\DTO\TimberTransportSuggestionsDTO;
+use App\Entity\ThirdParty;
 use App\Entity\Timber\TimberAppointment;
 use App\Repository\TimberAppointmentRepository;
+use DateTimeInterface;
+use PDOException;
 
 /**
  * @phpstan-type TimberAppointmentArray array{
@@ -50,10 +55,12 @@ use App\Repository\TimberAppointmentRepository;
 final class TimberService
 {
     private TimberAppointmentRepository $timberAppointmentRepository;
+    private ThirdPartyService $thirdPartyService;
 
     public function __construct()
     {
-        $this->timberAppointmentRepository = new TimberAppointmentRepository();
+        $this->timberAppointmentRepository = new TimberAppointmentRepository($this);
+        $this->thirdPartyService = new ThirdPartyService();
     }
 
     /**
@@ -67,20 +74,18 @@ final class TimberService
      */
     public function makeTimberAppointmentFromDatabase(array $rawData): TimberAppointment
     {
-        $thirdPartyService = new ThirdPartyService();
-
         $appointment = (new TimberAppointment())
             ->setId($rawData["id"] ?? null)
             ->setOnHold($rawData["attente"] ?? false)
             ->setDate($rawData["date_rdv"] ?? null)
             ->setArrivalTime($rawData["heure_arrivee"] ?? null)
             ->setDepartureTime($rawData["heure_depart"] ?? null)
-            ->setSupplier($thirdPartyService->getThirdParty($rawData["fournisseur"] ?? null))
-            ->setLoadingPlace($thirdPartyService->getThirdParty($rawData["chargement"] ?? null))
-            ->setDeliveryPlace($thirdPartyService->getThirdParty($rawData["livraison"] ?? null))
-            ->setCustomer($thirdPartyService->getThirdParty($rawData["client"] ?? null))
-            ->setCarrier($thirdPartyService->getThirdParty($rawData["transporteur"] ?? null))
-            ->setTransportBroker($thirdPartyService->getThirdParty($rawData["affreteur"] ?? null))
+            ->setSupplier($this->thirdPartyService->getThirdParty($rawData["fournisseur"] ?? null))
+            ->setLoadingPlace($this->thirdPartyService->getThirdParty($rawData["chargement"] ?? null))
+            ->setDeliveryPlace($this->thirdPartyService->getThirdParty($rawData["livraison"] ?? null))
+            ->setCustomer($this->thirdPartyService->getThirdParty($rawData["client"] ?? null))
+            ->setCarrier($this->thirdPartyService->getThirdParty($rawData["transporteur"] ?? null))
+            ->setTransportBroker($this->thirdPartyService->getThirdParty($rawData["affreteur"] ?? null))
             ->setReady($rawData["commande_prete"] ?? false)
             ->setCharteringConfirmationSent($rawData["confirmation_affretement"] ?? false)
             ->setDeliveryNoteNumber($rawData["numero_bl"] ?? "")
@@ -101,20 +106,18 @@ final class TimberService
      */
     public function makeTimberAppointmentFromForm(array $rawData): TimberAppointment
     {
-        $thirdPartyService = new ThirdPartyService();
-
         $appointment = (new TimberAppointment())
             ->setId($rawData["id"] ?? null)
             ->setOnHold($rawData["attente"] ?? false)
             ->setDate($rawData["date_rdv"] ?? null)
             ->setArrivalTime($rawData["heure_arrivee"] ?? null)
             ->setDepartureTime($rawData["heure_depart"] ?? null)
-            ->setSupplier($thirdPartyService->getThirdParty($rawData["fournisseur"] ?? null))
-            ->setLoadingPlace($thirdPartyService->getThirdParty($rawData["chargement"] ?? null))
-            ->setDeliveryPlace($thirdPartyService->getThirdParty($rawData["livraison"] ?? null))
-            ->setCustomer($thirdPartyService->getThirdParty($rawData["client"] ?? null))
-            ->setCarrier($thirdPartyService->getThirdParty($rawData["transporteur"] ?? null))
-            ->setTransportBroker($thirdPartyService->getThirdParty($rawData["affreteur"] ?? null))
+            ->setSupplier($this->thirdPartyService->getThirdParty($rawData["fournisseur"] ?? null))
+            ->setLoadingPlace($this->thirdPartyService->getThirdParty($rawData["chargement"] ?? null))
+            ->setDeliveryPlace($this->thirdPartyService->getThirdParty($rawData["livraison"] ?? null))
+            ->setCustomer($this->thirdPartyService->getThirdParty($rawData["client"] ?? null))
+            ->setCarrier($this->thirdPartyService->getThirdParty($rawData["transporteur"] ?? null))
+            ->setTransportBroker($this->thirdPartyService->getThirdParty($rawData["affreteur"] ?? null))
             ->setReady($rawData["commande_prete"] ?? false)
             ->setCharteringConfirmationSent($rawData["confirmation_affretement"] ?? false)
             ->setDeliveryNoteNumber($rawData["numero_bl"] ?? "")
@@ -170,7 +173,7 @@ final class TimberService
      */
     public function getAppointments(TimberFilterDTO $filter): Collection
     {
-        return $this->timberAppointmentRepository->getAppointments($filter);
+        return $this->timberAppointmentRepository->fetchAppointments($filter);
     }
 
     /**
@@ -182,7 +185,7 @@ final class TimberService
      */
     public function getAppointment(int $id): ?TimberAppointment
     {
-        return $this->timberAppointmentRepository->getAppointment($id);
+        return $this->timberAppointmentRepository->fetchAppointment($id);
     }
 
     /**
@@ -242,6 +245,10 @@ final class TimberService
     ): TimberAppointment {
         $appointment = $this->getAppointment($appointmentId);
 
+        if (!$appointment) {
+            throw new NotFoundException("Le RDV bois n'existe pas.");
+        }
+
         if (!is_null($isOrderReady)) {
             $appointment = $this->timberAppointmentRepository->setOrderReady(
                 $appointmentId,
@@ -257,7 +264,6 @@ final class TimberService
         }
 
         if (!is_null($deliveryNoteNumber)) {
-            $appointment = $this->getAppointment($appointmentId);
             $supplier = $appointment->getSupplier();
             $supplierId = $supplier?->getId();
 
@@ -267,7 +273,7 @@ final class TimberService
                 !$this->isDeliveryNoteNumberAvailable($deliveryNoteNumber, $supplierId, $appointmentId)
             ) {
                 throw new ClientException(
-                    "Le numéro de BL {$deliveryNoteNumber} est déjà utilisé pour {$supplier->getShortName()}."
+                    "Le numéro de BL {$deliveryNoteNumber} est déjà utilisé pour {$supplier?->getShortName()}."
                 );
             }
 
@@ -292,7 +298,7 @@ final class TimberService
             $supplierId = $appointment->getSupplier()?->getId();
 
             if (
-                $appointment->getSupplier()?->getId()
+                $supplierId
                 && $this->isSupplierWithUniqueDeliveryNoteNumbers($supplierId)
                 && $appointment->getLoadingPlace()?->getId() === 1
                 && $appointment->getDeliveryNoteNumber() === ""
@@ -322,11 +328,13 @@ final class TimberService
      * 
      * @param int $id ID du RDV à supprimer
      * 
-     * @return bool TRUE si succès, FALSE si erreur
+     * @return void
+     * 
+     * @throws DBException Erreur lors de la suppression.
      */
-    public function deleteAppointment(int $id): bool
+    public function deleteAppointment(int $id): void
     {
-        return $this->timberAppointmentRepository->deleteAppointment($id);
+        $this->timberAppointmentRepository->deleteAppointment($id);
     }
 
     /**
@@ -494,5 +502,29 @@ final class TimberService
         $nextDeliveryNoteNumber = (int) $lastDeliveryNoteNumber + 1;
 
         return (string) $nextDeliveryNoteNumber;
+    }
+
+    /**
+     * Récupère les RDV bois pour un fournisseur.
+     * 
+     * @param ThirdParty $supplier 
+     * @param \DateTimeInterface $startDate 
+     * @param \DateTimeInterface $endDate 
+     * 
+     * @return array{
+     *           attente: Collection<TimberAppointment>,
+     *           non_attente: Collection<TimberAppointment>,
+     *         }
+     */
+    public function getPdfAppointments(
+        ThirdParty $supplier,
+        \DateTimeInterface $startDate,
+        \DateTimeInterface $endDate,
+    ): array {
+        return $this->timberAppointmentRepository->getPdfAppointments(
+            $supplier,
+            $startDate,
+            $endDate
+        );
     }
 }

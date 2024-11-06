@@ -5,6 +5,7 @@ namespace App\Controller\Bulk;
 use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
@@ -13,6 +14,7 @@ use App\Service\BulkService;
 final class BulkAppointmentController extends Controller
 {
     private BulkService $bulkService;
+    /** @phpstan-var Module::* $module */
     private string $module = Module::BULK;
     private string $sseEventName = "vrac/rdvs";
 
@@ -131,6 +133,7 @@ final class BulkAppointmentController extends Controller
 
         $appointment = $this->bulkService->createAppointment($input);
 
+        /** @var int $id */
         $id = $appointment->getId();
 
         $this->response
@@ -144,12 +147,16 @@ final class BulkAppointmentController extends Controller
     /**
      * Met à jour un RDV.
      * 
-     * @param int $id id du RDV à modifier.
+     * @param ?int $id id du RDV à modifier.
      */
-    public function update(int $id): void
+    public function update(?int $id = null): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier un RDV vrac.");
+        }
+
+        if (!$id) {
+            throw new BadRequestException("L'identifiant du RDV est obligatoire.");
         }
 
         if (!$this->bulkService->appointmentExists($id)) {
@@ -168,12 +175,16 @@ final class BulkAppointmentController extends Controller
     /**
      * Met à jour certaines proriétés d'un RDV vrac.
      * 
-     * @param int $id id du RDV à modifier.
+     * @param ?int $id id du RDV à modifier.
      */
-    public function patch(int $id): void
+    public function patch(?int $id = null): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier un RDV vrac.");
+        }
+
+        if (!$id) {
+            throw new BadRequestException("L'identifiant du RDV est obligatoire.");
         }
 
         if (!$this->bulkService->appointmentExists($id)) {
@@ -192,12 +203,16 @@ final class BulkAppointmentController extends Controller
     /**
      * Supprime un RDV.
      * 
-     * @param int $id id du RDV à supprimer.
+     * @param ?int $id id du RDV à supprimer.
      */
-    public function delete(int $id): void
+    public function delete(?int $id = null): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour supprimer un RDV vrac.");
+        }
+
+        if (!$id) {
+            throw new BadRequestException("L'identifiant du RDV est obligatoire.");
         }
 
         if (!$this->bulkService->appointmentExists($id)) {

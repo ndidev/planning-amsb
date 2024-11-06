@@ -4,7 +4,7 @@
 
 namespace App\Controller;
 
-use App\Core\Exceptions\Client\ClientException;
+use App\Core\Exceptions\AppException;
 use App\Core\Exceptions\Server\ServerException;
 use App\Core\HTTP\HTTPResponse;
 use App\Core\Logger\ErrorLogger;
@@ -21,12 +21,8 @@ final class ErrorController extends Controller
     private function processRequest(): void
     {
         switch (true) {
-            case ($this->exception instanceof ClientException):
-                $this->handleClientException();
-                break;
-
-            case ($this->exception instanceof ServerException):
-                $this->handleServerException();
+            case ($this->exception instanceof AppException):
+                $this->handleAppException();
                 break;
 
             default:
@@ -35,32 +31,17 @@ final class ErrorController extends Controller
         }
     }
 
-    private function handleClientException(): void
+    private function handleAppException(): void
     {
-        if (!$this->exception instanceof ClientException) {
+        if (!$this->exception instanceof AppException) {
             $exceptionClass = $this->exception::class;
-            throw new \Exception("L'exception n'est pas une instance de ClientException ({$exceptionClass})");
+            throw new \Exception("L'exception n'est pas une instance de AppException ({$exceptionClass})");
         }
 
         $this->response
             ->setCode($this->exception->httpStatus)
             ->setType("text")
             ->setBody($this->exception->getMessage());
-    }
-
-    private function handleServerException(): void
-    {
-        if (!$this->exception instanceof ServerException) {
-            $exceptionClass = $this->exception::class;
-            throw new \Exception("L'exception n'est pas une instance de ServerException ({$exceptionClass})");
-        }
-
-        ErrorLogger::log($this->exception);
-
-        $this->response
-            ->setCode($this->exception->httpStatus)
-            ->setType("text")
-            ->setBody("Erreur serveur");
     }
 
     private function handleThrowable(): void

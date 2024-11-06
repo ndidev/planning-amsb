@@ -63,7 +63,7 @@ class User
     /**
      * Statut du compte de l'utilisateur.
      */
-    public AccountStatus|string $status;
+    public AccountStatus $status;
 
     /**
      * Rôles de l'utilisateur.
@@ -73,7 +73,7 @@ class User
     /**
      * `true` si l'utilisateur est administrateur, `false` sinon.
      */
-    public bool $isAdmin;
+    public bool $isAdmin = false;
 
     private Redis $redis;
 
@@ -162,7 +162,7 @@ class User
                 throw new AccountDeletedException();
 
             default:
-                throw new AccountStatusException($this->status);
+                throw new AccountStatusException($this->status->value);
         }
 
         // Si tout est OK :
@@ -209,7 +209,10 @@ class User
         $this->populate();
 
         if ($this->status !== AccountStatus::PENDING) {
-            throw new AccountStatusException($this->status, "Le compte n'est pas en attente d'activation");
+            throw new AccountStatusException(
+                $this->status->value,
+                "Le compte n'est pas en attente d'activation"
+            );
         }
 
         (new MySQL)
@@ -231,7 +234,10 @@ class User
 
         $this->updateRedis();
 
-        $this->sse->addEvent("admin/users", "update", $this->uid);
+        /** @var string $uid */
+        $uid = $this->uid;
+
+        $this->sse->addEvent("admin/users", "update", $uid);
     }
 
 
@@ -265,7 +271,7 @@ class User
         $this->populate();
 
         if ($this->status !== AccountStatus::ACTIVE) {
-            throw new AccountStatusException($this->status);
+            throw new AccountStatusException($this->status->value);
         }
 
         // Prolonger la session
@@ -284,30 +290,36 @@ class User
      */
     public function identifyFromApiKey(): User
     {
-        $api_key = $_SERVER["HTTP_X_API_KEY"] ?? null;
+        $apiKey = $_SERVER["HTTP_X_API_KEY"] ?? null;
 
-        if (!$api_key) {
+        if (!$apiKey) {
             throw new InvalidApiKeyException();
         }
 
-        $api_key_hash = md5($api_key);
+        $apiKeyHash = md5($apiKey);
 
-        $key_info =
-            $this->redis->hGetAll("admin:apikeys:{$api_key_hash}")
-            ?: (new MySQL)
-            ->query("SELECT `uid`, `status`, expiration FROM admin_api_keys WHERE `key` = '{$api_key_hash}'")
-            ->fetch();
+        $apiKeyInfo =
+            $this->redis->hGetAll("admin:apikeys:{$apiKeyHash}");
 
-        if ($key_info) {
-            $this->redis->hMSet("admin:apikeys:{$api_key_hash}", $key_info);
-            $this->redis->expire("admin:apikeys:{$api_key_hash}", ONE_WEEK);
+        if (!$apiKeyInfo) {
+            $keyInfoPdoStatement = (new MySQL())
+                ->query("SELECT `uid`, `status`, expiration FROM admin_api_keys WHERE `key` = '{$apiKeyHash}'");
+
+            if ($keyInfoPdoStatement) {
+                $apiKeyInfo = $keyInfoPdoStatement->fetch();
+            }
+        }
+
+        if ($apiKeyInfo) {
+            $this->redis->hMSet("admin:apikeys:{$apiKeyHash}", $apiKeyInfo);
+            $this->redis->expire("admin:apikeys:{$apiKeyHash}", ONE_WEEK);
         }
 
         [
             "uid" => $uid,
             "status" => $status,
             "expiration" => $expiration
-        ] = $key_info;
+        ] = $apiKeyInfo;
 
 
         if (!$uid) {
@@ -332,7 +344,7 @@ class User
         $this->populate();
 
         if ($this->status !== AccountStatus::ACTIVE) {
-            throw new AccountStatusException($this->status);
+            throw new AccountStatusException($this->status->value);
         }
 
         return $this;
@@ -350,7 +362,7 @@ class User
         // Accès à l'accueil et à l'écran individuel de modification du nom/mdp
         if ($module === null || $module === Module::USER) return true;
 
-        return ($this->roles->$module ?? -1) >= UserRoles::ACCESS->value;
+        return ($this->roles->$module ?? UserRoles::NONE) >= UserRoles::ACCESS;
     }
 
     /**
@@ -362,7 +374,7 @@ class User
      */
     public function canEdit(?string $module): bool
     {
-        return ($this->roles->$module ?? -1) >= UserRoles::EDIT->value;
+        return ($this->roles->$module ?? UserRoles::NONE) >= UserRoles::EDIT;
     }
 
     /**
@@ -370,10 +382,13 @@ class User
      */
     public function updateRedis(): void
     {
-        $user =
-            (new MySQL)
-            ->query("SELECT * FROM admin_users WHERE uid = '{$this->uid}'")
-            ->fetch();
+        $userPdoStatement = (new MySQL())->query("SELECT * FROM admin_users WHERE uid = '{$this->uid}'");
+
+        if ($userPdoStatement) {
+            $user = $userPdoStatement->fetch();
+        } else {
+            throw new InvalidAccountException();
+        }
 
         // Copie des infos dans Redis (hash)
         $this->redis->hMSet("admin:users:{$this->uid}", $user);

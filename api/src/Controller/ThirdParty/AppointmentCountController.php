@@ -13,7 +13,7 @@ final class AppointmentCountController extends Controller
     private ThirdPartyService $service;
 
     public function __construct(
-        private ?int $id = null,
+        private int $id,
     ) {
         parent::__construct();
         $this->service = new ThirdPartyService();
@@ -31,11 +31,7 @@ final class AppointmentCountController extends Controller
 
             case 'HEAD':
             case 'GET':
-                if ($this->id === null) {
-                    $this->readAll();
-                } else {
-                    $this->read($this->id);
-                }
+                $this->read($this->id);
                 break;
 
             default:
@@ -44,25 +40,6 @@ final class AppointmentCountController extends Controller
                     ->addHeader("Allow", $this->supportedMethods);
                 break;
         }
-    }
-
-    /**
-     * Retrieves the number of appointments for all third parties.
-     */
-    public function readAll(): void
-    {
-        $appointmentCounts = $this->service->getAllAppointmentCounts();
-
-        $etag = ETag::get($appointmentCounts);
-
-        if ($this->request->etag === $etag) {
-            $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
-            return;
-        }
-
-        $this->response
-            ->addHeader("ETag", $etag)
-            ->setJSON($appointmentCounts);
     }
 
     /**

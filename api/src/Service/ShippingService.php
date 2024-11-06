@@ -5,7 +5,7 @@
 namespace App\Service;
 
 use App\Core\Component\Collection;
-use App\DTO\ShippingFilterDTO;
+use App\DTO\Filter\ShippingFilterDTO;
 use App\DTO\ShippingStatsDetailsDTO;
 use App\DTO\ShippingStatsSummaryDTO;
 use App\Entity\Shipping\ShippingCall;
@@ -57,8 +57,6 @@ use App\Repository\ShippingRepository;
  *                                      }
  * 
  * @phpstan-import-type DraftsPerTonnage from \App\Repository\ShippingRepository
- * 
- * @phpstan-import-type ShippingStatsSummary from \App\Repository\ShippingRepository
  * 
  * @phpstan-import-type ShipsInOps from \App\Repository\ShippingRepository
  */
@@ -182,12 +180,12 @@ final class ShippingService
             ->setCustomer($rawData["client"] ?? '')
             ->setOperation($rawData["operation"] ?? '')
             ->setApproximate((bool) ($rawData["environ"] ?? false))
-            ->setBlTonnage(is_null($rawData["tonnage_bl"]) ? null : (float) $rawData["tonnage_bl"])
-            ->setBlVolume(is_null($rawData["cubage_bl"]) ? null : (float) $rawData["cubage_bl"])
-            ->setBlUnits(is_null($rawData["nombre_bl"]) ? null : (int) $rawData["nombre_bl"])
-            ->setOutturnTonnage(is_null($rawData["tonnage_outturn"]) ? null : (float) $rawData["tonnage_outturn"])
-            ->setOutturnVolume(is_null($rawData["cubage_outturn"]) ? null : (float) $rawData["cubage_outturn"])
-            ->setOutturnUnits(is_null($rawData["nombre_outturn"]) ? null : (int) $rawData["nombre_outturn"]);
+            ->setBlTonnage(isset($rawData["tonnage_bl"]) ? (float) $rawData["tonnage_bl"] : null)
+            ->setBlVolume(isset($rawData["cubage_bl"]) ? (float) $rawData["cubage_bl"] : null)
+            ->setBlUnits(isset($rawData["nombre_bl"]) ? (int) $rawData["nombre_bl"] : null)
+            ->setOutturnTonnage(isset($rawData["tonnage_outturn"]) ? (float) $rawData["tonnage_outturn"] : null)
+            ->setOutturnVolume(isset($rawData["cubage_outturn"]) ? (float) $rawData["cubage_outturn"] : null)
+            ->setOutturnUnits(isset($rawData["nombre_outturn"]) ? (int) $rawData["nombre_outturn"] : null);
 
         return $cargo;
     }
@@ -209,12 +207,12 @@ final class ShippingService
             ->setCustomer($rawData["client"] ?? '')
             ->setOperation($rawData["operation"] ?? '')
             ->setApproximate((bool) ($rawData["environ"] ?? false))
-            ->setBlTonnage(is_null($rawData["tonnage_bl"]) ? null : (float) $rawData["tonnage_bl"])
-            ->setBlVolume(is_null($rawData["cubage_bl"]) ? null : (float) $rawData["cubage_bl"])
-            ->setBlVolume(is_null($rawData["nombre_bl"]) ? null : (int) $rawData["nombre_bl"])
-            ->setOutturnTonnage(is_null($rawData["tonnage_outturn"]) ? null : (float) $rawData["tonnage_outturn"])
-            ->setOutturnVolume(is_null($rawData["cubage_outturn"]) ? null : (float) $rawData["cubage_outturn"])
-            ->setOutturnVolume(is_null($rawData["nombre_outturn"]) ? null : (int) $rawData["nombre_outturn"]);
+            ->setBlTonnage(isset($rawData["tonnage_bl"]) ? (float) $rawData["tonnage_bl"] : null)
+            ->setBlVolume(isset($rawData["cubage_bl"]) ? (float) $rawData["cubage_bl"] : null)
+            ->setBlVolume(isset($rawData["nombre_bl"]) ? (int) $rawData["nombre_bl"] : null)
+            ->setOutturnTonnage(isset($rawData["tonnage_outturn"]) ? (float) $rawData["tonnage_outturn"] : null)
+            ->setOutturnVolume(isset($rawData["cubage_outturn"]) ? (float) $rawData["cubage_outturn"] : null)
+            ->setOutturnVolume(isset($rawData["nombre_outturn"]) ? (int) $rawData["nombre_outturn"] : null);
 
         return $cargo;
     }
@@ -282,10 +280,8 @@ final class ShippingService
         $this->shippingRepository->deleteCall($id);
     }
 
-    public function getLastVoyageNumber(string $shipName, string $currentCallIdAsString): string
+    public function getLastVoyageNumber(string $shipName, ?int $currentCallId): string
     {
-        $currentCallId = $currentCallIdAsString === "" ? null : (int) $currentCallIdAsString;
-
         return $this->shippingRepository->fetchLastVoyageNumber($shipName, $currentCallId);
     }
 

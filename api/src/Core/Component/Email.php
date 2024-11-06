@@ -41,6 +41,11 @@ class Email extends PHPMailer
 
                 $outputFile = '/var/log/phpmailog.log';
                 $fileHandle = fopen($outputFile, 'a');
+
+                if (!$fileHandle) {
+                    return;
+                }
+
                 fwrite($fileHandle, $message);
                 fclose($fileHandle);
             };

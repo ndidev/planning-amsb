@@ -8,29 +8,29 @@ use App\Core\Exceptions\Client\BadRequestException;
 
 class CurrentUserFormDTO
 {
-    private ?string $uid = null;
-    private ?string $name = null;
+    private string $uid = '';
+    private string $name = '';
     private ?string $password = null;
     private ?string $passwordHash = null;
 
-    public function getUid(): ?string
+    public function getUid(): string
     {
         return $this->uid;
     }
 
-    public function setUid(?string $uid): static
+    public function setUid(string $uid): static
     {
         $this->uid = $uid;
 
         return $this;
     }
 
-    public function getName(): ?string
+    public function getName(): string
     {
         return $this->name;
     }
 
-    public function setName(?string $name): static
+    public function setName(string $name): static
     {
         if (!$name) {
             throw new BadRequestException('Le nom est requis.');

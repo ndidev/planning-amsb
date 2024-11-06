@@ -7,12 +7,13 @@ use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
-use App\DTO\TimberFilterDTO;
+use App\DTO\Filter\TimberFilterDTO;
 use App\Service\TimberService;
 
 final class TimberStatsController extends Controller
 {
     private TimberService $service;
+    /** @phpstan-var Module::* $module */
     private string $module = Module::TIMBER;
 
     public function __construct()

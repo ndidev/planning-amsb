@@ -9,11 +9,10 @@ use App\Core\Exceptions\Client\BadRequestException;
 use App\Entity\Config\QuickAppointmentAdd;
 use App\Entity\Config\TimberQuickAppointmentAdd;
 use App\Repository\QuickAppointmentAddRepository;
-use PDOException;
 
 /**
  * @phpstan-type TimberQuickAppointmentAddArray array{
- *                                                id?: int,
+ *                                                id?: int|null,
  *                                                fournisseur?: int,
  *                                                transporteur?: int,
  *                                                affreteur?: int,
@@ -34,9 +33,15 @@ final class QuickAppointmentAddService
     /**
      * Creates a TimberQuickAppointmentAdd object from database data.
      * 
-     * @param array $rawData
-     * 
-     * @phpstan-param TimberQuickAppointmentAddArray $rawData
+     * @param array{
+     *          id: int,
+     *          fournisseur: int,
+     *          transporteur: int,
+     *          affreteur: int,
+     *          chargement: int,
+     *          client: int,
+     *          livraison: int,
+     *        } $rawData
      * 
      * @return TimberQuickAppointmentAdd
      */
@@ -46,12 +51,12 @@ final class QuickAppointmentAddService
 
         $quickAppointmentAdd = (new TimberQuickAppointmentAdd())
             ->setId($rawData["id"])
-            ->setSupplier($thirdPartyService->getThirdParty($rawData["fournisseur"] ?? null))
-            ->setCarrier($thirdPartyService->getThirdParty($rawData["transporteur"] ?? null))
-            ->setCharterer($thirdPartyService->getThirdParty($rawData["affreteur"] ?? null))
-            ->setLoading($thirdPartyService->getThirdParty($rawData["chargement"] ?? null))
-            ->setCustomer($thirdPartyService->getThirdParty($rawData["client"] ?? null))
-            ->setDelivery($thirdPartyService->getThirdParty($rawData["livraison"] ?? null));
+            ->setSupplier($thirdPartyService->getThirdParty($rawData["fournisseur"]))
+            ->setCarrier($thirdPartyService->getThirdParty($rawData["transporteur"]))
+            ->setCharterer($thirdPartyService->getThirdParty($rawData["affreteur"]))
+            ->setLoading($thirdPartyService->getThirdParty($rawData["chargement"]))
+            ->setCustomer($thirdPartyService->getThirdParty($rawData["client"]))
+            ->setDelivery($thirdPartyService->getThirdParty($rawData["livraison"]));
 
         return $quickAppointmentAdd;
     }
@@ -70,7 +75,7 @@ final class QuickAppointmentAddService
         $thirdPartyService = new ThirdPartyService();
 
         $quickAppointmentAdd = (new TimberQuickAppointmentAdd())
-            ->setId($rawData["id"])
+            ->setId($rawData["id"] ?? null)
             ->setSupplier($thirdPartyService->getThirdParty($rawData["fournisseur"] ?? null))
             ->setCarrier($thirdPartyService->getThirdParty($rawData["transporteur"] ?? null))
             ->setCharterer($thirdPartyService->getThirdParty($rawData["affreteur"] ?? null))

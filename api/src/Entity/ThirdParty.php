@@ -5,7 +5,6 @@
 namespace App\Entity;
 
 use App\Core\Traits\IdentifierTrait;
-use App\Service\CountryService;
 
 /**
  * @phpstan-type ThirdPartyRoles array{
@@ -132,13 +131,9 @@ class ThirdParty extends AbstractEntity
         return $this->country;
     }
 
-    public function setCountry(Country|string|null $country): static
+    public function setCountry(?Country $country): static
     {
-        if (is_string($country)) {
-            $this->country = (new CountryService())->getCountry($country);
-        } else {
-            $this->country = $country;
-        }
+        $this->country = $country;
 
         return $this;
     }
@@ -184,6 +179,9 @@ class ThirdParty extends AbstractEntity
         return $this->roles[$role] ?? false;
     }
 
+    /** 
+     * @phpstan-param key-of<ThirdPartyRoles> $role
+     */
     public function setRole(string $role, bool|int $value): static
     {
         $this->roles[$role] = (bool) $value;

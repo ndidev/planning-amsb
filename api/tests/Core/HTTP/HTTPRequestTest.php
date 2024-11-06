@@ -5,8 +5,13 @@
 namespace App\Tests\Core\HTTP;
 
 use App\Core\HTTP\HTTPRequest;
+use App\Core\HTTP\HTTPRequestQuery;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
+#[CoversClass(HTTPRequest::class)]
+#[UsesClass(HTTPRequestQuery::class)]
 final class HTTPRequestTest extends TestCase
 {
     public function testGetMethod(): void
@@ -25,19 +30,13 @@ final class HTTPRequestTest extends TestCase
     public function testGetQuery(): void
     {
         // Given
-        $_SERVER["REQUEST_METHOD"] = "GET";
-        $_SERVER["REQUEST_URI"] = "/api/v1/pdf?config=1&date_debut=2021-01-01&date_fin=";
         $request = new HTTPRequest();
 
         // When
         $query = $request->getQuery();
 
         // Then
-        $this->assertSame([
-            "config" => "1",
-            "date_debut" => "2021-01-01",
-            "date_fin" => "",
-        ], $query);
+        $this->assertInstanceOf(HTTPRequestQuery::class, $query);
     }
 
     public function testGetQueryParams(): void
@@ -48,27 +47,17 @@ final class HTTPRequestTest extends TestCase
         $request = new HTTPRequest();
 
         // When
-        // Set value as integer
-        $configId = $request->getQueryParam("config", type: "int");
-        $expectedConfigId = 1;
-        // Unset value as null
-        $missingParam = $request->getQueryParam("missing_param", type: "int");
-        // Set value as datetime
-        $startDate = $request->getQueryParam("date_debut", type: "datetime");
-        $expectedStartDate = (new \DateTime("2021-01-01"))->setTime(0, 0, 0);
-        // Set and empty value as datetime
-        $endDate = $request->getQueryParam("date_fin", "now", "datetime")->setTime(0, 0, 0);
-        $expectedEndDate = (new \DateTime())->setTime(0, 0, 0);
-        // Unset value as boolean
-        $archive = $request->getQueryParam("archive", false, "bool");
-        $expectedArchive = false;
+        $queryArray =
+            (new \ReflectionClass(HTTPRequestQuery::class))
+            ->getProperty("query")
+            ->getValue($request->getQuery());
 
         // Then
-        $this->assertSame($expectedConfigId, $configId);
-        $this->assertNull($missingParam);
-        $this->assertEquals($expectedStartDate, $startDate);
-        $this->assertEquals($expectedEndDate, $endDate);
-        $this->assertSame($expectedArchive, $archive);
+        $this->assertSame([
+            "config" => "1",
+            "date_debut" => "2021-01-01",
+            "date_fin" => "",
+        ], $queryArray);
     }
 
     public function testGetBody(): void

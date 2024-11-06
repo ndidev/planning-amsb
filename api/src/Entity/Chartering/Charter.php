@@ -48,11 +48,13 @@ class Charter extends AbstractEntity
     public function setStatus(CharterStatus|int $status): static
     {
         if (is_int($status)) {
-            $this->status = CharterStatus::tryFrom($status);
+            $statusFromEnum = CharterStatus::tryFrom($status);
 
-            if (null === $this->status) {
+            if (null === $statusFromEnum) {
                 throw new \InvalidArgumentException("Statut invalide");
             }
+
+            $this->status = $statusFromEnum;
         } else {
             $this->status = $status;
         }
@@ -60,6 +62,13 @@ class Charter extends AbstractEntity
         return $this;
     }
 
+    /**
+     * @param bool $sqlFormat 
+     * 
+     * @return \DateTimeImmutable|string|null 
+     * 
+     * @phpstan-return ($sqlFormat is false ? \DateTimeImmutable|null :string|null)
+     */
     public function getLaycanStart(bool $sqlFormat = false): \DateTimeImmutable|string|null
     {
         if (true === $sqlFormat) {
@@ -80,6 +89,13 @@ class Charter extends AbstractEntity
         return $this;
     }
 
+    /**
+     * @param bool $sqlFormat 
+     * 
+     * @return \DateTimeImmutable|string|null 
+     * 
+     * @phpstan-return ($sqlFormat is false ? \DateTimeImmutable|null :string|null)
+     */
     public function getLaycanEnd(bool $sqlFormat = false): \DateTimeImmutable|string|null
     {
         if (true === $sqlFormat) {
@@ -100,6 +116,13 @@ class Charter extends AbstractEntity
         return $this;
     }
 
+    /**
+     * @param bool $sqlFormat 
+     * 
+     * @return \DateTimeImmutable|string|null 
+     * 
+     * @phpstan-return ($sqlFormat is false ? \DateTimeImmutable|null :string|null)
+     */
     public function getCpDate(bool $sqlFormat = false): \DateTimeImmutable|string|null
     {
         if (true === $sqlFormat) {

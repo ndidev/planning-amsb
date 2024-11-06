@@ -4,7 +4,7 @@
 
 namespace App\Repository;
 
-use App\DTO\NewTidesDTO;
+use App\Core\Exceptions\Server\DB\DBException;
 use App\DTO\TidesDTO;
 use const App\Core\Component\Constants\ONE_WEEK;
 
@@ -13,7 +13,7 @@ use const App\Core\Component\Constants\ONE_WEEK;
  */
 final class TideRepository extends Repository
 {
-    private string $redisNamespace = "marees";
+    private string $redisNamespace = "tides";
 
     /**
      * Retrieves tides based on the filter.
@@ -30,7 +30,7 @@ final class TideRepository extends Repository
         $datesHash = md5($startDate->format('Y-m-d') . $endDate->format('Y-m-d'));
 
         // Redis
-        $tides = json_decode($this->redis->get($this->redisNamespace . ":" . $datesHash));
+        $tides = json_decode($this->redis->get($this->redisNamespace . ":" . $datesHash), true);
 
         if (!$tides) {
             $statement = "SELECT * FROM marees m WHERE m.date BETWEEN :start AND :end";
@@ -73,7 +73,7 @@ final class TideRepository extends Repository
     public function fetchTidesByYear(int $year): TidesDTO
     {
         // Redis
-        $tides = json_decode($this->redis->get($this->redisNamespace . ":" . $year));
+        $tides = json_decode($this->redis->get($this->redisNamespace . ":" . $year), true);
 
         if (!$tides) {
             $statement = "SELECT * FROM marees WHERE SUBSTRING(date, 1, 4) = :year";
@@ -112,13 +112,16 @@ final class TideRepository extends Repository
         $years = json_decode($this->redis->get($this->redisNamespace . ":annees"));
 
         if (!$years) {
-            $statement = "SELECT DISTINCT SUBSTRING(date, 1, 4) AS annee FROM `utils_marees_shom`";
+            $statement = "SELECT DISTINCT SUBSTRING(date, 1, 4) FROM `utils_marees_shom`";
 
-            $years = $this->mysql->query($statement)->fetchAll();
+            $yearsRequest = $this->mysql->query($statement);
 
-            for ($i = 0; $i < count($years); $i++) {
-                $years[$i] = $years[$i]["annee"];
+            if (!$yearsRequest) {
+                throw new DBException("Impossible de récupérer les années des marées.");
             }
+
+            /** @var string[] */
+            $years = $yearsRequest->fetchAll(\PDO::FETCH_COLUMN);
 
             $this->redis->set($this->redisNamespace . ":annees", json_encode($years));
         }
@@ -154,17 +157,17 @@ final class TideRepository extends Repository
      * Supprime les marrées pour une année.
      * 
      * @param int $year Année pour laquelle supprimer les marées.
-     * 
-     * @return bool `true` si succès, `false` sinon
      */
-    public function delete(int $year): bool
+    public function delete(int $year): void
     {
         $request = $this->mysql->prepare("DELETE FROM utils_marees_shom WHERE SUBSTRING(date, 1, 4) = :year");
         $isDeleted = $request->execute(["year" => $year]);
 
-        $this->invalidateRedis();
+        if (!$isDeleted) {
+            throw new DBException("Erreur lors de la suppression");
+        }
 
-        return $isDeleted;
+        $this->invalidateRedis();
     }
 
     /**

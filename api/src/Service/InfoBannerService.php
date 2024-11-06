@@ -5,18 +5,20 @@
 namespace App\Service;
 
 use App\Core\Component\Collection;
+use App\Core\Component\Module;
+use App\Core\Exceptions\Client\ClientException;
 use App\Entity\Config\InfoBannerLine;
 use App\Repository\InfoBannerRepository;
 
 /**
- * @phpstan-type InfoBannerArray array{
- *                                 id?: int,
- *                                 module?: string,
- *                                 pc?: bool,
- *                                 tv?: bool,
- *                                 message?: string,
- *                                 couleur?: string,
- *                               }
+ * @phpstan-type InfoBannerFormData array{
+ *                                    id?: int,
+ *                                    module?: string,
+ *                                    pc?: bool,
+ *                                    tv?: bool,
+ *                                    message?: string,
+ *                                    couleur?: string,
+ *                                  }
  */
 final class InfoBannerService
 {
@@ -30,17 +32,24 @@ final class InfoBannerService
     /**
      * Creates an info banner line from database data.
      * 
-     * @param array $rawData Raw data from the database.
-     * 
-     * @phpstan-param InfoBannerArray $rawData
+     * @param array{
+     *          id: int,
+     *          module: string,
+     *          pc: int,
+     *          tv: int,
+     *          message: string,
+     *          couleur: string,
+     *        } $rawData Raw data from the database.
      * 
      * @return InfoBannerLine 
      */
     public function makeLineFromDatabase(array $rawData): InfoBannerLine
     {
+        $module = Module::tryFrom($rawData['module']);
+
         $line = (new InfoBannerLine())
             ->setId($rawData['id'])
-            ->setModule($rawData['module'])
+            ->setModule($module)
             ->setPc($rawData['pc'])
             ->setTv($rawData['tv'])
             ->setMessage($rawData['message'])
@@ -54,18 +63,24 @@ final class InfoBannerService
      * 
      * @param array $rawData Raw data from the form.
      * 
-     * @phpstan-param InfoBannerArray $rawData
+     * @phpstan-param InfoBannerFormData $rawData
      * 
      * @return InfoBannerLine 
      */
     public function makeLineFromForm(array $rawData): InfoBannerLine
     {
+        $module = Module::tryFrom($rawData['module'] ?? null);
+
+        if (!$module) {
+            throw new ClientException("Le module n'est pas valide.");
+        }
+
         $line = (new InfoBannerLine())
-            ->setModule($rawData['module'])
-            ->setPc($rawData['pc'])
-            ->setTv($rawData['tv'])
-            ->setMessage($rawData['message'])
-            ->setColor($rawData['couleur']);
+            ->setModule($module)
+            ->setPc($rawData['pc'] ?? false)
+            ->setTv($rawData['tv'] ?? false)
+            ->setMessage($rawData['message'] ?? '')
+            ->setColor($rawData['couleur'] ?? '#000000');
 
         return $line;
     }
@@ -95,7 +110,7 @@ final class InfoBannerService
      * 
      * @param array $rawData 
      * 
-     * @phpstan-param InfoBannerArray $rawData
+     * @phpstan-param InfoBannerFormData $rawData
      * 
      * @return InfoBannerLine 
      */
@@ -112,7 +127,7 @@ final class InfoBannerService
      * @param int   $id      Line ID.
      * @param array $rawData Raw data from the form.
      * 
-     * @phpstan-param InfoBannerArray $rawData
+     * @phpstan-param InfoBannerFormData $rawData
      * 
      * @return InfoBannerLine 
      */

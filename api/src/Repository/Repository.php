@@ -26,6 +26,8 @@ abstract class Repository
             $this->makeMySQLConnection();
         }
 
+        /** @var MySQL self::$staticMysql */
+
         return self::$staticMysql;
     }
 
@@ -43,6 +45,8 @@ abstract class Repository
         if (!self::$staticRedis) {
             $this->makeRedisConnection();
         }
+
+        /** @var Redis self::$staticRedis */
 
         return self::$staticRedis;
     }

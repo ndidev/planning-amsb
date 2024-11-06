@@ -5,6 +5,7 @@ namespace App\Controller\Admin;
 use App\Controller\Controller;
 use App\Core\Exceptions\Client\Auth\AdminException;
 use App\Core\Exceptions\Client\Auth\ForbiddenException;
+use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
@@ -119,6 +120,7 @@ final class UserAccountController extends Controller
 
         $newUser = $this->userService->createUser($input, $this->user->name);
 
+        /** @var string $uid */
         $uid = $newUser->getUid();
 
         $this->response
@@ -132,10 +134,14 @@ final class UserAccountController extends Controller
     /**
      * Met à jour un compte utilisateur.
      * 
-     * @param string $uid UID du compte à modifier.
+     * @param ?string $uid UID du compte à modifier.
      */
-    public function update(string $uid): void
+    public function update(?string $uid = null): void
     {
+        if (!$uid) {
+            throw new BadRequestException("L'identifiant de l'utilisateur est obligatoire.");
+        }
+
         if (!$this->userService->userExists($uid)) {
             throw new NotFoundException("L'utilisateur n'existe pas.");
         }
@@ -152,10 +158,14 @@ final class UserAccountController extends Controller
     /**
      * Supprime un compte utilisateur.
      * 
-     * @param string $uid UID du compte à supprimer.
+     * @param ?string $uid UID du compte à supprimer.
      */
-    public function delete(string $uid): void
+    public function delete(?string $uid = null): void
     {
+        if (!$uid) {
+            throw new BadRequestException("L'identifiant de l'utilisateur est obligatoire.");
+        }
+
         // Un utilisateur ne peut pas se supprimer lui-même
         if ($this->user->uid === $uid) {
             throw new ForbiddenException("Un administrateur ne peut pas supprimer son propre compte.");

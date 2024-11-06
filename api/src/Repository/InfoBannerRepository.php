@@ -23,12 +23,18 @@ final class InfoBannerRepository extends Repository
      */
     public function fetchAllLines(): Collection
     {
-        $linesRaw = $this->mysql->query("SELECT * FROM bandeau_info")->fetchAll();
+        $linesRequest = $this->mysql->query("SELECT * FROM bandeau_info");
+
+        if (!$linesRequest) {
+            throw new DBException("Impossible de récupérer les lignes du bandeau d'infos.");
+        }
+
+        $linesRaw = $linesRequest->fetchAll();
 
         $infoBannerService = new InfoBannerService();
 
         $lines = array_map(
-            fn(array $line) => $infoBannerService->makeLineFromDatabase($line),
+            fn($line) => $infoBannerService->makeLineFromDatabase($line),
             $linesRaw
         );
 
@@ -91,7 +97,10 @@ final class InfoBannerRepository extends Repository
         $lastInsertId = (int) $this->mysql->lastInsertId();
         $this->mysql->commit();
 
-        return $this->fetchLine($lastInsertId);
+        /** @var InfoBannerLine */
+        $newLine = $this->fetchLine($lastInsertId);
+
+        return $newLine;
     }
 
     /**
@@ -123,7 +132,13 @@ final class InfoBannerRepository extends Repository
             'id' => $line->getId(),
         ]);
 
-        return $this->fetchLine($line->getId());
+        /** @var int */
+        $id = $line->getId();
+
+        /** @var InfoBannerLine */
+        $updatedLine = $this->fetchLine($id);
+
+        return $updatedLine;
     }
 
     /**

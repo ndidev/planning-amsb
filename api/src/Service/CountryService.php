@@ -20,7 +20,7 @@ final class CountryService
 
     public function __construct()
     {
-        $this->countryRepository = new CountryRepository();
+        $this->countryRepository = new CountryRepository($this);
     }
 
     /**
@@ -32,7 +32,7 @@ final class CountryService
      * 
      * @return Country 
      */
-    public function makeCountry(array $rawData): Country
+    public function makeCountryFromDatabase(array $rawData): Country
     {
         return (new Country())
             ->setISO($rawData["iso"] ?? "")

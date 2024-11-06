@@ -6,8 +6,9 @@ namespace App\Repository;
 
 use App\Core\Component\Collection;
 use App\Core\Component\ETAConverter;
+use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\DB\DBException;
-use App\DTO\ShippingFilterDTO;
+use App\DTO\Filter\ShippingFilterDTO;
 use App\DTO\ShippingStatsDetailsDTO;
 use App\DTO\ShippingStatsSummaryDTO;
 use App\Entity\Shipping\ShippingCall;
@@ -15,17 +16,12 @@ use App\Entity\Shipping\ShippingCallCargo;
 use App\Service\ShippingService;
 
 /**
- * @phpstan-type DraftsPerTonnage array{
- *                                  navire: string,
- *                                  date: string,
- *                                  te: float,
- *                                  tonnage: float,
- *                                }
- * 
- * @phpstan-type ShippingStatsSummary array{
- *                                      Total: int,
-                                        "Par année": array{int, array{int, array{nombre: int, ids: int[]}}},
- *                                    }
+ * @phpstan-type DraftsPerTonnage list<array{
+ *                                       navire: string,
+ *                                       date: string,
+ *                                       te: float,
+ *                                       tonnage: float,
+ *                                     }>
  * 
  * @phpstan-type ShipsInOps list<array{
  *                                 navire: string,
@@ -130,6 +126,11 @@ final class ShippingRepository extends Repository
 
         // Escales
         $callsRequest = $this->mysql->query($callsStatement);
+
+        if (!$callsRequest) {
+            throw new DBException("Impossible de récupérer les escales.");
+        }
+
         $callsRaw = $callsRequest->fetchAll();
 
         $cargoesRaw = [];
@@ -152,7 +153,13 @@ final class ShippingRepository extends Repository
                 nombre_outturn
             FROM consignation_escales_marchandises
             WHERE escale_id IN (" . implode(",", $callsIds) . ")";
+
             $cargoesRequest = $this->mysql->query($cargoesStatement);
+
+            if (!$cargoesRequest) {
+                throw new DBException("Impossible de récupérer les marchandises.");
+            }
+
             $cargoesRaw = $cargoesRequest->fetchAll();
         }
 
@@ -366,7 +373,10 @@ final class ShippingRepository extends Repository
             ]);
         }
 
-        return $this->fetchCall($lastInsertId);
+        /** @var ShippingCall */
+        $newShippingCall = $this->fetchCall($lastInsertId);
+
+        return $newShippingCall;
     }
 
     /**
@@ -378,6 +388,12 @@ final class ShippingRepository extends Repository
      */
     public function updateCall(ShippingCall $call): ShippingCall
     {
+        $id = $call->getId();
+
+        if (!$id) {
+            throw new ClientException("ID de l'escale manquant");
+        }
+
         $callStatement =
             "UPDATE consignation_planning
             SET
@@ -500,7 +516,10 @@ final class ShippingRepository extends Repository
             ]);
         }
 
-        return $this->fetchCall($call->getId());
+        /** @var ShippingCall */
+        $updatedShippingCall = $this->fetchCall($id);
+
+        return $updatedShippingCall;
     }
 
     /**
@@ -569,7 +588,13 @@ final class ShippingRepository extends Repository
     {
         $statement = "SELECT * FROM drafts_par_tonnage";
 
-        $draftsPerTonnage = $this->mysql->query($statement)->fetchAll();
+        $draftsPerTonnageRequest = $this->mysql->query($statement);
+
+        if (!$draftsPerTonnageRequest) {
+            throw new DBException("Impossible de récupérer les tirants d'eau.");
+        }
+
+        $draftsPerTonnage = $draftsPerTonnageRequest->fetchAll();
 
         return $draftsPerTonnage;
     }
@@ -653,6 +678,10 @@ final class ShippingRepository extends Repository
 
         $callsRequest = $this->mysql->query($callsStatement);
 
+        if (!$callsRequest) {
+            throw new DBException("Impossible de récupérer les détails des stats.");
+        }
+
         $calls = $callsRequest->fetchAll();
 
         $statsDetails = new ShippingStatsDetailsDTO($calls);
@@ -675,6 +704,10 @@ final class ShippingRepository extends Repository
             ORDER BY navire ASC";
 
         $request = $this->mysql->query($statement);
+
+        if (!$request) {
+            throw new DBException("Impossible de récupérer les noms de navire.");
+        }
 
         $shipsNames = $request->fetchAll(\PDO::FETCH_COLUMN);
 
@@ -729,6 +762,10 @@ final class ShippingRepository extends Repository
 
         $request = $this->mysql->query($statement);
 
+        if (!$request) {
+            throw new DBException("Impossible de récupérer les marchandises.");
+        }
+
         $cargoNames = $request->fetchAll(\PDO::FETCH_COLUMN);
 
         return $cargoNames;
@@ -749,6 +786,10 @@ final class ShippingRepository extends Repository
             ORDER BY client ASC";
 
         $request = $this->mysql->query($statement);
+
+        if (!$request) {
+            throw new DBException("Impossible de récupérer les clients.");
+        }
 
         $customersNames = $request->fetchAll(\PDO::FETCH_COLUMN);
 

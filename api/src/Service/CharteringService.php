@@ -3,7 +3,8 @@
 namespace App\Service;
 
 use App\Core\Component\Collection;
-use App\DTO\CharteringFilterDTO;
+use App\Core\Exceptions\Server\DB\DBException;
+use App\DTO\Filter\CharteringFilterDTO;
 use App\Entity\Chartering\Charter;
 use App\Entity\Chartering\CharterLeg;
 use App\Repository\CharteringRepository;
@@ -42,10 +43,12 @@ use App\Repository\CharteringRepository;
 final class CharteringService
 {
     private CharteringRepository $charteringRepository;
+    private ThirdPartyService $thirdPartyService;
 
     public function __construct()
     {
-        $this->charteringRepository = new CharteringRepository();
+        $this->charteringRepository = new CharteringRepository($this);
+        $this->thirdPartyService = new ThirdPartyService();
     }
 
     /**
@@ -59,18 +62,16 @@ final class CharteringService
      */
     public function makeCharterFromDatabase(array $rawData): Charter
     {
-        $thirdPartyService = new ThirdPartyService();
-
         $charter = (new Charter())
             ->setId($rawData["id"] ?? null)
             ->setStatus($rawData["statut"] ?? 0)
             ->setLaycanStart($rawData["lc_debut"] ?? null)
             ->setLaycanEnd($rawData["lc_fin"] ?? null)
             ->setCpDate($rawData['cp_date'] ?? null)
-            ->setVesselName($rawData['navire'] ?? null)
-            ->setCharterer($thirdPartyService->getThirdParty($rawData['affreteur'] ?? null))
-            ->setShipOperator($thirdPartyService->getThirdParty($rawData['armateur'] ?? null))
-            ->setShipbroker($thirdPartyService->getThirdParty($rawData['courtier'] ?? null))
+            ->setVesselName($rawData['navire'] ?? '')
+            ->setCharterer($this->thirdPartyService->getThirdParty($rawData['affreteur'] ?? null))
+            ->setShipOperator($this->thirdPartyService->getThirdParty($rawData['armateur'] ?? null))
+            ->setShipbroker($this->thirdPartyService->getThirdParty($rawData['courtier'] ?? null))
             ->setFreightPayed((float) ($rawData['fret_achat'] ?? 0))
             ->setFreightSold((float) ($rawData['fret_vente'] ?? 0))
             ->setDemurragePayed((float) ($rawData['surestaries_achat'] ?? 0))
@@ -98,18 +99,16 @@ final class CharteringService
      */
     public function makeCharterFromFormData(array $rawData): Charter
     {
-        $thirdPartyService = new ThirdPartyService();
-
         $charter = (new Charter())
             ->setId($rawData["id"] ?? null)
             ->setStatus($rawData["statut"] ?? 0)
             ->setLaycanStart($rawData["lc_debut"] ?? null)
             ->setLaycanEnd($rawData["lc_fin"] ?? null)
             ->setCpDate($rawData['cp_date'] ?? null)
-            ->setVesselName($rawData['navire'] ?? null)
-            ->setCharterer($thirdPartyService->getThirdParty($rawData['affreteur'] ?? null))
-            ->setShipOperator($thirdPartyService->getThirdParty($rawData['armateur'] ?? null))
-            ->setShipbroker($thirdPartyService->getThirdParty($rawData['courtier'] ?? null))
+            ->setVesselName($rawData['navire'] ?? '')
+            ->setCharterer($this->thirdPartyService->getThirdParty($rawData['affreteur'] ?? null))
+            ->setShipOperator($this->thirdPartyService->getThirdParty($rawData['armateur'] ?? null))
+            ->setShipbroker($this->thirdPartyService->getThirdParty($rawData['courtier'] ?? null))
             ->setFreightPayed((float) ($rawData['fret_achat'] ?? 0))
             ->setFreightSold((float) ($rawData['fret_vente'] ?? 0))
             ->setDemurragePayed((float) ($rawData['surestaries_achat'] ?? 0))
@@ -200,12 +199,16 @@ final class CharteringService
     /**
      * Retrieves a charter.
      * 
-     * @param int $id ID of the charter to retrieve.
+     * @param ?int $id ID of the charter to retrieve.
      * 
      * @return ?Charter Retrieved charter.
      */
-    public function getCharter(int $id): ?Charter
+    public function getCharter(?int $id): ?Charter
     {
+        if ($id === null) {
+            return null;
+        }
+
         return $this->charteringRepository->fetchCharter($id);
     }
 
@@ -247,10 +250,12 @@ final class CharteringService
      * 
      * @param int $id ID of the charter to delete.
      * 
-     * @return bool TRUE if successful, FALSE if error.
+     * @return void
+     * 
+     * @throws DBException Erreur lors de la suppression
      */
-    public function deleteCharter(int $id): bool
+    public function deleteCharter(int $id): void
     {
-        return $this->charteringRepository->deleteCharter($id);
+        $this->charteringRepository->deleteCharter($id);
     }
 }

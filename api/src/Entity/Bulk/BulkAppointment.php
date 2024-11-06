@@ -35,9 +35,16 @@ class BulkAppointment extends AbstractEntity
         return $this;
     }
 
+    /**
+     * @param bool $sqlFormat 
+     * 
+     * @return \DateTimeImmutable|string|null 
+     * 
+     * @phpstan-return ($sqlFormat is false ? \DateTimeImmutable|null :string|null)
+     */
     public function getDate(bool $sqlFormat = false): \DateTimeImmutable|string|null
     {
-        if (true === $sqlFormat) {
+        if (true === $sqlFormat && null !== $this->date) {
             return $this->date->format("Y-m-d");
         } else {
             return $this->date;
@@ -55,6 +62,13 @@ class BulkAppointment extends AbstractEntity
         return $this;
     }
 
+    /**
+     * @param bool $sqlFormat 
+     * 
+     * @return \DateTimeImmutable|string|null 
+     * 
+     * @phpstan-return ($sqlFormat is false ? \DateTimeImmutable|null :string|null)
+     */
     public function getTime(bool $sqlFormat = false): \DateTimeImmutable|string|null
     {
         if (true === $sqlFormat) {

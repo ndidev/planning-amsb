@@ -5,15 +5,17 @@ namespace App\Controller\Timber;
 use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
-use App\DTO\TimberFilterDTO;
+use App\DTO\Filter\TimberFilterDTO;
 use App\Service\TimberService;
 
 final class TimberAppointmentController extends Controller
 {
     private TimberService $timberService;
+    /** @phpstan-var Module::* $module */
     private string $module = Module::TIMBER;
     private string $sse_event = "bois/rdvs";
 
@@ -134,6 +136,7 @@ final class TimberAppointmentController extends Controller
 
         $appointment = $this->timberService->createAppointment($input);
 
+        /** @var int $id */
         $id = $appointment->getId();
 
         $this->response
@@ -147,12 +150,16 @@ final class TimberAppointmentController extends Controller
     /**
      * Met à jour un RDV.
      * 
-     * @param int $id id du RDV à modifier.
+     * @param ?int $id id du RDV à modifier.
      */
-    public function update(int $id): void
+    public function update(?int $id = null): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier un RDV bois.");
+        }
+
+        if (!$id) {
+            throw new BadRequestException("L'identifiant du RDV est obligatoire.");
         }
 
         if (!$this->timberService->appointmentExists($id)) {
@@ -171,9 +178,9 @@ final class TimberAppointmentController extends Controller
     /**
      * Met à jour certaines proriétés d'un RDV bois.
      * 
-     * @param int $id id du RDV à modifier.
+     * @param ?int $id id du RDV à modifier.
      */
-    public function patch(?int $id): void
+    public function patch(?int $id = null): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier un RDV bois.");
@@ -206,12 +213,16 @@ final class TimberAppointmentController extends Controller
     /**
      * Supprime un RDV.
      * 
-     * @param int $id id du RDV à supprimer.
+     * @param ?int $id id du RDV à supprimer.
      */
-    public function delete(int $id): void
+    public function delete(?int $id = null): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour supprimer un RDV bois.");
+        }
+
+        if (!$id) {
+            throw new BadRequestException("L'identifiant du RDV est obligatoire.");
         }
 
         if (!$this->timberService->appointmentExists($id)) {

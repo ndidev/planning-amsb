@@ -22,22 +22,22 @@ abstract class Controller
   /**
    * Requête HTTP.
    */
-  protected HTTPRequest $request;
+  protected readonly HTTPRequest $request;
 
   /**
    * Réponse HTTP.
    */
-  protected HTTPResponse $response;
+  protected readonly HTTPResponse $response;
 
   /**
    * Supported HTTP methods.
    */
-  protected string $supportedMethods;
+  protected readonly string $supportedMethods;
 
   /**
    * Server-Sent Events handler.
    */
-  public SSEHandler $sse;
+  public readonly SSEHandler $sse;
 
   public function __construct(
     string $supportedMethods = "OPTIONS, HEAD, GET",
@@ -45,14 +45,12 @@ abstract class Controller
   ) {
     $this->request = new HTTPRequest();
     $this->response = new HTTPResponse();
+    $this->sse = new SSEHandler();
+    $this->supportedMethods = $supportedMethods;
 
     if ($error) {
       return;
     }
-
-    $this->supportedMethods = $supportedMethods;
-
-    $this->sse = new SSEHandler();
 
     $this->processCORSpreflight();
 

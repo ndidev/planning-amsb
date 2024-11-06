@@ -17,10 +17,16 @@ abstract class Module
     /**
      * Attempts to convert a module name to a constant.
      * 
-     * @param string $temptativeModuleName
+     * @param ?string $temptativeModuleName
+     * 
+     * @phpstan-return ?self::*
      */
-    public static function tryFrom(string $temptativeModuleName): ?string
+    public static function tryFrom(?string $temptativeModuleName): ?string
     {
+        if (!$temptativeModuleName) {
+            return null;
+        }
+
         return match (strtolower($temptativeModuleName)) {
             "vrac" => self::BULK,
             "chartering" => self::CHARTERING,

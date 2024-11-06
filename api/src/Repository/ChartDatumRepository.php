@@ -5,6 +5,7 @@
 namespace App\Repository;
 
 use App\Core\Component\Collection;
+use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\ChartDatum;
 use App\Service\ChartDatumService;
 
@@ -24,7 +25,13 @@ final class ChartDatumRepository extends Repository
     {
         $statement = "SELECT * FROM config_cotes";
 
-        $chartDataRaw = $this->mysql->query($statement)->fetchAll();
+        $chartDataRequest = $this->mysql->query($statement);
+
+        if (!$chartDataRequest) {
+            throw new DBException("Impossible de récupérer les côtes.");
+        }
+
+        $chartDataRaw = $chartDataRequest->fetchAll();
 
         $chartDatumService = new ChartDatumService();
 
@@ -77,6 +84,9 @@ final class ChartDatumRepository extends Repository
             'name' => $datum->getName(),
         ]);
 
-        return $this->fetchDatum($datum->getName());
+        /** @var ChartDatum */
+        $updatedDatum = $this->fetchDatum($datum->getName());
+
+        return $updatedDatum;
     }
 }

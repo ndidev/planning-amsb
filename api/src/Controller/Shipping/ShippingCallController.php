@@ -7,6 +7,7 @@ namespace App\Controller\Shipping;
 use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
@@ -15,6 +16,7 @@ use App\Service\ShippingService;
 final class ShippingCallController extends Controller
 {
     private ShippingService $shippingService;
+    /** @phpstan-var Module::* $module */
     private string $module = Module::SHIPPING;
     private string $sseEventName = "consignation/escales";
 
@@ -73,7 +75,7 @@ final class ShippingCallController extends Controller
             throw new AccessException("Vous n'avez pas les droits pour accéder aux escales.");
         }
 
-        $archives = array_key_exists("archives", $this->request->getQuery());
+        $archives = $this->request->getQuery()->isSet('archives');
 
         $calls = $this->shippingService->getShippingCalls($archives);
 
@@ -131,6 +133,7 @@ final class ShippingCallController extends Controller
 
         $newCall = $this->shippingService->createShippingCall($input);
 
+        /** @var int $id */
         $id = $newCall->getId();
 
         $this->response
@@ -144,12 +147,16 @@ final class ShippingCallController extends Controller
     /**
      * Met à jour une escale.
      * 
-     * @param int $id id de l'escale à modifier.
+     * @param ?int $id id de l'escale à modifier.
      */
-    public function update(int $id): void
+    public function update(?int $id = null): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier une escale.");
+        }
+
+        if (!$id) {
+            throw new BadRequestException("L'identifiant de l'escale est obligatoire.");
         }
 
         if (!$this->shippingService->callExists($id)) {
@@ -168,12 +175,16 @@ final class ShippingCallController extends Controller
     /**
      * Supprime une escale.
      * 
-     * @param int $id id de l'escale à supprimer.
+     * @param ?int $id id de l'escale à supprimer.
      */
-    public function delete(int $id): void
+    public function delete(?int $id = null): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour supprimer une escale.");
+        }
+
+        if (!$id) {
+            throw new BadRequestException("L'identifiant de l'escale est obligatoire.");
         }
 
         if (!$this->shippingService->callExists($id)) {

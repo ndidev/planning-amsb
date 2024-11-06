@@ -10,27 +10,27 @@ use App\Core\Component\Module;
 
 /**
  * @phpstan-type UserArray array{
- *                           uid: string,
+ *                           uid: ?string,
  *                           login: string,
  *                           nom: string,
  *                           roles: UserRolesObject,
  *                           statut: string,
  *                           commentaire: string,
  *                           historique: string,
- *                           last_connection: string,
+ *                           last_connection: ?string,
  *                         }
  * 
  * @phpstan-type UserRolesObject object{
- *                                 bois: 0|1|2,
- *                                 vrac: 0|1|2,
- *                                 consignation: 0|1|2,
- *                                 chartering: 0|1|2,
- *                                 config: 0|1,
- *                                 tiers: 0|1,
- *                                 admin: 0|1,
+ *                                 bois?: 0|1|2,
+ *                                 vrac?: 0|1|2,
+ *                                 consignation?: 0|1|2,
+ *                                 chartering?: 0|1|2,
+ *                                 config?: 0|1,
+ *                                 tiers?: 0|1,
+ *                                 admin?: 0|1,
  *                               }
  */
-class User extends AbstractEntity
+class UserAccount extends AbstractEntity
 {
     /**
      * UID de l'utilisateur.
@@ -40,7 +40,7 @@ class User extends AbstractEntity
     /**
      * Identifiant de l'utilisateur.
      */
-    private ?string $login = null;
+    private string $login = '';
 
     /**
      * Hash du mot de passe.
@@ -71,12 +71,12 @@ class User extends AbstractEntity
     /**
      * Statut du compte de l'utilisateur.
      */
-    private AccountStatus|string $status = AccountStatus::INACTIVE;
+    private AccountStatus $status = AccountStatus::INACTIVE;
 
     /**
      * Rôles de l'utilisateur.
      */
-    private object $roles;
+    private \stdClass $roles;
 
     /**
      * Commentaires sur l'utilisateur.
@@ -107,12 +107,12 @@ class User extends AbstractEntity
         return $this;
     }
 
-    public function getLogin(): ?string
+    public function getLogin(): string
     {
         return $this->login;
     }
 
-    public function setLogin(?string $login): static
+    public function setLogin(string $login): static
     {
         $this->login = $login;
 
@@ -167,6 +167,13 @@ class User extends AbstractEntity
         return $this;
     }
 
+    /**
+     * @param bool $sqlFormat 
+     * 
+     * @return \DateTimeImmutable|string|null 
+     * 
+     * @phpstan-return ($sqlFormat is false ? \DateTimeImmutable|null :string|null)
+     */
     public function getLastLogin(bool $sqlFormat = false): \DateTimeImmutable|string|null
     {
         if (true === $sqlFormat) {
@@ -187,23 +194,21 @@ class User extends AbstractEntity
         return $this;
     }
 
-    public function getStatus(bool $value = false): AccountStatus|string
+    public function getStatus(): AccountStatus
     {
-        if (true === $value) {
-            return $this->status->value;
-        }
-
         return $this->status;
     }
 
     public function setStatus(AccountStatus|string $status): static
     {
         if (is_string($status)) {
-            $this->status = AccountStatus::tryFrom($status);
+            $statusFromEnum = AccountStatus::tryFrom($status);
 
-            if (null === $this->status) {
+            if (null === $statusFromEnum) {
                 throw new \InvalidArgumentException("Statut invalide");
             }
+
+            $this->status = $statusFromEnum;
         } else {
             $this->status = $status;
         }
@@ -216,9 +221,16 @@ class User extends AbstractEntity
         return $this->roles;
     }
 
-    public function setRoles(object $roles): static
+    public function setRoles(\stdClass $roles): static
     {
         $this->roles = $roles;
+
+        return $this;
+    }
+
+    public function setAdmin(bool $isAdmin): static
+    {
+        $this->roles->admin = (int) $isAdmin;
 
         return $this;
     }
@@ -259,7 +271,7 @@ class User extends AbstractEntity
         // Accès à l'accueil et à l'écran individuel de modification du nom/mdp
         if ($module === null || $module === Module::USER) return true;
 
-        return ($this->roles->$module ?? -1) >= UserRoles::ACCESS->value;
+        return ($this->roles->$module ?? UserRoles::NONE) >= UserRoles::ACCESS;
     }
 
     /**
@@ -271,7 +283,7 @@ class User extends AbstractEntity
      */
     public function canEdit(?string $module): bool
     {
-        return ($this->roles->$module ?? -1) >= UserRoles::EDIT->value;
+        return ($this->roles->$module ?? UserRoles::NONE) >= UserRoles::EDIT;
     }
 
     /**
@@ -294,7 +306,7 @@ class User extends AbstractEntity
             "login" => $this->getLogin(),
             "nom" => $this->getName(),
             "roles" => $this->getRoles(),
-            "statut" => $this->getStatus(),
+            "statut" => $this->getStatus()->value,
             "commentaire" => $this->getComments(),
             "historique" => $this->getHistory(),
             "last_connection" => $this->getLastLogin(true),

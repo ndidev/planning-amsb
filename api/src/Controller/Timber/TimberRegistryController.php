@@ -13,6 +13,7 @@ use App\Service\TimberService;
 final class TimberRegistryController extends Controller
 {
     private TimberService $timberService;
+    /** @phpstan-var Module::* $module */
     private string $module = Module::TIMBER;
 
     public function __construct()
@@ -53,23 +54,17 @@ final class TimberRegistryController extends Controller
             throw new AccessException();
         }
 
-        $query = $this->request->getQuery();
-
-        $defaultStartDate = DateUtils::format(DateUtils::SQL_DATE, DateUtils::getPreviousWorkingDay(new \DateTimeImmutable()));
+        $defaultStartDate = DateUtils::format(
+            DateUtils::SQL_DATE,
+            DateUtils::getPreviousWorkingDay(new \DateTimeImmutable())
+        );
         $defaultEndDate = date("Y-m-d");
 
         // Filtre
-        $startDate = new \DateTimeImmutable(
-            isset($query['date_debut'])
-                ? ($query['date_debut'] ?: $defaultStartDate)
-                : $defaultStartDate
-        );
-
-        $endDate = new \DateTimeImmutable(
-            isset($query['date_fin'])
-                ? ($query['date_fin'] ?: $defaultEndDate)
-                : $defaultEndDate
-        );
+        /** @var \DateTime $startDate */
+        $startDate = $this->request->getQuery()->getParam('date_debut', $defaultStartDate, 'datetime');
+        /** @var \DateTime $endDate */
+        $endDate = $this->request->getQuery()->getParam('date_fin', $defaultEndDate, 'datetime');
 
         $csv = $this->timberService->getChateringRegister($startDate, $endDate);
 

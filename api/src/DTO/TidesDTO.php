@@ -27,11 +27,12 @@ final class TidesDTO implements \JsonSerializable
     public function __construct(array $tides)
     {
         for ($i = 0; $i < count($tides); $i++) {
-            $this->tides[$i] = [];
-            $this->tides[$i]["date"] = $tides[$i]["date"];
-            $this->tides[$i]["heure"] = substr($tides[$i]["heure"], 0, -3);
-            $this->tides[$i]["te_cesson"] = (float) $tides[$i]["te_cesson"];
-            $this->tides[$i]["te_bassin"] = (float) $tides[$i]["te_bassin"];
+            $this->tides[$i] = [
+                "date" => $tides[$i]["date"],
+                "heure" => substr($tides[$i]["heure"], 0, -3),
+                "te_cesson" => (float) $tides[$i]["te_cesson"],
+                "te_bassin" => (float) $tides[$i]["te_bassin"],
+            ];
         }
     }
 

@@ -12,6 +12,7 @@ use App\Service\TimberService;
 final class TransportSuggestionsController extends Controller
 {
     private TimberService $service;
+    /** @phpstan-var Module::* $module */
     private string $module = Module::TIMBER;
 
     public function __construct()
@@ -52,10 +53,8 @@ final class TransportSuggestionsController extends Controller
             throw new AccessException();
         }
 
-        $query = $this->request->getQuery();
-
-        $loadingPlaceId = (int) ($query["chargement"] ?? 0);
-        $deliveryPlaceId = (int) ($query["livraison"] ?? 0);
+        $loadingPlaceId = (int) $this->request->getQuery()->getParam('chargement');
+        $deliveryPlaceId = (int) $this->request->getQuery()->getParam('livraison');
 
         $suggestions = $this->service->getTransportSuggestions($loadingPlaceId, $deliveryPlaceId);
 

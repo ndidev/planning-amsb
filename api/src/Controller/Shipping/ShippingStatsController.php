@@ -7,12 +7,13 @@ use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
-use App\DTO\ShippingFilterDTO;
+use App\DTO\Filter\ShippingFilterDTO;
 use App\Service\ShippingService;
 
 final class ShippingStatsController extends Controller
 {
     private ShippingService $shippingService;
+    /** @phpstan-var Module::* $module */
     private string $module = Module::SHIPPING;
 
     public function __construct(

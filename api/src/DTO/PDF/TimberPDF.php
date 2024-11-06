@@ -55,63 +55,67 @@ final class TimberPDF extends PlanningPDF
             $previousDate = null;
 
             foreach ($confirmedAppointments as $appointment) {
-                $formattedDate = DateUtils::format(DateUtils::DATE_FULL, $appointment->getDate());
+                $appointmentDate = $appointment->getDate();
+
+                $formattedDate = $appointmentDate
+                    ? DateUtils::format(DateUtils::DATE_FULL, $appointmentDate)
+                    : "Pas de date";
 
                 $loadingPlace = $appointment->getLoadingPlace();
                 $deliveryPlace = $appointment->getDeliveryPlace();
                 $customer = $appointment->getCustomer();
 
                 if (
-                    $loadingPlace->getCountry()->getISO() === 'FR'
-                    || $loadingPlace->getCountry()->getISO() === 'ZZ'
+                    $loadingPlace?->getCountry()?->getISO() === 'FR'
+                    || $loadingPlace?->getCountry()?->getISO() === 'ZZ'
                 ) {
-                    $loadingPostCode = ' ' . substr($loadingPlace->getPostCode(), 0, 2);
+                    $loadingPostCode = ' ' . substr((string) $loadingPlace->getPostCode(), 0, 2);
                     $loadingCountry = '';
                 } else {
                     $loadingPostCode = '';
-                    $loadingCountry = ' (' . $loadingPlace->getCountry()->getISO() . ')';
+                    $loadingCountry = ' (' . $loadingPlace?->getCountry()?->getISO() . ')';
                 }
 
                 if (
-                    $customer->getCountry()->getISO() === 'FR'
-                    || $customer->getCountry()->getISO() === 'ZZ'
+                    $customer?->getCountry()?->getISO() === 'FR'
+                    || $customer?->getCountry()?->getISO() === 'ZZ'
                 ) {
-                    $customerPostCode = ' ' . substr($customer->getPostCode(), 0, 2);
+                    $customerPostCode = ' ' . substr((string) $customer->getPostCode(), 0, 2);
                     $customerCountry = '';
                 } else {
                     $customerPostCode = '';
-                    $customerCountry = ' (' . $customer->getCountry()->getISO() . ')';
+                    $customerCountry = ' (' . $customer?->getCountry()?->getISO() . ')';
                 }
 
                 if (
-                    $deliveryPlace->getCountry()->getISO() === 'FR'
-                    || $deliveryPlace->getCountry()->getISO() === 'ZZ'
+                    $deliveryPlace?->getCountry()?->getISO() === 'FR'
+                    || $deliveryPlace?->getCountry()?->getISO() === 'ZZ'
                 ) {
-                    $deliveryPostCode = ' ' . substr($deliveryPlace->getPostCode(), 0, 2);
+                    $deliveryPostCode = ' ' . substr((string) $deliveryPlace->getPostCode(), 0, 2);
                     $deliveryCountry = '';
                 } else {
                     $deliveryPostCode = '';
-                    $deliveryCountry = ' (' . $deliveryPlace->getCountry()->getISO() . ')';
+                    $deliveryCountry = ' (' . $deliveryPlace?->getCountry()?->getISO() . ')';
                 }
 
                 if ($appointment->getDate() != $previousDate) {
                     $this->AddDate($formattedDate);
                 }
                 $this->AddLine(
-                    $loadingPlace->getId(),
-                    $loadingPlace->getShortName(),
+                    $loadingPlace?->getId(),
+                    $loadingPlace?->getShortName(),
                     $loadingPostCode,
-                    $loadingPlace->getCity(),
+                    $loadingPlace?->getCity(),
                     $loadingCountry,
-                    $customer->getId(),
-                    $customer->getShortName(),
+                    $customer?->getId(),
+                    $customer?->getShortName(),
                     $customerPostCode,
-                    $customer->getCity(),
+                    $customer?->getCity(),
                     $customerCountry,
-                    $deliveryPlace->getId(),
-                    $deliveryPlace->getShortName(),
+                    $deliveryPlace?->getId(),
+                    $deliveryPlace?->getShortName(),
                     $deliveryPostCode,
-                    $deliveryPlace->getCity(),
+                    $deliveryPlace?->getCity(),
                     $deliveryCountry,
                     $appointment->getTransportBroker()?->isAgency(),
                     $appointment->getTransportBroker()?->getShortName() ?? "À affréter",
@@ -135,65 +139,65 @@ final class TimberPDF extends PlanningPDF
          */
         if (count($appointmentsOnHold) > 0) {
             foreach ($appointmentsOnHold as $appointment) {
-                if ($appointment->getDate() === NULL) {
-                    $formattedDate = "Pas de date";
-                } else {
-                    $formattedDate = DateUtils::format(DateUtils::DATE_FULL, $appointment->getDate());
-                }
+                $appointmentDate = $appointment->getDate();
+
+                $formattedDate = $appointmentDate
+                    ? DateUtils::format(DateUtils::DATE_FULL, $appointmentDate)
+                    : "Pas de date";
 
                 $loadingPlace = $appointment->getLoadingPlace();
                 $deliveryPlace = $appointment->getDeliveryPlace();
                 $customer = $appointment->getCustomer();
 
                 if (
-                    $loadingPlace->getCountry()->getISO() === 'FR'
-                    || $loadingPlace->getCountry()->getISO() === 'ZZ'
+                    $loadingPlace?->getCountry()?->getISO() === 'FR'
+                    || $loadingPlace?->getCountry()?->getISO() === 'ZZ'
                 ) {
-                    $loadingPostCode = ' ' . substr($loadingPlace->getPostCode(), 0, 2);
+                    $loadingPostCode = ' ' . substr((string) $loadingPlace->getPostCode(), 0, 2);
                     $loadingCountry = '';
                 } else {
                     $loadingPostCode = '';
-                    $loadingCountry = ' (' . $loadingPlace->getCountry()->getISO() . ')';
+                    $loadingCountry = ' (' . $loadingPlace?->getCountry()?->getISO() . ')';
                 }
 
                 if (
-                    $customer->getCountry()->getISO() === 'FR'
-                    || $customer->getCountry()->getISO() === 'ZZ'
+                    $customer?->getCountry()?->getISO() === 'FR'
+                    || $customer?->getCountry()?->getISO() === 'ZZ'
                 ) {
-                    $customerPostCode = ' ' . substr($customer->getPostCode(), 0, 2);
+                    $customerPostCode = ' ' . substr((string) $customer->getPostCode(), 0, 2);
                     $customerCountry = '';
                 } else {
                     $customerPostCode = '';
-                    $customerCountry = ' (' . $customer->getCountry()->getISO() . ')';
+                    $customerCountry = ' (' . $customer?->getCountry()?->getISO() . ')';
                 }
 
                 if (
-                    $deliveryPlace->getCountry()->getISO() === 'FR'
-                    || $deliveryPlace->getCountry()->getISO() === 'ZZ'
+                    $deliveryPlace?->getCountry()?->getISO() === 'FR'
+                    || $deliveryPlace?->getCountry()?->getISO() === 'ZZ'
                 ) {
-                    $deliveryPostCode = ' ' . substr($deliveryPlace->getPostCode(), 0, 2);
+                    $deliveryPostCode = ' ' . substr((string) $deliveryPlace->getPostCode(), 0, 2);
                     $deliveryCountry = '';
                 } else {
                     $deliveryPostCode = '';
-                    $deliveryCountry = ' (' . $deliveryPlace->getCountry()->getISO() . ')';
+                    $deliveryCountry = ' (' . $deliveryPlace?->getCountry()?->getISO() . ')';
                 }
 
                 $this->AddLineAttente(
                     $formattedDate,
-                    $loadingPlace->getId(),
-                    $loadingPlace->getShortName(),
+                    $loadingPlace?->getId(),
+                    $loadingPlace?->getShortName(),
                     $loadingPostCode,
-                    $loadingPlace->getCity(),
+                    $loadingPlace?->getCity(),
                     $loadingCountry,
-                    $customer->getId(),
-                    $customer->getShortName(),
+                    $customer?->getId(),
+                    $customer?->getShortName(),
                     $customerPostCode,
-                    $customer->getCity(),
+                    $customer?->getCity(),
                     $customerCountry,
-                    $deliveryPlace->getId(),
-                    $deliveryPlace->getShortName(),
+                    $deliveryPlace?->getId(),
+                    $deliveryPlace?->getShortName(),
                     $deliveryPostCode,
-                    $deliveryPlace->getCity(),
+                    $deliveryPlace?->getCity(),
                     $deliveryCountry,
                     $appointment->getPublicComment()
                 );
@@ -285,23 +289,23 @@ final class TimberPDF extends PlanningPDF
     }
 
     private function AddLineAttente(
-        string $formattedDate,
-        int    $loadingId,
-        string $loadingName,
-        string $loadingPostCode,
-        string $loadingCity,
-        string $loadingCountry,
-        int    $customerId,
-        string $customerName,
-        string $customerPostCode,
-        string $customerCity,
-        string $customerCountry,
-        int    $deliveryId,
-        string $deliveryName,
-        string $deliveryPostCode,
-        string $deliveryCity,
-        string $deliveryCountry,
-        string $publicComments
+        ?string $formattedDate,
+        ?int    $loadingId,
+        ?string $loadingName,
+        ?string $loadingPostCode,
+        ?string $loadingCity,
+        ?string $loadingCountry,
+        ?int    $customerId,
+        ?string $customerName,
+        ?string $customerPostCode,
+        ?string $customerCity,
+        ?string $customerCountry,
+        ?int    $deliveryId,
+        ?string $deliveryName,
+        ?string $deliveryPostCode,
+        ?string $deliveryCity,
+        ?string $deliveryCountry,
+        string  $publicComments
     ): void {
         $this->SetFont('Roboto', '', 10);
         $this->SetTextColor(100, 100, 100);

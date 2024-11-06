@@ -66,7 +66,13 @@ class DateUtils
             $datetime = $date;
         }
 
-        return $formatter->format($datetime);
+        $formattedDate = $formatter->format($datetime);
+
+        if ($formattedDate === false) {
+            throw new \Exception("Date format error.");
+        }
+
+        return $formattedDate;
     }
 
     /**

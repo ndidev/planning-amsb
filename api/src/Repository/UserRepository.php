@@ -5,14 +5,19 @@
 namespace App\Repository;
 
 use App\Core\Auth\AccountStatus;
-use App\Core\Exceptions\Client\Auth\InvalidAccountException;
 use App\Core\Exceptions\Server\DB\DBException;
+use App\Core\Exceptions\Server\ServerException;
 use App\DTO\CurrentUserFormDTO;
-use App\Entity\User;
+use App\Entity\UserAccount;
 use App\Service\UserService;
 
 final class UserRepository extends Repository
 {
+    public function __construct(private UserService $userService)
+    {
+        parent::__construct();
+    }
+
     public function userExists(string $uid): bool
     {
         return $this->mysql->exists("admin_users", $uid, "uid");
@@ -21,13 +26,19 @@ final class UserRepository extends Repository
     /**
      * Récupère tous les comptes utilisateurs.
      * 
-     * @return User[] Comptes utilisateurs.
+     * @return UserAccount[] Comptes utilisateurs.
      */
     public function fetchAllUsers(): array
     {
         $statement = "SELECT * FROM admin_users ORDER BY login";
 
-        $usersRaw = $this->mysql->query($statement)->fetchAll();
+        $userRequest = $this->mysql->query($statement);
+
+        if (!$userRequest) {
+            throw new DBException("Impossible de récupérer les utilisateurs.");
+        }
+
+        $usersRaw = $userRequest->fetchAll();
 
         // Update Redis
         $this->redis->pipeline();
@@ -36,11 +47,10 @@ final class UserRepository extends Repository
         }
         $this->redis->exec();
 
-        $userService = new UserService();
-
-        $users = array_map(fn(array $userRaw) => $userService->makeUserFromDatabase($userRaw), $usersRaw);
-
-        unset($usersRaw);
+        $users = array_map(
+            fn($userRaw) => $this->userService->makeUserFromDatabase($userRaw),
+            $usersRaw
+        );
 
         return $users;
     }
@@ -50,9 +60,9 @@ final class UserRepository extends Repository
      * 
      * @param string $uid UID du compte à récupérer.
      * 
-     * @return ?User Compte utilisateur récupéré
+     * @return ?UserAccount Compte utilisateur récupéré
      */
-    public function fetchUserByUid(string $uid): ?User
+    public function fetchUserByUid(string $uid): ?UserAccount
     {
         // Tentative Redis
         $userRaw = $this->redis->hGetAll("admin:users:{$uid}");
@@ -74,44 +84,29 @@ final class UserRepository extends Repository
             $this->redis->hMSet("admin:users:{$userRaw["uid"]}", $userRaw);
         }
 
-        $user = (new UserService())->makeUserFromDatabase($userRaw);
-
-        unset($userRaw);
+        $user = $this->userService->makeUserFromDatabase($userRaw);
 
         return $user;
     }
 
     /**
-     * Récupère un compte utilisateur.
-     * 
-     * @param string $login Login du compte à récupérer.
-     * 
-     * @return User Compte utilisateur.
-     */
-    public function fetchUserByLogin(string $login): User
-    {
-        $request = $this->mysql->prepare("SELECT uid FROM admin_users WHERE login = :login");
-        $request->execute(["login" => $login]);
-        $uid = $request->fetch(\PDO::FETCH_COLUMN);
-
-        if (!$uid) {
-            throw new InvalidAccountException();
-        }
-
-        return $this->fetchUserByUid($uid);
-    }
-
-    /**
      * Crée un compte utilisateur.
      * 
-     * @param User $user Eléments du compte à créer.
+     * @param UserAccount $user Eléments du compte à créer.
      * @param string $adminName Nom de l'admin créant le compte.
      * 
-     * @return User Compte utilisateur créé
+     * @return UserAccount Compte utilisateur créé
      */
-    public function createUser(User $user, string $adminName): User
+    public function createUser(UserAccount $user, string $adminName): UserAccount
     {
-        $uids = $this->mysql->query("SELECT uid FROM admin_users")->fetchAll(\PDO::FETCH_COLUMN);
+        $uidsRequest = $this->mysql->query("SELECT uid FROM admin_users");
+
+        if (!$uidsRequest) {
+            throw new DBException("Impossible de récupérer les UIDs.");
+        }
+
+        /** @var string[] $uids */
+        $uids = $uidsRequest->fetchAll(\PDO::FETCH_COLUMN);
 
         do {
             $uid = substr(md5(uniqid()), 0, 8);
@@ -136,9 +131,13 @@ final class UserRepository extends Repository
 
         $request = $this->mysql->prepare($statement);
 
+        if (!$request) {
+            throw new DBException("Impossible de préparer la requête.");
+        }
+
         $request->execute([
             "uid" => $uid,
-            "login" => mb_substr($user->getLogin(), 0, 255),
+            "login" => mb_substr((string) $user->getLogin(), 0, 255),
             "nom" => mb_substr($user->getName(), 0, 255),
             "statut" => AccountStatus::PENDING->value,
             "roles" => json_encode($user->getRoles()),
@@ -146,27 +145,52 @@ final class UserRepository extends Repository
             "admin" => $adminName
         ]);
 
-        [$uid] = $this->mysql->query("SELECT uid FROM admin_users WHERE login = '{$user->getLogin()}'")->fetch(\PDO::FETCH_NUM);
+        // Récupérer l'UID du nouvel utilisateur
+        $uidRequest = $this->mysql->query("SELECT uid FROM admin_users WHERE login = '{$user->getLogin()}'");
+
+        if (!$uidRequest) {
+            throw new DBException("Impossible de récupérer l'UID du nouvel utilisateur.");
+        }
+
+        /** @var string|false $uid */
+        $uid = $uidRequest->fetch(\PDO::FETCH_COLUMN);
+
+        if (!$uid) {
+            throw new DBException("Impossible de récupérer l'UID du nouvel utilisateur.");
+        }
 
         $this->updateRedis($uid);
 
-        return $this->fetchUserByUid($uid);
+        /** @var UserAccount */
+        $newUser = $this->fetchUserByUid($uid);
+
+        return $newUser;
     }
 
     /**
      * Met à jour un compte utilisateur.
      * 
-     * @param User   $user      Eléments du compte à modifier.
+     * @param UserAccount   $user      Eléments du compte à modifier.
      * @param string $adminName Nom de l'admin modifiant le compte.
      * 
-     * @return User Compte utilisateur modifié.
+     * @return UserAccount Compte utilisateur modifié.
      */
-    public function updateUser(User $user, string $adminName): User
+    public function updateUser(UserAccount $user, string $adminName): UserAccount
     {
         $uid = $user->getUid();
 
+        if (!$uid) {
+            throw new ServerException("Impossible de mettre à jour un utilisateur sans UID.");
+        }
+
+        $userCurrentInfo = $this->fetchUserByUid($uid);
+
+        if (!$userCurrentInfo) {
+            throw new ServerException("Impossible de mettre à jour un utilisateur inexistant.");
+        }
+
         /** @var AccountStatus $currentStatus */
-        $currentStatus = $this->fetchUserByUid($user->getUid())->getStatus();
+        $currentStatus = $userCurrentInfo->getStatus();
 
         /** @var AccountStatus $newStatus */
         $newStatus = $user->getStatus();
@@ -236,7 +260,10 @@ final class UserRepository extends Repository
 
         $this->updateRedis($uid);
 
-        return $this->fetchUserByUid($uid);
+        /** @var UserAccount */
+        $updatedUser = $this->fetchUserByUid($uid);
+
+        return $updatedUser;
     }
 
     /**
@@ -277,11 +304,15 @@ final class UserRepository extends Repository
     /**
      * Met à jours les informations de l'utilisateur dans Redis.
      */
-    public function updateRedis(string $uid): void
+    private function updateRedis(string $uid): void
     {
-        $user = $this->mysql
-            ->query("SELECT * FROM admin_users WHERE uid = '{$uid}'")
-            ->fetch();
+        $userRequest = $this->mysql->query("SELECT * FROM admin_users WHERE uid = '{$uid}'");
+
+        if (!$userRequest) {
+            throw new DBException("Impossible de récupérer les informations de l'utilisateur.");
+        }
+
+        $user = $userRequest->fetch();
 
         // Copie des infos dans Redis (hash)
         $this->redis->hMSet("admin:users:{$uid}", $user);
@@ -319,7 +350,7 @@ final class UserRepository extends Repository
         $this->redis->exec();
     }
 
-    public function updateCurrentUser(CurrentUserFormDTO $user): User
+    public function updateCurrentUser(CurrentUserFormDTO $user): UserAccount
     {
         $uid = $user->getUid();
 
@@ -343,6 +374,9 @@ final class UserRepository extends Repository
 
         $this->updateRedis($uid);
 
-        return $this->fetchUserByUid($uid);
+        /** @var UserAccount */
+        $updatedUser = $this->fetchUserByUid($uid);
+
+        return $updatedUser;
     }
 }

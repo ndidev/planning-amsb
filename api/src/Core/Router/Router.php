@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Core;
+namespace App\Core\Router;
 
 /**
  * Router.
@@ -10,19 +10,19 @@ namespace App\Core;
  * 
  * @link http://altorouter.com/
  * 
- * @phpstan-type Route array{0: string, 1: mixed, 2?: string}
+ * @phpstan-type RouteArray array{0: string, 1: mixed, 2?: string}
  */
 class Router
 {
     /**
      * Array of all routes (incl. named routes).
-     * @phpstan-var Route[]
+     * @var Route[]
      */
     protected array $routes = [];
 
     /**
      * Array of all named routes.
-     * @phpstan-var array<string, string>
+     * @var array<string, Route>
      */
     protected array $namedRoutes = [];
 
@@ -33,14 +33,7 @@ class Router
 
     /**
      * Array of default match types (regex helpers)
-     * @var array{
-     *        i: string,
-     *        a: string,
-     *        h: string,
-     *        '*': string,
-     *        '**': string,
-     *        '': string, 
-     *      }
+     * @var array<string, string>
      */
     protected array $matchTypes = [
         'i'  => '[0-9]++',
@@ -58,7 +51,7 @@ class Router
      * @param string $basePath
      * @param array<string, string> $matchTypes
      * 
-     * @phpstan-param Route[] $routes
+     * @phpstan-param RouteArray[] $routes
      */
     public function __construct(
         array $routes = [],
@@ -74,9 +67,7 @@ class Router
      * Retrieves all routes.
      * Useful if you want to process or display routes.
      * 
-     * @return array All routes.
-     * 
-     * @phpstan-return Route[]
+     * @return Route[] All routes.
      */
     public function getRoutes(): array
     {
@@ -96,7 +87,7 @@ class Router
      *
      * @param array|\Traversable $routes
      * 
-     * @phpstan-param array<Route>|\Traversable<Route> $routes
+     * @phpstan-param array<RouteArray>|\Traversable<RouteArray> $routes
      * 
      * @author Koen Punt
      */
@@ -130,16 +121,17 @@ class Router
     /**
      * Map a route to a target
      *
-     * @param string $route The route regex, custom regex must start with an @. You can use multiple pre-set regex filters, like [i:id]
+     * @param string $path The route regex, custom regex must start with an @. You can use multiple pre-set regex filters, like [i:id]
      * @param mixed $target The target where this route should point to. Can be anything.
      * @param string $name Optional name of this route. Supply if you want to reverse route this url in your application.
      * 
      * @throws \RuntimeException
      */
-    public function map(string $route, mixed $target, ?string $name = null): void
+    public function map(string $path, mixed $target, ?string $name = null): void
     {
+        $route = new Route($path, $target, $name);
 
-        $this->routes[] = [$route, $target, $name];
+        $this->routes[] = $route;
 
         if ($name) {
             if (isset($this->namedRoutes[$name])) {
@@ -175,9 +167,10 @@ class Router
         $route = $this->namedRoutes[$routeName];
 
         // prepend base path to route url again
-        $url = $this->basePath . $route;
+        $path = $route->getPath();
+        $url = $this->basePath . $path;
 
-        if (preg_match_all('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`', $route, $matches, PREG_SET_ORDER)) {
+        if (preg_match_all('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`', $path, $matches, PREG_SET_ORDER)) {
             foreach ($matches as $index => $match) {
                 list($block, $pre, $type, $param, $optional) = $match;
 
@@ -206,7 +199,7 @@ class Router
      * 
      * @param string $requestUrl The request url to match.
      * 
-     * @return array{target: string, params: array<string, mixed>, name: string}|false Array with route information on success, false on failure (no match).
+     * @return array{target: string, params: array<string, mixed>, name: ?string}|false Array with route information on success, false on failure (no match).
      */
     public function match(?string $requestUrl = null): array|false
     {
@@ -228,27 +221,27 @@ class Router
 
         $lastRequestUrlChar = $requestUrl ? $requestUrl[strlen($requestUrl) - 1] : '';
 
-        foreach ($this->routes as $handler) {
-            list($route, $target, $name) = $handler;
+        foreach ($this->routes as $route) {
+            list($path, $target, $name) = $route->toArray();
 
-            if ($route === '*') {
+            if ($path === '*') {
                 // * wildcard (matches all)
                 $match = true;
-            } elseif (isset($route[0]) && $route[0] === '@') {
+            } elseif (isset($path[0]) && $path[0] === '@') {
                 // @ regex delimiter
-                $pattern = '`' . substr($route, 1) . '`u';
+                $pattern = '`' . substr($path, 1) . '`u';
                 $match = preg_match($pattern, $requestUrl, $params) === 1;
-            } elseif (($position = strpos($route, '[')) === false) {
+            } elseif (($position = strpos($path, '[')) === false) {
                 // No params in url, do string comparison
-                $match = strcmp($requestUrl, $route) === 0;
+                $match = strcmp($requestUrl, $path) === 0;
             } else {
                 // Compare longest non-param string with url before moving on to regex
                 // Check if last character before param is a slash, because it could be optional if param is optional too (see https://github.com/dannyvankooten/AltoRouter/issues/241)
-                if (strncmp($requestUrl, $route, $position) !== 0 && ($lastRequestUrlChar === '/' || $route[$position - 1] !== '/')) {
+                if (strncmp($requestUrl, $path, $position) !== 0 && ($lastRequestUrlChar === '/' || $path[$position - 1] !== '/')) {
                     continue;
                 }
 
-                $regex = $this->compileRoute($route);
+                $regex = $this->compileRoute($path);
                 $match = preg_match($regex, $requestUrl, $params) === 1;
             }
 

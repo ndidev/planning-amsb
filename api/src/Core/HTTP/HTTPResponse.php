@@ -79,7 +79,7 @@ final class HTTPResponse
 
 
     private int $code = self::HTTP_OK_200;
-    /** @var array<string, string> $headers */
+    /** @var array<string|int, string> $headers */
     private array $headers = [];
     private ?string $body = null;
     private bool $compression = true;
@@ -322,12 +322,30 @@ final class HTTPResponse
             switch ($selectedCompressionMethod) {
                 case 'gzip':
                     // GZIP (== PHP gzencode)
-                    $this->body = gzencode($this->body);
+                    $compressedBody = gzencode($this->body);
+
+                    // Si la compression est inefficace, on ne compresse pas
+                    if ($compressedBody && strlen($compressedBody) >= strlen($this->body)) {
+                        $selectedCompressionMethod = "identity";
+                        break;
+                    }
+
+                    /** @var string $compressedBody */
+                    $this->body = $compressedBody;
                     break;
 
                 case 'deflate':
                     // HTTP DEFLATE (== PHP gzcompress)
-                    $this->body = gzcompress($this->body, 9);
+                    $compressedBody = gzcompress($this->body, 9);
+
+                    // Si la compression est inefficace, on ne compresse pas
+                    if ($compressedBody && strlen($compressedBody) >= strlen($this->body)) {
+                        $selectedCompressionMethod = "identity";
+                        break;
+                    }
+
+                    /** @var string $compressedBody */
+                    $this->body = $compressedBody;
                     break;
 
                 case 'compress':

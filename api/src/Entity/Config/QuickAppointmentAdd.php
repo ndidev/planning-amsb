@@ -13,7 +13,7 @@ abstract class QuickAppointmentAdd extends AbstractEntity
 
     protected ?string $module;
 
-    public function getModule(): string
+    public function getModule(): ?string
     {
         return $this->module;
     }

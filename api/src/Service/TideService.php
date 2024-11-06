@@ -4,6 +4,7 @@
 
 namespace App\Service;
 
+use App\Core\Exceptions\Server\ServerException;
 use App\DTO\NewTidesDTO;
 use App\DTO\TidesDTO;
 use App\Repository\TideRepository;
@@ -63,6 +64,11 @@ final class TideService
     public function addTides(mixed $data): string
     {
         $content = file_get_contents($data["tmp_name"]);
+
+        if ($content === false) {
+            throw new ServerException("Echec de la lecture du fichier.");
+        }
+
         // Delete the BOM
         $content = str_replace("\u{FEFF}", "", $content);
         // Delete the Windows carriage return
@@ -81,6 +87,9 @@ final class TideService
 
             // Push each line into the tides array
             [$date, $time, $heightOfWater] = str_getcsv($line, $separator);
+            /** @var string $date */
+            /** @var string $time */
+            /** @var string $heightOfWater */
             array_push($newTides, [
                 $date,
                 $time,
@@ -99,10 +108,9 @@ final class TideService
      * Deletes tides for a specific year.
      *
      * @param int $year The year for which to delete the tides.
-     * @return bool Returns true if the tides were successfully deleted, false otherwise.
      */
-    public function deleteTides(int $year): bool
+    public function deleteTides(int $year): void
     {
-        return $this->tideRepository->delete($year);
+        $this->tideRepository->delete($year);
     }
 }

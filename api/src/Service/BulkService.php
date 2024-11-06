@@ -3,9 +3,11 @@
 namespace App\Service;
 
 use App\Core\Component\Collection;
+use App\Core\Exceptions\Client\NotFoundException;
 use App\Entity\Bulk\BulkAppointment;
 use App\Entity\Bulk\BulkProduct;
 use App\Entity\Bulk\BulkQuality;
+use App\Entity\ThirdParty;
 use App\Repository\BulkAppointmentRepository;
 use App\Repository\BulkProductRepository;
 
@@ -44,11 +46,13 @@ final class BulkService
 {
     private BulkAppointmentRepository $appointmentRepository;
     private BulkProductRepository $productRepository;
+    private ThirdPartyService $thirdPartyService;
 
     public function __construct()
     {
-        $this->appointmentRepository = new BulkAppointmentRepository();
-        $this->productRepository = new BulkProductRepository();
+        $this->appointmentRepository = new BulkAppointmentRepository($this);
+        $this->productRepository = new BulkProductRepository($this);
+        $this->thirdPartyService = new ThirdPartyService();
     }
 
     // ============
@@ -66,8 +70,6 @@ final class BulkService
      */
     public function makeBulkAppointmentFromDatabase(array $rawData): BulkAppointment
     {
-        $thirdPartyService = new ThirdPartyService();
-
         $appointment = (new BulkAppointment())
             ->setId($rawData["id"] ?? null)
             ->setDate($rawData["date_rdv"] ?? new \DateTimeImmutable("now"))
@@ -76,9 +78,9 @@ final class BulkService
             ->setQuality($this->getQuality($rawData["qualite"] ?? null))
             ->setQuantity($rawData["quantite"] ?? 0, $rawData["max"] ?? false)
             ->setReady($rawData["commande_prete"] ?? false)
-            ->setSupplier($thirdPartyService->getThirdParty($rawData["fournisseur"] ?? null))
-            ->setCustomer($thirdPartyService->getThirdParty($rawData["client"] ?? null))
-            ->setCarrier($thirdPartyService->getThirdParty($rawData["transporteur"] ?? null))
+            ->setSupplier($this->thirdPartyService->getThirdParty($rawData["fournisseur"] ?? null))
+            ->setCustomer($this->thirdPartyService->getThirdParty($rawData["client"] ?? null))
+            ->setCarrier($this->thirdPartyService->getThirdParty($rawData["transporteur"] ?? null))
             ->setOrderNumber($rawData["num_commande"] ?? "")
             ->setComments($rawData["commentaire"] ?? "");
 
@@ -96,8 +98,6 @@ final class BulkService
      */
     public function makeBulkAppointmentFromFormData(array $rawData): BulkAppointment
     {
-        $thirdPartyService = new ThirdPartyService();
-
         $appointment = (new BulkAppointment())
             ->setId($rawData["id"] ?? null)
             ->setDate($rawData["date_rdv"] ?? new \DateTimeImmutable("now"))
@@ -106,9 +106,9 @@ final class BulkService
             ->setQuality($this->getQuality($rawData["qualite"] ?? null))
             ->setQuantity($rawData["quantite"] ?? 0, $rawData["max"] ?? false)
             ->setReady($rawData["commande_prete"] ?? false)
-            ->setSupplier($thirdPartyService->getThirdParty($rawData["fournisseur"] ?? null))
-            ->setCustomer($thirdPartyService->getThirdParty($rawData["client"] ?? null))
-            ->setCarrier($thirdPartyService->getThirdParty($rawData["transporteur"] ?? null))
+            ->setSupplier($this->thirdPartyService->getThirdParty($rawData["fournisseur"] ?? null))
+            ->setCustomer($this->thirdPartyService->getThirdParty($rawData["client"] ?? null))
+            ->setCarrier($this->thirdPartyService->getThirdParty($rawData["transporteur"] ?? null))
             ->setOrderNumber($rawData["num_commande"] ?? "")
             ->setComments($rawData["commentaire"] ?? "");
 
@@ -147,6 +147,27 @@ final class BulkService
     public function getAppointment(int $id): ?BulkAppointment
     {
         return $this->appointmentRepository->getAppointment($id);
+    }
+
+    /**
+     * Get appointments for a supplier.
+     * 
+     * @param ThirdParty $supplier 
+     * @param \DateTimeInterface $startDate 
+     * @param \DateTimeInterface $endDate 
+     * 
+     * @return Collection<BulkAppointment>
+     */
+    public function getPdfAppointments(
+        ThirdParty $supplier,
+        \DateTimeInterface $startDate,
+        \DateTimeInterface $endDate,
+    ): Collection {
+        return $this->appointmentRepository->getPdfAppointments(
+            $supplier,
+            $startDate,
+            $endDate
+        );
     }
 
     /**
@@ -194,11 +215,17 @@ final class BulkService
      */
     public function patchAppointment(int $id, array $input): BulkAppointment
     {
-        if (isset($input["commande_prete"])) {
-            return $this->appointmentRepository->setIsReady($id, (bool) $input["commande_prete"]);
+        $appointment = $this->getAppointment($id);
+
+        if ($appointment === null) {
+            throw new NotFoundException("Le RDV vrac n'existe pas.");
         }
 
-        return $this->getAppointment($id);
+        if (isset($input["commande_prete"])) {
+            $appointment = $this->appointmentRepository->setIsReady($id, (bool) $input["commande_prete"]);
+        }
+
+        return $appointment;
     }
 
     /**

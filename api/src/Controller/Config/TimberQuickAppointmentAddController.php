@@ -5,6 +5,7 @@ namespace App\Controller\Config;
 use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
@@ -13,6 +14,7 @@ use App\Service\QuickAppointmentAddService;
 final class TimberQuickAppointmentAddController extends Controller
 {
     private QuickAppointmentAddService $quickAppointmentAddService;
+    /** @phpstan-var Module::* $module */
     private string $module = Module::CONFIG;
     private string $sseEventName = "config/ajouts-rapides";
 
@@ -127,6 +129,7 @@ final class TimberQuickAppointmentAddController extends Controller
 
         $newQuickAppointment = $this->quickAppointmentAddService->createTimberQuickAppointmentAdd($input);
 
+        /** @var int $id */
         $id = $newQuickAppointment->getId();
 
         $this->response
@@ -140,9 +143,9 @@ final class TimberQuickAppointmentAddController extends Controller
     /**
      * Met à jour un ajout rapide.
      * 
-     * @param int $id id de l'ajout rapide à modifier.
+     * @param ?int $id id de l'ajout rapide à modifier.
      */
-    public function updateConfig(int $id): void
+    public function updateConfig(?int $id = null): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
@@ -150,6 +153,10 @@ final class TimberQuickAppointmentAddController extends Controller
 
         if (!$this->user->canEdit(Module::TIMBER)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier un ajout rapide bois.");
+        }
+
+        if (!$id) {
+            throw new BadRequestException("L'identifiant de l'ajout rapide est obligatoire.");
         }
 
         if (!$this->quickAppointmentAddService->quickAddExists(Module::TIMBER, $id)) {
@@ -168,9 +175,9 @@ final class TimberQuickAppointmentAddController extends Controller
     /**
      * Supprime un ajout rapide.
      * 
-     * @param int $id id de l'ajout rapide à supprimer.
+     * @param ?int $id id de l'ajout rapide à supprimer.
      */
-    public function deleteConfig(int $id): void
+    public function deleteConfig(?int $id = null): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
@@ -178,6 +185,10 @@ final class TimberQuickAppointmentAddController extends Controller
 
         if (!$this->user->canEdit(Module::TIMBER)) {
             throw new AccessException("Vous n'avez pas les droits pour supprimer un ajout rapide bois.");
+        }
+
+        if (!$id) {
+            throw new BadRequestException("L'identifiant de l'ajout rapide est obligatoire.");
         }
 
         if (!$this->quickAppointmentAddService->quickAddExists(Module::TIMBER, $id)) {

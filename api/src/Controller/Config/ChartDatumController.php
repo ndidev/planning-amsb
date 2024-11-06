@@ -5,6 +5,7 @@ namespace App\Controller\Config;
 use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
@@ -13,6 +14,7 @@ use App\Service\ChartDatumService;
 final class ChartDatumController extends Controller
 {
     private ChartDatumService $chartDatumService;
+    /** @phpstan-var Module::* $module */
     private string $module = Module::CONFIG;
     private string $sseEventName = "config/cotes";
 
@@ -99,9 +101,9 @@ final class ChartDatumController extends Controller
     /**
      * Met à jour une côte.
      * 
-     * @param string $name Côte à modifier.
+     * @param ?string $name Côte à modifier.
      */
-    public function update(string $name): void
+    public function update(?string $name = null): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier la configuration.");
@@ -109,6 +111,10 @@ final class ChartDatumController extends Controller
 
         if (!$this->user->canEdit(Module::SHIPPING)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier les côtes.");
+        }
+
+        if (!$name) {
+            throw new BadRequestException("L'identifiant de la côte est obligatoire.");
         }
 
         if (!$this->chartDatumService->datumExists($name)) {

@@ -14,6 +14,7 @@ use App\Service\ShippingService;
 final class DraftsPerTonnageController extends Controller
 {
     private ShippingService $shippingService;
+    /** @phpstan-var Module::* $module */
     private string $module = Module::SHIPPING;
 
     public function __construct()

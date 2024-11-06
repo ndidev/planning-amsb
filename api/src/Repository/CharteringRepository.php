@@ -2,16 +2,20 @@
 
 namespace App\Repository;
 
-use App\Core\Component\CharterStatus;
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\DB\DBException;
-use App\DTO\CharteringFilterDTO;
+use App\DTO\Filter\CharteringFilterDTO;
 use App\Entity\Chartering\Charter;
 use App\Entity\Chartering\CharterLeg;
 use App\Service\CharteringService;
 
 final class CharteringRepository extends Repository
 {
+    public function __construct(private CharteringService $charteringService)
+    {
+        parent::__construct();
+    }
+
     /**
      * Vérifie si une entrée existe dans la base de données.
      * 
@@ -83,15 +87,18 @@ final class CharteringRepository extends Repository
         if (count($chartersRaw) > 0) {
             $chartersIds = array_map(fn(array $charter) => $charter["id"], $chartersRaw);
             $legsStatement = "SELECT * FROM chartering_detail WHERE charter IN (" . implode(",", $chartersIds) . ")";
-            $legRequest = $this->mysql->query($legsStatement);
-            $legsRaw = $legRequest->fetchAll();
+            $legsRequest = $this->mysql->query($legsStatement);
+
+            if (!$legsRequest) {
+                throw new DBException("Impossible de récupérer les détails des affrètements.");
+            }
+
+            $legsRaw = $legsRequest->fetchAll();
         }
 
-        $charteringService = new CharteringService();
-
         $charters = array_map(
-            function (array $charterRaw) use ($charteringService, $legsRaw) {
-                $charter = $charteringService->makeCharterFromDatabase($charterRaw);
+            function (array $charterRaw) use ($legsRaw) {
+                $charter = $this->charteringService->makeCharterFromDatabase($charterRaw);
 
                 $filteredLegsRaw = array_values(
                     array_filter(
@@ -101,7 +108,7 @@ final class CharteringRepository extends Repository
                 );
 
                 $legs = array_map(
-                    fn(array $legRaw) => $charteringService->makeCharterLegFromDatabase($legRaw),
+                    fn(array $legRaw) => $this->charteringService->makeCharterLegFromDatabase($legRaw),
                     $filteredLegsRaw
                 );
 
@@ -164,11 +171,9 @@ final class CharteringRepository extends Repository
         $legsRequest->execute(["id" => $id]);
         $legsRaw = $legsRequest->fetchAll();
 
-        $charteringService = new CharteringService();
-
         $charterRaw["legs"] = $legsRaw;
 
-        $charter = $charteringService->makeCharterFromDatabase($charterRaw);
+        $charter = $this->charteringService->makeCharterFromDatabase($charterRaw);
 
         return $charter;
     }
@@ -264,7 +269,10 @@ final class CharteringRepository extends Repository
             ]);
         }
 
-        return $this->fetchCharter($lastInsertId);
+        /** @var Charter */
+        $newCharter = $this->fetchCharter($lastInsertId);
+
+        return $newCharter;
     }
 
     /**
@@ -393,7 +401,13 @@ final class CharteringRepository extends Repository
             }
         }
 
-        return $this->fetchCharter($charter->getId());
+        /** @var int */
+        $id = $charter->getId();
+
+        /** @var Charter */
+        $updatedCharter = $this->fetchCharter($id);
+
+        return $updatedCharter;
     }
 
     /**
@@ -401,17 +415,21 @@ final class CharteringRepository extends Repository
      * 
      * @param int $id ID de l'affrètement à supprimer
      * 
-     * @return bool TRUE si succès, FALSE si erreur
+     * @return void
+     * 
+     * @throws DBException Erreur lors de la suppression
      */
-    public function deleteCharter(int $id): bool
+    public function deleteCharter(int $id): void
     {
-        $request = $this->mysql->prepare("DELETE FROM chartering_registre WHERE id = :id");
-        $success = $request->execute(["id" => $id]);
+        try {
+            $request = $this->mysql->prepare("DELETE FROM chartering_registre WHERE id = :id");
+            $success = $request->execute(["id" => $id]);
 
-        if (!$success) {
-            throw new DBException("Erreur lors de la suppression");
+            if (!$success) {
+                throw new DBException("Erreur lors de la suppression");
+            }
+        } catch (\PDOException $e) {
+            throw new DBException("Erreur lors de la suppression", previous: $e);
         }
-
-        return $success;
     }
 }

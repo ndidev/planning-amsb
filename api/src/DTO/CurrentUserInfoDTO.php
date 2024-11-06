@@ -4,11 +4,11 @@
 
 namespace App\DTO;
 
-use App\Entity\User;
+use App\Entity\UserAccount;
 
 class CurrentUserInfoDTO implements \JsonSerializable
 {
-    public function __construct(private User $user) {}
+    public function __construct(private UserAccount $user) {}
 
     public function jsonSerialize(): mixed
     {

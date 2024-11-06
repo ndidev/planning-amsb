@@ -12,18 +12,22 @@ class InfoBannerLine extends AbstractEntity
 {
     use IdentifierTrait;
 
+    /** @phpstan-var ?Module::* $module */
     private ?string $module = null;
     private bool $pc = false;
     private bool $tv = false;
     private string $message = '';
     private string $color = '';
 
+    /**
+     * @phpstan-return ?Module::* $module
+     */
     public function getModule(): ?string
     {
         return $this->module;
     }
 
-    public function setModule(string $module): static
+    public function setModule(?string $module): static
     {
         $this->module = Module::tryFrom($module);
 

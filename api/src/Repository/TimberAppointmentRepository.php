@@ -3,10 +3,9 @@
 namespace App\Repository;
 
 use App\Core\Component\Collection;
-use App\Core\Component\DateUtils;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\DTO\SupplierWithUniqueDeliveryNoteNumber;
-use App\DTO\TimberFilterDTO;
+use App\DTO\Filter\TimberFilterDTO;
 use App\DTO\TimberRegistryEntryDTO;
 use App\DTO\TimberStatsDTO;
 use App\DTO\TimberTransportSuggestionsDTO;
@@ -22,6 +21,11 @@ use App\Service\TimberService;
  */
 final class TimberAppointmentRepository extends Repository
 {
+    public function __construct(private TimberService $timberService)
+    {
+        parent::__construct();
+    }
+
     /**
      * Vérifie si une entrée existe dans la base de données.
      * 
@@ -39,7 +43,7 @@ final class TimberAppointmentRepository extends Repository
      * 
      * @return Collection<TimberAppointment> Tous les RDV récupérés
      */
-    public function getAppointments(TimberFilterDTO $filter): Collection
+    public function fetchAppointments(TimberFilterDTO $filter): Collection
     {
         $sqlFilter =
             $filter->getSqlSupplierFilter()
@@ -86,10 +90,8 @@ final class TimberAppointmentRepository extends Repository
 
         $appointmentsRaw = $requete->fetchAll();
 
-        $timberService = new TimberService();
-
         $appointments = array_map(
-            fn(array $appointmentRaw) => $timberService->makeTimberAppointmentFromDatabase($appointmentRaw),
+            fn(array $appointmentRaw) => $this->timberService->makeTimberAppointmentFromDatabase($appointmentRaw),
             $appointmentsRaw
         );
 
@@ -103,7 +105,7 @@ final class TimberAppointmentRepository extends Repository
      * 
      * @return ?TimberAppointment Rendez-vous récupéré
      */
-    public function getAppointment(int $id): ?TimberAppointment
+    public function fetchAppointment(int $id): ?TimberAppointment
     {
         $statement =
             "SELECT
@@ -132,9 +134,7 @@ final class TimberAppointmentRepository extends Repository
 
         if (!$appointmentRaw) return null;
 
-        $timberService = new TimberService();
-
-        $appointment = $timberService->makeTimberAppointmentFromDatabase($appointmentRaw);
+        $appointment = $this->timberService->makeTimberAppointmentFromDatabase($appointmentRaw);
 
         return $appointment;
     }
@@ -142,57 +142,66 @@ final class TimberAppointmentRepository extends Repository
     /**
      * Crée un RDV bois.
      * 
-     * @param TimberAppointment $appointment RDV à créer
+     * @param TimberAppointment $appointment RDV à créer.
      * 
-     * @return TimberAppointment Rendez-vous créé
+     * @return TimberAppointment Rendez-vous créé.
+     * 
+     * @throws DBException Erreur lors de la création du RDV.
      */
     public function createAppointment(TimberAppointment $appointment): TimberAppointment
     {
         $statement = "INSERT INTO bois_planning
-            VALUES(
-                NULL,
-                :attente,
-                :date_rdv,
-                :heure_arrivee,
-                :heure_depart,
-                :chargement,
-                :client,
-                :livraison,
-                :transporteur,
-                :affreteur,
-                :fournisseur,
-                :commande_prete,
-                :confirmation_affretement,
-                :numero_bl,
-                :commentaire_public,
-                :commentaire_cache
-            )";
+            SET
+                attente = :attente,
+                date_rdv = :date_rdv,
+                heure_arrivee = :heure_arrivee,
+                heure_depart = :heure_depart,
+                chargement = :chargement,
+                client = :client,
+                livraison = :livraison,
+                transporteur = :transporteur,
+                affreteur = :affreteur,
+                fournisseur = :fournisseur,
+                commande_prete = :commande_prete,
+                confirmation_affretement = :confirmation_affretement,
+                numero_bl = :numero_bl,
+                commentaire_public = :commentaire_public,
+                commentaire_cache = :commentaire_cache
+            ";
 
-        $request = $this->mysql->prepare($statement);
+        try {
+            $request = $this->mysql->prepare($statement);
 
-        $this->mysql->beginTransaction();
-        $request->execute([
-            'attente' => (int) $appointment->isOnHold(),
-            'date_rdv' => $appointment->getDate(true),
-            'heure_arrivee' => $appointment->getArrivalTime(true),
-            'heure_depart' => $appointment->getDepartureTime(true),
-            'chargement' => $appointment->getLoadingPlace()->getId(),
-            'client' => $appointment->getCustomer()->getId(),
-            'livraison' => $appointment->getDeliveryPlace()->getId(),
-            'transporteur' => $appointment->getCarrier()?->getId(),
-            'affreteur' => $appointment->getTransportBroker()?->getId(),
-            'fournisseur' => $appointment->getSupplier()->getId(),
-            'commande_prete' => (int) $appointment->isReady(),
-            'confirmation_affretement' => (int) $appointment->isCharteringConfirmationSent(),
-            'numero_bl' => $appointment->getDeliveryNoteNumber(),
-            'commentaire_public' => $appointment->getPublicComment(),
-            'commentaire_cache' => $appointment->getPrivateComment(),
-        ]);
+            $this->mysql->beginTransaction();
+            $request->execute([
+                'attente' => (int) $appointment->isOnHold(),
+                'date_rdv' => $appointment->getDate(true),
+                'heure_arrivee' => $appointment->getArrivalTime(true),
+                'heure_depart' => $appointment->getDepartureTime(true),
+                'chargement' => $appointment->getLoadingPlace()?->getId(),
+                'client' => $appointment->getCustomer()?->getId(),
+                'livraison' => $appointment->getDeliveryPlace()?->getId(),
+                'transporteur' => $appointment->getCarrier()?->getId(),
+                'affreteur' => $appointment->getTransportBroker()?->getId(),
+                'fournisseur' => $appointment->getSupplier()?->getId(),
+                'commande_prete' => (int) $appointment->isReady(),
+                'confirmation_affretement' => (int) $appointment->isCharteringConfirmationSent(),
+                'numero_bl' => $appointment->getDeliveryNoteNumber(),
+                'commentaire_public' => $appointment->getPublicComment(),
+                'commentaire_cache' => $appointment->getPrivateComment(),
+            ]);
 
-        $lastInsertId = (int) $this->mysql->lastInsertId();
-        $this->mysql->commit();
+            $lastInsertId = (int) $this->mysql->lastInsertId();
+            $this->mysql->commit();
 
-        return $this->getAppointment($lastInsertId);
+            /** @var TimberAppointment */
+            $newAppointment = $this->fetchAppointment($lastInsertId);
+
+            return $newAppointment;
+        } catch (\PDOException $e) {
+            $this->mysql->rollBack();
+            throw new DBException("Erreur lors de la création du RDV", previous: $e);
+        }
     }
 
     /**
@@ -223,27 +232,64 @@ final class TimberAppointmentRepository extends Repository
                 commentaire_cache = :commentaire_cache
             WHERE id = :id";
 
-        $request = $this->mysql->prepare($statement);
-        $request->execute([
-            'attente' => (int) $appointment->isOnHold(),
-            'date_rdv' => $appointment->getDate(true),
-            'heure_arrivee' => $appointment->getArrivalTime(true),
-            'heure_depart' => $appointment->getDepartureTime(true),
-            'chargement' => $appointment->getLoadingPlace()->getId(),
-            'client' => $appointment->getCustomer()->getId(),
-            'livraison' => $appointment->getDeliveryPlace()->getId(),
-            'transporteur' => $appointment->getCarrier()?->getId(),
-            'affreteur' => $appointment->getTransportBroker()?->getId(),
-            'fournisseur' => $appointment->getSupplier()->getId(),
-            'commande_prete' => (int) $appointment->isReady(),
-            'confirmation_affretement' => (int) $appointment->isCharteringConfirmationSent(),
-            'numero_bl' => $appointment->getDeliveryNoteNumber(),
-            'commentaire_public' => $appointment->getPublicComment(),
-            'commentaire_cache' => $appointment->getPrivateComment(),
-            'id' => $appointment->getId(),
-        ]);
+        try {
+            $request = $this->mysql->prepare($statement);
+            $request->execute([
+                'attente' => (int) $appointment->isOnHold(),
+                'date_rdv' => $appointment->getDate(true),
+                'heure_arrivee' => $appointment->getArrivalTime(true),
+                'heure_depart' => $appointment->getDepartureTime(true),
+                'chargement' => $appointment->getLoadingPlace()?->getId(),
+                'client' => $appointment->getCustomer()?->getId(),
+                'livraison' => $appointment->getDeliveryPlace()?->getId(),
+                'transporteur' => $appointment->getCarrier()?->getId(),
+                'affreteur' => $appointment->getTransportBroker()?->getId(),
+                'fournisseur' => $appointment->getSupplier()?->getId(),
+                'commande_prete' => (int) $appointment->isReady(),
+                'confirmation_affretement' => (int) $appointment->isCharteringConfirmationSent(),
+                'numero_bl' => $appointment->getDeliveryNoteNumber(),
+                'commentaire_public' => $appointment->getPublicComment(),
+                'commentaire_cache' => $appointment->getPrivateComment(),
+                'id' => $appointment->getId(),
+            ]);
 
-        return $this->getAppointment($appointment->getId());
+            /** @var int */
+            $id = $appointment->getId();
+
+            /** @var TimberAppointment */
+            $updatedAppointment = $this->fetchAppointment($id);
+
+            return $updatedAppointment;
+        } catch (\PDOException $e) {
+            throw new DBException("Erreur lors de la mise à jour du RDV", previous: $e);
+        }
+    }
+
+    /**
+     * Met à jour l'état d'attente d'un RDV.
+     * 
+     * @param int  $id     ID du RDV à modifier.
+     * @param bool $status Statut d'attente.
+     * 
+     * @return TimberAppointment RDV modifié.
+     */
+    public function setAppointmentOnHold(int $id, bool $status): TimberAppointment
+    {
+        $this->mysql
+            ->prepare(
+                "UPDATE bois_planning
+                SET attente = :attente
+                WHERE id = :id"
+            )
+            ->execute([
+                'attente' => (int) $status,
+                'id' => $id,
+            ]);
+
+        /** @var TimberAppointment */
+        $updatedAppointment = $this->fetchAppointment($id);
+
+        return $updatedAppointment;
     }
 
     /**
@@ -267,7 +313,10 @@ final class TimberAppointmentRepository extends Repository
                 'id' => $id,
             ]);
 
-        return $this->getAppointment($id);
+        /** @var TimberAppointment */
+        $updatedAppointment = $this->fetchAppointment($id);
+
+        return $updatedAppointment;
     }
 
     /**
@@ -291,7 +340,10 @@ final class TimberAppointmentRepository extends Repository
                 'id' => $id,
             ]);
 
-        return $this->getAppointment($id);
+        /** @var TimberAppointment */
+        $updatedAppointment = $this->fetchAppointment($id);
+
+        return $updatedAppointment;
     }
 
     /**
@@ -311,7 +363,10 @@ final class TimberAppointmentRepository extends Repository
                 'id' => $id
             ]);
 
-        return $this->getAppointment($id);
+        /** @var TimberAppointment */
+        $updatedAppointment = $this->fetchAppointment($id);
+
+        return $updatedAppointment;
     }
 
     /**
@@ -331,7 +386,10 @@ final class TimberAppointmentRepository extends Repository
                 'id' => $id
             ]);
 
-        return $this->getAppointment($id);
+        /** @var TimberAppointment */
+        $updatedAppointment = $this->fetchAppointment($id);
+
+        return $updatedAppointment;
     }
 
     public function getLastDeliveryNoteNumber(
@@ -419,37 +477,48 @@ final class TimberAppointmentRepository extends Repository
      */
     public function setDeliveryNoteNumber(int $id, string $deliveryNoteNumber): TimberAppointment
     {
-        $this->mysql
-            ->prepare(
-                "UPDATE bois_planning
-                        SET numero_bl = :deliveryNoteNumber
-                        WHERE id = :id"
-            )
-            ->execute([
-                'deliveryNoteNumber' => $deliveryNoteNumber,
-                'id' => (int) $id
-            ]);
+        try {
+            $this->mysql
+                ->prepare(
+                    "UPDATE bois_planning
+                     SET numero_bl = :deliveryNoteNumber
+                     WHERE id = :id"
+                )
+                ->execute([
+                    'deliveryNoteNumber' => $deliveryNoteNumber,
+                    'id' => (int) $id
+                ]);
 
-        return $this->getAppointment($id);
+            /** @var TimberAppointment */
+            $updatedAppointment = $this->fetchAppointment($id);
+
+            return $updatedAppointment;
+        } catch (\PDOException $e) {
+            throw new DBException("Erreur lors de la mise à jour du numéro de BL", previous: $e);
+        }
     }
 
     /**
      * Supprime un RDV bois.
      * 
-     * @param int $id ID du RDV à supprimer
+     * @param int $id ID du RDV à supprimer.
      * 
-     * @return bool TRUE si succès, FALSE si erreur
+     * @return void
+     * 
+     * @throws DBException Erreur lors de la suppression.
      */
-    public function deleteAppointment(int $id): bool
+    public function deleteAppointment(int $id): void
     {
-        $request = $this->mysql->prepare("DELETE FROM bois_planning WHERE id = :id");
-        $success = $request->execute(["id" => $id]);
+        try {
+            $request = $this->mysql->prepare("DELETE FROM bois_planning WHERE id = :id");
+            $success = $request->execute(["id" => $id]);
 
-        if (!$success) {
-            throw new DBException("Erreur lors de la suppression");
+            if (!$success) {
+                throw new DBException("Erreur lors de la suppression");
+            }
+        } catch (\PDOException $e) {
+            throw new DBException("Erreur lors de la suppression", previous: $e);
         }
-
-        return $success;
     }
 
     /**
@@ -652,10 +721,14 @@ final class TimberAppointmentRepository extends Repository
     /**
      * Récupère les RDVs bois à exporter en PDF.
      * 
+     * @param ThirdParty         $supplier  Fournisseur des RDVs.
+     * @param \DateTimeInterface $startDate Date de début des RDVs.
+     * @param \DateTimeInterface $endDate   Date de fin des RDVs.
+     * 
      * @return array{
      *           attente: Collection<TimberAppointment>,
      *           non_attente: Collection<TimberAppointment>
-     *         } RDVs à exporter.
+     *         } RDVs bois à exporter.
      */
     public function getPdfAppointments(
         ThirdParty $supplier,

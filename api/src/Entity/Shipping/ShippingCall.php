@@ -20,24 +20,24 @@ use App\Service\ThirdPartyService;
  *                                   navire: string,
  *                                   voyage: string,
  *                                   armateur: ?int,
- *                                   eta_date: string,
+ *                                   eta_date: ?string,
  *                                   eta_heure: string,
- *                                   nor_date: string,
+ *                                   nor_date: ?string,
  *                                   nor_heure: string,
- *                                   pob_date: string,
+ *                                   pob_date: ?string,
  *                                   pob_heure: string,
- *                                   etb_date: string,
+ *                                   etb_date: ?string,
  *                                   etb_heure: string,
- *                                   ops_date: string,
+ *                                   ops_date: ?string,
  *                                   ops_heure: string,
- *                                   etc_date: string,
+ *                                   etc_date: ?string,
  *                                   etc_heure: string,
- *                                   etd_date: string,
+ *                                   etd_date: ?string,
  *                                   etd_heure: string,
  *                                   te_arrivee: ?float,
  *                                   te_depart: ?float,
- *                                   last_port: string,
- *                                   next_port: string,
+ *                                   last_port: ?string,
+ *                                   next_port: ?string,
  *                                   call_port: string,
  *                                   quai: string,
  *                                   commentaire: string,
@@ -92,9 +92,9 @@ class ShippingCall extends AbstractEntity
 
     private ?Port $nextPort = null;
 
-    private string $callPort = 'Le Légué';
+    private string $callPort = '';
 
-    private ?string $quay = null;
+    private string $quay = '';
 
     private string $comment = '';
 
@@ -414,12 +414,12 @@ class ShippingCall extends AbstractEntity
 
     public function setQuay(?string $quay): static
     {
-        $this->quay = trim($quay);
+        $this->quay = trim((string) $quay);
 
         return $this;
     }
 
-    public function getQuay(): ?string
+    public function getQuay(): string
     {
         return $this->quay;
     }

@@ -15,9 +15,10 @@ final class ErrorLogger
      */
     public static function log(\Throwable $e): void
     {
-        $error_string = static::formatError($e, "string");
+        /** @var string  $errorString */
+        $errorString = static::formatError($e, "string");
 
-        \error_log(PHP_EOL . $error_string);
+        \error_log(PHP_EOL . $errorString);
     }
 
     /**
@@ -26,14 +27,7 @@ final class ErrorLogger
      * @param ?\Throwable $e      Exception.
      * @param string      $format Output format (`array` or `string`).
      * 
-     * @return array{
-     *           code: int,
-     *           message: string,
-     *           file: string,
-     *           line: int,
-     *           previous: array{mixed}|null,
-     *           trace: array{mixed}
-     *         }|string|null Exception information or null if no exception.
+     * @return array<string, mixed>|string|null Exception information or null if no exception.
      */
     private static function formatError(?\Throwable $e, string $format = "array"): array|string|null
     {

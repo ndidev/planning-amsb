@@ -86,6 +86,9 @@ final class UserController extends Controller
 
         $this->response->setJSON($updatedUser);
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $this->user->uid, $updatedUser);
+        /** @var string $uid */
+        $uid = $this->user->uid;
+
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $uid, $updatedUser);
     }
 }

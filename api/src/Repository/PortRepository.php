@@ -5,6 +5,7 @@
 namespace App\Repository;
 
 use App\Core\Component\Collection;
+use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\Port;
 use App\Service\PortService;
 
@@ -25,7 +26,13 @@ final class PortRepository extends Repository
         if (!$portsRaw) {
             $statement = "SELECT * FROM utils_ports ORDER BY SUBSTRING(locode, 1, 2), nom";
 
-            $portsRaw = $this->mysql->query($statement)->fetchAll();
+            $portsRequest = $this->mysql->query($statement);
+
+            if (!$portsRequest) {
+                throw new DBException("Impossible de récupérer les ports.");
+            }
+
+            $portsRaw = $portsRequest->fetchAll();
 
             $this->redis->set($this->redisNamespace, json_encode($portsRaw));
         }

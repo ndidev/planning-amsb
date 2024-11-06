@@ -5,15 +5,17 @@ namespace App\Controller\Chartering;
 use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
-use App\DTO\CharteringFilterDTO;
+use App\DTO\Filter\CharteringFilterDTO;
 use App\Service\CharteringService;
 
 final class CharterController extends Controller
 {
     private CharteringService $charteringService;
+    /** @phpstan-var Module::* $module */
     private string $module = Module::CHARTERING;
     private string $sseEventName = "chartering/charters";
 
@@ -130,6 +132,7 @@ final class CharterController extends Controller
 
         $newCharter = $this->charteringService->createCharter($input);
 
+        /** @var int $id */
         $id = $newCharter->getId();
 
         $this->response
@@ -143,12 +146,16 @@ final class CharterController extends Controller
     /**
      * Met à jour un affrètement.
      * 
-     * @param int $id id de l'affrètement à modifier.
+     * @param ?int $id id de l'affrètement à modifier.
      */
-    public function update(int $id): void
+    public function update(?int $id = null): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier un affrètement.");
+        }
+
+        if (!$id) {
+            throw new BadRequestException("L'identifiant de l'affrètement est obligatoire.");
         }
 
         if (!$this->charteringService->charterExists($id)) {
@@ -167,12 +174,16 @@ final class CharterController extends Controller
     /**
      * Supprime un affrètement.
      * 
-     * @param int $id id de l'affrètement à supprimer.
+     * @param ?int $id id de l'affrètement à supprimer.
      */
-    public function delete(int $id): void
+    public function delete(?int $id = null): void
     {
         if (!$this->user->canEdit($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour supprimer un affrètement.");
+        }
+
+        if (!$id) {
+            throw new BadRequestException("L'identifiant de l'affrètement est obligatoire.");
         }
 
         if (!$this->charteringService->charterExists($id)) {

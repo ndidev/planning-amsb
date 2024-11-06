@@ -7,6 +7,7 @@ namespace App\Service;
 use App\Core\Component\Collection;
 use App\Core\Component\Module;
 use App\Core\Component\PdfEmail;
+use App\Core\Exceptions\AppException;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Exceptions\Server\ServerException;
@@ -17,10 +18,7 @@ use App\DTO\PDF\TimberPDF;
 use App\Entity\Config\AgencyDepartment;
 use App\Entity\Config\PdfConfig;
 use App\Entity\ThirdParty;
-use App\Repository\BulkAppointmentRepository;
 use App\Repository\PdfConfigRepository;
-use App\Repository\TimberAppointmentRepository;
-use PDOException;
 use PHPMailer\PHPMailer\Exception as PHPMailerException;
 
 /**
@@ -185,6 +183,10 @@ final class PdfService
         // Récupération données du service de l'agence.
         $agencyInfo = (new AgencyService())->getDepartment("transit");
 
+        if (!$agencyInfo) {
+            throw new ServerException("Impossible de récupérer les informations de l'agence");
+        }
+
         return match ($module) {
             Module::BULK => $this->generateBulkPdf($supplier, $startDate, $endDate, $agencyInfo),
             Module::TIMBER => $this->generateTimberPdf($supplier, $startDate, $endDate, $agencyInfo),
@@ -198,9 +200,9 @@ final class PdfService
         \DateTimeInterface $endDate,
         AgencyDepartment $agencyInfo,
     ): BulkPDF {
-        $bulkRepository = new BulkAppointmentRepository();
+        $bulkService = new BulkService();
 
-        $appointments = $bulkRepository->getPdfAppointments($supplier, $startDate, $endDate);
+        $appointments = $bulkService->getPdfAppointments($supplier, $startDate, $endDate);
 
         return new BulkPDF($supplier, $appointments, $startDate, $endDate, $agencyInfo);
     }
@@ -211,9 +213,9 @@ final class PdfService
         \DateTimeInterface $endDate,
         AgencyDepartment $agencyInfo,
     ): TimberPDF {
-        $timberRepository = new TimberAppointmentRepository();
+        $timberService = new TimberService();
 
-        $appointments = $timberRepository->getPdfAppointments($supplier, $startDate, $endDate);
+        $appointments = $timberService->getPdfAppointments($supplier, $startDate, $endDate);
 
         return new TimberPDF($supplier, $appointments, $startDate, $endDate, $agencyInfo);
     }
@@ -226,8 +228,8 @@ final class PdfService
      * @param \DateTimeInterface $endDate   Date de fin des RDV.
      * 
      * @return array{
-     *           module: string,
-     *           fournisseur: int,
+     *           module: Module::*|null,
+     *           fournisseur: int|null,
      *           statut: 'succes'|'echec',
      *           message: string|null,
      *           adresses: array{
@@ -243,26 +245,33 @@ final class PdfService
         \DateTimeInterface $startDate,
         \DateTimeInterface $endDate
     ): array {
-        $config = $this->getConfig($configId);
-
-        if (!$config) {
-            throw new NotFoundException("Configuration PDF non trouvée");
-        }
-
-        $pdf = $this->generatePDF($configId, $startDate, $endDate);
-
-        // Récupération données du service de l'agence.
-        $agencyInfo = (new AgencyService())->getDepartment("transit");
-
-        $resultat = [
-            "module" => $config->getModule(),
-            "fournisseur" => $config->getSupplier()->getId(),
+        $result = [
+            "module" => null,
+            "fournisseur" => null,
             "statut" => "echec",
             "message" => null,
             "adresses" => null,
         ];
 
         try {
+            $config = $this->getConfig($configId);
+
+            if (!$config) {
+                throw new NotFoundException("Configuration PDF non trouvée");
+            }
+
+            $result["module"] = $config->getModule();
+            $result["fournisseur"] = $config->getSupplier()?->getId();
+
+            // Récupération données du service de l'agence.
+            $agencyInfo = (new AgencyService())->getDepartment("transit");
+
+            if (!$agencyInfo) {
+                throw new ServerException("Impossible de récupérer les informations de l'agence");
+            }
+
+            $pdf = $this->generatePDF($configId, $startDate, $endDate);
+
             // Création e-mail
             $mail = new PdfEmail(
                 $pdf,
@@ -277,19 +286,20 @@ final class PdfService
             $mail->send();
             $mail->smtpClose();
 
-            $resultat["statut"] = "succes";
-            $resultat["message"] = "Le PDF a été envoyé avec succès.";
-            $resultat["adresses"] = $mail->getAllAddresses();
+            $result["statut"] = "succes";
+            $result["message"] = "Le PDF a été envoyé avec succès.";
+            $result["adresses"] = $mail->getAllAddresses();
         } catch (PHPMailerException $e) {
-            $resultat["message"] = "Erreur : " . mb_convert_encoding($mail->ErrorInfo, 'UTF-8');
+            $result["message"] = "Erreur : " . mb_convert_encoding($mail->ErrorInfo, 'UTF-8');
+            ErrorLogger::log($e);
+        } catch (AppException $e) {
+            $result["message"] = $e->getMessage();
             ErrorLogger::log($e);
         } catch (\Exception $e) {
-            $resultat["message"] = "Erreur : " . $e->getMessage();
+            $result["message"] = "Erreur serveur";
             ErrorLogger::log($e);
-        } finally {
-            unset($mail);
-
-            return $resultat;
         }
+
+        return $result;
     }
 }

@@ -7,7 +7,6 @@ namespace App\Entity\Shipping;
 use App\Core\Component\CargoOperation;
 use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
-use App\Service\ShippingService;
 
 /**
  * Represents a cargo for a shipping call.
@@ -19,12 +18,12 @@ use App\Service\ShippingService;
  *                                        client: string,
  *                                        operation: value-of<CargoOperation>,
  *                                        environ: bool,
- *                                        tonnage_bl: float,
- *                                        cubage_bl: float,
- *                                        nombre_bl: float,
- *                                        tonnage_outturn: float,
- *                                        cubage_outturn: float,
- *                                        nombre_outturn: float,
+ *                                        tonnage_bl: ?float,
+ *                                        cubage_bl: ?float,
+ *                                        nombre_bl: ?float,
+ *                                        tonnage_outturn: ?float,
+ *                                        cubage_outturn: ?float,
+ *                                        nombre_outturn: ?float,
  *                                      }
  */
 final class ShippingCallCargo extends AbstractEntity
@@ -48,13 +47,8 @@ final class ShippingCallCargo extends AbstractEntity
         return $this->shippingCall;
     }
 
-    public function setShippingCall(ShippingCall|int|null $shippingCall): static
+    public function setShippingCall(?ShippingCall $shippingCall): static
     {
-        if (is_int($shippingCall)) {
-            $this->shippingCall = (new ShippingService())->getShippingCall($shippingCall);
-        } else {
-            $this->shippingCall = $shippingCall;
-        }
         $this->shippingCall = $shippingCall;
 
         return $this;
@@ -92,11 +86,13 @@ final class ShippingCallCargo extends AbstractEntity
     public function setOperation(CargoOperation|string $operation): static
     {
         if (is_string($operation)) {
-            $this->operation = CargoOperation::tryFrom($operation);
+            $operationFromEnum = CargoOperation::tryFrom($operation);
 
-            if (null === $this->operation) {
+            if (null === $operationFromEnum) {
                 throw new \InvalidArgumentException("Opération invalide");
             }
+
+            $this->operation = $operationFromEnum;
         } else {
             $this->operation = $operation;
         }

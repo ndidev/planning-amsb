@@ -34,7 +34,7 @@ use App\Controller\User\UserController;
 use App\Controller\Utils\CountryController;
 use App\Controller\Utils\PortController;
 use App\Controller\Utils\TideController;
-use App\Core\Router;
+use App\Core\Router\Router;
 use App\Core\Security;
 use App\Core\HTTP\HTTPResponse;
 
@@ -51,6 +51,7 @@ if (Security::checkIfRequestCanBeDone() === false) {
 /**
  * Routes de l'API.
  * @var list<array{0: string, 1: string}> $routes
+ * @phpstan-var list<array{0: string, 1: class-string}> $routes
  */
 $routes = [
     // Affichage général
@@ -97,7 +98,7 @@ $routes = [
 
     // Tiers
     ["/tiers/[i:id]?", ThirdPartyController::class],
-    ["/tiers/[i:id]?/nombre_rdv", AppointmentCountController::class],
+    ["/tiers/[i:id]/nombre_rdv", AppointmentCountController::class],
 
     // Admin
     ["/admin/users/[a:uid]?", UserAccountController::class],

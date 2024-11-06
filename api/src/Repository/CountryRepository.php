@@ -5,12 +5,18 @@
 namespace App\Repository;
 
 use App\Core\Component\Collection;
+use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\Country;
 use App\Service\CountryService;
 
 final class CountryRepository extends Repository
 {
     private string $redisNamespace = "countries";
+
+    public function __construct(private CountryService $countryService)
+    {
+        parent::__construct();
+    }
 
     /**
      * Fetches all countries.
@@ -25,15 +31,23 @@ final class CountryRepository extends Repository
         if (!$countriesRaw) {
             $statement = "SELECT * FROM utils_pays ORDER BY nom";
 
-            $countriesRaw = $this->mysql->query($statement)->fetchAll();
+            $countriesRequest = $this->mysql->query($statement);
+
+            if (!$countriesRequest) {
+                throw new DBException("Impossible de récupérer les pays.");
+            }
+
+            $countriesRaw = $countriesRequest->fetchAll();
 
             $this->redis->set($this->redisNamespace, json_encode($countriesRaw));
+
+            foreach ($countriesRaw as $countryRaw) {
+                $this->redis->set("{$this->redisNamespace}:{$countryRaw['iso']}", json_encode($countryRaw));
+            }
         }
 
-        $countryService = new CountryService();
-
         $countries = array_map(
-            fn(array $countryRaw) => $countryService->makeCountry($countryRaw),
+            fn(array $countryRaw) => $this->countryService->makeCountryFromDatabase($countryRaw),
             $countriesRaw
         );
 
@@ -49,16 +63,28 @@ final class CountryRepository extends Repository
      */
     public function fetchByIso(string $iso): ?Country
     {
-        $statement = "SELECT * FROM utils_pays  WHERE iso = :iso";
+        // Redis
+        $countryRaw = json_decode($this->redis->get("{$this->redisNamespace}:{$iso}"), true);
 
-        $requete = $this->mysql->prepare($statement);
-        $requete->execute(["iso" => $iso]);
-        $paysRaw = $requete->fetch();
+        if (!$countryRaw) {
+            $statement = "SELECT * FROM utils_pays  WHERE iso = :iso";
 
-        if (!$paysRaw) return null;
+            $countryRequest = $this->mysql->prepare($statement);
 
-        $pays = (new CountryService())->makeCountry($paysRaw);
+            if (!$countryRequest) {
+                throw new DBException("Impossible de récupérer le pays.");
+            }
 
-        return $pays;
+            $countryRequest->execute(["iso" => $iso]);
+            $countryRaw = $countryRequest->fetch();
+
+            if (!$countryRaw) return null;
+
+            $this->redis->set("{$this->redisNamespace}:{$iso}", json_encode($countryRaw));
+        }
+
+        $country = $this->countryService->makeCountryFromDatabase($countryRaw);
+
+        return $country;
     }
 }

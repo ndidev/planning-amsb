@@ -4,7 +4,8 @@
 
 namespace App\Tests\DTO;
 
-use App\DTO\ShippingFilterDTO;
+use App\Core\HTTP\HTTPRequestQuery;
+use App\DTO\Filter\ShippingFilterDTO;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -15,85 +16,119 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlStartDate(): void
     {
         // Given
-        $query = ['date_debut' => '2023-01-01'];
+        $date = '2023-01-01';
+        $query = new HTTPRequestQuery(['date_debut' => $date]);
         $dto = new ShippingFilterDTO($query);
 
         // When
-        $result = $dto->getSqlStartDate();
+        $sqlStartDate = $dto->getSqlStartDate();
 
         // Then
-        $this->assertSame('2023-01-01', $result);
+        $this->assertSame($date, $sqlStartDate);
     }
 
     public function testGetSqlStartDateWithDefault(): void
     {
         // Given
-        $query = [];
+        $query = new HTTPRequestQuery([]);
         $dto = new ShippingFilterDTO($query);
+        $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
 
         // When
-        $result = $dto->getSqlStartDate();
+        $sqlStartDate = $dto->getSqlStartDate();
 
         // Then
-        $this->assertSame(ShippingFilterDTO::DEFAULT_START_DATE, $result);
+        $this->assertSame($expected, $sqlStartDate);
     }
 
     public function testGetSqlStartDateWithEmptyString(): void
     {
         // Given
-        $query = ['date_debut' => ''];
+        $query = new HTTPRequestQuery(['date_debut' => '']);
         $dto = new ShippingFilterDTO($query);
+        $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
 
         // When
-        $result = $dto->getSqlStartDate();
+        $sqlStartDate = $dto->getSqlStartDate();
 
         // Then
-        $this->assertSame(ShippingFilterDTO::DEFAULT_START_DATE, $result);
+        $this->assertSame($expected, $sqlStartDate);
+    }
+
+    public function testGetSqlStartDateWithIllegalString(): void
+    {
+        // Given
+        $query = new HTTPRequestQuery(['date_debut' => 'illegal']);
+        $dto = new ShippingFilterDTO($query);
+        $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
+
+        // When
+        $sqlStartDate = $dto->getSqlStartDate();
+
+        // Then
+        $this->assertSame($expected, $sqlStartDate);
     }
 
     public function testGetSqlEndDate(): void
     {
         // Given
-        $query = ['date_fin' => '2023-12-31'];
+        $date = '2023-12-31';
+        $query = new HTTPRequestQuery(['date_fin' => $date]);
         $dto = new ShippingFilterDTO($query);
 
         // When
-        $result = $dto->getSqlEndDate();
+        $sqlEndDate = $dto->getSqlEndDate();
 
         // Then
-        $this->assertSame('2023-12-31', $result);
+        $this->assertSame($date, $sqlEndDate);
     }
 
     public function testGetSqlEndDateWithDefault(): void
     {
         // Given
-        $query = [];
+        $query = new HTTPRequestQuery([]);
         $dto = new ShippingFilterDTO($query);
+        $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
 
         // When
-        $result = $dto->getSqlEndDate();
+        $sqlEndDate = $dto->getSqlEndDate();
 
         // Then
-        $this->assertSame(ShippingFilterDTO::DEFAULT_END_DATE, $result);
+        $this->assertSame($expected, $sqlEndDate);
     }
 
     public function testGetSqlEndDateWithEmptyString(): void
     {
         // Given
-        $query = ['date_fin' => ''];
+        $query = new HTTPRequestQuery(['date_fin' => '']);
         $dto = new ShippingFilterDTO($query);
+        $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
 
         // When
-        $result = $dto->getSqlEndDate();
+        $sqlEndDate = $dto->getSqlEndDate();
 
         // Then
-        $this->assertSame(ShippingFilterDTO::DEFAULT_END_DATE, $result);
+        $this->assertSame($expected, $sqlEndDate);
+    }
+
+    public function testGetSqlEndDateWithIllegalString(): void
+    {
+        // Given
+        $query = new HTTPRequestQuery(['date_fin' => 'illegal']);
+        $dto = new ShippingFilterDTO($query);
+        $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
+
+        // When
+        $sqlEndDate = $dto->getSqlEndDate();
+
+        // Then
+        $this->assertSame($expected, $sqlEndDate);
     }
 
     public function testGetSqlShipFilter(): void
     {
         // Given
-        $query = ['navire' => 'Ship1,Ship2'];
+        $query = new HTTPRequestQuery(['navire' => 'Ship1,Ship2']);
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -106,7 +141,7 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetEmptySqlShipFilter(): void
     {
         // Given
-        $query = [];
+        $query = new HTTPRequestQuery([]);
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -119,7 +154,7 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlShipOwnerFilter(): void
     {
         // Given
-        $query = ['armateur' => '1,2'];
+        $query = new HTTPRequestQuery(['armateur' => '1,2']);
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -132,7 +167,7 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetEmptySqlShipOwnerFilter(): void
     {
         // Given
-        $query = [];
+        $query = new HTTPRequestQuery([]);
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -145,7 +180,7 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlCargoFilter(): void
     {
         // Given
-        $query = ['marchandise' => 'Cargo1,Cargo2'];
+        $query = new HTTPRequestQuery(['marchandise' => 'Cargo1,Cargo2']);
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -158,7 +193,7 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetEmptySqlCargoFilter(): void
     {
         // Given
-        $query = [];
+        $query = new HTTPRequestQuery([]);
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -171,7 +206,7 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlCustomerFilter(): void
     {
         // Given
-        $query = ['client' => 'Customer1,Customer2'];
+        $query = new HTTPRequestQuery(['client' => 'Customer1,Customer2']);
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -184,7 +219,7 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetEmptySqlCustomerFilter(): void
     {
         // Given
-        $query = [];
+        $query = new HTTPRequestQuery([]);
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -197,7 +232,7 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlLastPortFilter(): void
     {
         // Given
-        $query = ['last_port' => 'Port1,Port2'];
+        $query = new HTTPRequestQuery(['last_port' => 'Port1,Port2']);
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -210,7 +245,7 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetEmptySqlLastPortFilter(): void
     {
         // Given
-        $query = [];
+        $query = new HTTPRequestQuery([]);
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -223,7 +258,7 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlNextPortFilter(): void
     {
         // Given
-        $query = ['next_port' => 'Port3,Port4'];
+        $query = new HTTPRequestQuery(['next_port' => 'Port3,Port4']);
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -236,7 +271,7 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetEmptySqlNextPortFilter(): void
     {
         // Given
-        $query = [];
+        $query = new HTTPRequestQuery([]);
         $dto = new ShippingFilterDTO($query);
 
         // When

@@ -5,6 +5,7 @@
 namespace App\Repository;
 
 use App\Core\Component\Collection;
+use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\Config\AgencyDepartment;
 use App\Service\AgencyService;
 
@@ -28,6 +29,11 @@ final class AgencyRepository extends Repository
     public function fetchAllDepartments(): Collection
     {
         $request = $this->mysql->query("SELECT * FROM config_agence");
+
+        if (!$request) {
+            throw new DBException("Impossible de récupérer les services de l'agence.");
+        }
+
         $departmentsRaw = $request->fetchAll();
 
         $agencyService = new AgencyService();
@@ -99,6 +105,9 @@ final class AgencyRepository extends Repository
             "service" => $department->getService(),
         ]);
 
-        return $this->fetchDepartment($department->getService());
+        /** @var AgencyDepartment $updatedDepartment */
+        $updatedDepartment = $this->fetchDepartment($department->getService());
+
+        return $updatedDepartment;
     }
 }

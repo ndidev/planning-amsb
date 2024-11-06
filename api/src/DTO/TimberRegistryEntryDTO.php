@@ -27,7 +27,13 @@ class TimberRegistryEntryDTO
 
     public function getDate(): string
     {
-        return date('d/m/Y', strtotime($this->date));
+        $timestamp = strtotime($this->date);
+
+        if (!$timestamp) {
+            return $this->date;
+        }
+
+        return date('d/m/Y', $timestamp);
     }
 
     public function getMonth(): string
@@ -163,7 +169,7 @@ class TimberRegistryEntryDTO
             return $this->loadingPlaceName
                 . ' '
                 . $this->loadingPlaceCity
-                . (strtolower($this->loadingPlaceCountry) == 'france'
+                . (strtolower((string) $this->loadingPlaceCountry) == 'france'
                     ? ""
                     : " ({$this->loadingPlaceCountry})");
         }
@@ -172,8 +178,8 @@ class TimberRegistryEntryDTO
     public function getDeliveryPlace(): string
     {
         if ($this->deliveryPlaceName) {
-            if (strtolower($this->deliveryPlaceCountry) === 'france') {
-                $livraison_departement = " " . substr($this->deliveryPlacePostCode, 0, 2);
+            if (strtolower((string) $this->deliveryPlaceCountry) === 'france') {
+                $livraison_departement = " " . substr((string) $this->deliveryPlacePostCode, 0, 2);
                 $this->deliveryPlaceCountry = "";
             } else {
                 $livraison_departement = "";
