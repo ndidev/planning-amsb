@@ -50,6 +50,9 @@ class ETAConverter
 
         foreach (self::CORRESPONDANCE_ETA as $letters => $digits) {
             $convertedTime = preg_replace("/\b$letters\b/i", "$digits~", $time);
+            if ($convertedTime !== $time) {
+                break;
+            }
         }
 
         return $convertedTime ?? $time;
@@ -74,6 +77,9 @@ class ETAConverter
 
         foreach (self::CORRESPONDANCE_ETA as $letters => $digits) {
             $convertedTime = preg_replace("/\b$digits~/i", $letters, $time);
+            if ($convertedTime !== $time) {
+                break;
+            }
         }
 
         return $convertedTime ?? $time;
