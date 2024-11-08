@@ -317,10 +317,16 @@ class User
             }
         }
 
-        if ($apiKeyInfo) {
-            $this->redis->hMSet("admin:apikeys:{$apiKeyHash}", $apiKeyInfo);
-            $this->redis->expire("admin:apikeys:{$apiKeyHash}", ONE_WEEK);
+        if (
+            !isset($apiKeyInfo["uid"])
+            || !isset($apiKeyInfo["status"])
+            || !isset($apiKeyInfo["expiration"])
+        ) {
+            throw new InvalidApiKeyException();
         }
+
+        $this->redis->hMSet("admin:apikeys:{$apiKeyHash}", $apiKeyInfo);
+        $this->redis->expire("admin:apikeys:{$apiKeyHash}", ONE_WEEK);
 
         [
             "uid" => $uid,
@@ -337,7 +343,7 @@ class User
             throw new InvalidApiKeyException();
         }
 
-        $now = DateUtils::format(DateUtils::SQL_TIMESTAMP, new \DateTime);
+        $now = DateUtils::format(DateUtils::SQL_TIMESTAMP, new \DateTime());
         if ($expiration && $expiration < $now) {
             throw new InvalidApiKeyException();
         }
