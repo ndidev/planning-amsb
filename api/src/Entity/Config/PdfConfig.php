@@ -83,14 +83,14 @@ class PdfConfig extends AbstractEntity
     /**
      * Set the list of emails.
      * 
-     * @param string[]|string $emails 
+     * @param array<mixed>|string $emails 
      */
     public function setEmails(array|string $emails): static
     {
         if (is_string($emails)) {
             $this->emails = array_map('trim', explode(PHP_EOL, $emails));
         } else {
-            $this->emails = $emails;
+            $this->emails = array_filter($emails, 'is_string');
         }
 
         return $this;

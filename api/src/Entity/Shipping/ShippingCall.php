@@ -456,9 +456,6 @@ class ShippingCall extends AbstractEntity
         return $this->cargoes;
     }
 
-    /**
-     * @phpstan-return ShippingCallArray
-     */
     public function toArray(): array
     {
         return [

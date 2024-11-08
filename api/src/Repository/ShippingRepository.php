@@ -16,6 +16,50 @@ use App\Entity\Shipping\ShippingCallCargo;
 use App\Service\ShippingService;
 
 /**
+ * @phpstan-type ShippingCallArray array{
+ *                                   id?: int,
+ *                                   navire?: string,
+ *                                   voyage?: string,
+ *                                   armateur?: int|null,
+ *                                   eta_date?: string,
+ *                                   eta_heure?: string,
+ *                                   nor_date?: string,
+ *                                   nor_heure?: string,
+ *                                   pob_date?: string,
+ *                                   pob_heure?: string,
+ *                                   etb_date?: string,
+ *                                   etb_heure?: string,
+ *                                   ops_date?: string,
+ *                                   ops_heure?: string,
+ *                                   etc_date?: string,
+ *                                   etc_heure?: string,
+ *                                   etd_date?: string,
+ *                                   etd_heure?: string,
+ *                                   te_arrivee?: float,
+ *                                   te_depart?: float,
+ *                                   last_port?: string,
+ *                                   next_port?: string,
+ *                                   call_port?: string,
+ *                                   quai?: string,
+ *                                   commentaire?: string,
+ *                                   marchandises?: ShippingCallCargoArray[],
+ *                                 }
+ * 
+ * @phpstan-type ShippingCallCargoArray array{
+ *                                        id?: int,
+ *                                        escale_id?: int,
+ *                                        marchandise?: string,
+ *                                        client?: string,
+ *                                        operation?: string,
+ *                                        environ?: bool,
+ *                                        tonnage_bl?: float|null,
+ *                                        cubage_bl?: float|null,
+ *                                        nombre_bl?: int|null,
+ *                                        tonnage_outturn?: float|null,
+ *                                        cubage_outturn?: float|null,
+ *                                        nombre_outturn?: int|null,
+ *                                      }
+ * 
  * @phpstan-type DraftsPerTonnage list<array{
  *                                       navire: string,
  *                                       date: string,
@@ -32,6 +76,11 @@ use App\Service\ShippingService;
  */
 final class ShippingRepository extends Repository
 {
+    public function __construct(private ShippingService $shippingService)
+    {
+        parent::__construct();
+    }
+
     /**
      * Vérifie si une entrée existe dans la base de données.
      * 
@@ -160,13 +209,12 @@ final class ShippingRepository extends Repository
                 throw new DBException("Impossible de récupérer les marchandises.");
             }
 
+            /** @phpstan-var ShippingCallCargoArray[] $cargoesRaw */
             $cargoesRaw = $cargoesRequest->fetchAll();
         }
 
-        $shippingService = new ShippingService();
-
-        $calls = array_map(function ($callRaw) use ($shippingService, $cargoesRaw) {
-            $call = $shippingService->makeShippingCallFromDatabase($callRaw);
+        $calls = array_map(function ($callRaw) use ($cargoesRaw) {
+            $call = $this->shippingService->makeShippingCallFromDatabase($callRaw);
 
             // Rétablir heure ETA
             $call->setEtaTime(ETAConverter::toLetters($call->getEtaTime()));
@@ -174,12 +222,12 @@ final class ShippingRepository extends Repository
             $filteredCargoesRaw = array_values(
                 array_filter(
                     $cargoesRaw,
-                    fn($cargo) => $cargo["escale_id"] === $call->getId()
+                    fn($cargo) => ($cargo["escale_id"] ?? null) === $call->getId()
                 )
             );
 
             $cargoes = array_map(
-                fn(array $cargoRaw) => $shippingService->makeShippingCallCargoFromDatabase($cargoRaw),
+                fn($cargoRaw) => $this->shippingService->makeShippingCallCargoFromDatabase($cargoRaw),
                 $filteredCargoesRaw
             );
 
@@ -252,19 +300,20 @@ final class ShippingRepository extends Repository
         $callRequest->execute(["id" => $id]);
         $callRaw = $callRequest->fetch();
 
-        if (!$callRaw) return null;
+        if (!is_array($callRaw)) return null;
+
+        /** @phpstan-var ShippingCallArray $callRaw */
 
 
         // Marchandises
         $cargoesRequest = $this->mysql->prepare($cargoesStatement);
         $cargoesRequest->execute(["id" => $id]);
+        /** @phpstan-var ShippingCallCargoArray[] $cargoesRaw */
         $cargoesRaw = $cargoesRequest->fetchAll();
 
         $callRaw["marchandises"] = $cargoesRaw;
 
-        $shippingService = new ShippingService();
-
-        $call = $shippingService->makeShippingCallFromDatabase($callRaw);
+        $call = $this->shippingService->makeShippingCallFromDatabase($callRaw);
 
         return $call;
     }
@@ -362,7 +411,7 @@ final class ShippingRepository extends Repository
                 'escale_id' => $lastInsertId,
                 'marchandise' => $cargo->getCargoName(),
                 'client' => $cargo->getCustomer(),
-                'operation' => $cargo->getOperation()->value,
+                'operation' => $cargo->getOperation(),
                 'environ' => (int) $cargo->isApproximate(),
                 'tonnage_bl' => $cargo->getBlTonnage(),
                 'cubage_bl' => $cargo->getBlVolume(),
@@ -505,7 +554,7 @@ final class ShippingRepository extends Repository
                 'escale_id' => $call->getId(),
                 'marchandise' => $cargo->getCargoName(),
                 'client' => $cargo->getCustomer(),
-                'operation' => $cargo->getOperation()->value,
+                'operation' => $cargo->getOperation(),
                 'environ' => (int) $cargo->isApproximate(),
                 'tonnage_bl' => $cargo->getBlTonnage(),
                 'cubage_bl' => $cargo->getBlVolume(),
@@ -572,6 +621,7 @@ final class ShippingRepository extends Repository
 
         $voyageNumberRequest = $this->mysql->prepare($statement);
         $voyageNumberRequest->execute(["navire" => $shipName]);
+        /** @var string */
         $voyageNumber = $voyageNumberRequest->fetch(\PDO::FETCH_COLUMN) ?: "";
 
         return $voyageNumber;

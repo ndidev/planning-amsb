@@ -5,6 +5,7 @@
 namespace App\Service;
 
 use App\Core\Component\Collection;
+use App\Core\HTTP\HTTPRequestBody;
 use App\DTO\Filter\ShippingFilterDTO;
 use App\DTO\ShippingStatsDetailsDTO;
 use App\DTO\ShippingStatsSummaryDTO;
@@ -13,51 +14,9 @@ use App\Entity\Shipping\ShippingCallCargo;
 use App\Repository\ShippingRepository;
 
 /**
- * @phpstan-type ShippingCallArray array{
- *                                   id?: int,
- *                                   navire?: string,
- *                                   voyage?: string,
- *                                   armateur?: int|null,
- *                                   eta_date?: string,
- *                                   eta_heure?: string,
- *                                   nor_date?: string,
- *                                   nor_heure?: string,
- *                                   pob_date?: string,
- *                                   pob_heure?: string,
- *                                   etb_date?: string,
- *                                   etb_heure?: string,
- *                                   ops_date?: string,
- *                                   ops_heure?: string,
- *                                   etc_date?: string,
- *                                   etc_heure?: string,
- *                                   etd_date?: string,
- *                                   etd_heure?: string,
- *                                   te_arrivee?: float,
- *                                   te_depart?: float,
- *                                   last_port?: string,
- *                                   next_port?: string,
- *                                   call_port?: string,
- *                                   quai?: string,
- *                                   commentaire?: string,
- *                                   marchandises?: ShippingCallCargoArray[],
- *                                 }
- * 
- * @phpstan-type ShippingCallCargoArray array{
- *                                        id?: int,
- *                                        marchandise?: string,
- *                                        client?: string,
- *                                        operation?: string,
- *                                        environ?: bool,
- *                                        tonnage_bl?: float|null,
- *                                        cubage_bl?: float|null,
- *                                        nombre_bl?: int|null,
- *                                        tonnage_outturn?: float|null,
- *                                        cubage_outturn?: float|null,
- *                                        nombre_outturn?: int|null,
- *                                      }
- * 
+ * @phpstan-import-type ShippingCallArray from \App\Repository\ShippingRepository
+ * @phpstan-import-type ShippingCallCargoArray from \App\Repository\ShippingRepository
  * @phpstan-import-type DraftsPerTonnage from \App\Repository\ShippingRepository
- * 
  * @phpstan-import-type ShipsInOps from \App\Repository\ShippingRepository
  */
 final class ShippingService
@@ -66,7 +25,7 @@ final class ShippingService
 
     public function __construct()
     {
-        $this->shippingRepository = new ShippingRepository();
+        $this->shippingRepository = new ShippingRepository($this);
     }
 
     /**
@@ -119,46 +78,48 @@ final class ShippingService
     /**
      * Creates a ShippingCall object from form data.
      * 
-     * @param array $rawData Raw data from the form.
-     * 
-     * @phpstan-param ShippingCallArray $rawData
+     * @param HTTPRequestBody $requestBody Raw data from the form.
      * 
      * @return ShippingCall
      */
-    public function makeShippingCallFromForm(array $rawData): ShippingCall
+    public function makeShippingCallFromForm(HTTPRequestBody $requestBody): ShippingCall
     {
         $shippingCall = (new ShippingCall())
-            ->setId($rawData["id"] ?? null)
-            ->setShipName($rawData["navire"] ?? "TBN")
-            ->setVoyage($rawData["voyage"] ?? "")
-            ->setShipOperator($rawData["armateur"] ?? null)
-            ->setEtaDate($rawData["eta_date"] ?? null)
-            ->setEtaTime($rawData["eta_heure"] ?? "")
-            ->setNorDate($rawData["nor_date"] ?? null)
-            ->setNorTime($rawData["nor_heure"] ?? "")
-            ->setPobDate($rawData["pob_date"] ?? null)
-            ->setPobTime($rawData["pob_heure"] ?? "")
-            ->setEtbDate($rawData["etb_date"] ?? null)
-            ->setEtbTime($rawData["etb_heure"] ?? "")
-            ->setOpsDate($rawData["ops_date"] ?? null)
-            ->setOpsTime($rawData["ops_heure"] ?? "")
-            ->setEtcDate($rawData["etc_date"] ?? null)
-            ->setEtcTime($rawData["etc_heure"] ?? "")
-            ->setEtdDate($rawData["etd_date"] ?? null)
-            ->setEtdTime($rawData["etd_heure"] ?? "")
-            ->setArrivalDraft($rawData["te_arrivee"] ?? null)
-            ->setDepartureDraft($rawData["te_depart"] ?? null)
-            ->setLastPort($rawData["last_port"] ?? null)
-            ->setNextPort($rawData["next_port"] ?? null)
-            ->setCallPort($rawData["call_port"] ?? "")
-            ->setQuay($rawData["quai"] ?? "")
-            ->setComment($rawData["commentaire"] ?? "")
-            ->setCargoes(
-                array_map(
-                    fn(array $cargo) => $this->makeShippingCallCargoFromDatabase($cargo),
-                    $rawData["marchandises"] ?? []
-                )
-            );
+            ->setId($requestBody->getInt('id'))
+            ->setShipName($requestBody->getString('navire', 'TBN'))
+            ->setVoyage($requestBody->getString('voyage'))
+            ->setShipOperator($requestBody->getInt('armateur'))
+            ->setEtaDate($requestBody->getDatetime('eta_date'))
+            ->setEtaTime($requestBody->getString('eta_heure'))
+            ->setNorDate($requestBody->getDatetime('nor_date'))
+            ->setNorTime($requestBody->getString('nor_heure'))
+            ->setPobDate($requestBody->getDatetime('pob_date'))
+            ->setPobTime($requestBody->getString('pob_heure'))
+            ->setEtbDate($requestBody->getDatetime('etb_date'))
+            ->setEtbTime($requestBody->getString('etb_heure'))
+            ->setOpsDate($requestBody->getDatetime('ops_date'))
+            ->setOpsTime($requestBody->getString('ops_heure'))
+            ->setEtcDate($requestBody->getDatetime('etc_date'))
+            ->setEtcTime($requestBody->getString('etc_heure'))
+            ->setEtdDate($requestBody->getDatetime('etd_date'))
+            ->setEtdTime($requestBody->getString('etd_heure'))
+            ->setArrivalDraft($requestBody->getFloat('te_arrivee'))
+            ->setDepartureDraft($requestBody->getFloat('te_depart'))
+            ->setLastPort($requestBody->getString('last_port', null))
+            ->setNextPort($requestBody->getString('next_port', null))
+            ->setCallPort($requestBody->getString('call_port'))
+            ->setQuay($requestBody->getString('quai'))
+            ->setComment($requestBody->getString('commentaire'));
+
+        /** @phpstan-var ShippingCallCargoArray[] $cargoes */
+        $cargoes = $requestBody->getArray('marchandises');
+
+        $shippingCall->setCargoes(
+            array_map(
+                fn(array $cargo) => $this->makeShippingCallCargoFromForm($cargo),
+                $cargoes
+            )
+        );
 
         return $shippingCall;
     }
@@ -245,13 +206,11 @@ final class ShippingService
     /**
      * Creates a shipping call.
      * 
-     * @param array $input Raw data from the form.
-     * 
-     * @phpstan-param ShippingCallArray $input
+     * @param HTTPRequestBody $input Raw data from the form.
      * 
      * @return ShippingCall
      */
-    public function createShippingCall(array $input): ShippingCall
+    public function createShippingCall(HTTPRequestBody $input): ShippingCall
     {
         $call = $this->makeShippingCallFromForm($input);
 
@@ -261,14 +220,12 @@ final class ShippingService
     /**
      * Updates a shipping call.
      * 
-     * @param int $id 
-     * @param array $input 
-     * 
-     * @phpstan-param ShippingCallArray $input
+     * @param int             $id 
+     * @param HTTPRequestBody $input 
      * 
      * @return ShippingCall 
      */
-    public function updateShippingCall(int $id, array $input): ShippingCall
+    public function updateShippingCall(int $id, HTTPRequestBody $input): ShippingCall
     {
         $call = $this->makeShippingCallFromForm($input)->setId($id);
 

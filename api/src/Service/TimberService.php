@@ -7,6 +7,7 @@ use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\Core\Exceptions\Server\ServerException;
+use App\Core\HTTP\HTTPRequestBody;
 use App\DTO\Filter\TimberFilterDTO;
 use App\DTO\SupplierWithUniqueDeliveryNoteNumber;
 use App\DTO\TimberRegistryEntryDTO;
@@ -98,31 +99,29 @@ final class TimberService
     /**
      * Crée un RDV bois à partir des données brutes du formulaire.
      * 
-     * @param array $rawData Données brutes du RDV bois.
-     * 
-     * @phpstan-param TimberAppointmentArray $rawData
+     * @param HTTPRequestBody $rawData Données brutes du RDV bois.
      * 
      * @return TimberAppointment RDV bois créé.
      */
-    public function makeTimberAppointmentFromForm(array $rawData): TimberAppointment
+    public function makeTimberAppointmentFromForm(HTTPRequestBody $rawData): TimberAppointment
     {
         $appointment = (new TimberAppointment())
-            ->setId($rawData["id"] ?? null)
-            ->setOnHold($rawData["attente"] ?? false)
-            ->setDate($rawData["date_rdv"] ?? null)
-            ->setArrivalTime($rawData["heure_arrivee"] ?? null)
-            ->setDepartureTime($rawData["heure_depart"] ?? null)
-            ->setSupplier($this->thirdPartyService->getThirdParty($rawData["fournisseur"] ?? null))
-            ->setLoadingPlace($this->thirdPartyService->getThirdParty($rawData["chargement"] ?? null))
-            ->setDeliveryPlace($this->thirdPartyService->getThirdParty($rawData["livraison"] ?? null))
-            ->setCustomer($this->thirdPartyService->getThirdParty($rawData["client"] ?? null))
-            ->setCarrier($this->thirdPartyService->getThirdParty($rawData["transporteur"] ?? null))
-            ->setTransportBroker($this->thirdPartyService->getThirdParty($rawData["affreteur"] ?? null))
-            ->setReady($rawData["commande_prete"] ?? false)
-            ->setCharteringConfirmationSent($rawData["confirmation_affretement"] ?? false)
-            ->setDeliveryNoteNumber($rawData["numero_bl"] ?? "")
-            ->setPublicComment($rawData["commentaire_public"] ?? "")
-            ->setPrivateComment($rawData["commentaire_cache"] ?? "");
+            ->setId($rawData->getInt('id'))
+            ->setOnHold($rawData->getBool('attente'))
+            ->setDate($rawData->getDatetime('date_rdv'))
+            ->setArrivalTime($rawData->getDatetime('heure_arrivee'))
+            ->setDepartureTime($rawData->getDatetime('heure_depart'))
+            ->setSupplier($this->thirdPartyService->getThirdParty($rawData->getInt('fournisseur')))
+            ->setLoadingPlace($this->thirdPartyService->getThirdParty($rawData->getInt('chargement')))
+            ->setDeliveryPlace($this->thirdPartyService->getThirdParty($rawData->getInt('livraison')))
+            ->setCustomer($this->thirdPartyService->getThirdParty($rawData->getInt('client')))
+            ->setCarrier($this->thirdPartyService->getThirdParty($rawData->getInt('transporteur')))
+            ->setTransportBroker($this->thirdPartyService->getThirdParty($rawData->getInt('affreteur')))
+            ->setReady($rawData->getBool('commande_prete'))
+            ->setCharteringConfirmationSent($rawData->getBool('confirmation_affretement'))
+            ->setDeliveryNoteNumber($rawData->getString('numero_bl'))
+            ->setPublicComment($rawData->getString('commentaire_public'))
+            ->setPrivateComment($rawData->getString('commentaire_cache'));
 
         return $appointment;
     }
@@ -191,13 +190,11 @@ final class TimberService
     /**
      * Crée un RDV bois.
      * 
-     * @param array $input Eléments du RDV à créer
-     * 
-     * @phpstan-param TimberAppointmentArray $input
+     * @param HTTPRequestBody $input Eléments du RDV à créer
      * 
      * @return TimberAppointment Rendez-vous créé
      */
-    public function createAppointment(array $input): TimberAppointment
+    public function createAppointment(HTTPRequestBody $input): TimberAppointment
     {
         $appointment = $this->makeTimberAppointmentFromForm($input);
 
@@ -207,14 +204,12 @@ final class TimberService
     /**
      * Met à jour un RDV bois.
      * 
-     * @param int   $id ID du RDV à modifier
-     * @param array $input  Eléments du RDV à modifier
-     * 
-     * @phpstan-param TimberAppointmentArray $input
+     * @param int             $id ID du RDV à modifier
+     * @param HTTPRequestBody $input  Eléments du RDV à modifier
      * 
      * @return TimberAppointment RDV modifié
      */
-    public function updateAppointment($id, array $input): TimberAppointment
+    public function updateAppointment($id, HTTPRequestBody $input): TimberAppointment
     {
         $appointment = $this->makeTimberAppointmentFromForm($input)->setId($id);
 

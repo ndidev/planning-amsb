@@ -4,30 +4,49 @@
 
 namespace App\Core\Component;
 
-enum CharterStatus: int
+abstract class CharterStatus
 {
     /**
      * Plannifié (pas confirmé).
      */
-    case PENDING = 0;
+    const PENDING = 0;
 
     /**
      * Confirmé par l'affréteur.
      */
-    case CONFIRMED = 1;
+    const CONFIRMED = 1;
 
     /**
      * Affrété.
      */
-    case CHARTERED = 2;
+    const CHARTERED = 2;
 
     /**
      * Chargement effectué.
      */
-    case LOADED = 3;
+    const LOADED = 3;
 
     /**
      * Voyage terminé.
      */
-    case COMPLETED = 4;
+    const COMPLETED = 4;
+
+    /**
+     * Attempts to convert an integer to a status constant.
+     * 
+     * @param int $temptativeStatus
+     * 
+     * @phpstan-return self::*
+     */
+    public static function tryFrom(int $temptativeStatus): int
+    {
+        return match ($temptativeStatus) {
+            0 => self::PENDING,
+            1 => self::CONFIRMED,
+            2 => self::CHARTERED,
+            3 => self::LOADED,
+            4 => self::COMPLETED,
+            default => self::PENDING,
+        };
+    }
 }

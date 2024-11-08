@@ -9,8 +9,23 @@ use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\Config\InfoBannerLine;
 use App\Service\InfoBannerService;
 
+/**
+ * @phpstan-type InfoBannerLineArray array{
+ *                                     id: int,
+ *                                     module: string,
+ *                                     pc: bool,
+ *                                     tv: bool,
+ *                                     message: string,
+ *                                     couleur: string,
+ *                                   }
+ */
 final class InfoBannerRepository extends Repository
 {
+    public function __construct(private InfoBannerService $infoBannerService)
+    {
+        parent::__construct();
+    }
+
     public function lineExists(int $id): bool
     {
         return $this->mysql->exists("bandeau_info", $id);
@@ -31,10 +46,8 @@ final class InfoBannerRepository extends Repository
 
         $linesRaw = $linesRequest->fetchAll();
 
-        $infoBannerService = new InfoBannerService();
-
         $lines = array_map(
-            fn($line) => $infoBannerService->makeLineFromDatabase($line),
+            fn($line) => $this->infoBannerService->makeLineFromDatabase($line),
             $linesRaw
         );
 
@@ -56,11 +69,11 @@ final class InfoBannerRepository extends Repository
         $request->execute(["id" => $id]);
         $lineRaw = $request->fetch();
 
-        if (!$lineRaw) return null;
+        if (!is_array($lineRaw)) return null;
 
-        $infoBannerService = new InfoBannerService();
+        /** @phpstan-var InfoBannerLineArray $lineRaw */
 
-        $line = $infoBannerService->makeLineFromDatabase($lineRaw);
+        $line = $this->infoBannerService->makeLineFromDatabase($lineRaw);
 
         return $line;
     }

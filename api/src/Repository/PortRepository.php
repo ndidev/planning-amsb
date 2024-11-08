@@ -9,9 +9,21 @@ use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\Port;
 use App\Service\PortService;
 
+/**
+ * @phpstan-type PortArray array{
+ *                           locode?: string,
+ *                           nom?: string,
+ *                           nom_affichage?: string,
+ *                         }
+ */
 final class PortRepository extends Repository
 {
     private string $redisNamespace = "ports";
+
+    public function __construct(private PortService $portService)
+    {
+        parent::__construct();
+    }
 
     /**
      * Récupère tous les ports.
@@ -21,9 +33,10 @@ final class PortRepository extends Repository
     public function fetchAllPorts(): Collection
     {
         // Redis
-        $portsRaw = json_decode($this->redis->get($this->redisNamespace), true);
+        $redisValue = $this->redis->get($this->redisNamespace);
+        $portsRaw = is_string($redisValue) ? json_decode($redisValue, true) : null;
 
-        if (!$portsRaw) {
+        if (!is_array($portsRaw)) {
             $statement = "SELECT * FROM utils_ports ORDER BY SUBSTRING(locode, 1, 2), nom";
 
             $portsRequest = $this->mysql->query($statement);
@@ -32,14 +45,16 @@ final class PortRepository extends Repository
                 throw new DBException("Impossible de récupérer les ports.");
             }
 
+            /** @phpstan-var PortArray[] $portsRaw */
             $portsRaw = $portsRequest->fetchAll();
 
             $this->redis->set($this->redisNamespace, json_encode($portsRaw));
         }
 
-        $portService = new PortService();
-
-        $ports = array_map(fn(array $portRaw) => $portService->makePortFromDatabase($portRaw), $portsRaw);
+        $ports = array_map(
+            fn($portRaw) => $this->portService->makePortFromDatabase($portRaw),
+            $portsRaw
+        );
 
         return new Collection($ports);
     }
@@ -59,11 +74,11 @@ final class PortRepository extends Repository
         $request->execute(["locode" => $locode]);
         $portRaw = $request->fetch();
 
-        if (!$portRaw) return null;
+        if (!is_array($portRaw)) return null;
 
-        $portService = new PortService();
+        /** @phpstan-var PortArray $portRaw */
 
-        $port = $portService->makePortFromDatabase($portRaw);
+        $port = $this->portService->makePortFromDatabase($portRaw);
 
         return $port;
     }

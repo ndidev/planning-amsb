@@ -198,11 +198,11 @@ final class TimberAppointmentController extends Controller
 
         $appointment = $this->timberService->patchAppointment(
             appointmentId: $id,
-            isOrderReady: $input["commande_prete"] ?? null,
-            isCharteringConfirmationSent: $input["confirmation_affretement"] ?? null,
-            deliveryNoteNumber: $input["numero_bl"] ?? null,
-            setArrivalTime: isset($input["heure_arrivee"]),
-            setDepartureTime: isset($input["heure_depart"]),
+            isOrderReady: $input->getBool('commande_prete', null),
+            isCharteringConfirmationSent: $input->getBool('confirmation_affretement', null),
+            deliveryNoteNumber: $input->getString('numero_bl', null),
+            setArrivalTime: $input->isSet('heure_arrivee'),
+            setDepartureTime: $input->isSet('heure_depart'),
         );
 
         $this->response->setJSON($appointment);

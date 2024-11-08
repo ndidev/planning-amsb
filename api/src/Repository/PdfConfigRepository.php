@@ -9,8 +9,24 @@ use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\Config\PdfConfig;
 use App\Service\PdfService;
 
+/**
+ * @phpstan-type PdfConfigArray array{
+ *                                id?: int,
+ *                                module?: string,
+ *                                fournisseur?: int,
+ *                                envoi_auto?: bool|int,
+ *                                liste_emails?: string|string[],
+ *                                jours_avant?: int,
+ *                                jours_apres?: int,
+ *                              }
+ */
 final class PdfConfigRepository extends Repository
 {
+    public function __construct(private PdfService $pdfService)
+    {
+        parent::__construct();
+    }
+
     public function configExists(int $id): bool
     {
         return $this->mysql->exists("config_pdf", $id);
@@ -40,12 +56,11 @@ final class PdfConfigRepository extends Repository
             throw new DBException("Impossible de récupérer les configurations PDF.");
         }
 
+        /** @phpstan-var PdfConfigArray[] $configsRaw */
         $configsRaw = $request->fetchAll();
 
-        $pdfService = new PdfService();
-
         $configs = array_map(
-            fn(array $config) => $pdfService->makeConfigFromDatabase($config),
+            fn($config) => $this->pdfService->makeConfigFromDatabase($config),
             $configsRaw
         );
 
@@ -79,11 +94,11 @@ final class PdfConfigRepository extends Repository
 
         $configRaw = $request->fetch();
 
-        if (!$configRaw) return null;
+        if (!is_array($configRaw)) return null;
 
-        $pdfService = new PdfService();
+        /** @phpstan-var PdfConfigArray $configRaw */
 
-        $config = $pdfService->makeConfigFromDatabase($configRaw);
+        $config = $this->pdfService->makeConfigFromDatabase($configRaw);
 
         return $config;
     }

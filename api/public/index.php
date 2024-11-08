@@ -34,6 +34,7 @@ use App\Controller\User\UserController;
 use App\Controller\Utils\CountryController;
 use App\Controller\Utils\PortController;
 use App\Controller\Utils\TideController;
+use App\Core\Exceptions\Server\ServerException;
 use App\Core\Router\Router;
 use App\Core\Security;
 use App\Core\HTTP\HTTPResponse;
@@ -123,6 +124,10 @@ try {
         $controllerClass = $match["target"];
         $params = $match["params"];
         $name = $match["name"];
+
+        if (!is_string($controllerClass) || !class_exists($controllerClass)) {
+            throw new ServerException("Controller not found");
+        }
 
         /** @var Controller $controller */
         $controller = new $controllerClass(...$params);

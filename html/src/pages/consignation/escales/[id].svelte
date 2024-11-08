@@ -61,7 +61,7 @@
   const nouvelleMarchandise: EscaleConsignation["marchandises"][0] = {
     id: null,
     escale_id: null,
-    operation: "Import",
+    operation: "import",
     marchandise: "",
     client: "",
     environ: true,
@@ -625,8 +625,8 @@
                       class="operation"
                       bind:value={marchandise.operation}
                     >
-                      <option value="Import">Import</option>
-                      <option value="Export">Export</option>
+                      <option value="import">Import</option>
+                      <option value="export">Export</option>
                     </select>
                   </label>
                 </div>

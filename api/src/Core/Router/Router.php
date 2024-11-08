@@ -199,7 +199,7 @@ class Router
      * 
      * @param string $requestUrl The request url to match.
      * 
-     * @return array{target: string, params: array<string, mixed>, name: ?string}|false Array with route information on success, false on failure (no match).
+     * @return array{target: mixed, params: array<string, mixed>, name: ?string}|false Array with route information on success, false on failure (no match).
      */
     public function match(?string $requestUrl = null): array|false
     {

@@ -6,30 +6,7 @@ namespace App\Entity;
 
 use App\Core\Auth\AccountStatus;
 use App\Core\Auth\UserRoles;
-use App\Core\Component\Module;
 
-/**
- * @phpstan-type UserArray array{
- *                           uid: ?string,
- *                           login: string,
- *                           nom: string,
- *                           roles: UserRolesObject,
- *                           statut: string,
- *                           commentaire: string,
- *                           historique: string,
- *                           last_connection: ?string,
- *                         }
- * 
- * @phpstan-type UserRolesObject object{
- *                                 bois?: 0|1|2,
- *                                 vrac?: 0|1|2,
- *                                 consignation?: 0|1|2,
- *                                 chartering?: 0|1|2,
- *                                 config?: 0|1,
- *                                 tiers?: 0|1,
- *                                 admin?: 0|1,
- *                               }
- */
 class UserAccount extends AbstractEntity
 {
     /**
@@ -76,7 +53,7 @@ class UserAccount extends AbstractEntity
     /**
      * Rôles de l'utilisateur.
      */
-    private \stdClass $roles;
+    private UserRoles $roles;
 
     /**
      * Commentaires sur l'utilisateur.
@@ -93,6 +70,8 @@ class UserAccount extends AbstractEntity
         if ($uid) {
             $this->uid = $uid;
         }
+
+        $this->roles = new UserRoles();
     }
 
     public function getUid(): ?string
@@ -216,14 +195,29 @@ class UserAccount extends AbstractEntity
         return $this;
     }
 
-    public function getRoles(): object
+    public function getRoles(): UserRoles
     {
         return $this->roles;
     }
 
-    public function setRoles(\stdClass $roles): static
+    /**
+     *  @return UserRoles::*
+     */
+    public function getRole(string $role): int
     {
-        $this->roles = $roles;
+        return $this->roles->$role;
+    }
+
+    /**
+     * @param string|array<mixed> $roles 
+     */
+    public function setRoles(string|array $roles): static
+    {
+        if (is_string($roles)) {
+            $this->roles->fillFromJsonString($roles);
+        } else {
+            $this->roles->fillFromArray($roles);
+        }
 
         return $this;
     }
@@ -260,45 +254,13 @@ class UserAccount extends AbstractEntity
     }
 
     /**
-     * Vérifie si l'utilisateur peut accéder à une rubrique.
-     * 
-     * @param ?Module::* $module Rubrique dont l'accès doit être vérifié.
-     * 
-     * @return bool `true` si l'utilisateur peut accéder à la rubrique, `false` sinon.
-     */
-    public function canAccess(?string $module): bool
-    {
-        // Accès à l'accueil et à l'écran individuel de modification du nom/mdp
-        if ($module === null || $module === Module::USER) return true;
-
-        return ($this->roles->$module ?? UserRoles::NONE) >= UserRoles::ACCESS;
-    }
-
-    /**
-     * Vérifie si l'utilisateur peut éditer une rubrique.
-     * 
-     * @param ?Module::* $module Rubrique dont l'accès doit être vérifié.
-     * 
-     * @return bool `true` si l'utilisateur peut éditer la rubrique, `false` sinon.
-     */
-    public function canEdit(?string $module): bool
-    {
-        return ($this->roles->$module ?? UserRoles::NONE) >= UserRoles::EDIT;
-    }
-
-    /**
      * `true` si l'utilisateur est administrateur, `false` sinon.
      */
     public function isAdmin(): bool
     {
-        return (bool) ($this->roles?->admin ?? false);
+        return $this->roles->admin >= UserRoles::ACCESS;
     }
 
-    /**
-     * @return array 
-     * 
-     * @phpstan-return UserArray
-     */
     public function toArray(): array
     {
         return [

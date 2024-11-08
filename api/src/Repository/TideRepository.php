@@ -30,9 +30,10 @@ final class TideRepository extends Repository
         $datesHash = md5($startDate->format('Y-m-d') . $endDate->format('Y-m-d'));
 
         // Redis
-        $tides = json_decode($this->redis->get($this->redisNamespace . ":" . $datesHash), true);
+        $redisValue = $this->redis->get($this->redisNamespace . ":" . $datesHash);
+        $tidesArray = is_string($redisValue) ? json_decode($redisValue, true) : null;
 
-        if (!$tides) {
+        if (!$tidesArray || !is_array($tidesArray)) {
             $statement = "SELECT * FROM marees m WHERE m.date BETWEEN :start AND :end";
 
             $request = $this->mysql->prepare($statement);
@@ -49,18 +50,18 @@ final class TideRepository extends Repository
              *             te_bassin: string
              *           }>
              */
-            $tides = $request->fetchAll();
+            $tidesArray = $request->fetchAll();
 
-            if (!empty($tides)) {
+            if (!empty($tidesArray)) {
                 $this->redis->setex(
                     $this->redisNamespace . ":" . $datesHash,
                     ONE_WEEK,
-                    json_encode($tides)
+                    json_encode($tidesArray)
                 );
             }
         }
 
-        $tidesDTO = new TidesDTO($tides);
+        $tidesDTO = new TidesDTO($tidesArray);
 
         return $tidesDTO;
     }
@@ -73,9 +74,10 @@ final class TideRepository extends Repository
     public function fetchTidesByYear(int $year): TidesDTO
     {
         // Redis
-        $tides = json_decode($this->redis->get($this->redisNamespace . ":" . $year), true);
+        $redisValue = $this->redis->get($this->redisNamespace . ":" . $year);
+        $tides = is_string($redisValue) ? json_decode($redisValue, true) : null;
 
-        if (!$tides) {
+        if (!$tides || !is_array($tides)) {
             $statement = "SELECT * FROM marees WHERE SUBSTRING(date, 1, 4) = :year";
 
             $tidesRequest = $this->mysql->prepare($statement);
@@ -109,9 +111,10 @@ final class TideRepository extends Repository
     public function fetchYears(): array
     {
         // Redis
-        $years = json_decode($this->redis->get($this->redisNamespace . ":annees"));
+        $redisValue = $this->redis->get($this->redisNamespace . ":years");
+        $years = is_string($redisValue) ? json_decode($redisValue) : null;
 
-        if (!$years) {
+        if (!is_array($years)) {
             $statement = "SELECT DISTINCT SUBSTRING(date, 1, 4) FROM `utils_marees_shom`";
 
             $yearsRequest = $this->mysql->query($statement);
@@ -123,7 +126,7 @@ final class TideRepository extends Repository
             /** @var string[] */
             $years = $yearsRequest->fetchAll(\PDO::FETCH_COLUMN);
 
-            $this->redis->set($this->redisNamespace . ":annees", json_encode($years));
+            $this->redis->set($this->redisNamespace . ":years", json_encode($years));
         }
 
         return $years;

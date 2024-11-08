@@ -2,43 +2,18 @@
 
 namespace App\Service;
 
+use App\Core\Component\CharterStatus;
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\DB\DBException;
+use App\Core\HTTP\HTTPRequestBody;
 use App\DTO\Filter\CharteringFilterDTO;
 use App\Entity\Chartering\Charter;
 use App\Entity\Chartering\CharterLeg;
 use App\Repository\CharteringRepository;
 
 /**
- * @phpstan-type CharterArray array{
- *                              id?: int,
- *                              statut?: int,
- *                              lc_debut?: string,
- *                              lc_fin?: string,
- *                              cp_date?: string,
- *                              navire?: string,
- *                              affreteur?: int,
- *                              armateur?: int,
- *                              courtier?: int,
- *                              fret_achat?: float,
- *                              fret_vente?: float,
- *                              surestaries_achat?: float,
- *                              surestaries_vente?: float,
- *                              commentaire?: string,
- *                              archive?: bool,
- *                              legs?: CharterLegArray[]
- *                            }
- * 
- * @phpstan-type CharterLegArray array{
- *                                 id?: int,
- *                                 charter?: int,
- *                                 bl_date?: string,
- *                                 pol?: string,
- *                                 pod?: string,
- *                                 marchandise?: string,
- *                                 quantite?: string,
- *                                 commentaire?: string,
- *                               }
+ * @phpstan-import-type CharterArray from \App\Repository\CharteringRepository
+ * @phpstan-import-type CharterLegArray from \App\Repository\CharteringRepository
  */
 final class CharteringService
 {
@@ -91,36 +66,38 @@ final class CharteringService
     /**
      * Creates a Charter object from form data.
      * 
-     * @param array $rawData 
-     * 
-     * @phpstan-param CharterArray $rawData
+     * @param HTTPRequestBody $requestBody 
      * 
      * @return Charter 
      */
-    public function makeCharterFromFormData(array $rawData): Charter
+    public function makeCharterFromFormData(HTTPRequestBody $requestBody): Charter
     {
         $charter = (new Charter())
-            ->setId($rawData["id"] ?? null)
-            ->setStatus($rawData["statut"] ?? 0)
-            ->setLaycanStart($rawData["lc_debut"] ?? null)
-            ->setLaycanEnd($rawData["lc_fin"] ?? null)
-            ->setCpDate($rawData['cp_date'] ?? null)
-            ->setVesselName($rawData['navire'] ?? '')
-            ->setCharterer($this->thirdPartyService->getThirdParty($rawData['affreteur'] ?? null))
-            ->setShipOperator($this->thirdPartyService->getThirdParty($rawData['armateur'] ?? null))
-            ->setShipbroker($this->thirdPartyService->getThirdParty($rawData['courtier'] ?? null))
-            ->setFreightPayed((float) ($rawData['fret_achat'] ?? 0))
-            ->setFreightSold((float) ($rawData['fret_vente'] ?? 0))
-            ->setDemurragePayed((float) ($rawData['surestaries_achat'] ?? 0))
-            ->setDemurrageSold((float) ($rawData['surestaries_vente'] ?? 0))
-            ->setComments($rawData['commentaire'] ?? '')
-            ->setArchive($rawData['archive'] ?? false)
-            ->setLegs(
-                array_map(
-                    fn(array $leg) => $this->makeCharterLegFromFormData($leg),
-                    $rawData['legs'] ?? []
-                )
-            );
+            ->setId($requestBody->getInt('id'))
+            ->setStatus($requestBody->getInt('statut', CharterStatus::PENDING))
+            ->setLaycanStart($requestBody->getDatetime('lc_debut', null))
+            ->setLaycanEnd($requestBody->getDatetime('lc_fin', null))
+            ->setCpDate($requestBody->getDatetime('cp_date', null))
+            ->setVesselName($requestBody->getString('navire'))
+            ->setCharterer($this->thirdPartyService->getThirdParty($requestBody->getInt('affreteur')))
+            ->setShipOperator($this->thirdPartyService->getThirdParty($requestBody->getInt('armateur')))
+            ->setShipbroker($this->thirdPartyService->getThirdParty($requestBody->getInt('courtier')))
+            ->setFreightPayed($requestBody->getFloat('fret_achat', 0))
+            ->setFreightSold($requestBody->getFloat('fret_vente', 0))
+            ->setDemurragePayed($requestBody->getFloat('surestaries_achat', 0))
+            ->setDemurrageSold($requestBody->getFloat('surestaries_vente', 0))
+            ->setComments($requestBody->getString('commentaire'))
+            ->setArchive($requestBody->getBool('archive'));
+
+        /** @phpstan-var CharterLegArray[] $legs */
+        $legs = $requestBody->getArray('legs');
+
+        $charter->setLegs(
+            array_map(
+                fn(array $leg) => $this->makeCharterLegFromFormData($leg),
+                $legs
+            )
+        );
 
         return $charter;
     }
@@ -215,13 +192,11 @@ final class CharteringService
     /**
      * Creates a charter.
      * 
-     * @param array $input Eléments de l'affrètement à créer.
-     * 
-     * @phpstan-param CharterArray $input
+     * @param HTTPRequestBody $input Eléments de l'affrètement à créer.
      * 
      * @return Charter Created charter.
      */
-    public function createCharter(array $input): Charter
+    public function createCharter(HTTPRequestBody $input): Charter
     {
         $charter = $this->makeCharterFromFormData($input);
 
@@ -231,14 +206,12 @@ final class CharteringService
     /**
      * Update a charter.
      * 
-     * @param int   $id ID of the charter to update.
-     * @param array $input  Elements of the charter to update.
-     * 
-     * @phpstan-param CharterArray $input
+     * @param int             $id ID of the charter to update.
+     * @param HTTPRequestBody $input  Elements of the charter to update.
      * 
      * @return Charter Updated charter.
      */
-    public function updateCharter($id, array $input): Charter
+    public function updateCharter($id, HTTPRequestBody $input): Charter
     {
         $charter = $this->makeCharterFromFormData($input)->setId($id);
 

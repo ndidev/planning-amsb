@@ -128,7 +128,7 @@ export type EscaleConsignation = {
   marchandises: {
     id: number;
     escale_id: number;
-    operation: "Import" | "Export";
+    operation: "import" | "export";
     marchandise: string;
     client: string;
     environ: boolean;

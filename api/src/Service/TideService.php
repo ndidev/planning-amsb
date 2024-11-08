@@ -59,10 +59,15 @@ final class TideService
      * Adds tides from a file to the database.
      *
      * @param mixed $data The data containing the file information.
+     * 
      * @return string The year of the first tide entry.
      */
     public function addTides(mixed $data): string
     {
+        if (!is_array($data) || !array_key_exists("tmp_name", $data)) {
+            throw new ServerException("Fichier non trouvé.");
+        }
+
         $content = file_get_contents($data["tmp_name"]);
 
         if ($content === false) {

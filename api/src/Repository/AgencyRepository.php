@@ -9,8 +9,28 @@ use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\Config\AgencyDepartment;
 use App\Service\AgencyService;
 
+/**
+ * @phpstan-type AgencyDepartmentArray array{
+ *                                       service: string,
+ *                                       affichage: string,
+ *                                       nom: string,
+ *                                       adresse_ligne_1: string,
+ *                                       adresse_ligne_2: string,
+ *                                       cp: string,
+ *                                       ville: string,
+ *                                       pays: string,
+ *                                       telephone: string,
+ *                                       mobile: string,
+ *                                       email: string
+ *                                     }
+ */
 final class AgencyRepository extends Repository
 {
+    public function __construct(private AgencyService $agencyService)
+    {
+        parent::__construct();
+    }
+
     /**
      * Vérifie si une entrée existe dans la base de données.
      * 
@@ -34,12 +54,11 @@ final class AgencyRepository extends Repository
             throw new DBException("Impossible de récupérer les services de l'agence.");
         }
 
+        /** @phpstan-var AgencyDepartmentArray[] $departmentsRaw */
         $departmentsRaw = $request->fetchAll();
 
-        $agencyService = new AgencyService();
-
         $departments = array_map(
-            fn(array $departmentRaw) => $agencyService->makeDepartmentFromDatabase($departmentRaw),
+            fn(array $departmentRaw) => $this->agencyService->makeDepartmentFromDatabase($departmentRaw),
             $departmentsRaw
         );
 
@@ -59,11 +78,11 @@ final class AgencyRepository extends Repository
         $request->execute(["service" => $departmentName]);
         $departmentRaw = $request->fetch();
 
-        if (!$departmentName) return null;
+        if (!is_array($departmentRaw)) return null;
 
-        $agencyService = new AgencyService();
+        /** @phpstan-var AgencyDepartmentArray $departmentRaw */
 
-        $department = $agencyService->makeDepartmentFromDatabase($departmentRaw);
+        $department = $this->agencyService->makeDepartmentFromDatabase($departmentRaw);
 
         return $department;
     }

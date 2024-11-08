@@ -132,7 +132,7 @@ final class TimberAppointmentRepository extends Repository
         $request->execute(["id" => $id]);
         $appointmentRaw = $request->fetch();
 
-        if (!$appointmentRaw) return null;
+        if (!is_array($appointmentRaw)) return null;
 
         $appointment = $this->timberService->makeTimberAppointmentFromDatabase($appointmentRaw);
 
@@ -456,12 +456,17 @@ final class TimberAppointmentRepository extends Repository
             "supplierId" => $supplierId,
         ]);
 
-        [$deliveryNoteNumberExists, $id] = $request->fetch(\PDO::FETCH_NUM);
+        $deliveryNoteNumberIsAvailable = true;
 
-        if ($deliveryNoteNumberExists && $id !== $currentAppointmentId) {
-            $deliveryNoteNumberIsAvailable = false;
-        } else {
-            $deliveryNoteNumberIsAvailable = true;
+        $deliveryNoteData = $request->fetch(\PDO::FETCH_NUM);
+
+        if (is_array($deliveryNoteData) && count($deliveryNoteData) === 2) {
+            /** @var array{0: int, 1: int} $deliveryNoteData */
+            [$deliveryNoteNumberCount, $id] = $deliveryNoteData;
+
+            if ($deliveryNoteNumberCount > 0 && $id !== $currentAppointmentId) {
+                $deliveryNoteNumberIsAvailable = false;
+            }
         }
 
         return $deliveryNoteNumberIsAvailable;

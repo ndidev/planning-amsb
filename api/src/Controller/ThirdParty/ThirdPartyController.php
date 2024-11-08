@@ -120,7 +120,7 @@ final class ThirdPartyController extends Controller
 
         $input = $this->request->getBody();
 
-        if (empty($input)) {
+        if ($input->isEmpty()) {
             throw new ClientException("Le corps de la requête est vide.");
         }
 

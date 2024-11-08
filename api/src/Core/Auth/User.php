@@ -18,7 +18,8 @@ use App\Core\Exceptions\Client\Auth\InvalidApiKeyException;
 use App\Core\Exceptions\Client\Auth\LoginException;
 use App\Core\Exceptions\Client\Auth\MaxLoginAttemptsException;
 use App\Core\Exceptions\Client\Auth\SessionException;
-
+use App\Core\Exceptions\Server\DB\DBException;
+use App\Core\Exceptions\Server\ServerException;
 use App\Core\Security;
 use const App\Core\Component\Constants\ONE_WEEK;
 
@@ -68,12 +69,7 @@ class User
     /**
      * Rôles de l'utilisateur.
      */
-    public object $roles;
-
-    /**
-     * `true` si l'utilisateur est administrateur, `false` sinon.
-     */
-    public bool $isAdmin = false;
+    public readonly UserRoles $roles;
 
     private Redis $redis;
 
@@ -87,6 +83,8 @@ class User
         } else {
             $this->redis = new Redis();
         }
+
+        $this->roles = new UserRoles();
 
         if ($uid) {
             $this->uid = $uid;
@@ -298,15 +296,24 @@ class User
 
         $apiKeyHash = md5($apiKey);
 
-        $apiKeyInfo =
-            $this->redis->hGetAll("admin:apikeys:{$apiKeyHash}");
+        $apiKeyInfo = $this->redis->hGetAll("admin:apikeys:{$apiKeyHash}");
 
-        if (!$apiKeyInfo) {
+        if ($apiKeyInfo instanceof \Redis) {
+            throw new ServerException("Redis shouldn't be in multimode");
+        }
+
+        if (empty($apiKeyInfo)) {
             $keyInfoPdoStatement = (new MySQL())
                 ->query("SELECT `uid`, `status`, expiration FROM admin_api_keys WHERE `key` = '{$apiKeyHash}'");
 
-            if ($keyInfoPdoStatement) {
-                $apiKeyInfo = $keyInfoPdoStatement->fetch();
+            if (!$keyInfoPdoStatement) {
+                throw new DBException("Impossible de récupérer les informations de la clé API");
+            }
+
+            $apiKeyInfo = $keyInfoPdoStatement->fetch();
+
+            if (!is_array($apiKeyInfo)) {
+                throw new InvalidApiKeyException();
             }
         }
 
@@ -323,12 +330,10 @@ class User
 
 
         if (!$uid) {
-            Security::preventBruteforce();
             throw new InvalidApiKeyException();
         }
 
         if ($status !== ApiKeyStatus::ACTIVE) {
-            Security::preventBruteforce();
             throw new InvalidApiKeyException();
         }
 
@@ -353,7 +358,7 @@ class User
     /**
      * Vérifie si l'utilisateur peut accéder à une rubrique.
      * 
-     * @param ?Module::* $module Rubrique dont l'accès doit être vérifié.
+     * @param ?string $module Rubrique dont l'accès doit être vérifié.
      * 
      * @return bool `true` si l'utilisateur peut accéder à la rubrique, `false` sinon.
      */
@@ -362,19 +367,27 @@ class User
         // Accès à l'accueil et à l'écran individuel de modification du nom/mdp
         if ($module === null || $module === Module::USER) return true;
 
-        return ($this->roles->$module ?? UserRoles::NONE) >= UserRoles::ACCESS;
+        return $this->roles->$module >= UserRoles::ACCESS;
     }
 
     /**
      * Vérifie si l'utilisateur peut éditer une rubrique.
      * 
-     * @param ?Module::* $module Rubrique dont l'accès doit être vérifié.
+     * @param ?string $module Rubrique dont l'accès doit être vérifié.
      * 
      * @return bool `true` si l'utilisateur peut éditer la rubrique, `false` sinon.
      */
     public function canEdit(?string $module): bool
     {
-        return ($this->roles->$module ?? UserRoles::NONE) >= UserRoles::EDIT;
+        return $this->roles->$module >= UserRoles::EDIT;
+    }
+
+    /**
+     * `true` si l'utilisateur est administrateur, `false` sinon.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->roles->admin >= UserRoles::ACCESS;
     }
 
     /**
@@ -384,13 +397,16 @@ class User
     {
         $userPdoStatement = (new MySQL())->query("SELECT * FROM admin_users WHERE uid = '{$this->uid}'");
 
-        if ($userPdoStatement) {
-            $user = $userPdoStatement->fetch();
-        } else {
+        if (!$userPdoStatement) {
+            throw new DBException("Impossible de récupérer les informations de l'utilisateur");
+        }
+
+        $user = $userPdoStatement->fetch();
+
+        if (!is_array($user)) {
             throw new InvalidAccountException();
         }
 
-        // Copie des infos dans Redis (hash)
         $this->redis->hMSet("admin:users:{$this->uid}", $user);
     }
 
@@ -464,17 +480,19 @@ class User
             $requete = $mysql->prepare("SELECT uid FROM admin_users WHERE login = :login");
             $requete->execute(["login" => $login]);
             $user = $requete->fetch();
-            $uid = $user["uid"] ?? null;
 
-            if (!$uid) {
+            if (!is_array($user) || !isset($user["uid"])) {
                 throw new InvalidAccountException();
             }
+
+            /** @var string */
+            $uid = $user["uid"];
         }
 
         // Identification grâce à l'identifiant de session
         if ($sid) {
             $uid = $this->redis->get("admin:sessions:{$sid}");
-            if ($uid === false) {
+            if (!is_string($uid)) {
                 throw new SessionException();
             }
         }
@@ -512,8 +530,7 @@ class User
         $this->name = $user["nom"];
         $this->loginAttempts = $user["login_attempts"];
         $this->status = AccountStatus::tryFrom($user["statut"]) ?? $user["statut"];
-        $this->roles = json_decode($user["roles"]);
-        $this->isAdmin = (bool) ($this->roles?->admin ?? false);
+        $this->roles->fillFromJsonString($user["roles"]);
     }
 
     /**

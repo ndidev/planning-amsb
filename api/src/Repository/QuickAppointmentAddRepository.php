@@ -10,8 +10,24 @@ use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\Config\TimberQuickAppointmentAdd;
 use App\Service\QuickAppointmentAddService;
 
+/**
+ * @phpstan-type TimberQuickAppointmentAddArray array{
+ *                                                id: int|null,
+ *                                                fournisseur: int,
+ *                                                transporteur: int,
+ *                                                affreteur: int,
+ *                                                chargement: int,
+ *                                                client: int,
+ *                                                livraison: int,
+ *                                              }
+ */
 final class QuickAppointmentAddRepository extends Repository
 {
+    public function __construct(private QuickAppointmentAddService $quickAppointmentAddService)
+    {
+        parent::__construct();
+    }
+
     public function quickAddExists(string $module, int $id): bool
     {
         return match ($module) {
@@ -47,12 +63,11 @@ final class QuickAppointmentAddRepository extends Repository
             throw new DBException("Impossible de récupérer les ajouts rapides bois.");
         }
 
+        /** @phpstan-var TimberQuickAppointmentAddArray[] $quickAddConfigsRaw */
         $quickAddConfigsRaw = $quickAddConfigsRequest->fetchAll();
 
-        $quickAppointmentAddService = new QuickAppointmentAddService();
-
         $quickAddConfigs = array_map(
-            fn($quickAddRaw) => $quickAppointmentAddService->makeTimberQuickAppointmentAddFromDatabase($quickAddRaw),
+            fn(array $quickAddRaw) => $this->quickAppointmentAddService->makeTimberQuickAppointmentAddFromDatabase($quickAddRaw),
             $quickAddConfigsRaw
         );
 
@@ -75,11 +90,11 @@ final class QuickAppointmentAddRepository extends Repository
 
         $quickAddConfigRaw = $request->fetch();
 
-        if (!$quickAddConfigRaw) return null;
+        if (!is_array($quickAddConfigRaw)) return null;
 
-        $quickAppointmentAddService = new QuickAppointmentAddService();
+        /** @phpstan-var TimberQuickAppointmentAddArray $quickAddConfigRaw */
 
-        $quickAddConfig = $quickAppointmentAddService->makeTimberQuickAppointmentAddFromDatabase($quickAddConfigRaw);
+        $quickAddConfig = $this->quickAppointmentAddService->makeTimberQuickAppointmentAddFromDatabase($quickAddConfigRaw);
 
         return $quickAddConfig;
     }

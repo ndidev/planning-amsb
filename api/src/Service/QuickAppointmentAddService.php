@@ -6,20 +6,13 @@ namespace App\Service;
 
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Client\BadRequestException;
+use App\Core\HTTP\HTTPRequestBody;
 use App\Entity\Config\QuickAppointmentAdd;
 use App\Entity\Config\TimberQuickAppointmentAdd;
 use App\Repository\QuickAppointmentAddRepository;
 
 /**
- * @phpstan-type TimberQuickAppointmentAddArray array{
- *                                                id?: int|null,
- *                                                fournisseur?: int,
- *                                                transporteur?: int,
- *                                                affreteur?: int,
- *                                                chargement?: int,
- *                                                client?: int,
- *                                                livraison?: int,
- *                                              }
+ * @phpstan-import-type TimberQuickAppointmentAddArray from \App\Repository\QuickAppointmentAddRepository
  */
 final class QuickAppointmentAddService
 {
@@ -27,21 +20,15 @@ final class QuickAppointmentAddService
 
     public function __construct()
     {
-        $this->quickAppointmentAddRepository = new QuickAppointmentAddRepository();
+        $this->quickAppointmentAddRepository = new QuickAppointmentAddRepository($this);
     }
 
     /**
      * Creates a TimberQuickAppointmentAdd object from database data.
      * 
-     * @param array{
-     *          id: int,
-     *          fournisseur: int,
-     *          transporteur: int,
-     *          affreteur: int,
-     *          chargement: int,
-     *          client: int,
-     *          livraison: int,
-     *        } $rawData
+     * @param array $rawData
+     * 
+     * @phpstan-param TimberQuickAppointmentAddArray $rawData
      * 
      * @return TimberQuickAppointmentAdd
      */
@@ -64,24 +51,22 @@ final class QuickAppointmentAddService
     /**
      * Creates a TimberQuickAppointmentAdd object from form data.
      * 
-     * @param array $rawData 
-     * 
-     * @phpstan-param TimberQuickAppointmentAddArray $rawData
+     * @param HTTPRequestBody $requestBody 
      * 
      * @return TimberQuickAppointmentAdd 
      */
-    public function makeTimberQuickAppointmentAddFromForm(array $rawData): TimberQuickAppointmentAdd
+    public function makeTimberQuickAppointmentAddFromForm(HTTPRequestBody $requestBody): TimberQuickAppointmentAdd
     {
         $thirdPartyService = new ThirdPartyService();
 
         $quickAppointmentAdd = (new TimberQuickAppointmentAdd())
-            ->setId($rawData["id"] ?? null)
-            ->setSupplier($thirdPartyService->getThirdParty($rawData["fournisseur"] ?? null))
-            ->setCarrier($thirdPartyService->getThirdParty($rawData["transporteur"] ?? null))
-            ->setCharterer($thirdPartyService->getThirdParty($rawData["affreteur"] ?? null))
-            ->setLoading($thirdPartyService->getThirdParty($rawData["chargement"] ?? null))
-            ->setCustomer($thirdPartyService->getThirdParty($rawData["client"] ?? null))
-            ->setDelivery($thirdPartyService->getThirdParty($rawData["livraison"] ?? null));
+            ->setId($requestBody->getInt('id'))
+            ->setSupplier($thirdPartyService->getThirdParty($requestBody->getInt('fournisseur')))
+            ->setCarrier($thirdPartyService->getThirdParty($requestBody->getInt('transporteur')))
+            ->setCharterer($thirdPartyService->getThirdParty($requestBody->getInt('affreteur')))
+            ->setLoading($thirdPartyService->getThirdParty($requestBody->getInt('chargement')))
+            ->setCustomer($thirdPartyService->getThirdParty($requestBody->getInt('client')))
+            ->setDelivery($thirdPartyService->getThirdParty($requestBody->getInt('livraison')));
 
         return $quickAppointmentAdd;
     }
@@ -123,13 +108,11 @@ final class QuickAppointmentAddService
     /**
      * Create a TimberQuickAppointmentAdd.
      * 
-     * @param array $rawData 
-     * 
-     * @phpstan-param TimberQuickAppointmentAddArray $rawData
+     * @param HTTPRequestBody $rawData 
      * 
      * @return TimberQuickAppointmentAdd 
      */
-    public function createTimberQuickAppointmentAdd(array $rawData): TimberQuickAppointmentAdd
+    public function createTimberQuickAppointmentAdd(HTTPRequestBody $rawData): TimberQuickAppointmentAdd
     {
         $quickAppointmentAdd = $this->makeTimberQuickAppointmentAddFromForm($rawData);
 
@@ -150,14 +133,12 @@ final class QuickAppointmentAddService
     /**
      * Update a TimberQuickAppointmentAdd.
      * 
-     * @param int $id 
-     * @param array $rawData 
-     * 
-     * @phpstan-param TimberQuickAppointmentAddArray $rawData
+     * @param int             $id 
+     * @param HTTPRequestBody $rawData 
      * 
      * @return TimberQuickAppointmentAdd 
      */
-    public function updateTimberQuickAppointmentAdd(int $id, array $rawData): TimberQuickAppointmentAdd
+    public function updateTimberQuickAppointmentAdd(int $id, HTTPRequestBody $rawData): TimberQuickAppointmentAdd
     {
         $quickAppointmentAdd = $this->makeTimberQuickAppointmentAddFromForm($rawData)->setId($id);
 

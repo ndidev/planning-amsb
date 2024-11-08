@@ -24,7 +24,7 @@ function array_stringify(
 
     foreach ($array as $key => $value) {
         // If $value is an array, recursive stringification
-        if (gettype($value) === "array" && !$maxDepthIsReached) {
+        if (is_array($value) && !$maxDepthIsReached) {
             $value = "["
                 . PHP_EOL
                 . array_stringify($value, $indentation + 2, $depth + 1, $maxDepth)
@@ -32,7 +32,8 @@ function array_stringify(
                 . "]";
         }
 
-        if (is_object($value)) {
+        if (!is_string($value)) {
+            /** @var string */
             $value = print_r($value, true);
         }
 

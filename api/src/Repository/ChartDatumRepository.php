@@ -9,8 +9,20 @@ use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\ChartDatum;
 use App\Service\ChartDatumService;
 
+/**
+ * @phpstan-type ChartDatumArray array{
+ *                                 cote?: string,
+ *                                 affichage?: string,
+ *                                 valeur?: float,
+ *                               }
+ */
 final class ChartDatumRepository extends Repository
 {
+    public function __construct(private ChartDatumService $chartDatumService)
+    {
+        parent::__construct();
+    }
+
     public function datumExists(string $name): bool
     {
         return $this->mysql->exists('config_cotes', $name, 'cote');
@@ -31,12 +43,11 @@ final class ChartDatumRepository extends Repository
             throw new DBException("Impossible de récupérer les côtes.");
         }
 
+        /** @phpstan-var ChartDatumArray[] $chartDataRaw */
         $chartDataRaw = $chartDataRequest->fetchAll();
 
-        $chartDatumService = new ChartDatumService();
-
         $chartData = array_map(
-            fn(array $datum) => $chartDatumService->makeChartDatumFromDatabase($datum),
+            fn(array $datum) => $this->chartDatumService->makeChartDatumFromDatabase($datum),
             $chartDataRaw
         );
 
@@ -58,11 +69,11 @@ final class ChartDatumRepository extends Repository
         $request->execute(["cote" => $name]);
         $chartDatumRaw = $request->fetch();
 
-        if (!$chartDatumRaw) return null;
+        if (!is_array($chartDatumRaw)) return null;
 
-        $chartDatumService = new ChartDatumService();
+        /** @phpstan-var ChartDatumArray $chartDatumRaw */
 
-        $chartDatum = $chartDatumService->makeChartDatumFromDatabase($chartDatumRaw);
+        $chartDatum = $this->chartDatumService->makeChartDatumFromDatabase($chartDatumRaw);
 
         return $chartDatum;
     }

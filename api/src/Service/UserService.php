@@ -5,37 +5,27 @@
 namespace App\Service;
 
 use App\Core\Auth\User as AuthUser;
+use App\Core\Auth\UserRoles;
 use App\Core\Component\SSEHandler;
 use App\Core\Exceptions\Client\Auth\UnauthorizedException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\ClientException;
+use App\Core\HTTP\HTTPRequestBody;
 use App\DTO\CurrentUserFormDTO;
 use App\DTO\CurrentUserInfoDTO;
 use App\Entity\UserAccount;
 use App\Repository\UserRepository;
 
 /**
- * @phpstan-type UserArray array{
- *                           uid?: string,
- *                           login?: string,
- *                           nom?: string,
- *                           can_login?: bool,
- *                           roles?: string|array<string, int>,
- *                           statut?: string,
- *                           last_connection?: string,
- *                           commentaire?: string,
- *                           historique?: string,
- *                         }
- * 
- * @phpstan-import-type UserRolesObject from \App\Entity\UserAccount
+ * @phpstan-import-type UserAccountArray from \App\Repository\UserRepository
  */
 final class UserService
 {
     private UserRepository $userRepository;
 
     public function __construct(
-        private ?SSEHandler $sse = null,
         private ?AuthUser $currentUser = null,
+        private ?SSEHandler $sse = null,
     ) {
         $this->userRepository = new UserRepository($this);
     }
@@ -43,28 +33,20 @@ final class UserService
     /**
      * Crée un objet User à partir des données brutes de la base de données.
      * 
-     * @param array{
-     *          uid: string,
-     *          login: string,
-     *          nom: string,
-     *          can_login: int,
-     *          roles: string,
-     *          statut: string,
-     *          last_connection: string,
-     *          commentaire: string,
-     *          historique: string,
-     *        } $rawData 
+     * @param array $rawData 
+     * 
+     * @phpstan-param UserAccountArray $rawData
      * 
      * @return UserAccount 
      */
-    public function makeUserFromDatabase(array $rawData): UserAccount
+    public function makeUserAccountFromDatabase(array $rawData): UserAccount
     {
         $user = (new UserAccount())
             ->setUid($rawData["uid"])
             ->setLogin($rawData["login"])
             ->setName($rawData["nom"])
             ->setCanLogin((bool) $rawData["can_login"])
-            ->setRoles(json_decode($rawData["roles"]) ?: '{}')
+            ->setRoles($rawData["roles"] ?: '{}')
             ->setStatus($rawData["statut"])
             ->setLastLogin($rawData["last_connection"])
             ->setComments($rawData["commentaire"])
@@ -76,21 +58,19 @@ final class UserService
     /**
      * Crée un objet User à partir des données d'un formulaire.
      * 
-     * @param array $rawData 
-     * 
-     * @phpstan-param UserArray $rawData
+     * @param HTTPRequestBody $requestBody 
      * 
      * @return UserAccount 
      */
-    public function makeUserFromForm(array $rawData): UserAccount
+    public function makeUserAccountFromForm(HTTPRequestBody $requestBody): UserAccount
     {
         $user = (new UserAccount())
-            ->setUid($rawData["uid"] ?? null)
-            ->setLogin($rawData["login"] ?? '')
-            ->setName($rawData["nom"] ?? '')
-            ->setRoles(json_decode(json_encode($rawData["roles"] ?? []) ?: '[]'))
-            ->setStatus($rawData["statut"] ?? '')
-            ->setComments($rawData["commentaire"] ?? '');
+            ->setUid($requestBody->getString('uid'))
+            ->setLogin($requestBody->getString('login'))
+            ->setName($requestBody->getString('nom'))
+            ->setRoles($requestBody->getArray('roles', []))
+            ->setStatus($requestBody->getString('statut'))
+            ->setComments($requestBody->getString('commentaire'));
 
         return $user;
     }
@@ -98,22 +78,26 @@ final class UserService
     /**
      * Crée un DTO pour la mise à jour des informations de l'utilisateur courant.
      * 
-     * @param array{nom?: string, password?: string} $rawData 
+     * @param HTTPRequestBody $requestBody 
      * 
      * @return CurrentUserFormDTO 
      */
-    public function makeCurrentUserDTO(array $rawData): CurrentUserFormDTO
+    public function makeCurrentUserFormDTO(HTTPRequestBody $requestBody): CurrentUserFormDTO
     {
         if (!$this->currentUser) {
             throw new UnauthorizedException("Utilisateur non connecté.");
         }
 
-        $currentUserDTO = (new CurrentUserFormDTO())
-            ->setUid((string) $this->currentUser->uid)
-            ->setName($rawData["nom"] ?? $this->currentUser->name)
-            ->setPassword($rawData["password"] ?? null);
+        if (!$this->currentUser->uid) {
+            throw new UnauthorizedException("Impossible de récupérer l'identifiant de l'utilisateur.");
+        }
 
-        return $currentUserDTO;
+        $currentUserFormDTO = (new CurrentUserFormDTO())
+            ->setUid($this->currentUser->uid)
+            ->setName($requestBody->getString('nom', $this->currentUser->name))
+            ->setPassword($requestBody->getString('password', null));
+
+        return $currentUserFormDTO;
     }
 
     public function userExists(string $uid): bool
@@ -128,7 +112,7 @@ final class UserService
      * 
      * @return UserAccount[]
      */
-    public function getUsers(bool $canLoginOnly = true): array
+    public function getUserAccounts(bool $canLoginOnly = true): array
     {
         $users = $this->userRepository->fetchAllUsers();
 
@@ -144,7 +128,7 @@ final class UserService
      * 
      * @param string $uid Identifiant de l'utilisateur.
      */
-    public function getUser(string $uid): ?UserAccount
+    public function getUserAccount(string $uid): ?UserAccount
     {
         return $this->userRepository->fetchUserByUid($uid);
     }
@@ -152,16 +136,13 @@ final class UserService
     /**
      * Crée un utilisateur.
      * 
-     * @param array $input
-     * @param string $adminName
-     * 
-     * @phpstan-param UserArray $input
+     * @param HTTPRequestBody $input
      * 
      * @return UserAccount 
      */
-    public function createUser(array $input, string $adminName): UserAccount
+    public function createUserAccount(HTTPRequestBody $input): UserAccount
     {
-        $user = $this->makeUserFromForm($input);
+        $user = $this->makeUserAccountFromForm($input);
 
         if (!$user->getLogin()) {
             throw new BadRequestException("Le login est obligatoire.");
@@ -171,33 +152,30 @@ final class UserService
             throw new BadRequestException("Le nom est obligatoire.");
         }
 
-        return $this->userRepository->createUser($user, $adminName);
+        return $this->userRepository->createUser($user, $this->currentUser?->name ?? '');
     }
 
     /**
      * Met à jour un utilisateur.
      * 
      * @param string $uid 
-     * @param array $input 
-     * @param AuthUser $admin 
-     * 
-     * @phpstan-param UserArray $input
+     * @param HTTPRequestBody $input 
      * 
      * @return UserAccount 
      */
-    public function updateUser(string $uid, array $input, AuthUser $admin): UserAccount
+    public function updateUserAccount(string $uid, HTTPRequestBody $input): UserAccount
     {
-        $user = $this->makeUserFromForm($input)->setUid($uid);
+        $user = $this->makeUserAccountFromForm($input)->setUid($uid);
 
-        // Conservation du rôle admin : un admin ne peut pas changer lui-même son statut admin
-        if ($uid === $admin->uid) {
-            $user->setAdmin($admin->isAdmin);
+        // Conservation du rôle admin : un utilisateur ne peut pas changer lui-même son statut admin
+        if ($uid === $this->currentUser?->uid) {
+            $user->setAdmin($this->currentUser->isAdmin());
         }
 
-        return $this->userRepository->updateUser($user, $admin->name);
+        return $this->userRepository->updateUser($user, $this->currentUser?->name ?? '');
     }
 
-    public function deleteUser(string $uid, string $adminName): void
+    public function deleteUserAccount(string $uid, string $adminName): void
     {
         $this->userRepository->deleteUser($uid, $adminName);
 
@@ -222,7 +200,7 @@ final class UserService
      *                uid: string|null,
      *                login: string|null,
      *                nom: string,
-     *                roles: UserRolesObject,
+     *                roles: UserRoles,
      *                statut: string,
      *              }
      */
@@ -244,13 +222,13 @@ final class UserService
     /**
      * Met à jour les informations de l'utilisateur courant.
      * 
-     * @param array{nom?: string, password?: string} $input
+     * @param HTTPRequestBody $input
      * 
      * @return CurrentUserInfoDTO
      */
-    public function updateCurrentUser(array $input): CurrentUserInfoDTO
+    public function updateCurrentUser(HTTPRequestBody $input): CurrentUserInfoDTO
     {
-        $currentUserDTO = $this->makeCurrentUserDTO($input);
+        $currentUserDTO = $this->makeCurrentUserFormDTO($input);
 
         if (
             $currentUserDTO->getPassword()

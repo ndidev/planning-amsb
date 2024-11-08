@@ -11,6 +11,19 @@ use App\DTO\CurrentUserFormDTO;
 use App\Entity\UserAccount;
 use App\Service\UserService;
 
+/**
+ * @phpstan-type UserAccountArray array{
+ *                                  uid: string,
+ *                                  login: string,
+ *                                  nom: string,
+ *                                  can_login: int,
+ *                                  roles: string,
+ *                                  statut: string,
+ *                                  last_connection: ?string,
+ *                                  commentaire: string,
+ *                                  historique: string,
+ *                                }
+ */
 final class UserRepository extends Repository
 {
     public function __construct(private UserService $userService)
@@ -38,6 +51,7 @@ final class UserRepository extends Repository
             throw new DBException("Impossible de récupérer les utilisateurs.");
         }
 
+        /** @phpstan-var UserAccountArray[] $usersRaw */
         $usersRaw = $userRequest->fetchAll();
 
         // Update Redis
@@ -48,7 +62,7 @@ final class UserRepository extends Repository
         $this->redis->exec();
 
         $users = array_map(
-            fn($userRaw) => $this->userService->makeUserFromDatabase($userRaw),
+            fn(array $userRaw) => $this->userService->makeUserAccountFromDatabase($userRaw),
             $usersRaw
         );
 
@@ -76,7 +90,7 @@ final class UserRepository extends Repository
 
             $userRaw = $request->fetch();
 
-            if (!$userRaw) {
+            if (!is_array($userRaw)) {
                 return null;
             }
 
@@ -84,7 +98,9 @@ final class UserRepository extends Repository
             $this->redis->hMSet("admin:users:{$userRaw["uid"]}", $userRaw);
         }
 
-        $user = $this->userService->makeUserFromDatabase($userRaw);
+        /** @phpstan-var UserAccountArray $userRaw */
+
+        $user = $this->userService->makeUserAccountFromDatabase($userRaw);
 
         return $user;
     }
@@ -313,6 +329,10 @@ final class UserRepository extends Repository
         }
 
         $user = $userRequest->fetch();
+
+        if (!is_array($user)) {
+            throw new DBException("Impossible de récupérer les informations de l'utilisateur.");
+        }
 
         // Copie des infos dans Redis (hash)
         $this->redis->hMSet("admin:users:{$uid}", $user);

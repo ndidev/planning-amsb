@@ -2,8 +2,6 @@
 
 namespace App\Core\HTTP;
 
-use App\Core\Exceptions\Client\ClientException;
-
 /**
  * Represents an HTTP request.
  * 
@@ -40,9 +38,8 @@ final class HTTPRequest
 
     /**
      * Request body.
-     * @var array<string, mixed>
      */
-    private array $body;
+    private HTTPRequestBody $body;
 
     /**
      * `true` if the request is a CORS preflight request.
@@ -51,25 +48,15 @@ final class HTTPRequest
 
     public function __construct()
     {
-        $this->method = strtoupper($_SERVER["REQUEST_METHOD"]);
+        $this->method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
 
         if (function_exists('getallheaders')) {
             $this->headers = getallheaders();
         }
 
-        $url = parse_url($_SERVER['REQUEST_URI']);
-        $this->path = $url["path"] ?? '';
+        $this->query = HTTPRequestQuery::buildFromRequest();
 
-        $query = [];
-        if (!empty($_GET)) {
-            $query = $_GET;
-        } else {
-            parse_str($url["query"] ?? '', $query);
-        }
-
-        $this->query = new HTTPRequestQuery($query);
-
-        $this->body = !empty($_POST) ? $_POST : (array) json_decode(file_get_contents("php://input") ?: '', true);
+        $this->body = HTTPRequestBody::buildFromRequest();
 
         $this->etag = $this->headers["If-None-Match"] ?? null;
 
@@ -103,18 +90,10 @@ final class HTTPRequest
     /**
      * Get a request body.
      * 
-     * @param bool $allowEmpty Allow an empty body.
-     * 
-     * @return array<string, mixed> Request body.
-     * 
-     * @throws ClientException If the body is empty and `$allowEmpty` is `false`.
+     * @return HTTPRequestBody Request body object.
      */
-    public function getBody(bool $allowEmpty = false): array
+    public function getBody(): HTTPRequestBody
     {
-        if (!$allowEmpty && empty($this->body)) {
-            throw new ClientException("Le corps de la requête est vide.");
-        }
-
         return $this->body;
     }
 }

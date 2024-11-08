@@ -5,6 +5,7 @@
 namespace App\Entity\Shipping;
 
 use App\Core\Component\CargoOperation;
+use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
 
@@ -16,7 +17,7 @@ use App\Entity\AbstractEntity;
  *                                        escale_id: ?int,
  *                                        marchandise: string,
  *                                        client: string,
- *                                        operation: value-of<CargoOperation>,
+ *                                        operation: CargoOperation::*,
  *                                        environ: bool,
  *                                        tonnage_bl: ?float,
  *                                        cubage_bl: ?float,
@@ -33,7 +34,8 @@ final class ShippingCallCargo extends AbstractEntity
     private ?ShippingCall $shippingCall = null;
     private string $cargoName = '';
     private string $customer = '';
-    private CargoOperation $operation = CargoOperation::IMPORT;
+    /** @phpstan-var CargoOperation::* $operation */
+    private string $operation = CargoOperation::IMPORT;
     private bool $approximate = false;
     private ?float $blTonnage = null;
     private ?float $blVolume = null;
@@ -78,24 +80,23 @@ final class ShippingCallCargo extends AbstractEntity
         return $this;
     }
 
-    public function getOperation(): CargoOperation
+    /**
+     *  @phpstan-return CargoOperation::*
+     */
+    public function getOperation(): string
     {
         return $this->operation;
     }
 
-    public function setOperation(CargoOperation|string $operation): static
+    public function setOperation(string $operation): static
     {
-        if (is_string($operation)) {
-            $operationFromEnum = CargoOperation::tryFrom($operation);
+        $operationFromEnum = CargoOperation::tryFrom($operation);
 
-            if (null === $operationFromEnum) {
-                throw new \InvalidArgumentException("Opération invalide");
-            }
-
-            $this->operation = $operationFromEnum;
-        } else {
-            $this->operation = $operation;
+        if (null === $operationFromEnum) {
+            throw new BadRequestException("Opération invalide");
         }
+
+        $this->operation = $operationFromEnum;
 
         return $this;
     }
@@ -184,9 +185,6 @@ final class ShippingCallCargo extends AbstractEntity
         return $this;
     }
 
-    /**
-     * @phpstan-return ShippingCallCargoArray
-     */
     public function toArray(): array
     {
         return [
@@ -194,7 +192,7 @@ final class ShippingCallCargo extends AbstractEntity
             'escale_id' => $this->getShippingCall()?->getId(),
             'marchandise' => $this->getCargoName(),
             'client' => $this->getCustomer(),
-            'operation' => $this->getOperation()->value,
+            'operation' => $this->getOperation(),
             'environ' => $this->isApproximate(),
             'tonnage_bl' => $this->getBlTonnage(),
             'cubage_bl' => $this->getBlVolume(),

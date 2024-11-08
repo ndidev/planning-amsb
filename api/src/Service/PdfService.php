@@ -11,6 +11,7 @@ use App\Core\Exceptions\AppException;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Exceptions\Server\ServerException;
+use App\Core\HTTP\HTTPRequestBody;
 use App\Core\Logger\ErrorLogger;
 use App\DTO\PDF\BulkPDF;
 use App\DTO\PDF\PlanningPDF;
@@ -22,15 +23,7 @@ use App\Repository\PdfConfigRepository;
 use PHPMailer\PHPMailer\Exception as PHPMailerException;
 
 /**
- * @phpstan-type PdfConfigArray array{
- *                                id?: int,
- *                                module?: string,
- *                                fournisseur?: int,
- *                                envoi_auto?: bool|int,
- *                                liste_emails?: string|string[],
- *                                jours_avant?: int,
- *                                jours_apres?: int,
- *                              }
+ * @phpstan-import-type PdfConfigArray from \App\Repository\PdfConfigRepository
  */
 final class PdfService
 {
@@ -38,7 +31,7 @@ final class PdfService
 
     public function __construct()
     {
-        $this->pdfConfigRepository = new PdfConfigRepository();
+        $this->pdfConfigRepository = new PdfConfigRepository($this);
     }
 
     /**
@@ -69,23 +62,21 @@ final class PdfService
     /**
      * Creates a PDF configuration from form data.
      * 
-     * @param array $rawData 
-     * 
-     * @phpstan-param PdfConfigArray $rawData
+     * @param HTTPRequestBody $requestBody 
      * 
      * @return PdfConfig 
      */
-    public function makeConfigFromForm(array $rawData): PdfConfig
+    public function makeConfigFromForm(HTTPRequestBody $requestBody): PdfConfig
     {
         $thirdPartyService = new ThirdPartyService();
 
         $config = (new PdfConfig())
-            ->setModule($rawData['module'] ?? null)
-            ->setSupplier($thirdPartyService->getThirdParty($rawData['fournisseur'] ?? null))
-            ->setAutoSend($rawData['envoi_auto'] ?? false)
-            ->setEmails($rawData['liste_emails'] ?? [])
-            ->setDaysBefore($rawData['jours_avant'] ?? 0)
-            ->setDaysAfter($rawData['jours_apres'] ?? 0);
+            ->setModule($requestBody->getString('module'))
+            ->setSupplier($thirdPartyService->getThirdParty($requestBody->getInt('fournisseur')))
+            ->setAutoSend($requestBody->getBool('envoi_auto'))
+            ->setEmails($requestBody->getArray('liste_emails'))
+            ->setDaysBefore($requestBody->getInt('jours_avant', 0))
+            ->setDaysAfter($requestBody->getInt('jours_apres', 0));
 
         return $config;
     }
@@ -113,14 +104,12 @@ final class PdfService
     /**
      * Updates a PDF configuration.
      * 
-     * @param int   $id      
-     * @param array $rawData 
-     *
-     * @phpstan-param PdfConfigArray $rawData
+     * @param int             $id      
+     * @param HTTPRequestBody $rawData 
      *  
      * @return PdfConfig 
      */
-    public function updateConfig(int $id, array $rawData): PdfConfig
+    public function updateConfig(int $id, HTTPRequestBody $rawData): PdfConfig
     {
         $config = $this->makeConfigFromForm($rawData)->setId($id);
 
@@ -130,13 +119,11 @@ final class PdfService
     /**
      * Creates a PDF configuration.
      * 
-     * @param array $rawData 
-     * 
-     * @phpstan-param PdfConfigArray $rawData
+     * @param HTTPRequestBody $rawData 
      * 
      * @return PdfConfig 
      */
-    public function createConfig(array $rawData): PdfConfig
+    public function createConfig(HTTPRequestBody $rawData): PdfConfig
     {
         $config = $this->makeConfigFromForm($rawData);
 

@@ -10,6 +10,21 @@ use App\Entity\Bulk\BulkProduct;
 use App\Entity\Bulk\BulkQuality;
 use App\Service\BulkService;
 
+/**
+ * @phpstan-type BulkProductArray array{
+ *                                  id?: int,
+ *                                  nom?: string,
+ *                                  couleur?: string,
+ *                                  unite?: string,
+ *                                  qualites?: BulkQualityArray[],
+ *                                }
+ * 
+ * @phpstan-type BulkQualityArray array{
+ *                                  id?: int,
+ *                                  nom?: string,
+ *                                  couleur?: string,
+ *                                }
+ */
 final class BulkProductRepository extends Repository
 {
     public function __construct(private BulkService $bulkService)
@@ -130,7 +145,7 @@ final class BulkProductRepository extends Repository
         $productRequest->execute(["id" => $id]);
         $productRaw = $productRequest->fetch();
 
-        if (!$productRaw) return null;
+        if (!is_array($productRaw)) return null;
 
         $product = $this->bulkService->makeProductFromDatabase($productRaw);
 
@@ -209,7 +224,7 @@ final class BulkProductRepository extends Repository
         $qualityRequest->execute(["id" => $id]);
         $qualityRaw = $qualityRequest->fetch();
 
-        if (!$qualityRaw) return null;
+        if (!is_array($qualityRaw)) return null;
 
         $quality = $this->bulkService->makeQualityFromDatabase($qualityRaw);
 

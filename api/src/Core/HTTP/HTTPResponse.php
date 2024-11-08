@@ -2,6 +2,7 @@
 
 namespace App\Core\HTTP;
 
+use App\Core\Exceptions\Server\ServerException;
 use App\Core\Logger\ErrorLogger;
 
 /**
@@ -152,11 +153,11 @@ final class HTTPResponse
     /**
      * Set the body of the HTTP response.
      * 
-     * @param mixed $body Body of the HTTP response.
+     * @param ?string $body Body of the HTTP response.
      * 
      * @return HTTPResponse
      */
-    public function setBody(mixed $body): HTTPResponse
+    public function setBody(?string $body): HTTPResponse
     {
         $this->body = $body;
 
@@ -173,7 +174,13 @@ final class HTTPResponse
      */
     public function setJSON(mixed $data, bool $alreadyJson = false): HTTPResponse
     {
-        $this->body = $alreadyJson ? $data : json_encode($data);
+        $body = $alreadyJson ? $data : json_encode($data);
+
+        if (!is_string($body)) {
+            throw new ServerException("Error while encoding data to JSON.");
+        }
+
+        $this->body = $body;
         $this->setType('json');
 
         return $this;
@@ -401,9 +408,6 @@ final class HTTPResponse
          * @var string[]
          */
         $allowedOrigins = [
-            "https://planning.amsb-mk.com",
-            "http://planning.amsb-mk.local",
-            "https://amsb.ndi.dev",
             "https://localhost",
             "http://localhost",
             ($_SERVER["REQUEST_SCHEME"] ?? "") . "://" . explode(":", $_SERVER["HTTP_HOST"])[0],

@@ -28,13 +28,13 @@ abstract class Module
         }
 
         return match (strtolower($temptativeModuleName)) {
-            "vrac" => self::BULK,
-            "chartering" => self::CHARTERING,
-            "config" => self::CONFIG,
-            "consignation" => self::SHIPPING,
-            "bois" => self::TIMBER,
-            "tiers" => self::THIRD_PARTY,
-            "user" => self::USER,
+            self::BULK => self::BULK,
+            self::CHARTERING => self::CHARTERING,
+            self::CONFIG => self::CONFIG,
+            self::SHIPPING => self::SHIPPING,
+            self::TIMBER => self::TIMBER,
+            self::THIRD_PARTY => self::THIRD_PARTY,
+            self::USER => self::USER,
             default => null,
         };
     }

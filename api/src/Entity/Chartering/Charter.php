@@ -9,13 +9,13 @@ use App\Core\Component\Collection;
 use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
 use App\Entity\ThirdParty;
-use App\Service\ThirdPartyService;
 
 class Charter extends AbstractEntity
 {
     use IdentifierTrait;
 
-    private CharterStatus $status = CharterStatus::PENDING;
+    /** @phpstan-var CharterStatus::* $status */
+    private int $status = CharterStatus::PENDING;
     private ?\DateTimeImmutable $laycanStart;
     private ?\DateTimeImmutable $laycanEnd;
     private ?\DateTimeImmutable $cpDate;
@@ -40,24 +40,17 @@ class Charter extends AbstractEntity
         $this->legs = new Collection();
     }
 
-    public function getStatus(): CharterStatus
+    /**
+     * @phpstan-return CharterStatus::*
+     */
+    public function getStatus(): int
     {
         return $this->status;
     }
 
-    public function setStatus(CharterStatus|int $status): static
+    public function setStatus(int $status): static
     {
-        if (is_int($status)) {
-            $statusFromEnum = CharterStatus::tryFrom($status);
-
-            if (null === $statusFromEnum) {
-                throw new \InvalidArgumentException("Statut invalide");
-            }
-
-            $this->status = $statusFromEnum;
-        } else {
-            $this->status = $status;
-        }
+        $this->status = CharterStatus::tryFrom($status);
 
         return $this;
     }
@@ -291,9 +284,6 @@ class Charter extends AbstractEntity
         return $this;
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     public function toArray(): array
     {
         return [

@@ -21,11 +21,15 @@ final class UserAccountController extends Controller
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
 
-        if ($this->user->isAdmin === false) {
+        if ($this->user->isAdmin() === false) {
             throw new AdminException();
         }
 
-        $this->userService = new UserService(sse: $this->sse);
+        $this->userService = new UserService(
+            currentUser: $this->user,
+            sse: $this->sse,
+        );
+
         $this->processRequest();
     }
 
@@ -72,7 +76,7 @@ final class UserAccountController extends Controller
      */
     public function readAll(): void
     {
-        $users = $this->userService->getUsers();
+        $users = $this->userService->getUserAccounts();
 
         $etag = ETag::get($users);
 
@@ -93,7 +97,7 @@ final class UserAccountController extends Controller
      */
     public function read(string $uid): void
     {
-        $user = $this->userService->getUser($uid);
+        $user = $this->userService->getUserAccount($uid);
 
         if (!$user) {
             throw new NotFoundException("L'utilisateur n'existe pas.");
@@ -118,7 +122,7 @@ final class UserAccountController extends Controller
     {
         $input = $this->request->getBody();
 
-        $newUser = $this->userService->createUser($input, $this->user->name);
+        $newUser = $this->userService->createUserAccount($input);
 
         /** @var string $uid */
         $uid = $newUser->getUid();
@@ -148,7 +152,7 @@ final class UserAccountController extends Controller
 
         $input = $this->request->getBody();
 
-        $updatedUser = $this->userService->updateUser($uid, $input, $this->user);
+        $updatedUser = $this->userService->updateUserAccount($uid, $input);
 
         $this->response->setJSON($updatedUser);
 
@@ -175,7 +179,7 @@ final class UserAccountController extends Controller
             throw new NotFoundException("L'utilisateur n'existe pas.");
         }
 
-        $this->userService->deleteUser($uid, $this->user->name);
+        $this->userService->deleteUserAccount($uid, $this->user->name);
 
         $this->response->setCode(HTTPResponse::HTTP_NO_CONTENT_204);
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $uid);

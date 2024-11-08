@@ -6,30 +6,13 @@ namespace App\Service;
 
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\ServerException;
+use App\Core\HTTP\HTTPRequestBody;
 use App\Core\Logger\ErrorLogger;
 use App\Entity\ThirdParty;
 use App\Repository\ThirdPartyRepository;
 
 /**
- * @phpstan-type ThirdPartyData array{
- *                                id?: int,
- *                                nom_court?: string,
- *                                nom_complet?: string,
- *                                adresse_ligne_1?: string,
- *                                adresse_ligne_2?: string,
- *                                cp?: string,
- *                                ville?: string,
- *                                pays?: string,
- *                                telephone?: string,
- *                                commentaire?: string,
- *                                non_modifiable?: bool,
- *                                lie_agence?: bool,
- *                                roles?: ThirdPartyRoles,
- *                                logo?: string,
- *                                actif?: bool,
- *                                nombre_rdv?: int
- *                              }
- * 
+ * @phpstan-import-type ThirdPartyArray from \App\Repository\ThirdPartyRepository
  * @phpstan-import-type ThirdPartyRoles from \App\Entity\ThirdParty
  */
 final class ThirdPartyService
@@ -46,45 +29,35 @@ final class ThirdPartyService
     /**
      * Creates a ThirdParty object from raw data.
      * 
-     * @param array{
-     *          id: int,
-     *          nom_court: string,
-     *          nom_complet: string,
-     *          adresse_ligne_1: string,
-     *          adresse_ligne_2: string,
-     *          cp: string,
-     *          ville: string,
-     *          pays: string,
-     *          telephone: string,
-     *          commentaire: string,
-     *          non_modifiable: int,
-     *          lie_agence: int,
-     *          roles: string,
-     *          logo: string,
-     *          actif: int,
-     *        } $rawData 
+     * @param array $rawData 
+     * 
+     * @phpstan-param ThirdPartyArray $rawData
      * 
      * @return ThirdParty 
      */
     public function makeThirdPartyFromDatabase(array $rawData): ThirdParty
     {
         $thirdParty = (new ThirdParty())
-            ->setId($rawData["id"])
-            ->setShortName($rawData["nom_court"])
-            ->setFullName($rawData["nom_complet"])
-            ->setAddressLine1($rawData["adresse_ligne_1"])
-            ->setAddressLine2($rawData["adresse_ligne_2"])
-            ->setPostCode($rawData["cp"])
-            ->setCity($rawData["ville"])
-            ->setCountry($this->countryService->getCountry($rawData["pays"]))
-            ->setPhone($rawData["telephone"])
-            ->setComments($rawData["commentaire"])
-            ->setIsNonEditable($rawData["non_modifiable"])
-            ->setIsAgency($rawData["lie_agence"])
-            ->setLogo($rawData["logo"])
-            ->setIsActive($rawData["actif"]);
+            ->setId($rawData["id"] ?? null)
+            ->setShortName($rawData["nom_court"] ?? '')
+            ->setFullName($rawData["nom_complet"] ?? '')
+            ->setAddressLine1($rawData["adresse_ligne_1"] ?? '')
+            ->setAddressLine2($rawData["adresse_ligne_2"] ?? '')
+            ->setPostCode($rawData["cp"] ?? '')
+            ->setCity($rawData["ville"] ?? '')
+            ->setCountry($this->countryService->getCountry($rawData["pays"] ?? ''))
+            ->setPhone($rawData["telephone"] ?? '')
+            ->setComments($rawData["commentaire"] ?? '')
+            ->setIsNonEditable($rawData["non_modifiable"] ?? false)
+            ->setIsAgency($rawData["lie_agence"] ?? false)
+            ->setLogo($rawData["logo"] ?? false)
+            ->setIsActive($rawData["actif"] ?? true);
 
-        $roles = json_decode($rawData["roles"] ?: "{}", true);
+        $roles = json_decode($rawData["roles"] ?? "{}", true);
+
+        if (!is_array($roles)) {
+            $roles = [];
+        }
 
         foreach ($thirdParty->getRoles() as $role => $default) {
             $thirdParty->setRole($role, $roles[$role] ?? $default);
@@ -96,33 +69,34 @@ final class ThirdPartyService
     /**
      * Creates a ThirdParty object from form data.
      * 
-     * @param array $rawData 
-     * 
-     * @phpstan-param ThirdPartyData $rawData
+     * @param HTTPRequestBody $requestBody 
      * 
      * @return ThirdParty 
      */
-    public function makeThirdPartyFromForm(array $rawData): ThirdParty
+    public function makeThirdPartyFromForm(HTTPRequestBody $requestBody): ThirdParty
     {
         $thirdParty = (new ThirdParty())
-            ->setId($rawData["id"] ?? null)
-            ->setShortName($rawData["nom_court"] ?? "")
-            ->setFullName($rawData["nom_complet"] ?? "")
-            ->setAddressLine1($rawData["adresse_ligne_1"] ?? "")
-            ->setAddressLine2($rawData["adresse_ligne_2"] ?? "")
-            ->setPostCode($rawData["cp"] ?? "")
-            ->setCity($rawData["ville"] ?? "")
-            ->setCountry($this->countryService->getCountry($rawData["pays"] ?? ''))
-            ->setPhone($rawData["telephone"] ?? "")
-            ->setComments($rawData["commentaire"] ?? "")
-            ->setIsNonEditable($rawData["non_modifiable"] ?? false)
-            ->setIsAgency($rawData["lie_agence"] ?? false)
-            ->setLogo($this->saveLogo($rawData["logo"] ?? null))
-            ->setIsActive($rawData["actif"] ?? true)
-            ->setAppointmentCount($rawData["nombre_rdv"] ?? 0);
+            ->setId($requestBody->getInt('id'))
+            ->setShortName($requestBody->getString('nom_court'))
+            ->setFullName($requestBody->getString('nom_complet'))
+            ->setAddressLine1($requestBody->getString('adresse_ligne_1'))
+            ->setAddressLine2($requestBody->getString('adresse_ligne_2'))
+            ->setPostCode($requestBody->getString('cp'))
+            ->setCity($requestBody->getString('ville'))
+            ->setCountry($this->countryService->getCountry($requestBody->getString('pays')))
+            ->setPhone($requestBody->getString('telephone'))
+            ->setComments($requestBody->getString('commentaire'))
+            ->setIsNonEditable($requestBody->getBool('non_modifiable'))
+            ->setIsAgency($requestBody->getBool('lie_agence'))
+            ->setLogo($this->saveLogo($requestBody->getParam('logo')))
+            ->setIsActive($requestBody->getBool('actif', true));
 
-        foreach ($thirdParty->getRoles() as $role => $value) {
-            $thirdParty->setRole($role, $rawData["roles"][$role] ?? false);
+        $rolesInRequest = $requestBody->getArray('roles');
+
+        foreach (array_keys($thirdParty->getRoles()) as $role) {
+            if (isset($rolesInRequest[$role])) {
+                $thirdParty->setRole($role, (bool) $rolesInRequest[$role]);
+            }
         }
 
         return $thirdParty;
@@ -167,13 +141,11 @@ final class ThirdPartyService
     /**
      * Creates a third party.
      * 
-     * @param array $input Elements of the third party to create.
-     * 
-     * @phpstan-param ThirdPartyData $input
+     * @param HTTPRequestBody $input Elements of the third party to create.
      * 
      * @return ThirdParty Created third party.
      */
-    public function createThirdParty(array $input): ThirdParty
+    public function createThirdParty(HTTPRequestBody $input): ThirdParty
     {
         $thirdParty = $this->makeThirdPartyFromForm($input);
 
@@ -183,14 +155,12 @@ final class ThirdPartyService
     /**
      * Updates a third party.
      * 
-     * @param int   $id    ID of the third party to update.
-     * @param array $input Elements of the third party to update.
-     * 
-     * @phpstan-param ThirdPartyData $input
+     * @param int             $id    ID of the third party to update.
+     * @param HTTPRequestBody $input Elements of the third party to update.
      * 
      * @return ThirdParty Updated third party.
      */
-    public function updateThirdParty($id, array $input): ThirdParty
+    public function updateThirdParty($id, HTTPRequestBody $input): ThirdParty
     {
         $thirdParty = $this->makeThirdPartyFromForm($input)->setId($id);
 

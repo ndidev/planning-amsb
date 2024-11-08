@@ -3,7 +3,7 @@
 namespace App\Controller\Config;
 
 use App\Controller\Controller;
-use App\Core\Component\DateUtils;
+use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\PdfService;
@@ -82,9 +82,14 @@ final class PdfViewerController extends Controller
     {
         $input = $this->request->getBody();
 
-        $configId = $input["config"] ?? null;
-        $startDate = DateUtils::convertDate($input["date_debut"] ?? new \DateTimeImmutable());
-        $endDate = DateUtils::convertDate($input["date_fin"] ?? new \DateTimeImmutable());
+        $configId = $input->getInt('config');
+
+        if (null === $configId) {
+            throw new BadRequestException("Le paramètre 'config' est obligatoire.");
+        }
+
+        $startDate = $input->getDatetime('date_debut', new \DateTimeImmutable());
+        $endDate = $input->getDatetime('date_fin', new \DateTimeImmutable());
 
         $sendingResults = $this->pdfService->sendPdfByEmail($configId, $startDate, $endDate);
 

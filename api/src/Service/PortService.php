@@ -9,11 +9,7 @@ use App\Entity\Port;
 use App\Repository\PortRepository;
 
 /**
- * @phpstan-type PortArray array{
- *                           locode?: string,
- *                           nom?: string,
- *                           nom_affichage?: string,
- *                         }
+ * @phpstan-import-type PortArray from \App\Repository\PortRepository
  */
 final class PortService
 {
@@ -21,7 +17,7 @@ final class PortService
 
     public function __construct()
     {
-        $this->portRepository = new PortRepository();
+        $this->portRepository = new PortRepository($this);
     }
 
     /**

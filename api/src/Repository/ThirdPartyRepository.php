@@ -8,6 +8,26 @@ use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\ThirdParty;
 use App\Service\ThirdPartyService;
 
+/**
+ * @phpstan-type ThirdPartyArray array{
+ *                                id?: int,
+ *                                nom_court?: string,
+ *                                nom_complet?: string,
+ *                                adresse_ligne_1?: string,
+ *                                adresse_ligne_2?: string,
+ *                                cp?: string,
+ *                                ville?: string,
+ *                                pays?: string,
+ *                                telephone?: string,
+ *                                commentaire?: string,
+ *                                non_modifiable?: bool,
+ *                                lie_agence?: bool,
+ *                                roles?: string,
+ *                                logo?: string,
+ *                                actif?: bool,
+ *                                nombre_rdv?: int
+ *                              }
+ */
 final class ThirdPartyRepository extends Repository
 {
     public function __construct(private ThirdPartyService $thirdPartyService)
@@ -40,10 +60,11 @@ final class ThirdPartyRepository extends Repository
             throw new DBException("Impossible de récupérer les tiers.");
         }
 
+        /** @phpstan-var ThirdPartyArray[] $thirdPartiesRaw */
         $thirdPartiesRaw = $thirdPartiesRequest->fetchAll();
 
         $thirdParties = array_map(
-            fn($thirdPartyRaw) => $this->thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw),
+            fn(array $thirdPartyRaw) => $this->thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw),
             $thirdPartiesRaw
         );
 
@@ -65,7 +86,7 @@ final class ThirdPartyRepository extends Repository
         $request->execute(["id" => $id]);
         $thirdPartyRaw = $request->fetch();
 
-        if (!$thirdPartyRaw) return null;
+        if (!is_array($thirdPartyRaw)) return null;
 
         $thirdParty = $this->thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw);
 

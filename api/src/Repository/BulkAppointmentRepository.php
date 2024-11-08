@@ -8,6 +8,23 @@ use App\Entity\Bulk\BulkAppointment;
 use App\Entity\ThirdParty;
 use App\Service\BulkService;
 
+/**
+ * @phpstan-type BulkAppointmentArray array{
+ *                                      id?: int,
+ *                                      date_rdv?: string,
+ *                                      heure?: string,
+ *                                      produit?: int,
+ *                                      qualite?: int,
+ *                                      quantite?: int,
+ *                                      max?: bool,
+ *                                      commande_prete?: bool,
+ *                                      fournisseur?: int,
+ *                                      client?: int,
+ *                                      transporteur?: int,
+ *                                      num_commande?: string,
+ *                                      commentaire?: string,
+ *                                    }
+ */
 final class BulkAppointmentRepository extends Repository
 {
     public function __construct(private BulkService $bulkService)
@@ -56,6 +73,7 @@ final class BulkAppointmentRepository extends Repository
             throw new DBException("Impossible de récupérer les RDV vrac.");
         }
 
+        /** @phpstan-var BulkAppointmentArray[] $appointmentsRaw */
         $appointmentsRaw = $request->fetchAll();
 
         $appointments = array_map(
@@ -97,7 +115,9 @@ final class BulkAppointmentRepository extends Repository
         $request->execute(["id" => $id]);
         $appointmentRaw = $request->fetch();
 
-        if (!$appointmentRaw) return null;
+        if (!is_array($appointmentRaw)) return null;
+
+        /** @phpstan-var BulkAppointmentArray $appointmentRaw */
 
         $appointment = $this->bulkService->makeBulkAppointmentFromDatabase($appointmentRaw);
 
@@ -295,6 +315,7 @@ final class BulkAppointmentRepository extends Repository
             "endDate" => $endDate->format("Y-m-d"),
         ]);
 
+        /** @phpstan-var BulkAppointmentArray[] $appointmentsRaw */
         $appointmentsRaw = $request->fetchAll();
 
         $appointments = array_map(

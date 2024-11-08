@@ -97,7 +97,7 @@ final class InfoBannerController extends Controller
 
         $input = $this->request->getBody();
 
-        if (!$this->user->canEdit(Module::tryFrom($input["module"]))) {
+        if (!$this->user->canEdit(Module::tryFrom($input->getString('module')))) {
             throw new AccessException("Vous n'avez pas les droits pour modifier les informations de ce module.");
         }
 
@@ -139,7 +139,7 @@ final class InfoBannerController extends Controller
 
         if (
             !$this->user->canEdit($current->getModule())
-            || !$this->user->canEdit(Module::tryFrom($input["module"]))
+            || !$this->user->canEdit(Module::tryFrom($input->getString('module')))
         ) {
             throw new AccessException("Vous n'avez pas les droits pour modifier les informations de ce module.");
         }

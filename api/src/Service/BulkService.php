@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Client\NotFoundException;
+use App\Core\HTTP\HTTPRequestBody;
 use App\Entity\Bulk\BulkAppointment;
 use App\Entity\Bulk\BulkProduct;
 use App\Entity\Bulk\BulkQuality;
@@ -12,35 +13,9 @@ use App\Repository\BulkAppointmentRepository;
 use App\Repository\BulkProductRepository;
 
 /**
- * @phpstan-type BulkAppointmentArray array{
- *                                      id?: int,
- *                                      date_rdv?: string,
- *                                      heure?: string,
- *                                      produit?: int,
- *                                      qualite?: int,
- *                                      quantite?: int,
- *                                      max?: bool,
- *                                      commande_prete?: bool,
- *                                      fournisseur?: int,
- *                                      client?: int,
- *                                      transporteur?: int,
- *                                      num_commande?: string,
- *                                      commentaire?: string,
- *                                    }
- * 
- * @phpstan-type BulkProductArray array{
- *                                  id?: int,
- *                                  nom?: string,
- *                                  couleur?: string,
- *                                  unite?: string,
- *                                  qualites?: BulkQualityArray[],
- *                                }
- * 
- * @phpstan-type BulkQualityArray array{
- *                                  id?: int,
- *                                  nom?: string,
- *                                  couleur?: string,
- *                                }
+ * @phpstan-import-type BulkAppointmentArray from \App\Repository\BulkAppointmentRepository
+ * @phpstan-import-type BulkProductArray from \App\Repository\BulkProductRepository
+ * @phpstan-import-type BulkQualityArray from \App\Repository\BulkProductRepository
  */
 final class BulkService
 {
@@ -90,27 +65,25 @@ final class BulkService
     /**
      * Creates a bulk appointment from form data.
      * 
-     * @param array $rawData
-     * 
-     * @phpstan-param BulkAppointmentArray $rawData
+     * @param HTTPRequestBody $requestBody
      * 
      * @return BulkAppointment
      */
-    public function makeBulkAppointmentFromFormData(array $rawData): BulkAppointment
+    public function makeBulkAppointmentFromFormData(HTTPRequestBody $requestBody): BulkAppointment
     {
         $appointment = (new BulkAppointment())
-            ->setId($rawData["id"] ?? null)
-            ->setDate($rawData["date_rdv"] ?? new \DateTimeImmutable("now"))
-            ->setTime($rawData["heure"] ?? null)
-            ->setProduct($this->getProduct($rawData["produit"] ?? null))
-            ->setQuality($this->getQuality($rawData["qualite"] ?? null))
-            ->setQuantity($rawData["quantite"] ?? 0, $rawData["max"] ?? false)
-            ->setReady($rawData["commande_prete"] ?? false)
-            ->setSupplier($this->thirdPartyService->getThirdParty($rawData["fournisseur"] ?? null))
-            ->setCustomer($this->thirdPartyService->getThirdParty($rawData["client"] ?? null))
-            ->setCarrier($this->thirdPartyService->getThirdParty($rawData["transporteur"] ?? null))
-            ->setOrderNumber($rawData["num_commande"] ?? "")
-            ->setComments($rawData["commentaire"] ?? "");
+            ->setId($requestBody->getInt('id'))
+            ->setDate($requestBody->getDatetime('date_rdv', 'now'))
+            ->setTime($requestBody->getDatetime('heure'))
+            ->setProduct($this->getProduct($requestBody->getInt('produit')))
+            ->setQuality($this->getQuality($requestBody->getInt('qualite')))
+            ->setQuantity($requestBody->getInt('quantite', 0), $requestBody->getBool('max'))
+            ->setReady($requestBody->getBool('commande_prete'))
+            ->setSupplier($this->thirdPartyService->getThirdParty($requestBody->getInt('fournisseur')))
+            ->setCustomer($this->thirdPartyService->getThirdParty($requestBody->getInt('client')))
+            ->setCarrier($this->thirdPartyService->getThirdParty($requestBody->getInt('transporteur')))
+            ->setOrderNumber($requestBody->getString('num_commande'))
+            ->setComments($requestBody->getString('commentaire'));
 
         return $appointment;
     }
@@ -173,13 +146,11 @@ final class BulkService
     /**
      * Create a bulk appointment.
      * 
-     * @param array $input Elements of the appointment to create.
-     * 
-     * @phpstan-param BulkAppointmentArray $input
+     * @param HTTPRequestBody $input Elements of the appointment to create.
      * 
      * @return BulkAppointment Created appointment.
      */
-    public function createAppointment(array $input): BulkAppointment
+    public function createAppointment(HTTPRequestBody $input): BulkAppointment
     {
         $appointment = $this->makeBulkAppointmentFromFormData($input);
 
@@ -189,14 +160,12 @@ final class BulkService
     /**
      * Update a bulk appointment.
      * 
-     * @param int   $id    ID of the appointment to update.
-     * @param array $input Elements of the appointment to update.
-     * 
-     * @phpstan-param BulkAppointmentArray $input
+     * @param int             $id    ID of the appointment to update.
+     * @param HTTPRequestBody $input Elements of the appointment to update.
      * 
      * @return BulkAppointment Updated appointment.
      */
-    public function updateAppointment($id, array $input): BulkAppointment
+    public function updateAppointment($id, HTTPRequestBody $input): BulkAppointment
     {
         $appointment = $this->makeBulkAppointmentFromFormData($input)->setId($id);
 
@@ -206,14 +175,12 @@ final class BulkService
     /**
      * Updates certain properties of a bulk appointment.
      * 
-     * @param int   $id    ID of the appointment to update.
-     * @param array $input Data to update.
-     * 
-     * @phpstan-param array{commande_prete?: int} $input
+     * @param int             $id    ID of the appointment to update.
+     * @param HTTPRequestBody $input Data to update.
      * 
      * @return BulkAppointment Updated appointment.
      */
-    public function patchAppointment(int $id, array $input): BulkAppointment
+    public function patchAppointment(int $id, HTTPRequestBody $input): BulkAppointment
     {
         $appointment = $this->getAppointment($id);
 
@@ -221,8 +188,8 @@ final class BulkService
             throw new NotFoundException("Le RDV vrac n'existe pas.");
         }
 
-        if (isset($input["commande_prete"])) {
-            $appointment = $this->appointmentRepository->setIsReady($id, (bool) $input["commande_prete"]);
+        if ($input->isSet('commande_prete')) {
+            $appointment = $this->appointmentRepository->setIsReady($id, $input->getBool('commande_prete'));
         }
 
         return $appointment;
@@ -259,7 +226,10 @@ final class BulkService
             ->setColor($rawData["couleur"] ?? "")
             ->setUnit($rawData["unite"] ?? "");
 
-        $qualities = array_map(fn($quality) => $this->makeQualityFromDatabase($quality), $rawData["qualites"] ?? []);
+        $qualities = array_map(
+            fn(array $quality) => $this->makeQualityFromDatabase($quality),
+            $rawData["qualites"] ?? []
+        );
 
         $product->setQualities($qualities);
 
@@ -269,23 +239,27 @@ final class BulkService
     /**
      * Creates a bulk product from form data.
      * 
-     * @param array $rawData 
-     * 
-     * @phpstan-param BulkProductArray $rawData
+     * @param HTTPRequestBody $requestBody 
      * 
      * @return BulkProduct 
      */
-    public function makeProductFromFormData(array $rawData): BulkProduct
+    public function makeProductFromFormData(HTTPRequestBody $requestBody): BulkProduct
     {
         $product = (new BulkProduct())
-            ->setId($rawData["id"] ?? null)
-            ->setName($rawData["nom"] ?? "")
-            ->setColor($rawData["couleur"] ?? "")
-            ->setUnit($rawData["unite"] ?? "");
+            ->setId($requestBody->getInt('id'))
+            ->setName($requestBody->getString('nom'))
+            ->setColor($requestBody->getString('couleur'))
+            ->setUnit($requestBody->getString('unite'));
 
-        $qualities = array_map(fn($quality) => $this->makeQualityFromFormData($quality), $rawData["qualites"] ?? []);
+        /** @phpstan-var BulkQualityArray[] $qualities */
+        $qualities = $requestBody->getArray('qualites');
 
-        $product->setQualities($qualities);
+        $product->setQualities(
+            array_map(
+                fn(array $quality) => $this->makeQualityFromFormData($quality),
+                $qualities
+            )
+        );
 
         return $product;
     }
@@ -331,13 +305,11 @@ final class BulkService
     /**
      * Create a bulk product.
      * 
-     * @param array $input Elements of the product to create.
-     * 
-     * @phpstan-param BulkProductArray $input
+     * @param HTTPRequestBody $input Elements of the product to create.
      * 
      * @return BulkProduct Created product.
      */
-    public function createProduct(array $input): BulkProduct
+    public function createProduct(HTTPRequestBody $input): BulkProduct
     {
         $product = $this->makeProductFromFormData($input);
 
@@ -347,14 +319,12 @@ final class BulkService
     /**
      * Update a bulk product.
      * 
-     * @param int   $id     ID of the product to update.
-     * @param array $input  Elements of the product to update.
-     * 
-     * @phpstan-param BulkProductArray $input
+     * @param int             $id    ID of the product to update.
+     * @param HTTPRequestBody $input Elements of the product to update.
      * 
      * @return BulkProduct Updated product.
      */
-    public function updateProduct(int $id, array $input): BulkProduct
+    public function updateProduct(int $id, HTTPRequestBody $input): BulkProduct
     {
         $product = $this->makeProductFromFormData($input)->setId($id);
 

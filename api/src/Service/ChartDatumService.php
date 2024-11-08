@@ -5,15 +5,12 @@
 namespace App\Service;
 
 use App\Core\Component\Collection;
+use App\Core\HTTP\HTTPRequestBody;
 use App\Entity\ChartDatum;
 use App\Repository\ChartDatumRepository;
 
 /**
- * @phpstan-type ChartDatumArray array{
- *                                 cote?: string,
- *                                 affichage?: string,
- *                                 valeur?: float,
- *                               }
+ * @phpstan-import-type ChartDatumArray from \App\Repository\ChartDatumRepository
  */
 final class ChartDatumService
 {
@@ -21,7 +18,7 @@ final class ChartDatumService
 
     public function __construct()
     {
-        $this->chartDatumRepository = new ChartDatumRepository();
+        $this->chartDatumRepository = new ChartDatumRepository($this);
     }
 
     /**
@@ -42,18 +39,16 @@ final class ChartDatumService
     }
 
     /**
-     * @param array $rawData 
-     * 
-     * @phpstan-param ChartDatumArray $rawData
+     * @param HTTPRequestBody $rawData 
      * 
      * @return ChartDatum 
      */
-    public function makeChartDatumFromForm(array $rawData): ChartDatum
+    public function makeChartDatumFromForm(HTTPRequestBody $rawData): ChartDatum
     {
         $chartDatum = (new ChartDatum())
-            ->setName($rawData['cote'] ?? '')
-            ->setDisplayName($rawData['affichage'] ?? '')
-            ->setValue((float) ($rawData['valeur'] ?? 0));
+            ->setName($rawData->getString('cote'))
+            ->setDisplayName($rawData->getString('affichage'))
+            ->setValue($rawData->getFloat('valeur', 0));
 
         return $chartDatum;
     }
@@ -79,14 +74,12 @@ final class ChartDatumService
     /**
      * Updates a chart datum.
      * 
-     * @param string $name 
-     * @param array $rawData 
-     * 
-     * @phpstan-param ChartDatumArray $rawData
+     * @param string          $name 
+     * @param HTTPRequestBody $rawData 
      * 
      * @return ChartDatum 
      */
-    public function updateDatumValue(string $name, array $rawData): ChartDatum
+    public function updateDatumValue(string $name, HTTPRequestBody $rawData): ChartDatum
     {
         $chartDatum = $this->makeChartDatumFromForm($rawData)->setName($name);
 

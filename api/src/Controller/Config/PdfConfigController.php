@@ -130,8 +130,8 @@ final class PdfConfigController extends Controller
 
         $input = $this->request->getBody();
 
-        if (!$this->user->canEdit(Module::tryFrom($input["module"]))) {
-            throw new AccessException("Vous n'avez pas les droits pour créer une configuration PDF {$input["module"]}.");
+        if (!$this->user->canEdit(Module::tryFrom($input->getString('module')))) {
+            throw new AccessException("Vous n'avez pas les droits pour créer une configuration PDF {$input->getString('module')}.");
         }
 
         $newPdfConfig = $this->pdfService->createConfig($input);
@@ -172,7 +172,7 @@ final class PdfConfigController extends Controller
 
         if (
             !$this->user->canEdit($current->getModule())
-            || !$this->user->canEdit(Module::tryFrom($input["module"]))
+            || !$this->user->canEdit(Module::tryFrom($input->getString('module')))
         ) {
             throw new AccessException("Vous n'avez pas les droits pour modifier cette configuration PDF.");
         }

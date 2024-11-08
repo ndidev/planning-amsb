@@ -16,7 +16,8 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $date = '2023-01-01';
-        $query = new HTTPRequestQuery(['date_debut' => $date]);
+        $_SERVER['REQUEST_URI'] = "/path?date_debut={$date}";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -29,7 +30,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetSqlStartDateWithDefault(): void
     {
         // Given
-        $query = new HTTPRequestQuery([]);
+        $_SERVER['REQUEST_URI'] = "/path";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
         $expected = (new \DateTime(TimberFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
 
@@ -43,7 +45,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetSqlStartDateWithEmptyString(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['date_debut' => '']);
+        $_SERVER['REQUEST_URI'] = "/path?date_debut=";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
         $expected = (new \DateTime(TimberFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
 
@@ -57,7 +60,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetSqlStartDateWithIllegalString(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['date_debut' => 'illegal']);
+        $_SERVER['REQUEST_URI'] = "/path?date_debut=illegal";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
         $expected = (new \DateTime(TimberFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
 
@@ -72,7 +76,8 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $date = '2023-12-31';
-        $query = new HTTPRequestQuery(['date_fin' => $date]);
+        $_SERVER['REQUEST_URI'] = "/path?date_fin={$date}";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -85,7 +90,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetSqlEndDateWithDefault(): void
     {
         // Given
-        $query = new HTTPRequestQuery([]);
+        $_SERVER['REQUEST_URI'] = "/path";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
         $expected = (new \DateTime(TimberFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
 
@@ -99,7 +105,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetSqlEndDateWithEmptyString(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['date_fin' => '']);
+        $_SERVER['REQUEST_URI'] = "/path?date_fin=";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
         $expected = (new \DateTime(TimberFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
 
@@ -113,7 +120,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetSqlEndDateWithIllegalString(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['date_fin' => 'illegal']);
+        $_SERVER['REQUEST_URI'] = "/path?date_fin=illegal";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
         $expected = (new \DateTime(TimberFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
 
@@ -127,7 +135,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetSqlSupplierFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['fournisseur' => '1,2']);
+        $_SERVER['REQUEST_URI'] = "/path?fournisseur=1,2";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -140,7 +149,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetSqlSupplierFilterWithTrailingComma(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['fournisseur' => '1,2,']);
+        $_SERVER['REQUEST_URI'] = "/path?fournisseur=1,2,";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -153,7 +163,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetEmptySqlSupplierFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery([]);
+        $_SERVER['REQUEST_URI'] = "/path";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -166,7 +177,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetSqlCustomerFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['client' => '1,2,']);
+        $_SERVER['REQUEST_URI'] = "/path?client=1,2";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -179,7 +191,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetSqlCustomerFilterWithTrailingComma(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['client' => '1,2,']);
+        $_SERVER['REQUEST_URI'] = "/path?client=1,2,";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -192,7 +205,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetEmptySqlCustomerFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery([]);
+        $_SERVER['REQUEST_URI'] = "/path";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -205,7 +219,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetSqlLoadingPlaceFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['chargement' => '1,2']);
+        $_SERVER['REQUEST_URI'] = "/path?chargement=1,2";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -218,7 +233,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetSqlLoadingPlaceFilterWithTrailingComma(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['chargement' => '1,2,']);
+        $_SERVER['REQUEST_URI'] = "/path?chargement=1,2,";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -231,7 +247,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetEmptySqlLoadingPlaceFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery([]);
+        $_SERVER['REQUEST_URI'] = "/path";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -244,7 +261,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetSqlDeliveryPlaceFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['livraison' => '3,4']);
+        $_SERVER['REQUEST_URI'] = "/path?livraison=3,4";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -257,7 +275,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetSqlDeliveryPlaceFilterWithTrailingComma(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['livraison' => '3,4,']);
+        $_SERVER['REQUEST_URI'] = "/path?livraison=3,4,";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -270,7 +289,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetEmptySqlDeliveryPlaceFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery([]);
+        $_SERVER['REQUEST_URI'] = "/path";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -283,7 +303,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetSqlTransportFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['transporteur' => '1,2']);
+        $_SERVER['REQUEST_URI'] = "/path?transporteur=1,2";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -296,7 +317,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetSqlTransportFilterWithTrailingComma(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['transporteur' => '1,2,']);
+        $_SERVER['REQUEST_URI'] = "/path?transporteur=1,2,";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -309,7 +331,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetEmptySqlTransportFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery([]);
+        $_SERVER['REQUEST_URI'] = "/path";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -322,7 +345,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetSqlChartererFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['affreteur' => '1,2']);
+        $_SERVER['REQUEST_URI'] = "/path?affreteur=1,2";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -335,7 +359,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetSqlChartererFilterWithTrailingComma(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['affreteur' => '1,2,']);
+        $_SERVER['REQUEST_URI'] = "/path?affreteur=1,2,";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -348,7 +373,8 @@ final class TimberFilterDTOTest extends TestCase
     public function testGetEmptySqlChartererFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery([]);
+        $_SERVER['REQUEST_URI'] = "/path";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new TimberFilterDTO($query);
 
         // When

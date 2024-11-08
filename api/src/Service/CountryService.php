@@ -9,10 +9,7 @@ use App\Entity\Country;
 use App\Repository\CountryRepository;
 
 /**
- * @phpstan-type CountryArray array{
- *                              iso?: string,
- *                              nom?: string,
- *                            }
+ * @phpstan-import-type CountryArray from \App\Repository\CountryRepository
  */
 final class CountryService
 {
@@ -35,8 +32,8 @@ final class CountryService
     public function makeCountryFromDatabase(array $rawData): Country
     {
         return (new Country())
-            ->setISO($rawData["iso"] ?? "")
-            ->setName($rawData["nom"] ?? "");
+            ->setISO($rawData["iso"])
+            ->setName($rawData["nom"]);
     }
 
     /**

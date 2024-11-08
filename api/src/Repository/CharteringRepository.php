@@ -9,6 +9,37 @@ use App\Entity\Chartering\Charter;
 use App\Entity\Chartering\CharterLeg;
 use App\Service\CharteringService;
 
+/**
+ * @phpstan-type CharterArray array{
+ *                              id?: int,
+ *                              statut?: int,
+ *                              lc_debut?: string,
+ *                              lc_fin?: string,
+ *                              cp_date?: string,
+ *                              navire?: string,
+ *                              affreteur?: int,
+ *                              armateur?: int,
+ *                              courtier?: int,
+ *                              fret_achat?: float,
+ *                              fret_vente?: float,
+ *                              surestaries_achat?: float,
+ *                              surestaries_vente?: float,
+ *                              commentaire?: string,
+ *                              archive?: bool,
+ *                              legs?: CharterLegArray[]
+ *                            }
+ * 
+ * @phpstan-type CharterLegArray array{
+ *                                 id?: int,
+ *                                 charter?: int,
+ *                                 bl_date?: string,
+ *                                 pol?: string,
+ *                                 pod?: string,
+ *                                 marchandise?: string,
+ *                                 quantite?: string,
+ *                                 commentaire?: string,
+ *                               }
+ */
 final class CharteringRepository extends Repository
 {
     public function __construct(private CharteringService $charteringService)
@@ -80,12 +111,15 @@ final class CharteringRepository extends Repository
             "startDate" => $filter->getSqlStartDate(),
             "endDate" => $filter->getSqlEndDate(),
         ]);
+
+        /** @phpstan-var CharterArray[] $chartersRaw */
         $chartersRaw = $chartersRequest->fetchAll();
+
 
         $legsRaw = [];
 
         if (count($chartersRaw) > 0) {
-            $chartersIds = array_map(fn(array $charter) => $charter["id"], $chartersRaw);
+            $chartersIds = array_map(fn(array $charter) => $charter["id"] ?? null, $chartersRaw);
             $legsStatement = "SELECT * FROM chartering_detail WHERE charter IN (" . implode(",", $chartersIds) . ")";
             $legsRequest = $this->mysql->query($legsStatement);
 
@@ -93,6 +127,7 @@ final class CharteringRepository extends Repository
                 throw new DBException("Impossible de récupérer les détails des affrètements.");
             }
 
+            /** @phpstan-var CharterLegArray[] $legsRaw */
             $legsRaw = $legsRequest->fetchAll();
         }
 
@@ -103,7 +138,7 @@ final class CharteringRepository extends Repository
                 $filteredLegsRaw = array_values(
                     array_filter(
                         $legsRaw,
-                        fn(array $legRaw) => $legRaw["charter"] === $charter->getId()
+                        fn(array $legRaw) => ($legRaw["charter"] ?? null) === $charter->getId()
                     )
                 );
 
@@ -164,11 +199,15 @@ final class CharteringRepository extends Repository
         $charterRequest->execute(["id" => $id]);
         $charterRaw = $charterRequest->fetch();
 
-        if (!$charterRaw) return null;
+        if (!is_array($charterRaw)) return null;
+
+        /** @phpstan-var CharterArray $charterRaw */
 
         // Détails
         $legsRequest = $this->mysql->prepare($legsStatement);
         $legsRequest->execute(["id" => $id]);
+
+        /** @phpstan-var CharterLegArray[] $legsRaw */
         $legsRaw = $legsRequest->fetchAll();
 
         $charterRaw["legs"] = $legsRaw;
@@ -230,7 +269,7 @@ final class CharteringRepository extends Repository
 
         $this->mysql->beginTransaction();
         $charterRequest->execute([
-            "statut" => $charter->getStatus()->value,
+            "statut" => $charter->getStatus(),
             // Laycan
             "lc_debut" => $charter->getLaycanStart(true),
             "lc_fin" => $charter->getLaycanEnd(true),
@@ -335,7 +374,7 @@ final class CharteringRepository extends Repository
 
         $charterRequest = $this->mysql->prepare($charterStatement);
         $charterRequest->execute([
-            "statut" => $charter->getStatus()->value,
+            "statut" => $charter->getStatus(),
             // Laycan
             "lc_debut" => $charter->getLaycanStart(true),
             "lc_fin" => $charter->getLaycanEnd(true),

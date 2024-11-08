@@ -17,7 +17,8 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $date = '2023-01-01';
-        $query = new HTTPRequestQuery(['date_debut' => $date]);
+        $_SERVER['REQUEST_URI'] = "/path?date_debut={$date}";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -30,7 +31,8 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlStartDateWithDefault(): void
     {
         // Given
-        $query = new HTTPRequestQuery([]);
+        $_SERVER['REQUEST_URI'] = "/path";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new ShippingFilterDTO($query);
         $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
 
@@ -44,7 +46,8 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlStartDateWithEmptyString(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['date_debut' => '']);
+        $_SERVER['REQUEST_URI'] = "/path?date_debut=";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new ShippingFilterDTO($query);
         $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
 
@@ -58,7 +61,8 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlStartDateWithIllegalString(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['date_debut' => 'illegal']);
+        $_SERVER['REQUEST_URI'] = "/path?date_debut=illegal";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new ShippingFilterDTO($query);
         $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
 
@@ -73,7 +77,8 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $date = '2023-12-31';
-        $query = new HTTPRequestQuery(['date_fin' => $date]);
+        $_SERVER['REQUEST_URI'] = "/path?date_fin={$date}";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -86,7 +91,8 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlEndDateWithDefault(): void
     {
         // Given
-        $query = new HTTPRequestQuery([]);
+        $_SERVER['REQUEST_URI'] = "/path";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new ShippingFilterDTO($query);
         $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
 
@@ -100,7 +106,8 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlEndDateWithEmptyString(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['date_fin' => '']);
+        $_SERVER['REQUEST_URI'] = "/path?date_fin=";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new ShippingFilterDTO($query);
         $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
 
@@ -114,7 +121,8 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlEndDateWithIllegalString(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['date_fin' => 'illegal']);
+        $_SERVER['REQUEST_URI'] = "/path?date_fin=illegal";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new ShippingFilterDTO($query);
         $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
 
@@ -128,7 +136,8 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlShipFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['navire' => 'Ship1,Ship2']);
+        $_SERVER['REQUEST_URI'] = "/path?navire=Ship1,Ship2";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -141,7 +150,8 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetEmptySqlShipFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery([]);
+        $_SERVER['REQUEST_URI'] = "/path";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -154,7 +164,8 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlShipOwnerFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['armateur' => '1,2']);
+        $_SERVER['REQUEST_URI'] = "/path?armateur=1,2";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -167,7 +178,8 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetEmptySqlShipOwnerFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery([]);
+        $_SERVER['REQUEST_URI'] = "/path";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -180,7 +192,8 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlCargoFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['marchandise' => 'Cargo1,Cargo2']);
+        $_SERVER['REQUEST_URI'] = "/path?marchandise=Cargo1,Cargo2";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -193,7 +206,8 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetEmptySqlCargoFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery([]);
+        $_SERVER['REQUEST_URI'] = "/path";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -206,7 +220,8 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlCustomerFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['client' => 'Customer1,Customer2']);
+        $_SERVER['REQUEST_URI'] = "/path?client=Customer1,Customer2";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -219,7 +234,8 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetEmptySqlCustomerFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery([]);
+        $_SERVER['REQUEST_URI'] = "/path";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -232,7 +248,8 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlLastPortFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['last_port' => 'Port1,Port2']);
+        $_SERVER['REQUEST_URI'] = "/path?last_port=Port1,Port2";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -245,7 +262,8 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetEmptySqlLastPortFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery([]);
+        $_SERVER['REQUEST_URI'] = "/path";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -258,7 +276,8 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlNextPortFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery(['next_port' => 'Port3,Port4']);
+        $_SERVER['REQUEST_URI'] = "/path?next_port=Port3,Port4";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -271,7 +290,8 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetEmptySqlNextPortFilter(): void
     {
         // Given
-        $query = new HTTPRequestQuery([]);
+        $_SERVER['REQUEST_URI'] = "/path";
+        $query = HTTPRequestQuery::buildFromRequest();
         $dto = new ShippingFilterDTO($query);
 
         // When
