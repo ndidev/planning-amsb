@@ -1,6 +1,8 @@
 <?php
 
-// path: api/src/Core/Component/CharterStatus.php
+// Path: api/src/Core/Component/CharterStatus.php
+
+declare(strict_types=1);
 
 namespace App\Core\Component;
 

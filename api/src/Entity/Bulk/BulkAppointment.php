@@ -2,6 +2,8 @@
 
 // Path: api/src/Entity/Bulk/BulkAppointment.php
 
+declare(strict_types=1);
+
 namespace App\Entity\Bulk;
 
 use App\Entity\AbstractEntity;

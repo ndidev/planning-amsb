@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Core/Exceptions/Client/Auth/AccountStatusException.php
+
+declare(strict_types=1);
+
 namespace App\Core\Exceptions\Client\Auth;
 
 /**

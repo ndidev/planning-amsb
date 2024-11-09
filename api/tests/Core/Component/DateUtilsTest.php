@@ -2,6 +2,8 @@
 
 // Path: api/tests/Core/Component/DateUtilsTest.php
 
+declare(strict_types=1);
+
 namespace App\Tests\Core\Component;
 
 use PHPUnit\Framework\TestCase;

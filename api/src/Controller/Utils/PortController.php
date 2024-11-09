@@ -2,6 +2,8 @@
 
 // Path: api/src/Controller/Utils/PortController.php
 
+declare(strict_types=1);
+
 namespace App\Controller\Utils;
 
 use App\Controller\Controller;

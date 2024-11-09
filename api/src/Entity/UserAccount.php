@@ -1,6 +1,8 @@
 <?php
 
-// Path: api/src/Entity/User.php
+// Path: api/src/Entity/UserAccount.php
+
+declare(strict_types=1);
 
 namespace App\Entity;
 

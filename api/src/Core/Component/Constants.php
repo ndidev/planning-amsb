@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Core/Component/Constants.php
+
+declare(strict_types=1);
+
 namespace App\Core\Component\Constants;
 
 // Time

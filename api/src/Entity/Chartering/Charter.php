@@ -2,6 +2,8 @@
 
 // Path: api/src/Entity/Bulk/BulkAppointment.php
 
+declare(strict_types=1);
+
 namespace App\Entity\Chartering;
 
 use App\Core\Component\CharterStatus;
@@ -23,10 +25,10 @@ class Charter extends AbstractEntity
     private ?ThirdParty $charterer = null;
     private ?ThirdParty $shipOperator = null;
     private ?ThirdParty $shipbroker = null;
-    private float $freightPayed = 0;
-    private float $freightSold = 0;
-    private float $demurragePayed = 0;
-    private float $demurrageSold = 0;
+    private float $freightPayed = 0.0;
+    private float $freightSold = 0.0;
+    private float $demurragePayed = 0.0;
+    private float $demurrageSold = 0.0;
     private string $comments = '';
     private bool $archive = false;
 

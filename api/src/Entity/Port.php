@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Entity/Port.php
+
+declare(strict_types=1);
+
 namespace App\Entity;
 
 class Port extends AbstractEntity

@@ -1,4 +1,9 @@
 <?php
+
+// Path: api/bootstrap.php
+
+declare(strict_types=1);
+
 setlocale(LC_ALL, "fr_FR.utf8", "fr-FR"); // Seul "fr_FR.utf8" fonctionne sur le serveur Axiom, seul "fr-FR" fonctionne en local
 date_default_timezone_set('Europe/Paris');
 

@@ -1,6 +1,8 @@
 <?php
 
-// path: api/src/Entity/Chartering/CharterLeg.php
+// Path: api/src/Entity/Chartering/CharterLeg.php
+
+declare(strict_types=1);
 
 namespace App\Entity\Chartering;
 

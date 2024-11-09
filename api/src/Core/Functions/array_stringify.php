@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Core/Functions/array_stringify.php
+
+declare(strict_types=1);
+
 namespace App\Core\Functions;
 
 /**

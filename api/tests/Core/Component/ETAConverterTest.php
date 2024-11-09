@@ -2,6 +2,8 @@
 
 // Path: api/tests/Core/Component/ETAConverterTest.php
 
+declare(strict_types=1);
+
 namespace App\Tests\Core\Component;
 
 use App\Core\Component\ETAConverter;

@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Core/Logger/ErrorLogger.php
+
+declare(strict_types=1);
+
 namespace App\Core\Logger;
 
 include_once __DIR__ . "/../Functions/array_stringify.php";

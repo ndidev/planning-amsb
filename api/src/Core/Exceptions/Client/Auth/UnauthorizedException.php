@@ -1,5 +1,7 @@
 <?php
 
+// Path: api/src/Core/Exceptions/Client/Auth/UnauthorizedException.php
+
 namespace App\Core\Exceptions\Client\Auth;
 
 use App\Core\HTTP\HTTPResponse;

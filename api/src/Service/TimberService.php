@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Service/TimberService.php
+
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Core\Component\Collection;

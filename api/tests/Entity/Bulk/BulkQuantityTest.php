@@ -2,6 +2,8 @@
 
 // Path: api/tests/Entity/Bulk/BulkQuantityTest.php
 
+declare(strict_types=1);
+
 namespace App\Tests\Entity\Bulk;
 
 use PHPUnit\Framework\TestCase;

@@ -2,6 +2,8 @@
 
 // Path: api/src/DTO/CurrentUserDTO.php
 
+declare(strict_types=1);
+
 namespace App\DTO;
 
 use App\Core\Exceptions\Client\BadRequestException;

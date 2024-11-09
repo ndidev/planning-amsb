@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Entity/Country.php
+
+declare(strict_types=1);
+
 namespace App\Entity;
 
 class Country extends AbstractEntity

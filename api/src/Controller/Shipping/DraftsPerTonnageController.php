@@ -2,6 +2,8 @@
 
 // Path: api/src/Controller/Shipping/DraftsPerTonnageController.php
 
+declare(strict_types=1);
+
 namespace App\Controller\Shipping;
 
 use App\Controller\Controller;

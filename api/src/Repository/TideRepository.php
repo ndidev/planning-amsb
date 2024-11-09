@@ -2,6 +2,8 @@
 
 // Path: api/src/Repository/TideRepository.php
 
+declare(strict_types=1);
+
 namespace App\Repository;
 
 use App\Core\Exceptions\Server\DB\DBException;

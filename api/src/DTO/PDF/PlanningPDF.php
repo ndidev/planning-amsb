@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/DTO/PDF/PlanningPDF.php
+
+declare(strict_types=1);
+
 namespace App\DTO\PDF;
 
 use App\Entity\Config\AgencyDepartment;

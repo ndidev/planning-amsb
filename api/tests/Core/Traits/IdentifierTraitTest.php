@@ -2,6 +2,8 @@
 
 // Path: api/tests/Core/Traits/IdentifierTraitTest.php
 
+declare(strict_types=1);
+
 namespace App\Tests\Core\Traits;
 
 use App\Core\Traits\IdentifierTrait;

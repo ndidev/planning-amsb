@@ -2,6 +2,8 @@
 
 // Path: api/src/Service/PdfService.php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Core\Component\Collection;
@@ -165,14 +167,14 @@ final class PdfService
             throw new NotFoundException("Fournisseur non trouvé");
         }
 
-        $module = $config->getModule();
-
         // Récupération données du service de l'agence.
         $agencyInfo = (new AgencyService())->getDepartment("transit");
 
         if (!$agencyInfo) {
             throw new ServerException("Impossible de récupérer les informations de l'agence");
         }
+
+        $module = $config->getModule();
 
         return match ($module) {
             Module::BULK => $this->generateBulkPdf($supplier, $startDate, $endDate, $agencyInfo),
@@ -215,16 +217,14 @@ final class PdfService
      * @param \DateTimeInterface $endDate   Date de fin des RDV.
      * 
      * @return array{
-     *           module: Module::*|null,
-     *           fournisseur: int|null,
-     *           statut: 'succes'|'echec',
-     *           message: string|null,
+     *           module: Module::*,
+     *           fournisseur: int,
      *           adresses: array{
      *                       from:string,
      *                       to:string[],
      *                       cc:string[],
      *                       bcc:string[]
-     *                     }|null,
+     *                     },
      *         } Résultat de l'envoi.
      */
     public function sendPdfByEmail(
@@ -235,8 +235,6 @@ final class PdfService
         $result = [
             "module" => null,
             "fournisseur" => null,
-            "statut" => "echec",
-            "message" => null,
             "adresses" => null,
         ];
 
@@ -247,8 +245,11 @@ final class PdfService
                 throw new NotFoundException("Configuration PDF non trouvée");
             }
 
-            $result["module"] = $config->getModule();
-            $result["fournisseur"] = $config->getSupplier()?->getId();
+            $supplierId = $config->getSupplier()?->getId();
+
+            if (!$supplierId) {
+                throw new NotFoundException("Fournisseur non trouvé");
+            }
 
             // Récupération données du service de l'agence.
             $agencyInfo = (new AgencyService())->getDepartment("transit");
@@ -256,6 +257,16 @@ final class PdfService
             if (!$agencyInfo) {
                 throw new ServerException("Impossible de récupérer les informations de l'agence");
             }
+
+            $supportedModules = [Module::BULK, Module::TIMBER];
+
+            $module = $config->getModule();
+
+            if (!in_array($module, $supportedModules)) {
+                throw new ServerException("Le module spécifié n'est pas pris en charge");
+            }
+
+            /** @phpstan-var Module::* $module */
 
             $pdf = $this->generatePDF($configId, $startDate, $endDate);
 
@@ -273,20 +284,13 @@ final class PdfService
             $mail->send();
             $mail->smtpClose();
 
-            $result["statut"] = "succes";
-            $result["message"] = "Le PDF a été envoyé avec succès.";
+            $result["module"] = $module;
+            $result["fournisseur"] = $supplierId;
             $result["adresses"] = $mail->getAllAddresses();
-        } catch (PHPMailerException $e) {
-            $result["message"] = "Erreur : " . mb_convert_encoding($mail->ErrorInfo, 'UTF-8');
-            ErrorLogger::log($e);
-        } catch (AppException $e) {
-            $result["message"] = $e->getMessage();
-            ErrorLogger::log($e);
-        } catch (\Exception $e) {
-            $result["message"] = "Erreur serveur";
-            ErrorLogger::log($e);
-        }
 
-        return $result;
+            return $result;
+        } catch (PHPMailerException $e) {
+            throw new ServerException("Erreur d'envoi", previous: $e);
+        }
     }
 }

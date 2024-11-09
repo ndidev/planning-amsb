@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Repository/Repository.php
+
+declare(strict_types=1);
+
 namespace App\Repository;
 
 use App\Core\Database\MySQL;

@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Core/Router/Router.php
+
+declare(strict_types=1);
+
 namespace App\Core\Router;
 
 /**
@@ -247,9 +251,14 @@ class Router
 
             if ($match) {
                 if ($params) {
-                    foreach ($params as $key => $value) {
+                    foreach ($params as $key => &$value) {
                         if (is_numeric($key)) {
                             unset($params[$key]);
+                            continue;
+                        }
+
+                        if (is_numeric($value)) {
+                            $value = (int) $value;
                         }
                     }
                 }

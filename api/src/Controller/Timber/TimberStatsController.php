@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Controller/Timber/TimberStatsController.php
+
+declare(strict_types=1);
+
 namespace App\Controller\Timber;
 
 use App\Controller\Controller;

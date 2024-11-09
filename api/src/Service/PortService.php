@@ -2,6 +2,8 @@
 
 // Path: api/src/Service/PortService.php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Core\Component\Collection;

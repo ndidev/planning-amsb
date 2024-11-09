@@ -2,6 +2,8 @@
 
 // Path: api/src/Core/HTTP/HTTPRequestQuery.php
 
+declare(strict_types=1);
+
 namespace App\Core\HTTP;
 
 /**

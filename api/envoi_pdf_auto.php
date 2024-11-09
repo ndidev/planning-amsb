@@ -1,8 +1,14 @@
 <?php
 
+// Path: api/envoi_pdf_auto.php
+
+declare(strict_types=1);
+
 require_once __DIR__ . '/bootstrap.php';
 
 use App\Core\Component\DateUtils;
+use App\Core\Exceptions\Server\ServerException;
+use App\Core\Logger\ErrorLogger;
 use App\Service\PdfService;
 
 const TODAY = new \DateTime();
@@ -40,25 +46,32 @@ foreach ($configs as $config) {
      */
     $rapport = "";
 
-    /**
-     * Calcul des dates si la page est appelée automatiquement
-     * (ex : si elle est appelée par CronJob)
-     */
-    $startDate = DateUtils::getPreviousWorkingDay(TODAY, $config->getDaysBefore());
-    $endDate = DateUtils::getNextWorkingDay(TODAY, $config->getDaysAfter());
+    try {
+        /**
+         * Calcul des dates si la page est appelée automatiquement
+         * (ex : si elle est appelée par CronJob)
+         */
+        $startDate = DateUtils::getPreviousWorkingDay(TODAY, $config->getDaysBefore());
+        $endDate = DateUtils::getNextWorkingDay(TODAY, $config->getDaysAfter());
+        $formattedStartDate = DateUtils::format(DateUtils::DATE_FULL, $startDate);
+        $formattedEndDate = DateUtils::format(DateUtils::DATE_FULL, $endDate);
 
-    // Envoi du PDF
-    $resultat = $pdfService->sendPdfByEmail(
-        $config->getId(),
-        $startDate,
-        $endDate
-    );
+        $configId = $config->getId();
 
-    // Mise à jour du rapport
-    $rapport .= "• {$config->getModule()}/{$config->getSupplier()->getId()} : {$resultat['statut']}" . PHP_EOL;
-    $rapport .= "  " . ($resultat["statut"] === "succes" ? "Message" : "Erreur") . " : {$resultat['message']}" . PHP_EOL;
-    $rapport .= "  Dates : du " . DateUtils::format(DateUtils::DATE_FULL, $startDate) . " au " . DateUtils::format(DateUtils::DATE_FULL, $endDate) . PHP_EOL;
-    if ($resultat["statut"] === "succes") {
+        if (!$configId) {
+            throw new ServerException("Erreur : l'identifiant de la configuration n'a pas été trouvé");
+        }
+
+        // Envoi du PDF
+        $resultat = $pdfService->sendPdfByEmail(
+            $configId,
+            $startDate,
+            $endDate
+        );
+
+        // Mise à jour du rapport
+        $rapport .= "• {$config->getModule()}/{$config->getSupplier()?->getId()} ({$config->getSupplier()?->getShortName()}) : succès" . PHP_EOL;
+        $rapport .= "  Dates : du {$formattedStartDate} au {$formattedEndDate}" . PHP_EOL;
         $rapport .= "  Adresses : " . PHP_EOL;
         $rapport .= "    From : " . $resultat["adresses"]["from"] . PHP_EOL;
         $rapport .= "    To : " . PHP_EOL;
@@ -73,8 +86,12 @@ foreach ($configs as $config) {
         foreach ($resultat["adresses"]["bcc"] as $address) {
             $rapport .= "      $address" . PHP_EOL;
         }
+    } catch (\Exception $e) {
+        $rapport .= "• {$config->getModule()}/{$config->getSupplier()?->getId()} ({$config->getSupplier()?->getShortName()}) : échec" . PHP_EOL;
+        $rapport .= "  Erreur : {$e->getMessage()}" . PHP_EOL;
+        ErrorLogger::log($e);
+    } finally {
+        // Affichage du rapport
+        echo $rapport;
     }
-
-    // Affichage du rapport
-    echo $rapport;
 }

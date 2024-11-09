@@ -2,6 +2,8 @@
 
 // Path: api/src/Core/Component/CargoOperation.php
 
+declare(strict_types=1);
+
 namespace App\Core\Component;
 
 abstract class CargoOperation

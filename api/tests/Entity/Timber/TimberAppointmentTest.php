@@ -2,6 +2,8 @@
 
 // Path: api/tests/Entity/Timber/TimberAppointmentTest.php
 
+declare(strict_types=1);
+
 namespace App\Tests\Entity\Timber;
 
 use App\Entity\ThirdParty;

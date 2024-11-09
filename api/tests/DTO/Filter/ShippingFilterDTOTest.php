@@ -1,6 +1,8 @@
 <?php
 
-// Path: api/tests/DTO/ShippingFilterDTOTest.php
+// Path: api/tests/DTO/Filter/ShippingFilterDTOTest.php
+
+declare(strict_types=1);
 
 namespace App\Tests\DTO;
 

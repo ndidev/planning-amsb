@@ -2,6 +2,8 @@
 
 // Path: api/src/Service/ChartDatumService.php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Core\Component\Collection;
@@ -33,7 +35,7 @@ final class ChartDatumService
         $chartDatum = (new ChartDatum())
             ->setName($rawData['cote'] ?? '')
             ->setDisplayName($rawData['affichage'] ?? '')
-            ->setValue((float) ($rawData['valeur'] ?? 0));
+            ->setValue((float) ($rawData['valeur'] ?? 0.0));
 
         return $chartDatum;
     }

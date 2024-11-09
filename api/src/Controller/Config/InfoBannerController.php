@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Controller/Config/InfoBannerController.php
+
+declare(strict_types=1);
+
 namespace App\Controller\Config;
 
 use App\Controller\Controller;

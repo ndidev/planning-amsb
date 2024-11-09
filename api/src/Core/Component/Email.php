@@ -1,6 +1,8 @@
 <?php
 
-// Path: api/src/Core/Component/PdfEmail.php
+// Path: api/src/Core/Component/Email.php
+
+declare(strict_types=1);
 
 namespace App\Core\Component;
 
@@ -54,7 +56,7 @@ class Email extends PHPMailer
         $this->SMTPAuth   = true;                         // Enable SMTP authentication
         $this->SMTPSecure = self::ENCRYPTION_STARTTLS;    // Enable TLS encryption; `PHPMailer::ENCRYPTION_SMTPS` also accepted
         $this->Host       = $_ENV["MAIL_HOST"];           // Set the SMTP server to send through
-        $this->Port       = $_ENV["MAIL_PORT"];           // TCP port to connect to
+        $this->Port       = (int) $_ENV["MAIL_PORT"];     // TCP port to connect to
         $this->Username   = $_ENV["MAIL_USER"];           // SMTP username
         $this->Password   = $_ENV["MAIL_PASS"];           // SMTP password
 

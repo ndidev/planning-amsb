@@ -1,11 +1,14 @@
 <?php
 
+// Path: api/src/Controller/Shipping/VoyageNumberController.php
+
+declare(strict_types=1);
+
 namespace App\Controller\Shipping;
 
 use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
-use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\ShippingService;
 

@@ -2,6 +2,8 @@
 
 // Path: api/src/Entity/Config/PdfConfig.php
 
+declare(strict_types=1);
+
 namespace App\Entity\Config;
 
 use App\Core\Component\Module;

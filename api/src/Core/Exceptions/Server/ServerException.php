@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Core/Exceptions/Server/ServerException.php
+
+declare(strict_types=1);
+
 namespace App\Core\Exceptions\Server;
 
 use App\Core\Exceptions\AppException;

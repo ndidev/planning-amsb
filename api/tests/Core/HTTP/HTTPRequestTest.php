@@ -2,6 +2,8 @@
 
 // Path: api/tests/Core/HTTP/HTTPRequestTest.php
 
+declare(strict_types=1);
+
 namespace App\Tests\Core\HTTP;
 
 use App\Core\HTTP\HTTPRequest;

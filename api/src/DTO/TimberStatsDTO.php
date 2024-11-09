@@ -2,6 +2,8 @@
 
 // Path: api/src/DTO/TimberStatsDTO.php
 
+declare(strict_types=1);
+
 namespace App\DTO;
 
 final class TimberStatsDTO implements \JsonSerializable

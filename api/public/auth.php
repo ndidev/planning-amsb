@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/public/auth.php
+
+declare(strict_types=1);
+
 require_once __DIR__ . "/../bootstrap.php";
 
 use App\Core\Auth\User;
@@ -182,11 +186,11 @@ try {
 /**
  * Crée l'endpoint à partir du path.
  * 
- * @param string $path Path obtenu de parse_url()
+ * @param ?string $path Path obtenu de parse_url()
  * 
- * @return string Endpoint au format "path/to/endpoint"
+ * @return ?string Endpoint au format "path/to/endpoint"
  */
-function makeEndpoint(string $path): ?string
+function makeEndpoint(?string $path): ?string
 {
     if (!$path) {
         return null;

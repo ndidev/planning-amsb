@@ -2,6 +2,8 @@
 
 // Path: api/src/Entity/Bulk/BulkQuality.php
 
+declare(strict_types=1);
+
 namespace App\Entity\Bulk;
 
 use App\Core\Interfaces\Arrayable;

@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Core/Security.php
+
+declare(strict_types=1);
+
 namespace App\Core;
 
 use App\Core\Database\Redis;

@@ -2,6 +2,8 @@
 
 // Path: api/src/Repository/ShippingRespository.php
 
+declare(strict_types=1);
+
 namespace App\Repository;
 
 use App\Core\Component\Collection;

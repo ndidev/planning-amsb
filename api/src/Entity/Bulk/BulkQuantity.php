@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Entity/Bulk/BulkQuantity.php
+
+declare(strict_types=1);
+
 namespace App\Entity\Bulk;
 
 class BulkQuantity

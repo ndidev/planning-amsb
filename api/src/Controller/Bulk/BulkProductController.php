@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Controller/Bulk/BulkProductController.php
+
+declare(strict_types=1);
+
 namespace App\Controller\Bulk;
 
 use App\Controller\Controller;

@@ -2,6 +2,8 @@
 
 // Path: api/src/Core/Component/PdfEmail.php
 
+declare(strict_types=1);
+
 namespace App\Core\Component;
 
 use App\Core\Component\DateUtils;

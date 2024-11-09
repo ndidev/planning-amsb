@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Core/Database/MySQL.php
+
+declare(strict_types=1);
+
 namespace App\Core\Database;
 
 use App\Core\Exceptions\Server\DB\DBConnectionException;

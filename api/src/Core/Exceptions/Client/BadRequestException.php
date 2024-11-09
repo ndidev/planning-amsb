@@ -2,6 +2,8 @@
 
 // Path: api/src/Core/Exceptions/Client/BadRequestException.php
 
+declare(strict_types=1);
+
 namespace App\Core\Exceptions\Client;
 
 use App\Core\HTTP\HTTPResponse;

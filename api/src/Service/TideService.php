@@ -2,6 +2,8 @@
 
 // Path: api/src/Service/TideService.php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Core\Exceptions\Server\ServerException;

@@ -2,13 +2,15 @@
 
 // Path: api/src/Entity/ChartDatum.php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 class ChartDatum extends AbstractEntity
 {
     private string $name = '';
     private string $displayName = '';
-    private float $value = 0;
+    private float $value = 0.0;
 
     public function getName(): string
     {

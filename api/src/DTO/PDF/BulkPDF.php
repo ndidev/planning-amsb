@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/DTO/PDF/BulkPDF.php
+
+declare(strict_types=1);
+
 namespace App\DTO\PDF;
 
 use App\Core\Component\ColorConverter;

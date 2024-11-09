@@ -1,6 +1,8 @@
 <?php
 
-// Path: api/src/Core/Component/Modules.php
+// Path: api/src/Core/Component/Module.php
+
+declare(strict_types=1);
 
 namespace App\Core\Component;
 

@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Service/CharteringService.php
+
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Core\Component\CharterStatus;
@@ -47,10 +51,10 @@ final class CharteringService
             ->setCharterer($this->thirdPartyService->getThirdParty($rawData['affreteur'] ?? null))
             ->setShipOperator($this->thirdPartyService->getThirdParty($rawData['armateur'] ?? null))
             ->setShipbroker($this->thirdPartyService->getThirdParty($rawData['courtier'] ?? null))
-            ->setFreightPayed((float) ($rawData['fret_achat'] ?? 0))
-            ->setFreightSold((float) ($rawData['fret_vente'] ?? 0))
-            ->setDemurragePayed((float) ($rawData['surestaries_achat'] ?? 0))
-            ->setDemurrageSold((float) ($rawData['surestaries_vente'] ?? 0))
+            ->setFreightPayed((float) ($rawData['fret_achat'] ?? 0.0))
+            ->setFreightSold((float) ($rawData['fret_vente'] ?? 0.0))
+            ->setDemurragePayed((float) ($rawData['surestaries_achat'] ?? 0.0))
+            ->setDemurrageSold((float) ($rawData['surestaries_vente'] ?? 0.0))
             ->setComments($rawData['commentaire'] ?? '')
             ->setArchive($rawData['archive'] ?? false)
             ->setLegs(

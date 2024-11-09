@@ -2,12 +2,13 @@
 
 // Path: api/src/Entity/Timber/TimberAppointment.php
 
+declare(strict_types=1);
+
 namespace App\Entity\Timber;
 
 use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
 use App\Entity\ThirdParty;
-use App\Service\ThirdPartyService;
 
 class TimberAppointment extends AbstractEntity
 {

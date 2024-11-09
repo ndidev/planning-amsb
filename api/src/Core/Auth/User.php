@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Core/Auth/User.php
+
+declare(strict_types=1);
+
 namespace App\Core\Auth;
 
 use App\Core\Component\Module;
@@ -528,14 +532,14 @@ class User
         $user = $this->redis->hGetAll("admin:users:{$this->uid}");
 
         // Prolongation cache
-        $this->redis->expire("admin:users:{$this->uid}", $_ENV["SESSION_EXPIRATION"]);
+        $this->redis->expire("admin:users:{$this->uid}", (int) $_ENV["SESSION_EXPIRATION"]);
 
         $this->login = $user["login"];
         $this->password = $user["password"];
-        $this->canLogin = $user["can_login"];
+        $this->canLogin = (bool) $user["can_login"];
         $this->name = $user["nom"];
-        $this->loginAttempts = $user["login_attempts"];
-        $this->status = AccountStatus::tryFrom($user["statut"]) ?? $user["statut"];
+        $this->loginAttempts = (int) $user["login_attempts"];
+        $this->status = AccountStatus::from($user["statut"]);
         $this->roles->fillFromJsonString($user["roles"]);
     }
 
@@ -551,10 +555,10 @@ class User
      */
     private function registerSession(string $sid): void
     {
-        $this->redis->setex("admin:sessions:{$sid}", $_ENV["SESSION_EXPIRATION"], $this->uid);
+        $this->redis->setex("admin:sessions:{$sid}", (int) $_ENV["SESSION_EXPIRATION"], $this->uid);
 
         setcookie($_ENV["SESSION_COOKIE_NAME"], $sid, [
-            "expires" => time() + $_ENV["SESSION_EXPIRATION"],
+            "expires" => time() + (int) $_ENV["SESSION_EXPIRATION"],
             "path" => $_ENV["SESSION_COOKIE_PATH"],
             // "samesite" => str_starts_with($_SERVER['HTTP_HOST'], "localhost") ? "None" : "Strict",
             "samesite" => "Strict",

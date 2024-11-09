@@ -2,6 +2,8 @@
 
 // Path: api/src/Controller/Timber/TimberDeliveryNoteController.php
 
+declare(strict_types=1);
+
 namespace App\Controller\Timber;
 
 use App\Controller\Controller;

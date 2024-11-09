@@ -2,6 +2,8 @@
 
 // Path: api/src/DTO/Filter/ShippingFilterDTO.php
 
+declare(strict_types=1);
+
 namespace App\DTO\Filter;
 
 use App\Core\HTTP\HTTPRequestQuery;

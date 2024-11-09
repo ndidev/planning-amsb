@@ -2,6 +2,8 @@
 
 // Path: api/src/Entity/Shipping/ShippingCallCargo.php
 
+declare(strict_types=1);
+
 namespace App\Entity\Shipping;
 
 use App\Core\Component\CargoOperation;
@@ -9,24 +11,6 @@ use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
 
-/**
- * Represents a cargo for a shipping call.
- * 
- * @phpstan-type ShippingCallCargoArray array{
- *                                        id: ?int,
- *                                        escale_id: ?int,
- *                                        marchandise: string,
- *                                        client: string,
- *                                        operation: CargoOperation::*,
- *                                        environ: bool,
- *                                        tonnage_bl: ?float,
- *                                        cubage_bl: ?float,
- *                                        nombre_bl: ?float,
- *                                        tonnage_outturn: ?float,
- *                                        cubage_outturn: ?float,
- *                                        nombre_outturn: ?float,
- *                                      }
- */
 final class ShippingCallCargo extends AbstractEntity
 {
     use IdentifierTrait;

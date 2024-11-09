@@ -2,6 +2,8 @@
 
 // Path: api/tests/Entity/Bulk/BulkQualityTest.php
 
+declare(strict_types=1);
+
 namespace App\Tests\Entity\Bulk;
 
 use App\Entity\Bulk\BulkQuality;

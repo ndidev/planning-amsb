@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Core/HTTP/HTTPResponse.php
+
+declare(strict_types=1);
+
 namespace App\Core\HTTP;
 
 use App\Core\Exceptions\Server\ServerException;
@@ -286,7 +290,7 @@ final class HTTPResponse
         foreach ($clientAcceptedMethods as $method) {
             $methodArray = explode(";q=", $method);
             $methodName = trim($methodArray[0]);
-            $methodPriority = (float) ($methodArray[1] ?? 1);
+            $methodPriority = (float) ($methodArray[1] ?? 1.0);
 
             $clientCompressionPriority[$methodName] = $methodPriority;
         }

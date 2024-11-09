@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Controller/ThirdParty/ThirdPartyController.php
+
+declare(strict_types=1);
+
 namespace App\Controller\ThirdParty;
 
 use App\Controller\Controller;

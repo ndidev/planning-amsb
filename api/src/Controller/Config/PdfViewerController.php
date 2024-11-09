@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Controller/Config/PdfViewerController.php
+
+declare(strict_types=1);
+
 namespace App\Controller\Config;
 
 use App\Controller\Controller;
@@ -91,8 +95,8 @@ final class PdfViewerController extends Controller
         $startDate = $input->getDatetime('date_debut', new \DateTimeImmutable());
         $endDate = $input->getDatetime('date_fin', new \DateTimeImmutable());
 
-        $sendingResults = $this->pdfService->sendPdfByEmail($configId, $startDate, $endDate);
+        $this->pdfService->sendPdfByEmail($configId, $startDate, $endDate);
 
-        $this->response->setJSON($sendingResults);
+        $this->response->setCode(HTTPResponse::HTTP_NO_CONTENT_204);
     }
 }

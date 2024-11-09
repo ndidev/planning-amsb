@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/DTO/TimberRegistryEntryDTO.php
+
+declare(strict_types=1);
+
 namespace App\DTO;
 
 use App\Core\Component\DateUtils;

@@ -1,6 +1,8 @@
 <?php
 
-// Path: api/tests/DTO/TimberFilterDTOTest.php
+// Path: api/tests/DTO/Filter/TimberFilterDTOTest.php
+
+declare(strict_types=1);
 
 namespace App\Tests\DTO;
 
