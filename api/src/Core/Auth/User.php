@@ -298,7 +298,7 @@ class User
             throw new InvalidApiKeyException();
         }
 
-        $apiKeyHash = md5($apiKey);
+        $apiKeyHash = \md5($apiKey);
 
         $apiKeyInfo = $this->redis->hGetAll("admin:apikeys:{$apiKeyHash}");
 
@@ -316,7 +316,7 @@ class User
 
             $apiKeyInfo = $keyInfoPdoStatement->fetch();
 
-            if (!is_array($apiKeyInfo)) {
+            if (!\is_array($apiKeyInfo)) {
                 throw new InvalidApiKeyException();
             }
         }
@@ -413,7 +413,7 @@ class User
 
         $user = $userPdoStatement->fetch();
 
-        if (!is_array($user)) {
+        if (!\is_array($user)) {
             throw new InvalidAccountException();
         }
 
@@ -429,7 +429,7 @@ class User
         $sessions = [];
         do {
             $batch = $this->redis->scan($iterator, "admin:sessions:*");
-            if ($batch) $sessions = array_merge($sessions, $batch);
+            if ($batch) $sessions = \array_merge($sessions, $batch);
         } while ($iterator);
 
         // Obtenir les utilisateurs pour chaque session
@@ -491,7 +491,7 @@ class User
             $requete->execute(["login" => $login]);
             $user = $requete->fetch();
 
-            if (!is_array($user) || !isset($user["uid"])) {
+            if (!\is_array($user) || !isset($user["uid"])) {
                 throw new InvalidAccountException();
             }
 
@@ -502,7 +502,7 @@ class User
         // Identification grâce à l'identifiant de session
         if ($sid) {
             $uid = $this->redis->get("admin:sessions:{$sid}");
-            if (!is_string($uid)) {
+            if (!\is_string($uid)) {
                 throw new SessionException();
             }
         }

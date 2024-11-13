@@ -48,7 +48,7 @@ final class ChartDatumRepository extends Repository
         /** @phpstan-var ChartDatumArray[] $chartDataRaw */
         $chartDataRaw = $chartDataRequest->fetchAll();
 
-        $chartData = array_map(
+        $chartData = \array_map(
             fn(array $datum) => $this->chartDatumService->makeChartDatumFromDatabase($datum),
             $chartDataRaw
         );
@@ -71,7 +71,7 @@ final class ChartDatumRepository extends Repository
         $request->execute(["cote" => $name]);
         $chartDatumRaw = $request->fetch();
 
-        if (!is_array($chartDatumRaw)) return null;
+        if (!\is_array($chartDatumRaw)) return null;
 
         /** @phpstan-var ChartDatumArray $chartDatumRaw */
 

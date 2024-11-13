@@ -206,7 +206,7 @@ final class ShippingRepository extends Repository
         $cargoesRaw = [];
 
         if (count($callsRaw) > 0) {
-            $callsIds = array_map(fn($call) => $call["id"], $callsRaw);
+            $callsIds = \array_map(fn($call) => $call["id"], $callsRaw);
             $cargoesStatement =
                 "SELECT
                 id,
@@ -234,7 +234,7 @@ final class ShippingRepository extends Repository
             $cargoesRaw = $cargoesRequest->fetchAll();
         }
 
-        $calls = array_map(function ($callRaw) use ($cargoesRaw) {
+        $calls = \array_map(function ($callRaw) use ($cargoesRaw) {
             $call = $this->shippingService->makeShippingCallFromDatabase($callRaw);
 
             // Rétablir heure ETA
@@ -247,7 +247,7 @@ final class ShippingRepository extends Repository
                 )
             );
 
-            $cargoes = array_map(
+            $cargoes = \array_map(
                 fn($cargoRaw) => $this->shippingService->makeShippingCallCargoFromDatabase($cargoRaw),
                 $filteredCargoesRaw
             );
@@ -321,7 +321,7 @@ final class ShippingRepository extends Repository
         $callRequest->execute(["id" => $id]);
         $callRaw = $callRequest->fetch();
 
-        if (!is_array($callRaw)) return null;
+        if (!\is_array($callRaw)) return null;
 
         /** @phpstan-var ShippingCallArray $callRaw */
 
@@ -559,7 +559,7 @@ final class ShippingRepository extends Repository
         $existingCargoesIdsRequest->execute(['callId' => $call->getId()]);
         $existingCargoesIds = $existingCargoesIdsRequest->fetchAll(\PDO::FETCH_COLUMN);
 
-        $submittedCargoesIds = array_map(fn(ShippingCallCargo $cargo) => $cargo->getId(), $call->getCargoes()->asArray());
+        $submittedCargoesIds = \array_map(fn(ShippingCallCargo $cargo) => $cargo->getId(), $call->getCargoes()->asArray());
         $cargoesIdsToBeDeleted = array_diff($existingCargoesIds, $submittedCargoesIds);
 
         if (count($cargoesIdsToBeDeleted) > 0) {

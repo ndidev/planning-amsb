@@ -230,7 +230,7 @@ final class BulkService
             ->setColor($rawData["couleur"] ?? "")
             ->setUnit($rawData["unite"] ?? "");
 
-        $qualities = array_map(
+        $qualities = \array_map(
             fn(array $quality) => $this->makeQualityFromDatabase($quality),
             $rawData["qualites"] ?? []
         );
@@ -259,7 +259,7 @@ final class BulkService
         $qualities = $requestBody->getArray('qualites');
 
         $product->setQualities(
-            array_map(
+            \array_map(
                 fn(array $quality) => $this->makeQualityFromFormData($quality),
                 $qualities
             )

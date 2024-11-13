@@ -17,7 +17,7 @@ final class HTTPRequestBody extends RequestParameterStore
     {
         $body = !empty($_POST)
             ? $_POST
-            : (array) json_decode(file_get_contents("php://input") ?: '', true);
+            : (array) \json_decode(\file_get_contents("php://input") ?: '', true);
 
         return new self($body);
     }

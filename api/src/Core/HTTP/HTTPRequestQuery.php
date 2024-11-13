@@ -23,7 +23,7 @@ final class HTTPRequestQuery extends RequestParameterStore
             /** @var string|false */
             $queryString = parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY);
 
-            if (is_string($queryString)) {
+            if (\is_string($queryString)) {
                 parse_str($queryString, $query);
             }
         }

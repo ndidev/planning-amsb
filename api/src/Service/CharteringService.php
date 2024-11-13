@@ -60,7 +60,7 @@ final class CharteringService
             ->setComments($rawData['commentaire'] ?? '')
             ->setArchive($rawData['archive'] ?? false)
             ->setLegs(
-                array_map(
+                \array_map(
                     fn(array $leg) => $this->makeCharterLegFromDatabase($leg),
                     $rawData['legs'] ?? []
                 )
@@ -99,7 +99,7 @@ final class CharteringService
         $legs = $requestBody->getArray('legs');
 
         $charter->setLegs(
-            array_map(
+            \array_map(
                 fn(array $leg) => $this->makeCharterLegFromFormData($leg),
                 $legs
             )

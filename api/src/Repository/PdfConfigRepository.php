@@ -61,7 +61,7 @@ final class PdfConfigRepository extends Repository
         /** @phpstan-var PdfConfigArray[] $configsRaw */
         $configsRaw = $request->fetchAll();
 
-        $configs = array_map(
+        $configs = \array_map(
             fn($config) => $this->pdfService->makeConfigFromDatabase($config),
             $configsRaw
         );
@@ -96,7 +96,7 @@ final class PdfConfigRepository extends Repository
 
         $configRaw = $request->fetch();
 
-        if (!is_array($configRaw)) return null;
+        if (!\is_array($configRaw)) return null;
 
         /** @phpstan-var PdfConfigArray $configRaw */
 

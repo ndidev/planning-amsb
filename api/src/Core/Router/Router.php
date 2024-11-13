@@ -98,7 +98,7 @@ class Router
     public function addRoutes(array|\Traversable $routes): void
     {
         foreach ($routes as $route) {
-            call_user_func_array([$this, 'map'], $route);
+            \call_user_func_array([$this, 'map'], $route);
         }
     }
 
@@ -119,7 +119,7 @@ class Router
      */
     public function addMatchTypes(array $matchTypes): void
     {
-        $this->matchTypes = array_merge($this->matchTypes, $matchTypes);
+        $this->matchTypes = \array_merge($this->matchTypes, $matchTypes);
     }
 
     /**
@@ -174,23 +174,23 @@ class Router
         $path = $route->getPath();
         $url = $this->basePath . $path;
 
-        if (preg_match_all('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`', $path, $matches, PREG_SET_ORDER)) {
+        if (\preg_match_all('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`', $path, $matches, PREG_SET_ORDER)) {
             foreach ($matches as $index => $match) {
                 list($block, $pre, $type, $param, $optional) = $match;
 
                 if ($pre) {
-                    $block = substr($block, 1);
+                    $block = \substr($block, 1);
                 }
 
                 if (isset($params[$param])) {
                     // Part is found, replace for param value
-                    $url = str_replace($block, $params[$param], $url);
+                    $url = \str_replace($block, $params[$param], $url);
                 } elseif ($optional && $index !== 0) {
                     // Only strip preceding slash if it's not at the base
-                    $url = str_replace($pre . $block, '', $url);
+                    $url = \str_replace($pre . $block, '', $url);
                 } else {
                     // Strip match block
-                    $url = str_replace($block, '', $url);
+                    $url = \str_replace($block, '', $url);
                 }
             }
         }
@@ -216,14 +216,14 @@ class Router
         }
 
         // strip base path from request url
-        $requestUrl = substr($requestUrl, strlen($this->basePath));
+        $requestUrl = \substr($requestUrl, \strlen($this->basePath));
 
         // Strip query string (?a=b) from Request Url
-        if (($strpos = strpos($requestUrl, '?')) !== false) {
-            $requestUrl = substr($requestUrl, 0, $strpos);
+        if (($strpos = \strpos($requestUrl, '?')) !== false) {
+            $requestUrl = \substr($requestUrl, 0, $strpos);
         }
 
-        $lastRequestUrlChar = $requestUrl ? $requestUrl[strlen($requestUrl) - 1] : '';
+        $lastRequestUrlChar = $requestUrl ? $requestUrl[\strlen($requestUrl) - 1] : '';
 
         foreach ($this->routes as $route) {
             list($path, $target, $name) = $route->toArray();
@@ -233,31 +233,31 @@ class Router
                 $match = true;
             } elseif (isset($path[0]) && $path[0] === '@') {
                 // @ regex delimiter
-                $pattern = '`' . substr($path, 1) . '`u';
-                $match = preg_match($pattern, $requestUrl, $params) === 1;
-            } elseif (($position = strpos($path, '[')) === false) {
+                $pattern = '`' . \substr($path, 1) . '`u';
+                $match = \preg_match($pattern, $requestUrl, $params) === 1;
+            } elseif (($position = \strpos($path, '[')) === false) {
                 // No params in url, do string comparison
-                $match = strcmp($requestUrl, $path) === 0;
+                $match = \strcmp($requestUrl, $path) === 0;
             } else {
                 // Compare longest non-param string with url before moving on to regex
                 // Check if last character before param is a slash, because it could be optional if param is optional too (see https://github.com/dannyvankooten/AltoRouter/issues/241)
-                if (strncmp($requestUrl, $path, $position) !== 0 && ($lastRequestUrlChar === '/' || $path[$position - 1] !== '/')) {
+                if (\strncmp($requestUrl, $path, $position) !== 0 && ($lastRequestUrlChar === '/' || $path[$position - 1] !== '/')) {
                     continue;
                 }
 
                 $regex = $this->compileRoute($path);
-                $match = preg_match($regex, $requestUrl, $params) === 1;
+                $match = \preg_match($regex, $requestUrl, $params) === 1;
             }
 
             if ($match) {
                 if ($params) {
                     foreach ($params as $key => &$value) {
-                        if (is_numeric($key)) {
+                        if (\is_numeric($key)) {
                             unset($params[$key]);
                             continue;
                         }
 
-                        if (is_numeric($value)) {
+                        if (\is_numeric($value)) {
                             $value = (int) $value;
                         }
                     }
@@ -283,7 +283,7 @@ class Router
      */
     protected function compileRoute(string $route): string
     {
-        if (preg_match_all('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`', $route, $matches, PREG_SET_ORDER)) {
+        if (\preg_match_all('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`', $route, $matches, PREG_SET_ORDER)) {
             $matchTypes = $this->matchTypes;
             foreach ($matches as $match) {
                 list($block, $pre, $type, $param, $optional) = $match;
@@ -308,7 +308,7 @@ class Router
                     . ')'
                     . $optional;
 
-                $route = str_replace($block, $pattern, $route);
+                $route = \str_replace($block, $pattern, $route);
             }
         }
         return "`^$route$`u";

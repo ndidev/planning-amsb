@@ -92,7 +92,7 @@ final class BulkProductRepository extends Repository
 
         $qualitiesRaw = $qualitiesRequest->fetchAll();
 
-        $products = array_map(
+        $products = \array_map(
             function (array $productRaw) use ($qualitiesRaw) {
                 $productRaw["qualites"] = array_values(
                     array_filter(
@@ -147,7 +147,7 @@ final class BulkProductRepository extends Repository
         $productRequest->execute(["id" => $id]);
         $productRaw = $productRequest->fetch();
 
-        if (!is_array($productRaw)) return null;
+        if (!\is_array($productRaw)) return null;
 
         $product = $this->bulkService->makeProductFromDatabase($productRaw);
 
@@ -182,13 +182,13 @@ final class BulkProductRepository extends Repository
         $qualitiesRequest->execute(["productId" => $productId]);
         $qualitiesRaw = $qualitiesRequest->fetchAll();
 
-        $qualities = array_map(
+        $qualities = \array_map(
             fn(array $qualityRaw) => $this->bulkService->makeQualityFromDatabase($qualityRaw),
             $qualitiesRaw
         );
 
         // Add qualities to cache
-        static::$qualitiesCache = array_merge(static::$qualitiesCache, $qualities);
+        static::$qualitiesCache = \array_merge(static::$qualitiesCache, $qualities);
 
         return $qualities;
     }
@@ -226,7 +226,7 @@ final class BulkProductRepository extends Repository
         $qualityRequest->execute(["id" => $id]);
         $qualityRaw = $qualityRequest->fetch();
 
-        if (!is_array($qualityRaw)) return null;
+        if (!\is_array($qualityRaw)) return null;
 
         $quality = $this->bulkService->makeQualityFromDatabase($qualityRaw);
 
@@ -338,7 +338,7 @@ final class BulkProductRepository extends Repository
         $qualitiesRequest->execute(['productId' => $product->getId()]);
         $existingQualitiesIds = $qualitiesRequest->fetchAll(\PDO::FETCH_COLUMN, 0);
 
-        $submittedQualitiesIds = array_map(fn(BulkQuality $quality) => $quality->getId(), $product->getQualities());
+        $submittedQualitiesIds = \array_map(fn(BulkQuality $quality) => $quality->getId(), $product->getQualities());
         $qualitiesIdsToBeDeleted = array_diff($existingQualitiesIds, $submittedQualitiesIds);
 
         if (!empty($qualitiesIdsToBeDeleted)) {

@@ -125,12 +125,12 @@ try {
     $router = new Router($routes, $_ENV["API_PATH"]);
     $match = $router->match();
 
-    if (is_array($match)) {
+    if (\is_array($match)) {
         $controllerClass = $match["target"];
         $params = $match["params"];
         $name = $match["name"];
 
-        if (!is_string($controllerClass) || !class_exists($controllerClass)) {
+        if (!\is_string($controllerClass) || !class_exists($controllerClass)) {
             throw new ServerException("Controller not found");
         }
 

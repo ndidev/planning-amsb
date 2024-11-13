@@ -59,13 +59,13 @@ class SSEHandler
                 "http" => [
                     "header" => "Content-type: application/json\r\n",
                     "method" => "POST",
-                    "content" => json_encode($event),
+                    "content" => \json_encode($event),
                     "timeout" => 0.5,
                 ]
             ];
 
             $context = stream_context_create($options);
-            $result = file_get_contents($url, false, $context);
+            $result = \file_get_contents($url, false, $context);
 
             if ($result === false) {
                 ErrorLogger::log(new \Exception("Erreur de notification SSE"));

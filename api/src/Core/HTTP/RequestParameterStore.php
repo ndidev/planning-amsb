@@ -243,17 +243,17 @@ abstract class RequestParameterStore
     private function checkDefaultIsCompatibleWithType(mixed $default, string $type): void
     {
         if ($default !== null) {
-            if (gettype($default) !== $type && 'datetime' !== $type) {
+            if (\gettype($default) !== $type && 'datetime' !== $type) {
                 throw new \InvalidArgumentException("Le type de la valeur par défaut n'est pas compatible avec le type attendu.");
             }
 
             // 'datetime' expects a valid \DateTimeImmutable constructor string or a \DateTimeInterface object
             if ('datetime' === $type) {
-                if (!is_string($default) && !($default instanceof \DateTimeInterface)) {
+                if (!\is_string($default) && !($default instanceof \DateTimeInterface)) {
                     throw new \InvalidArgumentException("Le type de la valeur par défaut n'est pas compatible avec le type attendu.");
                 }
 
-                if (is_string($default)) {
+                if (\is_string($default)) {
                     try {
                         new \DateTimeImmutable($default);
                     } catch (\Exception) {
@@ -267,14 +267,14 @@ abstract class RequestParameterStore
     private function convertParam(mixed $paramValue, string $typeString, mixed $default): mixed
     {
         return match ($typeString) {
-            'string' => is_scalar($paramValue) ? (string) $paramValue : $default,
-            'integer' => is_scalar($paramValue) ? (int) $paramValue : $default,
-            'double' => is_scalar($paramValue) ? (float) $paramValue : $default,
-            'boolean' => is_scalar($paramValue) ? (bool) $paramValue : $default,
-            'array' => is_array($paramValue) ? $paramValue : $default,
+            'string' => \is_scalar($paramValue) ? (string) $paramValue : $default,
+            'integer' => \is_scalar($paramValue) ? (int) $paramValue : $default,
+            'double' => \is_scalar($paramValue) ? (float) $paramValue : $default,
+            'boolean' => \is_scalar($paramValue) ? (bool) $paramValue : $default,
+            'array' => \is_array($paramValue) ? $paramValue : $default,
             'datetime' => (function () use ($paramValue, $default) {
                 try {
-                    if (is_string($paramValue)) {
+                    if (\is_string($paramValue)) {
                         return new \DateTimeImmutable($paramValue);
                     }
 
@@ -282,7 +282,7 @@ abstract class RequestParameterStore
                         return \DateTimeImmutable::createFromInterface($paramValue);
                     }
                 } catch (\Exception) {
-                    if (is_string($default)) {
+                    if (\is_string($default)) {
                         return new \DateTimeImmutable($default);
                     }
 

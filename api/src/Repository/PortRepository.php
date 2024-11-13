@@ -36,9 +36,9 @@ final class PortRepository extends Repository
     {
         // Redis
         $redisValue = $this->redis->get($this->redisNamespace);
-        $portsRaw = is_string($redisValue) ? json_decode($redisValue, true) : null;
+        $portsRaw = \is_string($redisValue) ? \json_decode($redisValue, true) : null;
 
-        if (!is_array($portsRaw)) {
+        if (!\is_array($portsRaw)) {
             $statement = "SELECT * FROM utils_ports ORDER BY SUBSTRING(locode, 1, 2), nom";
 
             $portsRequest = $this->mysql->query($statement);
@@ -50,10 +50,10 @@ final class PortRepository extends Repository
             /** @phpstan-var PortArray[] $portsRaw */
             $portsRaw = $portsRequest->fetchAll();
 
-            $this->redis->set($this->redisNamespace, json_encode($portsRaw));
+            $this->redis->set($this->redisNamespace, \json_encode($portsRaw));
         }
 
-        $ports = array_map(
+        $ports = \array_map(
             fn($portRaw) => $this->portService->makePortFromDatabase($portRaw),
             $portsRaw
         );
@@ -76,7 +76,7 @@ final class PortRepository extends Repository
         $request->execute(["locode" => $locode]);
         $portRaw = $request->fetch();
 
-        if (!is_array($portRaw)) return null;
+        if (!\is_array($portRaw)) return null;
 
         /** @phpstan-var PortArray $portRaw */
 

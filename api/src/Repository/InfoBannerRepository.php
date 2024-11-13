@@ -48,7 +48,7 @@ final class InfoBannerRepository extends Repository
 
         $linesRaw = $linesRequest->fetchAll();
 
-        $lines = array_map(
+        $lines = \array_map(
             fn($line) => $this->infoBannerService->makeLineFromDatabase($line),
             $linesRaw
         );
@@ -71,7 +71,7 @@ final class InfoBannerRepository extends Repository
         $request->execute(["id" => $id]);
         $lineRaw = $request->fetch();
 
-        if (!is_array($lineRaw)) return null;
+        if (!\is_array($lineRaw)) return null;
 
         /** @phpstan-var InfoBannerLineArray $lineRaw */
 
@@ -106,7 +106,7 @@ final class InfoBannerRepository extends Repository
             'pc' => (int) $line->isPc(),
             'tv' => (int) $line->isTv(),
             'color' => $line->getColor(),
-            'message' => mb_substr($line->getMessage(), 0, 255),
+            'message' => \mb_substr($line->getMessage(), 0, 255),
         ]);
 
         $lastInsertId = (int) $this->mysql->lastInsertId();
@@ -143,7 +143,7 @@ final class InfoBannerRepository extends Repository
             'pc' => (int) $line->isPc(),
             'tv' => (int) $line->isTv(),
             'color' => $line->getColor(),
-            'message' => mb_substr($line->getMessage(), 0, 255),
+            'message' => \mb_substr($line->getMessage(), 0, 255),
             'id' => $line->getId(),
         ]);
 

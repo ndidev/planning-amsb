@@ -168,7 +168,7 @@ class UserAccount extends AbstractEntity
 
     public function setStatus(AccountStatus|string $status): static
     {
-        if (is_string($status)) {
+        if (\is_string($status)) {
             $statusFromEnum = AccountStatus::tryFrom($status);
 
             if (null === $statusFromEnum) {
@@ -193,7 +193,7 @@ class UserAccount extends AbstractEntity
      */
     public function setRoles(string|array $roles): static
     {
-        if (is_string($roles)) {
+        if (\is_string($roles)) {
             $this->roles->fillFromJsonString($roles);
         } else {
             $this->roles->fillFromArray($roles);

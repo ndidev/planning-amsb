@@ -80,7 +80,7 @@ final class BulkAppointmentRepository extends Repository
         /** @phpstan-var BulkAppointmentArray[] $appointmentsRaw */
         $appointmentsRaw = $request->fetchAll();
 
-        $appointments = array_map(
+        $appointments = \array_map(
             fn(array $appointmentRaw) => $this->bulkService->makeBulkAppointmentFromDatabase($appointmentRaw),
             $appointmentsRaw
         );
@@ -119,7 +119,7 @@ final class BulkAppointmentRepository extends Repository
         $request->execute(["id" => $id]);
         $appointmentRaw = $request->fetch();
 
-        if (!is_array($appointmentRaw)) return null;
+        if (!\is_array($appointmentRaw)) return null;
 
         /** @phpstan-var BulkAppointmentArray $appointmentRaw */
 
@@ -322,7 +322,7 @@ final class BulkAppointmentRepository extends Repository
         /** @phpstan-var BulkAppointmentArray[] $appointmentsRaw */
         $appointmentsRaw = $request->fetchAll();
 
-        $appointments = array_map(
+        $appointments = \array_map(
             fn(array $appointmentRaw) => $this->bulkService->makeBulkAppointmentFromDatabase($appointmentRaw),
             $appointmentsRaw
         );

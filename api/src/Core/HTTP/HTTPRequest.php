@@ -52,10 +52,10 @@ final class HTTPRequest
 
     public function __construct()
     {
-        $this->method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+        $this->method = \strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
 
-        if (function_exists('getallheaders')) {
-            $this->headers = getallheaders();
+        if (\function_exists('\getallheaders')) {
+            $this->headers = \array_change_key_case(\getallheaders(), CASE_LOWER);
         }
 
         $this->query = HTTPRequestQuery::buildFromRequest();
@@ -64,11 +64,10 @@ final class HTTPRequest
 
         $this->etag = $this->headers["If-None-Match"] ?? null;
 
-        $headers = array_keys(array_change_key_case($this->headers, CASE_LOWER));
         if (
             $this->method === "OPTIONS"
-            && in_array("access-control-request-method", $headers)
-            && in_array("origin", $headers)
+            && \array_key_exists("access-control-request-method", $this->headers)
+            && \array_key_exists("origin", $this->headers)
         ) {
             $this->isPreflight = true;
         } else {

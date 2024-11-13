@@ -55,9 +55,9 @@ final class ThirdPartyService
             ->setLogo($rawData["logo"] ?? false)
             ->setActive($rawData["actif"] ?? true);
 
-        $roles = json_decode($rawData["roles"] ?? "{}", true);
+        $roles = \json_decode($rawData["roles"] ?? "{}", true);
 
-        if (!is_array($roles)) {
+        if (!\is_array($roles)) {
             $roles = [];
         }
 
@@ -206,7 +206,7 @@ final class ThirdPartyService
     {
         try {
             // Conservation du fichier existant
-            if (gettype($file) === "string") {
+            if (\gettype($file) === "string") {
                 return false;
             }
 

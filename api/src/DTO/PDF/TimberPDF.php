@@ -73,7 +73,7 @@ final class TimberPDF extends PlanningPDF
                     $loadingPlace?->getCountry()?->getISO() === 'FR'
                     || $loadingPlace?->getCountry()?->getISO() === 'ZZ'
                 ) {
-                    $loadingPostCode = ' ' . substr((string) $loadingPlace->getPostCode(), 0, 2);
+                    $loadingPostCode = ' ' . \substr((string) $loadingPlace->getPostCode(), 0, 2);
                     $loadingCountry = '';
                 } else {
                     $loadingPostCode = '';
@@ -84,7 +84,7 @@ final class TimberPDF extends PlanningPDF
                     $customer?->getCountry()?->getISO() === 'FR'
                     || $customer?->getCountry()?->getISO() === 'ZZ'
                 ) {
-                    $customerPostCode = ' ' . substr((string) $customer->getPostCode(), 0, 2);
+                    $customerPostCode = ' ' . \substr((string) $customer->getPostCode(), 0, 2);
                     $customerCountry = '';
                 } else {
                     $customerPostCode = '';
@@ -95,7 +95,7 @@ final class TimberPDF extends PlanningPDF
                     $deliveryPlace?->getCountry()?->getISO() === 'FR'
                     || $deliveryPlace?->getCountry()?->getISO() === 'ZZ'
                 ) {
-                    $deliveryPostCode = ' ' . substr((string) $deliveryPlace->getPostCode(), 0, 2);
+                    $deliveryPostCode = ' ' . \substr((string) $deliveryPlace->getPostCode(), 0, 2);
                     $deliveryCountry = '';
                 } else {
                     $deliveryPostCode = '';
@@ -157,7 +157,7 @@ final class TimberPDF extends PlanningPDF
                     $loadingPlace?->getCountry()?->getISO() === 'FR'
                     || $loadingPlace?->getCountry()?->getISO() === 'ZZ'
                 ) {
-                    $loadingPostCode = ' ' . substr((string) $loadingPlace->getPostCode(), 0, 2);
+                    $loadingPostCode = ' ' . \substr((string) $loadingPlace->getPostCode(), 0, 2);
                     $loadingCountry = '';
                 } else {
                     $loadingPostCode = '';
@@ -168,7 +168,7 @@ final class TimberPDF extends PlanningPDF
                     $customer?->getCountry()?->getISO() === 'FR'
                     || $customer?->getCountry()?->getISO() === 'ZZ'
                 ) {
-                    $customerPostCode = ' ' . substr((string) $customer->getPostCode(), 0, 2);
+                    $customerPostCode = ' ' . \substr((string) $customer->getPostCode(), 0, 2);
                     $customerCountry = '';
                 } else {
                     $customerPostCode = '';
@@ -179,7 +179,7 @@ final class TimberPDF extends PlanningPDF
                     $deliveryPlace?->getCountry()?->getISO() === 'FR'
                     || $deliveryPlace?->getCountry()?->getISO() === 'ZZ'
                 ) {
-                    $deliveryPostCode = ' ' . substr((string) $deliveryPlace->getPostCode(), 0, 2);
+                    $deliveryPostCode = ' ' . \substr((string) $deliveryPlace->getPostCode(), 0, 2);
                     $deliveryCountry = '';
                 } else {
                     $deliveryPostCode = '';
@@ -276,7 +276,7 @@ final class TimberPDF extends PlanningPDF
         }
 
         if ($publicComments !== '') {
-            $publicComments = str_replace(" <br> ", "\n", $publicComments);
+            $publicComments = \str_replace(" <br> ", "\n", $publicComments);
             $this->Cell(5, 6); // Décalage de 0.5cm
             $this->MultiCell(0, 6, $publicComments);
         }
@@ -330,7 +330,7 @@ final class TimberPDF extends PlanningPDF
         }
 
         if ($publicComments != '') {
-            $publicComments = str_replace(" <br> ", "\n", $publicComments);
+            $publicComments = \str_replace(" <br> ", "\n", $publicComments);
             $this->Cell(60, 6); // Décalage de 6cm
             $this->MultiCell(0, 6, $publicComments);
         }

@@ -35,9 +35,9 @@ final class CountryRepository extends Repository
     {
         // Redis
         $redisValue = $this->redis->get($this->redisNamespace);
-        $countriesRaw = is_string($redisValue) ? json_decode($redisValue, true) : null;
+        $countriesRaw = \is_string($redisValue) ? \json_decode($redisValue, true) : null;
 
-        if (!is_array($countriesRaw)) {
+        if (!\is_array($countriesRaw)) {
             $statement = "SELECT * FROM utils_pays ORDER BY nom";
 
             $countriesRequest = $this->mysql->query($statement);
@@ -49,14 +49,14 @@ final class CountryRepository extends Repository
             /** @phpstan-var CountryArray[] $countriesRaw */
             $countriesRaw = $countriesRequest->fetchAll();
 
-            $this->redis->set($this->redisNamespace, json_encode($countriesRaw));
+            $this->redis->set($this->redisNamespace, \json_encode($countriesRaw));
 
             foreach ($countriesRaw as $countryRaw) {
-                $this->redis->set("{$this->redisNamespace}:{$countryRaw['iso']}", json_encode($countryRaw));
+                $this->redis->set("{$this->redisNamespace}:{$countryRaw['iso']}", \json_encode($countryRaw));
             }
         }
 
-        $countries = array_map(
+        $countries = \array_map(
             fn($countryRaw) => $this->countryService->makeCountryFromDatabase($countryRaw),
             $countriesRaw
         );
@@ -75,9 +75,9 @@ final class CountryRepository extends Repository
     {
         // Redis
         $redisValue = $this->redis->get("{$this->redisNamespace}:{$iso}");
-        $countryRaw = is_string($redisValue) ? json_decode($redisValue, true) : null;
+        $countryRaw = \is_string($redisValue) ? \json_decode($redisValue, true) : null;
 
-        if (!is_array($countryRaw)) {
+        if (!\is_array($countryRaw)) {
             $statement = "SELECT * FROM utils_pays  WHERE iso = :iso";
 
             $countryRequest = $this->mysql->prepare($statement);
@@ -89,9 +89,9 @@ final class CountryRepository extends Repository
             $countryRequest->execute(["iso" => $iso]);
             $countryRaw = $countryRequest->fetch();
 
-            if (!is_array($countryRaw)) return null;
+            if (!\is_array($countryRaw)) return null;
 
-            $this->redis->set("{$this->redisNamespace}:{$iso}", json_encode($countryRaw));
+            $this->redis->set("{$this->redisNamespace}:{$iso}", \json_encode($countryRaw));
         }
 
         /** @phpstan-var CountryArray $countryRaw */

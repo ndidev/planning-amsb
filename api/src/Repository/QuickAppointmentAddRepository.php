@@ -68,7 +68,7 @@ final class QuickAppointmentAddRepository extends Repository
         /** @phpstan-var TimberQuickAppointmentAddArray[] $quickAddConfigsRaw */
         $quickAddConfigsRaw = $quickAddConfigsRequest->fetchAll();
 
-        $quickAddConfigs = array_map(
+        $quickAddConfigs = \array_map(
             fn(array $quickAddRaw) => $this->quickAppointmentAddService->makeTimberQuickAppointmentAddFromDatabase($quickAddRaw),
             $quickAddConfigsRaw
         );
@@ -92,7 +92,7 @@ final class QuickAppointmentAddRepository extends Repository
 
         $quickAddConfigRaw = $request->fetch();
 
-        if (!is_array($quickAddConfigRaw)) return null;
+        if (!\is_array($quickAddConfigRaw)) return null;
 
         /** @phpstan-var TimberQuickAppointmentAddArray $quickAddConfigRaw */
 

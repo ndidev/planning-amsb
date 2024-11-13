@@ -59,7 +59,7 @@ final class AgencyRepository extends Repository
         /** @phpstan-var AgencyDepartmentArray[] $departmentsRaw */
         $departmentsRaw = $request->fetchAll();
 
-        $departments = array_map(
+        $departments = \array_map(
             fn(array $departmentRaw) => $this->agencyService->makeDepartmentFromDatabase($departmentRaw),
             $departmentsRaw
         );
@@ -80,7 +80,7 @@ final class AgencyRepository extends Repository
         $request->execute(["service" => $departmentName]);
         $departmentRaw = $request->fetch();
 
-        if (!is_array($departmentRaw)) return null;
+        if (!\is_array($departmentRaw)) return null;
 
         /** @phpstan-var AgencyDepartmentArray $departmentRaw */
 

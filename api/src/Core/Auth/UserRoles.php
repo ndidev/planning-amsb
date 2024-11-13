@@ -42,9 +42,9 @@ final class UserRoles implements Arrayable, \JsonSerializable
 
     public function fillFromJsonString(string $roles): void
     {
-        $rolesArray = json_decode($roles, true);
+        $rolesArray = \json_decode($roles, true);
 
-        if (!is_array($rolesArray)) {
+        if (!\is_array($rolesArray)) {
             return;
         }
 
@@ -64,9 +64,9 @@ final class UserRoles implements Arrayable, \JsonSerializable
     public function fillFromArray(array $roles): void
     {
         foreach ($roles as $role => $value) {
-            if (!is_string($role)) continue;
+            if (!\is_string($role)) continue;
 
-            $intValue = is_scalar($value) ? (int) $value : null;
+            $intValue = \is_scalar($value) ? (int) $value : null;
 
             if (null === $intValue) continue;
 

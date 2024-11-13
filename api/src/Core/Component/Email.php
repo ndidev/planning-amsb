@@ -97,7 +97,7 @@ class Email extends PHPMailer
         // TO
         foreach ($to as $address) {
             $address = trim($address, " \t\n\r\0\x0B-_;,");
-            if (($address != '') && (substr($address, 0, 1) != '!') && (strpos($address, '@') == TRUE)) {
+            if (($address != '') && (\substr($address, 0, 1) != '!') && (\strpos($address, '@') == TRUE)) {
                 $this->addAddress($address);
             }
         }
@@ -130,10 +130,10 @@ class Email extends PHPMailer
     public function getAllAddresses(): array
     {
         return [
-            "from" => base64_decode(str_replace(["=?utf-8?B?", "?="], "", $this->FromName)) . " &lt;" . $this->From . "&gt;",
-            "to" => array_map(fn(array $address) => $address[0], $this->getToAddresses()),
-            "cc" => array_map(fn(array $address) => $address[0], $this->getCcAddresses()),
-            "bcc" => array_map(fn(array $address) => $address[0], $this->getBccAddresses()),
+            "from" => base64_decode(\str_replace(["=?utf-8?B?", "?="], "", $this->FromName)) . " &lt;" . $this->From . "&gt;",
+            "to" => \array_map(fn(array $address) => $address[0], $this->getToAddresses()),
+            "cc" => \array_map(fn(array $address) => $address[0], $this->getCcAddresses()),
+            "bcc" => \array_map(fn(array $address) => $address[0], $this->getBccAddresses()),
         ];
     }
 }

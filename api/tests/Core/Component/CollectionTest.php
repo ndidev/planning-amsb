@@ -119,7 +119,7 @@ final class CollectionTest extends TestCase
         $collection = new Collection(['item1', 'item2', 'item3']);
 
         // When
-        $json = json_encode($collection);
+        $json = \json_encode($collection);
 
         // Then
         $this->assertSame('["item1","item2","item3"]', $json);
@@ -135,6 +135,6 @@ final class TestArrayableClass implements Arrayable
 
     public function toArray(): array
     {
-        return array_map('strtoupper', $this->items);
+        return \array_map('strtoupper', $this->items);
     }
 }

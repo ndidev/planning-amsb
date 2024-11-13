@@ -183,7 +183,7 @@ class TimberRegistryEntryDTO
     {
         if ($this->deliveryPlaceName) {
             if (strtolower((string) $this->deliveryPlaceCountry) === 'france') {
-                $livraison_departement = " " . substr((string) $this->deliveryPlacePostCode, 0, 2);
+                $livraison_departement = " " . \substr((string) $this->deliveryPlacePostCode, 0, 2);
                 $this->deliveryPlaceCountry = "";
             } else {
                 $livraison_departement = "";

@@ -72,7 +72,7 @@ final class ShippingService
             ->setQuay($rawData["quai"] ?? "")
             ->setComment($rawData["commentaire"] ?? "")
             ->setCargoes(
-                array_map(
+                \array_map(
                     fn(array $cargo) => $this->makeShippingCallCargoFromDatabase($cargo),
                     $rawData["marchandises"] ?? []
                 )
@@ -121,7 +121,7 @@ final class ShippingService
         $cargoes = $requestBody->getArray('marchandises');
 
         $shippingCall->setCargoes(
-            array_map(
+            \array_map(
                 fn(array $cargo) => $this->makeShippingCallCargoFromForm($cargo),
                 $cargoes
             )
@@ -275,9 +275,9 @@ final class ShippingService
      */
     public function getStatsDetails(string|array $ids): ShippingStatsDetailsDTO
     {
-        $ids = is_array($ids)
+        $ids = \is_array($ids)
             ? $ids
-            : array_map(fn(string $id) => (int) $id, explode(",", $ids));
+            : \array_map(fn(string $id) => (int) $id, explode(",", $ids));
 
         return $this->shippingRepository->fetchStatsDetails($ids);
     }

@@ -123,7 +123,7 @@ final class CharteringRepository extends Repository
         $legsRaw = [];
 
         if (count($chartersRaw) > 0) {
-            $chartersIds = array_map(fn(array $charter) => $charter["id"] ?? null, $chartersRaw);
+            $chartersIds = \array_map(fn(array $charter) => $charter["id"] ?? null, $chartersRaw);
             $legsStatement = "SELECT * FROM chartering_detail WHERE charter IN (" . implode(",", $chartersIds) . ")";
             $legsRequest = $this->mysql->query($legsStatement);
 
@@ -135,7 +135,7 @@ final class CharteringRepository extends Repository
             $legsRaw = $legsRequest->fetchAll();
         }
 
-        $charters = array_map(
+        $charters = \array_map(
             function (array $charterRaw) use ($legsRaw) {
                 $charter = $this->charteringService->makeCharterFromDatabase($charterRaw);
 
@@ -146,7 +146,7 @@ final class CharteringRepository extends Repository
                     )
                 );
 
-                $legs = array_map(
+                $legs = \array_map(
                     fn(array $legRaw) => $this->charteringService->makeCharterLegFromDatabase($legRaw),
                     $filteredLegsRaw
                 );
@@ -203,7 +203,7 @@ final class CharteringRepository extends Repository
         $charterRequest->execute(["id" => $id]);
         $charterRaw = $charterRequest->fetch();
 
-        if (!is_array($charterRaw)) return null;
+        if (!\is_array($charterRaw)) return null;
 
         /** @phpstan-var CharterArray $charterRaw */
 
@@ -409,7 +409,7 @@ final class CharteringRepository extends Repository
         $legsIdsRequest->execute(['charterId' => $charter->getId()]);
         $existingLegsIds = $legsIdsRequest->fetchAll(\PDO::FETCH_COLUMN, 0);
 
-        $submittedLegsIds = array_map(fn(CharterLeg $leg) => $leg->getId(), $charter->getLegs()->asArray());
+        $submittedLegsIds = \array_map(fn(CharterLeg $leg) => $leg->getId(), $charter->getLegs()->asArray());
         $legsIdsToBeDeleted = array_diff($existingLegsIds, $submittedLegsIds);
 
         if (!empty($legsIdsToBeDeleted)) {

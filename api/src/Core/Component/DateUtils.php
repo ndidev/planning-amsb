@@ -260,7 +260,7 @@ abstract class DateUtils
                 return null;
             }
 
-            if (is_string($datetime)) {
+            if (\is_string($datetime)) {
                 return new \DateTimeImmutable($datetime);
             }
 

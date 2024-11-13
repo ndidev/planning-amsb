@@ -66,20 +66,20 @@ final class TideService
      */
     public function addTides(mixed $data): string
     {
-        if (!is_array($data) || !array_key_exists("tmp_name", $data)) {
+        if (!\is_array($data) || !array_key_exists("tmp_name", $data)) {
             throw new ServerException("Fichier non trouvé.");
         }
 
-        $content = file_get_contents($data["tmp_name"]);
+        $content = \file_get_contents($data["tmp_name"]);
 
         if ($content === false) {
             throw new ServerException("Echec de la lecture du fichier.");
         }
 
         // Delete the BOM
-        $content = str_replace("\u{FEFF}", "", $content);
+        $content = \str_replace("\u{FEFF}", "", $content);
         // Delete the Windows carriage return
-        $content = str_replace("\r", "", $content);
+        $content = \str_replace("\r", "", $content);
         $lines = explode(PHP_EOL, $content);
 
         $separator = ";";
@@ -88,7 +88,7 @@ final class TideService
         $newTides = [];
         foreach ($lines as $line) {
             // Skip the line if it doesn't match the expected format (YYYY-MM-DD;HH:MM:SS;HH.HH)
-            if (!preg_match("/^\d{4}-\d{2}-\d{2};\d{2}:\d{2}:\d{2};\d+(?:\.\d+)?$/", $line)) {
+            if (!\preg_match("/^\d{4}-\d{2}-\d{2};\d{2}:\d{2}:\d{2};\d+(?:\.\d+)?$/", $line)) {
                 continue;
             }
 
@@ -104,7 +104,7 @@ final class TideService
             ]);
         }
 
-        $year = substr($newTides[0][0], 0, 4);
+        $year = \substr($newTides[0][0], 0, 4);
 
         $this->tideRepository->addTides($newTides);
 

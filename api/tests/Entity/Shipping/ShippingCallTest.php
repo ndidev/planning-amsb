@@ -448,7 +448,7 @@ final class ShippingCallTest extends TestCase
             'call_port' => 'Port',
             'quai' => 'Quay',
             'commentaire' => 'Comment',
-            'marchandises' => array_map(fn(ShippingCallCargo $cargo) => $cargo->toArray(), $cargoes),
+            'marchandises' => \array_map(fn(ShippingCallCargo $cargo) => $cargo->toArray(), $cargoes),
         ];
 
         // When

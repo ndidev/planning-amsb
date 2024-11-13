@@ -6,7 +6,7 @@ declare(strict_types=1);
 
 namespace App\Core\Logger;
 
-include_once __DIR__ . "/../Functions/array_stringify.php";
+include_once API . "/src/Core/Functions/array_stringify.php";
 
 use function App\Core\Functions\array_stringify;
 

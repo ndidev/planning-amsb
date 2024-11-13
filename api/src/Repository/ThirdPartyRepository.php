@@ -67,7 +67,7 @@ final class ThirdPartyRepository extends Repository
         /** @phpstan-var ThirdPartyArray[] $thirdPartiesRaw */
         $thirdPartiesRaw = $thirdPartiesRequest->fetchAll();
 
-        $thirdParties = array_map(
+        $thirdParties = \array_map(
             fn(array $thirdPartyRaw) => $this->thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw),
             $thirdPartiesRaw
         );
@@ -90,7 +90,7 @@ final class ThirdPartyRepository extends Repository
         $request->execute(["id" => $id]);
         $thirdPartyRaw = $request->fetch();
 
-        if (!is_array($thirdPartyRaw)) return null;
+        if (!\is_array($thirdPartyRaw)) return null;
 
         $thirdParty = $this->thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw);
 
@@ -135,7 +135,7 @@ final class ThirdPartyRepository extends Repository
             'country' => $thirdParty->getCountry()?->getISO(),
             'phone' => $thirdParty->getPhone(),
             'comments' => $thirdParty->getComments(),
-            'roles' => json_encode($thirdParty->getRoles()),
+            'roles' => \json_encode($thirdParty->getRoles()),
             'logo' => $thirdParty->getLogoFilename(),
             'active' => (int) $thirdParty->isActive(),
         ]);
@@ -196,7 +196,7 @@ final class ThirdPartyRepository extends Repository
             'country' => $thirdParty->getCountry()?->getISO(),
             'phone' => $thirdParty->getPhone(),
             'comments' => $thirdParty->getComments(),
-            'roles' => json_encode($thirdParty->getRoles()),
+            'roles' => \json_encode($thirdParty->getRoles()),
             'active' => (int) $thirdParty->isActive(),
             'id' => $thirdParty->getId(),
         ];

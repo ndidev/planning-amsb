@@ -94,7 +94,7 @@ final class TimberAppointmentRepository extends Repository
 
         $appointmentsRaw = $requete->fetchAll();
 
-        $appointments = array_map(
+        $appointments = \array_map(
             fn(array $appointmentRaw) => $this->timberService->makeTimberAppointmentFromDatabase($appointmentRaw),
             $appointmentsRaw
         );
@@ -136,7 +136,7 @@ final class TimberAppointmentRepository extends Repository
         $request->execute(["id" => $id]);
         $appointmentRaw = $request->fetch();
 
-        if (!is_array($appointmentRaw)) return null;
+        if (!\is_array($appointmentRaw)) return null;
 
         $appointment = $this->timberService->makeTimberAppointmentFromDatabase($appointmentRaw);
 
@@ -429,8 +429,8 @@ final class TimberAppointmentRepository extends Repository
             // alors séparation/tri de la chaîne de caractères puis récupération du numéro le plus élevé
             $matches = NULL; // Tableau pour récupérer les numéros de BL
             $regexp = $supplierDto->getRegexp(); // Récupération de l'expression régulière
-            // preg_match_all("/\d{6}/", $deliveryNoteNumber["numero_bl"], $matches); // Filtre sur les numéros valides (6 chiffres)
-            preg_match_all("/$regexp/", $deliveryNoteNumber, $matches); // Filtre sur les numéros valides (6 chiffres)
+            // \preg_match_all("/\d{6}/", $deliveryNoteNumber["numero_bl"], $matches); // Filtre sur les numéros valides (6 chiffres)
+            \preg_match_all("/$regexp/", $deliveryNoteNumber, $matches); // Filtre sur les numéros valides (6 chiffres)
             $matches = $matches[0]; // Extraction des résultats
             sort($matches); // Tri des numéros
             $previousDeliveryNotesNumbers[] = array_pop($matches); // Récupération du numéro le plus élevé
@@ -464,7 +464,7 @@ final class TimberAppointmentRepository extends Repository
 
         $deliveryNoteData = $request->fetch(\PDO::FETCH_NUM);
 
-        if (is_array($deliveryNoteData) && count($deliveryNoteData) === 2) {
+        if (\is_array($deliveryNoteData) && count($deliveryNoteData) === 2) {
             /** @var array{0: int, 1: int} $deliveryNoteData */
             [$deliveryNoteNumberCount, $id] = $deliveryNoteData;
 
@@ -581,7 +581,7 @@ final class TimberAppointmentRepository extends Repository
 
         $timberService = new TimberService();
 
-        $registryEntries = array_map(
+        $registryEntries = \array_map(
             fn(array $entryRaw) => $timberService->makeTimberRegisterEntryDTO($entryRaw),
             $entriesRaw
         );
@@ -794,12 +794,12 @@ final class TimberAppointmentRepository extends Repository
 
         $timberService = new TimberService();
 
-        $scheduledAppointments = array_map(
+        $scheduledAppointments = \array_map(
             fn(array $appointmentRaw) => $timberService->makeTimberAppointmentFromDatabase($appointmentRaw),
             $scheduledAppointmentsRaw
         );
 
-        $onHoldAppointments = array_map(
+        $onHoldAppointments = \array_map(
             fn(array $appointmentRaw) => $timberService->makeTimberAppointmentFromDatabase($appointmentRaw),
             $onHoldAppointmentsRaw
         );

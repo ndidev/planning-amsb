@@ -199,7 +199,7 @@ function makeEndpoint(?string $path): ?string
     // Suppression du chemin de l'auth dans la requête
     // ex : "/planning-amsb/auth/login" => "login"
     $auth_path = $_ENV["AUTH_PATH"];
-    $endpoint = substr_replace($path, "", 0, strlen($auth_path));
+    $endpoint = substr_replace($path, "", 0, \strlen($auth_path));
 
     return $endpoint;
 }

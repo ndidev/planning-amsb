@@ -312,7 +312,7 @@ final class CharterTest extends TestCase
             'surestaries_vente' => 1000.0,
             'commentaire' => 'Comments',
             'archive' => true,
-            'legs' => array_map(fn(CharterLeg $leg) => $leg->toArray(), $legs),
+            'legs' => \array_map(fn(CharterLeg $leg) => $leg->toArray(), $legs),
         ];
 
         // When

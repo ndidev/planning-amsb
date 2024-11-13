@@ -22,7 +22,7 @@ final class ColorConverter
     public static function rgbToHex(string $rgb = ''): string
     {
         // Suppression des espaces dans la chaîne de caractères
-        $rgb = str_replace(" ", "", $rgb);
+        $rgb = \str_replace(" ", "", $rgb);
 
         // Enregistrement des trois couleurs dans un tableau
         $colors = explode(',', $rgb);
@@ -34,7 +34,7 @@ final class ColorConverter
 
         // Vérification que les couleurs sont valides
         foreach ($colors as $color) {
-            if (!is_numeric($color) || $color < 0 || $color > 255) {
+            if (!\is_numeric($color) || $color < 0 || $color > 255) {
                 return '#000000';
             }
         }
@@ -53,27 +53,27 @@ final class ColorConverter
     {
 
         // Si la chaîne comporte '#', on ne conserve que les chiffres
-        if (strpos($hex, '#') === 0) {
-            $hex = substr($hex, 1, strlen($hex));
+        if (\strpos($hex, '#') === 0) {
+            $hex = \substr($hex, 1, \strlen($hex));
         }
 
         $r = $g = $b = 0;
 
         // Vérification que la chaîne est au bon format (3 ou 6 caractères)
         // et qu'il s'agit bien d'un nombre hexadécimal correct
-        if ((strlen($hex) === 3 || strlen($hex) === 6) && ctype_xdigit($hex)) {
-            $colorStringLength = strlen($hex) / 3;
+        if ((\strlen($hex) === 3 || \strlen($hex) === 6) && ctype_xdigit($hex)) {
+            $colorStringLength = \strlen($hex) / 3;
             // Red
-            $r = substr($hex, $colorStringLength * 0, $colorStringLength);
-            $r = strlen($r) === 1 ? $r . $r : $r;
+            $r = \substr($hex, $colorStringLength * 0, $colorStringLength);
+            $r = \strlen($r) === 1 ? $r . $r : $r;
             $r = hexdec($r);
             // Green
-            $g = substr($hex, $colorStringLength * 1, $colorStringLength);
-            $g = strlen($g) === 1 ? $g . $g : $g;
+            $g = \substr($hex, $colorStringLength * 1, $colorStringLength);
+            $g = \strlen($g) === 1 ? $g . $g : $g;
             $g = hexdec($g);
             // Blue
-            $b = substr($hex, $colorStringLength * 2, $colorStringLength);
-            $b = strlen($b) === 1 ? $b . $b : $b;
+            $b = \substr($hex, $colorStringLength * 2, $colorStringLength);
+            $b = \strlen($b) === 1 ? $b . $b : $b;
             $b = hexdec($b);
         }
 

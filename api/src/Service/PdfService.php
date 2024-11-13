@@ -262,7 +262,7 @@ final class PdfService
 
             $module = $config->getModule();
 
-            if (!in_array($module, $supportedModules)) {
+            if (!\in_array($module, $supportedModules)) {
                 throw new ServerException("Le module spécifié n'est pas pris en charge");
             }
 

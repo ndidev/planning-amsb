@@ -31,7 +31,7 @@ final class TidesDTO implements \JsonSerializable
         for ($i = 0; $i < count($tides); $i++) {
             $this->tides[$i] = [
                 "date" => $tides[$i]["date"],
-                "heure" => substr($tides[$i]["heure"], 0, -3),
+                "heure" => \substr($tides[$i]["heure"], 0, -3),
                 "te_cesson" => (float) $tides[$i]["te_cesson"],
                 "te_bassin" => (float) $tides[$i]["te_bassin"],
             ];

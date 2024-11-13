@@ -63,7 +63,7 @@ final class UserRepository extends Repository
         }
         $this->redis->exec();
 
-        $users = array_map(
+        $users = \array_map(
             fn(array $userRaw) => $this->userService->makeUserAccountFromDatabase($userRaw),
             $usersRaw
         );
@@ -92,7 +92,7 @@ final class UserRepository extends Repository
 
             $userRaw = $request->fetch();
 
-            if (!is_array($userRaw)) {
+            if (!\is_array($userRaw)) {
                 return null;
             }
 
@@ -127,8 +127,8 @@ final class UserRepository extends Repository
         $uids = $uidsRequest->fetchAll(\PDO::FETCH_COLUMN);
 
         do {
-            $uid = substr(md5(uniqid()), 0, 8);
-        } while (in_array($uid, $uids));
+            $uid = \substr(\md5(\uniqid()), 0, 8);
+        } while (\in_array($uid, $uids));
 
         $statement =
             "INSERT INTO admin_users
@@ -155,10 +155,10 @@ final class UserRepository extends Repository
 
         $request->execute([
             "uid" => $uid,
-            "login" => mb_substr((string) $user->getLogin(), 0, 255),
-            "nom" => mb_substr($user->getName(), 0, 255),
+            "login" => \mb_substr((string) $user->getLogin(), 0, 255),
+            "nom" => \mb_substr($user->getName(), 0, 255),
             "statut" => AccountStatus::PENDING->value,
-            "roles" => json_encode($user->getRoles()),
+            "roles" => \json_encode($user->getRoles()),
             "commentaire" => $user->getComments(),
             "admin" => $adminName
         ]);
@@ -226,10 +226,10 @@ final class UserRepository extends Repository
 
             $request = $this->mysql->prepare($statement);
             $request->execute([
-                "login" => mb_substr($user->getLogin(), 0, 255),
-                "nom" => mb_substr($user->getName(), 0, 255),
+                "login" => \mb_substr($user->getLogin(), 0, 255),
+                "nom" => \mb_substr($user->getName(), 0, 255),
                 "commentaire" => $user->getComments(),
-                "roles" => json_encode($user->getRoles()),
+                "roles" => \json_encode($user->getRoles()),
                 "uid" => $uid,
             ]);
         }
@@ -332,7 +332,7 @@ final class UserRepository extends Repository
 
         $user = $userRequest->fetch();
 
-        if (!is_array($user)) {
+        if (!\is_array($user)) {
             throw new DBException("Impossible de récupérer les informations de l'utilisateur.");
         }
 
@@ -349,7 +349,7 @@ final class UserRepository extends Repository
         $sessions = [];
         do {
             $batch = $this->redis->scan($iterator, "admin:sessions:*");
-            if ($batch) $sessions = array_merge($sessions, $batch);
+            if ($batch) $sessions = \array_merge($sessions, $batch);
         } while ($iterator);
 
         // Obtenir les utilisateurs pour chaque session
@@ -382,7 +382,7 @@ final class UserRepository extends Repository
 
         $usernameRequest = $this->mysql->prepare($usernameStatement);
         $usernameRequest->execute([
-            "nom" => mb_substr($user->getName(), 0, 255),
+            "nom" => \mb_substr($user->getName(), 0, 255),
             "uid" => $uid,
         ]);
 

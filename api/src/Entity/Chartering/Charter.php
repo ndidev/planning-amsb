@@ -235,7 +235,7 @@ class Charter extends AbstractEntity
     public function setLegs(array $legs): static
     {
         $this->legs = new Collection(
-            array_map(fn(CharterLeg $leg) => $leg->setCharter($this), $legs)
+            \array_map(fn(CharterLeg $leg) => $leg->setCharter($this), $legs)
         );
 
         return $this;

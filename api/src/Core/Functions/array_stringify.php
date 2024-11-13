@@ -23,22 +23,22 @@ function array_stringify(
     int $maxDepth = 5,
 ): string {
     $string = "";
-    $indentation_spaces = str_repeat(" ", $indentation);
+    $indentation_spaces = \str_repeat(" ", $indentation);
     $maxDepthIsReached = $depth >= $maxDepth;
 
     foreach ($array as $key => $value) {
         // If $value is an array, recursive stringification
-        if (is_array($value) && !$maxDepthIsReached) {
+        if (\is_array($value) && !$maxDepthIsReached) {
             $value = "["
                 . PHP_EOL
                 . array_stringify($value, $indentation + 2, $depth + 1, $maxDepth)
-                . str_repeat(" ", $indentation)
+                . \str_repeat(" ", $indentation)
                 . "]";
         }
 
-        if (!is_string($value)) {
+        if (!\is_string($value)) {
             /** @var string */
-            $value = print_r($value, true);
+            $value = \print_r($value, true);
         }
 
         $string .= $indentation_spaces . "$key => $value" . PHP_EOL;

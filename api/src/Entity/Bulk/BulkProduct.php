@@ -60,7 +60,7 @@ class BulkProduct extends AbstractEntity
      */
     public function setQualities(array $qualities): static
     {
-        $this->qualities = array_map(
+        $this->qualities = \array_map(
             function (BulkQuality $quality) {
                 $quality->setProduct($this);
 
@@ -87,7 +87,7 @@ class BulkProduct extends AbstractEntity
             "nom" => $this->getName(),
             "couleur" => $this->getColor(),
             "unite" => $this->getUnit(),
-            "qualites" => array_map(
+            "qualites" => \array_map(
                 fn(BulkQuality $quality) => $quality->toArray(),
                 $this->getQualities()
             ),

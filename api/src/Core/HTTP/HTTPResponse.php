@@ -178,9 +178,9 @@ final class HTTPResponse
      */
     public function setJSON(mixed $data, bool $alreadyJson = false): HTTPResponse
     {
-        $body = $alreadyJson ? $data : json_encode($data);
+        $body = $alreadyJson ? $data : \json_encode($data);
 
-        if (!is_string($body)) {
+        if (!\is_string($body)) {
             throw new ServerException("Error while encoding data to JSON.");
         }
 
@@ -336,7 +336,7 @@ final class HTTPResponse
                     $compressedBody = gzencode($this->body);
 
                     // Si la compression est inefficace, on ne compresse pas
-                    if ($compressedBody && strlen($compressedBody) >= strlen($this->body)) {
+                    if ($compressedBody && \strlen($compressedBody) >= \strlen($this->body)) {
                         $selectedCompressionMethod = "identity";
                         break;
                     }
@@ -350,7 +350,7 @@ final class HTTPResponse
                     $compressedBody = gzcompress($this->body, 9);
 
                     // Si la compression est inefficace, on ne compresse pas
-                    if ($compressedBody && strlen($compressedBody) >= strlen($this->body)) {
+                    if ($compressedBody && \strlen($compressedBody) >= \strlen($this->body)) {
                         $selectedCompressionMethod = "identity";
                         break;
                     }
@@ -454,7 +454,7 @@ final class HTTPResponse
 
         // "Content-Length" header if there is a body
         if ($this->code >= 200 && $this->code !== 204 && $this->code !== 304) {
-            header("Content-Length: " . strlen($this->body ?? ""));
+            header("Content-Length: " . \strlen($this->body ?? ""));
         }
 
         // "Content-Type" header if there is a body

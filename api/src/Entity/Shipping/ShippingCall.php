@@ -369,7 +369,7 @@ class ShippingCall extends AbstractEntity
     public function setCargoes(array $cargoes): static
     {
         $this->cargoes = new Collection(
-            array_map(fn(ShippingCallCargo $cargo) => $cargo->setShippingCall($this), $cargoes)
+            \array_map(fn(ShippingCallCargo $cargo) => $cargo->setShippingCall($this), $cargoes)
         );
 
         return $this;
