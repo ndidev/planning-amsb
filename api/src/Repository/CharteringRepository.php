@@ -275,10 +275,10 @@ final class CharteringRepository extends Repository
         $charterRequest->execute([
             "statut" => $charter->getStatus(),
             // Laycan
-            "lc_debut" => $charter->getLaycanStart(true),
-            "lc_fin" => $charter->getLaycanEnd(true),
+            "lc_debut" => $charter->getSqlLaycanStart(),
+            "lc_fin" => $charter->getSqlLaycanEnd(),
             // C/P
-            "cp_date" => $charter->getCpDate(true),
+            "cp_date" => $charter->getSqlCpDate(),
             // Navire
             "navire" => $charter->getVesselName(),
             // Tiers
@@ -303,7 +303,7 @@ final class CharteringRepository extends Repository
         foreach ($charter->getLegs() as $leg) {
             $legsRequest->execute([
                 "charter" => $lastInsertId,
-                "bl_date" => $leg->getBlDate(true),
+                "bl_date" => $leg->getSqlBlDate(),
                 "marchandise" => $leg->getCommodity(),
                 "quantite" => $leg->getQuantity(),
                 "pol" => $leg->getPod()?->getLocode(),
@@ -380,10 +380,10 @@ final class CharteringRepository extends Repository
         $charterRequest->execute([
             "statut" => $charter->getStatus(),
             // Laycan
-            "lc_debut" => $charter->getLaycanStart(true),
-            "lc_fin" => $charter->getLaycanEnd(true),
+            "lc_debut" => $charter->getSqlLaycanStart(),
+            "lc_fin" => $charter->getSqlLaycanEnd(),
             // C/P
-            "cp_date" => $charter->getCpDate(true),
+            "cp_date" => $charter->getSqlCpDate(),
             // Navire
             "navire" => $charter->getVesselName(),
             // Tiers
@@ -423,7 +423,7 @@ final class CharteringRepository extends Repository
         foreach ($charter->getLegs() as $leg) {
             if ($leg->getId()) {
                 $updateLegRequest->execute([
-                    "bl_date" => $leg->getBlDate(true),
+                    "bl_date" => $leg->getSqlBlDate(),
                     "pol" => $leg->getPol()?->getLocode(),
                     "pod" => $leg->getPod()?->getLocode(),
                     "marchandise" => $leg->getCommodity(),
@@ -434,7 +434,7 @@ final class CharteringRepository extends Repository
             } else {
                 $insertLegRequest->execute([
                     "charter" => $charter->getId(),
-                    "bl_date" => $leg->getBlDate(true),
+                    "bl_date" => $leg->getSqlBlDate(),
                     "pol" => $leg->getPol()?->getLocode(),
                     "pod" => $leg->getPod()?->getLocode(),
                     "marchandise" => $leg->getCommodity(),

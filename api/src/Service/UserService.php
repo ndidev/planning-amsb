@@ -80,7 +80,7 @@ final class UserService
     /**
      * Crée un DTO pour la mise à jour des informations de l'utilisateur courant.
      * 
-     * @param HTTPRequestBody $requestBody 
+     * @param HTTPRequestBody $requestBody Contenu du corps de la requête.
      * 
      * @return CurrentUserFormDTO 
      */

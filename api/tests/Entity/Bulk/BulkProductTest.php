@@ -56,16 +56,8 @@ class BulkProductTest extends TestCase
     {
         // Given
         $bulkProduct = new BulkProduct();
-        $quality1 = $this->createMock(BulkQuality::class);
-        $quality2 = $this->createMock(BulkQuality::class);
-
-        $quality1->expects($this->once())
-            ->method('setProduct')
-            ->with($bulkProduct);
-
-        $quality2->expects($this->once())
-            ->method('setProduct')
-            ->with($bulkProduct);
+        $quality1 = new BulkQuality();
+        $quality2 = new BulkQuality();
 
         // When
         $bulkProduct->setQualities([$quality1, $quality2]);

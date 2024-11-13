@@ -22,11 +22,6 @@ class AgencyDepartment extends AbstractEntity
     private string $mobile = '';
     private string $email = '';
 
-    public function getService(): string
-    {
-        return $this->service;
-    }
-
     public function setService(string $service): static
     {
         $this->service = $service;
@@ -34,9 +29,9 @@ class AgencyDepartment extends AbstractEntity
         return $this;
     }
 
-    public function getDisplayName(): string
+    public function getService(): string
     {
-        return $this->displayName;
+        return $this->service;
     }
 
     public function setDisplayName(string $displayName): static
@@ -46,9 +41,9 @@ class AgencyDepartment extends AbstractEntity
         return $this;
     }
 
-    public function getFullName(): string
+    public function getDisplayName(): string
     {
-        return $this->fullName;
+        return $this->displayName;
     }
 
     public function setFullName(string $fullName): static
@@ -58,9 +53,9 @@ class AgencyDepartment extends AbstractEntity
         return $this;
     }
 
-    public function getAddressLine1(): string
+    public function getFullName(): string
     {
-        return $this->addressLine1;
+        return $this->fullName;
     }
 
     public function setAddressLine1(string $addressLine1): static
@@ -70,9 +65,9 @@ class AgencyDepartment extends AbstractEntity
         return $this;
     }
 
-    public function getAddressLine2(): string
+    public function getAddressLine1(): string
     {
-        return $this->addressLine2;
+        return $this->addressLine1;
     }
 
     public function setAddressLine2(string $addressLine2): static
@@ -82,9 +77,9 @@ class AgencyDepartment extends AbstractEntity
         return $this;
     }
 
-    public function getPostCode(): string
+    public function getAddressLine2(): string
     {
-        return $this->postCode;
+        return $this->addressLine2;
     }
 
     public function setPostCode(string $postCode): static
@@ -94,9 +89,9 @@ class AgencyDepartment extends AbstractEntity
         return $this;
     }
 
-    public function getCity(): string
+    public function getPostCode(): string
     {
-        return $this->city;
+        return $this->postCode;
     }
 
     public function setCity(string $city): static
@@ -106,9 +101,9 @@ class AgencyDepartment extends AbstractEntity
         return $this;
     }
 
-    public function getCountry(): string
+    public function getCity(): string
     {
-        return $this->country;
+        return $this->city;
     }
 
     public function setCountry(string $country): static
@@ -118,9 +113,9 @@ class AgencyDepartment extends AbstractEntity
         return $this;
     }
 
-    public function getPhone(): string
+    public function getCountry(): string
     {
-        return $this->phone;
+        return $this->country;
     }
 
     public function setPhone(string $phone): static
@@ -130,9 +125,9 @@ class AgencyDepartment extends AbstractEntity
         return $this;
     }
 
-    public function getMobile(): string
+    public function getPhone(): string
     {
-        return $this->mobile;
+        return $this->phone;
     }
 
     public function setMobile(string $mobile): static
@@ -142,9 +137,9 @@ class AgencyDepartment extends AbstractEntity
         return $this;
     }
 
-    public function getEmail(): string
+    public function getMobile(): string
     {
-        return $this->email;
+        return $this->mobile;
     }
 
     public function setEmail(string $email): static
@@ -152,6 +147,11 @@ class AgencyDepartment extends AbstractEntity
         $this->email = $email;
 
         return $this;
+    }
+
+    public function getEmail(): string
+    {
+        return $this->email;
     }
 
     public function toArray(): array

@@ -24,10 +24,14 @@ use App\Repository\ShippingRepository;
 final class ShippingService
 {
     private ShippingRepository $shippingRepository;
+    private ThirdPartyService $thirdPartyService;
+    private PortService $portService;
 
     public function __construct()
     {
         $this->shippingRepository = new ShippingRepository($this);
+        $this->thirdPartyService = new ThirdPartyService();
+        $this->portService = new PortService();
     }
 
     /**
@@ -45,7 +49,7 @@ final class ShippingService
             ->setId($rawData["id"] ?? null)
             ->setShipName($rawData["navire"] ?? "TBN")
             ->setVoyage($rawData["voyage"] ?? "")
-            ->setShipOperator($rawData["armateur"] ?? null)
+            ->setShipOperator($this->thirdPartyService->getThirdParty($rawData["armateur"] ?? null))
             ->setEtaDate($rawData["eta_date"] ?? null)
             ->setEtaTime($rawData["eta_heure"] ?? "")
             ->setNorDate($rawData["nor_date"] ?? null)
@@ -62,8 +66,8 @@ final class ShippingService
             ->setEtdTime($rawData["etd_heure"] ?? "")
             ->setArrivalDraft($rawData["te_arrivee"] ?? null)
             ->setDepartureDraft($rawData["te_depart"] ?? null)
-            ->setLastPort($rawData["last_port"] ?? null)
-            ->setNextPort($rawData["next_port"] ?? null)
+            ->setLastPort($this->portService->getPort($rawData["last_port"] ?? null))
+            ->setNextPort($this->portService->getPort($rawData["next_port"] ?? null))
             ->setCallPort($rawData["call_port"] ?? "")
             ->setQuay($rawData["quai"] ?? "")
             ->setComment($rawData["commentaire"] ?? "")
@@ -90,7 +94,7 @@ final class ShippingService
             ->setId($requestBody->getInt('id'))
             ->setShipName($requestBody->getString('navire', 'TBN'))
             ->setVoyage($requestBody->getString('voyage'))
-            ->setShipOperator($requestBody->getInt('armateur'))
+            ->setShipOperator($this->thirdPartyService->getThirdParty($requestBody->getInt('armateur')))
             ->setEtaDate($requestBody->getDatetime('eta_date'))
             ->setEtaTime($requestBody->getString('eta_heure'))
             ->setNorDate($requestBody->getDatetime('nor_date'))
@@ -107,8 +111,8 @@ final class ShippingService
             ->setEtdTime($requestBody->getString('etd_heure'))
             ->setArrivalDraft($requestBody->getFloat('te_arrivee'))
             ->setDepartureDraft($requestBody->getFloat('te_depart'))
-            ->setLastPort($requestBody->getString('last_port', null))
-            ->setNextPort($requestBody->getString('next_port', null))
+            ->setLastPort($this->portService->getPort($requestBody->getString('last_port', null)))
+            ->setNextPort($this->portService->getPort($requestBody->getString('next_port', null)))
             ->setCallPort($requestBody->getString('call_port'))
             ->setQuay($requestBody->getString('quai'))
             ->setComment($requestBody->getString('commentaire'));

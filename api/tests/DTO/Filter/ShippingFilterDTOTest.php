@@ -269,7 +269,7 @@ final class ShippingFilterDTOTest extends TestCase
         $dto = new ShippingFilterDTO($query);
 
         // When
-        $result = $dto->getSqlNextPortFilter();
+        $result = $dto->getSqlLastPortFilter();
 
         // Then
         $this->assertSame('', $result);

@@ -11,7 +11,7 @@ namespace App\Core\Component;
  * 
  * @package App\Core
  */
-class DateUtils
+abstract class DateUtils
 {
     public const TIMEZONE = "Europe/Paris";
 
@@ -251,29 +251,24 @@ class DateUtils
     /**
      * Make a DateTimeImmutable object from an input date or time.
      * 
-     * @param \DateTimeImmutable|string|null $datetime 
+     * @param \DateTimeInterface|string|null $datetime 
      */
-    public static function makeDateTimeImmutable(\DateTimeImmutable|string|null $datetime): ?\DateTimeImmutable
+    public static function makeDateTimeImmutable(\DateTimeInterface|string|null $datetime): ?\DateTimeImmutable
     {
-        $datetimeObject = null;
+        try {
+            if (is_null($datetime)) {
+                return null;
+            }
 
-        if (is_null($datetime)) {
-            $datetimeObject = null;
-        } else if (is_string($datetime)) {
-            $datetimeObject = new \DateTimeImmutable($datetime);
-        } else {
-            $datetimeObject = $datetime;
+            if (is_string($datetime)) {
+                return new \DateTimeImmutable($datetime);
+            }
+
+            if ($datetime instanceof \DateTimeInterface) {
+                return \DateTimeImmutable::createFromInterface($datetime);
+            }
+        } catch (\Throwable) {
+            return null;
         }
-
-        // TODO: use this method in entities
-
-        return $datetimeObject;
-    }
-
-    public static function getDateTimeImmutableValue(): \DateTimeImmutable|string|null
-    {
-        // TODO: Implement getDateTimeImmutableValue() method.
-
-        return null;
     }
 }

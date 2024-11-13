@@ -19,10 +19,12 @@ use App\Repository\QuickAppointmentAddRepository;
 final class QuickAppointmentAddService
 {
     private QuickAppointmentAddRepository $quickAppointmentAddRepository;
+    private ThirdPartyService $thirdPartyService;
 
     public function __construct()
     {
         $this->quickAppointmentAddRepository = new QuickAppointmentAddRepository($this);
+        $this->thirdPartyService = new ThirdPartyService();
     }
 
     /**
@@ -36,16 +38,14 @@ final class QuickAppointmentAddService
      */
     public function makeTimberQuickAppointmentAddFromDatabase(array $rawData): TimberQuickAppointmentAdd
     {
-        $thirdPartyService = new ThirdPartyService();
-
         $quickAppointmentAdd = (new TimberQuickAppointmentAdd())
             ->setId($rawData["id"])
-            ->setSupplier($thirdPartyService->getThirdParty($rawData["fournisseur"]))
-            ->setCarrier($thirdPartyService->getThirdParty($rawData["transporteur"]))
-            ->setCharterer($thirdPartyService->getThirdParty($rawData["affreteur"]))
-            ->setLoading($thirdPartyService->getThirdParty($rawData["chargement"]))
-            ->setCustomer($thirdPartyService->getThirdParty($rawData["client"]))
-            ->setDelivery($thirdPartyService->getThirdParty($rawData["livraison"]));
+            ->setSupplier($this->thirdPartyService->getThirdParty($rawData["fournisseur"]))
+            ->setCarrier($this->thirdPartyService->getThirdParty($rawData["transporteur"]))
+            ->setCharterer($this->thirdPartyService->getThirdParty($rawData["affreteur"]))
+            ->setLoading($this->thirdPartyService->getThirdParty($rawData["chargement"]))
+            ->setCustomer($this->thirdPartyService->getThirdParty($rawData["client"]))
+            ->setDelivery($this->thirdPartyService->getThirdParty($rawData["livraison"]));
 
         return $quickAppointmentAdd;
     }
@@ -59,16 +59,14 @@ final class QuickAppointmentAddService
      */
     public function makeTimberQuickAppointmentAddFromForm(HTTPRequestBody $requestBody): TimberQuickAppointmentAdd
     {
-        $thirdPartyService = new ThirdPartyService();
-
         $quickAppointmentAdd = (new TimberQuickAppointmentAdd())
             ->setId($requestBody->getInt('id'))
-            ->setSupplier($thirdPartyService->getThirdParty($requestBody->getInt('fournisseur')))
-            ->setCarrier($thirdPartyService->getThirdParty($requestBody->getInt('transporteur')))
-            ->setCharterer($thirdPartyService->getThirdParty($requestBody->getInt('affreteur')))
-            ->setLoading($thirdPartyService->getThirdParty($requestBody->getInt('chargement')))
-            ->setCustomer($thirdPartyService->getThirdParty($requestBody->getInt('client')))
-            ->setDelivery($thirdPartyService->getThirdParty($requestBody->getInt('livraison')));
+            ->setSupplier($this->thirdPartyService->getThirdParty($requestBody->getInt('fournisseur')))
+            ->setCarrier($this->thirdPartyService->getThirdParty($requestBody->getInt('transporteur')))
+            ->setCharterer($this->thirdPartyService->getThirdParty($requestBody->getInt('affreteur')))
+            ->setLoading($this->thirdPartyService->getThirdParty($requestBody->getInt('chargement')))
+            ->setCustomer($this->thirdPartyService->getThirdParty($requestBody->getInt('client')))
+            ->setDelivery($this->thirdPartyService->getThirdParty($requestBody->getInt('livraison')));
 
         return $quickAppointmentAdd;
     }

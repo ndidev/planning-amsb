@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Entity\Bulk;
 
+use App\Core\Component\DateUtils;
 use App\Entity\AbstractEntity;
 use App\Entity\ThirdParty;
 use App\Core\Traits\IdentifierTrait;
@@ -26,58 +27,38 @@ class BulkAppointment extends AbstractEntity
     private string $orderNumber = "";
     private string $comments = "";
 
-    public function setDate(\DateTimeImmutable|string $date): static
+    public function setDate(\DateTimeInterface|string $date): static
     {
-        if (is_string($date)) {
-            $this->date = new \DateTimeImmutable($date);
-        } else {
-            $this->date = $date;
-        }
+        $this->date = DateUtils::makeDateTimeImmutable($date);
 
         return $this;
     }
 
-    /**
-     * @param bool $sqlFormat 
-     * 
-     * @return \DateTimeImmutable|string|null 
-     * 
-     * @phpstan-return ($sqlFormat is false ? \DateTimeImmutable|null :string|null)
-     */
-    public function getDate(bool $sqlFormat = false): \DateTimeImmutable|string|null
+    public function getDate(): ?\DateTimeImmutable
     {
-        if (true === $sqlFormat && null !== $this->date) {
-            return $this->date->format("Y-m-d");
-        } else {
-            return $this->date;
-        }
+        return $this->date;
     }
 
-    public function setTime(\DateTimeImmutable|string|null $heure): static
+    public function getSqlDate(): ?string
     {
-        if (is_string($heure)) {
-            $this->time = new \DateTimeImmutable($heure);
-        } else {
-            $this->time = $heure;
-        }
+        return $this->date?->format('Y-m-d') ?? null;
+    }
+
+    public function setTime(\DateTimeInterface|string|null $time): static
+    {
+        $this->time = DateUtils::makeDateTimeImmutable($time);
 
         return $this;
     }
 
-    /**
-     * @param bool $sqlFormat 
-     * 
-     * @return \DateTimeImmutable|string|null 
-     * 
-     * @phpstan-return ($sqlFormat is false ? \DateTimeImmutable|null :string|null)
-     */
-    public function getTime(bool $sqlFormat = false): \DateTimeImmutable|string|null
+    public function getTime(): ?\DateTimeImmutable
     {
-        if (true === $sqlFormat) {
-            return $this->time?->format("H:i");
-        } else {
-            return $this->time;
-        }
+        return $this->time;
+    }
+
+    public function getSqlTime(): ?string
+    {
+        return $this->time?->format('H:i') ?? null;
     }
 
     public function setProduct(?BulkProduct $product): static
@@ -194,8 +175,8 @@ class BulkAppointment extends AbstractEntity
     {
         return  [
             "id" => $this->getId(),
-            "date_rdv" => $this->getDate()?->format("Y-m-d"),
-            "heure" => $this->getTime()?->format("H:i"),
+            "date_rdv" => $this->getDate()?->format('Y-m-d'),
+            "heure" => $this->getTime()?->format('H:i'),
             "produit" => $this->getProduct()?->getId(),
             "qualite" => $this->getQuality()?->getId(),
             "quantite" => $this->getQuantity()?->getValue() ?? 0,

@@ -49,8 +49,12 @@ final class PortService
         return $this->portRepository->fetchAllPorts();
     }
 
-    public function getPort(string $locode): ?Port
+    public function getPort(?string $locode): ?Port
     {
+        if ($locode === null) {
+            return null;
+        }
+
         return $this->portRepository->fetchPortByLocode($locode);
     }
 }

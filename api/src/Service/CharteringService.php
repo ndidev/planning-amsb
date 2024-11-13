@@ -23,11 +23,13 @@ final class CharteringService
 {
     private CharteringRepository $charteringRepository;
     private ThirdPartyService $thirdPartyService;
+    private PortService $portService;
 
     public function __construct()
     {
         $this->charteringRepository = new CharteringRepository($this);
         $this->thirdPartyService = new ThirdPartyService();
+        $this->portService = new PortService();
     }
 
     /**
@@ -120,8 +122,8 @@ final class CharteringService
         $leg = (new CharterLeg())
             ->setId($rawData["id"] ?? null)
             ->setBlDate($rawData["bl_date"] ?? null)
-            ->setPol($rawData["pol"] ?? null)
-            ->setPod($rawData["pod"] ?? null)
+            ->setPol($this->portService->getPort($rawData["pol"] ?? null))
+            ->setPod($this->portService->getPort($rawData["pod"] ?? null))
             ->setCommodity($rawData["marchandise"] ?? '')
             ->setQuantity($rawData["quantite"] ?? '')
             ->setComments($rawData["commentaire"] ?? '');
@@ -144,8 +146,8 @@ final class CharteringService
             ->setId($rawData["id"] ?? null)
             ->setCharter($this->getCharter($rawData["charter"] ?? null))
             ->setBlDate($rawData["bl_date"] ?? null)
-            ->setPol($rawData["pol"] ?? null)
-            ->setPod($rawData["pod"] ?? null)
+            ->setPol($this->portService->getPort($rawData["pol"] ?? null))
+            ->setPod($this->portService->getPort($rawData["pod"] ?? null))
             ->setCommodity($rawData["marchandise"] ?? '')
             ->setQuantity($rawData["quantite"] ?? '')
             ->setComments($rawData["commentaire"] ?? '');

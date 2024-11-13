@@ -6,42 +6,22 @@ declare(strict_types=1);
 
 namespace App\Entity\Config;
 
-use App\Core\Component\Module;
 use App\Core\Traits\IdentifierTrait;
+use App\Core\Traits\ModuleTrait;
 use App\Entity\AbstractEntity;
 use App\Entity\ThirdParty;
 
 class PdfConfig extends AbstractEntity
 {
     use IdentifierTrait;
+    use ModuleTrait;
 
-    /** @var ?Module::* $module */
-    private ?string $module = null;
     private ?ThirdParty $supplier = null;
     private bool $autoSend = false;
     /** @var string[] */
     private array $emails = [];
     private int $daysBefore = 0;
     private int $daysAfter = 0;
-
-    /**
-     * @return Module::*|null
-     */
-    public function getModule(): ?string
-    {
-        return $this->module;
-    }
-
-    public function setModule(?string $module): static
-    {
-        if (is_string($module)) {
-            $this->module = Module::tryFrom($module);
-        } else {
-            $this->module = $module;
-        }
-
-        return $this;
-    }
 
     public function getSupplier(): ?ThirdParty
     {

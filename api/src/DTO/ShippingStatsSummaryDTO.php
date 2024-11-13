@@ -6,12 +6,17 @@ declare(strict_types=1);
 
 namespace App\DTO;
 
+/**
+ * Shipping stats summary DTO.
+ * 
+ * @phpstan-import-type ShippingStatsSummaryArray from \App\Repository\ShippingRepository
+ */
 final class ShippingStatsSummaryDTO implements \JsonSerializable
 {
     /**
      * Stats summary.
      
-     * @var array{Total: int, ByYear: array<string, array<int, array{nombre: int, ids: int[]}>>}
+     * @var array{Total: int, ByYear: array<int, array<int, array{nombre: int, ids: int[]}>>}
      */
     private array $stats = [
         "Total" => 0,
@@ -21,16 +26,18 @@ final class ShippingStatsSummaryDTO implements \JsonSerializable
     /**
      * Creates a ShippingStatsSummaryDTO object from raw data.
      * 
-     * @param list<array{id: int, date: string}> $calls
+     * @param array $statsSummaryRaw
+     * 
+     * @phpstan-param ShippingStatsSummaryArray $statsSummaryRaw
      */
-    public function __construct(private array $calls)
+    public function __construct(private array $statsSummaryRaw)
     {
         $this->makeStats();
     }
 
     private function makeStats(): void
     {
-        $this->stats["Total"] = count($this->calls);
+        $this->stats["Total"] = count($this->statsSummaryRaw);
 
         $yearTemplate = [
             1 => ["nombre" => 0, "ids" => []],
@@ -48,10 +55,10 @@ final class ShippingStatsSummaryDTO implements \JsonSerializable
         ];
 
         // Compilation du nombre de RDV par année et par mois
-        foreach ($this->calls as $call) {
+        foreach ($this->statsSummaryRaw as $call) {
             $date = explode("-", $call["date"]);
-            $year = $date[0];
-            $month = $date[1];
+            $year = (int) $date[0];
+            $month = (int) $date[1];
 
             if (!array_key_exists($year, $this->stats["ByYear"])) {
                 $this->stats["ByYear"][$year] = $yearTemplate;

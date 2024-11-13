@@ -62,7 +62,7 @@ final class TimberRegistryController extends Controller
             DateUtils::SQL_DATE,
             DateUtils::getPreviousWorkingDay(new \DateTimeImmutable())
         );
-        $defaultEndDate = date("Y-m-d");
+        $defaultEndDate = date('Y-m-d');
 
         // Filtre
         /** @var \DateTime $startDate */

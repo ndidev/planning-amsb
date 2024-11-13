@@ -6,32 +6,23 @@ declare(strict_types=1);
 
 namespace App\Entity\Config;
 
-use App\Core\Component\Module;
 use App\Core\Traits\IdentifierTrait;
+use App\Core\Traits\ModuleTrait;
 use App\Entity\AbstractEntity;
 
 class InfoBannerLine extends AbstractEntity
 {
     use IdentifierTrait;
+    use ModuleTrait;
 
-    /** @phpstan-var ?Module::* $module */
-    private ?string $module = null;
     private bool $pc = false;
     private bool $tv = false;
     private string $message = '';
     private string $color = '';
 
-    /**
-     * @phpstan-return ?Module::* $module
-     */
-    public function getModule(): ?string
+    public function setPc(bool|int $pc): static
     {
-        return $this->module;
-    }
-
-    public function setModule(?string $module): static
-    {
-        $this->module = Module::tryFrom($module);
+        $this->pc = (bool) $pc;
 
         return $this;
     }
@@ -41,9 +32,9 @@ class InfoBannerLine extends AbstractEntity
         return $this->pc;
     }
 
-    public function setPc(bool|int $pc): static
+    public function setTv(bool|int $tv): static
     {
-        $this->pc = (bool) $pc;
+        $this->tv = (bool) $tv;
 
         return $this;
     }
@@ -53,9 +44,9 @@ class InfoBannerLine extends AbstractEntity
         return $this->tv;
     }
 
-    public function setTv(bool|int $tv): static
+    public function setMessage(string $message): static
     {
-        $this->tv = (bool) $tv;
+        $this->message = $message;
 
         return $this;
     }
@@ -65,9 +56,9 @@ class InfoBannerLine extends AbstractEntity
         return $this->message;
     }
 
-    public function setMessage(string $message): static
+    public function setColor(string $color): static
     {
-        $this->message = $message;
+        $this->color = $color;
 
         return $this;
     }
@@ -75,13 +66,6 @@ class InfoBannerLine extends AbstractEntity
     public function getColor(): string
     {
         return $this->color;
-    }
-
-    public function setColor(string $color): static
-    {
-        $this->color = $color;
-
-        return $this;
     }
 
     public function toArray(): array

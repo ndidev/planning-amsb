@@ -18,8 +18,8 @@ class CurrentUserInfoDTO implements \JsonSerializable
             "uid" => $this->user->getUid(),
             "login" => $this->user->getLogin(),
             "nom" => $this->user->getName(),
-            "roles" => $this->user->getRoles(),
-            "statut" => $this->user->getStatus(),
+            "roles" => $this->user->getRoles()->toArray(),
+            "statut" => $this->user->getStatus()->value,
         ];
     }
 }

@@ -39,10 +39,11 @@ class BulkAppointmentTest extends TestCase
 
         // When
         $bulkAppointment->setDate($date);
+        $actualDate = $bulkAppointment->getDate();
 
         // Then
-        $this->assertSame($date, $bulkAppointment->getDate());
-        $this->assertEquals('2023-10-01', $bulkAppointment->getDate(true));
+        $this->assertEquals($date, $bulkAppointment->getDate(), 'The date is not the expected one.');
+        $this->assertEquals('2023-10-01', $bulkAppointment->getSqlDate(), 'The SQL date is not the expected one.');
     }
 
     public function testSetAndGetTime(): void
@@ -55,8 +56,8 @@ class BulkAppointmentTest extends TestCase
         $bulkAppointment->setTime($time);
 
         // Then
-        $this->assertSame($time, $bulkAppointment->getTime());
-        $this->assertEquals('10:00', $bulkAppointment->getTime(true));
+        $this->assertEquals($time, $bulkAppointment->getTime(), 'The time is not the expected one.');
+        $this->assertEquals('10:00', $bulkAppointment->getSqlTime(), 'The SQL time is not the expected one.');
     }
 
     public function testSetAndGetProduct(): void

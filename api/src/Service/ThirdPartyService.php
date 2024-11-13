@@ -50,10 +50,10 @@ final class ThirdPartyService
             ->setCountry($this->countryService->getCountry($rawData["pays"] ?? ''))
             ->setPhone($rawData["telephone"] ?? '')
             ->setComments($rawData["commentaire"] ?? '')
-            ->setIsNonEditable($rawData["non_modifiable"] ?? false)
+            ->setNonEditable($rawData["non_modifiable"] ?? false)
             ->setIsAgency($rawData["lie_agence"] ?? false)
             ->setLogo($rawData["logo"] ?? false)
-            ->setIsActive($rawData["actif"] ?? true);
+            ->setActive($rawData["actif"] ?? true);
 
         $roles = json_decode($rawData["roles"] ?? "{}", true);
 
@@ -88,10 +88,10 @@ final class ThirdPartyService
             ->setCountry($this->countryService->getCountry($requestBody->getString('pays')))
             ->setPhone($requestBody->getString('telephone'))
             ->setComments($requestBody->getString('commentaire'))
-            ->setIsNonEditable($requestBody->getBool('non_modifiable'))
+            ->setNonEditable($requestBody->getBool('non_modifiable'))
             ->setIsAgency($requestBody->getBool('lie_agence'))
             ->setLogo($this->saveLogo($requestBody->getParam('logo')))
-            ->setIsActive($requestBody->getBool('actif', true));
+            ->setActive($requestBody->getBool('actif', true));
 
         $rolesInRequest = $requestBody->getArray('roles');
 

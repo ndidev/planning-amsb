@@ -11,7 +11,7 @@ final class TimberStatsDTO implements \JsonSerializable
     /**
      * Stats summary.
      
-     * @var array{Total: int, ByYear: array<string, array<int, int>>}
+     * @var array{Total: int, ByYear: array<int, array<int, int>>}
      */
     private array $stats = [
         "Total" => 0,
@@ -50,8 +50,8 @@ final class TimberStatsDTO implements \JsonSerializable
         // Compilation du nombre de RDV par année et par mois
         foreach ($this->dates as $date) {
             $date = explode("-", $date);
-            $year = $date[0];
-            $month = $date[1];
+            $year = (int) $date[0];
+            $month = (int) $date[1];
 
             if (!array_key_exists($year, $this->stats["ByYear"])) {
                 $this->stats["ByYear"][$year] = $yearTemplate;

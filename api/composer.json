@@ -22,7 +22,7 @@
     }
   },
   "scripts": {
-    "test": "./vendor/bin/phpunit tests --testdox"
+    "test": "./vendor/bin/phpunit tests --testdox  --coverage-html public/tests"
   },
   "config": {
     "allow-plugins": {

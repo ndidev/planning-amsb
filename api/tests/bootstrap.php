@@ -19,3 +19,5 @@ require_once API . "/src/Core/Component/Constants.php";
 // Chargement des variables d'environnement
 $dotenv = Dotenv\Dotenv::createImmutable(ROOTPATH, ".env.test");
 $dotenv->load();
+
+$_ENV["LOGOS_URL"] = "http://localhost/logos";

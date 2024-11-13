@@ -24,7 +24,7 @@ $dotenv->load();
 // (URL changeante en fonction de l'accès local/extranet et du protocole HTTP/HTTPS)
 if (array_key_exists("HTTP_HOST", $_SERVER)) {
     $scheme = $_SERVER["REQUEST_SCHEME"] ?? "http";
-    $host = $_SERVER["HTTP_HOST"];
+    $host = $_SERVER["HTTP_HOST"] ?? "localhost";
 
     $api_path = $_ENV["API_PATH"];
     $api_url = $scheme . "://" . $host . $api_path;

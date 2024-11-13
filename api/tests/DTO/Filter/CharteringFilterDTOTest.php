@@ -135,6 +135,34 @@ final class CharteringFilterDTOTest extends TestCase
         $this->assertSame($expected, $sqlEndDate);
     }
 
+    public function testGetSqlStatusFilter(): void
+    {
+        // Given
+        $_SERVER['REQUEST_URI'] = "/path?statut=1,2";
+        $query = HTTPRequestQuery::buildFromRequest();
+        $dto = new CharteringFilterDTO($query);
+
+        // When
+        $result = $dto->getSqlStatusFilter();
+
+        // Then
+        $this->assertSame(" AND statut IN (1,2)", $result);
+    }
+
+    public function testGetEmptySqlStatusFilter(): void
+    {
+        // Given
+        $_SERVER['REQUEST_URI'] = "/path";
+        $query = HTTPRequestQuery::buildFromRequest();
+        $dto = new CharteringFilterDTO($query);
+
+        // When
+        $result = $dto->getSqlStatusFilter();
+
+        // Then
+        $this->assertSame('', $result);
+    }
+
     public function testGetSqlChartererFilter(): void
     {
         // Given

@@ -8,7 +8,6 @@ namespace App\Entity\Config;
 
 use App\Core\Component\Module;
 use App\Entity\ThirdParty;
-use App\Service\ThirdPartyService;
 
 class TimberQuickAppointmentAdd extends QuickAppointmentAdd
 {
@@ -21,7 +20,14 @@ class TimberQuickAppointmentAdd extends QuickAppointmentAdd
 
     public function __construct()
     {
-        $this->module = Module::TIMBER;
+        $this->setModule(Module::TIMBER);
+    }
+
+    public function setSupplier(?ThirdParty $supplier): static
+    {
+        $this->supplier = $supplier;
+
+        return $this;
     }
 
     public function getSupplier(): ?ThirdParty
@@ -29,13 +35,9 @@ class TimberQuickAppointmentAdd extends QuickAppointmentAdd
         return $this->supplier;
     }
 
-    public function setSupplier(ThirdParty|int|null $supplier): static
+    public function setCarrier(?ThirdParty $carrier): static
     {
-        if (is_int($supplier)) {
-            $this->supplier = (new ThirdPartyService())->getThirdParty($supplier);
-        } else {
-            $this->supplier = $supplier;
-        }
+        $this->carrier = $carrier;
 
         return $this;
     }
@@ -45,13 +47,9 @@ class TimberQuickAppointmentAdd extends QuickAppointmentAdd
         return $this->carrier;
     }
 
-    public function setCarrier(ThirdParty|int|null $carrier): static
+    public function setCharterer(?ThirdParty $charterer): static
     {
-        if (is_int($carrier)) {
-            $this->carrier = (new ThirdPartyService())->getThirdParty($carrier);
-        } else {
-            $this->carrier = $carrier;
-        }
+        $this->charterer = $charterer;
 
         return $this;
     }
@@ -61,13 +59,9 @@ class TimberQuickAppointmentAdd extends QuickAppointmentAdd
         return $this->charterer;
     }
 
-    public function setCharterer(ThirdParty|int|null $charterer): static
+    public function setLoading(?ThirdParty $loading): static
     {
-        if (is_int($charterer)) {
-            $this->charterer = (new ThirdPartyService())->getThirdParty($charterer);
-        } else {
-            $this->charterer = $charterer;
-        }
+        $this->loading = $loading;
 
         return $this;
     }
@@ -77,13 +71,9 @@ class TimberQuickAppointmentAdd extends QuickAppointmentAdd
         return $this->loading;
     }
 
-    public function setLoading(ThirdParty|int|null $loading): static
+    public function setCustomer(?ThirdParty $customer): static
     {
-        if (is_int($loading)) {
-            $this->loading = (new ThirdPartyService())->getThirdParty($loading);
-        } else {
-            $this->loading = $loading;
-        }
+        $this->customer = $customer;
 
         return $this;
     }
@@ -93,13 +83,9 @@ class TimberQuickAppointmentAdd extends QuickAppointmentAdd
         return $this->customer;
     }
 
-    public function setCustomer(ThirdParty|int|null $customer): static
+    public function setDelivery(?ThirdParty $delivery): static
     {
-        if (is_int($customer)) {
-            $this->customer = (new ThirdPartyService())->getThirdParty($customer);
-        } else {
-            $this->customer = $customer;
-        }
+        $this->delivery = $delivery;
 
         return $this;
     }
@@ -107,17 +93,6 @@ class TimberQuickAppointmentAdd extends QuickAppointmentAdd
     public function getDelivery(): ?ThirdParty
     {
         return $this->delivery;
-    }
-
-    public function setDelivery(ThirdParty|int|null $delivery): static
-    {
-        if (is_int($delivery)) {
-            $this->delivery = (new ThirdPartyService())->getThirdParty($delivery);
-        } else {
-            $this->delivery = $delivery;
-        }
-
-        return $this;
     }
 
     public function toArray(): array

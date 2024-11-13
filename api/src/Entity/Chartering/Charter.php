@@ -8,6 +8,7 @@ namespace App\Entity\Chartering;
 
 use App\Core\Component\CharterStatus;
 use App\Core\Component\Collection;
+use App\Core\Component\DateUtils;
 use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
 use App\Entity\ThirdParty;
@@ -18,9 +19,9 @@ class Charter extends AbstractEntity
 
     /** @phpstan-var CharterStatus::* $status */
     private int $status = CharterStatus::PENDING;
-    private ?\DateTimeImmutable $laycanStart;
-    private ?\DateTimeImmutable $laycanEnd;
-    private ?\DateTimeImmutable $cpDate;
+    private ?\DateTimeImmutable $laycanStart = null;
+    private ?\DateTimeImmutable $laycanEnd = null;
+    private ?\DateTimeImmutable $cpDate = null;
     private string $vesselName = 'TBN';
     private ?ThirdParty $charterer = null;
     private ?ThirdParty $shipOperator = null;
@@ -42,14 +43,6 @@ class Charter extends AbstractEntity
         $this->legs = new Collection();
     }
 
-    /**
-     * @phpstan-return CharterStatus::*
-     */
-    public function getStatus(): int
-    {
-        return $this->status;
-    }
-
     public function setStatus(int $status): static
     {
         $this->status = CharterStatus::tryFrom($status);
@@ -58,89 +51,62 @@ class Charter extends AbstractEntity
     }
 
     /**
-     * @param bool $sqlFormat 
-     * 
-     * @return \DateTimeImmutable|string|null 
-     * 
-     * @phpstan-return ($sqlFormat is false ? \DateTimeImmutable|null :string|null)
+     * @phpstan-return CharterStatus::*
      */
-    public function getLaycanStart(bool $sqlFormat = false): \DateTimeImmutable|string|null
+    public function getStatus(): int
     {
-        if (true === $sqlFormat) {
-            return $this->laycanStart?->format("Y-m-d");
-        } else {
-            return $this->laycanStart;
-        }
+        return $this->status;
     }
 
     public function setLaycanStart(\DateTimeImmutable|string|null $date): static
     {
-        if (is_string($date)) {
-            $this->laycanStart = new \DateTimeImmutable($date);
-        } else {
-            $this->laycanStart = $date;
-        }
+        $this->laycanStart = DateUtils::makeDateTimeImmutable($date);
 
         return $this;
     }
 
-    /**
-     * @param bool $sqlFormat 
-     * 
-     * @return \DateTimeImmutable|string|null 
-     * 
-     * @phpstan-return ($sqlFormat is false ? \DateTimeImmutable|null :string|null)
-     */
-    public function getLaycanEnd(bool $sqlFormat = false): \DateTimeImmutable|string|null
+    public function getLaycanStart(): ?\DateTimeImmutable
     {
-        if (true === $sqlFormat) {
-            return $this->laycanEnd?->format("Y-m-d");
-        } else {
-            return $this->laycanEnd;
-        }
+        return $this->laycanStart;
+    }
+
+    public function getSqlLaycanStart(): ?string
+    {
+        return $this->laycanStart?->format('Y-m-d');
     }
 
     public function setLaycanEnd(\DateTimeImmutable|string|null $date): static
     {
-        if (is_string($date)) {
-            $this->laycanEnd = new \DateTimeImmutable($date);
-        } else {
-            $this->laycanEnd = $date;
-        }
+        $this->laycanEnd = DateUtils::makeDateTimeImmutable($date);
 
         return $this;
     }
 
-    /**
-     * @param bool $sqlFormat 
-     * 
-     * @return \DateTimeImmutable|string|null 
-     * 
-     * @phpstan-return ($sqlFormat is false ? \DateTimeImmutable|null :string|null)
-     */
-    public function getCpDate(bool $sqlFormat = false): \DateTimeImmutable|string|null
+    public function getLaycanEnd(): ?\DateTimeImmutable
     {
-        if (true === $sqlFormat) {
-            return $this->cpDate?->format("Y-m-d");
-        } else {
-            return $this->cpDate;
-        }
+        return $this->laycanEnd;
+    }
+
+    public function getSqlLaycanEnd(): ?string
+    {
+        return $this->laycanEnd?->format('Y-m-d');
     }
 
     public function setCpDate(\DateTimeImmutable|string|null $date): static
     {
-        if (is_string($date)) {
-            $this->cpDate = new \DateTimeImmutable($date);
-        } else {
-            $this->cpDate = $date;
-        }
+        $this->cpDate = DateUtils::makeDateTimeImmutable($date);
 
         return $this;
     }
 
-    public function getVesselName(): string
+    public function getCpDate(): ?\DateTimeImmutable
     {
-        return $this->vesselName;
+        return $this->cpDate;
+    }
+
+    public function getSqlCpDate(): ?string
+    {
+        return $this->cpDate?->format('Y-m-d');
     }
 
     public function setVesselName(string $vesselName): static
@@ -150,9 +116,9 @@ class Charter extends AbstractEntity
         return $this;
     }
 
-    public function getCharterer(): ?ThirdParty
+    public function getVesselName(): string
     {
-        return $this->charterer;
+        return $this->vesselName;
     }
 
     public function setCharterer(?ThirdParty $charterer): static
@@ -162,9 +128,9 @@ class Charter extends AbstractEntity
         return $this;
     }
 
-    public function getShipOperator(): ?ThirdParty
+    public function getCharterer(): ?ThirdParty
     {
-        return $this->shipOperator;
+        return $this->charterer;
     }
 
     public function setShipOperator(?ThirdParty $shipOperator): static
@@ -174,9 +140,9 @@ class Charter extends AbstractEntity
         return $this;
     }
 
-    public function getShipbroker(): ?ThirdParty
+    public function getShipOperator(): ?ThirdParty
     {
-        return $this->shipbroker;
+        return $this->shipOperator;
     }
 
     public function setShipbroker(?ThirdParty $shipbroker): static
@@ -186,9 +152,9 @@ class Charter extends AbstractEntity
         return $this;
     }
 
-    public function getFreightPayed(): float
+    public function getShipbroker(): ?ThirdParty
     {
-        return $this->freightPayed;
+        return $this->shipbroker;
     }
 
     public function setFreightPayed(float $freightPayed): static
@@ -198,9 +164,9 @@ class Charter extends AbstractEntity
         return $this;
     }
 
-    public function getFreightSold(): float
+    public function getFreightPayed(): float
     {
-        return $this->freightSold;
+        return $this->freightPayed;
     }
 
     public function setFreightSold(float $freightSold): static
@@ -210,9 +176,9 @@ class Charter extends AbstractEntity
         return $this;
     }
 
-    public function getDemurragePayed(): float
+    public function getFreightSold(): float
     {
-        return $this->demurragePayed;
+        return $this->freightSold;
     }
 
     public function setDemurragePayed(float $demurragePayed): static
@@ -222,9 +188,9 @@ class Charter extends AbstractEntity
         return $this;
     }
 
-    public function getDemurrageSold(): float
+    public function getDemurragePayed(): float
     {
-        return $this->demurrageSold;
+        return $this->demurragePayed;
     }
 
     public function setDemurrageSold(float $demurrageSold): static
@@ -234,9 +200,9 @@ class Charter extends AbstractEntity
         return $this;
     }
 
-    public function getComments(): string
+    public function getDemurrageSold(): float
     {
-        return $this->comments;
+        return $this->demurrageSold;
     }
 
     public function setComments(string $comments): static
@@ -246,9 +212,9 @@ class Charter extends AbstractEntity
         return $this;
     }
 
-    public function isArchive(): bool
+    public function getComments(): string
     {
-        return $this->archive;
+        return $this->comments;
     }
 
     public function setArchive(int|bool $archive): static
@@ -258,12 +224,9 @@ class Charter extends AbstractEntity
         return $this;
     }
 
-    /**
-     * @return Collection<CharterLeg>
-     */
-    public function getLegs(): Collection
+    public function isArchive(): bool
     {
-        return $this->legs;
+        return $this->archive;
     }
 
     /**
@@ -276,6 +239,14 @@ class Charter extends AbstractEntity
         );
 
         return $this;
+    }
+
+    /**
+     * @return Collection<CharterLeg>
+     */
+    public function getLegs(): Collection
+    {
+        return $this->legs;
     }
 
     public function addLeg(CharterLeg $leg): static
@@ -291,9 +262,9 @@ class Charter extends AbstractEntity
         return [
             "id" => $this->id,
             "statut" => $this->getStatus(),
-            "lc_debut" => $this->getLaycanStart()?->format("Y-m-d"),
-            "lc_fin" => $this->getLaycanEnd()?->format("Y-m-d"),
-            "cp_date" => $this->getCpDate()?->format("Y-m-d"),
+            "lc_debut" => $this->getLaycanStart()?->format('Y-m-d'),
+            "lc_fin" => $this->getLaycanEnd()?->format('Y-m-d'),
+            "cp_date" => $this->getCpDate()?->format('Y-m-d'),
             "navire" => $this->getVesselName(),
             "affreteur" => $this->getCharterer()?->getId(),
             "armateur" => $this->getShipOperator()?->getId(),

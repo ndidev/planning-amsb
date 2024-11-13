@@ -7,12 +7,11 @@ declare(strict_types=1);
 namespace App\Entity\Shipping;
 
 use App\Core\Component\Collection;
+use App\Core\Component\DateUtils;
 use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
 use App\Entity\Port;
 use App\Entity\ThirdParty;
-use App\Service\PortService;
-use App\Service\ThirdPartyService;
 
 class ShippingCall extends AbstractEntity
 {
@@ -100,13 +99,9 @@ class ShippingCall extends AbstractEntity
         return $this->voyage;
     }
 
-    public function setShipOperator(ThirdParty|int|null $shipOperator): static
+    public function setShipOperator(?ThirdParty $shipOperator): static
     {
-        if (is_int($shipOperator)) {
-            $this->shipOperator = (new ThirdPartyService())->getThirdParty($shipOperator);
-        } else {
-            $this->shipOperator = $shipOperator;
-        }
+        $this->shipOperator = $shipOperator;
 
         return $this;
     }
@@ -118,11 +113,7 @@ class ShippingCall extends AbstractEntity
 
     public function setEtaDate(\DateTimeImmutable|string|null $etaDate): static
     {
-        if (is_string($etaDate)) {
-            $this->etaDate = new \DateTimeImmutable($etaDate);
-        } else {
-            $this->etaDate = $etaDate;
-        }
+        $this->etaDate = DateUtils::makeDateTimeImmutable($etaDate);
 
         return $this;
     }
@@ -146,11 +137,7 @@ class ShippingCall extends AbstractEntity
 
     public function setNorDate(\DateTimeImmutable|string|null $norDate): static
     {
-        if (is_string($norDate)) {
-            $this->norDate = new \DateTimeImmutable($norDate);
-        } else {
-            $this->norDate = $norDate;
-        }
+        $this->norDate = DateUtils::makeDateTimeImmutable($norDate);
 
         return $this;
     }
@@ -174,11 +161,7 @@ class ShippingCall extends AbstractEntity
 
     public function setPobDate(\DateTimeImmutable|string|null $pobDate): static
     {
-        if (is_string($pobDate)) {
-            $this->pobDate = new \DateTimeImmutable($pobDate);
-        } else {
-            $this->pobDate = $pobDate;
-        }
+        $this->pobDate = DateUtils::makeDateTimeImmutable($pobDate);
 
         return $this;
     }
@@ -202,11 +185,7 @@ class ShippingCall extends AbstractEntity
 
     public function setEtbDate(\DateTimeImmutable|string|null $etbDate): static
     {
-        if (is_string($etbDate)) {
-            $this->etbDate = new \DateTimeImmutable($etbDate);
-        } else {
-            $this->etbDate = $etbDate;
-        }
+        $this->etbDate = DateUtils::makeDateTimeImmutable($etbDate);
 
         return $this;
     }
@@ -230,11 +209,7 @@ class ShippingCall extends AbstractEntity
 
     public function setOpsDate(\DateTimeImmutable|string|null $opsDate): static
     {
-        if (is_string($opsDate)) {
-            $this->opsDate = new \DateTimeImmutable($opsDate);
-        } else {
-            $this->opsDate = $opsDate;
-        }
+        $this->opsDate = DateUtils::makeDateTimeImmutable($opsDate);
 
         return $this;
     }
@@ -258,11 +233,7 @@ class ShippingCall extends AbstractEntity
 
     public function setEtcDate(\DateTimeImmutable|string|null $etcDate): static
     {
-        if (is_string($etcDate)) {
-            $this->etcDate = new \DateTimeImmutable($etcDate);
-        } else {
-            $this->etcDate = $etcDate;
-        }
+        $this->etcDate = DateUtils::makeDateTimeImmutable($etcDate);
 
         return $this;
     }
@@ -286,11 +257,7 @@ class ShippingCall extends AbstractEntity
 
     public function setEtdDate(\DateTimeImmutable|string|null $etdDate): static
     {
-        if (is_string($etdDate)) {
-            $this->etdDate = new \DateTimeImmutable($etdDate);
-        } else {
-            $this->etdDate = $etdDate;
-        }
+        $this->etdDate = DateUtils::makeDateTimeImmutable($etdDate);
 
         return $this;
     }
@@ -336,13 +303,9 @@ class ShippingCall extends AbstractEntity
         return $this->departureDraft;
     }
 
-    public function setLastPort(Port|string|null $lastPort): static
+    public function setLastPort(?Port $lastPort): static
     {
-        if (is_string($lastPort)) {
-            $this->lastPort = (new PortService())->getPort($lastPort);
-        } else {
-            $this->lastPort = $lastPort;
-        }
+        $this->lastPort = $lastPort;
 
         return $this;
     }
@@ -352,13 +315,9 @@ class ShippingCall extends AbstractEntity
         return $this->lastPort;
     }
 
-    public function setNextPort(Port|string|null $nextPort): static
+    public function setNextPort(?Port $nextPort): static
     {
-        if (is_string($nextPort)) {
-            $this->nextPort = (new PortService())->getPort($nextPort);
-        } else {
-            $this->nextPort = $nextPort;
-        }
+        $this->nextPort = $nextPort;
 
         return $this;
     }

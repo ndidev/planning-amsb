@@ -10,7 +10,7 @@ namespace App\Core\Component;
  * Convertit une couleur RGB en couleur hexadécimal ou vice versa
  * Utilisé dans la génération PDF vrac (pour les marchandises)
  */
-class ColorConverter
+final class ColorConverter
 {
     /**
      * Conversion RGB vers hexadécimal.

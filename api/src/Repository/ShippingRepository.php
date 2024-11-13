@@ -75,6 +75,25 @@ use App\Service\ShippingService;
  *                                 fin: string
  *                               }>
  * 
+ * @phpstan-type ShippingStatsSummaryArray list<array{
+ *                                                id: int,
+ *                                                date: string
+ *                                              }>
+ * 
+ * @phpstan-type ShippingStatsDetailsArray list<array{
+ *                                           id: int,
+ *                                           navire: string,
+ *                                           ops_date: ?string,
+ *                                           etc_date: ?string,
+ *                                           marchandise: string,
+ *                                           client: string,
+ *                                           tonnage_bl: ?float,
+ *                                           tonnage_outturn: ?float,
+ *                                           cubage_bl: ?float,
+ *                                           cubage_outturn: ?float,
+ *                                           nombre_bl: ?float,
+ *                                           nombre_outturn: ?float,
+ *                                         }> 
  */
 final class ShippingRepository extends Repository
 {
@@ -100,7 +119,7 @@ final class ShippingRepository extends Repository
      */
     public function fetchAllCalls(bool $archives = false): Collection
     {
-        $yesterday = (new \DateTime())->sub(new \DateInterval("P1D"))->format("Y-m-d");
+        $yesterday = (new \DateTime())->sub(new \DateInterval("P1D"))->format('Y-m-d');
 
         if ($archives) {
             $callsStatement =
@@ -379,19 +398,19 @@ final class ShippingRepository extends Repository
             'navire' => $call->getShipName() ?: "TBN",
             'voyage' => $call->getVoyage(),
             'armateur' => $call->getShipOperator()?->getId(),
-            'eta_date' => $call->getEtaDate()?->format("Y-m-d"),
+            'eta_date' => $call->getEtaDate()?->format('Y-m-d'),
             'eta_heure' => ETAConverter::toDigits($call->getEtaTime()),
-            'nor_date' => $call->getNorDate()?->format("Y-m-d"),
+            'nor_date' => $call->getNorDate()?->format('Y-m-d'),
             'nor_heure' => $call->getNorTime(),
-            'pob_date' => $call->getPobDate()?->format("Y-m-d"),
+            'pob_date' => $call->getPobDate()?->format('Y-m-d'),
             'pob_heure' => $call->getPobTime(),
-            'etb_date' => $call->getEtbDate()?->format("Y-m-d"),
+            'etb_date' => $call->getEtbDate()?->format('Y-m-d'),
             'etb_heure' => $call->getEtbTime(),
-            'ops_date' => $call->getOpsDate()?->format("Y-m-d"),
+            'ops_date' => $call->getOpsDate()?->format('Y-m-d'),
             'ops_heure' => $call->getOpsTime(),
-            'etc_date' => $call->getEtcDate()?->format("Y-m-d"),
+            'etc_date' => $call->getEtcDate()?->format('Y-m-d'),
             'etc_heure' => $call->getEtcTime(),
-            'etd_date' => $call->getEtdDate()?->format("Y-m-d"),
+            'etd_date' => $call->getEtdDate()?->format('Y-m-d'),
             'etd_heure' => $call->getEtdTime(),
             'te_arrivee' => $call->getArrivalDraft(),
             'te_depart' => $call->getDepartureDraft(),
@@ -506,19 +525,19 @@ final class ShippingRepository extends Repository
             'navire' => $call->getShipName() ?: "TBN",
             'voyage' => $call->getVoyage(),
             'armateur' => $call->getShipOperator()?->getId(),
-            'eta_date' => $call->getEtaDate()?->format("Y-m-d"),
+            'eta_date' => $call->getEtaDate()?->format('Y-m-d'),
             'eta_heure' => ETAConverter::toDigits($call->getEtaTime()),
-            'nor_date' => $call->getNorDate()?->format("Y-m-d"),
+            'nor_date' => $call->getNorDate()?->format('Y-m-d'),
             'nor_heure' => $call->getNorTime(),
-            'pob_date' => $call->getPobDate()?->format("Y-m-d"),
+            'pob_date' => $call->getPobDate()?->format('Y-m-d'),
             'pob_heure' => $call->getPobTime(),
-            'etb_date' => $call->getEtbDate()?->format("Y-m-d"),
+            'etb_date' => $call->getEtbDate()?->format('Y-m-d'),
             'etb_heure' => $call->getEtbTime(),
-            'ops_date' => $call->getOpsDate()?->format("Y-m-d"),
+            'ops_date' => $call->getOpsDate()?->format('Y-m-d'),
             'ops_heure' => $call->getOpsTime(),
-            'etc_date' => $call->getEtcDate()?->format("Y-m-d"),
+            'etc_date' => $call->getEtcDate()?->format('Y-m-d'),
             'etc_heure' => $call->getEtcTime(),
-            'etd_date' => $call->getEtdDate()?->format("Y-m-d"),
+            'etd_date' => $call->getEtdDate()?->format('Y-m-d'),
             'etd_heure' => $call->getEtdTime(),
             'te_arrivee' => $call->getArrivalDraft(),
             'te_depart' => $call->getDepartureDraft(),
@@ -686,11 +705,12 @@ final class ShippingRepository extends Repository
             "endDate" => $filter->getSqlEndDate()
         ]);
 
-        $calls = $callsRequest->fetchAll();
+        /** @phpstan-var ShippingStatsSummaryArray $statsSummaryRaw */
+        $statsSummaryRaw = $callsRequest->fetchAll();
 
-        $stats = new ShippingStatsSummaryDTO($calls);
+        $statsSummary = new ShippingStatsSummaryDTO($statsSummaryRaw);
 
-        return $stats;
+        return $statsSummary;
     }
 
     /**
@@ -734,9 +754,10 @@ final class ShippingRepository extends Repository
             throw new DBException("Impossible de récupérer les détails des stats.");
         }
 
-        $calls = $callsRequest->fetchAll();
+        /** @phpstan-var ShippingStatsDetailsArray $statsDetailsRaw */
+        $statsDetailsRaw = $callsRequest->fetchAll();
 
-        $statsDetails = new ShippingStatsDetailsDTO($calls);
+        $statsDetails = new ShippingStatsDetailsDTO($statsDetailsRaw);
 
         return $statsDetails;
     }
@@ -788,8 +809,8 @@ final class ShippingRepository extends Repository
 
         $request = $this->mysql->prepare($statement);
         $request->execute([
-            "startDate" => $startDate->format("Y-m-d"),
-            "endDate" => $endDate->format("Y-m-d"),
+            "startDate" => $startDate->format('Y-m-d'),
+            "endDate" => $endDate->format('Y-m-d'),
         ]);
 
         /** @phpstan-var ShipsInOps */

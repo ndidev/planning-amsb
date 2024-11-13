@@ -54,13 +54,6 @@ class ThirdParty extends AbstractEntity
     private bool $isActive = true;
     private int $appointmentCount = 0;
 
-    public function __construct() {}
-
-    public function getShortName(): string
-    {
-        return $this->shortName;
-    }
-
     public function setShortName(string $shortName): static
     {
         $this->shortName = trim($shortName);
@@ -68,9 +61,9 @@ class ThirdParty extends AbstractEntity
         return $this;
     }
 
-    public function getFullName(): string
+    public function getShortName(): string
     {
-        return $this->fullName;
+        return $this->shortName;
     }
 
     public function setFullName(string $fullName): static
@@ -80,9 +73,9 @@ class ThirdParty extends AbstractEntity
         return $this;
     }
 
-    public function getAddressLine1(): string
+    public function getFullName(): string
     {
-        return $this->addressLine1;
+        return $this->fullName;
     }
 
     public function setAddressLine1(string $addressLine1): static
@@ -92,9 +85,9 @@ class ThirdParty extends AbstractEntity
         return $this;
     }
 
-    public function getAddressLine2(): string
+    public function getAddressLine1(): string
     {
-        return $this->addressLine2;
+        return $this->addressLine1;
     }
 
     public function setAddressLine2(string $addressLine2): static
@@ -104,9 +97,9 @@ class ThirdParty extends AbstractEntity
         return $this;
     }
 
-    public function getPostCode(): string
+    public function getAddressLine2(): string
     {
-        return $this->postCode;
+        return $this->addressLine2;
     }
 
     public function setPostCode(string $postCode): static
@@ -116,9 +109,9 @@ class ThirdParty extends AbstractEntity
         return $this;
     }
 
-    public function getCity(): string
+    public function getPostCode(): string
     {
-        return $this->city;
+        return $this->postCode;
     }
 
     public function setCity(string $city): static
@@ -128,9 +121,9 @@ class ThirdParty extends AbstractEntity
         return $this;
     }
 
-    public function getCountry(): ?Country
+    public function getCity(): string
     {
-        return $this->country;
+        return $this->city;
     }
 
     public function setCountry(?Country $country): static
@@ -140,9 +133,9 @@ class ThirdParty extends AbstractEntity
         return $this;
     }
 
-    public function getPhone(): string
+    public function getCountry(): ?Country
     {
-        return $this->phone;
+        return $this->country;
     }
 
     public function setPhone(string $phone): static
@@ -152,9 +145,9 @@ class ThirdParty extends AbstractEntity
         return $this;
     }
 
-    public function getComments(): string
+    public function getPhone(): string
     {
-        return $this->comments;
+        return $this->phone;
     }
 
     public function setComments(string $comments): static
@@ -162,6 +155,11 @@ class ThirdParty extends AbstractEntity
         $this->comments = $comments;
 
         return $this;
+    }
+
+    public function getComments(): string
+    {
+        return $this->comments;
     }
 
     /**
@@ -176,11 +174,6 @@ class ThirdParty extends AbstractEntity
         return $this->roles;
     }
 
-    public function getRole(string $role): bool
-    {
-        return $this->roles[$role] ?? false;
-    }
-
     /** 
      * @phpstan-param key-of<ThirdPartyRoles> $role
      */
@@ -191,14 +184,26 @@ class ThirdParty extends AbstractEntity
         return $this;
     }
 
+    public function getRole(string $role): bool
+    {
+        return $this->roles[$role] ?? false;
+    }
+
+    public function setNonEditable(bool|int $isNonEditable): static
+    {
+        $this->isNonEditable = (bool) $isNonEditable;
+
+        return $this;
+    }
+
     public function isNonEditable(): bool
     {
         return $this->isNonEditable;
     }
 
-    public function setIsNonEditable(bool|int $isNonEditable): static
+    public function setIsAgency(bool|int $isAgency): static
     {
-        $this->isNonEditable = (bool) $isNonEditable;
+        $this->isAgency = (bool) $isAgency;
 
         return $this;
     }
@@ -208,9 +213,14 @@ class ThirdParty extends AbstractEntity
         return $this->isAgency;
     }
 
-    public function setIsAgency(bool|int $isAgency): static
+    /**
+     * Set the logo.
+     * 
+     * @param string|null|false $logo Filename of the logo, or null if no logo, or false if the logo if left unchanged.
+     */
+    public function setLogo(string|null|false $logo): static
     {
-        $this->isAgency = (bool) $isAgency;
+        $this->logo = $logo;
 
         return $this;
     }
@@ -237,14 +247,9 @@ class ThirdParty extends AbstractEntity
         return $_ENV["LOGOS_URL"] . "/" . $this->logo;
     }
 
-    /**
-     * Set the logo.
-     * 
-     * @param string|null|false $logo Filename of the logo, or null if no logo, or false if the logo if left unchanged.
-     */
-    public function setLogo(string|null|false $logo): static
+    public function setActive(bool|int $isActive): static
     {
-        $this->logo = $logo;
+        $this->isActive = (bool) $isActive;
 
         return $this;
     }
@@ -254,9 +259,9 @@ class ThirdParty extends AbstractEntity
         return $this->isActive;
     }
 
-    public function setIsActive(bool|int $isActive): static
+    public function setAppointmentCount(int $appointmentCount): static
     {
-        $this->isActive = (bool) $isActive;
+        $this->appointmentCount = $appointmentCount;
 
         return $this;
     }
@@ -264,13 +269,6 @@ class ThirdParty extends AbstractEntity
     public function getAppointmentCount(): int
     {
         return $this->appointmentCount;
-    }
-
-    public function setAppointmentCount(int $appointmentCount): static
-    {
-        $this->appointmentCount = $appointmentCount;
-
-        return $this;
     }
 
     public function toArray(): array

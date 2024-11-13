@@ -8,6 +8,7 @@ namespace App\Entity;
 
 use App\Core\Auth\AccountStatus;
 use App\Core\Auth\UserRoles;
+use App\Core\Component\DateUtils;
 
 class UserAccount extends AbstractEntity
 {
@@ -24,7 +25,7 @@ class UserAccount extends AbstractEntity
     /**
      * Hash du mot de passe.
      */
-    private ?string $password = null;
+    private ?string $passwordHash = null;
 
     /**
      * `true` si le compte peut être utilisé pour se connecter (utilisateur normal).  
@@ -76,11 +77,6 @@ class UserAccount extends AbstractEntity
         $this->roles = new UserRoles();
     }
 
-    public function getUid(): ?string
-    {
-        return $this->uid;
-    }
-
     public function setUid(?string $uid): static
     {
         $this->uid = $uid;
@@ -88,9 +84,9 @@ class UserAccount extends AbstractEntity
         return $this;
     }
 
-    public function getLogin(): string
+    public function getUid(): ?string
     {
-        return $this->login;
+        return $this->uid;
     }
 
     public function setLogin(string $login): static
@@ -100,16 +96,21 @@ class UserAccount extends AbstractEntity
         return $this;
     }
 
-    public function getPassword(): ?string
+    public function getLogin(): string
     {
-        return $this->password;
+        return $this->login;
     }
 
-    public function setPassword(?string $password): static
+    public function setPasswordHash(?string $passwordHash): static
     {
-        $this->password = $password;
+        $this->passwordHash = $passwordHash;
 
         return $this;
+    }
+
+    public function getPasswordHash(): ?string
+    {
+        return $this->passwordHash;
     }
 
     public function setCanLogin(bool $canLogin): static
@@ -124,11 +125,6 @@ class UserAccount extends AbstractEntity
         return $this->canLogin;
     }
 
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
     public function setName(string $name): static
     {
         $this->name = $name;
@@ -136,9 +132,9 @@ class UserAccount extends AbstractEntity
         return $this;
     }
 
-    public function getLoginAttempts(): int
+    public function getName(): string
     {
-        return $this->loginAttempts;
+        return $this->name;
     }
 
     public function setLoginAttempts(int $loginAttempts): static
@@ -148,36 +144,26 @@ class UserAccount extends AbstractEntity
         return $this;
     }
 
-    /**
-     * @param bool $sqlFormat 
-     * 
-     * @return \DateTimeImmutable|string|null 
-     * 
-     * @phpstan-return ($sqlFormat is false ? \DateTimeImmutable|null :string|null)
-     */
-    public function getLastLogin(bool $sqlFormat = false): \DateTimeImmutable|string|null
+    public function getLoginAttempts(): int
     {
-        if (true === $sqlFormat) {
-            return $this->lastLogin?->format("Y-m-d H:i:s");
-        } else {
-            return $this->lastLogin;
-        }
+        return $this->loginAttempts;
     }
 
-    public function setLastLogin(\DateTimeImmutable|string|null $lastLogin): static
+    public function setLastLogin(\DateTimeImmutable|string|null $lastLoginDatetime): static
     {
-        if (is_string($lastLogin)) {
-            $this->lastLogin = new \DateTimeImmutable($lastLogin);
-        } else {
-            $this->lastLogin = $lastLogin;
-        }
+        $this->lastLogin = DateUtils::makeDateTimeImmutable($lastLoginDatetime);
 
         return $this;
     }
 
-    public function getStatus(): AccountStatus
+    public function getLastLogin(): ?\DateTimeImmutable
     {
-        return $this->status;
+        return $this->lastLogin;
+    }
+
+    public function getSqlLastLogin(): ?string
+    {
+        return $this->lastLogin?->format("Y-m-d H:i:s");
     }
 
     public function setStatus(AccountStatus|string $status): static
@@ -197,17 +183,9 @@ class UserAccount extends AbstractEntity
         return $this;
     }
 
-    public function getRoles(): UserRoles
+    public function getStatus(): AccountStatus
     {
-        return $this->roles;
-    }
-
-    /**
-     *  @return UserRoles::*
-     */
-    public function getRole(string $role): int
-    {
-        return $this->roles->$role;
+        return $this->status;
     }
 
     /**
@@ -224,33 +202,22 @@ class UserAccount extends AbstractEntity
         return $this;
     }
 
+    public function getRoles(): UserRoles
+    {
+        return $this->roles;
+    }
+
+    /**
+     *  @return UserRoles::*
+     */
+    public function getRole(string $role): int
+    {
+        return $this->roles->$role;
+    }
+
     public function setAdmin(bool $isAdmin): static
     {
         $this->roles->admin = (int) $isAdmin;
-
-        return $this;
-    }
-
-    public function getComments(): string
-    {
-        return $this->comments;
-    }
-
-    public function setComments(string $comments): static
-    {
-        $this->comments = $comments;
-
-        return $this;
-    }
-
-    public function getHistory(): string
-    {
-        return $this->history;
-    }
-
-    public function setHistory(string $history): static
-    {
-        $this->history = $history;
 
         return $this;
     }
@@ -263,17 +230,41 @@ class UserAccount extends AbstractEntity
         return $this->roles->admin >= UserRoles::ACCESS;
     }
 
+    public function setComments(string $comments): static
+    {
+        $this->comments = $comments;
+
+        return $this;
+    }
+
+    public function getComments(): string
+    {
+        return $this->comments;
+    }
+
+    public function setHistory(string $history): static
+    {
+        $this->history = $history;
+
+        return $this;
+    }
+
+    public function getHistory(): string
+    {
+        return $this->history;
+    }
+
     public function toArray(): array
     {
         return [
             "uid" => $this->getUid(),
             "login" => $this->getLogin(),
             "nom" => $this->getName(),
-            "roles" => $this->getRoles(),
+            "roles" => $this->getRoles()->toArray(),
             "statut" => $this->getStatus()->value,
             "commentaire" => $this->getComments(),
             "historique" => $this->getHistory(),
-            "last_connection" => $this->getLastLogin(true),
+            "last_connection" => $this->getSqlLastLogin(),
         ];
     }
 }

@@ -179,9 +179,9 @@ final class TimberAppointmentRepository extends Repository
             $this->mysql->beginTransaction();
             $request->execute([
                 'attente' => (int) $appointment->isOnHold(),
-                'date_rdv' => $appointment->getDate(true),
-                'heure_arrivee' => $appointment->getArrivalTime(true),
-                'heure_depart' => $appointment->getDepartureTime(true),
+                'date_rdv' => $appointment->getSqlDate(),
+                'heure_arrivee' => $appointment->getSqlArrivalTime(),
+                'heure_depart' => $appointment->getSqlDepartureTime(),
                 'chargement' => $appointment->getLoadingPlace()?->getId(),
                 'client' => $appointment->getCustomer()?->getId(),
                 'livraison' => $appointment->getDeliveryPlace()?->getId(),
@@ -240,9 +240,9 @@ final class TimberAppointmentRepository extends Repository
             $request = $this->mysql->prepare($statement);
             $request->execute([
                 'attente' => (int) $appointment->isOnHold(),
-                'date_rdv' => $appointment->getDate(true),
-                'heure_arrivee' => $appointment->getArrivalTime(true),
-                'heure_depart' => $appointment->getDepartureTime(true),
+                'date_rdv' => $appointment->getSqlDate(),
+                'heure_arrivee' => $appointment->getSqlArrivalTime(),
+                'heure_depart' => $appointment->getSqlDepartureTime(),
                 'chargement' => $appointment->getLoadingPlace()?->getId(),
                 'client' => $appointment->getCustomer()?->getId(),
                 'livraison' => $appointment->getDeliveryPlace()?->getId(),
@@ -573,8 +573,8 @@ final class TimberAppointmentRepository extends Repository
         $request = $this->mysql->prepare($statement);
 
         $request->execute([
-            "startDate" => $startDate->format("Y-m-d"),
-            "endDate" => $endDate->format("Y-m-d"),
+            "startDate" => $startDate->format('Y-m-d'),
+            "endDate" => $endDate->format('Y-m-d'),
         ]);
 
         $entriesRaw = $request->fetchAll();
@@ -783,8 +783,8 @@ final class TimberAppointmentRepository extends Repository
         $scheduledRequest = $this->mysql->prepare($scheduledStatement);
         $scheduledRequest->execute([
             "supplierId" => $supplier->getId(),
-            "startDate" => $startDate->format("Y-m-d"),
-            "endDate" => $endDate->format("Y-m-d"),
+            "startDate" => $startDate->format('Y-m-d'),
+            "endDate" => $endDate->format('Y-m-d'),
         ]);
         $scheduledAppointmentsRaw = $scheduledRequest->fetchAll();
 

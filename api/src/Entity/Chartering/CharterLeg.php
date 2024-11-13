@@ -6,11 +6,10 @@ declare(strict_types=1);
 
 namespace App\Entity\Chartering;
 
+use App\Core\Component\DateUtils;
 use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
 use App\Entity\Port;
-use App\Service\CharteringService;
-use App\Service\PortService;
 
 class CharterLeg extends AbstractEntity
 {
@@ -24,11 +23,6 @@ class CharterLeg extends AbstractEntity
     private string $quantity = '';
     private string $comments = '';
 
-    public function getCharter(): ?Charter
-    {
-        return $this->charter;
-    }
-
     public function setCharter(?Charter $charter): static
     {
         $this->charter = $charter;
@@ -36,29 +30,31 @@ class CharterLeg extends AbstractEntity
         return $this;
     }
 
-    /**
-     * @param bool $sqlFormat 
-     * 
-     * @return \DateTimeImmutable|string|null 
-     * 
-     * @phpstan-return ($sqlFormat is false ? \DateTimeImmutable|null :string|null)
-     */
-    public function getBlDate(bool $sqlFormat = false): \DateTimeImmutable|string|null
+    public function getCharter(): ?Charter
     {
-        if (true === $sqlFormat) {
-            return $this->blDate?->format("Y-m-d");
-        } else {
-            return $this->blDate;
-        }
+        return $this->charter;
     }
 
     public function setBlDate(\DateTimeImmutable|string|null $blDate): static
     {
-        if (is_string($blDate)) {
-            $this->blDate = new \DateTimeImmutable($blDate);
-        } else {
-            $this->blDate = $blDate;
-        }
+        $this->blDate = DateUtils::makeDateTimeImmutable($blDate);
+
+        return $this;
+    }
+
+    public function getBlDate(): ?\DateTimeImmutable
+    {
+        return $this->blDate;
+    }
+
+    public function getSqlBlDate(): ?string
+    {
+        return $this->blDate?->format('Y-m-d');
+    }
+
+    public function setPol(?Port $pol): static
+    {
+        $this->pol = $pol;
 
         return $this;
     }
@@ -68,13 +64,9 @@ class CharterLeg extends AbstractEntity
         return $this->pol;
     }
 
-    public function setPol(Port|string|null $pol): static
+    public function setPod(?Port $pod): static
     {
-        if (is_string($pol)) {
-            $this->pol = (new PortService())->getPort($pol);
-        } else {
-            $this->pol = $pol;
-        }
+        $this->pod = $pod;
 
         return $this;
     }
@@ -84,13 +76,9 @@ class CharterLeg extends AbstractEntity
         return $this->pod;
     }
 
-    public function setPod(Port|string|null $pod): static
+    public function setCommodity(string $commodity): static
     {
-        if (is_string($pod)) {
-            $this->pod = (new PortService())->getPort($pod);
-        } else {
-            $this->pod = $pod;
-        }
+        $this->commodity = $commodity;
 
         return $this;
     }
@@ -100,9 +88,9 @@ class CharterLeg extends AbstractEntity
         return $this->commodity;
     }
 
-    public function setCommodity(string $commodity): static
+    public function setQuantity(string $quantity): static
     {
-        $this->commodity = $commodity;
+        $this->quantity = $quantity;
 
         return $this;
     }
@@ -112,9 +100,9 @@ class CharterLeg extends AbstractEntity
         return $this->quantity;
     }
 
-    public function setQuantity(string $quantity): static
+    public function setComments(string $comments): static
     {
-        $this->quantity = $quantity;
+        $this->comments = $comments;
 
         return $this;
     }
@@ -124,20 +112,13 @@ class CharterLeg extends AbstractEntity
         return $this->comments;
     }
 
-    public function setComments(string $comments): static
-    {
-        $this->comments = $comments;
-
-        return $this;
-    }
-
     public function toArray(): array
     {
         return [
             'id' => $this->getId(),
             'charter' => $this->getCharter()?->getId(),
             'bl_date' => $this->getBlDate()?->format('Y-m-d'),
-            'pol' => $this->getPod()?->getLocode(),
+            'pol' => $this->getPol()?->getLocode(),
             'pod' => $this->getPod()?->getLocode(),
             'marchandise' => $this->getCommodity(),
             'quantite' => $this->getQuantity(),

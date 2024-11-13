@@ -13,6 +13,7 @@ logos/
 
 # PHPUnit
 .phpunit.cache
+/api/public/tests
 
 # Local config files
 phpstan.neon

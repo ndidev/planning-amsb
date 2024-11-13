@@ -150,7 +150,7 @@ class TimberRegistryEntryDTO
 
     public function getDeliveryNoteNumber(): string
     {
-        return (string) $this->deliveryNoteNumber;
+        return $this->deliveryNoteNumber;
     }
 
     public function setTransport(?string $transport): static

@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Entity\Timber;
 
+use App\Core\Component\DateUtils;
 use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
 use App\Entity\ThirdParty;
@@ -30,11 +31,6 @@ class TimberAppointment extends AbstractEntity
     private string $publicComment = "";
     private string $privateComment = "";
 
-    public function isOnHold(): bool
-    {
-        return $this->isOnHold;
-    }
-
     public function setOnHold(bool|int $attente): static
     {
         $this->isOnHold = (bool) $attente;
@@ -42,69 +38,60 @@ class TimberAppointment extends AbstractEntity
         return $this;
     }
 
-    public function getDate(bool $sqlFormat = false): \DateTimeImmutable|string|null
+    public function isOnHold(): bool
     {
-        if (true === $sqlFormat && null !== $this->date) {
-            return $this->date->format("Y-m-d");
-        } else {
-            return $this->date;
-        }
+        return $this->isOnHold;
     }
 
     public function setDate(\DateTimeImmutable|string|null $date): static
     {
-        if (is_string($date)) {
-            $this->date = new \DateTimeImmutable($date);
-        } else {
-            $this->date = $date;
-        }
+        $this->date = DateUtils::makeDateTimeImmutable($date);
 
         return $this;
     }
 
-    public function getArrivalTime(bool $sqlFormat = false): \DateTimeImmutable|string|null
+    public function getDate(): ?\DateTimeImmutable
     {
-        if (true === $sqlFormat) {
-            return $this->arrivalTime?->format("H:i");
-        } else {
-            return $this->arrivalTime;
-        }
+        return $this->date;
+    }
+
+    public function getSqlDate(): ?string
+    {
+        return $this->date?->format('Y-m-d');
     }
 
     public function setArrivalTime(\DateTimeImmutable|string|null $arrivalTime): static
     {
-        if (is_string($arrivalTime)) {
-            $this->arrivalTime = new \DateTimeImmutable($arrivalTime);
-        } else {
-            $this->arrivalTime = $arrivalTime;
-        }
+        $this->arrivalTime = DateUtils::makeDateTimeImmutable($arrivalTime);
 
         return $this;
     }
 
-    public function getDepartureTime(bool $sqlFormat = false): \DateTimeImmutable|string|null
+    public function getArrivalTime(): ?\DateTimeImmutable
     {
-        if (true === $sqlFormat) {
-            return $this->departureTime?->format("H:i");
-        } else {
-            return $this->departureTime;
-        }
+        return $this->arrivalTime;
+    }
+
+    public function getSqlArrivalTime(): ?string
+    {
+        return $this->arrivalTime?->format('H:i');
     }
 
     public function setDepartureTime(\DateTimeImmutable|string|null $departureTime): static
     {
-        if (is_string($departureTime)) {
-            $this->departureTime = new \DateTimeImmutable($departureTime);
-        } else {
-            $this->departureTime = $departureTime;
-        }
+        $this->departureTime = DateUtils::makeDateTimeImmutable($departureTime);
 
         return $this;
     }
 
-    public function getSupplier(): ?ThirdParty
+    public function getDepartureTime(): ?\DateTimeImmutable
     {
-        return $this->supplier;
+        return $this->departureTime;
+    }
+
+    public function getSqlDepartureTime(): ?string
+    {
+        return $this->departureTime?->format('H:i');
     }
 
     public function setSupplier(?ThirdParty $supplier): static
@@ -114,9 +101,9 @@ class TimberAppointment extends AbstractEntity
         return $this;
     }
 
-    public function getLoadingPlace(): ?ThirdParty
+    public function getSupplier(): ?ThirdParty
     {
-        return $this->loadingPlace;
+        return $this->supplier;
     }
 
     public function setLoadingPlace(?ThirdParty $loadingPlace): static
@@ -126,9 +113,9 @@ class TimberAppointment extends AbstractEntity
         return $this;
     }
 
-    public function getDeliveryPlace(): ?ThirdParty
+    public function getLoadingPlace(): ?ThirdParty
     {
-        return $this->deliveryPlace;
+        return $this->loadingPlace;
     }
 
     public function setDeliveryPlace(?ThirdParty $deliveryPlace): static
@@ -138,9 +125,9 @@ class TimberAppointment extends AbstractEntity
         return $this;
     }
 
-    public function getCustomer(): ?ThirdParty
+    public function getDeliveryPlace(): ?ThirdParty
     {
-        return $this->customer;
+        return $this->deliveryPlace;
     }
 
     public function setCustomer(?ThirdParty $customer): static
@@ -150,9 +137,9 @@ class TimberAppointment extends AbstractEntity
         return $this;
     }
 
-    public function getCarrier(): ?ThirdParty
+    public function getCustomer(): ?ThirdParty
     {
-        return $this->carrier;
+        return $this->customer;
     }
 
     public function setCarrier(?ThirdParty $carrier): static
@@ -162,9 +149,9 @@ class TimberAppointment extends AbstractEntity
         return $this;
     }
 
-    public function getTransportBroker(): ?ThirdParty
+    public function getCarrier(): ?ThirdParty
     {
-        return $this->transportBroker;
+        return $this->carrier;
     }
 
     public function setTransportBroker(?ThirdParty $transportBroker): static
@@ -174,9 +161,9 @@ class TimberAppointment extends AbstractEntity
         return $this;
     }
 
-    public function isReady(): bool
+    public function getTransportBroker(): ?ThirdParty
     {
-        return $this->isReady;
+        return $this->transportBroker;
     }
 
     public function setReady(bool|int $isReady): static
@@ -186,9 +173,9 @@ class TimberAppointment extends AbstractEntity
         return $this;
     }
 
-    public function isCharteringConfirmationSent(): bool
+    public function isReady(): bool
     {
-        return $this->charteringConfirmationSent;
+        return $this->isReady;
     }
 
     public function setCharteringConfirmationSent(bool|int $charteringConfirmationSent): static
@@ -198,9 +185,9 @@ class TimberAppointment extends AbstractEntity
         return $this;
     }
 
-    public function getDeliveryNoteNumber(): string
+    public function isCharteringConfirmationSent(): bool
     {
-        return $this->deliveryNoteNumber;
+        return $this->charteringConfirmationSent;
     }
 
     public function setDeliveryNoteNumber(string $deliveryNoteNumber): static
@@ -210,9 +197,9 @@ class TimberAppointment extends AbstractEntity
         return $this;
     }
 
-    public function getPublicComment(): string
+    public function getDeliveryNoteNumber(): string
     {
-        return $this->publicComment;
+        return $this->deliveryNoteNumber;
     }
 
     public function setPublicComment(string $publicComment): static
@@ -222,9 +209,9 @@ class TimberAppointment extends AbstractEntity
         return $this;
     }
 
-    public function getPrivateComment(): string
+    public function getPublicComment(): string
     {
-        return $this->privateComment;
+        return $this->publicComment;
     }
 
     public function setPrivateComment(string $privateComment): static
@@ -234,14 +221,19 @@ class TimberAppointment extends AbstractEntity
         return $this;
     }
 
+    public function getPrivateComment(): string
+    {
+        return $this->privateComment;
+    }
+
     public function toArray(): array
     {
         return [
             "id" => $this->getId(),
             "attente" => $this->isOnHold(),
-            "date_rdv" => $this->getDate(true),
-            "heure_arrivee" => $this->getArrivalTime(true),
-            "heure_depart" => $this->getDepartureTime(true),
+            "date_rdv" => $this->getDate()?->format('Y-m-d'),
+            "heure_arrivee" => $this->getArrivalTime()?->format('H:i'),
+            "heure_depart" => $this->getDepartureTime()?->format('H:i'),
             "fournisseur" => $this->getSupplier()?->getId(),
             "chargement" => $this->getLoadingPlace()?->getId(),
             "livraison" => $this->getDeliveryPlace()?->getId(),

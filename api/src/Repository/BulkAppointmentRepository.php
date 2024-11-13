@@ -158,8 +158,8 @@ final class BulkAppointmentRepository extends Repository
 
         $this->mysql->beginTransaction();
         $request->execute([
-            'date_rdv' => $appointment->getDate(true),
-            'heure' => $appointment->getTime(true),
+            'date_rdv' => $appointment->getSqlDate(),
+            'heure' => $appointment->getSqlTime(),
             'produit' => $appointment->getProduct()?->getId(),
             'qualite' => $appointment->getQuality()?->getId(),
             'quantite' => $appointment->getQuantity()?->getValue(),
@@ -209,8 +209,8 @@ final class BulkAppointmentRepository extends Repository
 
         $request = $this->mysql->prepare($statement);
         $request->execute([
-            'date_rdv' => $appointment->getDate(true),
-            'heure' => $appointment->getTime(true),
+            'date_rdv' => $appointment->getSqlDate(),
+            'heure' => $appointment->getSqlTime(),
             'produit' => $appointment->getProduct()?->getId(),
             'qualite' => $appointment->getQuality()?->getId(),
             'quantite' => $appointment->getQuantity()?->getValue(),
@@ -315,8 +315,8 @@ final class BulkAppointmentRepository extends Repository
         $request = $this->mysql->prepare($statement);
         $request->execute([
             "supplierId" => $supplier->getId(),
-            "startDate" => $startDate->format("Y-m-d"),
-            "endDate" => $endDate->format("Y-m-d"),
+            "startDate" => $startDate->format('Y-m-d'),
+            "endDate" => $endDate->format('Y-m-d'),
         ]);
 
         /** @phpstan-var BulkAppointmentArray[] $appointmentsRaw */
