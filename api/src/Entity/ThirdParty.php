@@ -6,22 +6,9 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Core\Array\Environment;
 use App\Core\Traits\IdentifierTrait;
 
-/**
- * @phpstan-type ThirdPartyRoles array{
- *                                 bois_fournisseur: bool,
- *                                 bois_client: bool,
- *                                 bois_transporteur: bool,
- *                                 bois_affreteur: bool,
- *                                 vrac_fournisseur: bool,
- *                                 vrac_client: bool,
- *                                 vrac_transporteur: bool,
- *                                 maritime_armateur: bool,
- *                                 maritime_affreteur: bool,
- *                                 maritime_courtier: bool,
- *                               }
- */
 class ThirdParty extends AbstractEntity
 {
     use IdentifierTrait;
@@ -35,7 +22,7 @@ class ThirdParty extends AbstractEntity
     private ?Country $country = null;
     private string $phone = '';
     private string $comments = '';
-    /** @phpstan-var ThirdPartyRoles $roles */
+    /** @var array<string, bool> $roles */
     private array $roles = [
         "bois_fournisseur" => false,
         "bois_client" => false,
@@ -166,17 +153,12 @@ class ThirdParty extends AbstractEntity
      * Get the roles.
      * 
      * @return array<string, bool>
-     * 
-     * @phpstan-return ThirdPartyRoles
      */
     public function getRoles(): array
     {
         return $this->roles;
     }
 
-    /** 
-     * @phpstan-param key-of<ThirdPartyRoles> $role
-     */
     public function setRole(string $role, bool|int $value): static
     {
         $this->roles[$role] = (bool) $value;
@@ -244,7 +226,7 @@ class ThirdParty extends AbstractEntity
             return null;
         }
 
-        return $_ENV["LOGOS_URL"] . "/" . $this->logo;
+        return Environment::getString('LOGOS_URL') . "/" . $this->logo;
     }
 
     public function setActive(bool|int $isActive): static

@@ -14,17 +14,18 @@ use App\Service\BulkService;
 
 /**
  * @phpstan-type BulkProductArray array{
- *                                  id?: int,
- *                                  nom?: string,
- *                                  couleur?: string,
- *                                  unite?: string,
+ *                                  id: int,
+ *                                  nom: string,
+ *                                  couleur: string,
+ *                                  unite: string,
  *                                  qualites?: BulkQualityArray[],
  *                                }
  * 
  * @phpstan-type BulkQualityArray array{
- *                                  id?: int,
- *                                  nom?: string,
- *                                  couleur?: string,
+ *                                  id: int,
+ *                                  produit: int,
+ *                                  nom: string,
+ *                                  couleur: string,
  *                                }
  */
 final class BulkProductRepository extends Repository
@@ -69,7 +70,7 @@ final class BulkProductRepository extends Repository
      * 
      * @return Collection<BulkProduct> List of bulk products.
      */
-    public function getProducts(): Collection
+    public function fetchProducts(): Collection
     {
         $productsStatement = "SELECT * FROM vrac_produits ORDER BY nom";
         $qualitiesStatement = "SELECT * FROM vrac_qualites ORDER BY nom";
@@ -81,6 +82,7 @@ final class BulkProductRepository extends Repository
             throw new DBException("Impossible de récupérer les produits vrac.");
         }
 
+        /** @phpstan-var BulkProductArray[] */
         $productsRaw = $productsRequest->fetchAll();
 
         // Qualities
@@ -90,6 +92,7 @@ final class BulkProductRepository extends Repository
             throw new DBException("Impossible de récupérer les qualités vrac.");
         }
 
+        /** @phpstan-var BulkQualityArray[] */
         $qualitiesRaw = $qualitiesRequest->fetchAll();
 
         $products = \array_map(
@@ -120,7 +123,7 @@ final class BulkProductRepository extends Repository
      * 
      * @return ?BulkProduct Fetched product.
      */
-    public function getProduct(int $id): ?BulkProduct
+    public function fetchProduct(int $id): ?BulkProduct
     {
         $cachedProducts = array_values(array_filter(
             static::$productsCache,
@@ -149,10 +152,12 @@ final class BulkProductRepository extends Repository
 
         if (!\is_array($productRaw)) return null;
 
+        /** @phpstan-var BulkProductArray $productRaw */
+
         $product = $this->bulkService->makeProductFromDatabase($productRaw);
 
         // Qualities
-        $qualities = $this->getProductQualities($id);
+        $qualities = $this->fetchProductQualities($id);
 
         $product->setQualities($qualities);
 
@@ -168,7 +173,7 @@ final class BulkProductRepository extends Repository
      * 
      * @return BulkQuality[] Fetched qualities.
      */
-    public function getProductQualities(int $productId): array
+    public function fetchProductQualities(int $productId): array
     {
         $qualitiesStatement =
             "SELECT
@@ -180,6 +185,8 @@ final class BulkProductRepository extends Repository
 
         $qualitiesRequest = $this->mysql->prepare($qualitiesStatement);
         $qualitiesRequest->execute(["productId" => $productId]);
+
+        /** @phpstan-var BulkQualityArray[] */
         $qualitiesRaw = $qualitiesRequest->fetchAll();
 
         $qualities = \array_map(
@@ -200,7 +207,7 @@ final class BulkProductRepository extends Repository
      * 
      * @return ?BulkQuality Fetched quality.
      */
-    public function getQuality(int $id): ?BulkQuality
+    public function fetchQuality(int $id): ?BulkQuality
     {
         $cachedQualities = array_values(array_filter(
             static::$qualitiesCache,
@@ -227,6 +234,8 @@ final class BulkProductRepository extends Repository
         $qualityRaw = $qualityRequest->fetch();
 
         if (!\is_array($qualityRaw)) return null;
+
+        /** @phpstan-var BulkQualityArray $qualityRaw */
 
         $quality = $this->bulkService->makeQualityFromDatabase($qualityRaw);
 
@@ -284,7 +293,7 @@ final class BulkProductRepository extends Repository
         }
 
         /** @var BulkProduct */
-        $newProduct = $this->getProduct($lastInsertId);
+        $newProduct = $this->fetchProduct($lastInsertId);
 
         return $newProduct;
     }
@@ -370,7 +379,7 @@ final class BulkProductRepository extends Repository
         $id = $product->getId();
 
         /** @var BulkProduct */
-        $updatedProduct = $this->getProduct($id);
+        $updatedProduct = $this->fetchProduct($id);
 
         return $updatedProduct;
     }

@@ -28,17 +28,17 @@ final class CharteringFilterDTO
      */
     public function __construct(HTTPRequestQuery $query)
     {
-        $this->startDate = $query->getParam('date_debut', self::DEFAULT_START_DATE, 'datetime');
+        $this->startDate = $query->getDatetime('date_debut', self::DEFAULT_START_DATE);
 
-        $this->endDate = $query->getParam('date_fin', self::DEFAULT_END_DATE, 'datetime');
+        $this->endDate = $query->getDatetime('date_fin', self::DEFAULT_END_DATE);
 
-        $this->statusFilter = trim($query->getParam('statut', ''), ',');
+        $this->statusFilter = trim($query->getString('statut'), ',');
 
-        $this->chartererFilter = trim($query->getParam('affreteur', ''), ',');
+        $this->chartererFilter = trim($query->getString('affreteur'), ',');
 
-        $this->ownerFilter = trim($query->getParam('armateur', ''), ',');
+        $this->ownerFilter = trim($query->getString('armateur'), ',');
 
-        $this->brokerFilter = trim($query->getParam('courtier', ''), ',');
+        $this->brokerFilter = trim($query->getString('courtier'), ',');
 
         $this->isArchive = $query->isSet('archives');
     }

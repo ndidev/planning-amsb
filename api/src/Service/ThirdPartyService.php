@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\ServerException;
 use App\Core\HTTP\HTTPRequestBody;
@@ -15,7 +16,6 @@ use App\Repository\ThirdPartyRepository;
 
 /**
  * @phpstan-import-type ThirdPartyArray from \App\Repository\ThirdPartyRepository
- * @phpstan-import-type ThirdPartyRoles from \App\Entity\ThirdParty
  */
 final class ThirdPartyService
 {
@@ -39,30 +39,41 @@ final class ThirdPartyService
      */
     public function makeThirdPartyFromDatabase(array $rawData): ThirdParty
     {
-        $thirdParty = (new ThirdParty())
-            ->setId($rawData["id"] ?? null)
-            ->setShortName($rawData["nom_court"] ?? '')
-            ->setFullName($rawData["nom_complet"] ?? '')
-            ->setAddressLine1($rawData["adresse_ligne_1"] ?? '')
-            ->setAddressLine2($rawData["adresse_ligne_2"] ?? '')
-            ->setPostCode($rawData["cp"] ?? '')
-            ->setCity($rawData["ville"] ?? '')
-            ->setCountry($this->countryService->getCountry($rawData["pays"] ?? ''))
-            ->setPhone($rawData["telephone"] ?? '')
-            ->setComments($rawData["commentaire"] ?? '')
-            ->setNonEditable($rawData["non_modifiable"] ?? false)
-            ->setIsAgency($rawData["lie_agence"] ?? false)
-            ->setLogo($rawData["logo"] ?? false)
-            ->setActive($rawData["actif"] ?? true);
+        $rawDataAH = new ArrayHandler($rawData);
 
-        $roles = \json_decode($rawData["roles"] ?? "{}", true);
+        $thirdParty = (new ThirdParty())
+            ->setId($rawDataAH->getInt('id'))
+            ->setShortName($rawDataAH->getString('nom_court'))
+            ->setFullName($rawDataAH->getString('nom_complet'))
+            ->setAddressLine1($rawDataAH->getString('adresse_ligne_1'))
+            ->setAddressLine2($rawDataAH->getString('adresse_ligne_2'))
+            ->setPostCode($rawDataAH->getString('cp'))
+            ->setCity($rawDataAH->getString('ville'))
+            ->setCountry($this->countryService->getCountry($rawDataAH->getString('pays')))
+            ->setPhone($rawDataAH->getString('telephone'))
+            ->setComments($rawDataAH->getString('commentaire'))
+            ->setNonEditable($rawDataAH->getBool('non_modifiable', false))
+            ->setIsAgency($rawDataAH->getBool('lie_agence', false))
+            ->setActive($rawDataAH->getBool('actif', true));
+
+        // Logo
+        $logoData = $rawDataAH->get('logo');
+        if (\is_string($logoData) || null === $logoData) {
+            $thirdParty->setLogo($logoData);
+        }
+
+        // Roles
+        $rolesString = $rawDataAH->getString('roles', '{}', false);
+        $roles = \json_decode($rolesString, true);
 
         if (!\is_array($roles)) {
             $roles = [];
         }
 
+        $rolesAH = new ArrayHandler($roles);
+
         foreach ($thirdParty->getRoles() as $role => $default) {
-            $thirdParty->setRole($role, $roles[$role] ?? $default);
+            $thirdParty->setRole($role, $rolesAH->getBool($role, $default));
         }
 
         return $thirdParty;
@@ -90,14 +101,23 @@ final class ThirdPartyService
             ->setComments($requestBody->getString('commentaire'))
             ->setNonEditable($requestBody->getBool('non_modifiable'))
             ->setIsAgency($requestBody->getBool('lie_agence'))
-            ->setLogo($this->saveLogo($requestBody->getParam('logo')))
             ->setActive($requestBody->getBool('actif', true));
 
+        // Logo
+        $logoData = $requestBody->get('logo');
+        if (\is_array($logoData) || \is_string($logoData) || null === $logoData) {
+            $thirdParty->setLogo($this->saveLogo($logoData));
+        } else {
+            $thirdParty->setLogo(false);
+        }
+
+        // Roles
         $rolesInRequest = $requestBody->getArray('roles');
+        $rolesAH = new ArrayHandler($rolesInRequest);
 
         foreach (array_keys($thirdParty->getRoles()) as $role) {
-            if (isset($rolesInRequest[$role])) {
-                $thirdParty->setRole($role, (bool) $rolesInRequest[$role]);
+            if ($rolesAH->isSet($role)) {
+                $thirdParty->setRole($role, $rolesAH->getBool($role));
             }
         }
 
@@ -186,19 +206,18 @@ final class ThirdPartyService
      * 
      * @param int $id ID of the third party to retrieve.
      * 
-     * @return int|false Number of appointments for the third party(s).
-     *                   `false` if the third party does not exist.
+     * @return int Number of appointments for the third party.
      */
-    public function getAppointmentCountForId(int $id): int|false
+    public function getAppointmentCountForId(int $id): int
     {
-        return $this->thirdPartyRepository->getAppointmentCountForId($id);
+        return $this->thirdPartyRepository->fetchAppointmentCountForId($id);
     }
 
     /**
      * Enregistrer un logo dans le dossier images
      * et retourne le hash du fichier.
      * 
-     * @param array{data: string}|string|null $file Données du fichier (null pour effacement du logo existant).
+     * @param array<mixed>|string|null $file Données du fichier (null pour effacement du logo existant).
      * 
      * @return string|null|false Nom de fichier du logo si l'enregistrement a réussi, `false` sinon.
      */
@@ -217,6 +236,9 @@ final class ThirdPartyService
 
             // Récupérer les données de l'image
             // $fichier["data"] = "data:{type mime};base64,{données}"
+            if (!isset($file["data"]) || !\is_string($file["data"])) {
+                throw new ServerException("Logo : Données du fichier non trouvées.");
+            }
             $data = explode(",", $file["data"])[1];
 
             // Création de l'image depuis les données

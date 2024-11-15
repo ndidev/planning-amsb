@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\DTO\PDF;
 
+use App\Core\Exceptions\Server\ServerException;
 use App\Entity\Config\AgencyDepartment;
 use App\Entity\ThirdParty;
 
@@ -61,7 +62,9 @@ abstract class PlanningPDF extends \tFPDF
         // Couleur
         $this->SetTextColor(0, 0, 0);
         // Numéro de page
-        $this->Cell(0, 10, 'Page ' . $this->PageNo() . '/{nb}', 0, 0, 'C');
+        /** @var int */
+        $pageNumber = $this->PageNo();
+        $this->Cell(0, 10, 'Page ' . $pageNumber . '/{nb}', 0, 0, 'C');
     }
 
     /**
@@ -69,7 +72,13 @@ abstract class PlanningPDF extends \tFPDF
      */
     public function stringifyPDF(): string
     {
-        return $this->Output('S');
+        $stringifiedPdf = $this->Output('S');
+
+        if (!\is_string($stringifiedPdf)) {
+            throw new ServerException("Erreur lors de la génération du PDF");
+        }
+
+        return $stringifiedPdf;
     }
 
     /**
@@ -123,16 +132,19 @@ abstract class PlanningPDF extends \tFPDF
         $fileHandler = fopen('php://temp', 'rb+');
 
         if (!$fileHandler) {
-            $this->Error('Unable to create memory stream');
+            throw new ServerException('FPDF Error: Unable to create memory stream');
         }
-
-        /** @var resource $fileHandler */
 
         fwrite($fileHandler, $pngData);
         rewind($fileHandler);
         $info = $this->_parsepngstream($fileHandler, $file);
         fclose($fileHandler);
 
+        if (!\is_array($info)) {
+            throw new ServerException('FPDF Error: Invalid PNG data');
+        }
+
+        // @phpstan-ignore return.type
         return $info;
     }
 
@@ -164,19 +176,19 @@ abstract class PlanningPDF extends \tFPDF
 
         $ratio = $width_px / $height_px;
 
-        if (!defined("MM_PER_INCH")) define("MM_PER_INCH", 25.4);
-        if (!defined("MAX_WIDTH")) define("MAX_WIDTH", 50); // Largeur maximale de l'image sur le PDF (en mm)
-        if (!defined("MAX_HEIGHT")) define("MAX_HEIGHT", 20); // Hauteur maximale de l'image sur le PDF (en mm)
+        define("PNG_MM_PER_INCH", 25.4);
+        define("PNG_MAX_WIDTH", 50); // Largeur maximale de l'image sur le PDF (en mm)
+        define("PNG_MAX_HEIGHT", 20); // Hauteur maximale de l'image sur le PDF (en mm)
 
-        $original_width_mm = $width_px / $res_w * MM_PER_INCH;
-        $original_height_mm = $height_px / $res_h * MM_PER_INCH;
+        $original_width_mm = $width_px / $res_w * PNG_MM_PER_INCH;
+        $original_height_mm = $height_px / $res_h * PNG_MM_PER_INCH;
 
         // D'abord, réduction de la largeur (si nécessaire)
-        $pdf_width_mm = min($original_width_mm, MAX_WIDTH);
+        $pdf_width_mm = min($original_width_mm, PNG_MAX_WIDTH);
         $pdf_height_mm = $pdf_width_mm / $ratio;
 
         // Ensuite, réduction de la hauteur (si nécessaire)
-        $pdf_height_mm = min($pdf_height_mm, MAX_HEIGHT);
+        $pdf_height_mm = min($pdf_height_mm, PNG_MAX_HEIGHT);
         $pdf_width_mm = $pdf_height_mm * $ratio;
 
         $this->Image(LOGOS . "/" . $this->supplier->getLogoFilename(), 10, 6, $pdf_width_mm, $pdf_height_mm);

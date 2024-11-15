@@ -7,37 +7,26 @@ declare(strict_types=1);
 namespace App\Tests\Core\HTTP;
 
 use App\Core\HTTP\HTTPRequestQuery;
-use App\Core\HTTP\RequestParameterStore;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(HTTPRequestQuery::class)]
-#[CoversClass(RequestParameterStore::class)]
 final class HTTPRequestQueryTest extends TestCase
 {
-    public function testInstanciation(): void
-    {
-        // Given
-        $query = HTTPRequestQuery::buildFromRequest();
-
-        // Then
-        $this->assertInstanceOf(HTTPRequestQuery::class, $query);
-    }
-
     public function testBuildWithGet(): void
     {
         // Given
         $_GET = [
             "param1" => "value1",
         ];
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
 
         // When
         $reflectionClass = new \ReflectionClass($query);
-        $parameterBag = $reflectionClass->getProperty("parameterBag")->getValue($query);
+        $store = $reflectionClass->getProperty("store")->getValue($query);
 
         // Then
-        $this->assertSame($_GET, $parameterBag);
+        $this->assertSame($_GET, $store);
     }
 
     public function testBuildWithQueryString(): void
@@ -45,7 +34,7 @@ final class HTTPRequestQueryTest extends TestCase
         // Given
         $_GET = [];
         $_SERVER['REQUEST_URI'] = '/path?param1=value1&param2=42&param3=&param4';
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $expected = [
             "param1" => "value1",
             "param2" => "42",
@@ -55,10 +44,10 @@ final class HTTPRequestQueryTest extends TestCase
 
         // When
         $reflectionClass = new \ReflectionClass($query);
-        $parameterBag = $reflectionClass->getProperty("parameterBag")->getValue($query);
+        $store = $reflectionClass->getProperty("store")->getValue($query);
 
         // Then
-        $this->assertSame($expected, $parameterBag);
+        $this->assertSame($expected, $store);
     }
 
     #[\Override]

@@ -15,7 +15,6 @@ use App\Service\TimberService;
 final class TimberDeliveryNoteController extends Controller
 {
     private TimberService $timberService;
-    /** @phpstan-var Module::* $module */
     private string $module = Module::TIMBER;
 
     public function __construct()
@@ -56,11 +55,11 @@ final class TimberDeliveryNoteController extends Controller
             throw new AccessException("Vous n'avez pas les droits pour accéder aux RDVs bois.");
         }
 
-        $request = $this->request;
+        $query = $this->request->getQuery();
 
-        $supplierId = $request->getQuery()->getParam('supplierId', type: 'int');
-        $deliveryNoteNumber = $request->getQuery()->getParam('deliveryNoteNumber', '');
-        $currentAppointmentId = $request->getQuery()->getParam('currentAppointmentId', type: 'int');
+        $supplierId = $query->getInt('supplierId');
+        $deliveryNoteNumber = $query->getString('deliveryNoteNumber');
+        $currentAppointmentId = $query->getInt('currentAppointmentId');
 
         $isDeliveryNoteNumberAvailable = $this->timberService->isDeliveryNoteNumberAvailable(
             $deliveryNoteNumber,

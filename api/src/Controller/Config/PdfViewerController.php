@@ -54,12 +54,9 @@ final class PdfViewerController extends Controller
      */
     public function getPdfFile(): void
     {
-        /** @var ?int $configId */
-        $configId = $this->request->getQuery()->getParam("config", null, "int");
-        /** @var \DateTime $startDate */
-        $startDate = $this->request->getQuery()->getParam("date_debut", 'now', "datetime");
-        /** @var \DateTime $endDate */
-        $endDate = $this->request->getQuery()->getParam("date_fin", 'now', "datetime");
+        $configId = $this->request->getQuery()->getInt("config", null);
+        $startDate = $this->request->getQuery()->getDatetime("date_debut", 'now');
+        $endDate = $this->request->getQuery()->getDatetime("date_fin", 'now');
 
         $pdf = $this->pdfService->generatePDF($configId, $startDate, $endDate);
 

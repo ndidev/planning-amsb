@@ -19,47 +19,47 @@ use App\Service\ShippingService;
 
 /**
  * @phpstan-type ShippingCallArray array{
- *                                   id?: int,
- *                                   navire?: string,
- *                                   voyage?: string,
- *                                   armateur?: int|null,
- *                                   eta_date?: string,
- *                                   eta_heure?: string,
- *                                   nor_date?: string,
- *                                   nor_heure?: string,
- *                                   pob_date?: string,
- *                                   pob_heure?: string,
- *                                   etb_date?: string,
- *                                   etb_heure?: string,
- *                                   ops_date?: string,
- *                                   ops_heure?: string,
- *                                   etc_date?: string,
- *                                   etc_heure?: string,
- *                                   etd_date?: string,
- *                                   etd_heure?: string,
- *                                   te_arrivee?: float,
- *                                   te_depart?: float,
- *                                   last_port?: string,
- *                                   next_port?: string,
- *                                   call_port?: string,
- *                                   quai?: string,
- *                                   commentaire?: string,
+ *                                   id: int,
+ *                                   navire: string,
+ *                                   voyage: string,
+ *                                   armateur: int|null,
+ *                                   eta_date: string|null,
+ *                                   eta_heure: string,
+ *                                   nor_date: string|null,
+ *                                   nor_heure: string,
+ *                                   pob_date: string|null,
+ *                                   pob_heure: string,
+ *                                   etb_date: string|null,
+ *                                   etb_heure: string,
+ *                                   ops_date: string|null,
+ *                                   ops_heure: string,
+ *                                   etc_date: string|null,
+ *                                   etc_heure: string,
+ *                                   etd_date: string|null,
+ *                                   etd_heure: string,
+ *                                   te_arrivee: float|null,
+ *                                   te_depart: float|null,
+ *                                   last_port: string,
+ *                                   next_port: string,
+ *                                   call_port: string,
+ *                                   quai: string,
+ *                                   commentaire: string,
  *                                   marchandises?: ShippingCallCargoArray[],
  *                                 }
  * 
  * @phpstan-type ShippingCallCargoArray array{
- *                                        id?: int,
- *                                        escale_id?: int,
- *                                        marchandise?: string,
- *                                        client?: string,
- *                                        operation?: string,
- *                                        environ?: bool,
- *                                        tonnage_bl?: float|null,
- *                                        cubage_bl?: float|null,
- *                                        nombre_bl?: int|null,
- *                                        tonnage_outturn?: float|null,
- *                                        cubage_outturn?: float|null,
- *                                        nombre_outturn?: int|null,
+ *                                        id: int,
+ *                                        escale_id: int,
+ *                                        marchandise: string,
+ *                                        client: string,
+ *                                        operation: string,
+ *                                        environ: bool,
+ *                                        tonnage_bl: float|null,
+ *                                        cubage_bl: float|null,
+ *                                        nombre_bl: int|null,
+ *                                        tonnage_outturn: float|null,
+ *                                        cubage_outturn: float|null,
+ *                                        nombre_outturn: int|null,
  *                                      }
  * 
  * @phpstan-type DraftsPerTonnage list<array{
@@ -201,6 +201,7 @@ final class ShippingRepository extends Repository
             throw new DBException("Impossible de récupérer les escales.");
         }
 
+        /** @phpstan-var ShippingCallArray[] $callsRaw */
         $callsRaw = $callsRequest->fetchAll();
 
         $cargoesRaw = [];
@@ -243,7 +244,7 @@ final class ShippingRepository extends Repository
             $filteredCargoesRaw = array_values(
                 array_filter(
                     $cargoesRaw,
-                    fn($cargo) => ($cargo["escale_id"] ?? null) === $call->getId()
+                    fn($cargo) => ($cargo["escale_id"]) === $call->getId()
                 )
             );
 
@@ -642,8 +643,11 @@ final class ShippingRepository extends Repository
 
         $voyageNumberRequest = $this->mysql->prepare($statement);
         $voyageNumberRequest->execute(["navire" => $shipName]);
-        /** @var string */
         $voyageNumber = $voyageNumberRequest->fetch(\PDO::FETCH_COLUMN) ?: "";
+
+        if (!\is_string($voyageNumber)) {
+            $voyageNumber = '';
+        }
 
         return $voyageNumber;
     }
@@ -665,6 +669,7 @@ final class ShippingRepository extends Repository
             throw new DBException("Impossible de récupérer les tirants d'eau.");
         }
 
+        /** @phpstan-var DraftsPerTonnage $draftsPerTonnage */
         $draftsPerTonnage = $draftsPerTonnageRequest->fetchAll();
 
         return $draftsPerTonnage;
@@ -782,6 +787,7 @@ final class ShippingRepository extends Repository
             throw new DBException("Impossible de récupérer les noms de navire.");
         }
 
+        /** @var string[] */
         $shipsNames = $request->fetchAll(\PDO::FETCH_COLUMN);
 
         return $shipsNames;
@@ -839,6 +845,7 @@ final class ShippingRepository extends Repository
             throw new DBException("Impossible de récupérer les marchandises.");
         }
 
+        /** @var string[] */
         $cargoNames = $request->fetchAll(\PDO::FETCH_COLUMN);
 
         return $cargoNames;
@@ -864,6 +871,7 @@ final class ShippingRepository extends Repository
             throw new DBException("Impossible de récupérer les clients.");
         }
 
+        /** @var string[] */
         $customersNames = $request->fetchAll(\PDO::FETCH_COLUMN);
 
         return $customersNames;

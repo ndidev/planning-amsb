@@ -9,10 +9,12 @@ namespace App\Tests\DTO;
 use App\Core\HTTP\HTTPRequestQuery;
 use App\DTO\Filter\CharteringFilterDTO;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 
 #[CoversClass(CharteringFilterDTO::class)]
+#[UsesClass(HTTPRequestQuery::class)]
 final class CharteringFilterDTOTest extends TestCase
 {
     public function testGetSqlStartDate(): void
@@ -20,7 +22,7 @@ final class CharteringFilterDTOTest extends TestCase
         // Given
         $date = '2023-01-01';
         $_SERVER['REQUEST_URI'] = "/path?date_debut={$date}";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
 
         // When
@@ -34,7 +36,7 @@ final class CharteringFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
         $expected = (new \DateTime(CharteringFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
 
@@ -49,7 +51,7 @@ final class CharteringFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?date_debut=";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
         $expected = (new \DateTime(CharteringFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
 
@@ -64,7 +66,7 @@ final class CharteringFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?date_debut=illegal";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
         $expected = (new \DateTime(CharteringFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
 
@@ -80,7 +82,7 @@ final class CharteringFilterDTOTest extends TestCase
         // Given
         $date = '2023-12-31';
         $_SERVER['REQUEST_URI'] = "/path?date_fin={$date}";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
 
         // When
@@ -94,7 +96,7 @@ final class CharteringFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
         $expected = (new \DateTime(CharteringFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
 
@@ -109,7 +111,7 @@ final class CharteringFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?date_fin=";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
         $expected = (new \DateTime(CharteringFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
 
@@ -124,7 +126,7 @@ final class CharteringFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?date_fin=illegal";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
         $expected = (new \DateTime(CharteringFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
 
@@ -139,7 +141,7 @@ final class CharteringFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?statut=1,2";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
 
         // When
@@ -153,7 +155,7 @@ final class CharteringFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
 
         // When
@@ -167,7 +169,7 @@ final class CharteringFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?affreteur=1,2";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
 
         // When
@@ -181,7 +183,7 @@ final class CharteringFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
 
         // When
@@ -195,7 +197,7 @@ final class CharteringFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?armateur=1,2";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
 
         // When
@@ -209,7 +211,7 @@ final class CharteringFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
 
         // When
@@ -223,7 +225,7 @@ final class CharteringFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?courtier=1,2";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
 
         // When
@@ -237,7 +239,7 @@ final class CharteringFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
 
         // When
@@ -251,7 +253,7 @@ final class CharteringFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?archives";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
 
         // When
@@ -265,7 +267,7 @@ final class CharteringFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
 
         // When

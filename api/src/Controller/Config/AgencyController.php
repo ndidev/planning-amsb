@@ -18,7 +18,6 @@ use App\Service\AgencyService;
 final class AgencyController extends Controller
 {
     private AgencyService $agencyService;
-    /** @phpstan-var Module::* $module */
     private string $module = Module::CONFIG;
     private string $sseEventName = "config/agence";
 

@@ -49,6 +49,10 @@ final class UserRoles implements Arrayable, \JsonSerializable
         }
 
         foreach ($rolesArray as $role => $value) {
+            if (!\is_string($role)) continue;
+
+            if (!\is_numeric($value)) continue;
+
             $safeValue = match ((int) $value) {
                 self::NONE, self::ACCESS, self::EDIT => (int) $value,
                 default => self::NONE,

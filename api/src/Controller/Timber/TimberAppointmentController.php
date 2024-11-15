@@ -11,6 +11,7 @@ use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
+use App\Core\Array\Environment;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\DTO\Filter\TimberFilterDTO;
@@ -19,7 +20,6 @@ use App\Service\TimberService;
 final class TimberAppointmentController extends Controller
 {
     private TimberService $timberService;
-    /** @phpstan-var Module::* $module */
     private string $module = Module::TIMBER;
     private string $sse_event = "bois/rdvs";
 
@@ -145,7 +145,7 @@ final class TimberAppointmentController extends Controller
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)
-            ->addHeader("Location", $_ENV["API_URL"] . "/bois/rdvs/$id")
+            ->addHeader("Location", Environment::getString('API_URL') . "/bois/rdvs/$id")
             ->setJSON($appointment);
 
         $this->sse->addEvent($this->sse_event, __FUNCTION__, $id, $appointment);

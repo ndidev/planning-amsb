@@ -13,9 +13,9 @@ use App\Service\PortService;
 
 /**
  * @phpstan-type PortArray array{
- *                           locode?: string,
- *                           nom?: string,
- *                           nom_affichage?: string,
+ *                           locode: string,
+ *                           nom: string,
+ *                           nom_affichage: string,
  *                         }
  */
 final class PortRepository extends Repository
@@ -47,11 +47,12 @@ final class PortRepository extends Repository
                 throw new DBException("Impossible de récupérer les ports.");
             }
 
-            /** @phpstan-var PortArray[] $portsRaw */
             $portsRaw = $portsRequest->fetchAll();
 
             $this->redis->set($this->redisNamespace, \json_encode($portsRaw));
         }
+
+        /** @phpstan-var PortArray[] $portsRaw */
 
         $ports = \array_map(
             fn($portRaw) => $this->portService->makePortFromDatabase($portRaw),

@@ -20,7 +20,7 @@ final class ShippingFilterDTOTest extends TestCase
         // Given
         $date = '2023-01-01';
         $_SERVER['REQUEST_URI'] = "/path?date_debut={$date}";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -34,7 +34,7 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
         $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
 
@@ -49,7 +49,7 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?date_debut=";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
         $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
 
@@ -64,7 +64,7 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?date_debut=illegal";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
         $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
 
@@ -80,7 +80,7 @@ final class ShippingFilterDTOTest extends TestCase
         // Given
         $date = '2023-12-31';
         $_SERVER['REQUEST_URI'] = "/path?date_fin={$date}";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -94,7 +94,7 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
         $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
 
@@ -109,7 +109,7 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?date_fin=";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
         $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
 
@@ -124,7 +124,7 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?date_fin=illegal";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
         $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
 
@@ -139,7 +139,7 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?navire=Ship1,Ship2";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -153,7 +153,7 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -167,7 +167,7 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?armateur=1,2";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -181,7 +181,7 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -195,7 +195,7 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?marchandise=Cargo1,Cargo2";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -209,7 +209,7 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -223,7 +223,7 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?client=Customer1,Customer2";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -237,7 +237,7 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -251,7 +251,7 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?last_port=Port1,Port2";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -265,7 +265,7 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -279,7 +279,7 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?next_port=Port3,Port4";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
         // When
@@ -293,7 +293,7 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
         // When

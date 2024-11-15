@@ -17,7 +17,6 @@ use App\Service\TimberService;
 final class TimberStatsController extends Controller
 {
     private TimberService $service;
-    /** @phpstan-var Module::* $module */
     private string $module = Module::TIMBER;
 
     public function __construct()

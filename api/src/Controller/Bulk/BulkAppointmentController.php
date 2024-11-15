@@ -11,6 +11,7 @@ use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
+use App\Core\Array\Environment;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\BulkService;
@@ -18,7 +19,6 @@ use App\Service\BulkService;
 final class BulkAppointmentController extends Controller
 {
     private BulkService $bulkService;
-    /** @phpstan-var Module::* $module */
     private string $module = Module::BULK;
     private string $sseEventName = "vrac/rdvs";
 
@@ -142,7 +142,7 @@ final class BulkAppointmentController extends Controller
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)
-            ->addHeader("Location", $_ENV["API_URL"] . "/vrac/rdvs/$id")
+            ->addHeader("Location", Environment::getString('API_URL') . "/vrac/rdvs/$id")
             ->setJSON($appointment);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $appointment);

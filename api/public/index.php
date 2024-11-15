@@ -39,6 +39,7 @@ use App\Controller\User\UserController;
 use App\Controller\Utils\CountryController;
 use App\Controller\Utils\PortController;
 use App\Controller\Utils\TideController;
+use App\Core\Array\Environment;
 use App\Core\Exceptions\Server\ServerException;
 use App\Core\Router\Router;
 use App\Core\Security;
@@ -122,7 +123,7 @@ $response = new HTTPResponse();
  * Routeur
  */
 try {
-    $router = new Router($routes, $_ENV["API_PATH"]);
+    $router = new Router($routes, Environment::getString('API_PATH'));
     $match = $router->match();
 
     if (\is_array($match)) {

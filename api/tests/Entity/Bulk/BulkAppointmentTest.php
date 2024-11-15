@@ -192,7 +192,6 @@ class BulkAppointmentTest extends TestCase
         $array = $bulkAppointment->toArray();
 
         // Then
-        $this->assertIsArray($array);
         $this->assertEquals('2023-10-01', $array['date_rdv']);
         $this->assertEquals('10:00', $array['heure']);
         $this->assertEquals('ORD123456', $array['num_commande']);

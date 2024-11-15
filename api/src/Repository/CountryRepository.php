@@ -56,6 +56,8 @@ final class CountryRepository extends Repository
             }
         }
 
+        /** @phpstan-var CountryArray[] $countriesRaw */
+
         $countries = \array_map(
             fn($countryRaw) => $this->countryService->makeCountryFromDatabase($countryRaw),
             $countriesRaw

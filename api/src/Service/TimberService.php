@@ -20,42 +20,10 @@ use App\DTO\TimberTransportSuggestionsDTO;
 use App\Entity\ThirdParty;
 use App\Entity\Timber\TimberAppointment;
 use App\Repository\TimberAppointmentRepository;
-use DateTimeInterface;
-use PDOException;
 
 /**
- * @phpstan-type TimberAppointmentArray array{
- *                                        id?: int,
- *                                        attente?: bool,
- *                                        date_rdv?: string,
- *                                        heure_arrivee?: string,
- *                                        heure_depart?: string,
- *                                        fournisseur?: int,
- *                                        chargement?: int,
- *                                        livraison?: int,
- *                                        client?: int,
- *                                        transporteur?: int,
- *                                        affreteur?: int,
- *                                        commande_prete?: bool,
- *                                        confirmation_affretement?: bool,
- *                                        numero_bl?: string,
- *                                        commentaire_public?: string,
- *                                        commentaire_cache?: string,
- *                                      }
- * 
- * @phpstan-type TimberRegistryEntryArray array{
- *                                          date_rdv?: string,
- *                                          fournisseur?: string,
- *                                          chargement_nom?: string,
- *                                          chargement_ville?: string,
- *                                          chargement_pays?: string,
- *                                          livraison_nom?: string,
- *                                          livraison_cp?: string,
- *                                          livraison_ville?: string,
- *                                          livraison_pays?: string,
- *                                          numero_bl?: string,
- *                                          transporteur?: string,
- *                                        }
+ * @phpstan-import-type TimberAppointmentArray from \App\Repository\TimberAppointmentRepository
+ * @phpstan-import-type TimberRegistryEntryArray from \App\Repository\TimberAppointmentRepository
  */
 final class TimberService
 {
@@ -80,22 +48,22 @@ final class TimberService
     public function makeTimberAppointmentFromDatabase(array $rawData): TimberAppointment
     {
         $appointment = (new TimberAppointment())
-            ->setId($rawData["id"] ?? null)
-            ->setOnHold($rawData["attente"] ?? false)
-            ->setDate($rawData["date_rdv"] ?? null)
-            ->setArrivalTime($rawData["heure_arrivee"] ?? null)
-            ->setDepartureTime($rawData["heure_depart"] ?? null)
-            ->setSupplier($this->thirdPartyService->getThirdParty($rawData["fournisseur"] ?? null))
-            ->setLoadingPlace($this->thirdPartyService->getThirdParty($rawData["chargement"] ?? null))
-            ->setDeliveryPlace($this->thirdPartyService->getThirdParty($rawData["livraison"] ?? null))
-            ->setCustomer($this->thirdPartyService->getThirdParty($rawData["client"] ?? null))
-            ->setCarrier($this->thirdPartyService->getThirdParty($rawData["transporteur"] ?? null))
-            ->setTransportBroker($this->thirdPartyService->getThirdParty($rawData["affreteur"] ?? null))
-            ->setReady($rawData["commande_prete"] ?? false)
-            ->setCharteringConfirmationSent($rawData["confirmation_affretement"] ?? false)
-            ->setDeliveryNoteNumber($rawData["numero_bl"] ?? "")
-            ->setPublicComment($rawData["commentaire_public"] ?? "")
-            ->setPrivateComment($rawData["commentaire_cache"] ?? "");
+            ->setId($rawData["id"])
+            ->setOnHold($rawData["attente"])
+            ->setDate($rawData["date_rdv"])
+            ->setArrivalTime($rawData["heure_arrivee"])
+            ->setDepartureTime($rawData["heure_depart"])
+            ->setSupplier($this->thirdPartyService->getThirdParty($rawData["fournisseur"]))
+            ->setLoadingPlace($this->thirdPartyService->getThirdParty($rawData["chargement"]))
+            ->setDeliveryPlace($this->thirdPartyService->getThirdParty($rawData["livraison"]))
+            ->setCustomer($this->thirdPartyService->getThirdParty($rawData["client"]))
+            ->setCarrier($this->thirdPartyService->getThirdParty($rawData["transporteur"]))
+            ->setTransportBroker($this->thirdPartyService->getThirdParty($rawData["affreteur"]))
+            ->setReady($rawData["commande_prete"])
+            ->setCharteringConfirmationSent($rawData["confirmation_affretement"])
+            ->setDeliveryNoteNumber($rawData["numero_bl"])
+            ->setPublicComment($rawData["commentaire_public"])
+            ->setPrivateComment($rawData["commentaire_cache"]);
 
         return $appointment;
     }
@@ -142,7 +110,7 @@ final class TimberService
     public function makeTimberRegisterEntryDTO(array $rawData): TimberRegistryEntryDTO
     {
         $registryEntry = (new TimberRegistryEntryDTO())
-            ->setDate($rawData["date_rdv"] ?? "")
+            ->setDate($rawData["date_rdv"])
             ->setSupplierName($rawData["fournisseur"] ?? "")
             ->setLoadingPlaceName($rawData["chargement_nom"] ?? "")
             ->setLoadingPlaceCity($rawData["chargement_ville"] ?? "")
@@ -151,7 +119,7 @@ final class TimberService
             ->setDeliveryPlacePostCode($rawData["livraison_cp"] ?? "")
             ->setDeliveryPlaceCity($rawData["livraison_ville"] ?? "")
             ->setDeliveryPlaceCountry($rawData["livraison_pays"] ?? "")
-            ->setDeliveryNoteNumber($rawData["numero_bl"] ?? "")
+            ->setDeliveryNoteNumber($rawData["numero_bl"])
             ->setTransport($rawData["transporteur"] ?? "");
 
         return $registryEntry;
@@ -412,7 +380,7 @@ final class TimberService
         int $loadingPlaceId,
         int $deliveryPlaceId
     ): TimberTransportSuggestionsDTO {
-        return $this->timberAppointmentRepository->getTransportSuggestions($loadingPlaceId, $deliveryPlaceId);
+        return $this->timberAppointmentRepository->fetchTransportSuggestions($loadingPlaceId, $deliveryPlaceId);
     }
 
     public function getStats(TimberFilterDTO $filter): TimberStatsDTO

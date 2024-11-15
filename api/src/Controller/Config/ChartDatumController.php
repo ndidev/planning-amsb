@@ -18,7 +18,6 @@ use App\Service\ChartDatumService;
 final class ChartDatumController extends Controller
 {
     private ChartDatumService $chartDatumService;
-    /** @phpstan-var Module::* $module */
     private string $module = Module::CONFIG;
     private string $sseEventName = "config/cotes";
 

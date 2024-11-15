@@ -12,6 +12,13 @@ use const App\Core\Component\Constants\ONE_WEEK;
 
 /**
  * Repository for the tide data.
+ * 
+ * @phpstan-type TideArray array{
+ *                           date: string,
+ *                           heure: string,
+ *                           te_cesson: float,
+ *                           te_bassin: float
+ *                         }
  */
 final class TideRepository extends Repository
 {
@@ -44,14 +51,6 @@ final class TideRepository extends Repository
                 "end" => $endDate->format('Y-m-d'),
             ]);
 
-            /**
-             * @var list<array{
-             *             date: string,
-             *             heure: string,
-             *             te_cesson: string,
-             *             te_bassin: string
-             *           }>
-             */
             $tidesArray = $request->fetchAll();
 
             if (!empty($tidesArray)) {
@@ -62,6 +61,8 @@ final class TideRepository extends Repository
                 );
             }
         }
+
+        /** @phpstan-var list<TideArray> $tidesArray */
 
         $tidesDTO = new TidesDTO($tidesArray);
 
@@ -85,20 +86,14 @@ final class TideRepository extends Repository
             $tidesRequest = $this->mysql->prepare($statement);
             $tidesRequest->execute(["year" => $year]);
 
-            /**
-             * @var list<array{
-             *             date: string,
-             *             heure: string,
-             *             te_cesson: string,
-             *             te_bassin: string
-             *           }>
-             */
             $tides = $tidesRequest->fetchAll();
 
             if (!empty($tides)) {
                 $this->redis->set($this->redisNamespace . ":" . $year, \json_encode($tides));
             }
         }
+
+        /** @phpstan-var list<TideArray> $tides */
 
         $tidesDTO = new TidesDTO($tides);
 
@@ -125,11 +120,12 @@ final class TideRepository extends Repository
                 throw new DBException("Impossible de récupérer les années des marées.");
             }
 
-            /** @var string[] */
             $years = $yearsRequest->fetchAll(\PDO::FETCH_COLUMN);
 
             $this->redis->set($this->redisNamespace . ":years", \json_encode($years));
         }
+
+        /** @var string[] $years */
 
         return $years;
     }

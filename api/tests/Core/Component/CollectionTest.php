@@ -78,7 +78,9 @@ final class CollectionTest extends TestCase
         $array = $collection->asArray();
 
         // Then
-        $this->assertIsArray($array);
+        $this->assertContains('item1', $array);
+        $this->assertContains('item2', $array);
+        $this->assertContains('item3', $array);
     }
 
     public function testToArrayReturnsNonArrayableItemsUntouched(): void

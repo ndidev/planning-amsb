@@ -66,7 +66,11 @@ final class TideService
      */
     public function addTides(mixed $data): string
     {
-        if (!\is_array($data) || !array_key_exists("tmp_name", $data)) {
+        if (
+            !\is_array($data)
+            || !\array_key_exists("tmp_name", $data)
+            || !\is_string($data["tmp_name"])
+        ) {
             throw new ServerException("Fichier non trouvé.");
         }
 

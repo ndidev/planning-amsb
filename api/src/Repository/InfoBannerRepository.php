@@ -46,6 +46,7 @@ final class InfoBannerRepository extends Repository
             throw new DBException("Impossible de récupérer les lignes du bandeau d'infos.");
         }
 
+        /** @phpstan-var InfoBannerLineArray[] */
         $linesRaw = $linesRequest->fetchAll();
 
         $lines = \array_map(

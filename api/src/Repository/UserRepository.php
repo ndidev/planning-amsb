@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\Core\Array\ArrayHandler;
 use App\Core\Auth\AccountStatus;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\Core\Exceptions\Server\ServerException;
@@ -96,8 +97,10 @@ final class UserRepository extends Repository
                 return null;
             }
 
+            $userHandler = new ArrayHandler($userRaw);
+
             // Update Redis
-            $this->redis->hMSet("admin:users:{$userRaw["uid"]}", $userRaw);
+            $this->redis->hMSet("admin:users:{$userHandler->getString('uid')}", $userRaw);
         }
 
         /** @phpstan-var UserAccountArray $userRaw */
@@ -157,7 +160,7 @@ final class UserRepository extends Repository
             "uid" => $uid,
             "login" => \mb_substr((string) $user->getLogin(), 0, 255),
             "nom" => \mb_substr($user->getName(), 0, 255),
-            "statut" => AccountStatus::PENDING->value,
+            "statut" => AccountStatus::PENDING,
             "roles" => \json_encode($user->getRoles()),
             "commentaire" => $user->getComments(),
             "admin" => $adminName
@@ -207,10 +210,8 @@ final class UserRepository extends Repository
             throw new ServerException("Impossible de mettre à jour un utilisateur inexistant.");
         }
 
-        /** @var AccountStatus $currentStatus */
         $currentStatus = $userCurrentInfo->getStatus();
 
-        /** @var AccountStatus $newStatus */
         $newStatus = $user->getStatus();
 
         // Pas de changement de statut
@@ -247,7 +248,7 @@ final class UserRepository extends Repository
 
             $request = $this->mysql->prepare($statement);
             $request->execute([
-                "statut" => AccountStatus::PENDING->value,
+                "statut" => AccountStatus::PENDING,
                 "admin" => $adminName,
                 "uid" => $uid
             ]);
@@ -268,7 +269,7 @@ final class UserRepository extends Repository
 
             $request = $this->mysql->prepare($statement);
             $request->execute([
-                "statut" => AccountStatus::INACTIVE->value,
+                "statut" => AccountStatus::INACTIVE,
                 "admin" => $adminName,
                 "uid" => $uid,
             ]);
@@ -307,7 +308,7 @@ final class UserRepository extends Repository
         $request = $this->mysql->prepare($statement);
 
         $success = $request->execute([
-            "statut" => AccountStatus::DELETED->value,
+            "statut" => AccountStatus::DELETED,
             "admin" => $adminName,
             "uid" => $uid,
         ]);

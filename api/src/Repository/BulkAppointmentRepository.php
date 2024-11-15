@@ -14,19 +14,19 @@ use App\Service\BulkService;
 
 /**
  * @phpstan-type BulkAppointmentArray array{
- *                                      id?: int,
- *                                      date_rdv?: string,
- *                                      heure?: string,
- *                                      produit?: int,
- *                                      qualite?: int,
- *                                      quantite?: int,
- *                                      max?: bool,
- *                                      commande_prete?: bool,
- *                                      fournisseur?: int,
- *                                      client?: int,
- *                                      transporteur?: int,
- *                                      num_commande?: string,
- *                                      commentaire?: string,
+ *                                      id: int,
+ *                                      date_rdv: string,
+ *                                      heure: ?string,
+ *                                      produit: int,
+ *                                      qualite: ?int,
+ *                                      quantite: int,
+ *                                      max: int,
+ *                                      commande_prete: int,
+ *                                      fournisseur: int,
+ *                                      client: int,
+ *                                      transporteur: ?int,
+ *                                      num_commande: string,
+ *                                      commentaire: string,
  *                                    }
  */
 final class BulkAppointmentRepository extends Repository

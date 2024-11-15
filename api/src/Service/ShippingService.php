@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
 use App\Core\HTTP\HTTPRequestBody;
 use App\DTO\Filter\ShippingFilterDTO;
@@ -46,31 +47,31 @@ final class ShippingService
     public function makeShippingCallFromDatabase(array $rawData): ShippingCall
     {
         $shippingCall = (new ShippingCall())
-            ->setId($rawData["id"] ?? null)
-            ->setShipName($rawData["navire"] ?? "TBN")
-            ->setVoyage($rawData["voyage"] ?? "")
+            ->setId($rawData["id"])
+            ->setShipName($rawData["navire"])
+            ->setVoyage($rawData["voyage"])
             ->setShipOperator($this->thirdPartyService->getThirdParty($rawData["armateur"] ?? null))
-            ->setEtaDate($rawData["eta_date"] ?? null)
-            ->setEtaTime($rawData["eta_heure"] ?? "")
-            ->setNorDate($rawData["nor_date"] ?? null)
-            ->setNorTime($rawData["nor_heure"] ?? "")
-            ->setPobDate($rawData["pob_date"] ?? null)
-            ->setPobTime($rawData["pob_heure"] ?? "")
-            ->setEtbDate($rawData["etb_date"] ?? null)
-            ->setEtbTime($rawData["etb_heure"] ?? "")
-            ->setOpsDate($rawData["ops_date"] ?? null)
-            ->setOpsTime($rawData["ops_heure"] ?? "")
-            ->setEtcDate($rawData["etc_date"] ?? null)
-            ->setEtcTime($rawData["etc_heure"] ?? "")
-            ->setEtdDate($rawData["etd_date"] ?? null)
-            ->setEtdTime($rawData["etd_heure"] ?? "")
-            ->setArrivalDraft($rawData["te_arrivee"] ?? null)
-            ->setDepartureDraft($rawData["te_depart"] ?? null)
-            ->setLastPort($this->portService->getPort($rawData["last_port"] ?? null))
-            ->setNextPort($this->portService->getPort($rawData["next_port"] ?? null))
-            ->setCallPort($rawData["call_port"] ?? "")
-            ->setQuay($rawData["quai"] ?? "")
-            ->setComment($rawData["commentaire"] ?? "")
+            ->setEtaDate($rawData["eta_date"])
+            ->setEtaTime($rawData["eta_heure"])
+            ->setNorDate($rawData["nor_date"])
+            ->setNorTime($rawData["nor_heure"])
+            ->setPobDate($rawData["pob_date"])
+            ->setPobTime($rawData["pob_heure"])
+            ->setEtbDate($rawData["etb_date"])
+            ->setEtbTime($rawData["etb_heure"])
+            ->setOpsDate($rawData["ops_date"])
+            ->setOpsTime($rawData["ops_heure"])
+            ->setEtcDate($rawData["etc_date"])
+            ->setEtcTime($rawData["etc_heure"])
+            ->setEtdDate($rawData["etd_date"])
+            ->setEtdTime($rawData["etd_heure"])
+            ->setArrivalDraft($rawData["te_arrivee"])
+            ->setDepartureDraft($rawData["te_depart"])
+            ->setLastPort($this->portService->getPort($rawData["last_port"]))
+            ->setNextPort($this->portService->getPort($rawData["next_port"]))
+            ->setCallPort($rawData["call_port"])
+            ->setQuay($rawData["quai"])
+            ->setComment($rawData["commentaire"])
             ->setCargoes(
                 \array_map(
                     fn(array $cargo) => $this->makeShippingCallCargoFromDatabase($cargo),
@@ -142,11 +143,11 @@ final class ShippingService
     public function makeShippingCallCargoFromDatabase(array $rawData): ShippingCallCargo
     {
         $cargo = (new ShippingCallCargo())
-            ->setId($rawData["id"] ?? null)
-            ->setCargoName($rawData["marchandise"] ?? '')
-            ->setCustomer($rawData["client"] ?? '')
-            ->setOperation($rawData["operation"] ?? '')
-            ->setApproximate((bool) ($rawData["environ"] ?? false))
+            ->setId($rawData["id"])
+            ->setCargoName($rawData["marchandise"])
+            ->setCustomer($rawData["client"])
+            ->setOperation($rawData["operation"])
+            ->setApproximate((bool) $rawData["environ"])
             ->setBlTonnage(isset($rawData["tonnage_bl"]) ? (float) $rawData["tonnage_bl"] : null)
             ->setBlVolume(isset($rawData["cubage_bl"]) ? (float) $rawData["cubage_bl"] : null)
             ->setBlUnits(isset($rawData["nombre_bl"]) ? (int) $rawData["nombre_bl"] : null)
@@ -168,18 +169,20 @@ final class ShippingService
      */
     public function makeShippingCallCargoFromForm(array $rawData): ShippingCallCargo
     {
+        $rawDataAH = new ArrayHandler($rawData);
+
         $cargo = (new ShippingCallCargo())
-            ->setId($rawData["id"] ?? null)
-            ->setCargoName($rawData["marchandise"] ?? '')
-            ->setCustomer($rawData["client"] ?? '')
-            ->setOperation($rawData["operation"] ?? '')
-            ->setApproximate((bool) ($rawData["environ"] ?? false))
-            ->setBlTonnage(isset($rawData["tonnage_bl"]) ? (float) $rawData["tonnage_bl"] : null)
-            ->setBlVolume(isset($rawData["cubage_bl"]) ? (float) $rawData["cubage_bl"] : null)
-            ->setBlVolume(isset($rawData["nombre_bl"]) ? (int) $rawData["nombre_bl"] : null)
-            ->setOutturnTonnage(isset($rawData["tonnage_outturn"]) ? (float) $rawData["tonnage_outturn"] : null)
-            ->setOutturnVolume(isset($rawData["cubage_outturn"]) ? (float) $rawData["cubage_outturn"] : null)
-            ->setOutturnVolume(isset($rawData["nombre_outturn"]) ? (int) $rawData["nombre_outturn"] : null);
+            ->setId($rawDataAH->getInt('id'))
+            ->setCargoName($rawDataAH->getString('marchandise'))
+            ->setCustomer($rawDataAH->getString('client'))
+            ->setOperation($rawDataAH->getString('operation'))
+            ->setApproximate($rawDataAH->getBool('environ'))
+            ->setBlTonnage($rawDataAH->getFloat('tonnage_bl'))
+            ->setBlVolume($rawDataAH->getFloat('cubage_bl'))
+            ->setBlVolume($rawDataAH->getInt('nombre_bl'))
+            ->setOutturnTonnage($rawDataAH->getFloat('tonnage_outturn'))
+            ->setOutturnVolume($rawDataAH->getFloat('cubage_outturn'))
+            ->setOutturnVolume($rawDataAH->getInt('nombre_outturn'));
 
         return $cargo;
     }

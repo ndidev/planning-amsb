@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Core\Array\Environment;
+use App\Core\Array\Server;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 
@@ -52,7 +54,7 @@ final class RootController extends Controller
 
         $etag = ETag::get($endpointsList);
 
-        if (isset($_SERVER["HTTP_IF_NONE_MATCH"]) && $etag === $_SERVER["HTTP_IF_NONE_MATCH"]) {
+        if ($etag === Server::getString('HTTP_IF_NONE_MATCH')) {
             $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
             return;
         }
@@ -71,6 +73,7 @@ final class RootController extends Controller
      */
     private function buildIndex(): array
     {
+        /** @var array<string, string> */
         $endpointsList = [
             // Bois
             "rdvs_bois" => "bois/rdvs/{id}{?date_debut={jj/mm/aaaa}&date_fin={jj/mm/aaaa}&client={client}&livraison={livraison}&fournisseur={fournisseur}&affreteur={affreteur}&transporteur={transporteur}}",
@@ -116,7 +119,7 @@ final class RootController extends Controller
         ];
 
         foreach ($endpointsList as $description => $path) {
-            $endpointsList[$description] = $_ENV["API_URL"] . "/" . $path;
+            $endpointsList[$description] = Environment::getString('API_URL') . "/" . $path;
         }
 
         return $endpointsList;

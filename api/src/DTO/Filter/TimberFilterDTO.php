@@ -29,21 +29,21 @@ final readonly class TimberFilterDTO
      */
     public function __construct(HTTPRequestQuery $query)
     {
-        $this->startDate = $query->getParam('date_debut', self::DEFAULT_START_DATE, 'datetime');
+        $this->startDate = $query->getDatetime('date_debut', self::DEFAULT_START_DATE);
 
-        $this->endDate = $query->getParam('date_fin', self::DEFAULT_END_DATE, 'datetime');
+        $this->endDate = $query->getDatetime('date_fin', self::DEFAULT_END_DATE);
 
-        $this->supplierFilter = trim($query->getParam('fournisseur', ''), ',');
+        $this->supplierFilter = trim($query->getString('fournisseur'), ',');
 
-        $this->customerFilter = trim($query->getParam('client', ''), ',');
+        $this->customerFilter = trim($query->getString('client'), ',');
 
-        $this->loadingPlaceFilter = trim($query->getParam('chargement', ''), ',');
+        $this->loadingPlaceFilter = trim($query->getString('chargement'), ',');
 
-        $this->deliveryPlaceFilter = trim($query->getParam('livraison', ''), ',');
+        $this->deliveryPlaceFilter = trim($query->getString('livraison'), ',');
 
-        $this->transportFilter = trim($query->getParam('transporteur', ''), ',');
+        $this->transportFilter = trim($query->getString('transporteur'), ',');
 
-        $this->chartererFilter = trim($query->getParam('affreteur', ''), ',');
+        $this->chartererFilter = trim($query->getString('affreteur'), ',');
     }
 
     public function getSqlStartDate(): string

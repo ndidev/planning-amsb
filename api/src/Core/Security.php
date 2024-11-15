@@ -8,6 +8,7 @@ namespace App\Core;
 
 use App\Core\Database\Redis;
 
+use App\Core\Array\Server;
 use const App\Core\Component\Constants\{ONE_SECOND, ONE_MINUTE};
 
 /**
@@ -55,7 +56,7 @@ final class Security
      */
     public static function preventBruteforce(): void
     {
-        $client_ip_address = $_SERVER["REMOTE_ADDR"];
+        $client_ip_address = Server::getString('REMOTE_ADDR');
 
         try {
             // Increment the number of connection attempts and, if need be, block the IP address
@@ -92,7 +93,7 @@ final class Security
      */
     private static function isIpBlocked(): bool
     {
-        $client_ip_address = $_SERVER["REMOTE_ADDR"];
+        $client_ip_address = Server::getString('REMOTE_ADDR');
 
         try {
             if (static::getRedis()->get("security:blocked:$client_ip_address")) {

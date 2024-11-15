@@ -7,56 +7,45 @@ declare(strict_types=1);
 namespace App\Tests\Core\HTTP;
 
 use App\Core\HTTP\HTTPRequestBody;
-use App\Core\HTTP\RequestParameterStore;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(HTTPRequestBody::class)]
-#[CoversClass(RequestParameterStore::class)]
 final class HTTPRequestBodyTest extends TestCase
 {
-    public function testInstanciation(): void
-    {
-        // Given
-        $body = HTTPRequestBody::buildFromRequest();
-
-        // Then
-        $this->assertInstanceOf(HTTPRequestBody::class, $body);
-    }
-
     public function testBuildWithPost(): void
     {
         // Given
         $_POST = [
             'key' => 'value',
         ];
-        $body = HTTPRequestBody::buildFromRequest();
+        $body = new HTTPRequestBody();
 
         // When
         $reflectionClass = new \ReflectionClass($body);
-        $parameterBag = $reflectionClass->getProperty("parameterBag")->getValue($body);
+        $store = $reflectionClass->getProperty("store")->getValue($body);
 
         // Then
-        $this->assertSame($_POST, $parameterBag);
+        $this->assertSame($_POST, $store);
     }
 
     public function testBuildWithPhpInput(): void
     {
         // Given
-        $body = HTTPRequestBody::buildFromRequest();
+        $body = new HTTPRequestBody();
 
         // When
         $reflectionClass = new \ReflectionClass($body);
-        $parameterBag = $reflectionClass->getProperty("parameterBag")->getValue($body);
+        $store = $reflectionClass->getProperty("store")->getValue($body);
 
         // Then
-        $this->assertIsArray($parameterBag);
+        $this->assertIsArray($store);
     }
 
     public function testIsEmpty(): void
     {
         // Given
-        $body = HTTPRequestBody::buildFromRequest();
+        $body = new HTTPRequestBody();
 
         // Then
         $this->assertTrue($body->isEmpty());

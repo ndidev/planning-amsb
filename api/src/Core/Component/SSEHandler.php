@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace App\Core\Component;
 
+use App\Core\Array\Environment;
+use App\Core\Array\Server;
 use App\Core\Interfaces\Arrayable;
 use App\Core\Logger\ErrorLogger;
 
@@ -43,7 +45,7 @@ class SSEHandler
             "type" => $type,
             "id" => $id,
             "data" => $data instanceof Arrayable ? $data->toArray() : $data,
-            "origin" => $_SERVER["HTTP_X_SSE_CONNECTION"] ?? null,
+            "origin" => Server::getString('HTTP_X_SSE_CONNECTION', null),
         ];
     }
 
@@ -52,7 +54,15 @@ class SSEHandler
      */
     public function notify(): void
     {
-        $url = "http://{$_ENV["SSE_HOST"]}:{$_ENV["SSE_UPDATES_PORT"]}";
+        $host = Environment::getString('HTTP_HOST');
+        $port = Environment::getInt('SERVER_PORT');
+
+        if (!$host || !$port) {
+            ErrorLogger::log(new \Exception("L'hôte et le port du serveur SSE ne sont pas définis"));
+            return;
+        }
+
+        $url = "http://{$host}:{$port}";
 
         foreach ($this->events as $key => $event) {
             $options = [

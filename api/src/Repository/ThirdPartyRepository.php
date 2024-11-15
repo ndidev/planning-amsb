@@ -14,21 +14,21 @@ use App\Service\ThirdPartyService;
 
 /**
  * @phpstan-type ThirdPartyArray array{
- *                                id?: int,
- *                                nom_court?: string,
- *                                nom_complet?: string,
- *                                adresse_ligne_1?: string,
- *                                adresse_ligne_2?: string,
- *                                cp?: string,
- *                                ville?: string,
- *                                pays?: string,
- *                                telephone?: string,
- *                                commentaire?: string,
- *                                non_modifiable?: bool,
- *                                lie_agence?: bool,
- *                                roles?: string,
- *                                logo?: string,
- *                                actif?: bool,
+ *                                id: int,
+ *                                nom_court: string,
+ *                                nom_complet: string,
+ *                                adresse_ligne_1: string,
+ *                                adresse_ligne_2: string,
+ *                                cp: string,
+ *                                ville: string,
+ *                                pays: string,
+ *                                telephone: string,
+ *                                commentaire: string,
+ *                                non_modifiable: bool,
+ *                                lie_agence: bool,
+ *                                roles: string,
+ *                                logo: string,
+ *                                actif: bool,
  *                                nombre_rdv?: int
  *                              }
  */
@@ -91,6 +91,8 @@ final class ThirdPartyRepository extends Repository
         $thirdPartyRaw = $request->fetch();
 
         if (!\is_array($thirdPartyRaw)) return null;
+
+        /** @phpstan-var ThirdPartyArray $thirdPartyRaw */
 
         $thirdParty = $this->thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw);
 
@@ -222,7 +224,7 @@ final class ThirdPartyRepository extends Repository
      */
     public function deleteThirdParty(int $id): bool
     {
-        $appointmentCount = $this->getAppointmentCountForId($id);
+        $appointmentCount = $this->fetchAppointmentCountForId($id);
         if ($appointmentCount > 0) {
             throw new ClientException("Le tiers est concerné par {$appointmentCount} rdv. Impossible de le supprimer.");
         }
@@ -242,9 +244,9 @@ final class ThirdPartyRepository extends Repository
      * 
      * @param int $id Optionnel. ID du tiers à récupérer.
      * 
-     * @return int|false 
+     * @return int
      */
-    public function getAppointmentCountForId(int $id): int|false
+    public function fetchAppointmentCountForId(int $id): int
     {
         $statement =
             "SELECT 

@@ -6,15 +6,13 @@ declare(strict_types=1);
 
 namespace App\DTO;
 
+/**
+ * @phpstan-import-type TideArray from \App\Repository\TideRepository
+ */
 final class TidesDTO implements \JsonSerializable
 {
     /**
-     * @var list<array{
-     *             date: string,
-     *             heure: string,
-     *             te_cesson: float,
-     *             te_bassin: float
-     *           }>
+     * @phpstan-var list<TideArray>
      */
     private array $tides = [];
 
@@ -29,6 +27,7 @@ final class TidesDTO implements \JsonSerializable
     public function __construct(array $tides)
     {
         for ($i = 0; $i < count($tides); $i++) {
+            // @phpstan-ignore assign.propertyType
             $this->tides[$i] = [
                 "date" => $tides[$i]["date"],
                 "heure" => \substr($tides[$i]["heure"], 0, -3),

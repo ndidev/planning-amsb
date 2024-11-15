@@ -11,6 +11,7 @@ use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
+use App\Core\Array\Environment;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\ShippingService;
@@ -18,7 +19,6 @@ use App\Service\ShippingService;
 final class ShippingCallController extends Controller
 {
     private ShippingService $shippingService;
-    /** @phpstan-var Module::* $module */
     private string $module = Module::SHIPPING;
     private string $sseEventName = "consignation/escales";
 
@@ -140,7 +140,7 @@ final class ShippingCallController extends Controller
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)
-            ->addHeader("Location", $_ENV["API_URL"] . "/consignation/escales/$id")
+            ->addHeader("Location", Environment::getString('API_URL') . "/consignation/escales/$id")
             ->setJSON($newCall);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $newCall);

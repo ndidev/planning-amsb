@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\HTTPRequestBody;
@@ -49,19 +50,21 @@ final class BulkService
      */
     public function makeBulkAppointmentFromDatabase(array $rawData): BulkAppointment
     {
+        $rawDataAH = new ArrayHandler($rawData);
+
         $appointment = (new BulkAppointment())
-            ->setId($rawData["id"] ?? null)
-            ->setDate($rawData["date_rdv"] ?? new \DateTimeImmutable("now"))
-            ->setTime($rawData["heure"] ?? null)
-            ->setProduct($this->getProduct($rawData["produit"] ?? null))
-            ->setQuality($this->getQuality($rawData["qualite"] ?? null))
-            ->setQuantity($rawData["quantite"] ?? 0, $rawData["max"] ?? false)
-            ->setReady($rawData["commande_prete"] ?? false)
-            ->setSupplier($this->thirdPartyService->getThirdParty($rawData["fournisseur"] ?? null))
-            ->setCustomer($this->thirdPartyService->getThirdParty($rawData["client"] ?? null))
-            ->setCarrier($this->thirdPartyService->getThirdParty($rawData["transporteur"] ?? null))
-            ->setOrderNumber($rawData["num_commande"] ?? "")
-            ->setComments($rawData["commentaire"] ?? "");
+            ->setId($rawDataAH->getInt('id'))
+            ->setDate($rawDataAH->getDatetime('date_rdv', new \DateTimeImmutable("now")))
+            ->setTime($rawDataAH->getDatetime('heure', null))
+            ->setProduct($this->getProduct($rawDataAH->getInt('produit')))
+            ->setQuality($this->getQuality($rawDataAH->getInt('qualite')))
+            ->setQuantity($rawDataAH->getInt('quantite', 0), $rawDataAH->getBool('max'))
+            ->setReady($rawDataAH->getBool('commande_prete'))
+            ->setSupplier($this->thirdPartyService->getThirdParty($rawDataAH->getInt('fournisseur')))
+            ->setCustomer($this->thirdPartyService->getThirdParty($rawDataAH->getInt('client')))
+            ->setCarrier($this->thirdPartyService->getThirdParty($rawDataAH->getInt('transporteur')))
+            ->setOrderNumber($rawDataAH->getString('num_commande'))
+            ->setComments($rawDataAH->getString('commentaire'));
 
         return $appointment;
     }
@@ -225,10 +228,10 @@ final class BulkService
     public function makeProductFromDatabase(array $rawData): BulkProduct
     {
         $product = (new BulkProduct())
-            ->setId($rawData["id"] ?? null)
-            ->setName($rawData["nom"] ?? "")
-            ->setColor($rawData["couleur"] ?? "")
-            ->setUnit($rawData["unite"] ?? "");
+            ->setId($rawData["id"])
+            ->setName($rawData["nom"])
+            ->setColor($rawData["couleur"])
+            ->setUnit($rawData["unite"]);
 
         $qualities = \array_map(
             fn(array $quality) => $this->makeQualityFromDatabase($quality),
@@ -287,7 +290,7 @@ final class BulkService
      */
     public function getProducts(): Collection
     {
-        return $this->productRepository->getProducts();
+        return $this->productRepository->fetchProducts();
     }
 
     /**
@@ -303,7 +306,7 @@ final class BulkService
             return null;
         }
 
-        return $this->productRepository->getProduct($id);
+        return $this->productRepository->fetchProduct($id);
     }
 
     /**
@@ -364,9 +367,9 @@ final class BulkService
     public function makeQualityFromDatabase(array $rawData): BulkQuality
     {
         $quality = (new BulkQuality())
-            ->setId($rawData["id"] ?? null)
-            ->setName($rawData["nom"] ?? "")
-            ->setColor($rawData["couleur"] ?? "");
+            ->setId($rawData["id"])
+            ->setName($rawData["nom"])
+            ->setColor($rawData["couleur"]);
 
         return $quality;
     }
@@ -382,10 +385,12 @@ final class BulkService
      */
     public function makeQualityFromFormData(array $rawData): BulkQuality
     {
+        $rawDataAH = new ArrayHandler($rawData);
+
         $quality = (new BulkQuality())
-            ->setId($rawData["id"] ?? null)
-            ->setName($rawData["nom"] ?? "")
-            ->setColor($rawData["couleur"] ?? "");
+            ->setId($rawDataAH->getInt('id'))
+            ->setName($rawDataAH->getString('nom'))
+            ->setColor($rawDataAH->getString('couleur'));
 
         return $quality;
     }
@@ -399,7 +404,7 @@ final class BulkService
      */
     public function getQualities(int $productId): array
     {
-        return $this->productRepository->getProductQualities($productId);
+        return $this->productRepository->fetchProductQualities($productId);
     }
 
     /**
@@ -415,6 +420,6 @@ final class BulkService
             return null;
         }
 
-        return $this->productRepository->getQuality($id);
+        return $this->productRepository->fetchQuality($id);
     }
 }

@@ -11,6 +11,7 @@ use App\Core\Exceptions\Client\Auth\AdminException;
 use App\Core\Exceptions\Client\Auth\ForbiddenException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
+use App\Core\Array\Environment;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\UserService;
@@ -133,7 +134,7 @@ final class UserAccountController extends Controller
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)
-            ->addHeader("Location", $_ENV["API_URL"] . "/admin/users/$uid")
+            ->addHeader("Location", Environment::getString('API_URL') . "/admin/users/$uid")
             ->setJSON($newUser);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $uid, $newUser);

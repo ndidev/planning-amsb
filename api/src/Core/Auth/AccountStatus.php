@@ -6,17 +6,19 @@ declare(strict_types=1);
 
 namespace App\Core\Auth;
 
+use App\Core\Exceptions\Client\Auth\AccountStatusException;
+
 /**
  * Status of user accounts.
  */
-enum AccountStatus: string
+abstract class AccountStatus
 {
     /**
      * Active account.
      * 
      * The account can be used normally.
      */
-    case ACTIVE = "active";
+    const ACTIVE = "active";
 
     /**
      * Account awaiting activation.
@@ -24,7 +26,7 @@ enum AccountStatus: string
      * The account has been created but the password
      * hasn't yet been initialized by the user.
      */
-    case PENDING = "pending";
+    const PENDING = "pending";
 
     /**
      * Deactivated account.
@@ -34,7 +36,7 @@ enum AccountStatus: string
      * 
      * Only an administrator can reactivate the account.
      */
-    case INACTIVE = "inactive";
+    const INACTIVE = "inactive";
 
     /**
      * Locked account.
@@ -44,7 +46,7 @@ enum AccountStatus: string
      * 
      * Only an administrator can unlock the account.
      */
-    case LOCKED = "locked";
+    const LOCKED = "locked";
 
     /**
      * Deleted account.
@@ -53,5 +55,56 @@ enum AccountStatus: string
      * 
      * It is preserved to keep the history of operations but cannot be recovered.
      */
-    case DELETED = "deleted";
+    const DELETED = "deleted";
+
+    /**
+     * Attempts to convert a status to a constant.
+     * 
+     * Returns null if the status is not recognized.
+     * 
+     * @param ?string $temptativeStatus
+     * 
+     * @phpstan-return ?self::*
+     */
+    public static function tryFrom(?string $temptativeStatus): ?string
+    {
+        if (!$temptativeStatus) {
+            return null;
+        }
+
+        return match (strtolower($temptativeStatus)) {
+            self::ACTIVE => self::ACTIVE,
+            self::PENDING => self::PENDING,
+            self::INACTIVE => self::INACTIVE,
+            self::LOCKED => self::LOCKED,
+            self::DELETED => self::DELETED,
+            default => null,
+        };
+    }
+
+    /**
+     * Attempts to convert a status to a constant.
+     * 
+     * Throws an exception if the status is not recognized.
+     * 
+     * @param ?string $temptativeStatus
+     * 
+     * @phpstan-return self::*
+     * 
+     * @throws AccountStatusException If the status is not recognized.
+     */
+    public static function from(?string $temptativeStatus): string
+    {
+        $status = self::tryFrom($temptativeStatus);
+
+        if (!$status) {
+            if (null === $temptativeStatus) {
+                $temptativeStatus = 'null';
+            }
+
+            throw new AccountStatusException($temptativeStatus);
+        }
+
+        return $status;
+    }
 }

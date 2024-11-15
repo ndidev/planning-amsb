@@ -297,7 +297,7 @@ final class UserAccountTest extends TestCase
                 'role1' => 0,
                 'role2' => 1,
             ],
-            'statut' => AccountStatus::ACTIVE->value,
+            'statut' => AccountStatus::ACTIVE,
             'commentaire' => 'Comments',
             'historique' => 'History',
             'last_connection' => '2024-03-05 12:15:16',

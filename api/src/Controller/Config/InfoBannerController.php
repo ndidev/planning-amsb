@@ -11,6 +11,7 @@ use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
+use App\Core\Array\Environment;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\InfoBannerService;
@@ -18,7 +19,6 @@ use App\Service\InfoBannerService;
 final class InfoBannerController extends Controller
 {
     private InfoBannerService $infoBannerService;
-    /** @phpstan-var Module::* $module */
     private string $module = Module::CONFIG;
     private string $sseEventName = "config/bandeau-info";
 
@@ -112,7 +112,7 @@ final class InfoBannerController extends Controller
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)
-            ->addHeader("Location", $_ENV["API_URL"] . "/bandeau-info/$id")
+            ->addHeader("Location", Environment::getString('API_URL') . "/bandeau-info/$id")
             ->setJSON($newLine);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $newLine);

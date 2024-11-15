@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Core\Auth\User;
+use App\Core\Array\Environment;
 use App\Core\Component\SSEHandler;
 use App\Core\Exceptions\Client\Auth\AuthException;
 use App\Core\HTTP\HTTPRequest;
@@ -86,7 +87,7 @@ abstract class Controller
    */
   private function authenticateUser(): void
   {
-    if ($_ENV["AUTH"] === "ON") {
+    if (Environment::getString('AUTH') === "ON") {
       $validSession = true;
       $validApiKey = true;
 

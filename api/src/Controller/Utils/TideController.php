@@ -11,6 +11,7 @@ use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\ClientException;
+use App\Core\Array\Environment;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\TideService;
@@ -75,10 +76,10 @@ final class TideController extends Controller
      */
     public function getTides(): void
     {
-        /** @var \DateTime $startDate */
-        $startDate = $this->request->getQuery()->getParam('debut', '0001-01-01', 'datetime');
-        /** @var \DateTime $endDate */
-        $endDate = $this->request->getQuery()->getParam('fin', '9999-12-31', 'datetime');
+        $query = $this->request->getQuery();
+
+        $startDate = $query->getDatetime('debut', '0001-01-01');
+        $endDate = $query->getDatetime('fin', '9999-12-31');
 
         $tides = $this->service->getTides($startDate, $endDate);
 
@@ -149,7 +150,7 @@ final class TideController extends Controller
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)
-            ->addHeader("Location", $_ENV["API_URL"] . "/marees/$year")
+            ->addHeader("Location", Environment::getString('API_URL') . "/marees/$year")
             ->setJSON($data);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $year, $data);

@@ -29,31 +29,31 @@ final readonly class ShippingFilterDTO
      */
     public function __construct(HTTPRequestQuery $query)
     {
-        $this->startDate = $query->getParam('date_debut', self::DEFAULT_START_DATE, 'datetime');
+        $this->startDate = $query->getDatetime('date_debut', self::DEFAULT_START_DATE);
 
-        $this->endDate = $query->getParam('date_fin', self::DEFAULT_END_DATE, 'datetime');
+        $this->endDate = $query->getDatetime('date_fin', self::DEFAULT_END_DATE);
 
         /** @var string */
         $shipFilter = preg_replace(
             "/([^,]+),?/",
             "'$1',",
-            $query->getParam('navire', '', 'string', true)
+            $query->getString('navire')
         );
         $this->shipFilter = trim($shipFilter, ",");
 
-        $this->shipOwnerFilter = trim($query->getParam('armateur', ''));
+        $this->shipOwnerFilter = trim($query->getString('armateur'));
 
         $this->cargoFilter =
-            trim($this->splitStringParameters($query->getParam('marchandise', '')), ",");
+            trim($this->splitStringParameters($query->getString('marchandise')), ',');
 
         $this->customerFilter =
-            trim($this->splitStringParameters($query->getParam('client', '')), ",");
+            trim($this->splitStringParameters($query->getString('client')), ',');
 
         $this->lastPortFilter =
-            trim($this->splitStringParameters($query->getParam('last_port', '')), ",");
+            trim($this->splitStringParameters($query->getString('last_port')), ',');
 
         $this->nextPortFilter =
-            trim($this->splitStringParameters($query->getParam('next_port', '')), ",");
+            trim($this->splitStringParameters($query->getString('next_port')), ',');
     }
 
     public function getSqlStartDate(): string

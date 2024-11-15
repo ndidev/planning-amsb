@@ -50,8 +50,10 @@ class UserAccount extends AbstractEntity
 
     /**
      * Statut du compte de l'utilisateur.
+     * 
+     * @phpstan-var AccountStatus::* $status
      */
-    private AccountStatus $status = AccountStatus::INACTIVE;
+    private string $status = AccountStatus::INACTIVE;
 
     /**
      * Rôles de l'utilisateur.
@@ -166,24 +168,23 @@ class UserAccount extends AbstractEntity
         return $this->lastLogin?->format("Y-m-d H:i:s");
     }
 
-    public function setStatus(AccountStatus|string $status): static
+    public function setStatus(string $status): static
     {
-        if (\is_string($status)) {
-            $statusFromEnum = AccountStatus::tryFrom($status);
+        $statusFromEnum = AccountStatus::tryFrom($status);
 
-            if (null === $statusFromEnum) {
-                throw new \InvalidArgumentException("Statut invalide");
-            }
-
-            $this->status = $statusFromEnum;
-        } else {
-            $this->status = $status;
+        if (null === $statusFromEnum) {
+            throw new \InvalidArgumentException("Statut invalide");
         }
+
+        $this->status = $statusFromEnum;
 
         return $this;
     }
 
-    public function getStatus(): AccountStatus
+    /**
+     * @phpstan-return AccountStatus::*
+     */
+    public function getStatus(): string
     {
         return $this->status;
     }
@@ -212,7 +213,13 @@ class UserAccount extends AbstractEntity
      */
     public function getRole(string $role): int
     {
-        return $this->roles->$role;
+        /**
+         * @var int
+         * @phpstan-var UserRoles::*
+         */
+        $roleValue = $this->roles->$role;
+
+        return $roleValue;
     }
 
     public function setAdmin(bool $isAdmin): static
@@ -261,7 +268,7 @@ class UserAccount extends AbstractEntity
             "login" => $this->getLogin(),
             "nom" => $this->getName(),
             "roles" => $this->getRoles()->toArray(),
-            "statut" => $this->getStatus()->value,
+            "statut" => $this->getStatus(),
             "commentaire" => $this->getComments(),
             "historique" => $this->getHistory(),
             "last_connection" => $this->getSqlLastLogin(),

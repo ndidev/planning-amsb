@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace App\Core\Router;
 
+use App\Core\Array\Server;
+
 /**
  * Router.
  * 
@@ -203,16 +205,16 @@ class Router
      * 
      * @param string $requestUrl The request url to match.
      * 
-     * @return array{target: mixed, params: array<string, mixed>, name: ?string}|false Array with route information on success, false on failure (no match).
+     * @return array{target: mixed, params: array<string, string|int>, name: ?string}|false Array with route information on success, false on failure (no match).
      */
     public function match(?string $requestUrl = null): array|false
     {
-
+        /** @var array<string|int, string|int> $params */
         $params = [];
 
         // set Request Url if it isn't passed as parameter
         if ($requestUrl === null) {
-            $requestUrl = $_SERVER['REQUEST_URI'] ?? '/';
+            $requestUrl = Server::getString('REQUEST_URI', '/');
         }
 
         // strip base path from request url
@@ -262,6 +264,8 @@ class Router
                         }
                     }
                 }
+
+                /** @var array<string, string|int> $params */
 
                 return [
                     'target' => $target,

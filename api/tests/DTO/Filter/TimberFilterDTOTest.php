@@ -19,7 +19,7 @@ final class TimberFilterDTOTest extends TestCase
         // Given
         $date = '2023-01-01';
         $_SERVER['REQUEST_URI'] = "/path?date_debut={$date}";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -33,7 +33,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
         $expected = (new \DateTime(TimberFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
 
@@ -48,7 +48,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?date_debut=";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
         $expected = (new \DateTime(TimberFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
 
@@ -63,7 +63,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?date_debut=illegal";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
         $expected = (new \DateTime(TimberFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
 
@@ -79,7 +79,7 @@ final class TimberFilterDTOTest extends TestCase
         // Given
         $date = '2023-12-31';
         $_SERVER['REQUEST_URI'] = "/path?date_fin={$date}";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -93,7 +93,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
         $expected = (new \DateTime(TimberFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
 
@@ -108,7 +108,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?date_fin=";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
         $expected = (new \DateTime(TimberFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
 
@@ -123,7 +123,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?date_fin=illegal";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
         $expected = (new \DateTime(TimberFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
 
@@ -138,7 +138,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?fournisseur=1,2";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -152,7 +152,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?fournisseur=1,2,";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -166,7 +166,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -180,7 +180,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?client=1,2";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -194,7 +194,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?client=1,2,";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -208,7 +208,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -222,7 +222,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?chargement=1,2";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -236,7 +236,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?chargement=1,2,";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -250,7 +250,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -264,7 +264,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?livraison=3,4";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -278,7 +278,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?livraison=3,4,";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -292,7 +292,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -306,7 +306,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?transporteur=1,2";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -320,7 +320,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?transporteur=1,2,";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -334,7 +334,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -348,7 +348,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?affreteur=1,2";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -362,7 +362,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path?affreteur=1,2,";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
 
         // When
@@ -376,7 +376,7 @@ final class TimberFilterDTOTest extends TestCase
     {
         // Given
         $_SERVER['REQUEST_URI'] = "/path";
-        $query = HTTPRequestQuery::buildFromRequest();
+        $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
 
         // When

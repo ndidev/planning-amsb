@@ -11,6 +11,7 @@ use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
+use App\Core\Array\Environment;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\PdfService;
@@ -18,7 +19,6 @@ use App\Service\PdfService;
 final class PdfConfigController extends Controller
 {
     private PdfService $pdfService;
-    /** @phpstan-var Module::* $module */
     private string $module = Module::CONFIG;
     private string $sseEventName = "config/pdf";
 
@@ -145,7 +145,7 @@ final class PdfConfigController extends Controller
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)
-            ->addHeader("Location", $_ENV["API_URL"] . "/pdf/configs/$id")
+            ->addHeader("Location", Environment::getString('API_URL') . "/pdf/configs/$id")
             ->setJSON($newPdfConfig);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $newPdfConfig);

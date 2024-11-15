@@ -6,32 +6,19 @@ declare(strict_types=1);
 
 namespace App\Core\HTTP;
 
+use App\Core\Array\ArrayHandler;
+
 /**
  * Class to handle request body parameters.
- * 
- * @phpstan-import-type QueryArray from RequestParameterStore
  */
-final class HTTPRequestBody extends RequestParameterStore
+final class HTTPRequestBody extends ArrayHandler
 {
-    public static function buildFromRequest(): self
+    public function __construct()
     {
         $body = !empty($_POST)
             ? $_POST
             : (array) \json_decode(\file_get_contents("php://input") ?: '', true);
 
-        return new self($body);
-    }
-
-    /**
-     * @phpstan-param QueryArray $rawBody
-     */
-    private function __construct(array $rawBody)
-    {
-        parent::__construct($rawBody);
-    }
-
-    public function isEmpty(): bool
-    {
-        return empty($this->parameterBag);
+        $this->store = $body;
     }
 }

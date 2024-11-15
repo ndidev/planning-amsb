@@ -12,6 +12,7 @@ use App\Core\Component\SSEHandler;
 use App\Core\Exceptions\Client\Auth\UnauthorizedException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\ClientException;
+use App\Core\Array\Environment;
 use App\Core\HTTP\HTTPRequestBody;
 use App\DTO\CurrentUserFormDTO;
 use App\DTO\CurrentUserInfoDTO;
@@ -154,7 +155,7 @@ final class UserService
             throw new BadRequestException("Le nom est obligatoire.");
         }
 
-        return $this->userRepository->createUser($user, $this->currentUser?->name ?? '');
+        return $this->userRepository->createUser($user, $this->currentUser->name ?? '');
     }
 
     /**
@@ -174,7 +175,7 @@ final class UserService
             $user->setAdmin($this->currentUser->isAdmin());
         }
 
-        return $this->userRepository->updateUser($user, $this->currentUser?->name ?? '');
+        return $this->userRepository->updateUser($user, $this->currentUser->name ?? '');
     }
 
     public function deleteUserAccount(string $uid, string $adminName): void
@@ -217,7 +218,7 @@ final class UserService
             "login" => $this->currentUser->login,
             "nom" => $this->currentUser->name,
             "roles" => $this->currentUser->roles,
-            "statut" => $this->currentUser->status->value,
+            "statut" => $this->currentUser->status,
         ];
     }
 
@@ -232,11 +233,13 @@ final class UserService
     {
         $currentUserDTO = $this->makeCurrentUserFormDTO($input);
 
+        $minPasswordLength = Environment::getInt('AUTH_LONGUEUR_MINI_PASSWORD');
+
         if (
             $currentUserDTO->getPassword()
-            && \strlen($currentUserDTO->getPassword()) < $_ENV["AUTH_LONGUEUR_MINI_PASSWORD"]
+            && \strlen($currentUserDTO->getPassword()) < $minPasswordLength
         ) {
-            throw new ClientException("Le mot de passe doit contenir au moins {$_ENV["AUTH_LONGUEUR_MINI_PASSWORD"]} caractères.");
+            throw new ClientException("Le mot de passe doit contenir au moins {$minPasswordLength} caractères.");
         }
 
         $updatedUser = $this->userRepository->updateCurrentUser($currentUserDTO);

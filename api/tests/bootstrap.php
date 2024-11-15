@@ -12,6 +12,7 @@ define('API', ROOTPATH . '/api');
 define('FONTS', API . '/font');
 define('UNIFONTS', FONTS . '/unifont');
 define('LOGOS', ROOTPATH . '/logos');
+define('DATETIME_ALLOWED_DELTA', 60);
 
 require_once API . "/vendor/autoload.php";
 require_once API . "/src/Core/Component/Constants.php";

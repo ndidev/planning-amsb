@@ -9,6 +9,7 @@ namespace App\Controller\Timber;
 use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\TimberService;
@@ -16,7 +17,6 @@ use App\Service\TimberService;
 final class TransportSuggestionsController extends Controller
 {
     private TimberService $service;
-    /** @phpstan-var Module::* $module */
     private string $module = Module::TIMBER;
 
     public function __construct()
@@ -57,8 +57,14 @@ final class TransportSuggestionsController extends Controller
             throw new AccessException();
         }
 
-        $loadingPlaceId = (int) $this->request->getQuery()->getParam('chargement');
-        $deliveryPlaceId = (int) $this->request->getQuery()->getParam('livraison');
+        $query = $this->request->getQuery();
+
+        $loadingPlaceId = $query->getInt('chargement');
+        $deliveryPlaceId = $query->getInt('livraison');
+
+        if ($loadingPlaceId === null || $deliveryPlaceId === null) {
+            throw new BadRequestException("Les paramètres 'chargement' et 'livraison' sont obligatoires.");
+        }
 
         $suggestions = $this->service->getTransportSuggestions($loadingPlaceId, $deliveryPlaceId);
 

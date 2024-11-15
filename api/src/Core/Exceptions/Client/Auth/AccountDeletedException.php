@@ -17,11 +17,12 @@ class AccountDeletedException extends AccountStatusException
 
     public function __construct(string $message = self::DEFAULT_MESSAGE)
     {
-        parent::__construct($this->getStatut(), $message);
+        parent::__construct($this->getStatus(), $message);
     }
 
-    public function getStatut(): string
+    #[\Override]
+    public function getStatus(): string
     {
-        return AccountStatus::DELETED->value;
+        return AccountStatus::DELETED;
     }
 }

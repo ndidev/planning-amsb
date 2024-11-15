@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Core\Database;
 
 use App\Core\Exceptions\Server\DB\DBConnectionException;
+use App\Core\Array\Environment;
 
 /**
  * Connection to MySQL.
@@ -19,11 +20,11 @@ class MySQL extends \PDO
      */
     public function __construct(string $database = null)
     {
-        $host = $_ENV["DB_HOST"];
-        $port = $_ENV["DB_PORT"];
-        $base = $database ?? $_ENV["DB_BASE"];
-        $user = $_ENV["DB_USER"];
-        $pass = $_ENV["DB_PASS"];
+        $host = Environment::getString('DB_HOST');
+        $port = Environment::getInt('DB_PORT', 3306);
+        $base = $database ?? Environment::getString('DB_BASE');
+        $user = Environment::getString('DB_USER');
+        $pass = Environment::getString('DB_PASS');
 
         try {
             parent::__construct(

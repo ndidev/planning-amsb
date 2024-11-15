@@ -11,6 +11,7 @@ use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
+use App\Core\Array\Environment;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\DTO\Filter\CharteringFilterDTO;
@@ -19,7 +20,6 @@ use App\Service\CharteringService;
 final class CharterController extends Controller
 {
     private CharteringService $charteringService;
-    /** @phpstan-var Module::* $module */
     private string $module = Module::CHARTERING;
     private string $sseEventName = "chartering/charters";
 
@@ -141,7 +141,7 @@ final class CharterController extends Controller
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)
-            ->addHeader("Location", $_ENV["API_URL"] . "/chartering/charters/$id")
+            ->addHeader("Location", Environment::getString('API_URL') . "/chartering/charters/$id")
             ->setJSON($newCharter);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $newCharter);

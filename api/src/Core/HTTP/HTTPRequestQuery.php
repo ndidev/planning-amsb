@@ -6,14 +6,15 @@ declare(strict_types=1);
 
 namespace App\Core\HTTP;
 
+use App\Core\Array\ArrayHandler;
+use App\Core\Array\Server;
+
 /**
  * Class to handle request query parameters (after "?").
- * 
- * @phpstan-import-type QueryArray from RequestParameterStore
  */
-final class HTTPRequestQuery extends RequestParameterStore
+final class HTTPRequestQuery extends ArrayHandler
 {
-    public static function buildFromRequest(): self
+    public function __construct()
     {
         $query = [];
 
@@ -21,21 +22,13 @@ final class HTTPRequestQuery extends RequestParameterStore
             $query = $_GET;
         } else {
             /** @var string|false */
-            $queryString = parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY);
+            $queryString = parse_url(Server::getString('REQUEST_URI'), PHP_URL_QUERY);
 
             if (\is_string($queryString)) {
                 parse_str($queryString, $query);
             }
         }
 
-        return new self($query);
-    }
-
-    /**
-     * @phpstan-param QueryArray $query
-     */
-    private function __construct(array $query)
-    {
-        parent::__construct($query);
+        $this->store = $query;
     }
 }

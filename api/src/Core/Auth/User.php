@@ -6,11 +6,12 @@ declare(strict_types=1);
 
 namespace App\Core\Auth;
 
+use App\Core\Array\ArrayHandler;
+use App\Core\Component\DateUtils;
 use App\Core\Component\Module;
 use App\Core\Component\SSEHandler;
 use App\Core\Database\MySQL;
 use App\Core\Database\Redis;
-use App\Core\Component\DateUtils;
 use App\Core\Exceptions\Client\Auth\AccountDeletedException;
 use App\Core\Exceptions\Client\Auth\AccountInactiveException;
 use App\Core\Exceptions\Client\Auth\AccountLockedException;
@@ -24,6 +25,8 @@ use App\Core\Exceptions\Client\Auth\MaxLoginAttemptsException;
 use App\Core\Exceptions\Client\Auth\SessionException;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\Core\Exceptions\Server\ServerException;
+use App\Core\Array\Environment;
+use App\Core\Array\Server;
 use App\Core\Security;
 use const App\Core\Component\Constants\ONE_WEEK;
 
@@ -67,8 +70,10 @@ class User
 
     /**
      * Statut du compte de l'utilisateur.
+     * 
+     * @phpstan-var AccountStatus::* $status
      */
-    public AccountStatus $status;
+    public string $status;
 
     /**
      * Rôles de l'utilisateur.
@@ -164,7 +169,7 @@ class User
                 throw new AccountDeletedException();
 
             default:
-                throw new AccountStatusException($this->status->value);
+                throw new AccountStatusException($this->status);
         }
 
         // Si tout est OK :
@@ -190,11 +195,11 @@ class User
      */
     public function logout(): void
     {
-        if (!isset($_COOKIE[$_ENV["SESSION_COOKIE_NAME"]])) {
+        $sid = $_COOKIE[Environment::getString('SESSION_COOKIE_NAME')] ?? null;
+
+        if (!\is_string($sid)) {
             return;
         }
-
-        $sid = $_COOKIE[$_ENV["SESSION_COOKIE_NAME"]];
 
         $this->deleteSession($sid);
     }
@@ -212,7 +217,7 @@ class User
 
         if ($this->status !== AccountStatus::PENDING) {
             throw new AccountStatusException(
-                $this->status->value,
+                $this->status,
                 "Le compte n'est pas en attente d'activation"
             );
         }
@@ -230,7 +235,6 @@ class User
             ->execute([
                 "uid" => $this->uid,
                 "password" => password_hash($password, PASSWORD_DEFAULT),
-                // "statut" => AccountStatus::ACTIVE->value
                 "statut" => AccountStatus::ACTIVE,
             ]);
 
@@ -255,11 +259,11 @@ class User
      */
     public function identifyFromSession(): User
     {
-        if (!isset($_COOKIE[$_ENV["SESSION_COOKIE_NAME"]])) {
+        $sid = $_COOKIE[Environment::getString('SESSION_COOKIE_NAME')] ?? null;
+
+        if (!\is_string($sid)) {
             throw new SessionException();
         }
-
-        $sid = $_COOKIE[$_ENV["SESSION_COOKIE_NAME"]];
 
         try {
             $this->identify(sid: $sid);
@@ -273,7 +277,7 @@ class User
         $this->populate();
 
         if ($this->status !== AccountStatus::ACTIVE) {
-            throw new AccountStatusException($this->status->value);
+            throw new AccountStatusException($this->status);
         }
 
         // Prolonger la session
@@ -292,7 +296,7 @@ class User
      */
     public function identifyFromApiKey(): User
     {
-        $apiKey = $_SERVER["HTTP_X_API_KEY"] ?? null;
+        $apiKey = Server::getString('HTTP_X_API_KEY', null);
 
         if (!$apiKey) {
             throw new InvalidApiKeyException();
@@ -322,9 +326,9 @@ class User
         }
 
         if (
-            !isset($apiKeyInfo["uid"])
-            || !isset($apiKeyInfo["status"])
-            || !isset($apiKeyInfo["expiration"])
+            !isset($apiKeyInfo["uid"]) || !\is_string($apiKeyInfo["uid"])
+            || !isset($apiKeyInfo["status"]) || !\is_string($apiKeyInfo["status"])
+            || !isset($apiKeyInfo["expiration"]) || !\is_string($apiKeyInfo["expiration"])
         ) {
             throw new InvalidApiKeyException();
         }
@@ -359,7 +363,7 @@ class User
         $this->populate();
 
         if ($this->status !== AccountStatus::ACTIVE) {
-            throw new AccountStatusException($this->status->value);
+            throw new AccountStatusException($this->status);
         }
 
         return $this;
@@ -532,15 +536,17 @@ class User
         $user = $this->redis->hGetAll("admin:users:{$this->uid}");
 
         // Prolongation cache
-        $this->redis->expire("admin:users:{$this->uid}", (int) $_ENV["SESSION_EXPIRATION"]);
+        $this->redis->expire("admin:users:{$this->uid}", Environment::getInt('SESSION_EXPIRATION', -1));
 
-        $this->login = $user["login"];
-        $this->password = $user["password"];
-        $this->canLogin = (bool) $user["can_login"];
-        $this->name = $user["nom"];
-        $this->loginAttempts = (int) $user["login_attempts"];
-        $this->status = AccountStatus::from($user["statut"]);
-        $this->roles->fillFromJsonString($user["roles"]);
+        $userAH = new ArrayHandler($user);
+
+        $this->login = $userAH->getString('login');
+        $this->password = $userAH->getString('password');
+        $this->canLogin = (bool) $userAH->getBool('can_login');
+        $this->name = $userAH->getString('nom');
+        $this->loginAttempts = (int) $userAH->getInt('login_attempts');
+        $this->status = AccountStatus::from($userAH->getString('statut'));
+        $this->roles->fillFromJsonString($userAH->getString('roles'));
     }
 
     /**
@@ -555,14 +561,14 @@ class User
      */
     private function registerSession(string $sid): void
     {
-        $this->redis->setex("admin:sessions:{$sid}", (int) $_ENV["SESSION_EXPIRATION"], $this->uid);
+        $this->redis->setex("admin:sessions:{$sid}", Environment::getInt('SESSION_EXPIRATION', -1), $this->uid);
 
-        setcookie($_ENV["SESSION_COOKIE_NAME"], $sid, [
-            "expires" => time() + (int) $_ENV["SESSION_EXPIRATION"],
-            "path" => $_ENV["SESSION_COOKIE_PATH"],
-            // "samesite" => str_starts_with($_SERVER['HTTP_HOST'], "localhost") ? "None" : "Strict",
+        setcookie(Environment::getString('SESSION_COOKIE_NAME'), $sid, [
+            "expires" => time() + Environment::getInt('SESSION_EXPIRATION'),
+            "path" => Environment::getString('SESSION_COOKIE_PATH'),
+            // "samesite" => str_starts_with(Server::getString('HTTP_HOST'), "localhost") ? "None" : "Strict",
             "samesite" => "Strict",
-            "secure" => $_ENV["APP_ENV"] !== "development",
+            "secure" => Environment::getString('APP_ENV') !== "development",
             // "secure" => true,
             "httponly" => true
         ]);
@@ -580,8 +586,8 @@ class User
     {
         $this->redis->del("admin:sessions:{$sid}");
 
-        setcookie($_ENV["SESSION_COOKIE_NAME"], "", [
-            "path" => $_ENV["SESSION_COOKIE_PATH"]
+        setcookie(Environment::getString('SESSION_COOKIE_NAME'), "", [
+            "path" => Environment::getString('SESSION_COOKIE_PATH')
         ]);
 
         $this->sse->addEvent("admin/sessions", "close", "sid:{$sid}");

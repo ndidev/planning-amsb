@@ -252,6 +252,8 @@ abstract class DateUtils
      * Make a DateTimeImmutable object from an input date or time.
      * 
      * @param \DateTimeInterface|string|null $datetime 
+     * 
+     * @return ?\DateTimeImmutable `null` if the date is invalid.
      */
     public static function makeDateTimeImmutable(\DateTimeInterface|string|null $datetime): ?\DateTimeImmutable
     {
@@ -264,9 +266,7 @@ abstract class DateUtils
                 return new \DateTimeImmutable($datetime);
             }
 
-            if ($datetime instanceof \DateTimeInterface) {
-                return \DateTimeImmutable::createFromInterface($datetime);
-            }
+            return \DateTimeImmutable::createFromInterface($datetime);
         } catch (\Throwable) {
             return null;
         }

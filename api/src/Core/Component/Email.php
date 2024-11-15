@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Core\Component;
 
+use App\Core\Array\Environment;
 use PHPMailer\PHPMailer\Exception as PHPMailerException;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
@@ -30,8 +31,8 @@ class Email extends PHPMailer
     private function setupSMTP(): void
     {
         // Office 365 server settings
-        if ((bool) ($_ENV["MAIL_DEBUG"] ?? false)) {
-            $debugLevel = (int) ($_ENV["MAIL_DEBUG_LEVEL"] ?? 0);
+        if (Environment::getBool('MAIL_DEBUG', false)) {
+            $debugLevel = Environment::getInt('MAIL_DEBUG_LEVEL', 0);
             if ($debugLevel < SMTP::DEBUG_OFF || $debugLevel > SMTP::DEBUG_LOWLEVEL) {
                 $debugLevel = 0;
             }
@@ -39,6 +40,17 @@ class Email extends PHPMailer
 
             $this->Debugoutput = function ($str, $level) {
                 $timestamp = "[" . date('d-M-Y H:i:s e') . "] ";
+
+                if (!\is_string($str)) {
+                    return;
+                }
+
+                if (\is_numeric($level)) {
+                    $level = (int) $level;
+                } else {
+                    return;
+                }
+
                 $message = $timestamp . PHP_EOL . "debug level $level; message: $str\n";
 
                 $outputFile = '/var/log/phpmailog.log';
@@ -52,15 +64,15 @@ class Email extends PHPMailer
                 fclose($fileHandle);
             };
         }
-        $this->isSMTP();                                  // Send using SMTP
-        $this->SMTPAuth   = true;                         // Enable SMTP authentication
-        $this->SMTPSecure = self::ENCRYPTION_STARTTLS;    // Enable TLS encryption; `PHPMailer::ENCRYPTION_SMTPS` also accepted
-        $this->Host       = $_ENV["MAIL_HOST"];           // Set the SMTP server to send through
-        $this->Port       = (int) $_ENV["MAIL_PORT"];     // TCP port to connect to
-        $this->Username   = $_ENV["MAIL_USER"];           // SMTP username
-        $this->Password   = $_ENV["MAIL_PASS"];           // SMTP password
+        $this->isSMTP();                                           // Send using SMTP
+        $this->SMTPAuth   = true;                                  // Enable SMTP authentication
+        $this->SMTPSecure = self::ENCRYPTION_STARTTLS;             // Enable TLS encryption; `PHPMailer::ENCRYPTION_SMTPS` also accepted
+        $this->Host       = Environment::getString('MAIL_HOST');   // Set the SMTP server to send through
+        $this->Port       = Environment::getInt('MAIL_PORT', 587); // TCP port to connect to
+        $this->Username   = Environment::getString('MAIL_USER');   // SMTP username
+        $this->Password   = Environment::getString('MAIL_PASS');   // SMTP password
 
-        if ($_ENV["APP_ENV"] === "development") {
+        if (Environment::getString('APP_ENV') === "development") {
             $this->SMTPOptions = [
                 'ssl' => [
                     'verify_peer' => false,
@@ -90,8 +102,8 @@ class Email extends PHPMailer
     ): void {
         // FROM
         $this->setFrom(
-            $from["email"] ?? $_ENV["MAIL_USER"],
-            '=?utf-8?B?' . base64_encode($from["name"] ?? $_ENV["MAIL_FROM"]) . '?='
+            $from["email"] ?? Environment::getString('MAIL_USER'),
+            '=?utf-8?B?' . base64_encode($from["name"] ?? Environment::getString('MAIL_FROM')) . '?='
         );
 
         // TO
@@ -109,7 +121,7 @@ class Email extends PHPMailer
 
         // BCC
         foreach ($bcc as $address) {
-            $addresses = explode(',', $_ENV["MAIL_BCC"] ?? '');
+            $addresses = explode(',', Environment::getString('MAIL_BCC'));
             foreach ($addresses as $address) {
                 $address = trim($address, " \t\n\r\0\x0B-_;,");
                 $this->addBCC($address);
@@ -129,11 +141,37 @@ class Email extends PHPMailer
      */
     public function getAllAddresses(): array
     {
+        $fromAddress = base64_decode(\str_replace(["=?utf-8?B?", "?="], "", $this->FromName)) . " &lt;" . $this->From . "&gt;";
+
+        $toAddresses = \array_map(
+            function ($address) {
+                /** @var array{string, string} $address */
+                return $address[0];
+            },
+            $this->getToAddresses()
+        );
+
+        $ccAddresses = \array_map(
+            function ($address) {
+                /** @var array{string, string} $address */
+                return $address[0];
+            },
+            $this->getCcAddresses()
+        );
+
+        $bccAddresses = \array_map(
+            function ($address) {
+                /** @var array{string, string} $address */
+                return $address[0];
+            },
+            $this->getBccAddresses()
+        );
+
         return [
-            "from" => base64_decode(\str_replace(["=?utf-8?B?", "?="], "", $this->FromName)) . " &lt;" . $this->From . "&gt;",
-            "to" => \array_map(fn(array $address) => $address[0], $this->getToAddresses()),
-            "cc" => \array_map(fn(array $address) => $address[0], $this->getCcAddresses()),
-            "bcc" => \array_map(fn(array $address) => $address[0], $this->getBccAddresses()),
+            "from" => $fromAddress,
+            "to" => $toAddresses,
+            "cc" => $ccAddresses,
+            "bcc" => $bccAddresses,
         ];
     }
 }

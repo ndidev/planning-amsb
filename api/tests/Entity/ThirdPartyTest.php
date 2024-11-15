@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Entity;
 
+use App\Core\Array\Environment;
 use App\Entity\Country;
 use App\Entity\ThirdParty;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -149,7 +150,6 @@ final class ThirdPartyTest extends TestCase
         $roles = $thirdParty->getRoles();
 
         // Then
-        $this->assertIsArray($roles);
         $this->assertArrayHasKey('bois_fournisseur', $roles, 'The role "bois_affreteur" is missing.');
         $this->assertArrayHasKey('bois_client', $roles, 'The role "bois_client" is missing.');
         $this->assertArrayHasKey('bois_transporteur', $roles, 'The role "bois_transporteur" is missing.');
@@ -252,7 +252,7 @@ final class ThirdPartyTest extends TestCase
         // Given
         $thirdParty = new ThirdParty();
         $logoFilename = 'filename.webp';
-        $expected = $_ENV["LOGOS_URL"] . "/" . $logoFilename;
+        $expected = Environment::getString('LOGOS_URL') . '/' . $logoFilename;
 
         // When
         $thirdParty->setLogo($logoFilename);
@@ -351,7 +351,7 @@ final class ThirdPartyTest extends TestCase
             ],
             'non_modifiable' => true,
             'lie_agence' => true,
-            'logo' => $_ENV['LOGOS_URL'] . '/filename.webp',
+            'logo' => Environment::getString('LOGOS_URL') . '/filename.webp',
             'actif' => true,
             'nombre_rdv' => 5,
         ];
