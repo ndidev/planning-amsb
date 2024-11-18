@@ -36,7 +36,9 @@
   Notiflix.Notify.init({
     position: "right-bottom",
     cssAnimationStyle: "from-bottom",
+    plainText: false,
     messageMaxLength: 250,
+    timeout: 5000,
   });
 
   Notiflix.Confirm.init({

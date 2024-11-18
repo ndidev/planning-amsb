@@ -6,16 +6,25 @@ declare(strict_types=1);
 
 namespace App\Entity\Config;
 
+use App\Core\Validation\Constraints\Required;
 use App\Core\Component\Module;
 use App\Entity\ThirdParty;
 
 class TimberQuickAppointmentAdd extends QuickAppointmentAdd
 {
+    #[Required("Le fournisseur est obligatoire.")]
     private ?ThirdParty $supplier = null;
+
     private ?ThirdParty $carrier = null;
+
     private ?ThirdParty $charterer = null;
+
+    #[Required("Le lieu chargement est obligatoire.")]
     private ?ThirdParty $loading = null;
+
+    #[Required("Le client est obligatoire.")]
     private ?ThirdParty $customer = null;
+
     private ?ThirdParty $delivery = null;
 
     public function __construct()
@@ -95,6 +104,7 @@ class TimberQuickAppointmentAdd extends QuickAppointmentAdd
         return $this->delivery;
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [

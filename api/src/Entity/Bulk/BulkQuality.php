@@ -6,15 +6,22 @@ declare(strict_types=1);
 
 namespace App\Entity\Bulk;
 
-use App\Core\Interfaces\Arrayable;
 use App\Core\Traits\IdentifierTrait;
+use App\Core\Validation\Constraints\Required;
+use App\Entity\AbstractEntity;
 
-class BulkQuality implements Arrayable
+class BulkQuality extends AbstractEntity
 {
     use IdentifierTrait;
 
+    public const DEFAULT_COLOR = "#000000";
+
+    #[Required("Le nom est obligatoire.")]
     private string $name = "";
-    private string $color = "";
+
+    #[Required("La couleur est obligatoire.")]
+    private string $color = self::DEFAULT_COLOR;
+
     private ?BulkProduct $product = null;
 
     public function setName(string $name): static
@@ -38,7 +45,7 @@ class BulkQuality implements Arrayable
 
     public function getColor(): string
     {
-        return $this->color;
+        return $this->color ?: self::DEFAULT_COLOR;
     }
 
     public function setProduct(BulkProduct $produit): static
@@ -53,6 +60,7 @@ class BulkQuality implements Arrayable
         return $this->product;
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [

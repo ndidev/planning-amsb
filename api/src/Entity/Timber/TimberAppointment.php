@@ -6,8 +6,11 @@ declare(strict_types=1);
 
 namespace App\Entity\Timber;
 
+use App\Core\Validation\Constraints\Required;
 use App\Core\Component\DateUtils;
+use App\Core\Exceptions\Client\ValidationException;
 use App\Core\Traits\IdentifierTrait;
+use App\Core\Validation\ValidationResult;
 use App\Entity\AbstractEntity;
 use App\Entity\ThirdParty;
 
@@ -16,19 +19,36 @@ class TimberAppointment extends AbstractEntity
     use IdentifierTrait;
 
     private bool $isOnHold = false;
+
     private ?\DateTimeImmutable $date = null;
+
     private ?\DateTimeImmutable $arrivalTime = null;
+
     private ?\DateTimeImmutable $departureTime = null;
+
+    #[Required("Le fournisseur est obligatoire.")]
     private ?ThirdParty $supplier = null;
+
+    #[Required("Le lieu de chargement est obligatoire.")]
     private ?ThirdParty $loadingPlace = null;
+
     private ?ThirdParty $deliveryPlace = null;
+
+    #[Required("Le client est obligatoire.")]
     private ?ThirdParty $customer = null;
+
     private ?ThirdParty $carrier = null;
+
     private ?ThirdParty $transportBroker = null;
+
     private bool $isReady = false;
+
     private bool $charteringConfirmationSent = false;
+
     private string $deliveryNoteNumber = "";
+
     private string $publicComment = "";
+
     private string $privateComment = "";
 
     public function setOnHold(bool|int $attente): static
@@ -226,6 +246,7 @@ class TimberAppointment extends AbstractEntity
         return $this->privateComment;
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [
@@ -246,5 +267,22 @@ class TimberAppointment extends AbstractEntity
             "commentaire_public" => $this->getPublicComment(),
             "commentaire_cache" => $this->getPrivateComment(),
         ];
+    }
+    #[\Override]
+    public function validate(bool $throw = true): ValidationResult
+    {
+        $validationResult = new ValidationResult();
+
+        if (null === $this->date && false === $this->isOnHold) {
+            $validationResult->addError("La date de rendez-vous est obligatoire si le RDV n'est pas en attente.");
+        }
+
+        $validationResult->merge(parent::validate(false));
+
+        if ($throw && $validationResult->hasErrors()) {
+            throw new ValidationException(errors: $validationResult->getErrorMessage());
+        }
+
+        return $validationResult;
     }
 }

@@ -85,6 +85,8 @@ final class ChartDatumService
     {
         $chartDatum = $this->makeChartDatumFromForm($rawData)->setName($name);
 
+        $chartDatum->validate();
+
         return $this->chartDatumRepository->updateDatumValue($chartDatum);
     }
 }

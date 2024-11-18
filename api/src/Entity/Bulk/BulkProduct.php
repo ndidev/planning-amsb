@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Entity\Bulk;
 
+use App\Core\Validation\Constraints\Required;
 use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
 
@@ -13,9 +14,17 @@ class BulkProduct extends AbstractEntity
 {
     use IdentifierTrait;
 
+    public const DEFAULT_COLOR = "#000000";
+
+    #[Required("Le nom est obligatoire.")]
     private string $name = "";
-    private string $color = "";
+
+    #[Required("La couleur est obligatoire.")]
+    private string $color = self::DEFAULT_COLOR;
+
+    #[Required("L'unité est obligatoire.")]
     private string $unit = "";
+
     /** @var BulkQuality[] */
     private array $qualities = [];
 
@@ -40,7 +49,7 @@ class BulkProduct extends AbstractEntity
 
     public function getColor(): string
     {
-        return $this->color;
+        return $this->color ?: self::DEFAULT_COLOR;
     }
 
     public function setUnit(string $unit): static
@@ -80,6 +89,7 @@ class BulkProduct extends AbstractEntity
         return $this->qualities;
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [

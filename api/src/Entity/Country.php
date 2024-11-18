@@ -6,9 +6,14 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Core\Validation\Constraints\Required;
+
 class Country extends AbstractEntity
 {
+    #[Required("Le code ISO est obligatoire.")]
     private string $iso = '';
+
+    #[Required("Le nom est obligatoire.")]
     private string $name = '';
 
     public function getISO(): string
@@ -35,6 +40,7 @@ class Country extends AbstractEntity
         return $this;
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [

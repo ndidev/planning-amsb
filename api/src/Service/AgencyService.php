@@ -99,6 +99,8 @@ final class AgencyService
     {
         $department = $this->makeDepartmentFromForm($input)->setService($departmentName);
 
+        $department->validate();
+
         return $this->agencyRepository->updateDepartment($department);
     }
 }

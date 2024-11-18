@@ -170,6 +170,8 @@ final class TimberService
     {
         $appointment = $this->makeTimberAppointmentFromForm($input);
 
+        $appointment->validate();
+
         return $this->timberAppointmentRepository->createAppointment($appointment);
     }
 
@@ -184,6 +186,8 @@ final class TimberService
     public function updateAppointment($id, HTTPRequestBody $input): TimberAppointment
     {
         $appointment = $this->makeTimberAppointmentFromForm($input)->setId($id);
+
+        $appointment->validate();
 
         return $this->timberAppointmentRepository->updateAppointment($appointment);
     }

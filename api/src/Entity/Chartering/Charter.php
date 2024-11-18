@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Entity\Chartering;
 
+use App\Core\Validation\Constraints\Required;
 use App\Core\Component\CharterStatus;
 use App\Core\Component\Collection;
 use App\Core\Component\DateUtils;
@@ -19,18 +20,32 @@ class Charter extends AbstractEntity
 
     /** @phpstan-var CharterStatus::* $status */
     private int $status = CharterStatus::PENDING;
+
     private ?\DateTimeImmutable $laycanStart = null;
+
     private ?\DateTimeImmutable $laycanEnd = null;
+
     private ?\DateTimeImmutable $cpDate = null;
+
     private string $vesselName = 'TBN';
+
+    #[Required("L'affréteur est obligatoire.")]
     private ?ThirdParty $charterer = null;
+
     private ?ThirdParty $shipOperator = null;
+
     private ?ThirdParty $shipbroker = null;
+
     private float $freightPayed = 0.0;
+
     private float $freightSold = 0.0;
+
     private float $demurragePayed = 0.0;
+
     private float $demurrageSold = 0.0;
+
     private string $comments = '';
+
     private bool $archive = false;
 
     /**
@@ -257,6 +272,7 @@ class Charter extends AbstractEntity
         return $this;
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [

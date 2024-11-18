@@ -6,25 +6,44 @@ declare(strict_types=1);
 
 namespace App\Entity\Bulk;
 
+use App\Core\Validation\Constraints\Required;
 use App\Core\Component\DateUtils;
+use App\Core\Traits\IdentifierTrait;
+use App\Core\Validation\Constraints\PositiveOrNullNumber;
 use App\Entity\AbstractEntity;
 use App\Entity\ThirdParty;
-use App\Core\Traits\IdentifierTrait;
 
 class BulkAppointment extends AbstractEntity
 {
     use IdentifierTrait;
 
+    #[Required("La date est obligatoire.")]
     private ?\DateTimeImmutable $date = null;
+
     private ?\DateTimeImmutable $time = null;
+
+    #[Required("Le produit est obligatoire.")]
     private ?BulkProduct $product = null;
+
     private ?BulkQuality $quality = null;
-    private ?BulkQuantity $quantity = null;
-    private bool $ready = false;
+
+    #[PositiveOrNullNumber("La quantité doit être un nombre positif ou nul.")]
+    private int $quantityValue = 0;
+
+    private bool $quantityIsMax = false;
+
+    private bool $isReady = false;
+
+    #[Required("Le fournisseur est obligatoire.")]
     private ?ThirdParty $supplier = null;
+
+    #[Required("Le client est obligatoire.")]
     private ?ThirdParty $customer = null;
+
     private ?ThirdParty $carrier = null;
+
     private string $orderNumber = "";
+
     private string $comments = "";
 
     public function setDate(\DateTimeInterface|string $date): static
@@ -85,30 +104,40 @@ class BulkAppointment extends AbstractEntity
         return $this->quality;
     }
 
-    public function setQuantity(int $value, bool $max): static
+    public function setQuantityValue(int $value): static
     {
-        $this->quantity ??= new BulkQuantity();
-
-        $this->quantity->setValue($value)->setMax($max);
+        $this->quantityValue = $value;
 
         return $this;
     }
 
-    public function getQuantity(): ?BulkQuantity
+    public function getQuantityValue(): int
     {
-        return $this->quantity;
+        return $this->quantityValue;
+    }
+
+    public function setQuantityIsMax(bool $quantityIsMax): static
+    {
+        $this->quantityIsMax = $quantityIsMax;
+
+        return $this;
+    }
+
+    public function getQuantityIsMax(): bool
+    {
+        return $this->quantityIsMax;
     }
 
     public function setReady(bool|int $commandePrete): static
     {
-        $this->ready = (bool) $commandePrete;
+        $this->isReady = (bool) $commandePrete;
 
         return $this;
     }
 
     public function isReady(): bool
     {
-        return $this->ready;
+        return $this->isReady;
     }
 
     public function setSupplier(?ThirdParty $supplier): static
@@ -171,6 +200,7 @@ class BulkAppointment extends AbstractEntity
         return $this->comments;
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return  [
@@ -179,8 +209,8 @@ class BulkAppointment extends AbstractEntity
             "heure" => $this->getTime()?->format('H:i'),
             "produit" => $this->getProduct()?->getId(),
             "qualite" => $this->getQuality()?->getId(),
-            "quantite" => $this->getQuantity()?->getValue() ?? 0,
-            "max" => $this->getQuantity()?->isMax() ?? false,
+            "quantite" => $this->getQuantityValue(),
+            "max" => $this->getQuantityIsMax(),
             "commande_prete" => $this->isReady(),
             "fournisseur" => $this->getSupplier()?->getId(),
             "client" => $this->getCustomer()?->getId(),

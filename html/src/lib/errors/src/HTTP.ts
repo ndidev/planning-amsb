@@ -75,7 +75,7 @@ export namespace HTTP {
       super();
       this.status = response.status;
       this.statusText = response.statusText;
-      this.message = message;
+      this.message = message.replace(/\n|\r\n/g, "<br/>");
     }
   }
 

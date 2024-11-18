@@ -261,6 +261,7 @@ class UserAccount extends AbstractEntity
         return $this->history;
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [

@@ -58,7 +58,8 @@ final class BulkService
             ->setTime($rawDataAH->getDatetime('heure', null))
             ->setProduct($this->getProduct($rawDataAH->getInt('produit')))
             ->setQuality($this->getQuality($rawDataAH->getInt('qualite')))
-            ->setQuantity($rawDataAH->getInt('quantite', 0), $rawDataAH->getBool('max'))
+            ->setQuantityValue($rawDataAH->getInt('quantite', 0))
+            ->setQuantityIsMax($rawDataAH->getBool('max'))
             ->setReady($rawDataAH->getBool('commande_prete'))
             ->setSupplier($this->thirdPartyService->getThirdParty($rawDataAH->getInt('fournisseur')))
             ->setCustomer($this->thirdPartyService->getThirdParty($rawDataAH->getInt('client')))
@@ -84,7 +85,8 @@ final class BulkService
             ->setTime($requestBody->getDatetime('heure'))
             ->setProduct($this->getProduct($requestBody->getInt('produit')))
             ->setQuality($this->getQuality($requestBody->getInt('qualite')))
-            ->setQuantity($requestBody->getInt('quantite', 0), $requestBody->getBool('max'))
+            ->setQuantityValue($requestBody->getInt('quantite', 0))
+            ->setQuantityIsMax($requestBody->getBool('max'))
             ->setReady($requestBody->getBool('commande_prete'))
             ->setSupplier($this->thirdPartyService->getThirdParty($requestBody->getInt('fournisseur')))
             ->setCustomer($this->thirdPartyService->getThirdParty($requestBody->getInt('client')))
@@ -161,6 +163,8 @@ final class BulkService
     {
         $appointment = $this->makeBulkAppointmentFromFormData($input);
 
+        $appointment->validate();
+
         return $this->appointmentRepository->createAppointment($appointment);
     }
 
@@ -175,6 +179,8 @@ final class BulkService
     public function updateAppointment($id, HTTPRequestBody $input): BulkAppointment
     {
         $appointment = $this->makeBulkAppointmentFromFormData($input)->setId($id);
+
+        $appointment->validate();
 
         return $this->appointmentRepository->updateAppointment($appointment);
     }
@@ -320,6 +326,8 @@ final class BulkService
     {
         $product = $this->makeProductFromFormData($input);
 
+        $product->validate();
+
         return $this->productRepository->createProduct($product);
     }
 
@@ -334,6 +342,8 @@ final class BulkService
     public function updateProduct(int $id, HTTPRequestBody $input): BulkProduct
     {
         $product = $this->makeProductFromFormData($input)->setId($id);
+
+        $product->validate();
 
         return $this->productRepository->updateProduct($product);
     }

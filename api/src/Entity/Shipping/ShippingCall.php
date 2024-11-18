@@ -383,6 +383,7 @@ class ShippingCall extends AbstractEntity
         return $this->cargoes;
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [

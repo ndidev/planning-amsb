@@ -8,20 +8,33 @@ namespace App\Entity;
 
 use App\Core\Array\Environment;
 use App\Core\Traits\IdentifierTrait;
+use App\Core\Validation\Constraints\Required;
 
 class ThirdParty extends AbstractEntity
 {
     use IdentifierTrait;
 
     private string $shortName = '';
+
+    #[Required("Le nom complet est obligatoire.")]
     private string $fullName = '';
+
     private string $addressLine1 = '';
+
     private string $addressLine2 = '';
+
     private string $postCode = '';
+
+    #[Required("La ville est obligatoire.")]
     private string $city = '';
+
+    #[Required("Le pays est obligatoire.")]
     private ?Country $country = null;
+
     private string $phone = '';
+
     private string $comments = '';
+
     /** @var array<string, bool> $roles */
     private array $roles = [
         "bois_fournisseur" => false,
@@ -35,10 +48,15 @@ class ThirdParty extends AbstractEntity
         "maritime_affreteur" => false,
         "maritime_courtier" => false,
     ];
+
     private bool $isNonEditable = false;
+
     private bool $isAgency = false;
+
     private string|null|false $logo = null;
+
     private bool $isActive = true;
+
     private int $appointmentCount = 0;
 
     public function setShortName(string $shortName): static
@@ -253,6 +271,7 @@ class ThirdParty extends AbstractEntity
         return $this->appointmentCount;
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [

@@ -7,9 +7,13 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Core\Interfaces\Arrayable;
+use App\Core\Validation\Validation;
+use App\Core\Validation\ValidatorTrait;
 
-abstract class AbstractEntity implements Arrayable, \JsonSerializable
+abstract class AbstractEntity implements Arrayable, \JsonSerializable, Validation
 {
+    use ValidatorTrait;
+
     public function toArray(): array
     {
         $array = [];

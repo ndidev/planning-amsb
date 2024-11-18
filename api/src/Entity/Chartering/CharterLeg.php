@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Entity\Chartering;
 
+use App\Core\Validation\Constraints\Required;
 use App\Core\Component\DateUtils;
 use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
@@ -16,11 +17,19 @@ class CharterLeg extends AbstractEntity
     use IdentifierTrait;
 
     private ?Charter $charter = null;
+
     private ?\DateTimeImmutable $blDate = null;
+
+    #[Required("Le port de chargement est obligatoire.")]
     private ?Port $pol = null;
+
+    #[Required("Le port de déchargement est obligatoire.")]
     private ?Port $pod = null;
+
     private string $commodity = '';
+
     private string $quantity = '';
+
     private string $comments = '';
 
     public function setCharter(?Charter $charter): static
@@ -112,6 +121,7 @@ class CharterLeg extends AbstractEntity
         return $this->comments;
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [

@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Entity\Config;
 
+use App\Core\Validation\Constraints\Required;
 use App\Core\Traits\IdentifierTrait;
 use App\Core\Traits\ModuleTrait;
 use App\Entity\AbstractEntity;
@@ -16,11 +17,17 @@ class PdfConfig extends AbstractEntity
     use IdentifierTrait;
     use ModuleTrait;
 
+    #[Required("Le fournisseur est obligatoire.")]
     private ?ThirdParty $supplier = null;
+
     private bool $autoSend = false;
+
     /** @var string[] */
+
     private array $emails = [];
+
     private int $daysBefore = 0;
+
     private int $daysAfter = 0;
 
     public function getSupplier(): ?ThirdParty
@@ -102,6 +109,7 @@ class PdfConfig extends AbstractEntity
         return $this;
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [

@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Entity\Shipping;
 
+use App\Core\Validation\Constraints\Required;
 use App\Core\Component\CargoOperation;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Traits\IdentifierTrait;
@@ -16,16 +17,28 @@ final class ShippingCallCargo extends AbstractEntity
     use IdentifierTrait;
 
     private ?ShippingCall $shippingCall = null;
+
+    #[Required("Le nom de la marchandise est obligatoire.")]
     private string $cargoName = '';
+
+    #[Required("Le client est obligatoire.")]
     private string $customer = '';
+
     /** @phpstan-var CargoOperation::* $operation */
     private string $operation = CargoOperation::IMPORT;
+
     private bool $approximate = false;
+
     private ?float $blTonnage = null;
+
     private ?float $blVolume = null;
+
     private ?int $blUnits = null;
+
     private ?float $outturnTonnage = null;
+
     private ?float $outturnVolume = null;
+
     private ?int $outturnUnits = null;
 
     public function getShippingCall(): ?ShippingCall
@@ -169,6 +182,7 @@ final class ShippingCallCargo extends AbstractEntity
         return $this;
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [

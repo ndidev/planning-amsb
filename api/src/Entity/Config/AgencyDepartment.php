@@ -6,20 +6,32 @@ declare(strict_types=1);
 
 namespace App\Entity\Config;
 
+use App\Core\Validation\Constraints\Required;
 use App\Entity\AbstractEntity;
 
 class AgencyDepartment extends AbstractEntity
 {
     private string $service = '';
+
     private string $displayName = '';
+
+    #[Required("Le nom est obligatoire.")]
     private string $fullName = '';
+
     private string $addressLine1 = '';
+
     private string $addressLine2 = '';
+
     private string $postCode = '';
+
     private string $city = '';
+
     private string $country = '';
+
     private string $phone = '';
+
     private string $mobile = '';
+
     private string $email = '';
 
     public function setService(string $service): static
@@ -154,6 +166,7 @@ class AgencyDepartment extends AbstractEntity
         return $this->email;
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [

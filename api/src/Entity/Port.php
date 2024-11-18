@@ -6,10 +6,16 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Core\Validation\Constraints\Required;
+
 class Port extends AbstractEntity
 {
+    #[Required("Le code LOCODE est obligatoire.")]
     private string $locode = '';
+
+    #[Required("Le nom est obligatoire.")]
     private string $name = '';
+
     private string $displayName = '';
 
     public function getLocode(): string
@@ -48,6 +54,7 @@ class Port extends AbstractEntity
         return $this;
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [

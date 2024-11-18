@@ -6,10 +6,15 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Core\Validation\Constraints\PositiveNumber;
+
 class ChartDatum extends AbstractEntity
 {
     private string $name = '';
+
     private string $displayName = '';
+
+    #[PositiveNumber('La valeur doit être un nombre positif.')]
     private float $value = 0.0;
 
     public function getName(): string
@@ -48,6 +53,7 @@ class ChartDatum extends AbstractEntity
         return $this;
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [

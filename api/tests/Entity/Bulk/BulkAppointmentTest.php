@@ -9,7 +9,6 @@ namespace App\Tests\Entity\Bulk;
 use App\Entity\Bulk\BulkAppointment;
 use App\Entity\Bulk\BulkProduct;
 use App\Entity\Bulk\BulkQuality;
-use App\Entity\Bulk\BulkQuantity;
 use App\Entity\ThirdParty;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -18,7 +17,6 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(BulkAppointment::class)]
 #[UsesClass(BulkProduct::class)]
 #[UsesClass(BulkQuality::class)]
-#[UsesClass(BulkQuantity::class)]
 #[UsesClass(ThirdParty::class)]
 class BulkAppointmentTest extends TestCase
 {
@@ -40,10 +38,11 @@ class BulkAppointmentTest extends TestCase
         // When
         $bulkAppointment->setDate($date);
         $actualDate = $bulkAppointment->getDate();
+        $actualSqlDate = $bulkAppointment->getSqlDate();
 
         // Then
-        $this->assertEquals($date, $bulkAppointment->getDate(), 'The date is not the expected one.');
-        $this->assertEquals('2023-10-01', $bulkAppointment->getSqlDate(), 'The SQL date is not the expected one.');
+        $this->assertEquals($date, $actualDate, 'The date is not the expected one.');
+        $this->assertEquals('2023-10-01', $actualSqlDate, 'The SQL date is not the expected one.');
     }
 
     public function testSetAndGetTime(): void
@@ -54,10 +53,12 @@ class BulkAppointmentTest extends TestCase
 
         // When
         $bulkAppointment->setTime($time);
+        $actualTime = $bulkAppointment->getTime();
+        $actualSqlTime = $bulkAppointment->getSqlTime();
 
         // Then
-        $this->assertEquals($time, $bulkAppointment->getTime(), 'The time is not the expected one.');
-        $this->assertEquals('10:00', $bulkAppointment->getSqlTime(), 'The SQL time is not the expected one.');
+        $this->assertEquals($time, $actualTime, 'The time is not the expected one.');
+        $this->assertEquals('10:00', $actualSqlTime, 'The SQL time is not the expected one.');
     }
 
     public function testSetAndGetProduct(): void
@@ -68,9 +69,10 @@ class BulkAppointmentTest extends TestCase
 
         // When
         $bulkAppointment->setProduct($product);
+        $actualProduct = $bulkAppointment->getProduct();
 
         // Then
-        $this->assertSame($product, $bulkAppointment->getProduct());
+        $this->assertSame($product, $actualProduct);
     }
 
     public function testSetAndGetQuality(): void
@@ -81,24 +83,37 @@ class BulkAppointmentTest extends TestCase
 
         // When
         $bulkAppointment->setQuality($quality);
+        $actualQuality = $bulkAppointment->getQuality();
 
         // Then
-        $this->assertSame($quality, $bulkAppointment->getQuality());
+        $this->assertSame($quality, $actualQuality);
     }
 
-    public function testSetAndGetQuantity(): void
+    public function testSetAndGetQuantityValue(): void
     {
         // Given
         $bulkAppointment = new BulkAppointment();
-        $value = 100;
-        $max = true;
-        $quantity = (new BulkQuantity())->setValue($value)->setMax($max);
+        $quantity = 100;
 
         // When
-        $bulkAppointment->setQuantity($value, $max);
+        $bulkAppointment->setQuantityValue($quantity);
+        $actualQuantity = $bulkAppointment->getQuantityValue();
 
         // Then
-        $this->assertEquals($quantity, $bulkAppointment->getQuantity());
+        $this->assertEquals($quantity, $actualQuantity);
+    }
+
+    public function testSetAndGetQuantityIsMax(): void
+    {
+        // Given
+        $bulkAppointment = new BulkAppointment();
+
+        // When
+        $bulkAppointment->setQuantityIsMax(true);
+        $actualQuantityIsMax = $bulkAppointment->getQuantityIsMax();
+
+        // Then
+        $this->assertTrue($actualQuantityIsMax);
     }
 
     public function testSetAndIsReady(): void

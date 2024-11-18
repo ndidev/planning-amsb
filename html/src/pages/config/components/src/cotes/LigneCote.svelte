@@ -13,7 +13,7 @@
 
   import Notiflix from "notiflix";
 
-  import { fetcher, notiflixOptions } from "@app/utils";
+  import { fetcher } from "@app/utils";
 
   import type { Cote } from "@app/types";
 
@@ -32,7 +32,7 @@
       Notiflix.Block.dots([ligne]);
       ligne.style.minHeight = "initial";
 
-      cote.valeur = parseFloat(String(cote.valeur));
+      cote.valeur = parseFloat(String(cote.valeur || 0));
 
       await fetcher(`config/cotes/${cote.cote}`, {
         requestInit: {
