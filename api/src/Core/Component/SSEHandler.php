@@ -54,8 +54,8 @@ class SSEHandler
      */
     public function notify(): void
     {
-        $host = Environment::getString('HTTP_HOST');
-        $port = Environment::getInt('SERVER_PORT');
+        $host = Environment::getString('SSE_HOST');
+        $port = Environment::getInt('SSE_UPDATES_PORT');
 
         if (!$host || !$port) {
             ErrorLogger::log(new \Exception("L'hôte et le port du serveur SSE ne sont pas définis"));
