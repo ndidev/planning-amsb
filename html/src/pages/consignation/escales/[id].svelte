@@ -161,7 +161,7 @@
       const { voyage } = await fetcher<{ voyage: string }>(
         "consignation/voyage",
         {
-          params: {
+          searchParams: {
             navire: escale.navire,
             id: id ? id.toString() : "",
           },

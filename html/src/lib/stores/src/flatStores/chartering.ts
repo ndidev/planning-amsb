@@ -6,7 +6,7 @@ import type { FetcherOptions } from "@app/utils";
  * Store affrètements maritimes.
  */
 export const charteringCharters = (
-  params: FetcherOptions["params"] = new URLSearchParams()
+  params: FetcherOptions["searchParams"] = new URLSearchParams()
 ) =>
   createFlatStore<Charter>("chartering/charters", {
     params,

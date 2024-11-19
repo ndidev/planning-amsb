@@ -14,8 +14,7 @@ export class Filtre<
   /**
    * Convertir les données du filtre en paramètres de requête.
    */
-  toParams() {
-    // toParams(): { [key: string]: string } {
+  toSearchParams() {
     const params = {};
 
     for (let [key, value] of Object.entries(this.data)) {

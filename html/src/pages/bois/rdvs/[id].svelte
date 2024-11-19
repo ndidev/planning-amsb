@@ -136,7 +136,7 @@
       const isDeliveryNoteNumberAvailable: boolean = await fetcher(
         `bois/check-delivery-note-available`,
         {
-          params: {
+          searchParams: {
             supplierId: rdv.fournisseur.toString(),
             deliveryNoteNumber: numero_bl,
             currentAppointmentId: rdv.id.toString(),
@@ -179,7 +179,7 @@
       const suggestions: SuggestionsTransporteurs = await fetcher(
         "bois/suggestions-transporteurs",
         {
-          params: {
+          searchParams: {
             chargement: rdv.chargement.toString(),
             livraison: rdv.livraison.toString(),
           },

@@ -26,11 +26,11 @@
   setContext("archives", archives);
 
   const unsubscribeFiltre = storeFiltre.subscribe((value) => {
-    const params = value.toParams();
+    const params = value.toSearchParams();
 
     if (archives) params.append("archives", "");
 
-    charteringCharters.setParams(params);
+    charteringCharters.setSearchParams(params);
   });
 
   const unsubscribeCharters = charteringCharters.subscribe((value) => {

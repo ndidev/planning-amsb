@@ -1,33 +1,42 @@
 <!-- routify:options title="Planning AMSB - Vrac" -->
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, setContext, getContext } from "svelte";
+  import { params } from "@roxi/routify";
 
   import { LigneDate, LigneRdv, Placeholder } from "./components";
   import { BandeauInfo, SseConnection } from "@app/components";
 
   import { fetcher } from "@app/utils";
 
-  import { vracRdvs, vracProduits, marees as mareesStore } from "@app/stores";
+  const { vracRdvs, vracProduits, marees } = getContext<Stores>("stores");
 
-  import type { RdvVrac } from "@app/types";
+  import type { RdvVrac, Stores } from "@app/types";
 
   type DateString = string;
   type GroupesRdv = Map<DateString, RdvVrac[]>;
 
   let dates: Set<DateString>;
-  let rdvsGroupes: GroupesRdv;
+  let filteredAppointments: RdvVrac[] = [];
+  let groupedAppointments: GroupesRdv;
   let datesMareesSup4m = new Set<string>();
-  let marees: ReturnType<typeof mareesStore>;
+
+  const archives = "archives" in $params;
+
+  setContext("archives", archives);
+
+  if (archives) {
+    vracRdvs.setSearchParams({ archives: "true" });
+  } else {
+    vracRdvs.setSearchParams({});
+  }
 
   $: if ($vracRdvs && $vracProduits) {
-    dates = new Set(
-      [...$vracRdvs.values()].map(({ date_rdv }) => date_rdv).sort()
-    );
-
-    rdvsGroupes = grouperRdvs([...$vracRdvs.values()]);
+    filteredAppointments = filterArchivedAppointments($vracRdvs);
+    dates = makeDatesSet(filteredAppointments);
+    groupedAppointments = groupAppointments(filteredAppointments, dates);
 
     updateNaviresParDate();
-    updateMarees();
+    updateTides();
   }
 
   $: datesMareesSup4m = new Set(
@@ -36,10 +45,20 @@
       .map((maree) => maree.date)
   );
 
+  function filterArchivedAppointments(appointments: typeof $vracRdvs) {
+    return [...appointments.values()].filter(
+      (appointment) => appointment.archive === archives
+    );
+  }
+
+  function makeDatesSet(appointments: RdvVrac[]) {
+    return new Set(appointments.map(({ date_rdv }) => date_rdv).sort());
+  }
+
   /**
    * Grouper et trier les RDVs.
    */
-  function grouperRdvs(rdvs: RdvVrac[]) {
+  function groupAppointments(rdvs: RdvVrac[], dates: Set<DateString>) {
     const rdvsParDate: GroupesRdv = new Map<DateString, RdvVrac[]>();
 
     dates.forEach((date) => {
@@ -104,7 +123,7 @@
     const listeNavires: NaviresEnActivite = await fetcher(
       `consignation/navires-en-activite`,
       {
-        params: {
+        searchParams: {
           date_debut: debut,
           date_fin: fin,
         },
@@ -135,25 +154,21 @@
     ];
   }
 
-  const updateNaviresParDate = async () => {
+  async function updateNaviresParDate() {
     naviresParDate = await getNaviresParDate(
       [...dates][0],
       [...dates][dates.size - 1]
     );
-  };
+  }
 
-  const updateMarees = async () => {
-    const params: Parameters<typeof mareesStore>[0] = {
+  function updateTides() {
+    const params = {
       debut: [...dates][0],
       fin: [...dates][dates.size - 1],
     };
 
-    if (!marees) {
-      marees = mareesStore(params);
-    } else {
-      marees.setParams(params);
-    }
-  };
+    marees.setSearchParams(params);
+  }
 
   onMount(() => {
     document.addEventListener(
@@ -170,6 +185,7 @@
   });
 </script>
 
+<!-- routify:options query-params-is-page -->
 <!-- routify:options guard="vrac" -->
 
 <SseConnection
@@ -187,7 +203,7 @@
 
 <main>
   {#if $vracRdvs && $vracProduits}
-    {#each [...rdvsGroupes] as [date, rdvs] (date)}
+    {#each archives ? [...groupedAppointments].reverse() : [...groupedAppointments] as [date, rdvs] (date)}
       <LigneDate
         {date}
         maree={datesMareesSup4m.has(date)}
@@ -198,6 +214,8 @@
           <LigneRdv {rdv} />
         {/each}
       </div>
+    {:else}
+      <p class="no-appointment">Aucun rendez-vous.</p>
     {/each}
   {:else}
     <!-- Chargement des données -->
@@ -210,5 +228,11 @@
     width: 90vw;
     margin: auto;
     margin-bottom: 2rem;
+  }
+
+  .no-appointment {
+    margin-top: 20px;
+    font-size: 1.5em;
+    text-align: center;
   }
 </style>

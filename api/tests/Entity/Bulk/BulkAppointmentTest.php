@@ -20,15 +20,6 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ThirdParty::class)]
 class BulkAppointmentTest extends TestCase
 {
-    public function testInstanciation(): void
-    {
-        // Given
-        $bulkAppointment = new BulkAppointment();
-
-        // Then
-        $this->assertInstanceOf(BulkAppointment::class, $bulkAppointment);
-    }
-
     public function testSetAndGetDate(): void
     {
         // Given
@@ -123,9 +114,10 @@ class BulkAppointmentTest extends TestCase
 
         // When
         $bulkAppointment->setReady(true);
+        $actualIsReady = $bulkAppointment->isReady();
 
         // Then
-        $this->assertTrue($bulkAppointment->isReady());
+        $this->assertTrue($actualIsReady);
     }
 
     public function testSetAndGetSupplier(): void
@@ -136,9 +128,10 @@ class BulkAppointmentTest extends TestCase
 
         // When
         $bulkAppointment->setSupplier($supplier);
+        $actualSupplier = $bulkAppointment->getSupplier();
 
         // Then
-        $this->assertSame($supplier, $bulkAppointment->getSupplier());
+        $this->assertSame($supplier, $actualSupplier);
     }
 
     public function testSetAndGetClient(): void
@@ -149,9 +142,10 @@ class BulkAppointmentTest extends TestCase
 
         // When
         $bulkAppointment->setCustomer($client);
+        $actualCustomer = $bulkAppointment->getCustomer();
 
         // Then
-        $this->assertSame($client, $bulkAppointment->getCustomer());
+        $this->assertSame($client, $actualCustomer);
     }
 
     public function testSetAndGetCarrier(): void
@@ -162,9 +156,10 @@ class BulkAppointmentTest extends TestCase
 
         // When
         $bulkAppointment->setCarrier($carrier);
+        $actualCarrier = $bulkAppointment->getCarrier();
 
         // Then
-        $this->assertSame($carrier, $bulkAppointment->getCarrier());
+        $this->assertSame($carrier, $actualCarrier);
     }
 
     public function testSetAndGetOrderNumber(): void
@@ -175,9 +170,10 @@ class BulkAppointmentTest extends TestCase
 
         // When
         $bulkAppointment->setOrderNumber($orderNumber);
+        $actualOrderNumber = $bulkAppointment->getOrderNumber();
 
         // Then
-        $this->assertEquals($orderNumber, $bulkAppointment->getOrderNumber());
+        $this->assertEquals($orderNumber, $actualOrderNumber);
     }
 
     public function testSetAndGetComments(): void
@@ -188,29 +184,65 @@ class BulkAppointmentTest extends TestCase
 
         // When
         $bulkAppointment->setComments($comments);
+        $actualComments = $bulkAppointment->getComments();
 
         // Then
-        $this->assertEquals($comments, $bulkAppointment->getComments());
+        $this->assertEquals($comments, $actualComments);
+    }
+
+    public function testSetAndGetArchive(): void
+    {
+        // Given
+        $bulkAppointment = new BulkAppointment();
+
+        // When
+        $bulkAppointment->setArchive(true);
+        $actualIsArchive = $bulkAppointment->isArchive();
+
+        // Then
+        $this->assertTrue($actualIsArchive);
     }
 
     public function testToArray(): void
     {
         // Given
-        $bulkAppointment = new BulkAppointment();
-        $bulkAppointment->setDate('2023-10-01')
+        $bulkAppointment = (new BulkAppointment())
+            ->setId(1)
+            ->setDate('2023-10-01')
             ->setTime('10:00')
+            ->setProduct((new BulkProduct())->setId(10))
+            ->setQuality((new BulkQuality())->setId(20))
+            ->setQuantityValue(100)
+            ->setQuantityIsMax(true)
+            ->setReady(true)
+            ->setSupplier((new ThirdParty())->setId(30))
+            ->setCustomer((new ThirdParty())->setId(40))
+            ->setCarrier((new ThirdParty())->setId(50))
             ->setOrderNumber('ORD123456')
             ->setComments('This is a comment.')
-            ->setReady(true);
+            ->setArchive(true);
+
+        $expectedArray = [
+            'id' => 1,
+            'date_rdv' => '2023-10-01',
+            'heure' => '10:00',
+            'produit' => 10,
+            'qualite' => 20,
+            'quantite' => 100,
+            'max' => true,
+            'commande_prete' => true,
+            'fournisseur' => 30,
+            'client' => 40,
+            'transporteur' => 50,
+            'num_commande' => 'ORD123456',
+            'commentaire' => 'This is a comment.',
+            'archive' => true,
+        ];
 
         // When
-        $array = $bulkAppointment->toArray();
+        $actualArray = $bulkAppointment->toArray();
 
         // Then
-        $this->assertEquals('2023-10-01', $array['date_rdv']);
-        $this->assertEquals('10:00', $array['heure']);
-        $this->assertEquals('ORD123456', $array['num_commande']);
-        $this->assertEquals('This is a comment.', $array['commentaire']);
-        $this->assertTrue($array['commande_prete']);
+        $this->assertSame($expectedArray, $actualArray);
     }
 }

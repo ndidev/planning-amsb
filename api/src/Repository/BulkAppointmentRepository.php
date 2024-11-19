@@ -8,6 +8,7 @@ namespace App\Repository;
 
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\DB\DBException;
+use App\DTO\Filter\BulkFilterDTO;
 use App\Entity\Bulk\BulkAppointment;
 use App\Entity\ThirdParty;
 use App\Service\BulkService;
@@ -27,6 +28,7 @@ use App\Service\BulkService;
  *                                      transporteur: ?int,
  *                                      num_commande: string,
  *                                      commentaire: string,
+ *                                      archive: int,
  *                                    }
  */
 final class BulkAppointmentRepository extends Repository
@@ -49,10 +51,14 @@ final class BulkAppointmentRepository extends Repository
     /**
      * Fetch all the bulk appointments.
      * 
+     * @param BulkFilterDTO $filter The filter to apply.
+     * 
      * @return Collection<BulkAppointment> The fetched appointments.
      */
-    public function getAppointments(): Collection
+    public function getAppointments(BulkFilterDTO $filter): Collection
     {
+        $archiveFilter = (int) $filter->isArchive();
+
         $statement =
             "SELECT
                 id,
@@ -67,8 +73,10 @@ final class BulkAppointmentRepository extends Repository
                 client,
                 transporteur,
                 num_commande,
-                commentaire
+                commentaire,
+                archive
             FROM vrac_planning
+            WHERE archive = $archiveFilter
             ORDER BY date_rdv";
 
         $request = $this->mysql->query($statement);
@@ -111,7 +119,8 @@ final class BulkAppointmentRepository extends Repository
                 client,
                 transporteur,
                 num_commande,
-                commentaire
+                commentaire,
+                archive
             FROM vrac_planning
             WHERE id = :id";
 
@@ -151,7 +160,8 @@ final class BulkAppointmentRepository extends Repository
                 client = :client,
                 transporteur = :transporteur,
                 num_commande = :num_commande,
-                commentaire = :commentaire
+                commentaire = :commentaire,
+                archive = :archive
                 ";
 
         $request = $this->mysql->prepare($statement);
@@ -170,6 +180,7 @@ final class BulkAppointmentRepository extends Repository
             'transporteur' => $appointment->getCarrier()?->getId(),
             'num_commande' => $appointment->getOrderNumber(),
             'commentaire' => $appointment->getComments(),
+            'archive' => (int) $appointment->isArchive(),
         ]);
 
         $lastInsertId = (int) $this->mysql->lastInsertId();
@@ -204,7 +215,8 @@ final class BulkAppointmentRepository extends Repository
                 client = :client,
                 transporteur = :transporteur,
                 num_commande = :num_commande,
-                commentaire = :commentaire
+                commentaire = :commentaire,
+                archive = :archive
             WHERE id = :id";
 
         $request = $this->mysql->prepare($statement);
@@ -221,6 +233,7 @@ final class BulkAppointmentRepository extends Repository
             'transporteur' => $appointment->getCarrier()?->getId(),
             'num_commande' => $appointment->getOrderNumber(),
             'commentaire' => $appointment->getComments(),
+            'archive' => (int) $appointment->isArchive(),
             'id' => $appointment->getId(),
         ]);
 
@@ -251,6 +264,33 @@ final class BulkAppointmentRepository extends Repository
             )
             ->execute([
                 'commande_prete' => (int) $status,
+                'id' => $id,
+            ]);
+
+        /** @var BulkAppointment */
+        $updatedAppointment = $this->getAppointment($id);
+
+        return $updatedAppointment;
+    }
+
+    /**
+     * Met à jour l'état d'archivage d'un RDV.
+     * 
+     * @param int $id 
+     * @param bool $status 
+     * 
+     * @return BulkAppointment 
+     */
+    public function setIsArchive(int $id, bool $status): BulkAppointment
+    {
+        $this->mysql
+            ->prepare(
+                "UPDATE vrac_planning
+                SET archive = :archive
+                WHERE id = :id"
+            )
+            ->execute([
+                'archive' => (int) $status,
                 'id' => $id,
             ]);
 

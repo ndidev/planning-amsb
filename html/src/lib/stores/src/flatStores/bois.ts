@@ -6,12 +6,12 @@ import { DateUtils, type FetcherOptions } from "@app/utils";
  * Store RDVs bois.
  */
 export const boisRdvs = (
-  params: FetcherOptions["params"] = new URLSearchParams()
+  params: FetcherOptions["searchParams"] = new URLSearchParams()
 ) => createFlatStore<RdvBois>("bois/rdvs", { params, satisfiesParams });
 
-function satisfiesParams(rdv: RdvBois, params: URLSearchParams) {
+function satisfiesParams(rdv: RdvBois, searchParams: URLSearchParams) {
   const filtre: { [P in keyof FiltreBois]: string } =
-    Object.fromEntries(params);
+    Object.fromEntries(searchParams);
 
   return (
     rdv.attente ||

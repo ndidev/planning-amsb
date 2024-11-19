@@ -70,4 +70,9 @@ export type RdvVrac = {
    * Commentaire.
    */
   commentaire: string;
+
+  /**
+   * `true` si le RDV est archivé.
+   */
+  archive: boolean;
 };

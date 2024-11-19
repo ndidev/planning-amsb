@@ -97,7 +97,7 @@
     presets.get(preset) || presets.get("default");
 
   export let color = params.color;
-  export let title = params.text;
+  export let text = params.text;
   export let disabled = false;
   export let type: "button" | "reset" | "submit" = "button";
   export let needsOnline = params.needsOnline;
@@ -125,7 +125,7 @@
   style:--bg-color="var(--{color}-bg-color)"
   style:--color="var(--{color}-color)"
   style:--hover-color="var(--{color}-hover-color)"
-  {title}
+  title={text}
   disabled={(needsOnline && !$online) || disabled}
   on:click|preventDefault
 >

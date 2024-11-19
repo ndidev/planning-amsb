@@ -82,7 +82,7 @@
 
           const blob: Blob = await fetcher("config/pdf/generer", {
             accept: "blob",
-            params: {
+            searchParams: {
               config: config.id.toString(),
               date_debut:
                 document.querySelector<HTMLInputElement>(".date_debut").value,

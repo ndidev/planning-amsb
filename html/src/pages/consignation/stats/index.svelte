@@ -55,7 +55,7 @@
   async function recupererStats() {
     try {
       stats = await fetcher("consignation/stats", {
-        params: filtre.toParams(),
+        searchParams: filtre.toSearchParams(),
       });
     } catch (error) {
       Notiflix.Notify.failure(error.message);

@@ -46,6 +46,8 @@ class BulkAppointment extends AbstractEntity
 
     private string $comments = "";
 
+    private bool $isArchive = false;
+
     public function setDate(\DateTimeInterface|string $date): static
     {
         $this->date = DateUtils::makeDateTimeImmutable($date);
@@ -200,6 +202,18 @@ class BulkAppointment extends AbstractEntity
         return $this->comments;
     }
 
+    public function setArchive(bool $archive): static
+    {
+        $this->isArchive = $archive;
+
+        return $this;
+    }
+
+    public function isArchive(): bool
+    {
+        return $this->isArchive;
+    }
+
     #[\Override]
     public function toArray(): array
     {
@@ -217,6 +231,7 @@ class BulkAppointment extends AbstractEntity
             "transporteur" => $this->getCarrier()?->getId(),
             "num_commande" => $this->getOrderNumber(),
             "commentaire" => $this->getComments(),
+            "archive" => $this->isArchive(),
         ];
     }
 }

@@ -37,6 +37,8 @@
   let mc: HammerManager;
   let afficherModal = false;
 
+  const archives: boolean = getContext("archives");
+
   const tiersVierge: Partial<Tiers> = {
     nom_court: "",
   };
@@ -91,7 +93,7 @@
           Notiflix.Block.dots([ligne], notiflixOptions.texts.suppression);
           ligne.style.minHeight = "initial";
 
-          vracRdvs.delete(rdv.id);
+          await vracRdvs.delete(rdv.id);
 
           Notiflix.Notify.success("Le RDV a été supprimé");
         } catch (erreur) {
@@ -101,6 +103,39 @@
       },
       null,
       notiflixOptions.themes.red
+    );
+
+    afficherModal = false;
+  }
+
+  function toggleArchive() {
+    Notiflix.Confirm.show(
+      rdv.archive ? "Restauration RDV" : "Archivage RDV",
+      rdv.archive
+        ? "Voulez-vous vraiment restaurer le RDV ?"
+        : "Voulez-vous vraiment archiver le RDV ?",
+      rdv.archive ? "Restaurer" : "Archiver",
+      "Annuler",
+      async function () {
+        try {
+          Notiflix.Block.dots(
+            [ligne],
+            `${rdv.archive ? "Restauration" : "Archivage"} en cours...`
+          );
+          ligne.style.minHeight = "initial";
+
+          await vracRdvs.patch(rdv.id, { archive: !rdv.archive });
+
+          Notiflix.Notify.success(
+            `Le RDV a été ${rdv.archive ? "restauré" : "archivé"}`
+          );
+        } catch (erreur) {
+          Notiflix.Notify.failure(erreur.message);
+          Notiflix.Block.remove([ligne]);
+        }
+      },
+      null,
+      notiflixOptions.themes.orange
     );
 
     afficherModal = false;
@@ -129,7 +164,12 @@
     >
       <BoutonAction preset="modifier" on:click={$goto(`./${rdv.id}`)} />
       <BoutonAction preset="copier" on:click={$goto(`./new?copie=${rdv.id}`)} />
-      <BoutonAction preset="supprimer" on:click={supprimerRdv} />
+      <!-- <BoutonAction preset="supprimer" on:click={supprimerRdv} /> -->
+      <BoutonAction
+        preset="supprimer"
+        on:click={toggleArchive}
+        text="Archiver"
+      />
       <BoutonAction preset="annuler" on:click={() => (afficherModal = false)} />
     </div>
   </Modal>
@@ -203,16 +243,34 @@
       <MaterialButton
         preset="copier"
         on:click={() => {
-          $goto(`./new?copie=${rdv.id}`);
+          $goto(`./new?copie=${rdv.id}${archives ? "&archives" : ""}`);
         }}
       />
       <MaterialButton
         preset="modifier"
         on:click={() => {
-          $goto(`./${rdv.id}`);
+          $goto(`./${rdv.id}${archives ? "?archives" : ""}`);
         }}
       />
-      <MaterialButton preset="supprimer" on:click={supprimerRdv} />
+      {#if rdv.archive}
+        <MaterialButton
+          preset="supprimer"
+          on:click={toggleArchive}
+          title="Restaurer"
+          hoverColor="hsl(32, 100%, 50%)"
+        >
+          <slot name="icon">unarchive</slot>
+        </MaterialButton>
+      {:else}
+        <MaterialButton
+          preset="supprimer"
+          on:click={toggleArchive}
+          title="Archiver"
+          hoverColor="hsl(32, 100%, 50%)"
+        >
+          <slot name="icon">archive</slot>
+        </MaterialButton>
+      {/if}
     </div>
   {/if}
 

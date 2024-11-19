@@ -20,9 +20,9 @@
   setContext("archives", archives);
 
   if (archives) {
-    consignationEscales.setParams({ archives: "true" });
+    consignationEscales.setSearchParams({ archives: "true" });
   } else {
-    consignationEscales.setParams({});
+    consignationEscales.setSearchParams({});
   }
 
   let escales: typeof $consignationEscales;

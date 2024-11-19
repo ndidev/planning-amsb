@@ -3,9 +3,11 @@
   import { LigneDate, LigneRdv } from "./components";
   import { BandeauInfo, SseConnection } from "@app/components";
 
-  import { vracRdvs, vracProduits, currentUser } from "@app/stores";
+  // import { vracRdvs, vracProduits, currentUser } from "@app/stores";
+  const { vracRdvs, vracProduits, currentUser } = getContext<Stores>("stores");
 
-  import type { RdvVrac } from "@app/types";
+  import type { RdvVrac, Stores } from "@app/types";
+  import { getContext } from "svelte";
 
   type GroupesRdv = Map<string, RdvVrac[]>;
 

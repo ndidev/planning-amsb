@@ -66,7 +66,7 @@
       const params = { date_debut, date_fin };
 
       const blob = await fetcher<Blob>("bois/registre", {
-        params,
+        searchParams: params,
         accept: "blob",
       });
 

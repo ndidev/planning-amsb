@@ -14,6 +14,8 @@ use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Array\Environment;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
+use App\DTO\Filter\BulkFilterDTO;
+use App\Entity\Bulk\BulkAppointment;
 use App\Service\BulkService;
 
 final class BulkAppointmentController extends Controller
@@ -81,7 +83,9 @@ final class BulkAppointmentController extends Controller
             throw new AccessException("Vous n'avez pas les droits pour accéder aux RDVs vrac.");
         }
 
-        $appointments = $this->bulkService->getAppointments();
+        $filter = new BulkFilterDTO($this->request->getQuery());
+
+        $appointments = $this->bulkService->getAppointments($filter);
 
         $etag = ETag::get($appointments);
 

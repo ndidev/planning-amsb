@@ -32,7 +32,7 @@
   let rdvsBois: typeof $boisRdvs = null;
 
   const unsubscribeFiltre = storeFiltre.subscribe((value) => {
-    boisRdvs.setParams(value.toParams());
+    boisRdvs.setSearchParams(value.toSearchParams());
   });
 
   const unsubscribeRdvs = boisRdvs.subscribe((rdvs) => {

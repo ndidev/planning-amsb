@@ -13,7 +13,7 @@
   setContext<Stores>("stores", {
     currentUser: stores.currentUser,
     boisRdvs: stores.boisRdvs(),
-    vracRdvs: stores.vracRdvs,
+    vracRdvs: stores.vracRdvs(),
     vracProduits: stores.vracProduits,
     consignationEscales: stores.consignationEscales(),
     charteringCharters: stores.charteringCharters(),

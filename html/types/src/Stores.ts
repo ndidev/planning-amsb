@@ -3,7 +3,7 @@ import type * as stores from "@app/stores";
 export type Stores = {
   currentUser: typeof stores.currentUser;
   boisRdvs: ReturnType<typeof stores.boisRdvs>;
-  vracRdvs: typeof stores.vracRdvs;
+  vracRdvs: ReturnType<typeof stores.vracRdvs>;
   vracProduits: typeof stores.vracProduits;
   consignationEscales: ReturnType<typeof stores.consignationEscales>;
   charteringCharters: ReturnType<typeof stores.charteringCharters>;

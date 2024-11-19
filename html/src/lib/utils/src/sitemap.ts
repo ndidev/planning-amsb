@@ -42,6 +42,12 @@ export const sitemap: Map<ModuleId, Module> = new Map([
             devices: ["mobile", "desktop"],
           },
           {
+            affichage: "Archives",
+            roleMini: UserRoles.ACCESS,
+            href: "/vrac/rdvs?archives",
+            devices: ["mobile", "desktop"],
+          },
+          {
             affichage: "Produits",
             roleMini: UserRoles.EDIT,
             href: "/vrac/produits",

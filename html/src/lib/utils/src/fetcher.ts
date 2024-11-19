@@ -21,7 +21,7 @@ export async function fetcher<T>(
   const {
     prefix = "api",
     accept = "json",
-    params = {},
+    searchParams = {},
     requestInit = {},
   } = options;
 
@@ -30,7 +30,7 @@ export async function fetcher<T>(
       ? new URL(endpoint, appURLs[prefix])
       : endpoint;
 
-  for (const [name, value] of new URLSearchParams(params)) {
+  for (const [name, value] of new URLSearchParams(searchParams)) {
     url.searchParams.append(name, value);
   }
 
@@ -72,7 +72,7 @@ export type FetcherOptions = {
   /**
    * Optionnel. Paramètres de la requête (`searchParams`).
    */
-  params?: URLSearchParams | { [name: string]: string };
+  searchParams?: URLSearchParams | { [name: string]: string };
 
   /**
    * Optionnel. Options de la fonction fetch.

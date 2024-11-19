@@ -55,12 +55,6 @@
     source = new EventSource(url, { withCredentials: true });
 
     source.onopen = (event) => {
-      // console.debug(
-      //   "SSE : Connexion établie (souscriptions : ",
-      //   subscriptions.join(", "),
-      //   ")"
-      // );
-
       if (isReconnect) {
         // console.debug("SSE : Connexion rétablie");
         document.dispatchEvent(new CustomEvent(`planning:sse-reconnect`));

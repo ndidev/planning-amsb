@@ -15,18 +15,18 @@ import type { DBEventData } from "@app/types";
 export function createFlatStore<T extends { id: string | number }>(
   endpoint: string,
   options: {
-    params?: FetcherOptions["params"];
-    satisfiesParams?: (data: T, params: URLSearchParams) => boolean;
+    params?: FetcherOptions["searchParams"];
+    satisfiesParams?: (data: T, searchParams: URLSearchParams) => boolean;
     additionalEvents?: string[];
   } = {}
 ) {
   let {
     params = {},
-    satisfiesParams = (data: T, params: URLSearchParams) => true,
+    satisfiesParams = (data: T, searchParams: URLSearchParams) => true,
     additionalEvents = [],
   } = options;
 
-  params = new URLSearchParams(params);
+  let searchParams = new URLSearchParams(params);
 
   const initial = null;
 
@@ -58,7 +58,7 @@ export function createFlatStore<T extends { id: string | number }>(
     patch: _dbPatch,
     delete: _dbDelete,
     refresh: fetchAll,
-    setParams,
+    setSearchParams,
     endpoint,
   };
 
@@ -90,13 +90,16 @@ export function createFlatStore<T extends { id: string | number }>(
    *
    * @param data Données de l'item
    */
-  async function _dbCreate(data: T, params: FetcherOptions["params"] = {}) {
+  async function _dbCreate(
+    data: T,
+    searchParams: FetcherOptions["searchParams"] = {}
+  ) {
     const item: T = await fetcher(endpoint, {
       requestInit: {
         method: "POST",
         body: JSON.stringify(data),
       },
-      params,
+      searchParams,
     });
 
     _create(item);
@@ -109,13 +112,16 @@ export function createFlatStore<T extends { id: string | number }>(
    *
    * @param data Données de l'item
    */
-  async function _dbUpdate(data: T, params: FetcherOptions["params"] = {}) {
+  async function _dbUpdate(
+    data: T,
+    searchParams: FetcherOptions["searchParams"] = {}
+  ) {
     const item: T = await fetcher(`${endpoint}/${data.id}`, {
       requestInit: {
         method: "PUT",
         body: JSON.stringify(data),
       },
-      params,
+      searchParams,
     });
 
     _update(item);
@@ -132,14 +138,14 @@ export function createFlatStore<T extends { id: string | number }>(
   async function _dbPatch(
     id: T["id"],
     data: Partial<T>,
-    params: FetcherOptions["params"] = {}
+    searchParams: FetcherOptions["searchParams"] = {}
   ) {
     const item: T = await fetcher(`${endpoint}/${id}`, {
       requestInit: {
         method: "PATCH",
         body: JSON.stringify(data),
       },
-      params,
+      searchParams,
     });
 
     _update(item);
@@ -152,12 +158,15 @@ export function createFlatStore<T extends { id: string | number }>(
    *
    * @param id Identifiant de l'item
    */
-  async function _dbDelete(id: T["id"], params: FetcherOptions["params"] = {}) {
+  async function _dbDelete(
+    id: T["id"],
+    searchParams: FetcherOptions["searchParams"] = {}
+  ) {
     await fetcher(`${endpoint}/${id}`, {
       requestInit: {
         method: "DELETE",
       },
-      params,
+      searchParams,
     });
 
     _delete(id);
@@ -167,14 +176,21 @@ export function createFlatStore<T extends { id: string | number }>(
    * Mettre à jour les paramètres du store.
    *
    * @param params Paramètres de requête
+   * @param fetch  Si `true`, effectuer une nouvelle requête
    */
-  function setParams(_params: FetcherOptions["params"] = {}) {
-    _params = new URLSearchParams(_params);
+  function setSearchParams(
+    newParams: FetcherOptions["searchParams"] = {},
+    fetch: boolean = true
+  ) {
+    const newSearchParams = new URLSearchParams(newParams);
 
-    if (params.toString() !== _params.toString()) {
+    if (searchParams.toString() !== newSearchParams.toString()) {
       set(initial);
       current = initial;
-      params = _params;
+      searchParams = newSearchParams;
+    }
+
+    if (fetch) {
       fetchAll();
     }
   }
@@ -230,7 +246,7 @@ export function createFlatStore<T extends { id: string | number }>(
    */
   async function fetchAll() {
     try {
-      const items = mapify<T>(await fetcher(endpoint, { params }));
+      const items = mapify<T>(await fetcher(endpoint, { searchParams }));
 
       // Si la valeur n'a pas changé, ne pas mettre à jour
       if (jsonify(current) === jsonify(items)) return;
@@ -260,7 +276,7 @@ export function createFlatStore<T extends { id: string | number }>(
    */
   function _create(item: T) {
     // Si l'item ne correspond pas aux paramètres de requête, ne pas mettre à jour le store
-    if (!satisfiesParams(item, params as URLSearchParams)) return;
+    if (!satisfiesParams(item, searchParams)) return;
 
     update((items) => {
       if (!items) return;
@@ -278,17 +294,10 @@ export function createFlatStore<T extends { id: string | number }>(
    */
   function _update(item: T) {
     // Si l'item ne correspond pas aux paramètres de requête, ne pas mettre à jour le store
-    if (
-      !current?.get(item.id) &&
-      !satisfiesParams(item, params as URLSearchParams)
-    )
-      return;
+    if (!current?.get(item.id) && !satisfiesParams(item, searchParams)) return;
 
     // Si l'item mis à jour ne correspond plus aux paramètres de requête, le supprimer du store
-    if (
-      current?.get(item.id) &&
-      !satisfiesParams(item, params as URLSearchParams)
-    ) {
+    if (current?.get(item.id) && !satisfiesParams(item, searchParams)) {
       _delete(item.id);
       return;
     }

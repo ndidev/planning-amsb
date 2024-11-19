@@ -40,6 +40,7 @@
     transporteur: null,
     num_commande: "",
     commentaire: "",
+    archive: false,
   };
 
   const produitVierge: Partial<ProduitVrac> = {
@@ -56,6 +57,7 @@
 
   const isNew = $params.id === "new";
   const copie = parseInt($params.copie);
+  const archives = "archives" in $params;
 
   let rdv: RdvVrac = isNew && !copie ? { ...nouveauRdv } : null;
 
@@ -95,7 +97,9 @@
       await vracRdvs.create(rdv);
 
       Notiflix.Notify.success("Le RDV a été ajouté");
-      $goto("./");
+      // Preset archive to avoid fetching race condition
+      vracRdvs.setSearchParams(rdv.archive ? { archives: "true" } : {}, false);
+      $goto(`./${rdv.archive ? "?archives" : ""}`);
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
       boutonAjouter.$set({ disabled: false });
@@ -114,7 +118,9 @@
       await vracRdvs.update(rdv);
 
       Notiflix.Notify.success("Le RDV a été modifié");
-      $goto("./");
+      // Preset archive to avoid fetching race condition
+      vracRdvs.setSearchParams(rdv.archive ? { archives: "true" } : {}, false);
+      $goto(`./${rdv.archive ? "?archives" : ""}`);
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
       boutonModifier.$set({ disabled: false });
@@ -140,7 +146,7 @@
           await vracRdvs.delete(id);
 
           Notiflix.Notify.success("Le RDV a été supprimé");
-          $goto("./");
+          $goto(`./${archives ? "?archives" : ""}`);
         } catch (erreur) {
           Notiflix.Notify.failure(erreur.message);
           boutonSupprimer.$set({ disabled: false });
@@ -330,6 +336,17 @@
           cols="30"
         />
       </div>
+
+      <!-- Archive -->
+      <div class="pure-control-group">
+        <label for="archive">Archivé</label>
+        <input
+          type="checkbox"
+          name="archive"
+          id="archive"
+          bind:checked={rdv.archive}
+        />
+      </div>
     </form>
 
     <!-- Validation/Annulation/Suppression -->
@@ -360,7 +377,7 @@
       <BoutonAction
         preset="annuler"
         on:click={() => {
-          $goto("./");
+          $goto(`./${archives ? "?archives" : ""}`);
         }}
       />
     </div>

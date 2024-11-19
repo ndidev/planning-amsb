@@ -52,7 +52,9 @@
    */
   async function recupererStats() {
     try {
-      stats = await fetcher("bois/stats", { params: filtre.toParams() });
+      stats = await fetcher("bois/stats", {
+        searchParams: filtre.toSearchParams(),
+      });
     } catch (error) {
       Notiflix.Notify.failure(error.message);
       console.error(error);

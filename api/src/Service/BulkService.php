@@ -10,6 +10,7 @@ use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\HTTPRequestBody;
+use App\DTO\Filter\BulkFilterDTO;
 use App\Entity\Bulk\BulkAppointment;
 use App\Entity\Bulk\BulkProduct;
 use App\Entity\Bulk\BulkQuality;
@@ -65,7 +66,8 @@ final class BulkService
             ->setCustomer($this->thirdPartyService->getThirdParty($rawDataAH->getInt('client')))
             ->setCarrier($this->thirdPartyService->getThirdParty($rawDataAH->getInt('transporteur')))
             ->setOrderNumber($rawDataAH->getString('num_commande'))
-            ->setComments($rawDataAH->getString('commentaire'));
+            ->setComments($rawDataAH->getString('commentaire'))
+            ->setArchive($rawDataAH->getBool('archive'));
 
         return $appointment;
     }
@@ -92,7 +94,8 @@ final class BulkService
             ->setCustomer($this->thirdPartyService->getThirdParty($requestBody->getInt('client')))
             ->setCarrier($this->thirdPartyService->getThirdParty($requestBody->getInt('transporteur')))
             ->setOrderNumber($requestBody->getString('num_commande'))
-            ->setComments($requestBody->getString('commentaire'));
+            ->setComments($requestBody->getString('commentaire'))
+            ->setArchive($requestBody->getBool('archive'));
 
         return $appointment;
     }
@@ -112,11 +115,13 @@ final class BulkService
     /**
      * Retrieves all bulk appointments.
      * 
+     * @param BulkFilterDTO $filter Filter to apply.
+     * 
      * @return Collection<BulkAppointment> All retrieved appointments.
      */
-    public function getAppointments(): Collection
+    public function getAppointments(BulkFilterDTO $filter): Collection
     {
-        return $this->appointmentRepository->getAppointments();
+        return $this->appointmentRepository->getAppointments($filter);
     }
 
     /**
@@ -203,6 +208,10 @@ final class BulkService
 
         if ($input->isSet('commande_prete')) {
             $appointment = $this->appointmentRepository->setIsReady($id, $input->getBool('commande_prete'));
+        }
+
+        if ($input->isSet('archive')) {
+            $appointment = $this->appointmentRepository->setIsArchive($id, $input->getBool('archive'));
         }
 
         return $appointment;
