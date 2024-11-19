@@ -20,7 +20,7 @@
 
   import Notiflix from "notiflix";
 
-  import { online } from "@app/utils";
+  import { online, luminance } from "@app/utils";
 
   type Preset = {
     name:
@@ -107,6 +107,14 @@
    */
   export let block = false;
 
+  function colorIsCode(): boolean {
+    return (
+      color.startsWith("#") ||
+      color.startsWith("rgb") ||
+      color.startsWith("hsl")
+    );
+  }
+
   afterUpdate(() => {
     if (block) {
       Notiflix.Block.standard([button], { svgSize: "30px" });
@@ -122,14 +130,16 @@
 <button
   bind:this={button}
   {type}
-  style:--bg-color="var(--{color}-bg-color)"
-  style:--color="var(--{color}-color)"
-  style:--hover-color="var(--{color}-hover-color)"
+  style:--bg-color={colorIsCode() ? color : `var(--${color}-bg-color`}
+  style:--color={colorIsCode() ? color : `var(--${color}-color`}
+  style:--hover-color={colorIsCode()
+    ? luminance.getTextColor(color)
+    : `var(--${color}-hover-color`}
   title={text}
   disabled={(needsOnline && !$online) || disabled}
   on:click|preventDefault
 >
-  <slot>{params.text}</slot>
+  <slot>{text}</slot>
 </button>
 
 <style>

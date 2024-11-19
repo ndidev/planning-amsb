@@ -164,11 +164,10 @@
     >
       <BoutonAction preset="modifier" on:click={$goto(`./${rdv.id}`)} />
       <BoutonAction preset="copier" on:click={$goto(`./new?copie=${rdv.id}`)} />
-      <!-- <BoutonAction preset="supprimer" on:click={supprimerRdv} /> -->
       <BoutonAction
-        preset="supprimer"
+        text={rdv.archive ? "Restaurer" : "Archiver"}
+        color="hsl(32, 100%, 50%)"
         on:click={toggleArchive}
-        text="Archiver"
       />
       <BoutonAction preset="annuler" on:click={() => (afficherModal = false)} />
     </div>
