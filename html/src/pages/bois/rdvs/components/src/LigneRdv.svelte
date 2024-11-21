@@ -14,13 +14,19 @@
 
   import Notiflix from "notiflix";
   import Hammer from "hammerjs";
-
   import {
-    MaterialButton,
-    BoutonAction,
-    Modal,
-    IconText,
-  } from "@app/components";
+    ClockIcon,
+    ReceiptTextIcon,
+    PackageIcon,
+    UserIcon,
+    ArrowRightFromLineIcon,
+    ArrowRightToLineIcon,
+    TruckIcon,
+    MessageSquareTextIcon,
+    MessageSquareOffIcon,
+  } from "lucide-svelte";
+
+  import { LucideButton, BoutonAction, Modal, IconText } from "@app/components";
 
   import { notiflixOptions, device } from "@app/utils";
   import { HTTP } from "@app/errors";
@@ -226,11 +232,19 @@
   /**
    * Renseigner commande prête en cliquant sur l'icône paquet.
    */
-  async function renseignerCommandePrete() {
+  async function toggleOrderReady() {
     try {
+      const newState = !rdv.commande_prete;
+
       await boisRdvs.patch(rdv.id, {
-        commande_prete: !rdv.commande_prete,
+        commande_prete: newState,
       });
+
+      Notiflix.Notify.success(
+        newState
+          ? "Commande marquée comme prête"
+          : "Commande marquée comme non prête"
+      );
     } catch (err) {
       Notiflix.Notify.failure(err.message);
     } finally {
@@ -342,8 +356,8 @@
 
     {#if !rdv.heure_arrivee && $currentUser.canEdit("bois")}
       <div class="horloge horloge-arrivee pure-u-1 pure-u-lg-11-24">
-        <MaterialButton
-          icon="schedule"
+        <LucideButton
+          icon={ClockIcon}
           title="Renseigner l'heure d'arrvée"
           on:click={renseignerHeureArrivee}
         />
@@ -358,8 +372,8 @@
 
     {#if rdv.heure_arrivee && !rdv.heure_depart && $currentUser.canEdit("bois")}
       <div class="horloge horloge-depart pure-u-1 pure-u-lg-11-24">
-        <MaterialButton
-          icon="schedule"
+        <LucideButton
+          icon={ClockIcon}
           title="Renseigner l'heure de départ"
           on:click={renseignerHeureDepart}
         />
@@ -372,7 +386,9 @@
       {#if chargementAffiche}
         <div class="chargement">
           <IconText>
-            <span slot="icon" title="Chargement">line_start_diamond</span>
+            <span slot="icon" title="Chargement"
+              ><ArrowRightFromLineIcon /></span
+            >
             <span slot="text">{adresses.chargement}</span>
             <span slot="tooltip">{adresses.tooltipChargement}</span>
           </IconText>
@@ -383,7 +399,7 @@
         <IconText>
           <span slot="icon" title="Client">
             {#if chargementAffiche || livraisonAffiche}
-              person
+              <UserIcon />
             {/if}
           </span>
           <span slot="text">{adresses.client}</span>
@@ -394,7 +410,7 @@
       {#if livraisonAffiche}
         <div class="livraison">
           <IconText>
-            <span slot="icon" title="Livraison">line_end_circle</span>
+            <span slot="icon" title="Livraison"><ArrowRightToLineIcon /></span>
             <span slot="text">{adresses.livraison}</span>
             <span slot="tooltip">{adresses.tooltipLivraison}</span>
           </IconText>
@@ -404,16 +420,14 @@
 
     <div class="transporteur pure-u-1 pure-u-lg-2-24">
       {#if rdv.transporteur}
-        <IconText hideIcon={["desktop"]}>
-          <span slot="icon" title="Transporteur">local_shipping</span>
+        <IconText hideIcon={["desktop"]} showTooltip={rdv.transporteur >= 11}>
+          <span slot="icon" title="Transporteur"><TruckIcon /></span>
           <span slot="text" style:font-weight="bold"
             >{transporteur.nom_court}</span
           >
           <span slot="tooltip">
-            {#if rdv.transporteur >= 11}
-              <!-- Transporteur non "spécial" -->
-              {transporteur.telephone || "Téléphone non renseigné"}
-            {/if}
+            <!-- Transporteur non "spécial" -->
+            {transporteur.telephone || "Téléphone non renseigné"}
           </span>
         </IconText>
       {/if}
@@ -427,17 +441,18 @@
           : "hidden"}
         data-confirme={rdv.confirmation_affretement ? "1" : "0"}
       >
-        <MaterialButton
-          icon="receipt"
+        <LucideButton
+          icon={ReceiptTextIcon}
           title="Confirmation d'affrètement"
           color="#000000"
+          staticallyColored
           on:click={toggleConfirmationAffretement}
         />
       </div>
     {/if}
 
     <div class="affreteur pure-u-1 pure-u-lg-2-24">
-      <IconText iconType="text" hideIcon={["desktop"]}>
+      <IconText hideIcon={["desktop"]}>
         <span slot="icon" title="Affréteur">A</span>
         <span
           slot="text"
@@ -448,7 +463,7 @@
     </div>
 
     <div class="fournisseur pure-u-1 pure-u-lg-2-24">
-      <IconText iconType="text" hideIcon={["desktop"]}>
+      <IconText hideIcon={["desktop"]}>
         <span slot="icon" title="Fournisseur">F</span>
         <span slot="text">{fournisseur.nom_court}</span>
       </IconText>
@@ -457,28 +472,29 @@
     <div class="commande_prete pure-u-1 pure-u-lg-1-24">
       {#if rdv.commande_prete && !$currentUser.canEdit("bois")}
         <IconText hideText={["desktop"]}>
-          <span slot="icon" title="Commande prête">package_2</span>
+          <span slot="icon" title="Commande prête"><PackageIcon /></span>
           <span slot="text">Commande prête</span>
         </IconText>
       {/if}
 
       {#if rdv.commande_prete && $currentUser.canEdit("bois")}
         <div class="commande_prete-bouton-annuler">
-          <MaterialButton
-            icon="package_2"
+          <LucideButton
+            icon={PackageIcon}
             title="Annuler la préparation de commande"
-            invert
-            on:click={renseignerCommandePrete}
+            color="#000000"
+            staticallyColored
+            on:click={toggleOrderReady}
           />
         </div>
       {/if}
 
       {#if !rdv.commande_prete && $currentUser.canEdit("bois")}
         <div class="commande_prete-bouton-confirmer">
-          <MaterialButton
-            icon="package_2"
+          <LucideButton
+            icon={PackageIcon}
             title="Renseigner commande prête"
-            on:click={renseignerCommandePrete}
+            on:click={toggleOrderReady}
           />
         </div>
       {/if}
@@ -514,7 +530,9 @@
       {#if rdv.commentaire_public}
         <div class="commentaire_public">
           <IconText hideIcon={["desktop"]}>
-            <span slot="icon" title="Commentaire public">comment</span>
+            <span slot="icon" title="Commentaire public"
+              ><MessageSquareTextIcon /></span
+            >
             <span slot="text"
               >{@html rdv.commentaire_public.replace(
                 /(?:\r\n|\r|\n)/g,
@@ -532,7 +550,9 @@
       {#if rdv.commentaire_cache}
         <div class="commentaire_cache">
           <IconText hideIcon={["desktop"]}>
-            <span slot="icon" title="Commentaire caché">comments_disabled</span>
+            <span slot="icon" title="Commentaire caché"
+              ><MessageSquareOffIcon /></span
+            >
             <span slot="text"
               >{@html rdv.commentaire_cache.replace(
                 /(?:\r\n|\r|\n)/g,
@@ -547,19 +567,19 @@
 
   {#if $currentUser.canEdit("bois")}
     <div class="copie-modif-suppr">
-      <MaterialButton
-        preset="copier"
+      <LucideButton
+        preset="copy"
         on:click={() => {
           $goto(`./new?copie=${rdv.id}`);
         }}
       />
-      <MaterialButton
-        preset="modifier"
+      <LucideButton
+        preset="edit"
         on:click={() => {
           $goto(`./${rdv.id}`);
         }}
       />
-      <MaterialButton preset="supprimer" on:click={supprimerRdv} />
+      <LucideButton preset="delete" on:click={supprimerRdv} />
     </div>
   {/if}
 </div>
@@ -617,12 +637,13 @@
     position: relative;
   }
 
-  .confirmation_affretement :global(button):hover {
+  /* .confirmation_affretement :global(button):hover {
     font-variation-settings: "FILL" 1;
-  }
+  } */
 
   .confirmation_affretement :global(button::after) {
     position: absolute;
+    font-size: 1.5rem;
     left: 0.6em;
   }
 
@@ -656,7 +677,7 @@
   /* Desktop */
   @media screen and (min-width: 768px) {
     .rdv {
-      min-height: 2.75rem; /* Pour éviter saut de contenu lors de hover avec icônes Material */
+      min-height: 2.75rem; /* Pour éviter saut de contenu lors de hover avec icônes Lucide */
     }
 
     .rdv:hover .copie-modif-suppr {

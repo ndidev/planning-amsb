@@ -19,9 +19,10 @@
   import { onMount, onDestroy } from "svelte";
 
   import Notiflix from "notiflix";
+  import { CircleXIcon, UndoIcon } from "lucide-svelte";
 
   import {
-    MaterialButton,
+    LucideButton,
     Svelecte,
     BoutonAction,
     SseConnection,
@@ -200,7 +201,7 @@
 
     logoJustRestored = true;
     inputLogo.value = null;
-    selectedTiers.logo = $tiers?.get(selectedTiers.id).logo || AUCUN_LOGO;
+    selectedTiers.logo = $tiers?.get(selectedTiers.id)?.logo || null;
   }
 
   /**
@@ -446,27 +447,28 @@
         on:change={afficherPreviewLogo}
       />
       {#if selectedTiers.logo && typeof selectedTiers.logo === "object"}
-        <MaterialButton
-          icon="cancel"
+        <LucideButton
+          icon={CircleXIcon}
           title="Annuler le choix de fichier"
-          on:click={retablirLogoExistant}
           color="hsla(0, 100%, 50%, 0.5)"
           hoverColor="hsla(0, 100%, 50%, 1)"
+          staticallyColored
+          on:click={retablirLogoExistant}
         />
       {/if}
     </div>
     <div class="pure-control-group">
       <label>
         {#if typeof selectedTiers.logo === "string"}
-          <MaterialButton
-            preset="supprimer"
+          <LucideButton
+            preset="delete"
             title="Supprimer le logo existant"
             on:click={supprimerLogoExistant}
           />
         {/if}
         {#if selectedTiers.logo === null && $tiers?.get(selectedTiers.id)?.logo}
-          <MaterialButton
-            icon="undo"
+          <LucideButton
+            icon={UndoIcon}
             title="Rétablir le logo existant"
             on:click={retablirLogoExistant}
           />

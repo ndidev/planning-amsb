@@ -15,7 +15,7 @@
 <script lang="ts">
   import type { breakpoints } from "@app/utils";
 
-  export let iconType: "icon" | "text" = "icon";
+  export let showTooltip = true;
 
   export let hideIcon: Array<(typeof breakpoints)[number]["type"]> = [];
   export let hideText: Array<(typeof breakpoints)[number]["type"]> = [];
@@ -30,7 +30,6 @@
 >
   <div
     class="icon"
-    class:material-symbols-outlined={iconType === "icon"}
     class:no-desktop={hideIcon.includes("desktop")}
     class:no-mobile={hideIcon.includes("mobile")}
   >
@@ -44,7 +43,7 @@
   >
     <slot name="text" />
 
-    {#if $$slots.tooltip}
+    {#if $$slots.tooltip && showTooltip}
       <div class="tooltip">
         <slot name="tooltip" />
       </div>
@@ -59,6 +58,10 @@
     align-items: center;
     justify-items: start;
     column-gap: 5px;
+  }
+
+  .icon {
+    vertical-align: top;
   }
 
   .tooltip {

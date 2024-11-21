@@ -11,6 +11,8 @@
   ```
  -->
 <script lang="ts">
+  import { WavesIcon, ShipIcon } from "lucide-svelte";
+
   export let date: string;
 
   /**
@@ -33,13 +35,15 @@
 
   <!-- Point d'exclamation si vive-eau -->
   {#if maree}
-    <span class="marees" title="Navires potentiellement à quai">!</span>
+    <span class="marees" title="Navires potentiellement à quai"
+      ><WavesIcon /></span
+    >
   {/if}
 
   <!-- Pictogramme + nom des navires à quai si applicable -->
   {#if navires.length > 0}
     <div class="navires">
-      <i class="material-symbols-outlined icone-navire">directions_boat</i>
+      <i class="icone-navire"><ShipIcon /></i>
       <div class="texte-navires">{@html navires.join("<br />")}</div>
     </div>
   {/if}
@@ -66,8 +70,9 @@
     cursor: help;
   }
 
+  .marees,
   .icone-navire {
-    font-variation-settings: "FILL" 1;
+    vertical-align: top;
   }
 
   .texte-navires {

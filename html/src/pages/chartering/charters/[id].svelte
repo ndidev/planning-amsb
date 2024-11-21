@@ -6,7 +6,7 @@
   import Notiflix from "notiflix";
 
   import {
-    MaterialButton,
+    LucideButton,
     Svelecte,
     NumericInput,
     Chargement,
@@ -363,8 +363,8 @@
       <h2>Détails</h2>
       <div id="ajouter-ligne">
         Ajouter une ligne
-        <MaterialButton
-          icon="add"
+        <LucideButton
+          preset="add"
           title="Ajouter une ligne"
           on:click={ajouterEtape}
         />
@@ -461,8 +461,8 @@
               </div>
 
               <div class="poubelle">
-                <MaterialButton
-                  preset="supprimer"
+                <LucideButton
+                  preset="delete"
                   on:click={() => {
                     supprimerEtape(leg);
                   }}

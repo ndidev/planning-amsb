@@ -14,7 +14,7 @@
   import Notiflix from "notiflix";
   import autosize from "autosize";
 
-  import { MaterialButton } from "@app/components";
+  import { LucideButton } from "@app/components";
 
   import { configBandeauInfo } from "@app/stores";
 
@@ -163,18 +163,16 @@
   <!-- Boutons -->
   <span class="actions">
     {#if !isNew && !modificationEnCours}
-      <MaterialButton preset="supprimer" on:click={supprimerLigne} />
+      <LucideButton preset="delete" on:click={supprimerLigne} />
     {/if}
   </span>
   <span class="valider-annuler">
-    <MaterialButton
-      icon="done"
-      title="Valider"
+    <LucideButton
+      preset="confirm"
       on:click={isNew ? validerAjout : validerModification}
     />
-    <MaterialButton
-      icon="close"
-      title="Annuler"
+    <LucideButton
+      preset="cancel"
       on:click={isNew ? annulerAjout : annulerModification}
     />
   </span>

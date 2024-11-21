@@ -4,10 +4,15 @@
   import { params, goto, redirect } from "@roxi/routify";
 
   import Notiflix from "notiflix";
+  import {
+    CircleHelpIcon,
+    SparklesIcon,
+    TriangleAlertIcon,
+  } from "lucide-svelte";
 
   import {
     Svelecte,
-    MaterialButton,
+    LucideButton,
     Chargement,
     BoutonAction,
   } from "@app/components";
@@ -395,9 +400,9 @@
         />
         {#if rdv.fournisseur && rdv.affreteur && rdv.fournisseur !== rdv.affreteur && $tiers?.get(rdv.affreteur)?.roles.bois_fournisseur}
           <span
-            class="material-symbols-outlined warning-fournisseur"
-            title="Erreur possible : vérifier que le fournisseur est correct"
-            >warning</span
+            class="warning-fournisseur"
+            title="Erreur possible : vérifier que le fournisseur et l'affréteur sont corrects"
+            ><TriangleAlertIcon /></span
           >
         {/if}
       </div>
@@ -444,15 +449,7 @@
 
       <!-- Transporteur -->
       <div class="pure-control-group">
-        <label for="transporteur"
-          >Transporteur {#if rdv.affreteur === 1 || rdv.affreteur === null}
-            <MaterialButton
-              icon="tips_and_updates"
-              title="Suggestions de transporteurs"
-              on:click={afficherSuggestionsTransporteurs}
-            />
-          {/if}</label
-        >
+        <label for="transporteur">Transporteur</label>
         <Svelecte
           inputId="transporteur"
           type="tiers"
@@ -460,6 +457,15 @@
           bind:value={rdv.transporteur}
           name="Transporteur"
         />
+        {#if rdv.affreteur === 1 || rdv.affreteur === null}
+          <span>
+            <LucideButton
+              icon={SparklesIcon}
+              title="Suggestions de transporteurs"
+              on:click={afficherSuggestionsTransporteurs}
+            />
+          </span>
+        {/if}
       </div>
 
       <!-- Affréteur -->
@@ -472,6 +478,13 @@
           bind:value={rdv.affreteur}
           name="Affréteur"
         />
+        {#if rdv.fournisseur && rdv.affreteur && rdv.fournisseur !== rdv.affreteur && $tiers?.get(rdv.affreteur)?.roles.bois_fournisseur}
+          <span
+            class="warning-fournisseur"
+            title="Erreur possible : vérifier que le fournisseur et l'affréteur sont corrects"
+            ><TriangleAlertIcon /></span
+          >
+        {/if}
       </div>
 
       <!-- Commande prête -->
@@ -526,8 +539,8 @@
       <!-- Commentaire caché -->
       <div class="pure-control-group">
         <label for="commentaire_cache"
-          >Commentaire caché<br /><MaterialButton
-            icon="help"
+          >Commentaire caché<br /><LucideButton
+            icon={CircleHelpIcon}
             on:click={afficherExplicationsCommentaireCache}
           /></label
         >
@@ -582,6 +595,7 @@
     color: red;
     cursor: help;
     animation: warning-animation 0.5s linear 0s 6 alternate;
+    vertical-align: text-top;
   }
 
   @keyframes warning-animation {

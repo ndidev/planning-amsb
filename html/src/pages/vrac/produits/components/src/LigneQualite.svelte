@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { MaterialButton } from "@app/components";
+  import { LucideButton } from "@app/components";
 
   import type { QualiteVrac } from "@app/types";
 
@@ -34,8 +34,8 @@
   </label>
 
   <div class="poubelle">
-    <MaterialButton
-      preset="supprimer"
+    <LucideButton
+      preset="delete"
       title="Supprimer la qualité"
       on:click={() => supprimerQualite(qualite)}
     />

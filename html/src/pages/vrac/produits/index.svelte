@@ -4,7 +4,7 @@
 
   import Notiflix from "notiflix";
 
-  import { MaterialButton, BoutonAction } from "@app/components";
+  import { LucideButton, BoutonAction } from "@app/components";
   import { LigneQualite } from "./components";
 
   import { vracProduits } from "@app/stores";
@@ -255,8 +255,8 @@
       <fieldset>
         <legend>
           Qualités
-          <MaterialButton
-            icon="add"
+          <LucideButton
+            preset="add"
             title="Ajouter une qualité"
             on:click={ajouterQualite}
           />

@@ -13,8 +13,9 @@
   import { goto } from "@roxi/routify";
 
   // import Hammer from "hammerjs";
+  import { PlusIcon } from "lucide-svelte";
 
-  import { MaterialButton } from "@app/components";
+  import { LucideButton } from "@app/components";
   import AjoutsRapidesBois from "./AjoutsRapidesBois.svelte";
 
   import { device } from "@app/utils";
@@ -75,10 +76,10 @@
 
 {#if nouveau}
   <span class="add-button" bind:this={addButton}>
-    <MaterialButton
-      icon="add"
+    <LucideButton
+      icon={PlusIcon}
       title={nouveau.title}
-      fontSize={$device.isSmallerThan("desktop") ? "24px" : "36px"}
+      size={$device.isSmallerThan("desktop") ? "24px" : "36px"}
       on:click={() => $goto(nouveau.href)}
     />
 

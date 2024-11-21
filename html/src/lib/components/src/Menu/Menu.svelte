@@ -11,7 +11,9 @@
 <script lang="ts">
   import { url, beforeUrlChange } from "@roxi/routify";
 
-  import { MaterialButton } from "@app/components";
+  import { MenuIcon } from "lucide-svelte";
+
+  import { LucideButton } from "@app/components";
   import AddButton from "./AddButton.svelte";
   import UserFooter from "./UserFooter.svelte";
 
@@ -44,10 +46,10 @@
 
 <div class="menu-toggle-add">
   <!-- Affichage/masquage du menu -->
-  <MaterialButton
-    icon="menu"
+  <LucideButton
+    icon={MenuIcon}
     title="Menu"
-    fontSize={menuButtonFontSize}
+    size={menuButtonFontSize}
     on:click={() => {
       affichageMenu = !affichageMenu;
     }}

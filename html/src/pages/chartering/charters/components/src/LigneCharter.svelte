@@ -14,7 +14,7 @@
 
   import Hammer from "hammerjs";
 
-  import { MaterialButton, Modal, BoutonAction } from "@app/components";
+  import { LucideButton, Modal, BoutonAction } from "@app/components";
 
   import { device, locale } from "@app/utils";
 
@@ -155,8 +155,8 @@
   <!-- Copie / Modification / Suppression -->
   {#if $currentUser.canEdit("chartering")}
     <div class="copie-modif-suppr">
-      <MaterialButton
-        preset="modifier"
+      <LucideButton
+        preset="edit"
         on:click={$goto(`./${charter.id}${archives ? "?archives" : ""}`)}
       />
     </div>

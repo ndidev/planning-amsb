@@ -107,7 +107,7 @@
    */
   export let block = false;
 
-  function colorIsCode(): boolean {
+  function colorIsCode(color: string): boolean {
     return (
       color.startsWith("#") ||
       color.startsWith("rgb") ||
@@ -130,9 +130,9 @@
 <button
   bind:this={button}
   {type}
-  style:--bg-color={colorIsCode() ? color : `var(--${color}-bg-color`}
-  style:--color={colorIsCode() ? color : `var(--${color}-color`}
-  style:--hover-color={colorIsCode()
+  style:--bg-color={colorIsCode(color) ? color : `var(--${color}-bg-color`}
+  style:--color={colorIsCode(color) ? color : `var(--${color}-color`}
+  style:--hover-color={colorIsCode(color)
     ? luminance.getTextColor(color)
     : `var(--${color}-hover-color`}
   title={text}

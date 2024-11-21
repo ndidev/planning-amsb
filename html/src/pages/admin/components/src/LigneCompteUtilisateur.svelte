@@ -13,8 +13,9 @@
 
   import Notiflix from "notiflix";
   import autosize from "autosize";
+  import { CircleHelpIcon, HistoryIcon } from "lucide-svelte";
 
-  import { MaterialButton } from "@app/components";
+  import { LucideButton } from "@app/components";
 
   import { adminUsers, currentUser, authInfo } from "@app/stores";
 
@@ -385,9 +386,9 @@
   onMount(() => {
     // Si changement d'une ligne, activation de la classe "modificationEnCours"
     ligne
-      .querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
-        "input, textarea"
-      )
+      .querySelectorAll<
+        HTMLInputElement | HTMLTextAreaElement
+      >("input, textarea")
       .forEach((input) => {
         input.onchange = () => (modificationEnCours = true);
         input.oninput = () => (modificationEnCours = true);
@@ -418,13 +419,13 @@
         >
           {compteInitital.nom}
         </button>
-        <MaterialButton
-          icon="help"
+        <LucideButton
+          icon={CircleHelpIcon}
           title="Statut du compte"
           on:click={afficherExplications}
         />
-        <MaterialButton
-          icon="history"
+        <LucideButton
+          icon={HistoryIcon}
           title="Historique du compte"
           on:click={afficherHistorique}
         />
@@ -483,14 +484,12 @@
 
         <!-- Boutons modification-->
         <div class="modif-suppr">
-          <MaterialButton
-            icon="done"
-            title="Valider"
+          <LucideButton
+            preset="confirm"
             on:click={isNew ? validerAjout : validerModification}
           />
-          <MaterialButton
-            icon="close"
-            title="Annuler"
+          <LucideButton
+            preset="cancel"
             on:click={isNew ? annulerAjout : annulerModification}
           />
         </div>

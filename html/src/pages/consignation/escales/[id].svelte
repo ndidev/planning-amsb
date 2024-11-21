@@ -6,7 +6,7 @@
   import Notiflix from "notiflix";
 
   import {
-    MaterialButton,
+    LucideButton,
     Svelecte,
     NumericInput,
     Chargement,
@@ -574,8 +574,8 @@
       <h2>Marchandises</h2>
       <div id="ajouter-marchandise">
         Ajouter une marchandise
-        <MaterialButton
-          icon="add"
+        <LucideButton
+          preset="add"
           title="Ajouter une marchandise"
           on:click={ajouterMarchandise}
         />
@@ -697,8 +697,8 @@
                 </div>
               </div>
               <div class="poubelle">
-                <MaterialButton
-                  preset="supprimer"
+                <LucideButton
+                  preset="delete"
                   title="Supprimer la marchandise"
                   on:click={() => supprimerMarchandise(marchandise)}
                 />

@@ -12,6 +12,8 @@
   ```
  -->
 <script lang="ts">
+  import { PlusIcon } from "lucide-svelte";
+
   /**
    * Titre de la sous-section.
    */
@@ -29,7 +31,7 @@
   {#if fonctionAjout}
     <button title="Ajouter une ligne" on:click={() => fonctionAjout()}>
       Ajouter une ligne
-      <i class="material-symbols-outlined" title="Ajouter une ligne">add</i>
+      <i class="icon" title="Ajouter une ligne"><PlusIcon /></i>
     </button>
   {/if}
 </h3>
@@ -39,6 +41,10 @@
     margin: 20px 10% 5px 10%;
     color: #333;
     border-bottom: 1px solid #666;
+  }
+
+  .icon {
+    vertical-align: middle;
   }
 
   button {

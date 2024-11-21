@@ -11,7 +11,9 @@
 <script lang="ts">
   import { onMount, afterUpdate } from "svelte";
 
-  import { MaterialButton, Svelecte } from "@app/components";
+  import { CircleHelpIcon, EyeIcon, SendIcon } from "lucide-svelte";
+
+  import { LucideButton, Svelecte } from "@app/components";
 
   import { configPdf } from "@app/stores";
 
@@ -347,8 +349,8 @@
   <!-- Liste e-mails -->
   <div class="champ pure-u-1 pure-u-lg-9-24">
     <label for={"liste_emails_" + config.id}
-      >Liste e-mails <MaterialButton
-        icon="help"
+      >Liste e-mails <LucideButton
+        icon={CircleHelpIcon}
         title="Afficher les explications"
         on:click={afficherExplicationsEmails}
       /></label
@@ -362,23 +364,25 @@
   </div>
   <!-- Boutons -->
   <span class="actions">
-    <MaterialButton
-      icon="visibility"
+    <LucideButton
+      icon={EyeIcon}
       title="Visualiser le PDF"
       on:click={visualiserPdf}
     />
-    <MaterialButton icon="send" title="Envoyer le PDF" on:click={envoyerPdf} />
-    <MaterialButton preset="supprimer" on:click={supprimerLigne} />
+    <LucideButton
+      icon={SendIcon}
+      title="Envoyer le PDF"
+      on:click={envoyerPdf}
+    />
+    <LucideButton preset="delete" on:click={supprimerLigne} />
   </span>
   <span class="valider-annuler">
-    <MaterialButton
-      icon="done"
-      title="Valider"
+    <LucideButton
+      preset="confirm"
       on:click={isNew ? validerAjout : validerModification}
     />
-    <MaterialButton
-      icon="close"
-      title="Annuler"
+    <LucideButton
+      preset="cancel"
       on:click={isNew ? annulerAjout : annulerModification}
     />
   </span>

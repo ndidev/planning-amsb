@@ -9,7 +9,7 @@
   ```
  -->
 <script lang="ts">
-  import { MaterialButton, NumericInput } from "@app/components";
+  import { LucideButton, NumericInput } from "@app/components";
 
   import Notiflix from "notiflix";
 
@@ -76,16 +76,8 @@
 
   <!-- Boutons -->
   <span class="valider-annuler">
-    <MaterialButton
-      icon="done"
-      title="Valider"
-      on:click={validerModification}
-    />
-    <MaterialButton
-      icon="close"
-      title="Annuler"
-      on:click={annulerModification}
-    />
+    <LucideButton preset="confirm" on:click={validerModification} />
+    <LucideButton preset="cancel" on:click={annulerModification} />
   </span>
 </div>
 

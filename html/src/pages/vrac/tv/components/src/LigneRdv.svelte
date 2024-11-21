@@ -9,6 +9,8 @@
   ```
  -->
 <script lang="ts">
+  import { PackageIcon } from "lucide-svelte";
+
   import { tiers, vracProduits } from "@app/stores";
   import type { RdvVrac, ProduitVrac, QualiteVrac, Tiers } from "@app/types";
 
@@ -52,9 +54,7 @@
 
   <div class="commande_prete pure-u-1 pure-u-lg-1-24" style:text-align="right">
     {#if rdv.commande_prete}
-      <span class="material-symbols-outlined" title="Commande prête"
-        >package_2</span
-      >
+      <PackageIcon />
     {/if}
   </div>
 

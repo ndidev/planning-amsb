@@ -15,8 +15,9 @@
 
   import Notiflix from "notiflix";
   import Hammer from "hammerjs";
+  import { PackageIcon, ArchiveIcon, ArchiveRestoreIcon } from "lucide-svelte";
 
-  import { MaterialButton, BoutonAction, Modal } from "@app/components";
+  import { LucideButton, BoutonAction, Modal } from "@app/components";
 
   import { notiflixOptions, device } from "@app/utils";
   import type {
@@ -67,45 +68,24 @@
   /**
    * Renseigner commande prête en cliquant sur l'icône paquet.
    */
-  async function renseignerCommandePrete() {
+  async function toggleOrderReady() {
     try {
+      const newState = !rdv.commande_prete;
+
       await vracRdvs.patch(rdv.id, {
-        commande_prete: !rdv.commande_prete,
+        commande_prete: newState,
       });
+
+      Notiflix.Notify.success(
+        newState
+          ? "Commande marquée comme prête"
+          : "Commande marquée comme non prête"
+      );
     } catch (err) {
       Notiflix.Notify.failure(err.message);
     } finally {
       afficherModal = false;
     }
-  }
-
-  /**
-   * Supprimer le RDV.
-   */
-  function supprimerRdv() {
-    Notiflix.Confirm.show(
-      "Suppression RDV",
-      "Voulez-vous vraiment supprimer le RDV ?",
-      "Supprimer",
-      "Annuler",
-      async function () {
-        try {
-          Notiflix.Block.dots([ligne], notiflixOptions.texts.suppression);
-          ligne.style.minHeight = "initial";
-
-          await vracRdvs.delete(rdv.id);
-
-          Notiflix.Notify.success("Le RDV a été supprimé");
-        } catch (erreur) {
-          Notiflix.Notify.failure(erreur.message);
-          Notiflix.Block.remove([ligne]);
-        }
-      },
-      null,
-      notiflixOptions.themes.red
-    );
-
-    afficherModal = false;
   }
 
   function toggleArchive() {
@@ -183,36 +163,32 @@
       <span class="qualite" style:color={qualite.couleur}>{qualite.nom}</span>
     {/if}
     {#if rdv.commande_prete}
-      <span class="material-symbols-outlined no-desktop" title="Commande prête"
-        >package_2</span
-      >
+      <span class="no-desktop" title="Commande prête"><PackageIcon /></span>
     {/if}
   </div>
 
   <div class="commande_prete pure-u-1 pure-u-lg-1-24 no-mobile">
     {#if rdv.commande_prete && !$currentUser.canEdit("vrac")}
-      <span class="material-symbols-outlined" title="Commande prête"
-        >package_2</span
-      >
+      <span title="Commande prête"><PackageIcon /></span>
     {/if}
 
     {#if rdv.commande_prete && $currentUser.canEdit("vrac")}
       <div class="commande_prete-bouton-annuler">
-        <MaterialButton
-          icon="package_2"
+        <LucideButton
+          icon={PackageIcon}
           title="Annuler la préparation de commande"
+          on:click={toggleOrderReady}
           invert
-          on:click={renseignerCommandePrete}
         />
       </div>
     {/if}
 
     {#if !rdv.commande_prete && $currentUser.canEdit("vrac")}
       <div class="commande_prete-bouton-confirmer">
-        <MaterialButton
-          icon="package_2"
+        <LucideButton
+          icon={PackageIcon}
           title="Renseigner commande prête"
-          on:click={renseignerCommandePrete}
+          on:click={toggleOrderReady}
         />
       </div>
     {/if}
@@ -239,37 +215,24 @@
 
   {#if $currentUser.canEdit("vrac")}
     <div class="copie-modif-suppr">
-      <MaterialButton
-        preset="copier"
+      <LucideButton
+        preset="copy"
         on:click={() => {
           $goto(`./new?copie=${rdv.id}${archives ? "&archives" : ""}`);
         }}
       />
-      <MaterialButton
-        preset="modifier"
+      <LucideButton
+        preset="edit"
         on:click={() => {
           $goto(`./${rdv.id}${archives ? "?archives" : ""}`);
         }}
       />
-      {#if rdv.archive}
-        <MaterialButton
-          preset="supprimer"
-          on:click={toggleArchive}
-          title="Restaurer"
-          hoverColor="hsl(32, 100%, 50%)"
-        >
-          <slot name="icon">unarchive</slot>
-        </MaterialButton>
-      {:else}
-        <MaterialButton
-          preset="supprimer"
-          on:click={toggleArchive}
-          title="Archiver"
-          hoverColor="hsl(32, 100%, 50%)"
-        >
-          <slot name="icon">archive</slot>
-        </MaterialButton>
-      {/if}
+      <LucideButton
+        icon={rdv.archive ? ArchiveRestoreIcon : ArchiveIcon}
+        on:click={toggleArchive}
+        title={rdv.archive ? "Restaurer" : "Archiver"}
+        color="hsl(32, 100%, 50%)"
+      />
     </div>
   {/if}
 
@@ -378,6 +341,7 @@
 
     .commande_prete {
       text-align: center;
+      min-height: 2rem;
     }
 
     .rdv:hover .commande_prete-bouton-confirmer {

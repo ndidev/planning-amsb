@@ -13,8 +13,9 @@
   import type { Writable } from "svelte/store";
 
   import Notiflix from "notiflix";
+  import { ScrollTextIcon } from "lucide-svelte";
 
-  import { MaterialButton } from "@app/components";
+  import { LucideButton } from "@app/components";
   import { type Filtre, fetcher, notiflixOptions, DateUtils } from "@app/utils";
   import type { FiltreBois } from "@app/types";
 
@@ -82,8 +83,8 @@
   }
 </script>
 
-<MaterialButton
-  icon="assignment"
+<LucideButton
+  icon={ScrollTextIcon}
   title="Extraire registre d'affrètement"
   on:click={afficherChoixDates}
 />
