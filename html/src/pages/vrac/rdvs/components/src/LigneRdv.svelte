@@ -231,7 +231,7 @@
         icon={rdv.archive ? ArchiveRestoreIcon : ArchiveIcon}
         on:click={toggleArchive}
         title={rdv.archive ? "Restaurer" : "Archiver"}
-        color="hsl(32, 100%, 50%)"
+        hoverColor="hsl(32, 100%, 50%)"
       />
     </div>
   {/if}
