@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
 use App\Entity\Port;
 use App\Repository\PortRepository;
@@ -33,10 +34,12 @@ final class PortService
      */
     public function makePortFromDatabase(array $rawData): Port
     {
+        $rawDataAH = new ArrayHandler($rawData);
+
         return (new Port())
-            ->setLocode($rawData["locode"] ?? "")
-            ->setName($rawData["nom"] ?? "")
-            ->setDisplayName($rawData["nom_affichage"] ?? "");
+            ->setLocode($rawDataAH->getString('locode'))
+            ->setName($rawDataAH->getString('nom'))
+            ->setDisplayName($rawDataAH->getString('nom_affichage'));
     }
 
     /**

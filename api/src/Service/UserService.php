@@ -6,13 +6,14 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Core\Array\ArrayHandler;
+use App\Core\Array\Environment;
 use App\Core\Auth\User as AuthUser;
 use App\Core\Auth\UserRoles;
 use App\Core\Component\SSEHandler;
 use App\Core\Exceptions\Client\Auth\UnauthorizedException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\ClientException;
-use App\Core\Array\Environment;
 use App\Core\HTTP\HTTPRequestBody;
 use App\DTO\CurrentUserFormDTO;
 use App\DTO\CurrentUserInfoDTO;
@@ -44,16 +45,18 @@ final class UserService
      */
     public function makeUserAccountFromDatabase(array $rawData): UserAccount
     {
+        $rawDataAH = new ArrayHandler($rawData);
+
         $user = (new UserAccount())
-            ->setUid($rawData["uid"])
-            ->setLogin($rawData["login"])
-            ->setName($rawData["nom"])
-            ->setCanLogin((bool) $rawData["can_login"])
-            ->setRoles($rawData["roles"] ?: '{}')
-            ->setStatus($rawData["statut"])
-            ->setLastLogin($rawData["last_connection"])
-            ->setComments($rawData["commentaire"])
-            ->setHistory($rawData["historique"]);
+            ->setUid($rawDataAH->getString('uid'))
+            ->setLogin($rawDataAH->getString('login'))
+            ->setName($rawDataAH->getString('nom'))
+            ->setCanLogin($rawDataAH->getBool('can_login'))
+            ->setRoles($rawDataAH->getString('roles', '{}'))
+            ->setStatus($rawDataAH->getString('statut'))
+            ->setLastLogin($rawDataAH->getDatetime('last_connection'))
+            ->setComments($rawDataAH->getString('commentaire'))
+            ->setHistory($rawDataAH->getString('historique'));
 
         return $user;
     }

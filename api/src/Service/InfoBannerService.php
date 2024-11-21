@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\ClientException;
@@ -36,15 +37,15 @@ final class InfoBannerService
      */
     public function makeLineFromDatabase(array $rawData): InfoBannerLine
     {
-        $module = Module::tryFrom($rawData['module']);
+        $rawDataAH = new ArrayHandler($rawData);
 
         $line = (new InfoBannerLine())
-            ->setId($rawData['id'])
-            ->setModule($module)
-            ->setPc($rawData['pc'])
-            ->setTv($rawData['tv'])
-            ->setMessage($rawData['message'])
-            ->setColor($rawData['couleur']);
+            ->setId($rawDataAH->getInt('id'))
+            ->setModule($rawDataAH->getString('module'))
+            ->setPc($rawDataAH->getBool('pc'))
+            ->setTv($rawDataAH->getBool('tv'))
+            ->setMessage($rawDataAH->getString('message'))
+            ->setColor($rawDataAH->getString('couleur', InfoBannerLine::DEFAULT_COLOR));
 
         return $line;
     }
@@ -69,7 +70,7 @@ final class InfoBannerService
             ->setPc($requestBody->getBool('pc'))
             ->setTv($requestBody->getBool('tv'))
             ->setMessage($requestBody->getString('message'))
-            ->setColor($requestBody->getString('couleur', '#000000'));
+            ->setColor($requestBody->getString('couleur', InfoBannerLine::DEFAULT_COLOR));
 
         return $line;
     }

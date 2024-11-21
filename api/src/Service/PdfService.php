@@ -6,15 +6,14 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
 use App\Core\Component\Module;
 use App\Core\Component\PdfEmail;
-use App\Core\Exceptions\AppException;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Exceptions\Server\ServerException;
 use App\Core\HTTP\HTTPRequestBody;
-use App\Core\Logger\ErrorLogger;
 use App\DTO\PDF\BulkPDF;
 use App\DTO\PDF\PlanningPDF;
 use App\DTO\PDF\TimberPDF;
@@ -49,14 +48,16 @@ final class PdfService
     {
         $thirdPartyService = new ThirdPartyService();
 
+        $rawDataAH = new ArrayHandler($rawData);
+
         $config = (new PdfConfig())
-            ->setId($rawData['id'] ?? null)
-            ->setModule($rawData['module'] ?? null)
-            ->setSupplier($thirdPartyService->getThirdParty($rawData['fournisseur'] ?? null))
-            ->setAutoSend($rawData['envoi_auto'] ?? false)
-            ->setEmails($rawData['liste_emails'] ?? [])
-            ->setDaysBefore($rawData['jours_avant'] ?? 0)
-            ->setDaysAfter($rawData['jours_apres'] ?? 0);
+            ->setId($rawDataAH->getInt('id'))
+            ->setModule($rawDataAH->getString('module'))
+            ->setSupplier($thirdPartyService->getThirdParty($rawDataAH->getInt('fournisseur')))
+            ->setAutoSend($rawDataAH->getBool('envoi_auto'))
+            ->setEmails($rawDataAH->getArray('liste_emails'))
+            ->setDaysBefore($rawDataAH->getInt('jours_avant', 0))
+            ->setDaysAfter($rawDataAH->getInt('jours_apres', 0));
 
         return $config;
     }
@@ -72,8 +73,14 @@ final class PdfService
     {
         $thirdPartyService = new ThirdPartyService();
 
+        $module = Module::tryFrom($requestBody->getString('module'));
+
+        if (!$module) {
+            throw new ClientException("Le module n'est pas valide.");
+        }
+
         $config = (new PdfConfig())
-            ->setModule($requestBody->getString('module'))
+            ->setModule($module)
             ->setSupplier($thirdPartyService->getThirdParty($requestBody->getInt('fournisseur')))
             ->setAutoSend($requestBody->getBool('envoi_auto'))
             ->setEmails($requestBody->getArray('liste_emails'))

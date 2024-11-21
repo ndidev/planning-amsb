@@ -20,8 +20,13 @@ class ArrayHandler
 
     /**
      * Get the value of a variable.
+     * 
+     * @param int|string $key     Name of the key.
+     * @param mixed      $default Default value.
+     * 
+     * @return mixed
      */
-    public function get(string $key, mixed $default = null): mixed
+    public function get(int|string $key, mixed $default = null): mixed
     {
         $value = $this->store[$key] ?? $default;
 
@@ -31,12 +36,17 @@ class ArrayHandler
     /**
      * Get the value of a variable as a string.
      * 
+     * @param int|string $key            Name of the key.
+     * @param ?string    $default        Default value.
+     * @param bool       $throwException If `true`, throw an exception if the value cannot be cast to a `string`.
+     *                                   If `false`, return the default value.
+     * 
      * @phpstan-return ($default is null ? string|null : string)
      * 
      * @throws \RuntimeException If the value cannot be cast to a string and `$throwException` is set to `true`.
      */
     public function getString(
-        string $key,
+        int|string $key,
         ?string $default = '',
         bool $allowEmpty = true,
         bool $throwException = false,
@@ -65,12 +75,17 @@ class ArrayHandler
     /**
      * Get the value of a variable as an integer.
      * 
+     * @param int|string $key            Name of the key.
+     * @param ?int       $default        Default value.
+     * @param bool       $throwException If `true`, throw an exception if the value cannot be cast to an `int`.
+     *                                   If `false`, return the default value.
+     * 
      * @phpstan-return ($default is null ? int|null : int)
      * 
      * @throws \RuntimeException If the value cannot be cast to an integer and `$throwException` is set to `true`.
      */
     public function getInt(
-        string $key,
+        int|string $key,
         ?int $default = null,
         bool $throwException = false,
     ): ?int {
@@ -94,12 +109,17 @@ class ArrayHandler
     /**
      * Get the value of a variable as a float.
      * 
+     * @param int|string     $key            Name of the key.
+     * @param float|int|null $default        Default value.
+     * @param bool           $throwException If `true`, throw an exception if the value cannot be cast to a `float`.
+     *                                       If `false`, return the default value.
+     * 
      * @phpstan-return ($default is null ? float|null : float)
      * 
      * @throws \RuntimeException If the value cannot be cast to a float and `$throwException` is set to `true`.
      */
     public function getFloat(
-        string $key,
+        int|string $key,
         float|int|null $default = null,
         bool $throwException = false,
     ): ?float {
@@ -123,12 +143,17 @@ class ArrayHandler
     /**
      * Get the value of a variable as a boolean.
      * 
+     * @param int|string $key            Name of the key.
+     * @param ?bool      $default        Default value.
+     * @param bool       $throwException If `true`, throw an exception if the value cannot be cast to a `bool`.
+     *                                   If `false`, return the default value.
+     * 
      * @phpstan-return ($default is null ? bool|null : bool)
      * 
      * @throws \RuntimeException If the value cannot be cast to a boolean and `$throwException` is set to `true`.
      */
     public function getBool(
-        string $key,
+        int|string $key,
         ?bool $default = false,
         bool $throwException = false,
     ): ?bool {
@@ -160,8 +185,11 @@ class ArrayHandler
     /**
      * Get the value of a variable as an array.
      * 
-     * @param string       $key
+     * @param int|string       $key
      * @param array<mixed> $default
+     * @param bool         $allowEmpty
+     * @param bool         $throwException If `true`, throw an exception if the value cannot be cast to an `array`.
+     *                                     If `false`, return the default value.
      * 
      * @return ?array<mixed>
      * 
@@ -170,7 +198,7 @@ class ArrayHandler
      * @throws \RuntimeException If the value cannot be cast to an array and `$throwException` is set to `true`.
      */
     public function getArray(
-        string $key,
+        int|string $key,
         ?array $default = [],
         bool $allowEmpty = true,
         bool $throwException = false,
@@ -199,7 +227,7 @@ class ArrayHandler
     /**
      * Get the value of a variable as a `\DateTimeImmutable`.
      * 
-     * @param string                         $key            Name of the key.
+     * @param int|string                     $key            Name of the key.
      * @param \DateTimeInterface|string|null $default        Default value.
      * @param bool                           $allowEmpty     Allow empty value (i.e.: current datetime).
      * @param bool                           $throwException If `true`, throw an exception if the value cannot be cast to a `\DateTimeImmutable`.
@@ -212,7 +240,7 @@ class ArrayHandler
      * @throws \RuntimeException If the value cannot be cast to a `\DateTimeImmutable` and `$throwException` is set to `true`.
      */
     public function getDatetime(
-        string $key,
+        int|string $key,
         \DateTimeInterface|string|null $default = null,
         bool $allowEmpty = false,
         bool $throwException = false,
@@ -256,11 +284,11 @@ class ArrayHandler
     /**
      * Check if a key is set.
      * 
-     * @param string $key Name of the key.
+     * @param int|string $key Name of the key.
      * 
      * @return bool 
      */
-    public function isSet(string $key): bool
+    public function isSet(int|string $key): bool
     {
         return isset($this->store[$key]);
     }
@@ -268,7 +296,7 @@ class ArrayHandler
     /**
      * Set the value of a key.
      */
-    public function put(string $key, mixed $value): void
+    public function put(int|string $key, mixed $value): void
     {
         $this->store[$key] = $value;
     }

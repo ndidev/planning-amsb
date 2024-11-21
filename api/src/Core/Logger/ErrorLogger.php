@@ -40,11 +40,12 @@ final class ErrorLogger
         }
 
         $arrayError = [
+            "type" => \get_class($e),
             "code" => $e->getCode(),
             "message" => $e->getMessage(),
             "file" => $e->getFile(),
             "line" => $e->getLine(),
-            "previous" => static::formatError($e->getPrevious()),
+            "previous" => static::formatError($e->getPrevious()) ?? 'null',
             "trace" => $e->getTrace()
         ];
 

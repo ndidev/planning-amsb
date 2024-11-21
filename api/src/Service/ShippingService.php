@@ -46,38 +46,44 @@ final class ShippingService
      */
     public function makeShippingCallFromDatabase(array $rawData): ShippingCall
     {
+        $rawDataAH = new ArrayHandler($rawData);
+
         $shippingCall = (new ShippingCall())
-            ->setId($rawData["id"])
-            ->setShipName($rawData["navire"])
-            ->setVoyage($rawData["voyage"])
-            ->setShipOperator($this->thirdPartyService->getThirdParty($rawData["armateur"] ?? null))
-            ->setEtaDate($rawData["eta_date"])
-            ->setEtaTime($rawData["eta_heure"])
-            ->setNorDate($rawData["nor_date"])
-            ->setNorTime($rawData["nor_heure"])
-            ->setPobDate($rawData["pob_date"])
-            ->setPobTime($rawData["pob_heure"])
-            ->setEtbDate($rawData["etb_date"])
-            ->setEtbTime($rawData["etb_heure"])
-            ->setOpsDate($rawData["ops_date"])
-            ->setOpsTime($rawData["ops_heure"])
-            ->setEtcDate($rawData["etc_date"])
-            ->setEtcTime($rawData["etc_heure"])
-            ->setEtdDate($rawData["etd_date"])
-            ->setEtdTime($rawData["etd_heure"])
-            ->setArrivalDraft($rawData["te_arrivee"])
-            ->setDepartureDraft($rawData["te_depart"])
-            ->setLastPort($this->portService->getPort($rawData["last_port"]))
-            ->setNextPort($this->portService->getPort($rawData["next_port"]))
-            ->setCallPort($rawData["call_port"])
-            ->setQuay($rawData["quai"])
-            ->setComment($rawData["commentaire"])
-            ->setCargoes(
-                \array_map(
-                    fn(array $cargo) => $this->makeShippingCallCargoFromDatabase($cargo),
-                    $rawData["marchandises"] ?? []
-                )
-            );
+            ->setId($rawDataAH->getInt('id'))
+            ->setShipName($rawDataAH->getString('navire'))
+            ->setVoyage($rawDataAH->getString('voyage'))
+            ->setShipOperator($this->thirdPartyService->getThirdParty($rawDataAH->getInt('armateur')))
+            ->setEtaDate($rawDataAH->getDatetime('eta_date'))
+            ->setEtaTime($rawDataAH->getString('eta_heure'))
+            ->setNorDate($rawDataAH->getDatetime('nor_date'))
+            ->setNorTime($rawDataAH->getString('nor_heure'))
+            ->setPobDate($rawDataAH->getDatetime('pob_date'))
+            ->setPobTime($rawDataAH->getString('pob_heure'))
+            ->setEtbDate($rawDataAH->getDatetime('etb_date'))
+            ->setEtbTime($rawDataAH->getString('etb_heure'))
+            ->setOpsDate($rawDataAH->getDatetime('ops_date'))
+            ->setOpsTime($rawDataAH->getString('ops_heure'))
+            ->setEtcDate($rawDataAH->getDatetime('etc_date'))
+            ->setEtcTime($rawDataAH->getString('etc_heure'))
+            ->setEtdDate($rawDataAH->getDatetime('etd_date'))
+            ->setEtdTime($rawDataAH->getString('etd_heure'))
+            ->setArrivalDraft($rawDataAH->getFloat('te_arrivee'))
+            ->setDepartureDraft($rawDataAH->getFloat('te_depart'))
+            ->setLastPort($this->portService->getPort($rawDataAH->getString('last_port', null)))
+            ->setNextPort($this->portService->getPort($rawDataAH->getString('next_port', null)))
+            ->setCallPort($rawDataAH->getString('call_port'))
+            ->setQuay($rawDataAH->getString('quai'))
+            ->setComment($rawDataAH->getString('commentaire'));
+
+        /** @phpstan-var ShippingCallCargoArray[] */
+        $cargoesRaw = $rawDataAH->getArray('marchandises');
+
+        $shippingCall->setCargoes(
+            \array_map(
+                fn(array $cargo) => $this->makeShippingCallCargoFromDatabase($cargo),
+                $cargoesRaw
+            )
+        );
 
         return $shippingCall;
     }
@@ -142,18 +148,20 @@ final class ShippingService
      */
     public function makeShippingCallCargoFromDatabase(array $rawData): ShippingCallCargo
     {
+        $rawDataAH = new ArrayHandler($rawData);
+
         $cargo = (new ShippingCallCargo())
-            ->setId($rawData["id"])
-            ->setCargoName($rawData["marchandise"])
-            ->setCustomer($rawData["client"])
-            ->setOperation($rawData["operation"])
-            ->setApproximate((bool) $rawData["environ"])
-            ->setBlTonnage(isset($rawData["tonnage_bl"]) ? (float) $rawData["tonnage_bl"] : null)
-            ->setBlVolume(isset($rawData["cubage_bl"]) ? (float) $rawData["cubage_bl"] : null)
-            ->setBlUnits(isset($rawData["nombre_bl"]) ? (int) $rawData["nombre_bl"] : null)
-            ->setOutturnTonnage(isset($rawData["tonnage_outturn"]) ? (float) $rawData["tonnage_outturn"] : null)
-            ->setOutturnVolume(isset($rawData["cubage_outturn"]) ? (float) $rawData["cubage_outturn"] : null)
-            ->setOutturnUnits(isset($rawData["nombre_outturn"]) ? (int) $rawData["nombre_outturn"] : null);
+            ->setId($rawDataAH->getInt('id'))
+            ->setCargoName($rawDataAH->getString('marchandise'))
+            ->setCustomer($rawDataAH->getString('client'))
+            ->setOperation($rawDataAH->getString('operation'))
+            ->setApproximate($rawDataAH->getBool('environ'))
+            ->setBlTonnage($rawDataAH->getFloat('tonnage_bl', null))
+            ->setBlVolume($rawDataAH->getFloat('cubage_bl', null))
+            ->setBlUnits($rawDataAH->getInt('nombre_bl', null))
+            ->setOutturnTonnage($rawDataAH->getFloat('tonnage_outturn', null))
+            ->setOutturnVolume($rawDataAH->getFloat('cubage_outturn', null))
+            ->setOutturnUnits($rawDataAH->getInt('nombre_outturn', null));
 
         return $cargo;
     }

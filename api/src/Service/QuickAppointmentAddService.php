@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\HTTP\HTTPRequestBody;
@@ -38,14 +39,16 @@ final class QuickAppointmentAddService
      */
     public function makeTimberQuickAppointmentAddFromDatabase(array $rawData): TimberQuickAppointmentAdd
     {
+        $rawDataAH = new ArrayHandler($rawData);
+
         $quickAppointmentAdd = (new TimberQuickAppointmentAdd())
-            ->setId($rawData["id"])
-            ->setSupplier($this->thirdPartyService->getThirdParty($rawData["fournisseur"]))
-            ->setCarrier($this->thirdPartyService->getThirdParty($rawData["transporteur"]))
-            ->setCharterer($this->thirdPartyService->getThirdParty($rawData["affreteur"]))
-            ->setLoading($this->thirdPartyService->getThirdParty($rawData["chargement"]))
-            ->setCustomer($this->thirdPartyService->getThirdParty($rawData["client"]))
-            ->setDelivery($this->thirdPartyService->getThirdParty($rawData["livraison"]));
+            ->setId($rawDataAH->getInt('id'))
+            ->setSupplier($this->thirdPartyService->getThirdParty($rawDataAH->getInt('fournisseur')))
+            ->setCarrier($this->thirdPartyService->getThirdParty($rawDataAH->getInt('transporteur')))
+            ->setCharterer($this->thirdPartyService->getThirdParty($rawDataAH->getInt('affreteur')))
+            ->setLoading($this->thirdPartyService->getThirdParty($rawDataAH->getInt('chargement')))
+            ->setCustomer($this->thirdPartyService->getThirdParty($rawDataAH->getInt('client')))
+            ->setDelivery($this->thirdPartyService->getThirdParty($rawDataAH->getInt('livraison')));
 
         return $quickAppointmentAdd;
     }

@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Client\NotFoundException;
@@ -47,23 +48,25 @@ final class TimberService
      */
     public function makeTimberAppointmentFromDatabase(array $rawData): TimberAppointment
     {
+        $rawDataAH = new ArrayHandler($rawData);
+
         $appointment = (new TimberAppointment())
-            ->setId($rawData["id"])
-            ->setOnHold($rawData["attente"])
-            ->setDate($rawData["date_rdv"])
-            ->setArrivalTime($rawData["heure_arrivee"])
-            ->setDepartureTime($rawData["heure_depart"])
-            ->setSupplier($this->thirdPartyService->getThirdParty($rawData["fournisseur"]))
-            ->setLoadingPlace($this->thirdPartyService->getThirdParty($rawData["chargement"]))
-            ->setDeliveryPlace($this->thirdPartyService->getThirdParty($rawData["livraison"]))
-            ->setCustomer($this->thirdPartyService->getThirdParty($rawData["client"]))
-            ->setCarrier($this->thirdPartyService->getThirdParty($rawData["transporteur"]))
-            ->setTransportBroker($this->thirdPartyService->getThirdParty($rawData["affreteur"]))
-            ->setReady($rawData["commande_prete"])
-            ->setCharteringConfirmationSent($rawData["confirmation_affretement"])
-            ->setDeliveryNoteNumber($rawData["numero_bl"])
-            ->setPublicComment($rawData["commentaire_public"])
-            ->setPrivateComment($rawData["commentaire_cache"]);
+            ->setId($rawDataAH->getInt('id'))
+            ->setOnHold($rawDataAH->getBool('attente'))
+            ->setDate($rawDataAH->getDatetime('date_rdv'))
+            ->setArrivalTime($rawDataAH->getDatetime('heure_arrivee'))
+            ->setDepartureTime($rawDataAH->getDatetime('heure_depart'))
+            ->setSupplier($this->thirdPartyService->getThirdParty($rawDataAH->getInt('fournisseur')))
+            ->setLoadingPlace($this->thirdPartyService->getThirdParty($rawDataAH->getInt('chargement')))
+            ->setDeliveryPlace($this->thirdPartyService->getThirdParty($rawDataAH->getInt('livraison')))
+            ->setCustomer($this->thirdPartyService->getThirdParty($rawDataAH->getInt('client')))
+            ->setCarrier($this->thirdPartyService->getThirdParty($rawDataAH->getInt('transporteur')))
+            ->setTransportBroker($this->thirdPartyService->getThirdParty($rawDataAH->getInt('affreteur')))
+            ->setReady($rawDataAH->getBool('commande_prete'))
+            ->setCharteringConfirmationSent($rawDataAH->getBool('confirmation_affretement'))
+            ->setDeliveryNoteNumber($rawDataAH->getString('numero_bl'))
+            ->setPublicComment($rawDataAH->getString('commentaire_public'))
+            ->setPrivateComment($rawDataAH->getString('commentaire_cache'));
 
         return $appointment;
     }

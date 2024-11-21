@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
 use App\Entity\Country;
 use App\Repository\CountryRepository;
@@ -33,9 +34,11 @@ final class CountryService
      */
     public function makeCountryFromDatabase(array $rawData): Country
     {
+        $rawDataAH = new ArrayHandler($rawData);
+
         return (new Country())
-            ->setISO($rawData["iso"])
-            ->setName($rawData["nom"]);
+            ->setISO($rawDataAH->getString('iso'))
+            ->setName($rawDataAH->getString('nom'));
     }
 
     /**

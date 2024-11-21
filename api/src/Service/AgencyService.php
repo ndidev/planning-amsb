@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
 use App\Core\HTTP\HTTPRequestBody;
 use App\Entity\Config\AgencyDepartment;
@@ -32,18 +33,20 @@ final class AgencyService
      */
     public function makeDepartmentFromDatabase(array $rawData): AgencyDepartment
     {
+        $rawDataAH = new ArrayHandler($rawData);
+
         $department = (new AgencyDepartment())
-            ->setService($rawData['service'])
-            ->setDisplayName($rawData['affichage'])
-            ->setFullName($rawData['nom'])
-            ->setAddressLine1($rawData['adresse_ligne_1'])
-            ->setAddressLine2($rawData['adresse_ligne_2'])
-            ->setPostCode($rawData['cp'])
-            ->setCity($rawData['ville'])
-            ->setCountry($rawData['pays'])
-            ->setPhone($rawData['telephone'])
-            ->setMobile($rawData['mobile'])
-            ->setEmail($rawData['email']);
+            ->setService($rawDataAH->getString('service'))
+            ->setDisplayName($rawDataAH->getString('affichage'))
+            ->setFullName($rawDataAH->getString('nom'))
+            ->setAddressLine1($rawDataAH->getString('adresse_ligne_1'))
+            ->setAddressLine2($rawDataAH->getString('adresse_ligne_2'))
+            ->setPostCode($rawDataAH->getString('cp'))
+            ->setCity($rawDataAH->getString('ville'))
+            ->setCountry($rawDataAH->getString('pays'))
+            ->setPhone($rawDataAH->getString('telephone'))
+            ->setMobile($rawDataAH->getString('mobile'))
+            ->setEmail($rawDataAH->getString('email'));
 
         return $department;
     }

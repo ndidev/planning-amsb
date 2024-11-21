@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
 use App\Core\HTTP\HTTPRequestBody;
 use App\Entity\ChartDatum;
@@ -32,10 +33,12 @@ final class ChartDatumService
      */
     public function makeChartDatumFromDatabase(array $rawData): ChartDatum
     {
+        $rawDataAH = new ArrayHandler($rawData);
+
         $chartDatum = (new ChartDatum())
-            ->setName($rawData['cote'] ?? '')
-            ->setDisplayName($rawData['affichage'] ?? '')
-            ->setValue((float) ($rawData['valeur'] ?? 0.0));
+            ->setName($rawDataAH->getString('cote'))
+            ->setDisplayName($rawDataAH->getString('affichage'))
+            ->setValue($rawDataAH->getFloat('valeur', 0));
 
         return $chartDatum;
     }

@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Core\Array\ArrayHandler;
 use App\Core\Component\CharterStatus;
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\DB\DBException;
@@ -43,28 +44,34 @@ final class CharteringService
      */
     public function makeCharterFromDatabase(array $rawData): Charter
     {
+        $rawDataAH = new ArrayHandler($rawData);
+
         $charter = (new Charter())
-            ->setId($rawData["id"] ?? null)
-            ->setStatus($rawData["statut"] ?? 0)
-            ->setLaycanStart($rawData["lc_debut"] ?? null)
-            ->setLaycanEnd($rawData["lc_fin"] ?? null)
-            ->setCpDate($rawData['cp_date'] ?? null)
-            ->setVesselName($rawData['navire'] ?? '')
-            ->setCharterer($this->thirdPartyService->getThirdParty($rawData['affreteur'] ?? null))
-            ->setShipOperator($this->thirdPartyService->getThirdParty($rawData['armateur'] ?? null))
-            ->setShipbroker($this->thirdPartyService->getThirdParty($rawData['courtier'] ?? null))
-            ->setFreightPayed((float) ($rawData['fret_achat'] ?? 0.0))
-            ->setFreightSold((float) ($rawData['fret_vente'] ?? 0.0))
-            ->setDemurragePayed((float) ($rawData['surestaries_achat'] ?? 0.0))
-            ->setDemurrageSold((float) ($rawData['surestaries_vente'] ?? 0.0))
-            ->setComments($rawData['commentaire'] ?? '')
-            ->setArchive($rawData['archive'] ?? false)
-            ->setLegs(
-                \array_map(
-                    fn(array $leg) => $this->makeCharterLegFromDatabase($leg),
-                    $rawData['legs'] ?? []
-                )
-            );
+            ->setId($rawDataAH->getInt('id'))
+            ->setStatus($rawDataAH->getInt('statut', CharterStatus::PENDING))
+            ->setLaycanStart($rawDataAH->getDatetime('lc_debut'))
+            ->setLaycanEnd($rawDataAH->getDatetime('lc_fin'))
+            ->setCpDate($rawDataAH->getDatetime('cp_date'))
+            ->setVesselName($rawDataAH->getString('navire'))
+            ->setCharterer($this->thirdPartyService->getThirdParty($rawDataAH->getInt('affreteur')))
+            ->setShipOperator($this->thirdPartyService->getThirdParty($rawDataAH->getInt('armateur')))
+            ->setShipbroker($this->thirdPartyService->getThirdParty($rawDataAH->getInt('courtier')))
+            ->setFreightPayed($rawDataAH->getFloat('fret_achat', 0))
+            ->setFreightSold($rawDataAH->getFloat('fret_vente', 0))
+            ->setDemurragePayed($rawDataAH->getFloat('surestaries_achat', 0))
+            ->setDemurrageSold($rawDataAH->getFloat('surestaries_vente', 0))
+            ->setComments($rawDataAH->getString('commentaire'))
+            ->setArchive($rawDataAH->getBool('archive'));
+
+        /** @phpstan-var CharterLegArray[] $legs */
+        $legs = $rawDataAH->getArray('legs');
+
+        $charter->setLegs(
+            \array_map(
+                fn(array $leg) => $this->makeCharterLegFromDatabase($leg),
+                $legs
+            )
+        );
 
         return $charter;
     }
@@ -119,14 +126,16 @@ final class CharteringService
      */
     public function makeCharterLegFromDatabase(array $rawData): CharterLeg
     {
+        $rawDataAH = new ArrayHandler($rawData);
+
         $leg = (new CharterLeg())
-            ->setId($rawData["id"] ?? null)
-            ->setBlDate($rawData["bl_date"] ?? null)
-            ->setPol($this->portService->getPort($rawData["pol"] ?? null))
-            ->setPod($this->portService->getPort($rawData["pod"] ?? null))
-            ->setCommodity($rawData["marchandise"] ?? '')
-            ->setQuantity($rawData["quantite"] ?? '')
-            ->setComments($rawData["commentaire"] ?? '');
+            ->setId($rawDataAH->getInt('id'))
+            ->setBlDate($rawDataAH->getDatetime('bl_date'))
+            ->setPol($this->portService->getPort($rawDataAH->getString('pol', null)))
+            ->setPod($this->portService->getPort($rawDataAH->getString('pod', null)))
+            ->setCommodity($rawDataAH->getString('marchandise'))
+            ->setQuantity($rawDataAH->getString('quantite'))
+            ->setComments($rawDataAH->getString('commentaire'));
 
         return $leg;
     }
@@ -142,15 +151,17 @@ final class CharteringService
      */
     public function makeCharterLegFromFormData(array $rawData): CharterLeg
     {
+        $rawDataAH = new ArrayHandler($rawData);
+
         $leg = (new CharterLeg())
-            ->setId($rawData["id"] ?? null)
-            ->setCharter($this->getCharter($rawData["charter"] ?? null))
-            ->setBlDate($rawData["bl_date"] ?? null)
-            ->setPol($this->portService->getPort($rawData["pol"] ?? null))
-            ->setPod($this->portService->getPort($rawData["pod"] ?? null))
-            ->setCommodity($rawData["marchandise"] ?? '')
-            ->setQuantity($rawData["quantite"] ?? '')
-            ->setComments($rawData["commentaire"] ?? '');
+            ->setId($rawDataAH->getInt('id'))
+            ->setCharter($this->getCharter($rawDataAH->getInt('charter')))
+            ->setBlDate($rawDataAH->getDatetime('bl_date'))
+            ->setPol($this->portService->getPort($rawDataAH->getString('pol', null)))
+            ->setPod($this->portService->getPort($rawDataAH->getString('pod', null)))
+            ->setCommodity($rawDataAH->getString('marchandise'))
+            ->setQuantity($rawDataAH->getString('quantite'))
+            ->setComments($rawDataAH->getString('commentaire'));
 
         return $leg;
     }
