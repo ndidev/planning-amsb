@@ -15,7 +15,13 @@
 
   import Notiflix from "notiflix";
   import Hammer from "hammerjs";
-  import { PackageIcon, ArchiveIcon, ArchiveRestoreIcon } from "lucide-svelte";
+  import {
+    PackageIcon,
+    PackageCheckIcon,
+    PackageXIcon,
+    ArchiveIcon,
+    ArchiveRestoreIcon,
+  } from "lucide-svelte";
 
   import { LucideButton, BoutonAction, Modal } from "@app/components";
 
@@ -167,27 +173,20 @@
     {/if}
   </div>
 
-  <div class="commande_prete pure-u-1 pure-u-lg-1-24 no-mobile">
-    {#if rdv.commande_prete && !$currentUser.canEdit("vrac")}
-      <span title="Commande prête"><PackageIcon /></span>
-    {/if}
-
-    {#if rdv.commande_prete && $currentUser.canEdit("vrac")}
-      <div class="commande_prete-bouton-annuler">
-        <LucideButton
-          icon={PackageIcon}
-          title="Annuler la préparation de commande"
-          on:click={toggleOrderReady}
-          invert
-        />
+  <div class="commande-prete pure-u-1 pure-u-lg-1-24 no-mobile">
+    {#if rdv.commande_prete}
+      <div class="commande-prete__status">
+        <PackageIcon />
       </div>
     {/if}
 
-    {#if !rdv.commande_prete && $currentUser.canEdit("vrac")}
-      <div class="commande_prete-bouton-confirmer">
+    {#if $currentUser.canEdit("vrac")}
+      <div class="commande-prete__bouton">
         <LucideButton
-          icon={PackageIcon}
-          title="Renseigner commande prête"
+          icon={rdv.commande_prete ? PackageXIcon : PackageCheckIcon}
+          title={rdv.commande_prete
+            ? "Annuler la préparation de commande"
+            : "Renseigner commande prête"}
           on:click={toggleOrderReady}
         />
       </div>
@@ -280,7 +279,7 @@
     font-weight: bold;
   }
 
-  .commande_prete-bouton-confirmer {
+  .commande-prete__bouton {
     display: none;
   }
 
@@ -310,7 +309,7 @@
       text-align: right;
     }
 
-    .commande_prete {
+    .commande-prete {
       text-align: left;
     }
   }
@@ -339,12 +338,15 @@
       margin-left: 10px;
     }
 
-    .commande_prete {
+    .commande-prete {
       text-align: center;
       min-height: 2rem;
     }
+    .rdv:hover .commande-prete__status {
+      display: none;
+    }
 
-    .rdv:hover .commande_prete-bouton-confirmer {
+    .rdv:hover .commande-prete__bouton {
       display: inline-block;
     }
   }
