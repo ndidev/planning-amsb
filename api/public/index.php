@@ -96,7 +96,7 @@ $routes = [
 
     // Config
     ["/config/agence/[a:service]?", AgencyController::class],
-    ["/config/bandeau-info", InfoBannerController::class],
+    ["/config/bandeau-info/[i:id]?", InfoBannerController::class],
     ["/config/pdf/[i:id]?", PdfConfigController::class],
     ["/config/pdf/generer", PdfViewerController::class],
     ["/config/ajouts-rapides", QuickAppointmentAddController::class],
