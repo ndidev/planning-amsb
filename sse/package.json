@@ -11,8 +11,7 @@
   "dependencies": {
     "cookie": "^1.0.0",
     "md5": "^2.3.0",
-    "redis": "^4.7.0",
-    "uuid": "^10.0.0"
+    "redis": "^4.7.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^28.0.1",
@@ -22,7 +21,6 @@
     "@tsconfig/node20": "^20.1.4",
     "@types/md5": "^2.3.2",
     "@types/node": "20.10.0",
-    "@types/uuid": "^10.0.0",
     "rollup": "^4.24.0",
     "tslib": "^2.5.0",
     "typescript": "^5.0.0"
