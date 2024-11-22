@@ -202,7 +202,7 @@
     height: 100%;
     transform: scale(var(--scale, 1));
     border-radius: 50%;
-    background-color: var(--color, var(--default-color));
+    background-color: var(--hover-color, var(--default-hover-color));
     opacity: 0;
     z-index: -1;
     transition: opacity var(--transition-time) linear;
