@@ -177,18 +177,15 @@
   ]}
 />
 
-<BandeauInfo module="bois" pc />
+<div class="sticky top-0 z-[1] ml-16 lg:ml-24">
+  <BandeauInfo module="bois" pc />
 
-<div class="filtre">
   <BandeauFiltre />
 </div>
 
-<!-- Filtre SQL pour registre affrètement -->
-<div id="bouton-registre">
-  <ExtractionRegistre />
-</div>
+<ExtractionRegistre />
 
-<main>
+<main class="w-11/12 mx-auto mb-24">
   {#if rdvsBois}
     <!-- RDVs en attente -->
     <div>
@@ -214,58 +211,3 @@
     <Placeholder />
   {/if}
 </main>
-
-<style>
-  * {
-    --couleur-total: hsl(0, 0%, 0%);
-    --couleur-attendus: hsl(0, 0%, 31%);
-    --couleur-parc: hsl(29, 100%, 74%);
-    --couleur-charges: hsl(110, 52%, 55%);
-  }
-
-  .filtre {
-    position: sticky;
-    top: 0;
-    left: 0;
-    margin-left: 100px;
-    z-index: 2;
-  }
-
-  /* LISTE RDV */
-
-  main {
-    width: 95%;
-    margin: auto;
-    margin-bottom: 6rem;
-  }
-
-  /* Mobile */
-  @media screen and (max-width: 767px) {
-    #bouton-registre {
-      display: none;
-    }
-  }
-
-  /* Desktop */
-  @media screen and (min-width: 768px) {
-    #bouton-registre {
-      --size: 50px;
-
-      display: grid;
-      position: fixed;
-      right: 30px;
-      top: 15px;
-      width: var(--size);
-      height: var(--size);
-      z-index: 3;
-
-      background: radial-gradient(
-        circle at center,
-        white 0,
-        white 50%,
-        transparent 100%
-      );
-      border-radius: 50%;
-    }
-  }
-</style>

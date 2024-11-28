@@ -26,10 +26,10 @@
   const formattedDate = new DateUtils(date).format().long;
 </script>
 
-<div>
-  <div class="date">{formattedDate}</div>
+<div class="mb-2 mt-5 w-full first:mt-12 lg:mb-4 lg:mt-8 lg:text-xl">
+  <div class="inline-block text-green-400">{formattedDate}</div>
 
-  <div class="camions-stats">
+  <div class="camions-stats inline-block">
     <div class="total">
       <span class="camions">
         {camions.total}
@@ -61,18 +61,14 @@
 </div>
 
 <style>
-  .date {
-    color: hsl(124, 50%, 56%);
-    margin-top: 30px;
-    margin-bottom: 15px;
+  * {
+    --couleur-total: hsl(0, 0%, 0%);
+    --couleur-attendus: hsl(0, 0%, 31%);
+    --couleur-parc: hsl(29, 100%, 74%);
+    --couleur-charges: hsl(110, 52%, 55%);
   }
 
   /* CAMIONS */
-
-  .date,
-  .camions-stats {
-    display: inline-block;
-  }
 
   .camions-stats {
     margin-left: 20px;

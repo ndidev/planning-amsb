@@ -5,3 +5,5 @@ export { default as LigneDateAttente } from "./src/LigneDateAttente.svelte";
 export { default as LigneRdvAttente } from "./src/LigneRdvAttente.svelte";
 export { default as Placeholder } from "./src/Placeholder.svelte";
 export { default as Filtre } from "./src/Filtre.svelte";
+export { default as ThirdPartyAddress } from "./src/ThirdPartyAddress.svelte";
+export { default as ThirdPartyTooltip } from "./src/ThirdPartyTooltip.svelte";

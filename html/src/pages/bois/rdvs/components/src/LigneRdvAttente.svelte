@@ -15,22 +15,25 @@
   import Notiflix from "notiflix";
   import Hammer from "hammerjs";
   import {
-    PackageIcon,
-    UserIcon,
     ArrowRightFromLineIcon,
     ArrowRightToLineIcon,
-    TruckIcon,
-    MessageSquareTextIcon,
     MessageSquareOffIcon,
+    MessageSquareTextIcon,
+    PackageCheckIcon,
+    PackageIcon,
+    PackageXIcon,
+    TruckIcon,
+    UserIcon,
   } from "lucide-svelte";
 
+  import { ThirdPartyAddress, ThirdPartyTooltip } from "../";
   import { LucideButton, Modal, BoutonAction, IconText } from "@app/components";
 
   import { notiflixOptions, device, DateUtils } from "@app/utils";
-  import type { Stores, RdvBois, Tiers } from "@app/types";
+  import type { Stores, RdvBois } from "@app/types";
 
   // Stores
-  const { boisRdvs, currentUser, tiers, pays } = getContext<Stores>("stores");
+  const { boisRdvs, currentUser, tiers } = getContext<Stores>("stores");
 
   export let rdv: RdvBois;
   let ligne: HTMLDivElement;
@@ -38,133 +41,15 @@
   let mc: HammerManager;
   let afficherModal = false;
 
-  const tiersVierge: Partial<Tiers> = {
-    nom_complet: "",
-    nom_court: "",
-    adresse_ligne_1: "",
-    adresse_ligne_2: "",
-    cp: "",
-    ville: "",
-    pays: "",
-    telephone: "",
-    commentaire: "",
-    lie_agence: false,
-  };
+  $: client = $tiers?.get(rdv.client);
+  $: livraison = $tiers?.get(rdv.livraison);
+  $: chargement = $tiers?.get(rdv.chargement);
+  $: transporteur = $tiers?.get(rdv.transporteur);
+  $: fournisseur = $tiers?.get(rdv.fournisseur);
+  $: affreteur = $tiers?.get(rdv.affreteur);
 
-  $: client = $tiers?.get(rdv.client) || tiersVierge;
-  $: livraison = $tiers?.get(rdv.livraison) || tiersVierge;
-  $: chargement = $tiers?.get(rdv.chargement) || tiersVierge;
-  $: transporteur = $tiers?.get(rdv.transporteur) || tiersVierge;
-  $: fournisseur = $tiers?.get(rdv.fournisseur) || tiersVierge;
-  $: affreteur = $tiers?.get(rdv.affreteur) || tiersVierge;
-
-  $: adresses = {
-    client: [
-      client.nom_court,
-      client.pays.toLowerCase() === "fr" ? client.cp.substring(0, 2) : "",
-      client.ville,
-      ["fr", "zz"].includes(client.pays.toLowerCase())
-        ? ""
-        : `(${
-            $pays?.find(({ iso }) => client.pays === iso)?.nom || client.pays
-          })`,
-    ]
-      .filter((champ) => champ)
-      .join(" "),
-
-    tootipClient: !client.id
-      ? "Pas de client renseigné"
-      : [
-          "Client :",
-          client.nom_complet,
-          client.adresse_ligne_1,
-          client.adresse_ligne_2,
-          [client.cp || "", client.ville || ""]
-            .filter((champ) => champ)
-            .join(" "),
-          $pays?.find(({ iso }) => client.pays === iso)?.nom || client.pays,
-          client.telephone,
-          client.commentaire ? " " : "",
-          client.commentaire,
-        ]
-          .filter((champ) => champ)
-          .join("\n"),
-
-    chargement: [
-      chargement.nom_court,
-      chargement.pays?.toLowerCase() === "fr"
-        ? chargement.cp?.substring(0, 2)
-        : "",
-      chargement.ville,
-      ["fr", "zz"].includes(chargement.pays?.toLowerCase())
-        ? ""
-        : `(${
-            $pays?.find(({ iso }) => chargement.pays === iso)?.nom ||
-            chargement.pays
-          })`,
-    ]
-      .filter((champ) => champ)
-      .join(" "),
-
-    tooltipChargement: !chargement.id
-      ? "Pas de lieu de chargement renseigné"
-      : [
-          "Chargement :",
-          chargement.nom_complet,
-          chargement.adresse_ligne_1,
-          chargement.adresse_ligne_2,
-          [chargement.cp || "", chargement.ville || ""]
-            .filter((champ) => champ)
-            .join(" "),
-          chargement.pays.toLowerCase() === "zz"
-            ? ""
-            : $pays?.find(({ iso }) => chargement.pays === iso)?.nom ||
-              chargement.pays,
-          chargement.telephone,
-          chargement.commentaire ? " " : "",
-          chargement.commentaire,
-        ]
-          .filter((champ) => champ)
-          .join("\n"),
-
-    livraison: [
-      livraison.nom_court,
-      livraison.pays.toLowerCase() === "fr" ? livraison.cp.substring(0, 2) : "",
-      livraison.ville,
-      ["fr", "zz"].includes(livraison.pays.toLowerCase())
-        ? ""
-        : `(${
-            $pays?.find(({ iso }) => livraison.pays === iso)?.nom ||
-            livraison.pays
-          })`,
-    ]
-      .filter((champ) => champ)
-      .join(" "),
-
-    tooltipLivraison: !livraison.id
-      ? "Pas de lieu de livraison renseigné"
-      : [
-          "Livraison :",
-          livraison.nom_complet,
-          livraison.adresse_ligne_1,
-          livraison.adresse_ligne_2,
-          [livraison.cp || "", livraison.ville || ""]
-            .filter((champ) => champ)
-            .join(" "),
-          livraison.pays.toLowerCase() === "zz"
-            ? ""
-            : $pays?.find(({ iso }) => livraison.pays === iso)?.nom ||
-              livraison.pays,
-          livraison.telephone,
-          livraison.commentaire ? " " : "",
-          livraison.commentaire,
-        ]
-          .filter((champ) => champ)
-          .join("\n"),
-  };
-
-  $: chargementAffiche = rdv.chargement && rdv.chargement !== 1;
-  $: livraisonAffiche = rdv.livraison && rdv.client !== rdv.livraison;
+  $: loadingPlaceIsDisplayed = rdv.chargement && rdv.chargement !== 1;
+  $: deliveryPlaceIsDisplayed = rdv.livraison && rdv.client !== rdv.livraison;
 
   const formattedDate = rdv.date_rdv
     ? new DateUtils(rdv.date_rdv).format().long
@@ -251,152 +136,166 @@
   </Modal>
 {/if}
 
-<div class="rdv pure-g" bind:this={ligne}>
-  <div class="pure-u-1 pure-u-lg-22-24">
-    <div class="date-rdv pure-u-1 pure-u-lg-4-24">{formattedDate}</div>
-
-    <div class="adresses-tiers pure-u-1 pure-u-lg-5-24">
-      {#if chargementAffiche}
-        <div class="chargement">
-          <IconText>
-            <span slot="icon" title="Chargement"
-              ><ArrowRightFromLineIcon /></span
-            >
-            <span slot="text">{adresses.chargement}</span>
-            <span slot="tooltip">{adresses.tooltipChargement}</span>
-          </IconText>
-        </div>
-      {/if}
-
-      <div class="client">
-        <IconText>
-          <span slot="icon" title="Client">
-            {#if chargementAffiche || livraisonAffiche}
-              <UserIcon />
-            {/if}
-          </span>
-          <span slot="text">{adresses.client}</span>
-          <span slot="tooltip">{adresses.tootipClient}</span>
-        </IconText>
-      </div>
-
-      {#if livraisonAffiche}
-        <div class="livraison">
-          <IconText>
-            <span slot="icon" title="Livraison"><ArrowRightToLineIcon /></span>
-            <span slot="text">{adresses.livraison}</span>
-            <span slot="tooltip">{adresses.tooltipLivraison}</span>
-          </IconText>
-        </div>
-      {/if}
-    </div>
-
-    <div class="transporteur pure-u-1 pure-u-lg-2-24">
-      {#if rdv.transporteur}
-        <IconText hideIcon={["desktop"]}>
-          <span slot="icon" title="Transporteur"><TruckIcon /></span>
-          <span slot="text" style:font-weight="bold"
-            >{transporteur.nom_court}</span
-          >
-          <span slot="tooltip">
-            {#if rdv.transporteur >= 11}
-              <!-- Transporteur non "spécial" -->
-              {transporteur.telephone || "Téléphone non renseigné"}
-            {/if}
-          </span>
-        </IconText>
-      {/if}
-    </div>
-
-    <div
-      class="affreteur pure-u-1 pure-u-lg-2-24"
-      class:lie-agence={affreteur.lie_agence}
-    >
-      <IconText hideIcon={["desktop"]}>
-        <span slot="icon" title="Affréteur">A</span>
-        <span slot="text">{affreteur.nom_court}</span>
-      </IconText>
-    </div>
-
-    <div class="fournisseur pure-u-1 pure-u-lg-2-24">
-      <IconText hideIcon={["desktop"]}>
-        <span slot="icon" title="Fournisseur">F</span>
-        <span slot="text">{fournisseur.nom_court}</span>
-      </IconText>
-    </div>
-
-    <div class="commande_prete pure-u-1 pure-u-lg-1-24">
-      {#if rdv.commande_prete && !$currentUser.canEdit("bois")}
-        <IconText hideText={["desktop"]}>
-          <span slot="icon" title="Commande prête"><PackageIcon /></span>
-          <span slot="text">Commande prête</span>
-        </IconText>
-      {/if}
-
-      {#if rdv.commande_prete && $currentUser.canEdit("bois")}
-        <div class="commande_prete-bouton-annuler">
-          <LucideButton
-            icon={PackageIcon}
-            title="Annuler la préparation de commande"
-            color="#000000"
-            staticallyColored
-            on:click={toggleOrderReady}
-          />
-        </div>
-      {/if}
-
-      {#if !rdv.commande_prete && $currentUser.canEdit("bois")}
-        <div class="commande_prete-bouton-confirmer">
-          <LucideButton
-            icon={PackageIcon}
-            title="Renseigner commande prête"
-            on:click={toggleOrderReady}
-          />
-        </div>
-      {/if}
-    </div>
-
-    <div class="commentaires pure-u-1 pure-u-lg-6-24">
-      {#if rdv.commentaire_public}
-        <div class="commentaire_public">
-          <IconText hideIcon={["desktop"]}>
-            <span slot="icon" title="Commentaire public"
-              ><MessageSquareTextIcon /></span
-            >
-            <span slot="text"
-              >{@html rdv.commentaire_public.replace(
-                /(?:\r\n|\r|\n)/g,
-                "<br>"
-              )}</span
-            >
-          </IconText>
-        </div>
-      {/if}
-
-      {#if rdv.commentaire_public && rdv.commentaire_cache}
-        <div class="separateur" />
-      {/if}
-
-      {#if rdv.commentaire_cache}
-        <div class="commentaire_cache">
-          <IconText hideIcon={["desktop"]}>
-            <span slot="icon" title="Commentaire caché"
-              ><MessageSquareOffIcon /></span
-            >
-            <span slot="text"
-              >{@html rdv.commentaire_cache.replace(
-                /(?:\r\n|\r|\n)/g,
-                "<br>"
-              )}</span
-            >
-          </IconText>
-        </div>
-      {/if}
-    </div>
+<div
+  class="group grid border-b-[1px] border-gray-300 py-2 text-gray-500 last:border-none lg:min-h-11 lg:grid-cols-[17%_20%_8%_8%_8%_3%_24%_auto]"
+  bind:this={ligne}
+>
+  <!-- Date -->
+  <div>
+    {formattedDate}
   </div>
 
+  <!-- Adresses -->
+  <div>
+    <!-- Chargement -->
+    {#if loadingPlaceIsDisplayed}
+      <div class="chargement">
+        <IconText>
+          <span slot="icon" title="Chargement"><ArrowRightFromLineIcon /></span>
+          <span slot="text"><ThirdPartyAddress thirdParty={chargement} /></span>
+          <span slot="tooltip"
+            ><ThirdPartyTooltip
+              thirdParty={chargement}
+              role="chargement"
+            /></span
+          >
+        </IconText>
+      </div>
+    {/if}
+
+    <!-- Client -->
+    <div class="client">
+      <IconText>
+        <span slot="icon" title="Client">
+          {#if loadingPlaceIsDisplayed || deliveryPlaceIsDisplayed || $device.is("mobile")}
+            <UserIcon />
+          {/if}
+        </span>
+        <span slot="text"><ThirdPartyAddress thirdParty={client} /></span>
+        <span slot="tooltip"
+          ><ThirdPartyTooltip thirdParty={client} role="client" /></span
+        >
+      </IconText>
+    </div>
+
+    <!-- Livraison -->
+    {#if deliveryPlaceIsDisplayed}
+      <div class="livraison">
+        <IconText>
+          <span slot="icon" title="Livraison"><ArrowRightToLineIcon /></span>
+          <span slot="text"><ThirdPartyAddress thirdParty={livraison} /></span>
+          <span slot="tooltip"
+            ><ThirdPartyTooltip thirdParty={livraison} role="livraison" /></span
+          >
+        </IconText>
+      </div>
+    {/if}
+  </div>
+
+  <div>
+    {#if rdv.transporteur}
+      <IconText hideIcon={["desktop"]}>
+        <span slot="icon" title="Transporteur"><TruckIcon /></span>
+        <span slot="text" style:font-weight="bold"
+          >{transporteur?.nom_court || ""}</span
+        >
+        <span slot="tooltip">
+          {#if rdv.transporteur >= 11}
+            <!-- Transporteur non "spécial" -->
+            {transporteur?.telephone || "Téléphone non renseigné"}
+          {/if}
+        </span>
+      </IconText>
+    {/if}
+  </div>
+
+  <!-- Affréteur -->
+  <div class="affreteur" class:lie-agence={affreteur?.lie_agence || false}>
+    <IconText hideIcon={["desktop"]}>
+      <span slot="icon" title="Affréteur">A</span>
+      <span slot="text">{affreteur?.nom_court || ""}</span>
+    </IconText>
+  </div>
+
+  <!-- Fournisseur -->
+  <div class="fournisseur">
+    <IconText hideIcon={["desktop"]}>
+      <span slot="icon" title="Fournisseur">F</span>
+      <span slot="text">{fournisseur?.nom_court || ""}</span>
+    </IconText>
+  </div>
+
+  <!-- Commande prête -->
+  <div class="col-start-1 row-start-2 lg:col-auto lg:row-auto">
+    {#if rdv.commande_prete}
+      <div
+        class="lg:text-center lg:group-hover:[display:var(--display-on-over)]"
+        style:--display-on-over={$currentUser.canEdit("bois")
+          ? "none"
+          : "block"}
+      >
+        <PackageIcon />
+        <span class="lg:hidden">Commande prête</span>
+      </div>
+    {/if}
+
+    {#if $currentUser.canEdit("bois")}
+      <div class="hidden text-center lg:group-hover:block">
+        <LucideButton
+          icon={rdv.commande_prete ? PackageXIcon : PackageCheckIcon}
+          title={rdv.commande_prete
+            ? "Annuler la préparation de commande"
+            : "Renseigner commande prête"}
+          on:click={toggleOrderReady}
+        />
+      </div>
+    {/if}
+  </div>
+
+  <!-- Commentaires -->
+  <div>
+    {#if rdv.commentaire_public}
+      <div class="lg:pl-1">
+        <IconText hideIcon={["desktop"]}>
+          <span slot="icon" title="Commentaire public"
+            ><MessageSquareTextIcon /></span
+          >
+          <span slot="text"
+            >{@html rdv.commentaire_public.replace(
+              /(?:\r\n|\r|\n)/g,
+              "<br>"
+            )}</span
+          >
+        </IconText>
+      </div>
+    {/if}
+
+    {#if rdv.commentaire_public && rdv.commentaire_cache}
+      <div class="h-3" />
+    {/if}
+
+    {#if rdv.commentaire_cache}
+      <div
+        class="text-gray-400 lg:border-l-[1px] lg:border-dotted lg:border-l-gray-400 lg:pl-1"
+      >
+        <IconText hideIcon={["desktop"]}>
+          <span slot="icon" title="Commentaire caché"
+            ><MessageSquareOffIcon /></span
+          >
+          <span slot="text"
+            >{@html rdv.commentaire_cache.replace(
+              /(?:\r\n|\r|\n)/g,
+              "<br>"
+            )}</span
+          >
+        </IconText>
+      </div>
+    {/if}
+  </div>
+
+  <!-- Boutons -->
   {#if $currentUser.canEdit("bois")}
-    <div class="copie-modif-suppr">
+    <div class="no-mobile invisible ms-auto me-2 group-hover:visible">
       <LucideButton
         preset="copy"
         on:click={() => {
@@ -413,75 +312,3 @@
     </div>
   {/if}
 </div>
-
-<style>
-  .rdv {
-    color: #555;
-    padding: 8px 0 8px 5px;
-    border-bottom: 1px solid #999;
-    align-items: baseline;
-  }
-
-  .rdv:last-child {
-    border-bottom: none;
-  }
-
-  .rdv .date-rdv {
-    margin-left: 5px;
-  }
-
-  .adresses-tiers,
-  .transporteur,
-  .affreteur,
-  .fournisseur,
-  .commentaires,
-  .commande_prete {
-    margin-left: 5px;
-  }
-
-  .commentaires .separateur {
-    height: 10px;
-  }
-
-  .commentaire_cache {
-    --commentaire-cache-color: hsl(0, 0%, 70%);
-    color: var(--commentaire-cache-color);
-  }
-
-  .commande_prete-bouton-confirmer {
-    display: none;
-  }
-
-  /* Mobile */
-  @media screen and (max-width: 767px) {
-    .transporteur,
-    .commentaires {
-      margin-top: 10px;
-    }
-  }
-
-  /* Desktop */
-  @media screen and (min-width: 768px) {
-    .rdv {
-      min-height: 2.75rem; /* Pour éviter saut de contenu lors de hover avec icônes Lucide */
-    }
-
-    .rdv:hover .copie-modif-suppr {
-      visibility: visible;
-      margin-right: 10px;
-    }
-
-    .commentaire_cache {
-      border-left: 1px dotted var(--commentaire-cache-color);
-    }
-
-    .commentaire_public,
-    .commentaire_cache {
-      padding-left: 5px;
-    }
-
-    .rdv:hover .commande_prete-bouton-confirmer {
-      display: inline-block;
-    }
-  }
-</style>

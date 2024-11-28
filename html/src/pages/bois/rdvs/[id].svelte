@@ -3,14 +3,16 @@
   import { getContext } from "svelte";
   import { params, goto, redirect } from "@roxi/routify";
 
-  import Notiflix from "notiflix";
+  import { Label, Input, Checkbox, Textarea } from "flowbite-svelte";
   import {
     CircleHelpIcon,
     SparklesIcon,
     TriangleAlertIcon,
   } from "lucide-svelte";
+  import Notiflix from "notiflix";
 
   import {
+    PageHeading,
     Svelecte,
     LucideButton,
     Chargement,
@@ -197,38 +199,41 @@
         transporteurs: any[];
       };
 
-      let ul = document.createElement("ul");
-      ul.classList.add("suggestions");
+      let message = "";
 
-      suggestions.transporteurs.forEach((transporteur) => {
-        const li = document.createElement("li");
-        li.classList.add("suggestion");
+      if (suggestions.transporteurs.length > 0) {
+        let ul = document.createElement("ul");
+        ul.classList.add("suggestions");
 
-        const spanTransporteur = document.createElement("span");
-        spanTransporteur.classList.add("suggestion-transporteur");
-        spanTransporteur.textContent = transporteur.nom;
+        suggestions.transporteurs.forEach((transporteur) => {
+          const li = document.createElement("li");
+          li.classList.add("suggestion");
 
-        const spanTelephone = document.createElement("span");
-        spanTelephone.classList.add("suggestion-telephone");
-        spanTelephone.textContent =
-          transporteur.telephone || "Téléphone non renseigné";
+          const spanTransporteur = document.createElement("span");
+          spanTransporteur.classList.add("suggestion-transporteur");
+          spanTransporteur.textContent = transporteur.nom;
 
-        li.append(spanTransporteur, " - ", spanTelephone);
-        ul.appendChild(li);
+          const spanTelephone = document.createElement("span");
+          spanTelephone.classList.add("suggestion-telephone");
+          spanTelephone.textContent =
+            transporteur.telephone || "Téléphone non renseigné";
+
+          li.append(spanTransporteur, " - ", spanTelephone);
+          ul.appendChild(li);
+        });
+
+        message = ul.outerHTML;
+      } else {
+        message = "Aucun transport similaire n'a été effectué précédemment.";
+      }
+
+      Notiflix.Report.info("Suggestions de transporteurs", message, "Fermer", {
+        messageMaxLength: Infinity,
+        width: "min(400px, 95%)",
+        info: {
+          backOverlayColor: "hsla(200, 100%, 20%, 0.1)",
+        },
       });
-
-      Notiflix.Report.info(
-        "Suggestions de transporteurs",
-        ul.outerHTML,
-        "Fermer",
-        {
-          messageMaxLength: Infinity,
-          width: "min(400px, 95%)",
-          info: {
-            backOverlayColor: "hsla(200, 100%, 20%, 0.1)",
-          },
-        }
-      );
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
     }
@@ -328,21 +333,21 @@
 <!-- routify:options param-is-page -->
 <!-- routify:options guard="bois/edit" -->
 
-<main class="formulaire">
-  <h1>Rendez-vous</h1>
+<main class="w-7/12 mx-auto">
+  <PageHeading>Rendez-vous</PageHeading>
 
   {#if !rdv}
     <Chargement />
   {:else}
     <form
-      class="pure-form pure-form-aligned"
+      class="flex flex-col gap-3 mb-4"
       bind:this={formulaire}
       use:preventFormSubmitOnEnterKeydown
     >
       <!-- Date -->
-      <div class="pure-control-group">
-        <label for="date_rdv">Date (jj/mm/aaaa)</label>
-        <input
+      <div>
+        <Label for="date_rdv">Date (jj/mm/aaaa)</Label>
+        <Input
           type="date"
           id="date_rdv"
           name="date_rdv"
@@ -353,20 +358,16 @@
       </div>
 
       <!-- En attente -->
-      <div class="pure-control-group">
-        <label for="attente">En attente de confirmation</label>
-        <input
-          type="checkbox"
-          name="attente"
-          id="attente"
-          bind:checked={rdv.attente}
-        />
+      <div>
+        <Checkbox name="attente" bind:checked={rdv.attente}
+          >En attente de confirmation</Checkbox
+        >
       </div>
 
       <!-- Heure arrivée -->
-      <div class="pure-control-group">
-        <label for="heure_arrivee">Heure arrivée (hh:mm)</label>
-        <input
+      <div>
+        <Label for="heure_arrivee">Heure arrivée (hh:mm)</Label>
+        <Input
           type="time"
           name="heure_arrivee"
           id="heure_arrivee"
@@ -376,9 +377,9 @@
       </div>
 
       <!-- Heure départ -->
-      <div class="pure-control-group">
-        <label for="heure_depart">Heure départ (hh:mm)</label>
-        <input
+      <div>
+        <Label for="heure_depart">Heure départ (hh:mm)</Label>
+        <Input
           type="time"
           name="heure_depart"
           id="heure_depart"
@@ -388,8 +389,17 @@
       </div>
 
       <!-- Fournisseur -->
-      <div class="pure-control-group">
-        <label for="fournisseur">Fournisseur</label>
+      <div>
+        <Label for="fournisseur"
+          >Fournisseur
+          {#if rdv.fournisseur && rdv.affreteur && rdv.fournisseur !== rdv.affreteur && $tiers?.get(rdv.affreteur)?.roles.bois_fournisseur}
+            <span
+              class="warning-fournisseur"
+              title="Erreur possible : vérifier que le fournisseur et l'affréteur sont corrects"
+              ><TriangleAlertIcon /></span
+            >
+          {/if}
+        </Label>
         <Svelecte
           inputId="fournisseur"
           type="tiers"
@@ -398,18 +408,11 @@
           name="Fournisseur"
           required
         />
-        {#if rdv.fournisseur && rdv.affreteur && rdv.fournisseur !== rdv.affreteur && $tiers?.get(rdv.affreteur)?.roles.bois_fournisseur}
-          <span
-            class="warning-fournisseur"
-            title="Erreur possible : vérifier que le fournisseur et l'affréteur sont corrects"
-            ><TriangleAlertIcon /></span
-          >
-        {/if}
       </div>
 
       <!-- Chargement -->
-      <div class="pure-control-group">
-        <label for="chargement">Chargement</label>
+      <div>
+        <Label for="chargement">Chargement</Label>
         <Svelecte
           inputId="chargement"
           type="tiers"
@@ -421,8 +424,8 @@
       </div>
 
       <!-- Client -->
-      <div class="pure-control-group">
-        <label for="client">Client</label>
+      <div>
+        <Label for="client">Client</Label>
         <Svelecte
           inputId="client"
           type="tiers"
@@ -435,8 +438,8 @@
       </div>
 
       <!-- Livraison -->
-      <div class="pure-control-group">
-        <label for="livraison">Livraison</label>
+      <div>
+        <Label for="livraison">Livraison</Label>
         <Svelecte
           inputId="livraison"
           type="tiers"
@@ -448,8 +451,19 @@
       </div>
 
       <!-- Transporteur -->
-      <div class="pure-control-group">
-        <label for="transporteur">Transporteur</label>
+      <div>
+        <Label for="transporteur"
+          >Transporteur
+          {#if rdv.affreteur === 1 || rdv.affreteur === null}
+            <span>
+              <LucideButton
+                icon={SparklesIcon}
+                title="Suggestions de transporteurs"
+                on:click={afficherSuggestionsTransporteurs}
+              />
+            </span>
+          {/if}
+        </Label>
         <Svelecte
           inputId="transporteur"
           type="tiers"
@@ -457,20 +471,20 @@
           bind:value={rdv.transporteur}
           name="Transporteur"
         />
-        {#if rdv.affreteur === 1 || rdv.affreteur === null}
-          <span>
-            <LucideButton
-              icon={SparklesIcon}
-              title="Suggestions de transporteurs"
-              on:click={afficherSuggestionsTransporteurs}
-            />
-          </span>
-        {/if}
       </div>
 
       <!-- Affréteur -->
-      <div class="pure-control-group">
-        <label for="affreteur">Affréteur</label>
+      <div>
+        <Label for="affreteur"
+          >Affréteur
+          {#if rdv.fournisseur && rdv.affreteur && rdv.fournisseur !== rdv.affreteur && $tiers?.get(rdv.affreteur)?.roles.bois_fournisseur}
+            <span
+              class="warning-fournisseur"
+              title="Erreur possible : vérifier que le fournisseur et l'affréteur sont corrects"
+              ><TriangleAlertIcon /></span
+            >
+          {/if}</Label
+        >
         <Svelecte
           inputId="affreteur"
           type="tiers"
@@ -478,43 +492,29 @@
           bind:value={rdv.affreteur}
           name="Affréteur"
         />
-        {#if rdv.fournisseur && rdv.affreteur && rdv.fournisseur !== rdv.affreteur && $tiers?.get(rdv.affreteur)?.roles.bois_fournisseur}
-          <span
-            class="warning-fournisseur"
-            title="Erreur possible : vérifier que le fournisseur et l'affréteur sont corrects"
-            ><TriangleAlertIcon /></span
-          >
-        {/if}
       </div>
 
       <!-- Commande prête -->
-      <div class="pure-control-group">
-        <label for="commande_prete">Commande prête</label>
-        <input
-          type="checkbox"
-          name="commande_prete"
-          id="commande_prete"
-          bind:checked={rdv.commande_prete}
-        />
+      <div>
+        <Checkbox name="commande_prete" bind:checked={rdv.commande_prete}
+          >Commande prête</Checkbox
+        >
       </div>
 
       <!-- Confirmation d'affrètement -->
-      <div class="pure-control-group">
-        <label for="confirmation_affretement">Confirmation d'affrètement</label>
-        <input
-          type="checkbox"
+      <div>
+        <Checkbox
           name="confirmation_affretement"
-          id="confirmation_affretement"
           bind:checked={rdv.confirmation_affretement}
           disabled={$tiers?.get(rdv.affreteur)?.lie_agence === false ||
-            !rdv.transporteur}
-        />
+            !rdv.transporteur}>Confirmation d'affrètement</Checkbox
+        >
       </div>
 
       <!-- Numéro BL -->
       <div class="pure-control-group">
-        <label for="numero_bl">Numéro BL</label>
-        <input
+        <Label for="numero_bl">Numéro BL</Label>
+        <Input
           type="text"
           name="numero_bl"
           id="numero_bl"
@@ -525,38 +525,38 @@
 
       <!-- Commentaire public -->
       <div class="pure-control-group">
-        <label for="commentaire_public">Commentaire public</label>
-        <textarea
+        <Label for="commentaire_public">Commentaire public</Label>
+        <Textarea
           class="rdv_commentaire"
           name="commentaire_public"
           id="commentaire_public"
-          rows="3"
-          cols="30"
+          rows={3}
+          cols={30}
           bind:value={rdv.commentaire_public}
         />
       </div>
 
       <!-- Commentaire caché -->
       <div class="pure-control-group">
-        <label for="commentaire_cache"
-          >Commentaire caché<br /><LucideButton
+        <Label for="commentaire_cache"
+          >Commentaire caché <LucideButton
             icon={CircleHelpIcon}
             on:click={afficherExplicationsCommentaireCache}
-          /></label
+          /></Label
         >
-        <textarea
+        <Textarea
           class="rdv_commentaire"
           name="commentaire_cache"
           id="commentaire_cache"
-          rows="3"
-          cols="30"
+          rows={3}
+          cols={30}
           bind:value={rdv.commentaire_cache}
         />
       </div>
     </form>
 
     <!-- Validation/Annulation/Suppression -->
-    <div class="boutons">
+    <div class="text-center">
       {#if isNew}
         <!-- Bouton "Ajouter" -->
         <BoutonAction

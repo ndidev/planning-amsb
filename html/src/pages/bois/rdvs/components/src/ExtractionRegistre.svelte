@@ -83,8 +83,32 @@
   }
 </script>
 
-<LucideButton
-  icon={ScrollTextIcon}
-  title="Extraire registre d'affrètement"
-  on:click={afficherChoixDates}
-/>
+<div class="bouton-registre hidden lg:grid">
+  <LucideButton
+    icon={ScrollTextIcon}
+    title="Extraire registre d'affrètement"
+    on:click={afficherChoixDates}
+  />
+</div>
+
+<style>
+  .bouton-registre {
+    --size: 50px;
+
+    place-items: center;
+    position: fixed;
+    right: 30px;
+    top: 15px;
+    width: var(--size);
+    height: var(--size);
+    z-index: 3;
+
+    background: radial-gradient(
+      circle at center,
+      white 0,
+      white 50%,
+      transparent 100%
+    );
+    border-radius: 50%;
+  }
+</style>
