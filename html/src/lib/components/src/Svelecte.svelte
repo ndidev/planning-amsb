@@ -1,9 +1,5 @@
 <script lang="ts" context="module">
-  import Svelecte, {
-    addFormatter,
-    config,
-    TAB_SELECT_NAVIGATE,
-  } from "svelecte/src/Svelecte.svelte";
+  import Svelecte, { addRenderer, config } from "svelecte";
 
   type ItemFormat = {
     id: number | string;
@@ -12,36 +8,30 @@
     tag: string;
   };
 
-  addFormatter({
-    classic: (item: ItemFormat, isSelected: boolean) => {
-      if (isSelected) {
-        return `<div title="${item.label}">${item.label}</div>`;
-      }
+  addRenderer("classic", (item: ItemFormat, isSelected, inputValue) => {
+    return isSelected
+      ? `<div title="${item.label}">${item.label}</div>`
+      : `<span>${item.label}</span>`;
+  });
 
-      return `<span>${item.label}</span>`;
-    },
-    withTags: (item: ItemFormat, isSelected: boolean) => {
-      if (isSelected) {
-        return `<div title="${item.label}">${item.tag}</div>`;
-      }
-
-      return `<span>${item.label}</span>`;
-    },
+  addRenderer("withTags", (item: ItemFormat, isSelected, inputValue) => {
+    return isSelected
+      ? `<div title="${item.label}">${item.tag}</div>`
+      : `<span>${item.label}</span>`;
   });
 </script>
 
 <script lang="ts">
-  import Item from "svelecte/src/components/Item.svelte";
   import { onDestroy, getContext } from "svelte";
   import type { Stores } from "@app/types";
   import type { Unsubscriber } from "svelte/store";
+  import type { SearchProps } from "svelecte/dist/utils/list";
 
   // form and CE
   export let name = "svelecte";
   export let inputId = null;
   export let required = false;
-  export let hasAnchor = false;
-  export let disabled = config.disabled;
+  export let disabled = false;
   // basic
   export let options = [];
   export let valueField = config.valueField;
@@ -52,6 +42,7 @@
   export let placeholder = name !== "svelecte" ? name : config.placeholder;
   // UI, UX
   export let searchable = config.searchable;
+  export let searchProps: SearchProps = {};
   export let clearable = config.clearable;
   export let renderer = null;
   export let disableHighlight = false;
@@ -60,9 +51,6 @@
   export let resetOnSelect = config.resetOnSelect;
   export let closeAfterSelect = config.closeAfterSelect;
   export let dndzone = () => ({ noop: true, destroy: () => {} });
-  export let validatorAction = null;
-  export let dropdownItem = Item;
-  export let controlItem = Item;
   // multiple
   export let multiple = config.multiple;
   export let max = config.max;
@@ -73,11 +61,9 @@
   export let allowEditing = config.allowEditing;
   export let keepCreated = config.keepCreated;
   export let delimiter = config.delimiter;
-  export let createFilter = null;
-  export let createTransform = null;
   // remote
   export let fetch = null;
-  export let fetchMode = "auto";
+  export let fetchMode: "auto" | "init" = "auto";
   export let fetchCallback = config.fetchCallback;
   export let fetchResetOnBlur = true;
   export let minQuery = config.minQuery;
@@ -87,31 +73,24 @@
   export let virtualList = config.virtualList;
   export let vlHeight = config.vlHeight;
   export let vlItemSize = config.vlItemSize;
-  // sifter related
-  export let searchField = null;
-  export let sortField = null;
-  export let disableSifter = false;
   // styling
   let className = "svelecte-control";
   export { className as class };
-  export let style = null;
   // i18n override
   export let i18n = null;
   export let readSelection = null;
   export let value = null;
-  export let labelAsValue = false;
   export let valueAsObject = config.valueAsObject;
 
   export let highlightFirstItem = true;
 
-  let isInvalid = false;
   $: svelecteClass = `${className} ${required && !value ? "invalid" : ""}`;
 
   // =================
   // Options générales
   // =================
-  selectOnTab = multiple ? true : TAB_SELECT_NAVIGATE;
-  collapseSelection = multiple;
+  selectOnTab = multiple ? true : "select-navigate";
+  collapseSelection = multiple ? "blur" : null;
   highlightFirstItem = required ? true : false;
 
   i18n = {
@@ -154,8 +133,8 @@
   if (typesPredefinis.includes(type)) {
     valueField = "id";
     labelField = "label";
-    searchField = "search";
-    sortField = "label";
+    searchProps.fields = ["search"];
+    searchProps.sort = "label";
     renderer = multiple ? "withTags" : "classic";
   }
 
@@ -223,7 +202,6 @@
     {name}
     {inputId}
     {required}
-    {hasAnchor}
     {disabled}
     {options}
     {valueField}
@@ -233,6 +211,7 @@
     {disabledField}
     {placeholder}
     {searchable}
+    {searchProps}
     {clearable}
     {renderer}
     {disableHighlight}
@@ -241,9 +220,6 @@
     {resetOnSelect}
     {closeAfterSelect}
     {dndzone}
-    {validatorAction}
-    {dropdownItem}
-    {controlItem}
     {multiple}
     {max}
     {collapseSelection}
@@ -252,8 +228,6 @@
     {allowEditing}
     {keepCreated}
     {delimiter}
-    {createFilter}
-    {createTransform}
     {fetch}
     {fetchMode}
     {fetchCallback}
@@ -263,20 +237,14 @@
     {virtualList}
     {vlHeight}
     {vlItemSize}
-    {searchField}
-    {sortField}
-    {disableSifter}
     class={svelecteClass}
-    {style}
     {i18n}
     {readSelection}
     bind:value
-    {labelAsValue}
     {valueAsObject}
     on:input
     on:change
     {highlightFirstItem}
-    {...$$restProps}
   />
 {:else}
   <Svelecte />
