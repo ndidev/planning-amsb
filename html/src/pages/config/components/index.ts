@@ -1,5 +1,6 @@
 export { default as TitreSection } from "./src/TitreSection.svelte";
 export { default as TitreSousSection } from "./src/TitreSousSection.svelte";
+export { default as ConfigLine } from "./src/ConfigLine.svelte";
 
 export { default as Agence } from "./src/agence/Agence.svelte";
 export { default as Service } from "./src/agence/Service.svelte";

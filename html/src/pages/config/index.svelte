@@ -1,5 +1,7 @@
 <!-- routify:options title="Planning AMSB - Configuration" -->
 <script lang="ts">
+  import { Heading, Select } from "flowbite-svelte";
+
   import {
     BandeauInfo,
     ConfigsPDF,
@@ -11,7 +13,7 @@
 
   import { currentUser } from "@app/stores";
 
-  import { SseConnection } from "@app/components";
+  import { PageHeading, SseConnection } from "@app/components";
 
   import type { ModuleId } from "@app/types";
 
@@ -74,11 +76,11 @@
   ]}
 />
 
-<main>
-  <h1>Configuration</h1>
+<main class="w-7/12 mx-auto">
+  <PageHeading>Configuration</PageHeading>
 
-  <div id="select">
-    <select bind:value={selected}>
+  <div id="select" class="text-center mb-8">
+    <Select bind:value={selected} placeholder="">
       {#each configs as config}
         {#if !config.module || (config.module && $currentUser.canEdit(config.module))}
           <option value={config}>
@@ -86,102 +88,10 @@
           </option>
         {/if}
       {/each}
-    </select>
+    </Select>
   </div>
 
-  <h2 class="titre-section">{selected.affichage}</h2>
+  <Heading tag="h2" class="mb-4">{selected.affichage}</Heading>
 
   <svelte:component this={selected.component} />
 </main>
-
-<style>
-  main {
-    width: 90%;
-    margin: auto;
-  }
-
-  /* En-têtes */
-
-  h1 {
-    margin: 20px 0;
-    text-align: center;
-  }
-
-  .titre-section {
-    margin: 20px 10% 5px 10%;
-    color: #333;
-  }
-
-  #select {
-    text-align: center;
-  }
-
-  :global(.ligne) {
-    width: 80%;
-    margin: 5px auto;
-    padding: 10px;
-    border-radius: 5px;
-    border: 2px solid #ddd;
-    background-color: #eee;
-    display: flex;
-    align-items: center;
-  }
-
-  :global(.ligne-vide) {
-    width: 80%;
-    margin: 5px auto;
-    padding: 10px;
-    border-radius: 5px;
-    display: flex;
-    align-items: center;
-  }
-
-  :global(.modificationEnCours) {
-    background-color: lightyellow;
-  }
-
-  :global(.modificationEnCours .valider-annuler) {
-    display: inline;
-  }
-
-  :global(.modificationEnCours .actions) {
-    display: none;
-  }
-
-  :global(.valider-annuler) {
-    margin-left: auto;
-    color: hsla(0, 0%, 0%, 0.3);
-    display: none;
-  }
-
-  :global(.actions) {
-    margin-left: auto;
-    color: hsla(0, 0%, 0%, 0.3);
-    display: inline;
-  }
-
-  :global(.help),
-  :global(.actions i),
-  :global(.valider-annuler i) {
-    cursor: pointer;
-  }
-
-  :global(.visualiser:hover),
-  :global(.envoyer:hover),
-  :global(.valider:hover),
-  :global(.annuler:hover) {
-    color: hsla(0, 0%, 0%, 0.8);
-  }
-
-  @media screen and (max-width: 480px) {
-    :global(.ligne) {
-      flex-direction: column;
-      width: 100%;
-    }
-
-    :global(input[type="text"]),
-    :global(input:not([type])) {
-      width: 100%;
-    }
-  }
-</style>

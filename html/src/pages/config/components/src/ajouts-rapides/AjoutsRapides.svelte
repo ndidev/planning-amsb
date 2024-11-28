@@ -9,7 +9,7 @@
   ```
  -->
 <script lang="ts">
-  import { TitreSousSection, LigneAjoutRapideBois } from "../..";
+  import { TitreSousSection, ConfigLine, LigneAjoutRapideBois } from "../..";
   import { Chargement } from "@app/components";
 
   import { currentUser, configAjoutsRapides } from "@app/stores";
@@ -38,13 +38,13 @@
           configAjoutsRapides.new(module);
         }}
       />
-      <ul id="rdv-rapides-{module}">
+      <div id="rdv-rapides-{module}" class="mb-4">
         {#each [...$configAjoutsRapides[module].values()] as ajoutRapide (ajoutRapide.id)}
           <svelte:component this={components[module]} {ajoutRapide} />
         {:else}
-          <li class="ligne-vide">Aucun ajout rapide configuré.</li>
+          <ConfigLine>Aucun ajout rapide configuré.</ConfigLine>
         {/each}
-      </ul>
+      </div>
     {/if}
   {/each}
 {/if}

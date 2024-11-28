@@ -9,15 +9,16 @@
   ```
  -->
 <script lang="ts">
-  import { afterUpdate } from "svelte";
+  import { Label } from "flowbite-svelte";
 
+  import { ConfigLine } from "../../";
   import { Svelecte, LucideButton } from "@app/components";
 
   import { configAjoutsRapides } from "@app/stores";
 
   import Notiflix from "notiflix";
 
-  import { fetcher, notiflixOptions, validerFormulaire } from "@app/utils";
+  import { notiflixOptions, validerFormulaire } from "@app/utils";
 
   import type { AjoutRapideBois } from "@app/types";
 
@@ -28,7 +29,7 @@
 
   let modificationEnCours: boolean = isNew; // Modification en cours par défaut si nouveau compte uniquement;
 
-  let ligne: HTMLLIElement;
+  let ligne: HTMLDivElement;
 
   /**
    * Valider l'ajout.
@@ -117,105 +118,92 @@
       notiflixOptions.themes.red
     );
   }
-
-  afterUpdate(() => {
-    // Si changement d'une ligne, activation de la classe "modificationEnCours"
-    ligne
-      .querySelectorAll<HTMLInputElement | HTMLSelectElement>("input, select")
-      .forEach((input) => {
-        input.onchange = () => {
-          modificationEnCours = true;
-        };
-        input.oninput = () => (modificationEnCours = true);
-      });
-  });
 </script>
 
-<li class="ligne" bind:this={ligne} class:modificationEnCours>
-  <!-- Fournisseur -->
-  <div>
-    <label for={"fournisseur_" + ajoutRapide.id}>Fournisseur</label>
-    <Svelecte
-      inputId={"fournisseur_" + ajoutRapide.id}
-      type="tiers"
-      role="bois_fournisseur"
-      name="Fournisseur"
-      bind:value={ajoutRapide.fournisseur}
-      required
-    />
-  </div>
+<ConfigLine bind:modificationEnCours bind:ligne>
+  <div class="ligne basis-11/12">
+    <!-- Fournisseur -->
+    <div>
+      <Label for={"fournisseur_" + ajoutRapide.id}>Fournisseur</Label>
+      <Svelecte
+        inputId={"fournisseur_" + ajoutRapide.id}
+        type="tiers"
+        role="bois_fournisseur"
+        name="Fournisseur"
+        bind:value={ajoutRapide.fournisseur}
+        required
+      />
+    </div>
 
-  <!-- Client -->
-  <div>
-    <label for={"client_" + ajoutRapide.id}>Client</label>
-    <Svelecte
-      inputId={"client_" + ajoutRapide.id}
-      type="tiers"
-      role="bois_client"
-      name="Client"
-      bind:value={ajoutRapide.client}
-      required
-    />
-  </div>
+    <!-- Client -->
+    <div>
+      <Label for={"client_" + ajoutRapide.id}>Client</Label>
+      <Svelecte
+        inputId={"client_" + ajoutRapide.id}
+        type="tiers"
+        role="bois_client"
+        name="Client"
+        bind:value={ajoutRapide.client}
+        required
+      />
+    </div>
 
-  <!-- Chargement -->
-  <div>
-    <label for={"chargement_" + ajoutRapide.id}>Chargement</label>
-    <Svelecte
-      inputId={"chargement_" + ajoutRapide.id}
-      type="tiers"
-      role="bois_client"
-      name="Chargement"
-      bind:value={ajoutRapide.chargement}
-      required
-    />
-  </div>
+    <!-- Chargement -->
+    <div>
+      <Label for={"chargement_" + ajoutRapide.id}>Chargement</Label>
+      <Svelecte
+        inputId={"chargement_" + ajoutRapide.id}
+        type="tiers"
+        role="bois_client"
+        name="Chargement"
+        bind:value={ajoutRapide.chargement}
+        required
+      />
+    </div>
 
-  <!-- Livraison -->
-  <div>
-    <label for={"livraison_" + ajoutRapide.id}>Livraison</label>
-    <Svelecte
-      inputId={"livraison_" + ajoutRapide.id}
-      type="tiers"
-      role="bois_client"
-      name="Livraison"
-      bind:value={ajoutRapide.livraison}
-      required
-    />
-  </div>
+    <!-- Livraison -->
+    <div>
+      <Label for={"livraison_" + ajoutRapide.id}>Livraison</Label>
+      <Svelecte
+        inputId={"livraison_" + ajoutRapide.id}
+        type="tiers"
+        role="bois_client"
+        name="Livraison"
+        bind:value={ajoutRapide.livraison}
+        required
+      />
+    </div>
 
-  <!-- Transporteur -->
-  <div class="pure-control-group">
-    <label for={"transporteur_" + ajoutRapide.id}>Transporteur</label>
-    <Svelecte
-      inputId={"transporteur_" + ajoutRapide.id}
-      type="tiers"
-      role="bois_transporteur"
-      name="Transporteur"
-      bind:value={ajoutRapide.transporteur}
-      required
-    />
-  </div>
+    <!-- Transporteur -->
+    <div class="pure-control-group">
+      <Label for={"transporteur_" + ajoutRapide.id}>Transporteur</Label>
+      <Svelecte
+        inputId={"transporteur_" + ajoutRapide.id}
+        type="tiers"
+        role="bois_transporteur"
+        name="Transporteur"
+        bind:value={ajoutRapide.transporteur}
+        required
+      />
+    </div>
 
-  <!-- Affréteur -->
-  <div>
-    <label for={"affreteur_" + ajoutRapide.id}>Affréteur</label>
-    <Svelecte
-      inputId={"affreteur_" + ajoutRapide.id}
-      type="tiers"
-      role="bois_affreteur"
-      name="Affréteur"
-      bind:value={ajoutRapide.affreteur}
-      required
-    />
+    <!-- Affréteur -->
+    <div>
+      <Label for={"affreteur_" + ajoutRapide.id}>Affréteur</Label>
+      <Svelecte
+        inputId={"affreteur_" + ajoutRapide.id}
+        type="tiers"
+        role="bois_affreteur"
+        name="Affréteur"
+        bind:value={ajoutRapide.affreteur}
+        required
+      />
+    </div>
   </div>
 
   <!-- Boutons -->
-  <div class="boutons-icone">
-    <span class="actions">
-      <LucideButton preset="delete" on:click={supprimerLigne} />
-    </span>
-    <span class="valider-annuler">
+  <div slot="actions">
+    {#if modificationEnCours}
       <LucideButton
         preset="confirm"
         on:click={isNew ? validerAjout : validerModification}
@@ -224,15 +212,13 @@
         preset="cancel"
         on:click={isNew ? annulerAjout : annulerModification}
       />
-    </span>
+    {:else}
+      <LucideButton preset="delete" on:click={supprimerLigne} />
+    {/if}
   </div>
-</li>
+</ConfigLine>
 
 <style>
-  .ligne :global(.svelecte-control) {
-    width: 100%;
-  }
-
   /* Mobile */
   @media screen and (max-width: 767px) {
     .ligne {
@@ -243,11 +229,6 @@
     .ligne > div:not(.boutons-icone) {
       width: 100%;
     }
-
-    .boutons-icone {
-      width: auto;
-      margin: 10px auto;
-    }
   }
 
   /* Desktop */
@@ -255,18 +236,11 @@
     .ligne {
       display: grid;
       grid-template-areas:
-        "a b c g"
-        "d e f g";
-      grid-template-columns: repeat(3, 1fr) 50px;
+        "a b c"
+        "d e f";
+      grid-template-columns: repeat(3, 1fr);
       column-gap: 10px;
       row-gap: 5px;
-    }
-
-    .boutons-icone {
-      grid-area: g;
-      align-self: center;
-      justify-self: center;
-      text-align: center;
     }
   }
 </style>

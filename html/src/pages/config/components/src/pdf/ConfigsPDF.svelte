@@ -9,7 +9,7 @@
   ```
  -->
 <script lang="ts">
-  import { TitreSousSection, LigneConfigPDF } from "../../";
+  import { TitreSousSection, ConfigLine, LigneConfigPDF } from "../../";
   import { Chargement } from "@app/components";
 
   import { currentUser, configPdf } from "@app/stores";
@@ -32,13 +32,13 @@
           configPdf.new(module);
         }}
       />
-      <ul id="pdf-{module}">
+      <div id="pdf-{module}" class="mb-4">
         {#each [...$configPdf[module].values()] as config (config.id)}
           <LigneConfigPDF {config} />
         {:else}
-          <li class="ligne-vide">Aucun PDF configuré.</li>
+          <ConfigLine>Aucun PDF configuré.</ConfigLine>
         {/each}
-      </ul>
+      </div>
     {/if}
   {/each}
 {/if}

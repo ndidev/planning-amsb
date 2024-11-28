@@ -11,9 +11,11 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
+  import { Input, Textarea, Checkbox } from "flowbite-svelte";
   import Notiflix from "notiflix";
   import autosize from "autosize";
 
+  import ConfigLine from "../ConfigLine.svelte";
   import { LucideButton } from "@app/components";
 
   import { configBandeauInfo } from "@app/stores";
@@ -29,7 +31,7 @@
 
   let modificationEnCours = isNew; // Modification en cours par défaut si nouveau compte uniquement;
 
-  let ligne: HTMLLIElement;
+  let ligne: HTMLDivElement;
 
   $: ligneInfo.message = ligneInfo.message.slice(0, 255);
 
@@ -116,85 +118,52 @@
   }
 
   onMount(() => {
-    // Si changement d'une ligne, activation de la classe "modificationEnCours"
-    ligne
-      .querySelectorAll<
-        HTMLInputElement | HTMLTextAreaElement
-      >("input, textarea")
-      .forEach((input) => {
-        input.onchange = () => (modificationEnCours = true);
-        input.oninput = () => (modificationEnCours = true);
-      });
-
     autosize(ligne.querySelector("textarea"));
   });
 </script>
 
-<li class="ligne pure-form" class:modificationEnCours bind:this={ligne}>
-  <div class="bloc pure-u-1 pure-u-lg-6-24">
-    <!-- Active PC -->
-    <span class="champ pure-u-7-24">
-      <label class="pure-checkbox"
-        >PC
-        <input type="checkbox" bind:checked={ligneInfo.pc} />
-      </label>
-    </span>
-    <!-- Active TV -->
-    <span class="champ pure-u-7-24">
-      <label class="pure-checkbox"
-        >TV
-        <input type="checkbox" bind:checked={ligneInfo.tv} />
-      </label>
-    </span>
-    <!-- Couleur -->
-    <span class="champ pure-u-7-24">
-      <input type="color" class="couleur" bind:value={ligneInfo.couleur} />
-    </span>
-  </div>
+<ConfigLine bind:modificationEnCours bind:ligne>
+  <!-- Active PC -->
+  <Checkbox bind:checked={ligneInfo.pc} class="inline-block basis-2/24"
+    >PC</Checkbox
+  >
+
+  <!-- Active TV -->
+  <Checkbox bind:checked={ligneInfo.tv} class="inline-block basis-2/24"
+    >TV</Checkbox
+  >
+
+  <!-- Couleur -->
+  <input
+    type="color"
+    class="inline-block basis-2/24 min-h-7 rounded-lg"
+    bind:value={ligneInfo.couleur}
+  />
+
   <!-- Message -->
-  <span class="champ pure-u-1 pure-u-lg-16-24">
-    <textarea
-      class="message"
-      bind:value={ligneInfo.message}
-      rows="1"
-      maxlength="255"
-    />
-  </span>
+  <Textarea
+    class="basis-full lg:basis-14/24"
+    bind:value={ligneInfo.message}
+    rows={1}
+    maxlength={255}
+    required
+  />
+
   <!-- Boutons -->
-  <span class="actions">
-    {#if !isNew && !modificationEnCours}
-      <LucideButton preset="delete" on:click={supprimerLigne} />
+  <div slot="actions">
+    {#if !modificationEnCours}
+      {#if !isNew}
+        <LucideButton preset="delete" on:click={supprimerLigne} />
+      {/if}
+    {:else}
+      <LucideButton
+        preset="confirm"
+        on:click={isNew ? validerAjout : validerModification}
+      />
+      <LucideButton
+        preset="cancel"
+        on:click={isNew ? annulerAjout : annulerModification}
+      />
     {/if}
-  </span>
-  <span class="valider-annuler">
-    <LucideButton
-      preset="confirm"
-      on:click={isNew ? validerAjout : validerModification}
-    />
-    <LucideButton
-      preset="cancel"
-      on:click={isNew ? annulerAjout : annulerModification}
-    />
-  </span>
-</li>
-
-<style>
-  .ligne .champ {
-    margin-left: 1%;
-  }
-
-  input[type="color"] {
-    margin: 0.5em 0;
-  }
-
-  textarea {
-    width: 100%;
-    padding: 5px;
-  }
-
-  @media screen and (max-width: 480px) {
-    .message {
-      margin-top: 5px;
-    }
-  }
-</style>
+  </div>
+</ConfigLine>

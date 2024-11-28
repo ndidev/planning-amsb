@@ -9,8 +9,10 @@
   ```
  -->
 <script lang="ts">
+  import { ConfigLine } from "../../";
   import { LucideButton, NumericInput } from "@app/components";
 
+  import { Label, Input } from "flowbite-svelte";
   import Notiflix from "notiflix";
 
   import { fetcher } from "@app/utils";
@@ -60,11 +62,11 @@
   }
 </script>
 
-<div class="ligne pure-form" class:modificationEnCours bind:this={ligne}>
+<ConfigLine bind:modificationEnCours bind:ligne>
   <div class="bloc pure-u-1 pure-u-lg-20-24">
     <!-- Valeur -->
     <div class="pure-control-group">
-      <label for={"config_cotes_" + cote.cote}>Valeur : </label>
+      <!-- <Label for={"config_cotes_" + cote.cote}>Valeur : </Label> -->
       <NumericInput
         id={"config_cotes_" + cote.cote}
         format="+2"
@@ -75,23 +77,10 @@
   </div>
 
   <!-- Boutons -->
-  <span class="valider-annuler">
-    <LucideButton preset="confirm" on:click={validerModification} />
-    <LucideButton preset="cancel" on:click={annulerModification} />
-  </span>
-</div>
-
-<style>
-  /* Mobile */
-  @media screen and (max-width: 767px) {
-    .ligne {
-      text-align: left;
-      flex-direction: column;
-      width: 100%;
-    }
-
-    .ligne :global(input) {
-      width: 100%;
-    }
-  }
-</style>
+  <div slot="actions">
+    {#if modificationEnCours}
+      <LucideButton preset="confirm" on:click={validerModification} />
+      <LucideButton preset="cancel" on:click={annulerModification} />
+    {/if}
+  </div>
+</ConfigLine>

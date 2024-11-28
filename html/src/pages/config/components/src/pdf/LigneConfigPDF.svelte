@@ -9,9 +9,12 @@
   ```
  -->
 <script lang="ts">
-  import { onMount, afterUpdate } from "svelte";
+  import { onMount } from "svelte";
 
+  import { Label, Input, Textarea, Checkbox } from "flowbite-svelte";
   import { CircleHelpIcon, EyeIcon, SendIcon } from "lucide-svelte";
+
+  import { ConfigLine } from "../../";
 
   import { LucideButton, Svelecte } from "@app/components";
 
@@ -36,7 +39,7 @@
 
   let modificationEnCours: boolean = isNew; // Modification en cours par défaut si nouveau compte uniquement;
 
-  let ligne: HTMLLIElement;
+  let ligne: HTMLDivElement;
 
   /**
    * Afficher les explications pour la liste d'e-mails.
@@ -279,135 +282,107 @@
 
     autosize(ligne.querySelector("textarea"));
   });
-
-  afterUpdate(() => {
-    // Si changement d'une ligne, activation de la classe "modificationEnCours"
-    ligne
-      .querySelectorAll<
-        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-      >("input, textarea, select")
-      .forEach((input) => {
-        input.onchange = () => (modificationEnCours = true);
-        input.oninput = () => (modificationEnCours = true);
-      });
-  });
 </script>
 
-<!-- <li class="ligne pure-form" class:modificationEnCours bind:this={ligne}> -->
-<li class="ligne pure-form" class:modificationEnCours bind:this={ligne}>
-  <!-- Fournisseur -->
-  <div class="champ pure-u-1 pure-u-lg-5-24">
-    <div class="pure-control-group">
-      <label for={"founisseur_" + config.id}>Fournisseur</label>
-      <Svelecte
-        inputId={"founisseur_" + config.id}
-        type="tiers"
-        role={`${config.module}_fournisseur`}
-        bind:value={config.fournisseur}
-        name="Fournisseur"
-        required
-      />
+<ConfigLine bind:modificationEnCours bind:ligne>
+  <div class="basis-full lg:basis-10/24">
+    <div>
+      <!-- Fournisseur -->
+      <div class="basis-full mb-2">
+        <Label for={"fournisseur_" + config.id}>Fournisseur</Label>
+        <Svelecte
+          inputId={"fournisseur_" + config.id}
+          type="tiers"
+          role={`${config.module}_fournisseur`}
+          bind:value={config.fournisseur}
+          name="Fournisseur"
+          required
+        />
+      </div>
+    </div>
+
+    <div class="flex flex-row gap-4">
+      <!-- Jours avant -->
+      <div class="basis-full lg:basis-1/3">
+        <Label for="days-before">Jours avant</Label>
+        <Input
+          type="number"
+          min={0}
+          id="days-before"
+          class="jours_avant"
+          bind:value={config.jours_avant}
+          required
+        />
+      </div>
+
+      <!-- Jours après -->
+      <div class="basis-full lg:basis-1/3">
+        <Label for="days-after">Jours après</Label>
+        <Input
+          type="number"
+          min={0}
+          id="days-after"
+          class="jours_apres"
+          bind:value={config.jours_apres}
+          required
+        />
+      </div>
+
+      <!-- Envoi automatique -->
+      <div class="basis-full lg:basis-1/4">
+        <Label>
+          Envoi automatique <Checkbox bind:checked={config.envoi_auto} />
+        </Label>
+      </div>
     </div>
   </div>
-  <!-- Jours avant -->
-  <div class="champ pure-u-1 pure-u-lg-2-24">
-    <label
-      >Jours avant
-      <input
-        type="number"
-        min="0"
-        class="jours_avant"
-        bind:value={config.jours_avant}
-        required
-      />
-    </label>
-  </div>
-  <!-- Jours après -->
-  <div class="champ pure-u-1 pure-u-lg-2-24">
-    <label
-      >Jours après
-      <input
-        type="number"
-        min="0"
-        class="jours_apres"
-        bind:value={config.jours_apres}
-        required
-      />
-    </label>
-  </div>
-  <!-- Envoi automatique -->
-  <div class="champ pure-u-1 pure-u-lg-2-24">
-    <label class="pure-checkbox"
-      >Envoi automatique
-      <input
-        type="checkbox"
-        class="envoi_auto"
-        bind:checked={config.envoi_auto}
-      />
-    </label>
-  </div>
+
   <!-- Liste e-mails -->
-  <div class="champ pure-u-1 pure-u-lg-9-24">
-    <label for={"liste_emails_" + config.id}
+  <div class="basis-full lg:basis-9/24 mb-auto">
+    <Label for={"liste_emails_" + config.id}
       >Liste e-mails <LucideButton
         icon={CircleHelpIcon}
+        size="20px"
         title="Afficher les explications"
         on:click={afficherExplicationsEmails}
-      /></label
+      /></Label
     >
-    <textarea
+    <Textarea
       class="liste_emails"
       id={"liste_emails_" + config.id}
       bind:value={config.liste_emails}
-      rows="3"
+      rows={3}
     />
   </div>
+
   <!-- Boutons -->
-  <span class="actions">
-    <LucideButton
-      icon={EyeIcon}
-      title="Visualiser le PDF"
-      on:click={visualiserPdf}
-    />
-    <LucideButton
-      icon={SendIcon}
-      title="Envoyer le PDF"
-      on:click={envoyerPdf}
-    />
-    <LucideButton preset="delete" on:click={supprimerLigne} />
-  </span>
-  <span class="valider-annuler">
-    <LucideButton
-      preset="confirm"
-      on:click={isNew ? validerAjout : validerModification}
-    />
-    <LucideButton
-      preset="cancel"
-      on:click={isNew ? annulerAjout : annulerModification}
-    />
-  </span>
-</li>
+  <div slot="actions">
+    {#if modificationEnCours}
+      <LucideButton
+        preset="confirm"
+        on:click={isNew ? validerAjout : validerModification}
+      />
+      <LucideButton
+        preset="cancel"
+        on:click={isNew ? annulerAjout : annulerModification}
+      />
+    {:else}
+      <LucideButton
+        icon={EyeIcon}
+        title="Visualiser le PDF"
+        on:click={visualiserPdf}
+      />
+      <LucideButton
+        icon={SendIcon}
+        title="Envoyer le PDF"
+        on:click={envoyerPdf}
+      />
+      <LucideButton preset="delete" on:click={supprimerLigne} />
+    {/if}
+  </div>
+</ConfigLine>
 
 <style>
-  .ligne .champ {
-    display: flex;
-    flex-direction: column;
-    margin-left: 1%;
-  }
-
-  .ligne:global(.fournisseur) {
-    width: 240px;
-  }
-
-  .jours_avant,
-  .jours_apres {
-    width: 80%;
-  }
-
-  textarea {
-    padding: 5px;
-  }
-
   /* Dates dans Notiflix */
   :global(.pdf-form-notiflix) {
     text-align: right;
@@ -416,31 +391,5 @@
   :global(.pdf-champ-notiflix) {
     margin-bottom: 5px;
     margin-right: 30px;
-  }
-
-  /* Mobile */
-  @media screen and (max-width: 767px) {
-    .ligne {
-      flex-direction: column;
-    }
-
-    .liste_emails {
-      margin-top: 5px;
-    }
-
-    .actions,
-    .valider-annuler {
-      margin: 10px auto;
-    }
-  }
-  /* Desktop */
-  @media screen and (min-width: 768px) {
-    .ligne :global(.svelecte-control) {
-      width: 200px;
-    }
-
-    .liste_emails {
-      margin-top: 0;
-    }
   }
 </style>
