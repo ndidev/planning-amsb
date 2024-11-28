@@ -1,29 +1,30 @@
 :root {
   --error-color: hsl(4, 100%, 64%);
   --input-width: 300px;
+
+  /* Svelecte */
+  --sv-border-invalid: 2px solid var(--error-color, red);
+  --sv-min-height: 38px;
 }
 
-.formulaire {
-  width: 80%;
-  margin: auto;
+.svelecte.svelecte-control:has(select:invalid) {
+  --sv-border: var(--sv-border-invalid);
 }
 
-h1 {
-  margin: 20px 0;
-  text-align: center;
+@supports not selector(:has(a, b)) {
+  .svelecte.svelecte-control.invalid {
+    --sv-border: var(--sv-border-invalid);
+  }
 }
 
-input,
-select {
-  padding: 5px;
+/* Svelecte highlight */
+.highlight {
+  background-color: yellow;
 }
 
-input[type="text"],
-input[type="password"],
-input:not([type]),
-select,
-textarea {
-  width: var(--input-width);
+.svelecte-control input[type="text"] {
+  border: none;
+  box-shadow: none;
 }
 
 input:invalid {
@@ -32,39 +33,4 @@ input:invalid {
 
 label.requis::after {
   content: "*";
-}
-
-.svelecte-control {
-  display: inline-block;
-  width: var(--input-width);
-}
-
-.pure-form .svelecte-control input[type="text"] {
-  border: none;
-  box-shadow: none;
-}
-
-/* Boutons ajouter/modifier/supprimer des formulaires */
-
-.boutons {
-  margin-top: 15px;
-  margin-bottom: 100px;
-  text-align: center;
-}
-
-/* ------------------------------- */
-
-/* Mobile */
-@media screen and (max-width: 767px) {
-  :root {
-    --input-width: 100%;
-  }
-}
-
-/* Desktop */
-@media screen and (min-width: 768px) {
-  .formulaire {
-    width: 70%;
-    margin: auto;
-  }
 }

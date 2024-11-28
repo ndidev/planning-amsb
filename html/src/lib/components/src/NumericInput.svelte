@@ -30,6 +30,8 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
 
+  import { Input } from "flowbite-svelte";
+
   let input: HTMLInputElement;
 
   export let value: number;
@@ -140,23 +142,24 @@
   });
 </script>
 
-<input
-  type="text"
-  autocomplete="off"
-  bind:this={input}
-  bind:value
-  class={className}
-  {placeholder}
-  {id}
-  {name}
-  {required}
-  on:input
-  on:change
-  on:focus
-  on:blur
-  on:keydown
-  on:keyup
-  on:keypress
-/>
-
-<style></style>
+<Input let:props>
+  <input
+    type="text"
+    autocomplete="off"
+    bind:this={input}
+    bind:value
+    class={className}
+    {placeholder}
+    {id}
+    {name}
+    {required}
+    on:input
+    on:change
+    on:focus
+    on:blur
+    on:keydown
+    on:keyup
+    on:keypress
+    {...props}
+  />
+</Input>

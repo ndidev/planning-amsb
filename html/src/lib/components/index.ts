@@ -14,4 +14,5 @@ export { default as Menu } from "./src/Menu";
 export { default as Modal } from "./src/Modal.svelte";
 export { default as NumericInput } from "./src/NumericInput.svelte";
 export { default as OfflineBanner } from "./src/OfflineBanner.svelte";
+export { default as PageHeading } from "./src/PageHeading.svelte";
 export { default as Svelecte } from "./src/Svelecte.svelte";

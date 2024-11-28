@@ -9,18 +9,27 @@
   ```
  -->
 <script lang="ts">
-  import { url, beforeUrlChange } from "@roxi/routify";
+  import { url, goto, page, params } from "@roxi/routify";
 
+  import {
+    Drawer,
+    Sidebar,
+    SidebarDropdownItem,
+    SidebarDropdownWrapper,
+    SidebarGroup,
+    SidebarItem,
+    SidebarWrapper,
+  } from "flowbite-svelte";
+  import { sineIn } from "svelte/easing";
   import { MenuIcon } from "lucide-svelte";
+  import Notiflix from "notiflix";
 
   import { LucideButton } from "@app/components";
   import AddButton from "./AddButton.svelte";
-  import UserFooter from "./UserFooter.svelte";
 
   import { currentUser } from "@app/stores";
-
+  import { User } from "@app/auth";
   import { sitemap, device } from "@app/utils";
-
   import type { ModuleId } from "@app/types";
 
   /**
@@ -28,30 +37,37 @@
    */
   export let module: ModuleId;
 
-  let nav: HTMLElement;
-
-  let affichageMenu = false;
+  let displayMenu = false;
 
   $: menuButtonFontSize = $device.isSmallerThan("desktop") ? "24px" : "36px";
 
-  // Cacher le menu lors le la navigation sur mobile
-  $beforeUrlChange((event, route) => {
-    if (nav.offsetWidth >= document.body.offsetWidth) {
-      affichageMenu = false;
-    }
+  $: activeUrl =
+    $page.path.replace("/index", "") +
+    ("archives" in $params ? "?archives" : "");
 
-    return true;
-  });
+  /**
+   * Déconnecter l'utilisateur courant.
+   */
+  async function logout() {
+    try {
+      await $currentUser.logout();
+      currentUser.set(new User());
+      $goto("/");
+    } catch (error: any) {
+      Notiflix.Notify.failure(error.message);
+      console.error(error);
+    }
+  }
 </script>
 
-<div class="menu-toggle-add">
+<div class="fixed left-0 top-0 m-3 z-[100]">
   <!-- Affichage/masquage du menu -->
   <LucideButton
     icon={MenuIcon}
     title="Menu"
     size={menuButtonFontSize}
     on:click={() => {
-      affichageMenu = !affichageMenu;
+      displayMenu = !displayMenu;
     }}
   />
 
@@ -61,139 +77,54 @@
   {/if}
 </div>
 
-<nav bind:this={nav} style="display: {affichageMenu ? 'flex' : 'none'};">
-  <ul>
-    {#each [...sitemap] as [module, { affichage, tree: { href, children, devices } }]}
-      {@const deviceMatches = devices?.includes($device.type) ?? true}
-      {#if $currentUser.canAccess(module) && deviceMatches}
-        <li>
-          {#if href}
-            <a href={$url(href)} title={affichage} class="rubrique link"
-              >{affichage}</a
-            >
-          {:else}
-            <span class="rubrique">{affichage}</span>
-          {/if}
-          {#if children}
-            <ul>
-              {#each children as { affichage, roleMini, href, devices }}
-                {#if $currentUser.getRole(module) >= roleMini && deviceMatches}
-                  <li>
-                    <a href={$url(href)} title={affichage} class="link"
-                      >{affichage}</a
-                    >
-                  </li>
+<Drawer
+  bind:hidden={displayMenu}
+  backdrop={false}
+  activateClickOutside={false}
+  transitionType="fly"
+  transitionParams={{ x: -320, duration: 200, easing: sineIn }}
+  width="w-64"
+  id="menu-drawer"
+>
+  <Sidebar class={`fixed inset-y-0 left-0 w-64`} {activeUrl}>
+    <SidebarWrapper class="pt-16 h-full flex flex-col">
+      {#each [...sitemap] as [module, { affichage, tree: { href, children, devices } }]}
+        {@const deviceMatches = devices?.includes($device.type) ?? true}
+        {#if $currentUser.canAccess(module) && deviceMatches}
+          <SidebarGroup>
+            {#if href}
+              <SidebarItem href={$url(href)} label={affichage} />
+            {:else}
+              <SidebarDropdownWrapper
+                label={affichage}
+                isOpen={activeUrl.includes(module)}
+              >
+                {#if children}
+                  {#each children as { affichage, roleMini, href, devices }}
+                    {#if $currentUser.getRole(module) >= roleMini && deviceMatches}
+                      <SidebarDropdownItem
+                        href={$url(href)}
+                        label={affichage}
+                        active={activeUrl === href}
+                      />
+                    {/if}
+                  {/each}
                 {/if}
-              {/each}
-            </ul>
-          {/if}
-        </li>
-      {/if}
-    {/each}
-  </ul>
+              </SidebarDropdownWrapper>
+            {/if}
+          </SidebarGroup>
+        {/if}
+      {/each}
 
-  <div class="user-footer" style="display: {affichageMenu ? 'block' : 'none'};">
-    <UserFooter />
-  </div>
-</nav>
-
-<style>
-  * {
-    --couleur-texte-menu: hsl(0, 0%, 39%);
-    --menu-font-family: Arial, Helvetica, sans-serif;
-    --bg-color: hsl(0, 0%, 94%);
-  }
-
-  .menu-toggle-add {
-    position: fixed;
-    top: 0;
-    left: 0;
-    margin: 10px;
-    z-index: 25;
-  }
-
-  /******************/
-
-  nav {
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 20;
-    margin: 0;
-    padding: 0;
-    background: hsl(0, 0%, 94%);
-    color: var(--couleur-texte-menu);
-    font-family: var(--menu-font-family);
-    text-transform: uppercase;
-    text-align: center;
-  }
-
-  nav > ul {
-    margin-top: 60px;
-  }
-
-  nav li {
-    list-style: none;
-  }
-
-  .rubrique {
-    display: inline-block;
-    font-weight: bold;
-    margin-top: 1rem;
-    margin-bottom: 0.4rem;
-  }
-
-  .link {
-    display: inline-block;
-    height: 1.5em;
-    padding: 0;
-    color: var(--couleur-texte-menu);
-    text-decoration: none;
-  }
-
-  .link:not(.rubrique) {
-    text-transform: none;
-    font-variant: small-caps;
-  }
-
-  .link:hover {
-    text-decoration: underline;
-  }
-
-  .user-footer {
-    align-self: center;
-    margin-top: auto;
-    margin-bottom: 10px;
-    color: var(--couleur-texte-menu);
-    font-family: var(--menu-font-family);
-  }
-
-  /* Desktop */
-  @media screen and (min-width: 768px) {
-    nav {
-      width: 200px;
-      text-align: initial;
-      font-size: 0.8rem;
-    }
-
-    nav ul {
-      margin-left: 0px;
-      padding-left: 10px;
-    }
-
-    nav li {
-      margin-left: 0;
-      padding: 0;
-    }
-
-    .user-footer {
-      align-self: flex-start;
-      padding-left: 10px;
-      font-size: 0.8rem;
-    }
-  }
-</style>
+      <SidebarGroup border class="mt-auto">
+        <SidebarItem
+          href={$url("/user")}
+          label={$currentUser.nom}
+          class="font-bold"
+          title="Configuration utilisateur"
+        />
+        <SidebarItem label="Se déconnecter" on:click={logout} />
+      </SidebarGroup>
+    </SidebarWrapper>
+  </Sidebar>
+</Drawer>

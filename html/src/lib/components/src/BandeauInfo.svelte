@@ -42,34 +42,14 @@
   ) as ConfigBandeauInfo[];
 </script>
 
-<section class="bandeau-info" style:margin-left={tv ? "0px" : "90px"}>
+<div class="text-xs lg:ml-0 lg:text-xl">
   {#each lignes as ligne}
     <div
-      class="ligne-bandeau-info"
+      class="p-1 lg:p-2"
       style:background-color={ligne.couleur}
       style:color={luminance.getTextColor(ligne.couleur)}
     >
       {@html ligne.message.replace(/\r\n|\r|\n/g, "<br/>")}
     </div>
   {/each}
-</section>
-
-<style>
-  .bandeau-info {
-    position: sticky;
-    top: 0px;
-    z-index: 1;
-    font-size: 1.2em;
-  }
-
-  .ligne-bandeau-info {
-    padding: 5px;
-  }
-
-  @media screen and (max-width: 480px) {
-    .bandeau-info {
-      margin-left: 65px;
-      font-size: 0.8em;
-    }
-  }
-</style>
+</div>

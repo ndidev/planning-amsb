@@ -134,10 +134,10 @@
 
   /**
    * Taille de l'icône.
+   *
+   * Exemple : "24px"
    */
-  export let size: string | number = "24px";
-
-  export let invert = false;
+  export let size: string = "24px";
 
   function colorIsCode(color: string): boolean {
     return (
@@ -150,11 +150,10 @@
 
 <button
   type="button"
-  class:invert
-  style:--color={colorIsCode(color) ? color : `var(--${color}-color`}
+  style:--color={colorIsCode(color) ? color : `var(--${color}-color)`}
   style:--hover-color={colorIsCode(hoverColor)
     ? hoverColor
-    : `var(--${hoverColor}-color`}
+    : `var(--${hoverColor}-color)`}
   style:width={size}
   style:height={size}
   {title}
@@ -174,16 +173,17 @@
     --red-color: hsl(4, 100%, 64%);
     --black-color: hsl(0, 0%, 0%);
 
+    --default-hover-color: hsl(0, 0%, 0%);
+
     --transition-time: 100ms;
 
-    background-color: transparent;
-    border: none;
+    appearance: none;
     cursor: pointer;
     color: var(--color, var(--default-color));
     font-size: var(--font-size);
-    vertical-align: middle;
     position: relative;
     isolation: isolate;
+    vertical-align: middle;
     transition: color var(--transition-time) linear;
   }
 
@@ -191,16 +191,20 @@
     color: var(--hover-color, var(--default-hover-color));
   }
 
+  button :global(.lucide-icon) {
+    vertical-align: baseline;
+  }
+
   /* Cercle au survol */
   button::before {
     --scale: 1.5;
     content: "";
     position: absolute;
-    top: calc(50% - 50%);
-    left: 0;
+    top: 50%;
+    left: 50%;
     width: 100%;
     height: 100%;
-    transform: scale(var(--scale, 1));
+    transform: translate(-50%, -50%) scale(var(--scale, 1));
     border-radius: 50%;
     background-color: var(--hover-color, var(--default-hover-color));
     opacity: 0;

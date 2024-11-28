@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 *,
 *::before,
 *::after {
@@ -16,6 +20,10 @@ body {
   vertical-align: middle;
 }
 
+.lucide-icon {
+  display: inline-block;
+}
+
 /* ------------------------------- */
 
 /* Notiflix Block */
@@ -29,17 +37,14 @@ body {
 
 /* Mobile */
 @media screen and (max-width: 767px) {
-  /* Ensemble "modifier-supprimer" des lignes de RDV */
-  .copie-modif-suppr {
+  .no-mobile {
     display: none;
   }
 }
 
 /* Desktop */
 @media screen and (min-width: 768px) {
-  .copie-modif-suppr {
-    min-width: 52px;
-    margin-left: auto;
-    visibility: hidden;
+  .no-desktop {
+    display: none;
   }
 }
