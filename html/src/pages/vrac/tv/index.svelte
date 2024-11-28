@@ -88,9 +88,11 @@
     ]}
   />
 
-  <BandeauInfo module="vrac" tv />
+  <div class="sticky top-0">
+    <BandeauInfo module="vrac" tv />
+  </div>
 
-  <main>
+  <main class="w-[95vw] mx-auto">
     {#if $vracRdvs && $vracProduits}
       {#each [...rdvsGroupes] as [date, rdvs] (date)}
         <LigneDate {date} />
@@ -121,12 +123,5 @@
     background-position: center center;
     background-attachment: fixed;
     background-size: 60%;
-  }
-
-  /* LISTE RDV */
-
-  main {
-    width: 95vw;
-    margin: auto;
   }
 </style>

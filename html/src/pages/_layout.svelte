@@ -23,17 +23,15 @@
 <SessionChecker />
 
 <Guard>
-  <div class="container">
-    <OfflineBanner />
+  <OfflineBanner />
 
-    <Menu module={rubrique} />
+  <Menu module={rubrique} />
 
-    <div class="page">
-      <slot />
-    </div>
-
-    <EnvFooter />
+  <div class="page mx-auto w-full">
+    <slot />
   </div>
+
+  <EnvFooter />
 </Guard>
 
 <style>

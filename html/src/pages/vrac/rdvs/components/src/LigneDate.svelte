@@ -30,73 +30,26 @@
   const formattedDate = new DateUtils(date).format().long;
 </script>
 
-<div class="ligne-date pure-u-1">
-  <span class="date">{formattedDate}</span>
+<div class="mb-2 mt-5 w-full first:mt-12 lg:mb-4 lg:mt-8 lg:text-xl">
+  <span class="text-green-400">{formattedDate}</span>
 
   <!-- Point d'exclamation si vive-eau -->
   {#if maree}
-    <span class="marees" title="Navires potentiellement à quai"
-      ><WavesIcon /></span
+    <span
+      class="relative ms-3 inline cursor-help align-top text-red-500"
+      title="Navires potentiellement à quai"><WavesIcon /></span
     >
   {/if}
 
   <!-- Pictogramme + nom des navires à quai si applicable -->
   {#if navires.length > 0}
-    <div class="navires">
-      <i class="icone-navire"><ShipIcon /></i>
-      <div class="texte-navires">{@html navires.join("<br />")}</div>
+    <div class="group relative ms-3 inline cursor-help text-red-500">
+      <i class="align-top"><ShipIcon /></i>
+      <div
+        class="absolute left-8 top-0 hidden h-auto w-auto whitespace-nowrap border-2 bg-amber-50 p-1 text-xs group-hover:block"
+      >
+        {@html navires.join("<br />")}
+      </div>
     </div>
   {/if}
 </div>
-
-<style>
-  .ligne-date {
-    font-size: 1.3em;
-    margin-top: 30px;
-    margin-bottom: 15px;
-  }
-
-  .date {
-    color: #58c85f;
-  }
-
-  .marees,
-  .navires {
-    display: inline;
-    position: relative;
-    margin-left: 10px;
-    font-weight: bold;
-    color: red;
-    cursor: help;
-  }
-
-  .marees,
-  .icone-navire {
-    vertical-align: top;
-  }
-
-  .texte-navires {
-    display: none;
-    position: absolute;
-    width: auto;
-    height: auto;
-    top: 0px;
-    left: 30px;
-    padding: 5px;
-    border: 2px solid black;
-    background-color: beige;
-    font-size: 0.5em;
-    color: red;
-    white-space: nowrap;
-  }
-
-  .navires:hover .texte-navires {
-    display: block;
-  }
-
-  @media screen and (max-width: 480px) {
-    .date {
-      font-size: 1em;
-    }
-  }
-</style>

@@ -2,9 +2,10 @@
 <script lang="ts">
   import { goto } from "@roxi/routify";
 
+  import { Label, Input, Select, Helper } from "flowbite-svelte";
   import Notiflix from "notiflix";
 
-  import { LucideButton, BoutonAction } from "@app/components";
+  import { PageHeading, LucideButton, BoutonAction } from "@app/components";
   import { LigneQualite } from "./components";
 
   import { vracProduits } from "@app/stores";
@@ -192,66 +193,68 @@
 
 <!-- routify:options guard="vrac/edit" -->
 
-<main class="formulaire">
-  <h1>Produit</h1>
+<main class="w-7/12 mx-auto">
+  <PageHeading>Produit</PageHeading>
 
-  <form class="pure-form pure-form-aligned">
+  <form class="flex flex-col gap-4 mb-4">
     <!-- Liste déroulante -->
-    <div class="pure-control-group">
-      <label />
-      <select id="id" name="id" bind:value={selected}>
-        <option value="">Nouveau...</option>
+    <div>
+      <Label />
+      <Select id="id" name="id" bind:value={selected} placeholder="">
+        <option value="" selected>Nouveau...</option>
         {#if $vracProduits}
           {#each [...$vracProduits.values()].sort( (a, b) => a.nom.localeCompare(b.nom) ) as produit}
             <option value={produit.id}>{produit.nom}</option>
           {/each}
         {/if}
-      </select>
+      </Select>
     </div>
 
     <!-- Nom produit -->
-    <div class="pure-control-group">
-      <label for="nom">Nom Produit</label>
-      <input
+    <div>
+      <Label for="nom">Nom Produit</Label>
+      <Input
         type="text"
         id="nom"
         name="nom"
         placeholder="Nom du produit"
-        maxlength="255"
+        maxlength={20}
         data-nom="Nom du produit"
         bind:value={produit.nom}
         required
       />
+      <Helper>20 caractères maximum</Helper>
     </div>
 
     <!-- Couleur produit -->
-    <div class="pure-control-group">
-      <label for="couleur">Couleur</label>
-      <input
+    <div>
+      <Label for="couleur">Couleur</Label>
+      <Input
         type="color"
         id="couleur"
         name="couleur"
         bind:value={produit.couleur}
-        class="couleur"
+        class="min-h-10 w-full lg:w-40 p-1"
         required
       />
     </div>
 
     <!-- Unité -->
-    <div class="pure-control-group">
-      <label for="unite">Unité</label>
-      <input
+    <div>
+      <Label for="unite">Unité</Label>
+      <Input
         type="text"
         id="unite"
         name="unite"
-        maxlength="10"
+        maxlength={10}
         data-nom="Unité"
         bind:value={produit.unite}
       />
+      <Helper>10 caractères maximum</Helper>
     </div>
 
     <!-- Qualités -->
-    <div class="pure-controls">
+    <div>
       <fieldset>
         <legend>
           Qualités
@@ -261,9 +264,8 @@
             on:click={ajouterQualite}
           />
         </legend>
-        <!-- <div class="pure-control-group"> -->
         <div class="input">
-          <ul id="qualites">
+          <ul id="qualites" class="m-0 p-0 list-none">
             <!-- Liste des qualités dynamique en fonction du produit choisi -->
             {#each produit.qualites as qualite}
               <LigneQualite {qualite} {supprimerQualite} />
@@ -271,13 +273,12 @@
           </ul>
           <div />
         </div>
-        <!-- </div> -->
       </fieldset>
     </div>
   </form>
 
   <!-- Validation/Annulation/Suppression -->
-  <div class="boutons">
+  <div class="text-center">
     {#if !produit.id}
       <!-- Bouton "Ajouter" -->
       <BoutonAction
@@ -306,16 +307,3 @@
     <BoutonAction preset="annuler" on:click={() => $goto("../")} />
   </div>
 </main>
-
-<style>
-  main {
-    width: 90%;
-    margin: auto;
-  }
-
-  #qualites {
-    margin: 0;
-    padding: 0;
-    list-style-type: none;
-  }
-</style>

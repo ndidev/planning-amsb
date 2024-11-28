@@ -19,15 +19,6 @@
   });
 </script>
 
-<div class="ligne-date pure-u-1">
+<div class="text-2xl w-full text-green-400 mt-8 mb-4">
   <span class="date">{formattedDate}</span>
 </div>
-
-<style>
-  .ligne-date {
-    font-size: 1.4em;
-    color: #58c85f;
-    margin-top: 30px;
-    margin-bottom: 15px;
-  }
-</style>

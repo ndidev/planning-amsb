@@ -199,9 +199,11 @@
   ]}
 />
 
-<BandeauInfo module="vrac" pc />
+<div class="sticky top-0 z-[1] ml-16 lg:ml-24">
+  <BandeauInfo module="vrac" pc />
+</div>
 
-<main>
+<main class="w-11/12 mx-auto mb-8">
   {#if $vracRdvs && $vracProduits}
     {#each archives ? [...groupedAppointments].reverse() : [...groupedAppointments] as [date, rdvs] (date)}
       <LigneDate
@@ -215,24 +217,10 @@
         {/each}
       </div>
     {:else}
-      <p class="no-appointment">Aucun rendez-vous.</p>
+      <p class="mt-5 text-2xl text-center">Aucun rendez-vous.</p>
     {/each}
   {:else}
     <!-- Chargement des données -->
     <Placeholder />
   {/if}
 </main>
-
-<style>
-  main {
-    width: 90vw;
-    margin: auto;
-    margin-bottom: 2rem;
-  }
-
-  .no-appointment {
-    margin-top: 20px;
-    font-size: 1.5em;
-    text-align: center;
-  }
-</style>

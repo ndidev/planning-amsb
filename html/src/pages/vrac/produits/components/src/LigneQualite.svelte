@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { Label, Input } from "flowbite-svelte";
+
   import { LucideButton } from "@app/components";
 
   import type { QualiteVrac } from "@app/types";
@@ -9,31 +11,35 @@
   $: isNew = qualite.id === null;
 </script>
 
-<li class="ligne-qualite" class:new={isNew}>
-  <label
-    >Nom :
-    <input
+<li
+  class="p-2 my-1 flex flex-col lg:flex-row gap-3 border-b-[1px]"
+  class:new={isNew}
+>
+  <div>
+    <Label for={"nom_" + qualite.id}>Nom</Label>
+    <Input
       type="text"
+      id={"nom_" + qualite.id}
       name="nom"
-      maxlength="255"
+      maxlength={255}
       data-nom="Nom de la qualité"
       bind:value={qualite.nom}
       required
     />
-  </label>
+  </div>
 
-  <label
-    >Couleur :
-    <input
+  <div>
+    <Label>Couleur</Label>
+    <Input
       type="color"
       name="couleur"
       bind:value={qualite.couleur}
-      class="couleur"
+      class="min-h-10 w-full lg:w-20 p-1"
       required
     />
-  </label>
+  </div>
 
-  <div class="poubelle">
+  <div class="ms-3 self-center">
     <LucideButton
       preset="delete"
       title="Supprimer la qualité"
@@ -43,15 +49,6 @@
 </li>
 
 <style>
-  .ligne-qualite {
-    padding: 8px;
-    margin-block: 2px;
-  }
-
-  .poubelle {
-    margin-left: 10px;
-  }
-
   .new {
     border-radius: 10px;
     background-color: antiquewhite;

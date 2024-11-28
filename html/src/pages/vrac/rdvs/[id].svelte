@@ -3,9 +3,15 @@
   import { tick, getContext } from "svelte";
   import { params, goto, redirect } from "@roxi/routify";
 
+  import { Label, Input, Textarea, Checkbox, Select } from "flowbite-svelte";
   import Notiflix from "notiflix";
 
-  import { Svelecte, Chargement, BoutonAction } from "@app/components";
+  import {
+    PageHeading,
+    Svelecte,
+    Chargement,
+    BoutonAction,
+  } from "@app/components";
   import {
     notiflixOptions,
     validerFormulaire,
@@ -161,27 +167,28 @@
 <!-- routify:options param-is-page -->
 <!-- routify:options guard="vrac/edit" -->
 
-<main class="formulaire">
-  <h1>Rendez-vous</h1>
+<main class="w-7/12 mx-auto">
+  <PageHeading>Rendez-vous</PageHeading>
 
   {#if !rdv}
     <Chargement />
   {:else}
     <form
-      class="pure-form pure-form-aligned"
+      class="flex flex-col gap-3 mb-4"
       bind:this={formulaire}
       use:preventFormSubmitOnEnterKeydown
     >
       <!-- Produit -->
-      <div class="pure-control-group form-control">
-        <label for="produit">Produit</label>
-        <select
+      <div>
+        <Label for="produit">Produit</Label>
+        <Select
           id="produit"
           name="produit"
           data-nom="Produit"
           bind:value={rdv.produit}
           on:change={selectionnerPremiereQualite}
           required
+          placeholder=""
         >
           <option value="">Sélectionnez</option>
           {#if $vracProduits}
@@ -189,29 +196,30 @@
               <option value={_produit.id}>{_produit.nom}</option>
             {/each}
           {/if}
-        </select>
+        </Select>
       </div>
 
       <!-- Qualité -->
-      <div class="pure-control-group form-control">
-        <label for="qualite">Qualité</label>
-        <select
+      <div>
+        <Label for="qualite">Qualité</Label>
+        <Select
           id="qualite"
           name="qualite"
           data-nom="Qualité"
           bind:value={rdv.qualite}
+          placeholder=""
           disabled={produit.qualites.length === 0}
         >
           {#each produit.qualites as qualite}
             <option value={qualite.id}>{qualite.nom}</option>
           {/each}
-        </select>
+        </Select>
       </div>
 
       <!-- Date -->
-      <div class="pure-control-group form-control">
-        <label for="date_rdv">Date (jj/mm/aaaa)</label>
-        <input
+      <div>
+        <Label for="date_rdv">Date (jj/mm/aaaa)</Label>
+        <Input
           type="date"
           name="date_rdv"
           id="date_rdv"
@@ -222,9 +230,9 @@
       </div>
 
       <!-- Heure -->
-      <div class="pure-control-group form-control">
-        <label for="heure">Heure RDV (hh:mm)</label>
-        <input
+      <div>
+        <Label for="heure">Heure RDV (hh:mm)</Label>
+        <Input
           type="time"
           name="heure"
           id="heure"
@@ -234,15 +242,15 @@
         />
       </div>
 
-      <!-- Quantité + unité -->
-      <div class="pure-control-group form-control">
-        <label for="quantite">
+      <!-- Quantité -->
+      <div>
+        <Label for="quantite">
           Quantité
           {#if produit.unite}
             (<span id="unite">{produit.unite}</span>)
           {/if}
-        </label>
-        <input
+        </Label>
+        <Input
           type="number"
           min="0"
           name="quantite"
@@ -251,32 +259,25 @@
           bind:value={rdv.quantite}
           required
         />
-        <span class="pure-form-message-inline">
-          <label class="pure-checkbox"
-            ><input
-              type="checkbox"
-              name="max"
-              id="max"
-              bind:checked={rdv.max}
-            /> Max</label
-          >
-        </span>
+      </div>
+
+      <!-- Max -->
+      <div>
+        <Checkbox name="max" bind:checked={rdv.max}
+          >Max (la quantité ne doit pas être dépassée)</Checkbox
+        >
       </div>
 
       <!-- Commande prête -->
-      <div class="pure-control-group">
-        <label for="commande_prete">Commande prête</label>
-        <input
-          type="checkbox"
-          name="commande_prete"
-          id="commande_prete"
-          bind:checked={rdv.commande_prete}
-        />
+      <div>
+        <Checkbox name="commande_prete" bind:checked={rdv.commande_prete}
+          >Commande prête</Checkbox
+        >
       </div>
 
       <!-- Fournisseur -->
       <div class="pure-control-group">
-        <label for="fournisseur">Fournisseur</label>
+        <Label for="fournisseur">Fournisseur</Label>
         <Svelecte
           inputId="fournisseur"
           type="tiers"
@@ -289,7 +290,7 @@
 
       <!-- Client -->
       <div class="pure-control-group">
-        <label for="client">Client</label>
+        <Label for="client">Client</Label>
         <Svelecte
           inputId="client"
           type="tiers"
@@ -302,7 +303,7 @@
 
       <!-- Transporteur -->
       <div class="pure-control-group">
-        <label for="transporteur">Transporteur</label>
+        <Label for="transporteur">Transporteur</Label>
         <Svelecte
           inputId="transporteur"
           type="tiers"
@@ -314,8 +315,8 @@
 
       <!-- Numéro commande -->
       <div class="pure-control-group form-control">
-        <label for="num_commande">Numéro commande</label>
-        <input
+        <Label for="num_commande">Numéro commande</Label>
+        <Input
           type="text"
           name="num_commande"
           id="num_commande"
@@ -326,31 +327,25 @@
 
       <!-- Commentaire -->
       <div class="pure-control-group form-control">
-        <label for="commentaire">Commentaire</label>
-        <textarea
+        <Label for="commentaire">Commentaire</Label>
+        <Textarea
           class="rdv_commentaire"
           name="commentaire"
           id="commentaire"
           bind:value={rdv.commentaire}
-          rows="3"
-          cols="30"
+          rows={3}
+          cols={30}
         />
       </div>
 
       <!-- Archive -->
-      <div class="pure-control-group">
-        <label for="archive">Archivé</label>
-        <input
-          type="checkbox"
-          name="archive"
-          id="archive"
-          bind:checked={rdv.archive}
-        />
+      <div>
+        <Checkbox name="archive" bind:checked={rdv.archive}>Archivé</Checkbox>
       </div>
     </form>
 
     <!-- Validation/Annulation/Suppression -->
-    <div class="boutons">
+    <div class="text-center">
       {#if isNew}
         <!-- Bouton "Ajouter" -->
         <BoutonAction
@@ -383,6 +378,3 @@
     </div>
   {/if}
 </main>
-
-<style>
-</style>

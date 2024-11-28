@@ -160,28 +160,41 @@
   </Modal>
 {/if}
 
-<div class="rdv pure-g" bind:this={ligne}>
-  <div class="heure pure-u-lg-1-24 pure-u-4-24">{rdv.heure ?? ""}</div>
+<div
+  class="group grid grid-cols-[50px_1fr] gap-2 border-b-[1px] border-gray-300 py-2 last:border-none lg:grid-cols-[4%_16%_4%_8%_29%_8%_16%_auto] lg:text-lg"
+  bind:this={ligne}
+>
+  <!-- Heure -->
+  <div
+    class="font-bold text-[#d91ffa] [grid-area:1/1/6/2] lg:col-auto lg:row-auto"
+  >
+    {rdv.heure ?? ""}
+  </div>
 
-  <div class="produit-qualite pure-u-lg-4-24 pure-u-12-24">
-    <span class="produit" style:color={produit.couleur}>{produit.nom}</span>
+  <!-- Produit + qualité -->
+  <div class="font-bold">
+    <span style:color={produit.couleur}>{produit.nom}</span>
+
     {#if rdv.qualite}
-      <span class="qualite" style:color={qualite.couleur}>{qualite.nom}</span>
-    {/if}
-    {#if rdv.commande_prete}
-      <span class="no-desktop" title="Commande prête"><PackageIcon /></span>
+      <span style:color={qualite.couleur}>{qualite.nom}</span>
     {/if}
   </div>
 
-  <div class="commande-prete pure-u-1 pure-u-lg-1-24 no-mobile">
+  <!-- Commande prête -->
+  <div class="col-start-1 row-start-2 lg:col-auto lg:row-auto">
     {#if rdv.commande_prete}
-      <div class="commande-prete__status">
+      <div
+        class="text-center lg:group-hover:[display:var(--display-on-over)] align-middle"
+        style:--display-on-over={$currentUser.canEdit("vrac")
+          ? "none"
+          : "block"}
+      >
         <PackageIcon />
       </div>
     {/if}
 
     {#if $currentUser.canEdit("vrac")}
-      <div class="commande-prete__bouton">
+      <div class="hidden text-center lg:group-hover:block align-middle">
         <LucideButton
           icon={rdv.commande_prete ? PackageXIcon : PackageCheckIcon}
           title={rdv.commande_prete
@@ -193,27 +206,29 @@
     {/if}
   </div>
 
-  <div
-    class="quantite-unite pure-u-lg-2-24 pure-u-6-24"
-    style:color={rdv.max ? "red" : "initial"}
-  >
-    <span class="quantite">{rdv.quantite}</span>
-    <span class="unite">{produit.unite}</span>
-    <span class="max">{rdv.max ? "max" : ""}</span>
+  <!-- Quantité + unité + max -->
+  <div style:color={rdv.max ? "red" : "initial"}>
+    <span class="font-bold">{rdv.quantite}</span>
+    <span>{produit.unite}</span>
+    <span>{rdv.max ? "max" : ""}</span>
   </div>
 
-  <div class="client pure-u-lg-7-24 pure-u-1">
+  <!-- Client -->
+  <div>
     {client.nom_court}
     {client.ville}
   </div>
-  <div class="transporteur pure-u-lg-3-24 pure-u-1">
+
+  <!-- Transporteur -->
+  <div class="font-bold">
     {transporteur.nom_court}
   </div>
 
-  <div class="num_commande pure-u-lg-3-24 pure-u-12-24">{rdv.num_commande}</div>
+  <!-- Numéro de commande -->
+  <div>{rdv.num_commande}</div>
 
   {#if $currentUser.canEdit("vrac")}
-    <div class="copie-modif-suppr">
+    <div class="no-mobile invisible ms-auto group-hover:visible">
       <LucideButton
         preset="copy"
         on:click={() => {
@@ -235,119 +250,11 @@
     </div>
   {/if}
 
-  <div class="pure-u-lg-6-24">
-    <!-- Espacement -->
-  </div>
-  <div class="commentaire pure-u-lg-17-24 pure-u-1">
+  <!-- Espacement -->
+  <div class="lg:col-span-3"></div>
+
+  <!-- Commentaire -->
+  <div class="lg:col-span-4">
     {@html rdv.commentaire.replace(/(?:\r\n|\r|\n)/g, "<br>")}
   </div>
-  <!-- <hr /> -->
 </div>
-
-<style>
-  .rdv {
-    border-bottom: 1px solid #ddd;
-  }
-
-  .rdv:last-child {
-    border-bottom: none;
-  }
-
-  .heure,
-  .produit-qualite,
-  .quantite-unite,
-  .client,
-  .transporteur,
-  .num_commande {
-    display: inline-block;
-  }
-
-  .qualite,
-  .unite,
-  .max {
-    margin-left: 0.3em;
-  }
-
-  .heure {
-    font-weight: bold;
-    color: #d91ffa;
-  }
-
-  .produit-qualite,
-  .quantite,
-  .transporteur {
-    font-weight: bold;
-  }
-
-  .commande-prete__bouton {
-    display: none;
-  }
-
-  /* Mobile */
-  @media screen and (max-width: 767px) {
-    .no-mobile {
-      display: none;
-    }
-
-    .rdv {
-      padding: 8px 0;
-    }
-
-    .produit-qualite {
-      margin-left: 0;
-    }
-
-    .client,
-    .transporteur,
-    .num_commande,
-    .commentaire {
-      margin-left: 16.667%;
-    }
-
-    .quantite-unite {
-      margin-left: auto;
-      text-align: right;
-    }
-
-    .commande-prete {
-      text-align: left;
-    }
-  }
-
-  /* Desktop */
-  @media screen and (min-width: 768px) {
-    .no-desktop {
-      display: none;
-    }
-
-    .rdv {
-      font-size: 1.2rem;
-      padding: 8px 0 8px 5px;
-    }
-
-    .rdv:hover > .copie-modif-suppr {
-      visibility: visible;
-      margin-right: 10px;
-    }
-
-    .produit-qualite,
-    .client,
-    .transporteur,
-    .num_commande,
-    .commentaire {
-      margin-left: 10px;
-    }
-
-    .commande-prete {
-      text-align: center;
-      min-height: 2rem;
-    }
-    .rdv:hover .commande-prete__status {
-      display: none;
-    }
-
-    .rdv:hover .commande-prete__bouton {
-      display: inline-block;
-    }
-  }
-</style>
