@@ -3,6 +3,8 @@
   import { onMount, getContext } from "svelte";
   import type { Writable } from "svelte/store";
 
+  import { Label, Input, Button } from "flowbite-svelte";
+
   import { appURLs } from "@app/utils";
 
   import { currentUser } from "@app/stores";
@@ -18,14 +20,18 @@
 
   let loginInput: HTMLInputElement;
   let passwordInput: HTMLInputElement;
-  let loginButton: HTMLButtonElement;
+
+  const loginButtonProperties = {
+    text: "S'identifier",
+    disabled: false,
+  };
 
   /**
    * Procéder à l'identification de l'utilisateur.
    */
   async function logUserIn() {
-    loginButton.textContent = "Connexion...";
-    loginButton.setAttribute("disabled", "true");
+    loginButtonProperties.text = "Connexion...";
+    loginButtonProperties.disabled = true;
     loginMessage = "";
 
     const url = new URL(appURLs.auth);
@@ -63,8 +69,8 @@
     } catch (erreur) {
       loginMessage = erreur.message;
     } finally {
-      loginButton.textContent = "S'identifier";
-      loginButton.removeAttribute("disabled");
+      loginButtonProperties.text = "S'identifier";
+      loginButtonProperties.disabled = false;
     }
   }
 
@@ -76,61 +82,52 @@
   });
 </script>
 
-<div class="login-conteneur">
-  <form
-    class="pure-form pure-form-stacked"
-    id="login-form"
-    on:submit|preventDefault={logUserIn}
-  >
+<div class="w-[75vw] max-w-96">
+  <form on:submit|preventDefault={logUserIn}>
     <fieldset>
-      <div class="input-group">
-        <label for="login">Identifiant</label>
-        <input
-          type="text"
-          name="login"
-          id="login"
-          bind:this={loginInput}
-          bind:value={$login}
-          autocomplete="username"
-          placeholder="Identifiant"
-          required
-        />
+      <div class="mb-4">
+        <Label for="login">Identifiant</Label>
+        <Input let:props>
+          <input
+            type="text"
+            name="login"
+            id="login"
+            bind:this={loginInput}
+            bind:value={$login}
+            autocomplete="username"
+            placeholder="Identifiant"
+            required
+            {...props}
+          />
+        </Input>
       </div>
 
-      <div class="input-group">
-        <label for="password">Mot de passe</label>
-        <input
-          type="password"
-          name="password"
-          id="password"
-          bind:this={passwordInput}
-          bind:value={password}
-          autocomplete="current-password"
-          placeholder="Mot de passe"
-        />
+      <div class="mb-4">
+        <Label for="password">Mot de passe</Label>
+        <Input let:props>
+          <input
+            type="password"
+            name="password"
+            id="password"
+            bind:this={passwordInput}
+            bind:value={password}
+            autocomplete="current-password"
+            placeholder="Mot de passe"
+            {...props}
+          />
+        </Input>
       </div>
 
-      <div class="pure-controls">
-        <button
-          class="pure-button pure-button-primary pure-u-1"
+      <div>
+        <Button
           type="submit"
-          bind:this={loginButton}
+          class="w-full"
+          disabled={loginButtonProperties.disabled}
+          >{loginButtonProperties.text}</Button
         >
-          S'identifier
-        </button>
       </div>
     </fieldset>
   </form>
 
-  <div id="login-message" class="login-message">{loginMessage}</div>
+  <div class="mt-12 text-center text-error-600">{loginMessage}</div>
 </div>
-
-<style>
-  .input-group {
-    margin: 1rem 0;
-  }
-
-  .login-message {
-    text-align: center;
-  }
-</style>

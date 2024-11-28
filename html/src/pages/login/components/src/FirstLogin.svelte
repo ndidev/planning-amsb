@@ -12,6 +12,7 @@
   import { onMount, getContext } from "svelte";
   import type { Writable } from "svelte/store";
 
+  import { Label, Input, Button } from "flowbite-svelte";
   import Notiflix from "notiflix";
 
   import { appURLs } from "@app/utils";
@@ -31,8 +32,9 @@
    */
   const { LONGUEUR_MINI_PASSWORD } = $authInfo;
 
-  let validerButton: HTMLButtonElement;
   let passwordInput: HTMLInputElement;
+
+  const validerButtonProperties = { disabled: false };
 
   /**
    * Vérifier que les deux champs password (mdp & confirmation) sont identiques et corrects.
@@ -61,11 +63,7 @@
       }
     }
 
-    if (validerButton) {
-      conditionsValides
-        ? validerButton.removeAttribute("disabled")
-        : validerButton.setAttribute("disabled", "true");
-    }
+    validerButtonProperties.disabled = !conditionsValides;
   }
 
   /**
@@ -84,21 +82,21 @@
     // Longueur
     conditionsMessages.push(
       longueur
-        ? `✔ Le mot de passe fait ${LONGUEUR_MINI_PASSWORD} caractères ou plus`
+        ? `✅ Le mot de passe fait ${LONGUEUR_MINI_PASSWORD} caractères ou plus`
         : `❌ Le mot de passe doit faire ${LONGUEUR_MINI_PASSWORD} caractères au minimum`
     );
 
     // Différent de l'identifiant
     conditionsMessages.push(
       differentIdentifiant
-        ? `✔ Le mot de passe est différent de l'identifiant (${$login})`
+        ? `✅ Le mot de passe est différent de l'identifiant (${$login})`
         : `❌ Le mot de passe ne peut pas être identique à l'identifiant (${$login})`
     );
 
     // Identiques
     conditionsMessages.push(
       identiques
-        ? "✔ Les mots de passe sont identiques"
+        ? "✅ Les mots de passe sont identiques"
         : "❌ Les mots de passe ne sont pas identiques"
     );
   }
@@ -124,8 +122,10 @@
   /**
    * Initialiser le mot de passe.
    */
-  async function initialiserPassword() {
-    validerButton.setAttribute("disabled", "true");
+  async function initialiserPassword(e: Event) {
+    e.preventDefault();
+
+    validerButtonProperties.disabled = true;
 
     const url = new URL(appURLs.auth);
     url.pathname += "first-login";
@@ -150,7 +150,7 @@
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
     } finally {
-      validerButton.removeAttribute("disabled");
+      validerButtonProperties.disabled = false;
     }
   }
 
@@ -159,11 +159,11 @@
   });
 </script>
 
-<div class="first-ligon-conteneur">
-  <div class="first-login-header">
+<div>
+  <div class="mx-auto mb-8 text-center text-lg">
     Initialisation du mot de passe
 
-    <div class="password-tip">
+    <div class="mt-5 text-base">
       Un mot de passe <strong>long</strong> vaut mieux qu'un mot de passe
       compliqué.<br />
       <br />
@@ -172,30 +172,30 @@
     </div>
   </div>
 
-  <form class="pure-form pure-form-aligned" id="first-login-form">
+  <form>
     <fieldset>
-      <!-- Login -->
-      <input hidden name="login" />
-
       <!-- Mot de passe -->
-      <div class="pure-control-group">
-        <label for="new-password">Mot de passe</label>
-        <input
-          type="password"
-          id="new-password"
-          name="password"
-          bind:value={password}
-          bind:this={passwordInput}
-          autocomplete="new-password"
-          placeholder="Mot de passe"
-          minlength={LONGUEUR_MINI_PASSWORD}
-        />
+      <div class="mb-4">
+        <Label for="new-password">Mot de passe</Label>
+        <Input let:props>
+          <input
+            type="password"
+            id="new-password"
+            name="password"
+            bind:value={password}
+            bind:this={passwordInput}
+            autocomplete="new-password"
+            placeholder="Mot de passe"
+            minlength={LONGUEUR_MINI_PASSWORD}
+            {...props}
+          />
+        </Input>
       </div>
 
       <!-- Confirmation mot de passe -->
-      <div class="pure-control-group">
-        <label for="new-password-confirm">Confirmation mot de passe</label>
-        <input
+      <div class="mb-4">
+        <Label for="new-password-confirm">Confirmation mot de passe</Label>
+        <Input
           type="password"
           id="new-password-confirm"
           bind:value={passwordConfirm}
@@ -204,40 +204,21 @@
         />
       </div>
 
-      <div class="pure-controls">
-        <button
-          class="pure-button pure-button-primary"
+      <div class="mb-4 text-center">
+        <Button
           type="submit"
-          bind:this={validerButton}
-          on:click|preventDefault={initialiserPassword}
+          on:click={initialiserPassword}
+          disabled={validerButtonProperties.disabled}
         >
           Définir le mot de passe
-        </button>
+        </Button>
       </div>
     </fieldset>
   </form>
 
-  <div id="first-login-message">
+  <div class="mx-auto">
     {#each conditionsMessages as message}
       <div>{message}</div>
     {/each}
   </div>
 </div>
-
-<style>
-  .first-login-header {
-    margin: auto;
-    margin-bottom: 30px;
-    text-align: center;
-    font-size: large;
-  }
-
-  .first-login-header > .password-tip {
-    margin-top: 20px;
-    font-size: medium;
-  }
-
-  #first-login-message {
-    margin: auto;
-  }
-</style>
