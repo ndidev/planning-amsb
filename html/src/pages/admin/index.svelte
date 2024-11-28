@@ -1,7 +1,9 @@
 <!-- routify:options title="Planning AMSB - Administration" -->
 <script lang="ts">
+  import { Accordion, Button } from "flowbite-svelte";
+
   import { LigneCompteUtilisateur } from "./components";
-  import { Chargement, SseConnection } from "@app/components";
+  import { Chargement, PageHeading, SseConnection } from "@app/components";
   import { adminUsers } from "@app/stores";
 
   $: comptes = [...$adminUsers.values()].sort((a, b) =>
@@ -13,37 +15,20 @@
 
 <SseConnection subscriptions={["admin/users"]} />
 
-<main class="formulaire">
-  <h1>Administration</h1>
+<main class="w-7/12 mx-auto">
+  <PageHeading>Administration</PageHeading>
 
-  <div class="ajouter-compte">
-    <button on:click={() => adminUsers.new()}>Ajouter un compte</button>
+  <div class="text-center mb-4">
+    <Button on:click={() => adminUsers.new()}>Ajouter un compte</Button>
   </div>
 
   {#if $adminUsers.size === 0}
     <Chargement />
   {:else}
-    <ul>
+    <Accordion multiple>
       {#each comptes as compte (compte.uid)}
         <LigneCompteUtilisateur id={compte.uid} />
       {/each}
-    </ul>
+    </Accordion>
   {/if}
 </main>
-
-<style>
-  ul {
-    margin-bottom: 50px;
-  }
-
-  .ajouter-compte {
-    display: flex;
-  }
-
-  .ajouter-compte > button {
-    align-self: center;
-    margin: 10px auto 15px;
-    padding: 7px;
-    cursor: pointer;
-  }
-</style>
