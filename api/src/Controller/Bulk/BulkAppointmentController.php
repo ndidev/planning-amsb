@@ -15,7 +15,6 @@ use App\Core\Array\Environment;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\DTO\Filter\BulkFilterDTO;
-use App\Entity\Bulk\BulkAppointment;
 use App\Service\BulkService;
 
 final class BulkAppointmentController extends Controller

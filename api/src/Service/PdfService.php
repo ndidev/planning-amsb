@@ -55,7 +55,7 @@ final class PdfService
             ->setModule($rawDataAH->getString('module'))
             ->setSupplier($thirdPartyService->getThirdParty($rawDataAH->getInt('fournisseur')))
             ->setAutoSend($rawDataAH->getBool('envoi_auto'))
-            ->setEmails($rawDataAH->getArray('liste_emails'))
+            ->setEmails($rawDataAH->getString('liste_emails'))
             ->setDaysBefore($rawDataAH->getInt('jours_avant', 0))
             ->setDaysAfter($rawDataAH->getInt('jours_apres', 0));
 

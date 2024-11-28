@@ -204,7 +204,7 @@ final class ShippingService
      */
     public function callExists(int $id): bool
     {
-        return $this->shippingRepository->exists($id);
+        return $this->shippingRepository->callExists($id);
     }
 
     /**

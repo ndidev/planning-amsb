@@ -107,7 +107,7 @@ final class ShippingRepository extends Repository
      * 
      * @param int $id Identifiant de l'entrée.
      */
-    public function exists(int $id): bool
+    public function callExists(int $id): bool
     {
         return $this->mysql->exists("consignation_planning", $id);
     }
