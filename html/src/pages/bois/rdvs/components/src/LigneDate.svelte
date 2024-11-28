@@ -26,7 +26,7 @@
   const formattedDate = new DateUtils(date).format().long;
 </script>
 
-<div class="mb-2 mt-5 w-full first:mt-12 lg:mb-4 lg:mt-8 lg:text-xl">
+<div class="mb-2 mt-5 w-full first:mt-12 lg:mb-4 lg:mt-8 lg:text-lg">
   <div class="inline-block text-green-400">{formattedDate}</div>
 
   <div class="camions-stats inline-block">
