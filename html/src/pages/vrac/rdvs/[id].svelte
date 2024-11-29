@@ -3,7 +3,7 @@
   import { tick, getContext } from "svelte";
   import { params, goto, redirect } from "@roxi/routify";
 
-  import { Label, Input, Textarea, Checkbox, Select } from "flowbite-svelte";
+  import { Label, Input, Textarea, Toggle, Select } from "flowbite-svelte";
   import Notiflix from "notiflix";
 
   import {
@@ -167,7 +167,7 @@
 <!-- routify:options param-is-page -->
 <!-- routify:options guard="vrac/edit" -->
 
-<main class="w-7/12 mx-auto">
+<main class="mx-auto w-10/12 lg:w-1/3">
   <PageHeading>Rendez-vous</PageHeading>
 
   {#if !rdv}
@@ -263,15 +263,15 @@
 
       <!-- Max -->
       <div>
-        <Checkbox name="max" bind:checked={rdv.max}
-          >Max (la quantité ne doit pas être dépassée)</Checkbox
+        <Toggle name="max" bind:checked={rdv.max}
+          >Max (la quantité ne doit pas être dépassée)</Toggle
         >
       </div>
 
       <!-- Commande prête -->
       <div>
-        <Checkbox name="commande_prete" bind:checked={rdv.commande_prete}
-          >Commande prête</Checkbox
+        <Toggle name="commande_prete" bind:checked={rdv.commande_prete}
+          >Commande prête</Toggle
         >
       </div>
 
@@ -340,7 +340,7 @@
 
       <!-- Archive -->
       <div>
-        <Checkbox name="archive" bind:checked={rdv.archive}>Archivé</Checkbox>
+        <Toggle name="archive" bind:checked={rdv.archive}>Archivé</Toggle>
       </div>
     </form>
 

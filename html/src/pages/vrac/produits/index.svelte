@@ -193,7 +193,7 @@
 
 <!-- routify:options guard="vrac/edit" -->
 
-<main class="w-7/12 mx-auto">
+<main class="mx-auto w-10/12 lg:w-1/3">
   <PageHeading>Produit</PageHeading>
 
   <form class="flex flex-col gap-4 mb-4">

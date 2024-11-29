@@ -48,10 +48,12 @@
   ]}
 />
 
-<CoteCesson />
-<BandeauInfo module="consignation" pc />
+<div class="sticky top-0 z-[1] ml-16 lg:ml-24">
+  <CoteCesson />
+  <BandeauInfo module="consignation" pc />
+</div>
 
-<main>
+<main class="w-full mb-8">
   {#if escales}
     {#each [...escales.values()] as escale (escale.id)}
       <LigneEscale {escale} />
@@ -60,9 +62,3 @@
     <Chargement />
   {/if}
 </main>
-
-<style>
-  main {
-    margin-bottom: 2rem;
-  }
-</style>

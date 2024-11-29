@@ -4,6 +4,7 @@
   import { writable } from "svelte/store";
 
   import { Filtre as BandeauFiltre } from "./components";
+  import { PageHeading } from "@app/components";
 
   import { fetcher, Filtre } from "@app/utils";
 
@@ -68,8 +69,8 @@
 
 <!-- routify:options guard="bois" -->
 
-<main class="formulaire">
-  <h1>Statistiques</h1>
+<main>
+  <PageHeading>Statistiques</PageHeading>
 
   <!-- Filtre par date/client -->
   <BandeauFiltre />
@@ -146,13 +147,10 @@
 
 <style>
   main {
-    width: calc(95% - 200px); /* 200px = largeur du menu */
-    margin-left: 200px;
-  }
-
-  h1 {
-    margin: 20px 0;
-    text-align: center;
+    /* Largeur du menu = 256px */
+    --margin-left: 280px;
+    width: calc(95% - var(--margin-left));
+    margin-left: var(--margin-left);
   }
 
   /* STATS */

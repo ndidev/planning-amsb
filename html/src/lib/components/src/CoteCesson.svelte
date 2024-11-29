@@ -55,33 +55,13 @@
 </script>
 
 {#if coteCesson}
-  <section class="bandeau-info" style:margin-left={tv ? "0px" : "90px"}>
+  <div class="text-xs lg:ml-0 lg:text-xl">
     <div
-      class="ligne-bandeau-info"
+      class="p-1 lg:p-2"
       style:background-color={bgColor}
       style:color={couleurTexte}
     >
       Côte Cesson : {coteCesson.toFixed(2)} m
     </div>
-  </section>
+  </div>
 {/if}
-
-<style>
-  .bandeau-info {
-    position: sticky;
-    top: 0px;
-    z-index: 1;
-    font-size: 1.2em;
-  }
-
-  .ligne-bandeau-info {
-    padding: 5px;
-  }
-
-  @media screen and (max-width: 480px) {
-    .bandeau-info {
-      margin-left: 65px;
-      font-size: 0.8em;
-    }
-  }
-</style>

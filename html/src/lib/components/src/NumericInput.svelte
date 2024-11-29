@@ -40,7 +40,7 @@
   export let id = "";
   export let name = "";
   export let required = false;
-  let className = "";
+  let className = "w-full lg:min-w-min lg:max-w-max";
   export { className as class };
 
   /** Decimal separator used by the browser. */
@@ -142,13 +142,12 @@
   });
 </script>
 
-<Input let:props>
+<Input let:props class={className}>
   <input
     type="text"
     autocomplete="off"
     bind:this={input}
     bind:value
-    class={className}
     {placeholder}
     {id}
     {name}

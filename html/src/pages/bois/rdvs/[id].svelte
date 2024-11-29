@@ -3,7 +3,7 @@
   import { getContext } from "svelte";
   import { params, goto, redirect } from "@roxi/routify";
 
-  import { Label, Input, Checkbox, Textarea } from "flowbite-svelte";
+  import { Label, Input, Checkbox, Toggle, Textarea } from "flowbite-svelte";
   import {
     CircleHelpIcon,
     SparklesIcon,
@@ -97,25 +97,22 @@
    * Pour ne pas perdre les informations sur les secondes,
    * celles-ci sont rajoutée lors de la soumission du formulaire.
    *
-   * @param heure
+   * @param time
    * @param type
    */
-  function ajouterSecondes(
-    heure: string,
-    type: "arrivee" | "depart"
-  ): string | null {
-    if (!heure) {
+  function addSeconds(time: string, type: "arrivee" | "depart"): string | null {
+    if (!time) {
       return null;
     }
 
-    const heure_rdv = (rdv["heure_" + type] as string) || "";
+    const appointmentTime = (rdv["heure_" + type] as string) || "";
 
-    if (heure === heure_rdv.substring(0, 5)) {
+    if (time === appointmentTime.substring(0, 5)) {
       // Si l'heure n'a pas changé, conserver les secondes
-      return heure_rdv;
+      return appointmentTime;
     } else {
       // Si l'heure a changé, mettre les secondes à zéro
-      return heure + ":00";
+      return time + ":00";
     }
   }
 
@@ -124,7 +121,7 @@
    * lors de la saisie du client
    * si le champ livraison est vide
    */
-  function remplirLivraisonAuto() {
+  function autoFillDeliveryPlace() {
     if (rdv.client !== null && rdv.livraison === null) {
       rdv.livraison = rdv.client;
     }
@@ -133,7 +130,7 @@
   /**
    * Vérification du numéro BL directement pour éviter doublon
    */
-  async function verifierNumeroBL() {
+  async function checkDeliveryNoteNumber() {
     try {
       if (numero_bl === rdv.numero_bl || numero_bl === "") {
         rdv.numero_bl = numero_bl;
@@ -144,9 +141,9 @@
         `bois/check-delivery-note-available`,
         {
           searchParams: {
-            supplierId: rdv.fournisseur.toString(),
+            supplierId: rdv.fournisseur?.toString(),
             deliveryNoteNumber: numero_bl,
-            currentAppointmentId: rdv.id.toString(),
+            currentAppointmentId: rdv.id?.toString(),
           },
         }
       );
@@ -261,8 +258,8 @@
     boutonAjouter.$set({ disabled: true });
 
     try {
-      rdv.heure_arrivee = ajouterSecondes(heure_arrivee, "arrivee");
-      rdv.heure_depart = ajouterSecondes(heure_depart, "depart");
+      rdv.heure_arrivee = addSeconds(heure_arrivee, "arrivee");
+      rdv.heure_depart = addSeconds(heure_depart, "depart");
 
       await boisRdvs.create(rdv);
 
@@ -284,8 +281,8 @@
     boutonModifier.$set({ disabled: true });
 
     try {
-      rdv.heure_arrivee = ajouterSecondes(heure_arrivee, "arrivee");
-      rdv.heure_depart = ajouterSecondes(heure_depart, "depart");
+      rdv.heure_arrivee = addSeconds(heure_arrivee, "arrivee");
+      rdv.heure_depart = addSeconds(heure_depart, "depart");
 
       await boisRdvs.update(rdv);
 
@@ -333,7 +330,7 @@
 <!-- routify:options param-is-page -->
 <!-- routify:options guard="bois/edit" -->
 
-<main class="w-7/12 mx-auto">
+<main class="mx-auto w-10/12 lg:w-1/3">
   <PageHeading>Rendez-vous</PageHeading>
 
   {#if !rdv}
@@ -344,48 +341,55 @@
       bind:this={formulaire}
       use:preventFormSubmitOnEnterKeydown
     >
-      <!-- Date -->
-      <div>
-        <Label for="date_rdv">Date (jj/mm/aaaa)</Label>
-        <Input
-          type="date"
-          id="date_rdv"
-          name="date_rdv"
-          data-nom="Date"
-          bind:value={rdv.date_rdv}
-          required={!rdv.attente}
-        />
+      <div class="flex flex-col lg:flex-row gap-3 lg:gap-8">
+        <!-- Date -->
+        <div>
+          <Label for="date_rdv">Date (jj/mm/aaaa)</Label>
+          <Input
+            type="date"
+            id="date_rdv"
+            name="date_rdv"
+            data-nom="Date"
+            bind:value={rdv.date_rdv}
+            required={!rdv.attente}
+            class="w-full lg:w-max"
+          />
+        </div>
+
+        <!-- En attente -->
+        <div class="lg:self-center">
+          <Toggle name="attente" bind:checked={rdv.attente}
+            >En attente de confirmation</Toggle
+          >
+        </div>
       </div>
 
-      <!-- En attente -->
-      <div>
-        <Checkbox name="attente" bind:checked={rdv.attente}
-          >En attente de confirmation</Checkbox
-        >
-      </div>
+      <div class="flex flex-col lg:flex-row gap-3 lg:gap-8">
+        <!-- Heure arrivée -->
+        <div>
+          <Label for="heure_arrivee">Heure arrivée (hh:mm)</Label>
+          <Input
+            type="time"
+            name="heure_arrivee"
+            id="heure_arrivee"
+            bind:value={heure_arrivee}
+            placeholder="hh:mm"
+            class="w-full lg:w-max"
+          />
+        </div>
 
-      <!-- Heure arrivée -->
-      <div>
-        <Label for="heure_arrivee">Heure arrivée (hh:mm)</Label>
-        <Input
-          type="time"
-          name="heure_arrivee"
-          id="heure_arrivee"
-          bind:value={heure_arrivee}
-          placeholder="hh:mm"
-        />
-      </div>
-
-      <!-- Heure départ -->
-      <div>
-        <Label for="heure_depart">Heure départ (hh:mm)</Label>
-        <Input
-          type="time"
-          name="heure_depart"
-          id="heure_depart"
-          bind:value={heure_depart}
-          placeholder="hh:mm"
-        />
+        <!-- Heure départ -->
+        <div>
+          <Label for="heure_depart">Heure départ (hh:mm)</Label>
+          <Input
+            type="time"
+            name="heure_depart"
+            id="heure_depart"
+            bind:value={heure_depart}
+            placeholder="hh:mm"
+            class="w-full lg:w-max"
+          />
+        </div>
       </div>
 
       <!-- Fournisseur -->
@@ -432,7 +436,7 @@
           role="bois_client"
           bind:value={rdv.client}
           name="Client"
-          on:change={remplirLivraisonAuto}
+          on:change={autoFillDeliveryPlace}
           required
         />
       </div>
@@ -496,18 +500,18 @@
 
       <!-- Commande prête -->
       <div>
-        <Checkbox name="commande_prete" bind:checked={rdv.commande_prete}
-          >Commande prête</Checkbox
+        <Toggle name="commande_prete" bind:checked={rdv.commande_prete}
+          >Commande prête</Toggle
         >
       </div>
 
       <!-- Confirmation d'affrètement -->
       <div>
-        <Checkbox
+        <Toggle
           name="confirmation_affretement"
           bind:checked={rdv.confirmation_affretement}
           disabled={$tiers?.get(rdv.affreteur)?.lie_agence === false ||
-            !rdv.transporteur}>Confirmation d'affrètement</Checkbox
+            !rdv.transporteur}>Confirmation d'affrètement</Toggle
         >
       </div>
 
@@ -519,7 +523,7 @@
           name="numero_bl"
           id="numero_bl"
           bind:value={numero_bl}
-          on:change={verifierNumeroBL}
+          on:change={checkDeliveryNoteNumber}
         />
       </div>
 

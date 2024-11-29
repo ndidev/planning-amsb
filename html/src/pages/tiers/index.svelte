@@ -23,6 +23,7 @@
     Label,
     Input,
     Checkbox,
+    Toggle,
     Textarea,
     Fileupload,
   } from "flowbite-svelte";
@@ -564,7 +565,7 @@
 
     <!-- Actif -->
     <div class="mb-4">
-      <Checkbox name="actif" bind:checked={selectedTiers.actif}>Actif</Checkbox>
+      <Toggle name="actif" bind:checked={selectedTiers.actif}>Actif</Toggle>
     </div>
   </form>
 
