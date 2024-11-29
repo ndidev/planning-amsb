@@ -36,7 +36,7 @@
     "lucide-svelte": "^0.460.1",
     "notiflix": "^3.2.5",
     "purecss": "^3.0.0",
-    "svelecte": "^4.0.0",
+    "svelecte": "4.3.1",
     "uuid": "^11.0.0"
   },
   "workspaces": [
