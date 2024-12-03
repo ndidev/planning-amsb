@@ -44,7 +44,9 @@ class BulkAppointment extends AbstractEntity
 
     private string $orderNumber = "";
 
-    private string $comments = "";
+    private string $publicComments = "";
+
+    private string $privateComments = "";
 
     private bool $isArchive = false;
 
@@ -190,16 +192,28 @@ class BulkAppointment extends AbstractEntity
         return $this->orderNumber;
     }
 
-    public function setComments(string $comments): static
+    public function setPublicComments(string $comments): static
     {
-        $this->comments = $comments;
+        $this->publicComments = $comments;
 
         return $this;
     }
 
-    public function getComments(): string
+    public function getPublicComments(): string
     {
-        return $this->comments;
+        return $this->publicComments;
+    }
+
+    public function setPrivateComments(string $comments): static
+    {
+        $this->privateComments = $comments;
+
+        return $this;
+    }
+
+    public function getPrivateComments(): string
+    {
+        return $this->privateComments;
     }
 
     public function setArchive(bool $archive): static
@@ -230,7 +244,8 @@ class BulkAppointment extends AbstractEntity
             "client" => $this->getCustomer()?->getId(),
             "transporteur" => $this->getCarrier()?->getId(),
             "num_commande" => $this->getOrderNumber(),
-            "commentaire" => $this->getComments(),
+            "commentaire_public" => $this->getPublicComments(),
+            "commentaire_prive" => $this->getPrivateComments(),
             "archive" => $this->isArchive(),
         ];
     }

@@ -27,7 +27,8 @@ use App\Service\BulkService;
  *                                      client: int,
  *                                      transporteur: ?int,
  *                                      num_commande: string,
- *                                      commentaire: string,
+ *                                      commentaire_public: string,
+ *                                      commentaire_prive: string,
  *                                      archive: int,
  *                                    }
  */
@@ -73,7 +74,8 @@ final class BulkAppointmentRepository extends Repository
                 client,
                 transporteur,
                 num_commande,
-                commentaire,
+                commentaire_public,
+                commentaire_prive,
                 archive
             FROM vrac_planning
             WHERE archive = $archiveFilter
@@ -119,7 +121,8 @@ final class BulkAppointmentRepository extends Repository
                 client,
                 transporteur,
                 num_commande,
-                commentaire,
+                commentaire_public,
+                commentaire_prive,
                 archive
             FROM vrac_planning
             WHERE id = :id";
@@ -149,18 +152,19 @@ final class BulkAppointmentRepository extends Repository
         $statement =
             "INSERT INTO vrac_planning
             SET
-                date_rdv = :date_rdv,
-                heure = :heure,
-                produit = :produit,
-                qualite = :qualite,
-                quantite = :quantite,
+                date_rdv = :date,
+                heure = :time,
+                produit = :productId,
+                qualite = :qualityId,
+                quantite = :quantity,
                 max = :max,
-                commande_prete = :commande_prete,
-                fournisseur = :fournisseur,
-                client = :client,
-                transporteur = :transporteur,
-                num_commande = :num_commande,
-                commentaire = :commentaire,
+                commande_prete = :orderIsReady,
+                fournisseur = :supplierId,
+                client = :customerId,
+                transporteur = :carrierId,
+                num_commande = :orderNumber,
+                commentaire_public = :publicComments,
+                commentaire_prive = :privateComments,
                 archive = :archive
                 ";
 
@@ -168,18 +172,19 @@ final class BulkAppointmentRepository extends Repository
 
         $this->mysql->beginTransaction();
         $request->execute([
-            'date_rdv' => $appointment->getSqlDate(),
-            'heure' => $appointment->getSqlTime(),
-            'produit' => $appointment->getProduct()?->getId(),
-            'qualite' => $appointment->getQuality()?->getId(),
-            'quantite' => $appointment->getQuantityValue(),
+            'date' => $appointment->getSqlDate(),
+            'time' => $appointment->getSqlTime(),
+            'productId' => $appointment->getProduct()?->getId(),
+            'qualityId' => $appointment->getQuality()?->getId(),
+            'quantity' => $appointment->getQuantityValue(),
             'max' => (int) $appointment->getQuantityIsMax(),
-            'commande_prete' => (int) $appointment->isReady(),
-            'fournisseur' => $appointment->getSupplier()?->getId(),
-            'client' => $appointment->getCustomer()?->getId(),
-            'transporteur' => $appointment->getCarrier()?->getId(),
-            'num_commande' => $appointment->getOrderNumber(),
-            'commentaire' => $appointment->getComments(),
+            'orderIsReady' => (int) $appointment->isReady(),
+            'supplierId' => $appointment->getSupplier()?->getId(),
+            'customerId' => $appointment->getCustomer()?->getId(),
+            'carrierId' => $appointment->getCarrier()?->getId(),
+            'orderNumber' => $appointment->getOrderNumber(),
+            'publicComments' => $appointment->getPublicComments(),
+            'privateComments' => $appointment->getPrivateComments(),
             'archive' => (int) $appointment->isArchive(),
         ]);
 
@@ -204,35 +209,37 @@ final class BulkAppointmentRepository extends Repository
         $statement =
             "UPDATE vrac_planning
             SET
-                date_rdv = :date_rdv,
-                heure = :heure,
-                produit = :produit,
-                qualite = :qualite,
-                quantite = :quantite,
+                date_rdv = :date,
+                heure = :time,
+                produit = :productId,
+                qualite = :qualityId,
+                quantite = :quantity,
                 max = :max,
-                commande_prete = :commande_prete,
-                fournisseur = :fournisseur,
-                client = :client,
-                transporteur = :transporteur,
-                num_commande = :num_commande,
-                commentaire = :commentaire,
+                commande_prete = :orderIsReady,
+                fournisseur = :supplierId,
+                client = :customerId,
+                transporteur = :carrierId,
+                num_commande = :orderNumber,
+                commentaire_public = :publicComments,
+                commentaire_prive = :privateComments,
                 archive = :archive
             WHERE id = :id";
 
         $request = $this->mysql->prepare($statement);
         $request->execute([
-            'date_rdv' => $appointment->getSqlDate(),
-            'heure' => $appointment->getSqlTime(),
-            'produit' => $appointment->getProduct()?->getId(),
-            'qualite' => $appointment->getQuality()?->getId(),
-            'quantite' => $appointment->getQuantityValue(),
+            'date' => $appointment->getSqlDate(),
+            'time' => $appointment->getSqlTime(),
+            'productId' => $appointment->getProduct()?->getId(),
+            'qualityId' => $appointment->getQuality()?->getId(),
+            'quantity' => $appointment->getQuantityValue(),
             'max' => (int) $appointment->getQuantityIsMax(),
-            'commande_prete' => (int) $appointment->isReady(),
-            'fournisseur' => $appointment->getSupplier()?->getId(),
-            'client' => $appointment->getCustomer()?->getId(),
-            'transporteur' => $appointment->getCarrier()?->getId(),
-            'num_commande' => $appointment->getOrderNumber(),
-            'commentaire' => $appointment->getComments(),
+            'orderIsReady' => (int) $appointment->isReady(),
+            'supplierId' => $appointment->getSupplier()?->getId(),
+            'customerId' => $appointment->getCustomer()?->getId(),
+            'carrierId' => $appointment->getCarrier()?->getId(),
+            'orderNumber' => $appointment->getOrderNumber(),
+            'publicComments' => $appointment->getPublicComments(),
+            'privateComments' => $appointment->getPrivateComments(),
             'archive' => (int) $appointment->isArchive(),
             'id' => $appointment->getId(),
         ]);
@@ -259,11 +266,11 @@ final class BulkAppointmentRepository extends Repository
         $this->mysql
             ->prepare(
                 "UPDATE vrac_planning
-                SET commande_prete = :commande_prete
+                SET commande_prete = :orderIsReady
                 WHERE id = :id"
             )
             ->execute([
-                'commande_prete' => (int) $status,
+                'orderIsReady' => (int) $status,
                 'id' => $id,
             ]);
 

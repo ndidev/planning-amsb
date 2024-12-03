@@ -237,11 +237,11 @@
   }
 
   /**
-   * Afficher les explications pour le commentaire caché.
+   * Afficher les explications pour le commentaire privé.
    */
-  function afficherExplicationsCommentaireCache() {
+  function showPrivateCommentsHelp() {
     Notiflix.Report.info(
-      "Commentaire caché",
+      "Commentaire privé",
       "Ce commentaire ne sera pas visible dans le planning envoyé au client." +
         "<br/>" +
         "Utile pour ajouter des informations sur les tarifs d'affrètement, l'état de préparation de la commande, etc.",
@@ -531,8 +531,6 @@
       <div>
         <Label for="commentaire_public">Commentaire public</Label>
         <Textarea
-          class="rdv_commentaire"
-          name="commentaire_public"
           id="commentaire_public"
           rows={3}
           cols={30}
@@ -542,16 +540,14 @@
 
       <!-- Commentaire caché -->
       <div>
-        <Label for="commentaire_cache"
-          >Commentaire caché <LucideButton
+        <Label for="commentaire_prive"
+          >Commentaire privé <LucideButton
             icon={CircleHelpIcon}
-            on:click={afficherExplicationsCommentaireCache}
+            on:click={showPrivateCommentsHelp}
           /></Label
         >
         <Textarea
-          class="rdv_commentaire"
-          name="commentaire_cache"
-          id="commentaire_cache"
+          id="commentaire_prive"
           rows={3}
           cols={30}
           bind:value={rdv.commentaire_cache}

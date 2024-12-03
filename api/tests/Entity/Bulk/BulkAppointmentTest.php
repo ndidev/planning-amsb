@@ -176,15 +176,29 @@ class BulkAppointmentTest extends TestCase
         $this->assertEquals($orderNumber, $actualOrderNumber);
     }
 
-    public function testSetAndGetComments(): void
+    public function testSetAndGetPublicComments(): void
     {
         // Given
         $bulkAppointment = new BulkAppointment();
         $comments = 'This is a comment.';
 
         // When
-        $bulkAppointment->setComments($comments);
-        $actualComments = $bulkAppointment->getComments();
+        $bulkAppointment->setPublicComments($comments);
+        $actualComments = $bulkAppointment->getPublicComments();
+
+        // Then
+        $this->assertEquals($comments, $actualComments);
+    }
+
+    public function testSetAndGetPrivateComments(): void
+    {
+        // Given
+        $bulkAppointment = new BulkAppointment();
+        $comments = 'This is a comment.';
+
+        // When
+        $bulkAppointment->setPrivateComments($comments);
+        $actualComments = $bulkAppointment->getPrivateComments();
 
         // Then
         $this->assertEquals($comments, $actualComments);
@@ -219,7 +233,8 @@ class BulkAppointmentTest extends TestCase
             ->setCustomer((new ThirdParty())->setId(40))
             ->setCarrier((new ThirdParty())->setId(50))
             ->setOrderNumber('ORD123456')
-            ->setComments('This is a comment.')
+            ->setPublicComments('This is a public comment.')
+            ->setPrivateComments('This is a private comment.')
             ->setArchive(true);
 
         $expectedArray = [
@@ -235,7 +250,8 @@ class BulkAppointmentTest extends TestCase
             'client' => 40,
             'transporteur' => 50,
             'num_commande' => 'ORD123456',
-            'commentaire' => 'This is a comment.',
+            'commentaire_public' => 'This is a public comment.',
+            'commentaire_prive' => 'This is a private comment.',
             'archive' => true,
         ];
 

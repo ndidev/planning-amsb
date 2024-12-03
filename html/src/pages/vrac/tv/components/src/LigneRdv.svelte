@@ -89,6 +89,6 @@
 
   <!-- Commentaire -->
   <div class="col-span-4">
-    {@html rdv.commentaire.replace(/(?:\r\n|\r|\n)/g, "<br>")}
+    {@html rdv.commentaire_public.replace(/(?:\r\n|\r|\n)/g, "<br>")}
   </div>
 </div>

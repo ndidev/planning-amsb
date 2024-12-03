@@ -66,7 +66,8 @@ final class BulkService
             ->setCustomer($this->thirdPartyService->getThirdParty($rawDataAH->getInt('client')))
             ->setCarrier($this->thirdPartyService->getThirdParty($rawDataAH->getInt('transporteur')))
             ->setOrderNumber($rawDataAH->getString('num_commande'))
-            ->setComments($rawDataAH->getString('commentaire'))
+            ->setPublicComments($rawDataAH->getString('commentaire_public'))
+            ->setPrivateComments($rawDataAH->getString('commentaire_prive'))
             ->setArchive($rawDataAH->getBool('archive'));
 
         return $appointment;
@@ -94,7 +95,8 @@ final class BulkService
             ->setCustomer($this->thirdPartyService->getThirdParty($requestBody->getInt('client')))
             ->setCarrier($this->thirdPartyService->getThirdParty($requestBody->getInt('transporteur')))
             ->setOrderNumber($requestBody->getString('num_commande'))
-            ->setComments($requestBody->getString('commentaire'))
+            ->setPublicComments($requestBody->getString('commentaire_public'))
+            ->setPrivateComments($requestBody->getString('commentaire_prive'))
             ->setArchive($requestBody->getBool('archive'));
 
         return $appointment;

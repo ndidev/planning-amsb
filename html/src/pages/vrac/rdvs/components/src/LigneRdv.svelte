@@ -22,9 +22,11 @@
     PackageXIcon,
     ArchiveIcon,
     ArchiveRestoreIcon,
+    MessageSquareOffIcon,
+    MessageSquareTextIcon,
   } from "lucide-svelte";
 
-  import { LucideButton, BoutonAction } from "@app/components";
+  import { LucideButton, BoutonAction, IconText } from "@app/components";
 
   import { notiflixOptions, device } from "@app/utils";
   import type {
@@ -246,8 +248,46 @@
   <!-- Espacement -->
   <div class="lg:col-span-3"></div>
 
-  <!-- Commentaire -->
+  <!-- Commentaires -->
   <div class="lg:col-span-4">
-    {@html rdv.commentaire.replace(/(?:\r\n|\r|\n)/g, "<br>")}
+    <!-- Commentaire public -->
+    {#if rdv.commentaire_public}
+      <div class="lg:pl-1">
+        <IconText hideIcon={["desktop"]}>
+          <span slot="icon" title="Commentaire public"
+            ><MessageSquareTextIcon /></span
+          >
+          <span slot="text"
+            >{@html rdv.commentaire_public.replace(
+              /(?:\r\n|\r|\n)/g,
+              "<br>"
+            )}</span
+          >
+        </IconText>
+      </div>
+    {/if}
+
+    {#if rdv.commentaire_public && rdv.commentaire_prive}
+      <div class="h-3" />
+    {/if}
+
+    <!-- Commentaire privé -->
+    {#if rdv.commentaire_prive}
+      <div
+        class="text-gray-400 lg:border-l-[1px] lg:border-dotted lg:border-l-gray-400 lg:pl-1"
+      >
+        <IconText hideIcon={["desktop"]}>
+          <span slot="icon" title="Commentaire caché"
+            ><MessageSquareOffIcon /></span
+          >
+          <span slot="text"
+            >{@html rdv.commentaire_prive.replace(
+              /(?:\r\n|\r|\n)/g,
+              "<br>"
+            )}</span
+          >
+        </IconText>
+      </div>
+    {/if}
   </div>
 </div>

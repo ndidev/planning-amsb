@@ -67,9 +67,14 @@ export type RdvVrac = {
   num_commande: string;
 
   /**
-   * Commentaire.
+   * Commentaire public.
    */
-  commentaire: string;
+  commentaire_public: string;
+
+  /**
+   * Commentaire privé.
+   */
+  commentaire_prive: string;
 
   /**
    * `true` si le RDV est archivé.

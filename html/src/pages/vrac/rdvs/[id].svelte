@@ -4,6 +4,7 @@
   import { params, goto, redirect } from "@roxi/routify";
 
   import { Label, Input, Textarea, Toggle, Select } from "flowbite-svelte";
+  import { CircleHelpIcon } from "lucide-svelte";
   import Notiflix from "notiflix";
 
   import {
@@ -11,6 +12,7 @@
     Svelecte,
     Chargement,
     BoutonAction,
+    LucideButton,
   } from "@app/components";
   import {
     notiflixOptions,
@@ -45,7 +47,8 @@
     client: null,
     transporteur: null,
     num_commande: "",
-    commentaire: "",
+    commentaire_public: "",
+    commentaire_prive: "",
     archive: false,
   };
 
@@ -160,6 +163,17 @@
       },
       () => boutonSupprimer.$set({ disabled: false }),
       notiflixOptions.themes.red
+    );
+  }
+
+  /**
+   * Afficher les explications pour le commentaire privé.
+   */
+  function showPrivateCommentsHelp() {
+    Notiflix.Report.info(
+      "Commentaire privé",
+      "Ce commentaire ne sera pas visible sur l'écran TV.",
+      "Fermer"
     );
   }
 </script>
@@ -324,13 +338,28 @@
         />
       </div>
 
-      <!-- Commentaire -->
+      <!-- Commentaire public -->
       <div>
-        <Label for="commentaire">Commentaire</Label>
+        <Label for="public-comments">Commentaire public</Label>
         <Textarea
-          class="rdv_commentaire"
-          id="commentaire"
-          bind:value={rdv.commentaire}
+          id="public-comments"
+          bind:value={rdv.commentaire_public}
+          rows={3}
+          cols={30}
+        />
+      </div>
+
+      <!-- Commentaire privé -->
+      <div>
+        <Label for="private-comments"
+          >Commentaire privé <LucideButton
+            icon={CircleHelpIcon}
+            on:click={showPrivateCommentsHelp}
+          /></Label
+        >
+        <Textarea
+          id="private-comments"
+          bind:value={rdv.commentaire_prive}
           rows={3}
           cols={30}
         />
