@@ -13,8 +13,9 @@
   import { goto } from "@roxi/routify";
 
   import Hammer from "hammerjs";
+  import { Modal } from "flowbite-svelte";
 
-  import { Badge, LucideButton, Modal, BoutonAction } from "@app/components";
+  import { Badge, LucideButton, BoutonAction } from "@app/components";
 
   import { device, locale } from "@app/utils";
 
@@ -26,7 +27,7 @@
   let ligne: HTMLDivElement;
 
   let mc: HammerManager;
-  let afficherModal = false;
+  let showModal = false;
 
   const archives: boolean = getContext("archives");
 
@@ -94,7 +95,7 @@
     mc = new Hammer(ligne);
     mc.on("press", () => {
       if ($device.is("mobile")) {
-        afficherModal = true;
+        showModal = true;
       }
     });
   });
@@ -104,18 +105,10 @@
   });
 </script>
 
-{#if afficherModal}
-  <Modal on:outclick={() => (afficherModal = false)}>
-    <div
-      style:background="white"
-      style:padding="20px"
-      style:border-radius="20px"
-    >
-      <BoutonAction preset="modifier" on:click={$goto(`./${charter.id}`)} />
-      <BoutonAction preset="annuler" on:click={() => (afficherModal = false)} />
-    </div>
-  </Modal>
-{/if}
+<Modal bind:open={showModal} outsideclose dismissable={false}>
+  <BoutonAction preset="modifier" on:click={$goto(`./${charter.id}`)} />
+  <BoutonAction preset="annuler" on:click={() => (showModal = false)} />
+</Modal>
 
 <div
   class="group grid gap-1 border-l-[10px] border-l-[color:var(--status-color)] px-6 py-2 text-sm first:mt-10 last:mb-12 lg:grid-cols-[20%_20%_50%_auto] lg:gap-2 lg:px-10 lg:text-base"

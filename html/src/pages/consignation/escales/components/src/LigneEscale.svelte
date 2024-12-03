@@ -12,10 +12,11 @@
   import { onMount, onDestroy, getContext } from "svelte";
   import { goto } from "@roxi/routify";
 
+  import { Modal } from "flowbite-svelte";
   import { ArrowDownIcon, ArrowUpIcon } from "lucide-svelte";
   import Hammer from "hammerjs";
 
-  import { Badge, LucideButton, Modal, BoutonAction } from "@app/components";
+  import { Badge, LucideButton, BoutonAction } from "@app/components";
 
   import { device, locale } from "@app/utils";
 
@@ -210,21 +211,13 @@
   });
 </script>
 
-{#if showModal}
-  <Modal on:outclick={() => (showModal = false)}>
-    <div
-      style:background="white"
-      style:padding="20px"
-      style:border-radius="20px"
-    >
-      <BoutonAction
-        preset="modifier"
-        on:click={$goto(`./${escale.id}${archives ? "?archives" : ""}`)}
-      />
-      <BoutonAction preset="annuler" on:click={() => (showModal = false)} />
-    </div>
-  </Modal>
-{/if}
+<Modal bind:open={showModal} outsideclose dismissable={false}>
+  <BoutonAction
+    preset="modifier"
+    on:click={$goto(`./${escale.id}${archives ? "?archives" : ""}`)}
+  />
+  <BoutonAction preset="annuler" on:click={() => (showModal = false)} />
+</Modal>
 
 <div
   class="group grid gap-1 px-3 py-2 text-sm first:pt-5 lg:grid-cols-[20%_15%_10%_10%_40%_auto] lg:gap-2 lg:px-10 lg:text-base border-l-[10px] border-l-[color:var(--status-color)]"

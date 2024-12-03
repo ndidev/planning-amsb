@@ -14,6 +14,7 @@
 
   import Notiflix from "notiflix";
   import Hammer from "hammerjs";
+  import { Modal } from "flowbite-svelte";
   import {
     ArrowRightFromLineIcon,
     ArrowRightToLineIcon,
@@ -27,7 +28,7 @@
   } from "lucide-svelte";
 
   import { ThirdPartyAddress, ThirdPartyTooltip } from "../";
-  import { LucideButton, Modal, BoutonAction, IconText } from "@app/components";
+  import { LucideButton, BoutonAction, IconText } from "@app/components";
 
   import { notiflixOptions, device, DateUtils } from "@app/utils";
   import type { Stores, RdvBois } from "@app/types";
@@ -39,7 +40,7 @@
   let ligne: HTMLDivElement;
 
   let mc: HammerManager;
-  let afficherModal = false;
+  let showModal = false;
 
   $: client = $tiers?.get(rdv.client);
   $: livraison = $tiers?.get(rdv.livraison);
@@ -74,7 +75,7 @@
     } catch (err) {
       Notiflix.Notify.failure(err.message);
     } finally {
-      afficherModal = false;
+      showModal = false;
     }
   }
 
@@ -104,14 +105,14 @@
       notiflixOptions.themes.red
     );
 
-    afficherModal = false;
+    showModal = false;
   }
 
   onMount(() => {
     mc = new Hammer(ligne);
     mc.on("press", () => {
       if ($device.is("mobile")) {
-        afficherModal = true;
+        showModal = true;
       }
     });
   });
@@ -121,20 +122,12 @@
   });
 </script>
 
-{#if afficherModal}
-  <Modal on:outclick={() => (afficherModal = false)}>
-    <div
-      style:background="white"
-      style:padding="20px"
-      style:border-radius="20px"
-    >
-      <BoutonAction preset="modifier" on:click={$goto(`./${rdv.id}`)} />
-      <BoutonAction preset="copier" on:click={$goto(`./new?copie=${rdv.id}`)} />
-      <BoutonAction preset="supprimer" on:click={supprimerRdv} />
-      <BoutonAction preset="annuler" on:click={() => (afficherModal = false)} />
-    </div>
-  </Modal>
-{/if}
+<Modal bind:open={showModal} outsideclose dismissable={false}>
+  <BoutonAction preset="modifier" on:click={$goto(`./${rdv.id}`)} />
+  <BoutonAction preset="copier" on:click={$goto(`./new?copie=${rdv.id}`)} />
+  <BoutonAction preset="supprimer" on:click={supprimerRdv} />
+  <BoutonAction preset="annuler" on:click={() => (showModal = false)} />
+</Modal>
 
 <div
   class="group grid py-2 text-gray-500 lg:min-h-11 lg:grid-cols-[17%_20%_8%_8%_8%_3%_24%_auto]"

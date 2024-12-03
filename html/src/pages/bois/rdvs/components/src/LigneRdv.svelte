@@ -14,6 +14,7 @@
 
   import Notiflix from "notiflix";
   import Hammer from "hammerjs";
+  import { Modal } from "flowbite-svelte";
   import {
     ArrowRightFromLineIcon,
     ArrowRightToLineIcon,
@@ -29,7 +30,7 @@
   } from "lucide-svelte";
 
   import { ThirdPartyAddress, ThirdPartyTooltip } from "../";
-  import { LucideButton, BoutonAction, Modal, IconText } from "@app/components";
+  import { LucideButton, BoutonAction, IconText } from "@app/components";
 
   import { notiflixOptions, device } from "@app/utils";
   import { HTTP } from "@app/errors";
@@ -43,7 +44,7 @@
   let inputNumeroBL: HTMLDivElement;
 
   let mc: HammerManager;
-  let afficherModal = false;
+  let showModal = false;
 
   $: client = $tiers?.get(rdv.client);
   $: livraison = $tiers?.get(rdv.livraison);
@@ -82,7 +83,7 @@
     } catch (err) {
       Notiflix.Notify.failure(err.message);
     } finally {
-      afficherModal = false;
+      showModal = false;
     }
   }
 
@@ -97,7 +98,7 @@
     } catch (err) {
       Notiflix.Notify.failure(err.message);
     } finally {
-      afficherModal = false;
+      showModal = false;
     }
   }
 
@@ -133,7 +134,7 @@
     } catch (err) {
       Notiflix.Notify.failure(err.message);
     } finally {
-      afficherModal = false;
+      showModal = false;
     }
   }
 
@@ -184,14 +185,14 @@
       notiflixOptions.themes.red
     );
 
-    afficherModal = false;
+    showModal = false;
   }
 
   onMount(() => {
     mc = new Hammer(ligne);
     mc.on("press", (event) => {
       if ($device.is("mobile")) {
-        afficherModal = true;
+        showModal = true;
       }
     });
   });
@@ -202,30 +203,22 @@
   });
 </script>
 
-{#if afficherModal}
-  <Modal on:outclick={() => (afficherModal = false)}>
-    <div
-      style:background="white"
-      style:padding="20px"
-      style:border-radius="20px"
+<Modal bind:open={showModal} outsideclose dismissable={false}>
+  {#if !rdv.heure_arrivee}
+    <BoutonAction on:click={renseignerHeureArrivee}
+      >Renseigner heure d'arrivée</BoutonAction
     >
-      {#if !rdv.heure_arrivee}
-        <BoutonAction on:click={renseignerHeureArrivee}
-          >Renseigner heure d'arrivée</BoutonAction
-        >
-      {/if}
-      {#if rdv.heure_arrivee && !rdv.heure_depart}
-        <BoutonAction on:click={renseignerHeureDepart}
-          >Renseigner heure de départ</BoutonAction
-        >
-      {/if}
-      <BoutonAction preset="modifier" on:click={$goto(`./${rdv.id}`)} />
-      <BoutonAction preset="copier" on:click={$goto(`./new?copie=${rdv.id}`)} />
-      <BoutonAction preset="supprimer" on:click={supprimerRdv} />
-      <BoutonAction preset="annuler" on:click={() => (afficherModal = false)} />
-    </div>
-  </Modal>
-{/if}
+  {/if}
+  {#if rdv.heure_arrivee && !rdv.heure_depart}
+    <BoutonAction on:click={renseignerHeureDepart}
+      >Renseigner heure de départ</BoutonAction
+    >
+  {/if}
+  <BoutonAction preset="modifier" on:click={$goto(`./${rdv.id}`)} />
+  <BoutonAction preset="copier" on:click={$goto(`./new?copie=${rdv.id}`)} />
+  <BoutonAction preset="supprimer" on:click={supprimerRdv} />
+  <BoutonAction preset="annuler" on:click={() => (showModal = false)} />
+</Modal>
 
 <div
   bind:this={ligne}

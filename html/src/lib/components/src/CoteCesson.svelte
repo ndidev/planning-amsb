@@ -17,8 +17,6 @@
 
   import type { Cote } from "@app/types";
 
-  export let tv: boolean = false;
-
   $: coteCesson = $configCotes?.find((cote: Cote) => cote.cote === "cesson")
     .valeur as number;
 

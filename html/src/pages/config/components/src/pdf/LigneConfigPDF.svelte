@@ -11,7 +11,14 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  import { Label, Input, Textarea, Checkbox } from "flowbite-svelte";
+  import {
+    Label,
+    Input,
+    Textarea,
+    Checkbox,
+    Button,
+    Modal,
+  } from "flowbite-svelte";
   import { CircleHelpIcon, EyeIcon, SendIcon } from "lucide-svelte";
 
   import { ConfigLine } from "../../";
@@ -41,10 +48,19 @@
 
   let ligne: HTMLDivElement;
 
+  let showModal = false;
+  let modalAction: "view" | "send";
+  let startDate = new DateUtils(new Date())
+    .jourOuvrePrecedent(config.jours_avant)
+    .toLocaleISODateString();
+  let endDate = new DateUtils(new Date())
+    .jourOuvreSuivant(config.jours_apres)
+    .toLocaleISODateString();
+
   /**
    * Afficher les explications pour la liste d'e-mails.
    */
-  function afficherExplicationsEmails() {
+  function showEmailsHelp() {
     Notiflix.Report.info(
       "Liste e-mails",
       "Une adresse par ligne.<br />" +
@@ -57,141 +73,87 @@
   /**
    * Visualiser le PDF.
    */
-  function visualiserPdf() {
+  async function viewPdf(startDate: string, endDate: string) {
     if (!validerFormulaire(ligne)) return;
 
-    const date_debut = new DateUtils(new Date())
-      .jourOuvrePrecedent(config.jours_avant)
-      .toLocaleISODateString();
+    try {
+      Notiflix.Block.dots([ligne], notiflixOptions.texts.telechargement);
+      ligne.style.minHeight = "initial";
 
-    const date_fin = new DateUtils(new Date())
-      .jourOuvreSuivant(config.jours_apres)
-      .toLocaleISODateString();
+      const blob: Blob = await fetcher("config/pdf/generer", {
+        accept: "blob",
+        searchParams: {
+          config: config.id.toString(),
+          date_debut: startDate,
+          date_fin: endDate,
+        },
+      });
 
-    Notiflix.Confirm.show(
-      "Visualiser le PDF",
-      `<div class="text-right">
-          <div class="mb-1 mr-8">
-            <label>Date début : <input type="date" class="date_debut" value="${date_debut}"></label>
-          </div>
-          <div class="mb-1 mr-8">
-            <label>Date fin : <input type="date" class="date_fin" value="${date_fin}"></label>
-          </div>
-        </div>`,
-      "Visualiser",
-      "Annuler",
-      async () => {
-        try {
-          Notiflix.Block.dots([ligne], notiflixOptions.texts.telechargement);
-          ligne.style.minHeight = "initial";
-
-          const blob: Blob = await fetcher("config/pdf/generer", {
-            accept: "blob",
-            searchParams: {
-              config: config.id.toString(),
-              date_debut:
-                document.querySelector<HTMLInputElement>(".date_debut").value,
-              date_fin:
-                document.querySelector<HTMLInputElement>(".date_fin").value,
-            },
-          });
-
-          const file = URL.createObjectURL(blob);
-          const filename = "planning.pdf";
-          const link = document.createElement("a");
-          link.href = file;
-          link.download = filename;
-          link.click();
-        } catch (err) {
-          Notiflix.Notify.failure(err.message);
-        } finally {
-          Notiflix.Block.remove([ligne]);
-        }
-      },
-      null,
-      notiflixOptions.themes.green
-    );
+      const file = URL.createObjectURL(blob);
+      const filename = "planning.pdf";
+      const link = document.createElement("a");
+      link.href = file;
+      link.download = filename;
+      link.click();
+    } catch (err) {
+      Notiflix.Notify.failure(err.message);
+    } finally {
+      Notiflix.Block.remove([ligne]);
+    }
   }
 
   /**
    * Envoyer le PDF par e-mail.
    */
-  function envoyerPdf() {
+  async function sendPdf(startDate: string, endDate: string) {
     if (!validerFormulaire(ligne)) return;
 
-    const date_debut = new DateUtils(new Date())
-      .jourOuvrePrecedent(config.jours_avant)
-      .toLocaleISODateString();
+    try {
+      Notiflix.Block.dots([ligne], notiflixOptions.texts.envoi);
+      ligne.style.minHeight = "initial";
 
-    const date_fin = new DateUtils(new Date())
-      .jourOuvreSuivant(config.jours_apres)
-      .toLocaleISODateString();
+      type SendingResult = {
+        statut: "succes" | "echec";
+        message: string;
+        module: string;
+        fournisseur: number;
+        adresses: {
+          from: string;
+          to: string[];
+          cc: [];
+          bcc: [];
+        };
+      };
 
-    Notiflix.Confirm.show(
-      "Envoyer le PDF",
-      `<div class="text-right">
-          <div class="mb-1 mr-8">
-            <label>Date début : <input type="date" value="${date_debut}"></label>
-          </div>
-          <div class="mb-1 mr-8">
-            <label>Date fin : <input type="date" value="${date_fin}"></label>
-          </div>
-        </div>`,
-      "Envoyer",
-      "Annuler",
-      async () => {
-        try {
-          Notiflix.Block.dots([ligne], notiflixOptions.texts.envoi);
-          ligne.style.minHeight = "initial";
+      const resultat: SendingResult = await fetcher("config/pdf/generer", {
+        requestInit: {
+          method: "POST",
+          body: JSON.stringify({
+            config: config.id.toString(),
+            date_debut: startDate,
+            date_fin: endDate,
+          }),
+        },
+      });
 
-          type SendingResult = {
-            statut: "succes" | "echec";
-            message: string;
-            module: string;
-            fournisseur: number;
-            adresses: {
-              from: string;
-              to: string[];
-              cc: [];
-              bcc: [];
-            };
-          };
+      if (resultat.statut === "succes") {
+        Notiflix.Notify.success(resultat.message);
+      }
 
-          const resultat: SendingResult = await fetcher("config/pdf/generer", {
-            requestInit: {
-              method: "POST",
-              body: JSON.stringify({
-                config: config.id.toString(),
-                date_debut:
-                  document.querySelector<HTMLInputElement>(".date_debut").value,
-                date_fin:
-                  document.querySelector<HTMLInputElement>(".date_fin").value,
-              }),
-            },
-          });
-
-          if (resultat.statut === "succes") {
-            Notiflix.Notify.success(resultat.message);
-          }
-
-          if (resultat.statut === "echec") {
-            throw new Error("Échec d'envoi du PDF");
-          }
-        } catch (err) {
-          Notiflix.Notify.failure(err.message);
-        } finally {
-          Notiflix.Block.remove([ligne]);
-        }
-      },
-      null,
-      notiflixOptions.themes.green
-    );
+      if (resultat.statut === "echec") {
+        throw new Error("Échec d'envoi du PDF");
+      }
+    } catch (err) {
+      Notiflix.Notify.failure(err.message);
+    } finally {
+      Notiflix.Block.remove([ligne]);
+    }
   }
 
   /**
    * Valider l'ajout.
    */
-  async function validerAjout() {
+  async function createConfig() {
     if (!validerFormulaire(ligne)) return;
 
     try {
@@ -211,14 +173,14 @@
   /**
    * Annuler l'ajout.
    */
-  function annulerAjout() {
+  function cancelCreate() {
     configPdf.cancel(config.id);
   }
 
   /**
    * Valider les modifications.
    */
-  async function validerModification() {
+  async function updateConfig() {
     if (!validerFormulaire(ligne)) return;
 
     try {
@@ -240,7 +202,7 @@
   /**
    * Annuler les modifications.
    */
-  function annulerModification() {
+  function cancelUpdate() {
     config = structuredClone(configInitial);
     modificationEnCours = false;
     ligne.querySelectorAll("input").forEach((input) => {
@@ -251,7 +213,7 @@
   /**
    * Supprimer une ligne.
    */
-  function supprimerLigne() {
+  function deleteConfig() {
     // Demande de confirmation
     Notiflix.Confirm.show(
       "Suppression configuration",
@@ -344,7 +306,7 @@
         icon={CircleHelpIcon}
         size="20px"
         title="Afficher les explications"
-        on:click={afficherExplicationsEmails}
+        on:click={showEmailsHelp}
       /></Label
     >
     <Textarea
@@ -360,24 +322,63 @@
     {#if modificationEnCours}
       <LucideButton
         preset="confirm"
-        on:click={isNew ? validerAjout : validerModification}
+        on:click={isNew ? createConfig : updateConfig}
       />
       <LucideButton
         preset="cancel"
-        on:click={isNew ? annulerAjout : annulerModification}
+        on:click={isNew ? cancelCreate : cancelUpdate}
       />
     {:else}
       <LucideButton
         icon={EyeIcon}
         title="Visualiser le PDF"
-        on:click={visualiserPdf}
+        on:click={() => {
+          modalAction = "view";
+          showModal = true;
+        }}
       />
       <LucideButton
         icon={SendIcon}
         title="Envoyer le PDF"
-        on:click={envoyerPdf}
+        on:click={() => {
+          modalAction = "send";
+          showModal = true;
+        }}
       />
-      <LucideButton preset="delete" on:click={supprimerLigne} />
+      <LucideButton preset="delete" on:click={deleteConfig} />
     {/if}
   </div>
 </ConfigLine>
+
+<Modal
+  title={modalAction === "view" ? "Visualiser le PDF" : "Envoyer le PDF"}
+  bind:open={showModal}
+  outsideclose
+  autoclose
+  dismissable={false}
+  size="xs"
+>
+  <div>
+    <Label for="start-date">Date début :</Label>
+    <Input type="date" id="start-date" bind:value={startDate} />
+  </div>
+  <div>
+    <Label for="end-date">Date fin :</Label>
+    <Input type="date" id="end-date" bind:value={endDate} />
+  </div>
+  <div class="text-center">
+    <Button
+      on:click={() => {
+        switch (modalAction) {
+          case "view":
+            viewPdf(startDate, endDate);
+            break;
+          case "send":
+            sendPdf(startDate, endDate);
+            break;
+        }
+      }}>{modalAction === "view" ? "Visualiser" : "Envoyer"}</Button
+    >
+    <Button on:click={() => (showModal = false)} color="dark">Annuler</Button>
+  </div>
+</Modal>

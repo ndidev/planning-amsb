@@ -12,7 +12,6 @@ export { default as EnvFooter, FOOTER_HEIGHT } from "./src/EnvFooter.svelte";
 export { default as IconText } from "./src/IconText.svelte";
 export { default as LucideButton } from "./src/LucideButton.svelte";
 export { default as Menu } from "./src/Menu";
-export { default as Modal } from "./src/Modal.svelte";
 export { default as NumericInput } from "./src/NumericInput.svelte";
 export { default as OfflineBanner } from "./src/OfflineBanner.svelte";
 export { default as PageHeading } from "./src/PageHeading.svelte";

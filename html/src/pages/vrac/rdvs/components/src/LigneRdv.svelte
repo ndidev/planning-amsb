@@ -15,6 +15,7 @@
 
   import Notiflix from "notiflix";
   import Hammer from "hammerjs";
+  import { Modal } from "flowbite-svelte";
   import {
     PackageIcon,
     PackageCheckIcon,
@@ -23,7 +24,7 @@
     ArchiveRestoreIcon,
   } from "lucide-svelte";
 
-  import { LucideButton, BoutonAction, Modal } from "@app/components";
+  import { LucideButton, BoutonAction } from "@app/components";
 
   import { notiflixOptions, device } from "@app/utils";
   import type {
@@ -42,7 +43,7 @@
   let ligne: HTMLDivElement;
 
   let mc: HammerManager;
-  let afficherModal = false;
+  let showModal = false;
 
   const archives: boolean = getContext("archives");
 
@@ -90,7 +91,7 @@
     } catch (err) {
       Notiflix.Notify.failure(err.message);
     } finally {
-      afficherModal = false;
+      showModal = false;
     }
   }
 
@@ -124,14 +125,14 @@
       notiflixOptions.themes.orange
     );
 
-    afficherModal = false;
+    showModal = false;
   }
 
   onMount(() => {
     mc = new Hammer(ligne);
     mc.on("press", () => {
       if ($device.is("mobile")) {
-        afficherModal = true;
+        showModal = true;
       }
     });
   });
@@ -141,24 +142,16 @@
   });
 </script>
 
-{#if afficherModal}
-  <Modal on:outclick={() => (afficherModal = false)}>
-    <div
-      style:background="white"
-      style:padding="20px"
-      style:border-radius="20px"
-    >
-      <BoutonAction preset="modifier" on:click={$goto(`./${rdv.id}`)} />
-      <BoutonAction preset="copier" on:click={$goto(`./new?copie=${rdv.id}`)} />
-      <BoutonAction
-        text={rdv.archive ? "Restaurer" : "Archiver"}
-        color="hsl(32, 100%, 50%)"
-        on:click={toggleArchive}
-      />
-      <BoutonAction preset="annuler" on:click={() => (afficherModal = false)} />
-    </div>
-  </Modal>
-{/if}
+<Modal bind:open={showModal} outsideclose dismissable={false}>
+  <BoutonAction preset="modifier" on:click={$goto(`./${rdv.id}`)} />
+  <BoutonAction preset="copier" on:click={$goto(`./new?copie=${rdv.id}`)} />
+  <BoutonAction
+    text={rdv.archive ? "Restaurer" : "Archiver"}
+    color="hsl(32, 100%, 50%)"
+    on:click={toggleArchive}
+  />
+  <BoutonAction preset="annuler" on:click={() => (showModal = false)} />
+</Modal>
 
 <div
   class="group grid grid-cols-[50px_1fr] gap-2 py-2 lg:grid-cols-[4%_16%_4%_8%_29%_8%_16%_auto] lg:text-lg"
