@@ -175,7 +175,7 @@
     </div>
 
     <!-- Transporteur -->
-    <div class="pure-control-group">
+    <div>
       <Label for={"transporteur_" + ajoutRapide.id}>Transporteur</Label>
       <Svelecte
         inputId={"transporteur_" + ajoutRapide.id}

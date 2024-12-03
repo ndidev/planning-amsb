@@ -34,12 +34,12 @@
 
     Notiflix.Confirm.show(
       "Extraire le registre d'affrètement",
-      `<div class="pure-form pdf-form-notiflix">
-          <div class="pdf-champ-notiflix">
-            <label>Date début : <input type="date" class="date_debut" value="${date_debut}"></label>
+      `<div class="text-right">
+          <div class="mb-1 mr-8">
+            <label>Date début : <input type="date" value="${date_debut}"></label>
           </div>
-          <div class="pdf-champ-notiflix">
-            <label>Date fin : <input type="date" class="date_fin" value="${date_fin}"></label>
+          <div class="mb-1 mr-8">
+            <label>Date fin : <input type="date" value="${date_fin}"></label>
           </div>
         </div>`,
       "Extraire",

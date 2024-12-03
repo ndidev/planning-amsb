@@ -67,7 +67,7 @@
     class="items-end gap-2 lg:grid-flow-col lg:grid-cols-[max-content_repeat(3,1fr)_max-content] lg:grid-rows-2 lg:gap-4"
     style:display={filterIsDisplayed ? "grid" : "none"}
   >
-    <!-- Dates -->
+    <!-- Date début -->
     <div>
       <Label for="date_debut">Du</Label>
       <Input
@@ -78,6 +78,7 @@
       />
     </div>
 
+    <!-- Date fin -->
     <div>
       <Label for="date_fin">Au</Label>
       <Input

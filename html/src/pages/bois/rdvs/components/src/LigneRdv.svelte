@@ -229,7 +229,7 @@
 
 <div
   bind:this={ligne}
-  class="group grid grid-cols-[50px_1fr] gap-2 lg:grid-cols-[4%_4%_20%_8%_3%_8%_8%_3%_8%_20%_auto] border-b-[1px] border-gray-300 py-2 last:border-none lg:min-h-11"
+  class="group grid grid-cols-[50px_1fr] gap-2 lg:grid-cols-[4%_4%_20%_8%_3%_8%_8%_3%_8%_20%_auto] py-2 lg:min-h-11"
   style:--bg-arrive="hsl(44, 100%, 79%)"
   style:--bg-parti="hsl(104, 100%, 89%)"
   style:background-color={`var(--bg-${statut}, none)`}
@@ -320,7 +320,7 @@
   </div>
 
   <!-- Transporteur -->
-  <div class="transporteur">
+  <div>
     {#if rdv.transporteur}
       <IconText hideIcon={["desktop"]} showTooltip={rdv.transporteur >= 11}>
         <span slot="icon" title="Transporteur"><TruckIcon /></span>

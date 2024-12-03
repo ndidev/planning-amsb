@@ -42,9 +42,7 @@
   ) || { ...qualiteVierge };
 </script>
 
-<div
-  class="grid grid-cols-[16%_4%_4%_8%_29%_8%_16%] gap-2 px-1 py-2 text-xl border-b-[1px] border-b-gray-400 last:border-b-0"
->
+<div class="grid grid-cols-[16%_4%_4%_8%_29%_8%_16%] gap-2 px-1 py-2 text-xl">
   <!-- Produit + Qualité -->
   <div class="font-bold">
     <span style:color={produit.couleur}>{produit.nom}</span>

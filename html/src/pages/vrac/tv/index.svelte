@@ -96,7 +96,7 @@
     {#if $vracRdvs && $vracProduits}
       {#each [...rdvsGroupes] as [date, rdvs] (date)}
         <LigneDate {date} />
-        <div>
+        <div class="divide-y">
           {#each rdvs as rdv (rdv.id)}
             <LigneRdv {rdv} />
           {/each}

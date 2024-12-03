@@ -161,7 +161,7 @@
 {/if}
 
 <div
-  class="group grid grid-cols-[50px_1fr] gap-2 border-b-[1px] border-gray-300 py-2 last:border-none lg:grid-cols-[4%_16%_4%_8%_29%_8%_16%_auto] lg:text-lg"
+  class="group grid grid-cols-[50px_1fr] gap-2 py-2 lg:grid-cols-[4%_16%_4%_8%_29%_8%_16%_auto] lg:text-lg"
   bind:this={ligne}
 >
   <!-- Heure -->

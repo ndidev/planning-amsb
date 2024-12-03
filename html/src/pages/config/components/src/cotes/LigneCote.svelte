@@ -12,7 +12,6 @@
   import { ConfigLine } from "../../";
   import { LucideButton, NumericInput } from "@app/components";
 
-  import { Label, Input } from "flowbite-svelte";
   import Notiflix from "notiflix";
 
   import { fetcher } from "@app/utils";
@@ -63,17 +62,13 @@
 </script>
 
 <ConfigLine bind:modificationEnCours bind:ligne>
-  <div class="bloc pure-u-1 pure-u-lg-20-24">
-    <!-- Valeur -->
-    <div class="pure-control-group">
-      <!-- <Label for={"config_cotes_" + cote.cote}>Valeur : </Label> -->
-      <NumericInput
-        id={"config_cotes_" + cote.cote}
-        format="+2"
-        bind:value={cote.valeur}
-        on:input={() => (modificationEnCours = true)}
-      />
-    </div>
+  <div>
+    <NumericInput
+      id={"config_cotes_" + cote.cote}
+      format="+2"
+      bind:value={cote.valeur}
+      on:input={() => (modificationEnCours = true)}
+    />
   </div>
 
   <!-- Boutons -->

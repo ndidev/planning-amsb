@@ -23,7 +23,7 @@
   <CoteCesson tv />
   <BandeauInfo module="consignation" tv />
 
-  <main>
+  <main class="divide-y">
     {#each [...($consignationEscales?.values() || [])] as escale (escale.id)}
       <LigneEscale {escale} />
     {/each}

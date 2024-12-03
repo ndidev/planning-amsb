@@ -516,7 +516,7 @@
       </div>
 
       <!-- Numéro BL -->
-      <div class="pure-control-group">
+      <div>
         <Label for="numero_bl">Numéro BL</Label>
         <Input
           type="text"
@@ -528,7 +528,7 @@
       </div>
 
       <!-- Commentaire public -->
-      <div class="pure-control-group">
+      <div>
         <Label for="commentaire_public">Commentaire public</Label>
         <Textarea
           class="rdv_commentaire"
@@ -541,7 +541,7 @@
       </div>
 
       <!-- Commentaire caché -->
-      <div class="pure-control-group">
+      <div>
         <Label for="commentaire_cache"
           >Commentaire caché <LucideButton
             icon={CircleHelpIcon}

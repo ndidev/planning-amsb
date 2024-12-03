@@ -211,7 +211,7 @@
         maree={datesMareesSup4m.has(date)}
         navires={naviresParDate.get(date) || []}
       />
-      <div>
+      <div class="divide-y">
         {#each rdvs as rdv (rdv.id)}
           <LigneRdv {rdv} />
         {/each}

@@ -5,9 +5,11 @@
   export let escale: EscaleConsignation;
 </script>
 
-<li class="card">
-  <div class="navire">
-    <a href="/consignation/escales/{escale.id}">{escale.navire}</a>
+<li class="my-4 rounded-lg border-2 border-gray-300 p-4">
+  <div class="mb-1 font-bold">
+    <a class="hover:underline" href="/consignation/escales/{escale.id}"
+      >{escale.navire}</a
+    >
   </div>
   <div>
     {new DateUtils(escale.ops_date).format().long} &gt; {new DateUtils(
@@ -15,15 +17,15 @@
     ).format().long}
   </div>
 
-  <ul class="marchandises">
+  <ul class="mt-2">
     {#each escale.marchandises as marchandise}
-      <li>
-        <div class="marchandise-client pure-u-1">
-          <span class="marchandise_nom">{marchandise.marchandise}</span>
-          <span class="client">{marchandise.client}</span>
+      <li class="ml-4">
+        <div>
+          <span>{marchandise.marchandise}</span>
+          <span class="ml-2">{marchandise.client}</span>
 
           {#if marchandise.tonnage_outturn}
-            <span class="quantite tonnage">
+            <span class="ml-4">
               {marchandise.tonnage_outturn.toLocaleString("fr-FR", {
                 minimumFractionDigits: 3,
               }) + " MT"}
@@ -31,7 +33,7 @@
           {/if}
 
           {#if marchandise.cubage_outturn}
-            <span class="quantite cubage">
+            <span class="ml-4 italic">
               {marchandise.cubage_outturn.toLocaleString("fr-FR", {
                 minimumFractionDigits: 3,
               }) + " m3"}
@@ -39,7 +41,7 @@
           {/if}
 
           {#if marchandise.nombre_outturn}
-            <span class="quantite nombre">
+            <span class="ml-4">
               {marchandise.nombre_outturn.toLocaleString("fr-FR") + " colis"}
             </span>
           {/if}
@@ -50,44 +52,3 @@
     {/each}
   </ul>
 </li>
-
-<style>
-  .card {
-    border: 2px solid lightgray;
-    border-radius: 4px;
-    padding: 1rem;
-    margin-block: 1rem;
-  }
-
-  .navire {
-    font-weight: bold;
-    margin-bottom: 0.3rem;
-  }
-
-  .navire a,
-  .navire a:visited {
-    color: black;
-    text-decoration: none;
-  }
-
-  .navire a:hover {
-    text-decoration: underline;
-  }
-
-  .marchandises {
-    margin-top: 0.5rem;
-  }
-
-  .marchandises > li {
-    list-style-type: none;
-    margin-left: 1rem;
-  }
-
-  .client {
-    margin-left: 0.5rem;
-  }
-
-  .quantite {
-    margin-left: 1rem;
-  }
-</style>

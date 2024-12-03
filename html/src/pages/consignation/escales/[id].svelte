@@ -34,9 +34,9 @@
   const { consignationEscales } = getContext<Stores>("stores");
 
   let form: HTMLFormElement;
-  let boutonAjouter: BoutonAction;
-  let boutonModifier: BoutonAction;
-  let boutonSupprimer: BoutonAction;
+  let createCallButton: BoutonAction;
+  let updateCallButton: BoutonAction;
+  let deleteCallButton: BoutonAction;
 
   const nouvelleEscale: EscaleConsignation = {
     id: null,
@@ -163,7 +163,7 @@
   /**
    * Supprimer une marchandise.
    */
-  function supprimerMarchandise(
+  function deleteCargo(
     marchandiseASupprimer: EscaleConsignation["marchandises"][0]
   ) {
     escale.marchandises = escale.marchandises.filter(
@@ -243,10 +243,10 @@
   /**
    * Ajouter l'escale.
    */
-  async function ajouterEscale() {
+  async function createCall() {
     if (!validerFormulaire(form)) return;
 
-    boutonAjouter.$set({ block: true });
+    createCallButton.$set({ block: true });
 
     try {
       await consignationEscales.create(escale);
@@ -255,17 +255,17 @@
       $goto(`./${archives ? "?archives" : ""}`);
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
-      boutonAjouter.$set({ block: false });
+      createCallButton.$set({ block: false });
     }
   }
 
   /**
    * Modifier l'escale.
    */
-  async function modifierEscale() {
+  async function updateCall() {
     if (!validerFormulaire(form)) return;
 
-    boutonModifier.$set({ block: true });
+    updateCallButton.$set({ block: true });
 
     try {
       await consignationEscales.update(escale);
@@ -275,17 +275,17 @@
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
       console.error(erreur);
-      boutonModifier.$set({ block: false });
+      updateCallButton.$set({ block: false });
     }
   }
 
   /**
    * Supprimer l'escale.
    */
-  function supprimerEscale() {
+  function deleteCall() {
     if (!id) return;
 
-    boutonSupprimer.$set({ block: true });
+    deleteCallButton.$set({ block: true });
 
     // Demande de confirmation
     Notiflix.Confirm.show(
@@ -303,10 +303,10 @@
           Notiflix.Notify.failure(erreur.message);
         }
 
-        boutonSupprimer.$set({ block: false });
+        deleteCallButton.$set({ block: false });
       },
       () => {
-        boutonSupprimer.$set({ block: false });
+        deleteCallButton.$set({ block: false });
       },
       notiflixOptions.themes.red
     );
@@ -489,8 +489,8 @@
           />
         </div>
         <div>
-          <ul id="marchandises">
-            {#each escale.marchandises as marchandise ((i = marchandise.id ||= Math.random()))}
+          <ul>
+            {#each escale.marchandises as cargo ((i = cargo.id ||= Math.random()))}
               <li
                 class="my-1 flex flex-col items-end gap-2 rounded-lg border-[1px] border-gray-300 p-2 lg:flex-row"
               >
@@ -506,7 +506,7 @@
                       creatablePrefix=""
                       keepCreated
                       placeholder="Marchandise"
-                      bind:value={marchandise.marchandise}
+                      bind:value={cargo.marchandise}
                       required
                     />
                   </div>
@@ -521,17 +521,14 @@
                       creatablePrefix=""
                       keepCreated
                       placeholder="Client"
-                      bind:value={marchandise.client}
+                      bind:value={cargo.client}
                       required
                     />
                   </div>
                   <div>
                     <Label>
                       Opération*
-                      <Select
-                        class="operation"
-                        bind:value={marchandise.operation}
-                      >
+                      <Select class="operation" bind:value={cargo.operation}>
                         <option value="import">Import</option>
                         <option value="export">Export</option>
                       </Select>
@@ -543,7 +540,7 @@
                   <div class="font-bold">
                     BL (<Checkbox
                       class="environ checkbox-environ inline ml-1"
-                      bind:checked={marchandise.environ}
+                      bind:checked={cargo.environ}
                       >environ)
                     </Checkbox>
                   </div>
@@ -552,7 +549,7 @@
                     <NumericInput
                       id="tonnage_bl_{i}"
                       format="+3"
-                      bind:value={marchandise.tonnage_bl}
+                      bind:value={cargo.tonnage_bl}
                     />
                   </div>
                   <div>
@@ -560,7 +557,7 @@
                     <NumericInput
                       id="cubage_bl_{i}"
                       format="+3"
-                      bind:value={marchandise.cubage_bl}
+                      bind:value={cargo.cubage_bl}
                     />
                   </div>
                   <div>
@@ -568,7 +565,7 @@
                     <NumericInput
                       id="nombre_bl_{i}"
                       format="+0"
-                      bind:value={marchandise.nombre_bl}
+                      bind:value={cargo.nombre_bl}
                     />
                   </div>
                 </div>
@@ -580,7 +577,7 @@
                     <NumericInput
                       id="tonnage_outturn_{i}"
                       format="+3"
-                      bind:value={marchandise.tonnage_outturn}
+                      bind:value={cargo.tonnage_outturn}
                     />
                   </div>
                   <div>
@@ -588,7 +585,7 @@
                     <NumericInput
                       id="cubage_outturn_{i}"
                       format="+3"
-                      bind:value={marchandise.cubage_outturn}
+                      bind:value={cargo.cubage_outturn}
                     />
                   </div>
                   <div>
@@ -596,7 +593,7 @@
                     <NumericInput
                       id="nombre_outturn_{i}"
                       format="+0"
-                      bind:value={marchandise.nombre_outturn}
+                      bind:value={cargo.nombre_outturn}
                     />
                   </div>
                 </div>
@@ -605,7 +602,7 @@
                   <LucideButton
                     preset="delete"
                     title="Supprimer la marchandise"
-                    on:click={() => supprimerMarchandise(marchandise)}
+                    on:click={() => deleteCargo(cargo)}
                   />
                 </div>
               </li>
@@ -621,21 +618,21 @@
         <!-- Bouton "Ajouter" -->
         <BoutonAction
           preset="ajouter"
-          on:click={ajouterEscale}
-          bind:this={boutonAjouter}
+          on:click={createCall}
+          bind:this={createCallButton}
         />
       {:else}
         <!-- Bouton "Modifier" -->
         <BoutonAction
           preset="modifier"
-          on:click={modifierEscale}
-          bind:this={boutonModifier}
+          on:click={updateCall}
+          bind:this={updateCallButton}
         />
         <!-- Bouton "Supprimer" -->
         <BoutonAction
           preset="supprimer"
-          on:click={supprimerEscale}
-          bind:this={boutonSupprimer}
+          on:click={deleteCall}
+          bind:this={deleteCallButton}
         />
       {/if}
 

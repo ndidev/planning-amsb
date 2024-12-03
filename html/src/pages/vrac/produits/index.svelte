@@ -265,7 +265,7 @@
           />
         </legend>
         <div class="input">
-          <ul id="qualites" class="m-0 p-0 list-none">
+          <ul id="qualites" class="m-0 list-none divide-y p-0">
             <!-- Liste des qualités dynamique en fonction du produit choisi -->
             {#each produit.qualites as qualite}
               <LigneQualite {qualite} {supprimerQualite} />

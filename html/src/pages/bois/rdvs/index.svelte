@@ -190,9 +190,11 @@
     <!-- RDVs en attente -->
     <div>
       <LigneDateAttente camions={camions.get("attente")} />
-      {#each [...rdvsGroupes.get("attente")] as rdv (rdv.id)}
-        <LigneRdvAttente {rdv} />
-      {/each}
+      <div class="divide-y">
+        {#each [...rdvsGroupes.get("attente")] as rdv (rdv.id)}
+          <LigneRdvAttente {rdv} />
+        {/each}
+      </div>
     </div>
 
     <!-- RDVs plannifiés -->
@@ -200,9 +202,11 @@
       {#if date !== "attente" && date !== null}
         <div>
           <LigneDate {date} camions={camions.get(date)} />
-          {#each rdvs as rdv (rdv.id)}
-            <LigneRdv {rdv} />
-          {/each}
+          <div class="divide-y">
+            {#each rdvs as rdv (rdv.id)}
+              <LigneRdv {rdv} />
+            {/each}
+          </div>
         </div>
       {/if}
     {/each}

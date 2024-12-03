@@ -11,7 +11,7 @@
   } from "@app/components";
   import { LigneEscale } from "./components";
 
-  import type { Stores } from "@app/types";
+  import type { EscaleConsignation, Stores } from "@app/types";
 
   const { consignationEscales } = getContext<Stores>("stores");
 
@@ -25,10 +25,12 @@
     consignationEscales.setSearchParams({});
   }
 
-  let escales: typeof $consignationEscales;
+  let escales: EscaleConsignation[];
 
   const unsubscribeEscales = consignationEscales.subscribe((value) => {
-    escales = value;
+    if (value) {
+      escales = [...value.values()];
+    }
   });
 
   onDestroy(() => {
@@ -53,11 +55,13 @@
   <BandeauInfo module="consignation" pc />
 </div>
 
-<main class="w-full mb-8">
+<main class="w-full flex-auto">
   {#if escales}
-    {#each [...escales.values()] as escale (escale.id)}
-      <LigneEscale {escale} />
-    {/each}
+    <div class="divide-y">
+      {#each [...escales.values()] as escale (escale.id)}
+        <LigneEscale {escale} />
+      {/each}
+    </div>
   {:else}
     <Chargement />
   {/if}

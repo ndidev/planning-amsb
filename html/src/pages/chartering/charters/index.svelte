@@ -52,13 +52,13 @@
   subscriptions={["chartering/charters", "tiers", "config/bandeau-info"]}
 />
 
-<BandeauInfo module="chartering" pc />
+<div class="sticky top-0 z-[1] ml-16 lg:ml-24">
+  <BandeauInfo module="chartering" pc />
 
-<div class="filtre">
   <BandeauFiltre />
 </div>
 
-<main>
+<main class="divide-y">
   {#if charters}
     {#each [...charters.values()] as charter (charter.id)}
       <LigneCharter {charter} />
@@ -67,13 +67,3 @@
     <Chargement />
   {/if}
 </main>
-
-<style>
-  .filtre {
-    position: sticky;
-    top: 0;
-    left: 0;
-    margin-left: 100px;
-    z-index: 2;
-  }
-</style>

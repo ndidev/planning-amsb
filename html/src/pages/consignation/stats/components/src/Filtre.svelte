@@ -62,24 +62,12 @@
   <!-- Dates -->
   <div>
     <Label for="date_debut">Du</Label>
-    <Input
-      type="date"
-      id="date_debut"
-      class="datepicker pure-input-1"
-      name="date_debut"
-      bind:value={_filtre.date_debut}
-    />
+    <Input type="date" id="date_debut" bind:value={_filtre.date_debut} />
   </div>
 
   <div>
     <Label for="date_fin">Au</Label>
-    <Input
-      type="date"
-      id="date_fin"
-      class="datepicker pure-input-1"
-      name="date_fin"
-      bind:value={_filtre.date_fin}
-    />
+    <Input type="date" id="date_fin" bind:value={_filtre.date_fin} />
   </div>
 
   <!-- Filtre navire -->

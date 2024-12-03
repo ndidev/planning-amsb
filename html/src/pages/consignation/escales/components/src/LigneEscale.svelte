@@ -12,11 +12,12 @@
   import { onMount, onDestroy, getContext } from "svelte";
   import { goto } from "@roxi/routify";
 
+  import { ArrowDownIcon, ArrowUpIcon } from "lucide-svelte";
   import Hammer from "hammerjs";
 
-  import { LucideButton, Modal, BoutonAction } from "@app/components";
+  import { Badge, LucideButton, Modal, BoutonAction } from "@app/components";
 
-  import { device, locale, luminance } from "@app/utils";
+  import { device, locale } from "@app/utils";
 
   import type { EscaleConsignation, Stores } from "@app/types";
 
@@ -43,99 +44,103 @@
     0
   );
 
-  type ETX = {
-    status: typeof callStatus;
-    acronym: string;
-    date: string;
-    time: string;
+  type Status = {
+    name: "atsea" | "arrived" | "berthed" | "inops" | "completed" | "departed";
+    text: string;
     background: string;
+    nextEtxAcronym: string;
+    nextEtxDate: string;
+    nextEtxTime: string;
   };
 
-  $: etxList = [
-    {
-      status: "atsea",
-      acronym: "ETA",
-      date: escale.eta_date
-        ? new Date(escale.eta_date).toLocaleDateString(locale)
-        : "",
-      time: escale.eta_heure,
-      background: "hsla(0, 100%, 100%, 1)",
-    },
-    {
-      status: "arrived",
-      acronym: "ETB",
-      date: escale.etb_date
-        ? new Date(escale.etb_date).toLocaleDateString(locale)
-        : "",
-      time: escale.etb_heure,
-      background: "hsla(60, 100%, 50%, 0.6)",
-    },
-    {
-      status: "berthed",
-      acronym: "Ops",
-      date: escale.ops_date
-        ? new Date(escale.ops_date).toLocaleDateString(locale)
-        : "",
-      time: escale.ops_heure,
-      background: "hsla(288, 100%, 39%, 0.8)",
-    },
-    {
-      status: "inops",
-      acronym: "ETC",
-      date: escale.etc_date
-        ? new Date(escale.etc_date).toLocaleDateString(locale)
-        : "",
-      time: escale.etc_heure,
-      background: "hsla(182, 100%, 62%, 0.6)",
-    },
-    {
-      status: "completed",
-      acronym: "ETD",
-      date: escale.etd_date
-        ? new Date(escale.etd_date).toLocaleDateString(locale)
-        : "",
-      time: escale.etd_heure,
-      background: "hsla(120, 100%, 50%, 0.6)",
-    },
-    {
-      status: "departed",
-      acronym: "",
-      date: "",
-      time: "",
-      background: "hsla(221, 100%, 50%, 0.8)",
-    },
-  ] satisfies ETX[];
+  $: statusMap = new Map<Status["name"], Status>([
+    [
+      "atsea",
+      {
+        name: "atsea",
+        text: "",
+        background: "hsla(0, 100%, 100%, 1)",
+        nextEtxAcronym: "ETA",
+        nextEtxDate: escale.eta_date
+          ? new Date(escale.eta_date).toLocaleDateString(locale)
+          : "",
+        nextEtxTime: escale.eta_heure,
+      },
+    ],
+    [
+      "arrived",
+      {
+        name: "arrived",
+        text: "Sur rade",
+        background: "hsla(60, 100%, 47%, 0.8)",
+        nextEtxAcronym: "ETB",
+        nextEtxDate: escale.etb_date
+          ? new Date(escale.etb_date).toLocaleDateString(locale)
+          : "",
+        nextEtxTime: escale.etb_heure,
+      },
+    ],
+    [
+      "berthed",
+      {
+        name: "berthed",
+        text: "À quai",
+        background: "hsla(288, 100%, 39%, 0.8)",
+        nextEtxAcronym: "Ops",
+        nextEtxDate: escale.ops_date
+          ? new Date(escale.ops_date).toLocaleDateString(locale)
+          : "",
+        nextEtxTime: escale.ops_heure,
+      },
+    ],
+    [
+      "inops",
+      {
+        name: "inops",
+        text: "En opérations",
+        background: "hsla(182, 100%, 62%, 0.6)",
+        nextEtxAcronym: "ETC",
+        nextEtxDate: escale.etc_date
+          ? new Date(escale.etc_date).toLocaleDateString(locale)
+          : "",
+        nextEtxTime: escale.etc_heure,
+      },
+    ],
+    [
+      "completed",
+      {
+        name: "completed",
+        text: "Terminé",
+        background: "hsla(120, 100%, 50%, 0.6)",
+        nextEtxAcronym: "ETD",
+        nextEtxDate: escale.etd_date
+          ? new Date(escale.etd_date).toLocaleDateString(locale)
+          : "",
+        nextEtxTime: escale.etd_heure,
+      },
+    ],
+    [
+      "departed",
+      {
+        name: "departed",
+        text: "Parti",
+        background: "hsla(221, 100%, 50%, 0.8)",
+        nextEtxAcronym: "",
+        nextEtxDate: "",
+        nextEtxTime: "",
+      },
+    ],
+  ]);
 
-  let callStatus: ReturnType<typeof getCallStatus> | null = null;
-  let backgroundColor: string;
-  let textColor: string;
+  let callStatus: Status | null = null;
 
-  $: {
-    callStatus = (escale, archives ? null : getCallStatus());
-
-    backgroundColor =
-      etxList.find((etx) => etx.status === callStatus)?.background || "white";
-
-    textColor = luminance.getTextColor(backgroundColor);
-
-    if (escale.call_port === "Tréguier" && textColor === "black") {
-      textColor = "hsla(210, 100%, 40%, 0.9)";
-    }
-  }
+  $: callStatus = (escale, archives ? null : getCallStatus());
 
   /**
    * Assignation classe à chaque escale en fonction de la date
    * afin de mettre en forme le planning.
    */
   function getCallStatus() {
-    let status:
-      | "atsea"
-      | "arrived"
-      | "berthed"
-      | "inops"
-      | "completed"
-      | "departed" = "atsea";
-
     let eta = makeDateFromETX("eta");
     let etb = makeDateFromETX("etb");
     let ops = makeDateFromETX("ops");
@@ -143,24 +148,26 @@
     let etd = makeDateFromETX("etd");
     let now = new Date();
 
+    let status: Status = statusMap.get("atsea");
+
     if (eta && eta < now) {
-      status = "arrived";
+      status = statusMap.get("arrived");
     }
 
     if (etb && etb < now) {
-      status = "berthed";
+      status = statusMap.get("berthed");
     }
 
     if (ops && ops < now) {
-      status = "inops";
+      status = statusMap.get("inops");
     }
 
     if (etc && etc < now) {
-      status = "completed";
+      status = statusMap.get("completed");
     }
 
     if (etd && etd < now) {
-      status = "departed";
+      status = statusMap.get("departed");
     }
 
     return status;
@@ -220,16 +227,28 @@
 {/if}
 
 <div
-  class="group grid gap-1 border-b-[1px] border-gray-300 px-6 py-2 text-sm first:mt-3 last:mb-12 last:border-none lg:grid-cols-[20%_15%_10%_10%_40%_auto] lg:gap-2 lg:px-10 lg:text-base"
-  class:departed={callStatus === "departed"}
-  style:background-color={backgroundColor}
-  style:color={textColor}
+  class="group grid gap-1 px-3 py-2 text-sm first:pt-5 lg:grid-cols-[20%_15%_10%_10%_40%_auto] lg:gap-2 lg:px-10 lg:text-base border-l-[10px] border-l-[color:var(--status-color)]"
+  class:departed={callStatus?.name === "departed"}
+  style:background-color={/* backgroundColor */ "white"}
+  style:--status-color={callStatus?.background || "transparent"}
+  style:color={escale.call_port === "Tréguier"
+    ? "hsla(210, 100%, 40%, 0.9)"
+    : "black"}
   bind:this={line}
 >
   <!-- Navire / Armateur -->
   <div class="flex flex-row items-baseline gap-2 lg:flex-col">
-    <div class="text-lg lg:text-2xl">{escale.navire}</div>
+    <div class="mb-2">
+      <!-- Navire -->
+      <div class="text-lg lg:text-2xl">{escale.navire}</div>
 
+      <!-- Statut -->
+      {#if callStatus}
+        <Badge color={callStatus.background} size="sm">{callStatus.text}</Badge>
+      {/if}
+    </div>
+
+    <!-- Numéro de voyage -->
     {#if escale.voyage}
       <div class="voyage">
         {`(escale n°${escale.voyage})`}
@@ -241,15 +260,17 @@
 
   <!-- Dates et heures -->
   <div class="group-[.departed]:hidden lg:group-[.departed]:block">
-    {#each etxList as etx}
-      {#if etx.status !== "departed"}
+    {#each [...statusMap.values()] as status}
+      {#if status.name !== "departed"}
         <div
-          style:font-weight={callStatus === etx.status ? "bold" : "normal"}
-          style:font-size={callStatus === etx.status ? "1.1rem" : "1rem"}
+          style:font-weight={callStatus?.name === status.name
+            ? "bold"
+            : "normal"}
+          style:font-size={callStatus?.name === status.name ? "1.1em" : "1em"}
         >
-          <span class="nom">{etx.acronym} :</span>
-          <span class="date">{etx.date}</span>
-          <span class="heure">{etx.time}</span>
+          <span class="nom">{status.nextEtxAcronym} :</span>
+          <span class="date">{status.nextEtxDate}</span>
+          <span class="heure">{status.nextEtxTime}</span>
         </div>
       {/if}
     {/each}
@@ -294,35 +315,46 @@
 
   <!-- Marchandises -->
   <div>
-    {#each escale.marchandises as marchandise}
+    {#each escale.marchandises as cargo}
       <div>
         <div>
-          <span class="font-bold">{marchandise.marchandise}</span>
-          <span class="ml-2">{marchandise.client}</span>
+          <span
+            title={cargo.operation.charAt(0).toLocaleUpperCase() +
+              cargo.operation.slice(1)}
+            class="*:align-text-top"
+          >
+            {#if cargo.operation === "import"}
+              <ArrowDownIcon size="1em" />
+            {:else if cargo.operation === "export"}
+              <ArrowUpIcon size="1em" />
+            {/if}
+          </span>
+          <span class="font-bold">{cargo.marchandise}</span>
+          <span class="ml-2">{cargo.client}</span>
         </div>
 
         <div>
-          <span>{marchandise.environ ? "~" : ""}</span>
+          <span>{cargo.environ ? "~" : ""}</span>
 
-          {#if marchandise.tonnage_bl}
+          {#if cargo.tonnage_bl}
             <span class="ml-3">
-              {marchandise.tonnage_bl.toLocaleString("fr-FR", {
+              {cargo.tonnage_bl.toLocaleString("fr-FR", {
                 minimumFractionDigits: 3,
               }) + " MT"}
             </span>
           {/if}
 
-          {#if marchandise.cubage_bl}
+          {#if cargo.cubage_bl}
             <span class="ml-3 italic">
-              {marchandise.cubage_bl.toLocaleString("fr-FR", {
+              {cargo.cubage_bl.toLocaleString("fr-FR", {
                 minimumFractionDigits: 3,
               }) + " m3"}
             </span>
           {/if}
 
-          {#if marchandise.nombre_bl}
+          {#if cargo.nombre_bl}
             <span class="ml-3">
-              {marchandise.nombre_bl.toLocaleString("fr-FR") + " colis"}
+              {cargo.nombre_bl.toLocaleString("fr-FR") + " colis"}
             </span>
           {/if}
         </div>

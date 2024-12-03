@@ -11,10 +11,7 @@
   $: isNew = qualite.id === null;
 </script>
 
-<li
-  class="p-2 my-1 flex flex-col lg:flex-row gap-3 border-b-[1px]"
-  class:new={isNew}
->
+<li class="p-2 my-1 flex flex-col lg:flex-row gap-3" class:new={isNew}>
   <div>
     <Label for={"nom_" + qualite.id}>Nom</Label>
     <Input

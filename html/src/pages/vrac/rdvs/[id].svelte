@@ -276,7 +276,7 @@
       </div>
 
       <!-- Fournisseur -->
-      <div class="pure-control-group">
+      <div>
         <Label for="fournisseur">Fournisseur</Label>
         <Svelecte
           inputId="fournisseur"
@@ -289,7 +289,7 @@
       </div>
 
       <!-- Client -->
-      <div class="pure-control-group">
+      <div>
         <Label for="client">Client</Label>
         <Svelecte
           inputId="client"
@@ -302,7 +302,7 @@
       </div>
 
       <!-- Transporteur -->
-      <div class="pure-control-group">
+      <div>
         <Label for="transporteur">Transporteur</Label>
         <Svelecte
           inputId="transporteur"
@@ -314,11 +314,10 @@
       </div>
 
       <!-- Numéro commande -->
-      <div class="pure-control-group form-control">
+      <div>
         <Label for="num_commande">Numéro commande</Label>
         <Input
           type="text"
-          name="num_commande"
           id="num_commande"
           bind:value={rdv.num_commande}
           data-nom="Numéro commande"
@@ -326,11 +325,10 @@
       </div>
 
       <!-- Commentaire -->
-      <div class="pure-control-group form-control">
+      <div>
         <Label for="commentaire">Commentaire</Label>
         <Textarea
           class="rdv_commentaire"
-          name="commentaire"
           id="commentaire"
           bind:value={rdv.commentaire}
           rows={3}

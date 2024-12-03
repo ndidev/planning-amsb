@@ -137,7 +137,7 @@
 {/if}
 
 <div
-  class="group grid border-b-[1px] border-gray-300 py-2 text-gray-500 last:border-none lg:min-h-11 lg:grid-cols-[17%_20%_8%_8%_8%_3%_24%_auto]"
+  class="group grid py-2 text-gray-500 lg:min-h-11 lg:grid-cols-[17%_20%_8%_8%_8%_3%_24%_auto]"
   bind:this={ligne}
 >
   <!-- Date -->

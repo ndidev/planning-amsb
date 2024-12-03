@@ -4,7 +4,9 @@
 
   /* Svelecte */
   --sv-border-invalid: 2px solid var(--error-color, red);
-  --sv-min-height: 38px;
+  --sv-min-height: 42px; /* Same as flowbite-svelte */
+  --sv-border-radius: 0.5rem; /* Same as flowbite-svelte */
+  --sv-bg: rgb(249, 250, 251); /* Same as flowbite-svelte */
 }
 
 .svelecte.svelecte-control:has(select:invalid) {
@@ -17,7 +19,6 @@
   }
 }
 
-/* Svelecte highlight */
 .highlight {
   background-color: yellow;
 }
@@ -26,6 +27,8 @@
   border: none;
   box-shadow: none;
 }
+
+/* End Svelecte */
 
 input:invalid {
   border: 2px solid var(--error-color) !important;

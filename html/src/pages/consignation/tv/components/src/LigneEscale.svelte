@@ -1,7 +1,9 @@
 <script lang="ts">
   import { getContext } from "svelte";
 
-  import { locale } from "@app/utils";
+  import { ArrowDownIcon, ArrowUpIcon } from "lucide-svelte";
+
+  import { locale, luminance } from "@app/utils";
 
   import type { EscaleConsignation, Stores } from "@app/types";
 
@@ -22,74 +24,114 @@
     0
   );
 
-  // @ts-expect-error
-  $: statutEscale = (escale, obtenirStatutEscale());
-  $: statutEscaleTexte = (() => {
-    switch (statutEscale) {
-      case "atsea":
-        return "";
+  type Status = {
+    name: "atsea" | "arrived" | "berthed" | "inops" | "completed" | "departed";
+    background: string;
+    text: string;
+  };
 
-      case "arrived":
-        return "Sur rade";
+  const statusMap = new Map<Status["name"], Status>([
+    [
+      "atsea",
+      {
+        name: "atsea",
+        background: "hsla(0, 100%, 100%, 1)",
+        text: "",
+      },
+    ],
+    [
+      "arrived",
+      {
+        name: "arrived",
+        background: "hsla(60, 100%, 50%, 0.6)",
+        text: "Sur rade",
+      },
+    ],
+    [
+      "berthed",
+      {
+        name: "berthed",
+        background: "hsla(288, 100%, 39%, 0.8)",
+        text: "À quai",
+      },
+    ],
+    [
+      "inops",
+      {
+        name: "inops",
+        background: "hsla(182, 100%, 62%, 0.6)",
+        text: "En opérations",
+      },
+    ],
+    [
+      "completed",
+      {
+        name: "completed",
+        background: "hsla(120, 100%, 50%, 0.6)",
+        text: "Terminé",
+      },
+    ],
+    [
+      "departed",
+      {
+        name: "departed",
+        background: "hsla(221, 100%, 50%, 0.8)",
+        text: "Parti",
+      },
+    ],
+  ]);
 
-      case "berthed":
-        return "À quai";
+  let callStatus: Status | null = null;
+  let backgroundColor: Status["background"];
+  let textColor: string;
 
-      case "inops":
-        return "En opérations";
+  $: {
+    callStatus = (escale, getCallStatus());
 
-      case "completed":
-        return "Terminé";
+    backgroundColor = callStatus?.background || "white";
 
-      case "departed":
-        return "Parti";
+    textColor = luminance.getTextColor(backgroundColor);
 
-      default:
-        return "";
+    if (escale.call_port === "Tréguier" && textColor === "black") {
+      textColor = "hsla(210, 100%, 40%, 0.9)";
     }
-  })();
+  }
 
   /**
    * Assignation classe à chaque escale en fonction de la date
    * afin de mettre en forme le planning
    */
-  function obtenirStatutEscale() {
-    let statut:
-      | "atsea"
-      | "arrived"
-      | "berthed"
-      | "inops"
-      | "completed"
-      | "departed" = "atsea";
+  function getCallStatus() {
+    let eta = makeDateFromETX("eta");
+    let etb = makeDateFromETX("etb");
+    let ops = makeDateFromETX("ops");
+    let etc = makeDateFromETX("etc");
+    let etd = makeDateFromETX("etd");
+    let now = new Date();
 
-    let eta = creerDateDepuisETX("eta");
-    let etb = creerDateDepuisETX("etb");
-    let ops = creerDateDepuisETX("ops");
-    let etc = creerDateDepuisETX("etc");
-    let etd = creerDateDepuisETX("etd");
-    let maintenant = new Date();
+    let status: Status = statusMap.get("atsea");
 
-    if (eta && eta < maintenant) {
-      statut = "arrived";
+    if (eta && eta < now) {
+      status = statusMap.get("arrived");
     }
 
-    if (etb && etb < maintenant) {
-      statut = "berthed";
+    if (etb && etb < now) {
+      status = statusMap.get("berthed");
     }
 
-    if (ops && ops < maintenant) {
-      statut = "inops";
+    if (ops && ops < now) {
+      status = statusMap.get("inops");
     }
 
-    if (etc && etc < maintenant) {
-      statut = "completed";
+    if (etc && etc < now) {
+      status = statusMap.get("completed");
     }
 
-    if (etd && etd < maintenant) {
-      statut = "departed";
+    if (etd && etd < now) {
+      status = statusMap.get("departed");
     }
 
-    return statut;
+    return status;
   }
 
   /**
@@ -99,58 +141,54 @@
    *
    * @return Date au format 'YYYY-MM-DDTHH:MM'
    */
-  function creerDateDepuisETX(etx: "eta" | "etb" | "ops" | "etc" | "etd") {
+  function makeDateFromETX(etx: "eta" | "etb" | "ops" | "etc" | "etd") {
     if (!escale[`${etx}_date`]) return null;
 
     let date = escale[`${etx}_date`]; // Date mise au format 'YYYY-MM-DD'
-    let heure = escale[`${etx}_heure`];
-    let regexp_heure = /^((([01][0-9]|[2][0-3]):[0-5][0-9])|24:00)/;
+    let time = escale[`${etx}_heure`];
+    let timeRegex = /^((([01][0-9]|[2][0-3]):[0-5][0-9])|24:00)/;
 
-    if (!regexp_heure.test(heure)) {
-      heure = "00:00"; // Si heure non renseignée
+    if (!timeRegex.test(time)) {
+      time = "00:00"; // Si heure non renseignée
     } else {
-      heure = heure.substring(0, 5);
+      time = time.substring(0, 5);
     }
 
-    return new Date(date + "T" + heure);
+    return new Date(date + "T" + time);
   }
 </script>
 
 <div
-  class={`escale pure-g ${statutEscale}`}
-  class:treguier={escale.call_port === "Tréguier"}
-  style:background-color={`var(--bg-${statutEscale}, white)`}
+  class="grid grid-cols-[20%_15%_7%_13%_40%_auto] gap-1 p-5 text-xl last:pb-12"
+  style:background-color={backgroundColor}
+  style:color={textColor}
 >
   <!-- Navire / Armateur -->
-  <div class="navire-armateur bloc pure-u-5-24">
-    <div class="navire">{escale.navire}</div>
+  <div>
+    <div class="text-3xl">{escale.navire}</div>
 
     {#if escale.voyage}
-      <div class="voyage">{`(escale n°${escale.voyage})`}</div>
+      <div class="mt-3">{`(escale n°${escale.voyage})`}</div>
     {/if}
   </div>
 
   <!-- Dates et heures -->
-  <div class="etx bloc pure-u-3-24">
+  <div class="text-xl uppercase">
     <!-- ETA -->
-    {#if statutEscale === "atsea"}
-      <div class="eta">
-        <span class="date">
-          {escale.eta_date
-            ? new Date(escale.eta_date).toLocaleDateString(locale)
-            : ""}
-        </span>
-        <span class="heure">{escale.eta_heure}</span>
-      </div>
+    {#if callStatus?.name === "atsea"}
+      <span>
+        {escale.eta_date
+          ? new Date(escale.eta_date).toLocaleDateString(locale)
+          : ""}
+      </span>
+      <span class="ml-2">{escale.eta_heure}</span>
     {:else}
-      <div class="etape">
-        {statutEscaleTexte}
-      </div>
+      {callStatus?.text || ""}
     {/if}
   </div>
 
   <!-- TE -->
-  <div class="te bloc pure-u-2-24">
+  <div>
     <div>
       A : <span class="te_arrivee">
         {escale.te_arrivee
@@ -173,185 +211,96 @@
   </div>
 
   <!-- Ports -->
-  <div class="ports bloc pure-u-3-24">
-    <div class="last_port">
+  <div class="text-center">
+    <div>
       {$ports?.find((port) => port.locode === escale.last_port)
         ?.nom_affichage || ""}
     </div>
-    <div class="quai">
+    <div class="my-1 font-bold">
       {escale.quai}
     </div>
-    <div class="next_port">
+    <div>
       {$ports?.find((port) => port.locode === escale.next_port)
         ?.nom_affichage || "À ordres"}
     </div>
   </div>
 
   <!-- Marchandises -->
-  <div class="marchandises bloc pure-u-9-24">
-    {#each escale.marchandises as marchandise}
-      <div class="marchandise">
-        <span class="environ">{marchandise.environ ? "~" : ""}</span>
+  <div>
+    <table class="border-separate border-spacing-x-3 border-spacing-y-1">
+      <tbody>
+        {#each escale.marchandises as cargo}
+          <tr>
+            <td class="font-bold ml-3">
+              <span
+                title={cargo.operation.charAt(0).toLocaleUpperCase() +
+                  cargo.operation.slice(1)}
+                class="*:align-text-top"
+              >
+                {#if cargo.operation === "import"}
+                  <ArrowDownIcon size="1em" />
+                {:else if cargo.operation === "export"}
+                  <ArrowUpIcon size="1em" />
+                {/if}
+              </span>{cargo.marchandise}</td
+            >
+            <td class="environ">{cargo.environ ? "~" : ""}</td>
 
-        {#if marchandise.tonnage_bl}
-          <span class="quantite tonnage">
-            {marchandise.tonnage_bl.toLocaleString("fr-FR", {
-              minimumFractionDigits: 3,
-            }) + " MT"}
-          </span>
-        {/if}
+            <td class="text-right">
+              {#if cargo.tonnage_bl}
+                {cargo.tonnage_bl.toLocaleString("fr-FR", {
+                  minimumFractionDigits: 3,
+                }) + " MT"}
+              {/if}
+            </td>
 
-        {#if marchandise.cubage_bl}
-          <span class="quantite cubage">
-            {marchandise.cubage_bl.toLocaleString("fr-FR", {
-              minimumFractionDigits: 3,
-            }) + " m3"}
-          </span>
-        {/if}
+            <td class="text-right italic">
+              {#if cargo.cubage_bl}
+                {cargo.cubage_bl.toLocaleString("fr-FR", {
+                  minimumFractionDigits: 3,
+                }) + " m3"}
+              {/if}
+            </td>
 
-        {#if marchandise.nombre_bl}
-          <span class="quantite nombre">
-            {marchandise.nombre_bl.toLocaleString("fr-FR") + " colis"}
-          </span>
-        {/if}
+            <td class="text-right">
+              {#if cargo.nombre_bl}
+                {cargo.nombre_bl.toLocaleString("fr-FR") + " colis"}
+              {/if}
+            </td>
+          </tr>
+        {/each}
+      </tbody>
 
-        <span class="marchandise_nom">{marchandise.marchandise}</span>
-      </div>
-    {/each}
+      {#if escale.marchandises.length > 1 && (tonnageTotal || cubageTotal || nombreTotal)}
+        <tfoot>
+          <tr>
+            <td class="total mt-1">Total</td>
+            <td></td>
 
-    {#if escale.marchandises.length > 1 && (tonnageTotal || cubageTotal || nombreTotal)}
-      <div class="total pure-u-1">
-        Total
+            <td class="text-right">
+              {#if tonnageTotal}
+                {tonnageTotal.toLocaleString("fr-FR", {
+                  minimumFractionDigits: 3,
+                }) + " MT"}
+              {/if}
+            </td>
 
-        {#if tonnageTotal}
-          <span class="quantite tonnage">
-            {tonnageTotal.toLocaleString("fr-FR", {
-              minimumFractionDigits: 3,
-            }) + " MT"}
-          </span>
-        {/if}
+            <td class="text-right italic">
+              {#if cubageTotal}
+                {cubageTotal.toLocaleString("fr-FR", {
+                  minimumFractionDigits: 3,
+                }) + " m3"}
+              {/if}
+            </td>
 
-        {#if cubageTotal}
-          <span class="quantite cubage">
-            {cubageTotal.toLocaleString("fr-FR", {
-              minimumFractionDigits: 3,
-            }) + " m3"}
-          </span>
-        {/if}
-
-        {#if nombreTotal}
-          <span class="quantite nombre">
-            {nombreTotal.toLocaleString("fr-FR") + " colis"}
-          </span>
-        {/if}
-      </div>
-    {/if}
+            <td class="text-right">
+              {#if nombreTotal}
+                {nombreTotal.toLocaleString("fr-FR") + " colis"}
+              {/if}
+            </td>
+          </tr>
+        </tfoot>
+      {/if}
+    </table>
   </div>
 </div>
-
-<style>
-  * {
-    --etx-actif-size: 1.3rem;
-    --etx-actif-weight: normal;
-    --etx-actif-transform: uppercase;
-    --bg-arrived: hsla(60, 100%, 50%, 0.6);
-    --bg-berthed: hsla(288, 100%, 39%, 0.8);
-    --bg-inops: hsla(182, 100%, 62%, 0.6);
-    --bg-completed: hsla(120, 100%, 50%, 0.6);
-    --bg-departed: hsla(221, 100%, 50%, 0.8);
-  }
-
-  /* PLANNING */
-
-  .escale {
-    font-size: 1.2em;
-    padding: 20px 0px 20px 20px;
-    border-bottom: 1px solid #999;
-  }
-
-  .escale:last-child {
-    margin-bottom: 50px;
-    border-bottom: none;
-  }
-
-  .escale.treguier {
-    color: #0d74ba;
-  }
-
-  .bloc {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    margin-left: 0.3em;
-  }
-
-  .etx :is(.date, .heure) {
-    margin-left: 0.4em;
-  }
-
-  .navire {
-    font-size: 1.6em;
-  }
-
-  .voyage {
-    color: hsl(0, 0%, 39%);
-    margin-top: 0.7em;
-  }
-
-  .ports.bloc {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    text-align: center;
-  }
-
-  .quai {
-    margin: 5px 0;
-    font-weight: bold;
-  }
-
-  .marchandise_nom {
-    font-weight: bold;
-  }
-
-  .marchandise .cubage {
-    font-style: italic;
-  }
-
-  .marchandise .quantite,
-  .total .quantite {
-    margin-left: 10px;
-  }
-
-  .marchandise span {
-    margin-left: 0.7em;
-  }
-
-  :is(.marchandise, .total) .cubage {
-    font-style: italic;
-  }
-
-  .total {
-    margin-top: 5px;
-  }
-
-  /* Couleurs suivant statut escale */
-
-  .eta,
-  .etape {
-    display: inline-block;
-    font-size: var(--etx-actif-size);
-    font-weight: var(--etx-actif-weight);
-    text-transform: var(--etx-actif-transform);
-  }
-
-  .escale.berthed,
-  .escale.berthed .voyage {
-    color: #fff;
-  }
-
-  .escale.departed,
-  .escale.departed .voyage {
-    color: #fff;
-  }
-</style>
