@@ -28,6 +28,7 @@ export type { ProduitVrac, QualiteVrac } from "./src/ProduitVrac";
 export type { RdvBois } from "./src/RdvBois";
 export type { RdvVrac } from "./src/RdvVrac";
 export type { ServiceAgence } from "./src/ServiceAgence";
+export type { StevedoringEquipment } from "./src/StevedoringEquipment";
 export type { StevedoringStaff } from "./src/StevedoringStaff";
 export type { Stores } from "./src/Stores";
 export type { Tiers } from "./src/Tiers";

@@ -9,9 +9,9 @@
 
   import { currentUser } from "@app/stores";
 
-  import type { StevedoringStaff } from "@app/types";
+  import type { StevedoringEquipment } from "@app/types";
 
-  export let staff: StevedoringStaff;
+  export let equipment: StevedoringEquipment;
 
   export let hidden = true;
 
@@ -38,22 +38,23 @@
     <!-- Nom -->
     <div class="text-3xl *:align-baseline">
       <span class="font-bold">
-        {staff.firstname}
-        {staff.lastname}
+        {equipment.brand}
+        {equipment.model}
+        {equipment.internalNumber}
       </span>
 
       {#if $currentUser.canEdit("manutention")}
         <LucideButton
           preset="edit"
           icon={PencilIcon}
-          on:click={$goto(`/manutention/personnel/${staff.id}`)}
+          on:click={$goto(`/manutention/equipements/${equipment.id}`)}
           align="baseline"
         />
       {/if}
     </div>
 
     <!-- Statut -->
-    {#if staff.isActive}
+    {#if equipment.isActive}
       <div>
         <Badge color="hsla(120, 90%, 40%, 0.6)">actif</Badge>
       </div>
@@ -63,35 +64,37 @@
       </div>
     {/if}
 
-    <!-- Téléphone -->
+    <!-- Marque -->
     <div>
-      Téléphone :
-      {#if staff.phone}
-        <a href="tel:{staff.phone}" title="Appeler"
-          ><span class="hover:underline">{staff.phone}</span>
-          <PhoneCallIcon size="0.8em" /></a
-        >
-      {:else}
-        non renseigné
-      {/if}
+      Marque : {equipment.brand}
     </div>
 
-    <!-- Type de contrat -->
+    <!-- Modèle -->
     <div>
-      Type de contrat : {staff.type === "cdi" ? "CDI" : "Intérimaire"}
+      Modèle : {equipment.model}
     </div>
 
-    <!-- Agence d'intérim -->
-    {#if staff.tempWorkAgency}
-      <div>Agence d'intérim : {staff.tempWorkAgency}</div>
-    {/if}
+    <!-- Type -->
+    <div>
+      Type : {equipment.type}
+    </div>
+
+    <!-- Numéro interne -->
+    <div>
+      Numéro interne : {equipment.internalNumber || "non renseigné"}
+    </div>
+
+    <!-- Numéro de série -->
+    <div>
+      Numéro de série : {equipment.serialNumber || "non renseigné"}
+    </div>
 
     <!-- Commentaires -->
     <div>
       <div>Commentaires :</div>
-      {#if staff.comments}
+      {#if equipment.comments}
         <div class="ml-2">
-          {@html staff.comments.replace("\r\n|\r|\n", "<br/>")}
+          {@html equipment.comments.replace("\r\n|\r|\n", "<br/>")}
         </div>
       {:else}
         <div class="ml-2 italic">Aucun commentaire</div>

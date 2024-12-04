@@ -18,6 +18,7 @@
     consignationEscales: stores.consignationEscales(),
     charteringCharters: stores.charteringCharters(),
     stevedoringStaff: stores.stevedoringStaff,
+    stevedoringEquipments: stores.stevedoringEquipments,
     tiers: stores.tiers,
     configBandeauInfo: stores.configBandeauInfo,
     configPdf: stores.configPdf,

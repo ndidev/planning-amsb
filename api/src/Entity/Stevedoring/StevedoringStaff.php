@@ -142,7 +142,7 @@ class StevedoringStaff extends AbstractEntity
             'phone' => $this->getPhone(),
             'type' => $this->getType(),
             'tempWorkAgency' => $this->getTempWorkAgency(),
-            'active' => $this->isActive(),
+            'isActive' => $this->isActive(),
             'comments' => $this->getComments(),
             'deletedAt' => $this->getDeletedAt()?->format('Y-m-d H:i:s'),
         ];

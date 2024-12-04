@@ -6,10 +6,9 @@
   import { Accordion, AccordionItem, Button, Search } from "flowbite-svelte";
 
   import { StaffCard } from "./components";
-  import { PageHeading } from "@app/components";
+  import { Chargement, PageHeading, SseConnection } from "@app/components";
 
   import type { StevedoringStaff, Stores } from "@app/types";
-  import { Chargement } from "@app/components";
 
   const { stevedoringStaff } = getContext<Stores>("stores");
 
@@ -32,11 +31,11 @@
       .filter(filterStaffBySearch));
 
   function groupStaffByLastnameInitial(staffList: StevedoringStaff[]) {
-    return staffList.reduce((acc, staff) => {
+    return staffList.reduce((map, staff) => {
       const initial = staff.lastname[0].toUpperCase();
-      if (!acc.has(initial)) acc.set(initial, []);
-      acc.get(initial).push(staff);
-      return acc;
+      if (!map.has(initial)) map.set(initial, []);
+      map.get(initial).push(staff);
+      return map;
     }, new Map<string, StevedoringStaff[]>());
   }
 
@@ -49,6 +48,8 @@
 </script>
 
 <!-- routify:options guard="manutention" -->
+
+<SseConnection subscriptions={["stevedoring/staff"]} />
 
 <main class="mx-auto w-10/12 lg:w-2/3">
   <PageHeading>Personnel de manutention</PageHeading>

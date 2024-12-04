@@ -20,52 +20,50 @@
     preventFormSubmitOnEnterKeydown,
   } from "@app/utils";
 
-  import type { StevedoringStaff, Stores } from "@app/types";
+  import type { StevedoringEquipment, Stores } from "@app/types";
 
-  const { stevedoringStaff } = getContext<Stores>("stores");
+  const { stevedoringEquipments } = getContext<Stores>("stores");
 
   let form: HTMLFormElement;
   let createButton: BoutonAction;
   let updateButton: BoutonAction;
   let deleteButton: BoutonAction;
 
-  const newStaff: StevedoringStaff = {
+  const newEquipment: StevedoringEquipment = {
     id: null,
-    firstname: "",
-    lastname: "",
-    phone: "",
-    type: "cdi",
-    tempWorkAgency: null,
+    brand: "",
+    model: "",
+    type: "",
+    internalNumber: "",
+    serialNumber: "",
     isActive: true,
     comments: "",
-    deletedAt: null,
   };
 
   /**
    * Identifiant du personnel.
    */
-  let id: StevedoringStaff["id"] = parseInt($params.id);
+  let id: StevedoringEquipment["id"] = parseInt($params.id);
 
   let isNew = $params.id === "new";
 
-  let staff: StevedoringStaff = { ...newStaff };
+  let equipment: StevedoringEquipment = { ...newEquipment };
 
   (async () => {
     try {
       if (id) {
-        staff = structuredClone(await stevedoringStaff.get(id));
-        if (!staff) throw new Error();
+        equipment = structuredClone(await stevedoringEquipments.get(id));
+        if (!equipment) throw new Error();
       }
     } catch (error) {
       $redirect("./new");
     }
   })();
 
-  $: tempWorkAgencies = $stevedoringStaff
+  $: types = $stevedoringEquipments
     ? new Set(
-        [...$stevedoringStaff.values()]
-          .filter((staff) => staff.type === "interim")
-          .map((staff) => staff.tempWorkAgency)
+        [...$stevedoringEquipments.values()]
+          .map((equipment) => equipment.type)
           .filter((agency) => agency)
       )
     : [];
@@ -73,13 +71,13 @@
   /**
    * Créer le RDV.
    */
-  async function createStaff() {
+  async function createEquipment() {
     if (!validerFormulaire(form)) return;
 
     createButton.$set({ disabled: true });
 
     try {
-      await stevedoringStaff.create(staff);
+      await stevedoringEquipments.create(equipment);
 
       Notiflix.Notify.success("Le personnel a été ajouté");
       $goto("./");
@@ -93,13 +91,13 @@
   /**
    * Modifier le RDV.
    */
-  async function updateStaff() {
+  async function updateEquipment() {
     if (!validerFormulaire(form)) return;
 
     updateButton.$set({ disabled: true });
 
     try {
-      await stevedoringStaff.update(staff);
+      await stevedoringEquipments.update(equipment);
 
       Notiflix.Notify.success("Le personnel a été modifié");
       $goto("./");
@@ -113,7 +111,7 @@
   /**
    * Supprimer le RDV.
    */
-  function deleteStaff() {
+  function deleteEquipment() {
     if (!id) return;
 
     deleteButton.$set({ disabled: true });
@@ -121,14 +119,14 @@
     // Demande de confirmation
     Notiflix.Confirm.show(
       "Suppression de personnel",
-      `Voulez-vous vraiment supprimer le personnel ?`,
+      `Voulez-vous vraiment supprimer l'équipement ?`,
       "Supprimer",
       "Annuler",
       async function () {
         try {
-          await stevedoringStaff.delete(id);
+          await stevedoringEquipments.delete(id);
 
-          Notiflix.Notify.success("Le personnel a été supprimé");
+          Notiflix.Notify.success("L'équipement a été supprimé");
           $goto("./");
         } catch (erreur) {
           Notiflix.Notify.failure(erreur.message);
@@ -145,9 +143,9 @@
 <!-- routify:options guard="manutention/edit" -->
 
 <main class="mx-auto w-10/12 lg:w-1/3">
-  <PageHeading>Personnel de manutention</PageHeading>
+  <PageHeading>Équipement de manutention</PageHeading>
 
-  {#if !staff}
+  {#if !equipment}
     <Chargement />
   {:else}
     <form
@@ -155,78 +153,78 @@
       bind:this={form}
       use:preventFormSubmitOnEnterKeydown
     >
-      <!-- Prénom -->
+      <!-- Marque -->
       <div>
-        <Label for="firstname">Prénom</Label>
+        <Label for="brand">Marque</Label>
         <Input
           type="text"
-          id="firstname"
-          bind:value={staff.firstname}
-          placeholder="Prénom"
+          id="brand"
+          bind:value={equipment.brand}
+          placeholder="Marque"
         />
       </div>
 
-      <!-- Nom de famille -->
+      <!-- Modèle -->
       <div>
-        <Label for="lastname">Nom de famille</Label>
+        <Label for="model">Modèle</Label>
         <Input
           type="text"
-          id="lastname"
-          bind:value={staff.lastname}
-          placeholder="Nom de famille"
-        />
-      </div>
-
-      <!-- Téléphone -->
-      <div>
-        <Label for="phone">Téléphone</Label>
-        <Input
-          type="tel"
-          id="phone"
-          bind:value={staff.phone}
-          placeholder="Téléphone"
+          id="model"
+          bind:value={equipment.model}
+          placeholder="Modèle"
         />
       </div>
 
       <!-- Type -->
       <div>
         <Label for="type">Type</Label>
-        <Select id="type" bind:value={staff.type} placeholder="" required>
-          <option value="cdi">CDI</option>
-          <option value="interim">Intérimaire</option>
-        </Select>
+        <Svelecte
+          inputId="type"
+          bind:value={equipment.type}
+          options={[...types.values()]}
+          placeholder="Type"
+          creatable
+          creatablePrefix=""
+          allowEditing
+          required
+        />
       </div>
 
-      <!-- Agence d'intérim -->
-      {#if staff.type === "interim"}
-        <div>
-          <Label for="tempWorkAgency">Agence d'intérim</Label>
-          <Svelecte
-            inputId="tempWorkAgency"
-            bind:value={staff.tempWorkAgency}
-            options={[...tempWorkAgencies.values()]}
-            placeholder="Agence d'intérim"
-            creatable
-            creatablePrefix=""
-            allowEditing
-            required
-          />
-        </div>
-      {/if}
+      <!-- Numéro interne -->
+      <div>
+        <Label for="internalNumber">Numéro interne</Label>
+        <Input
+          type="text"
+          id="internalNumber"
+          bind:value={equipment.internalNumber}
+          placeholder="Numéro interne"
+        />
+      </div>
+
+      <!-- Numéro de série -->
+      <div>
+        <Label for="serialNumber">Numéro de série</Label>
+        <Input
+          type="text"
+          id="serialNumber"
+          bind:value={equipment.serialNumber}
+          placeholder="Numéro de série"
+        />
+      </div>
 
       <!-- Commentaires -->
       <div>
         <Label for="comments">Commentaires</Label>
         <Textarea
           id="comments"
-          bind:value={staff.comments}
+          bind:value={equipment.comments}
           placeholder="Commentaires"
         />
 
         <!-- Actif -->
         <div>
           <Label for="isActive">Actif</Label>
-          <Toggle id="isActive" bind:checked={staff.isActive} />
+          <Toggle id="isActive" bind:checked={equipment.isActive} />
         </div>
       </div>
     </form>
@@ -237,20 +235,20 @@
         <!-- Bouton "Ajouter" -->
         <BoutonAction
           preset="ajouter"
-          on:click={createStaff}
+          on:click={createEquipment}
           bind:this={createButton}
         />
       {:else}
         <!-- Bouton "Modifier" -->
         <BoutonAction
           preset="modifier"
-          on:click={updateStaff}
+          on:click={updateEquipment}
           bind:this={updateButton}
         />
         <!-- Bouton "Supprimer" -->
         <BoutonAction
           preset="supprimer"
-          on:click={deleteStaff}
+          on:click={deleteEquipment}
           bind:this={deleteButton}
         />
       {/if}

@@ -5,7 +5,7 @@
 
   Usage:
   ```tsx
-  <StaffLine
+  <StaffCard
     staff={staff} // The staff member to display
   />
   ```
@@ -25,15 +25,10 @@
 
 <Card size="xs">
   <div>
-    <!-- <a
-      href="./personnel/{staff.id}"
-      class="hover:underline"
-      class:opacity-50={!staff.active}>{staff.firstname} {staff.lastname}</a
-    > -->
     <button
       on:click={() => (drawerHidden = false)}
       class="hover:underline"
-      class:opacity-50={!staff.active}
+      class:opacity-50={!staff.isActive}
       >{staff.firstname} {staff.lastname}</button
     >
   </div>

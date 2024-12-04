@@ -148,7 +148,7 @@ final class StevedoringStaffTest extends TestCase
             'phone' => '0123456789',
             'type' => 'interim',
             'tempWorkAgency' => 'Some agency',
-            'active' => true,
+            'isActive' => true,
             'comments' => 'Some comments',
             'deletedAt' => '2021-01-01 01:23:45',
         ];

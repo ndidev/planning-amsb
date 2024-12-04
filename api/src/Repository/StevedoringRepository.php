@@ -8,6 +8,7 @@ namespace App\Repository;
 
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\DB\DBException;
+use App\Entity\Stevedoring\StevedoringEquipment;
 use App\Entity\Stevedoring\StevedoringStaff;
 use App\Service\StevedoringService;
 
@@ -17,6 +18,10 @@ final class StevedoringRepository extends Repository
     {
         parent::__construct();
     }
+
+    // =====
+    // Staff
+    // =====
 
     public function staffExists(int $id): bool
     {
@@ -36,11 +41,6 @@ final class StevedoringRepository extends Repository
         }
 
         return true;
-    }
-
-    public function taskExists(int $id): bool
-    {
-        return $this->mysql->exists("stevedoring_tasks", $id);
     }
 
     /**
@@ -100,7 +100,7 @@ final class StevedoringRepository extends Repository
                 phone = :phone,
                 type = :type,
                 temp_work_agency = :tempWorkAgency,
-                active = :active,
+                is_active = :isActive,
                 comments = :comments";
 
         $request = $this->mysql->prepare($statement);
@@ -118,7 +118,7 @@ final class StevedoringRepository extends Repository
                 'phone' => $staff->getPhone(),
                 'type' => $staff->getType(),
                 'tempWorkAgency' => $staff->getTempWorkAgency(),
-                'active' => (int) $staff->isActive(),
+                'isActive' => (int) $staff->isActive(),
                 'comments' => $staff->getComments(),
             ]);
 
@@ -146,7 +146,7 @@ final class StevedoringRepository extends Repository
                 phone = :phone,
                 type = :type,
                 temp_work_agency = :tempWorkAgency,
-                active = :active,
+                is_active = :isActive,
                 comments = :comments
             WHERE
                 id = :id";
@@ -164,7 +164,7 @@ final class StevedoringRepository extends Repository
                 'phone' => $staff->getPhone(),
                 'type' => $staff->getType(),
                 'tempWorkAgency' => $staff->getTempWorkAgency(),
-                'active' => (int) $staff->isActive(),
+                'isActive' => (int) $staff->isActive(),
                 'comments' => $staff->getComments(),
                 'id' => $staff->getId(),
             ]);
@@ -183,7 +183,7 @@ final class StevedoringRepository extends Repository
                 firstname = '',
                 lastname = '',
                 phone = '',
-                active = 0,
+                is_active = 0,
                 comments = '',
                 deleted_at = NOW()
             WHERE
@@ -200,5 +200,186 @@ final class StevedoringRepository extends Repository
         } catch (\PDOException $e) {
             throw new DBException("Impossible de supprimer le personnel de manutention.", previous: $e);
         }
+    }
+
+    // =========
+    // Equipment
+    // =========
+
+    public function equipmentExists(int $id): bool
+    {
+        return $this->mysql->exists("stevedoring_equipments", $id);
+    }
+
+    /**
+     * 
+     * @return Collection<StevedoringEquipment>
+     * @throws DBException 
+     */
+    public function fetchAllEquipments(): Collection
+    {
+        $equipmentStatement =
+            "SELECT *
+             FROM stevedoring_equipments
+             ORDER BY brand ASC, model ASC, internal_number ASC";
+
+        $equipmentRequest = $this->mysql->query($equipmentStatement);
+
+        if (!$equipmentRequest) {
+            throw new DBException("Impossible de récupérer les équipements de manutention.");
+        }
+
+        /** @var array<array<mixed>> */
+        $equipmentRaw = $equipmentRequest->fetchAll();
+
+        $allEquipment = array_map(
+            fn($equipment) => $this->stevedoringService->makeStevedoringEquipmentFromDatabase($equipment),
+            $equipmentRaw
+        );
+
+        return new Collection($allEquipment);
+    }
+
+    public function fetchEquipment(int $id): ?StevedoringEquipment
+    {
+        $equipmentStatement =
+            "SELECT *
+             FROM stevedoring_equipments
+             WHERE id = :id";
+
+        $equipmentRequest = $this->mysql->prepare($equipmentStatement);
+
+        if (!$equipmentRequest) {
+            throw new DBException("Impossible de récupérer l'équipement de manutention.");
+        }
+
+        $equipmentRequest->execute(['id' => $id]);
+
+        $equipmentRaw = $equipmentRequest->fetch();
+
+        if (!\is_array($equipmentRaw)) {
+            return null;
+        }
+
+        $equipment = $this->stevedoringService->makeStevedoringEquipmentFromDatabase($equipmentRaw);
+
+        return $equipment;
+    }
+
+    public function createEquipment(StevedoringEquipment $equipment): StevedoringEquipment
+    {
+        $statement =
+            "INSERT INTO stevedoring_equipments
+            SET
+                type = :type,
+                brand = :brand,
+                model = :model,
+                internal_number = :internalNumber,
+                serial_number = :serialNumber,
+                comments = :comments,
+                is_active = :isActive";
+
+        $request = $this->mysql->prepare($statement);
+
+        if (!$request) {
+            throw new DBException("Impossible de créer l'équipement de manutention.");
+        }
+
+        try {
+            $this->mysql->beginTransaction();
+
+            $request->execute([
+                'type' => $equipment->getType(),
+                'brand' => $equipment->getBrand(),
+                'model' => $equipment->getModel(),
+                'internalNumber' => $equipment->getInternalNumber(),
+                'serialNumber' => $equipment->getSerialNumber(),
+                'comments' => $equipment->getComments(),
+                'isActive' => (int) $equipment->isActive(),
+            ]);
+
+            $lastInsertId = (int) $this->mysql->lastInsertId();
+
+            $this->mysql->commit();
+        } catch (\PDOException $e) {
+            $this->mysql->rollBack();
+            throw new DBException("Impossible de créer l'équipement de manutention.", previous: $e);
+        }
+
+        /** @var StevedoringEquipment */
+        $createdEquipment = $this->fetchEquipment($lastInsertId);
+
+        return $createdEquipment;
+    }
+
+    public function updateEquipment(StevedoringEquipment $equipment): StevedoringEquipment
+    {
+        $statement =
+            "UPDATE stevedoring_equipments
+            SET
+                type = :type,
+                brand = :brand,
+                model = :model,
+                internal_number = :internalNumber,
+                serial_number = :serialNumber,
+                comments = :comments,
+                is_active = :isActive
+            WHERE
+                id = :id";
+
+        $request = $this->mysql->prepare($statement);
+
+        if (!$request) {
+            throw new DBException("Impossible de mettre à jour l'équipement de manutention.");
+        }
+
+        try {
+            $request->execute([
+                'type' => $equipment->getType(),
+                'brand' => $equipment->getBrand(),
+                'model' => $equipment->getModel(),
+                'internalNumber' => $equipment->getInternalNumber(),
+                'serialNumber' => $equipment->getSerialNumber(),
+                'comments' => $equipment->getComments(),
+                'isActive' => (int) $equipment->isActive(),
+                'id' => $equipment->getId(),
+            ]);
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de mettre à jour l'équipement de manutention.", previous: $e);
+        }
+
+        return $equipment;
+    }
+
+    public function deleteEquipment(int $id): void
+    {
+        $tasksCount = $this->fetchTasksCountForEquipment($id);
+        if ($tasksCount > 0) {
+            throw new DBException("Impossible de supprimer l'équipement de manutention car il est utilisé dans des tâches.");
+        }
+
+        try {
+            $deleteStatement = "DELETE FROM stevedoring_equipments WHERE id = :id";
+            $deleteRequest = $this->mysql->prepare($deleteStatement);
+            $deleteRequest->execute(['id' => $id]);
+        } catch (\PDOException $e) {
+            throw new DBException("Erreur lors de la suppression.", previous: $e);
+        }
+    }
+
+    public function fetchTasksCountForEquipment(int $id): int
+    {
+        // TODO: implement
+
+        return 0;
+    }
+
+    // =====
+    // Tasks
+    // =====
+
+    public function taskExists(int $id): bool
+    {
+        return $this->mysql->exists("stevedoring_tasks", $id);
     }
 }

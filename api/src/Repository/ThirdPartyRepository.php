@@ -219,24 +219,21 @@ final class ThirdPartyRepository extends Repository
      * Supprime un tiers.
      * 
      * @param int $id ID du tiers à supprimer
-     * 
-     * @return bool TRUE si succès, FALSE si erreur
      */
-    public function deleteThirdParty(int $id): bool
+    public function deleteThirdParty(int $id): void
     {
         $appointmentCount = $this->fetchAppointmentCountForId($id);
         if ($appointmentCount > 0) {
             throw new ClientException("Le tiers est concerné par {$appointmentCount} rdv. Impossible de le supprimer.");
         }
 
-        $deleteRequest = $this->mysql->prepare("DELETE FROM tiers WHERE id = :id");
-        $isDeleted = $deleteRequest->execute(["id" => $id]);
-
-        if (!$isDeleted) {
-            throw new DBException("Erreur lors de la suppression");
+        try {
+            $deleteStatement = "DELETE FROM tiers WHERE id = :id";
+            $deleteRequest = $this->mysql->prepare($deleteStatement);
+            $deleteRequest->execute(["id" => $id]);
+        } catch (\PDOException $e) {
+            throw new DBException("Erreur lors de la suppression.", previous: $e);
         }
-
-        return $isDeleted;
     }
 
     /**

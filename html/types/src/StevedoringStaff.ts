@@ -35,7 +35,7 @@ export type StevedoringStaff = {
   /**
    * Actif.
    */
-  active: boolean;
+  isActive: boolean;
 
   /**
    * Commentaires.

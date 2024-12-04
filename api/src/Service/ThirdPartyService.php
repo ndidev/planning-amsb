@@ -193,12 +193,10 @@ final class ThirdPartyService
      * Deletes a third party.
      * 
      * @param int $id ID of the third party to delete.
-     * 
-     * @return bool TRUE if successful, FALSE if error.
      */
-    public function deleteThirdParty(int $id): bool
+    public function deleteThirdParty(int $id): void
     {
-        return $this->thirdPartyRepository->deleteThirdParty($id);
+        $this->thirdPartyRepository->deleteThirdParty($id);
     }
 
     /**
