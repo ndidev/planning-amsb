@@ -3,7 +3,7 @@
   import { getContext } from "svelte";
   import { params, goto, redirect } from "@roxi/routify";
 
-  import { Label, Input, Checkbox, Toggle, Textarea } from "flowbite-svelte";
+  import { Label, Input, Toggle, Textarea } from "flowbite-svelte";
   import {
     CircleHelpIcon,
     SparklesIcon,
@@ -33,12 +33,12 @@
 
   const { boisRdvs, tiers } = getContext<Stores>("stores");
 
-  let formulaire: HTMLFormElement;
-  let boutonAjouter: BoutonAction;
-  let boutonModifier: BoutonAction;
-  let boutonSupprimer: BoutonAction;
+  let form: HTMLFormElement;
+  let createButton: BoutonAction;
+  let updateButton: BoutonAction;
+  let deleteButton: BoutonAction;
 
-  const nouveauRdv: RdvBois = {
+  const newAppointment: RdvBois = {
     id: null,
     attente: false,
     date_rdv: new Date()
@@ -69,19 +69,19 @@
   let isNew = $params.id === "new";
   const copie = parseInt($params.copie);
 
-  let rdv: RdvBois = { ...nouveauRdv };
-  let numero_bl = rdv?.numero_bl;
-  let heure_arrivee = rdv?.heure_arrivee?.substring(0, 5) ?? "";
-  let heure_depart = rdv?.heure_depart?.substring(0, 5) ?? "";
+  let appointment: RdvBois = { ...newAppointment };
+  let numero_bl = appointment?.numero_bl;
+  let heure_arrivee = appointment?.heure_arrivee?.substring(0, 5) ?? "";
+  let heure_depart = appointment?.heure_depart?.substring(0, 5) ?? "";
 
   (async () => {
     try {
       if (id || copie) {
-        rdv = structuredClone(await boisRdvs.get(id || copie));
-        if (!rdv) throw new Error();
-        numero_bl = rdv.numero_bl;
-        heure_arrivee = rdv.heure_arrivee?.substring(0, 5) ?? "";
-        heure_depart = rdv.heure_depart?.substring(0, 5) ?? "";
+        appointment = structuredClone(await boisRdvs.get(id || copie));
+        if (!appointment) throw new Error();
+        numero_bl = appointment.numero_bl;
+        heure_arrivee = appointment.heure_arrivee?.substring(0, 5) ?? "";
+        heure_depart = appointment.heure_depart?.substring(0, 5) ?? "";
       }
     } catch (error) {
       $redirect("./new");
@@ -105,7 +105,7 @@
       return null;
     }
 
-    const appointmentTime = (rdv["heure_" + type] as string) || "";
+    const appointmentTime = (appointment["heure_" + type] as string) || "";
 
     if (time === appointmentTime.substring(0, 5)) {
       // Si l'heure n'a pas changé, conserver les secondes
@@ -122,8 +122,8 @@
    * si le champ livraison est vide
    */
   function autoFillDeliveryPlace() {
-    if (rdv.client !== null && rdv.livraison === null) {
-      rdv.livraison = rdv.client;
+    if (appointment.client !== null && appointment.livraison === null) {
+      appointment.livraison = appointment.client;
     }
   }
 
@@ -132,8 +132,8 @@
    */
   async function checkDeliveryNoteNumber() {
     try {
-      if (numero_bl === rdv.numero_bl || numero_bl === "") {
-        rdv.numero_bl = numero_bl;
+      if (numero_bl === appointment.numero_bl || numero_bl === "") {
+        appointment.numero_bl = numero_bl;
         return;
       }
 
@@ -141,17 +141,17 @@
         `bois/check-delivery-note-available`,
         {
           searchParams: {
-            supplierId: rdv.fournisseur?.toString(),
+            supplierId: appointment.fournisseur?.toString(),
             deliveryNoteNumber: numero_bl,
-            currentAppointmentId: rdv.id?.toString(),
+            currentAppointmentId: appointment.id?.toString(),
           },
         }
       );
 
       if (isDeliveryNoteNumberAvailable) {
-        rdv.numero_bl = numero_bl;
+        appointment.numero_bl = numero_bl;
       } else {
-        const supplierName = $tiers.get(rdv.fournisseur)?.nom_court;
+        const supplierName = $tiers.get(appointment.fournisseur)?.nom_court;
 
         Notiflix.Report.failure(
           "Erreur",
@@ -159,20 +159,20 @@
           "OK"
         );
 
-        numero_bl = rdv.numero_bl;
+        numero_bl = appointment.numero_bl;
       }
     } catch (err: unknown) {
       const error = err as HTTP.Error | Error;
       Notiflix.Notify.failure(error.message);
-      numero_bl = rdv.numero_bl;
+      numero_bl = appointment.numero_bl;
     }
   }
 
   /**
    * Afficher des suggestions de transporteurs.
    */
-  async function afficherSuggestionsTransporteurs() {
-    if (!rdv.chargement || !rdv.livraison) {
+  async function showCarrierSuggestions() {
+    if (!appointment.chargement || !appointment.livraison) {
       Notiflix.Notify.failure(
         "Le chargement et la livraison doivent être renseignés pour obtenir des suggestions"
       );
@@ -184,8 +184,8 @@
         "bois/suggestions-transporteurs",
         {
           searchParams: {
-            chargement: rdv.chargement.toString(),
-            livraison: rdv.livraison.toString(),
+            chargement: appointment.chargement.toString(),
+            livraison: appointment.livraison.toString(),
           },
         }
       );
@@ -252,56 +252,56 @@
   /**
    * Créer le RDV.
    */
-  async function ajouterRdv() {
-    if (!validerFormulaire(formulaire)) return;
+  async function createAppointment() {
+    if (!validerFormulaire(form)) return;
 
-    boutonAjouter.$set({ disabled: true });
+    createButton.$set({ disabled: true });
 
     try {
-      rdv.heure_arrivee = addSeconds(heure_arrivee, "arrivee");
-      rdv.heure_depart = addSeconds(heure_depart, "depart");
+      appointment.heure_arrivee = addSeconds(heure_arrivee, "arrivee");
+      appointment.heure_depart = addSeconds(heure_depart, "depart");
 
-      await boisRdvs.create(rdv);
+      await boisRdvs.create(appointment);
 
       Notiflix.Notify.success("Le RDV a été ajouté");
       $goto("./");
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
       console.error(erreur);
-      boutonAjouter.$set({ disabled: false });
+      createButton.$set({ disabled: false });
     }
   }
 
   /**
    * Modifier le RDV.
    */
-  async function modifierRdv() {
-    if (!validerFormulaire(formulaire)) return;
+  async function updateAppointment() {
+    if (!validerFormulaire(form)) return;
 
-    boutonModifier.$set({ disabled: true });
+    updateButton.$set({ disabled: true });
 
     try {
-      rdv.heure_arrivee = addSeconds(heure_arrivee, "arrivee");
-      rdv.heure_depart = addSeconds(heure_depart, "depart");
+      appointment.heure_arrivee = addSeconds(heure_arrivee, "arrivee");
+      appointment.heure_depart = addSeconds(heure_depart, "depart");
 
-      await boisRdvs.update(rdv);
+      await boisRdvs.update(appointment);
 
       Notiflix.Notify.success("Le RDV a été modifié");
       $goto("./");
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
       console.error(erreur);
-      boutonModifier.$set({ disabled: false });
+      updateButton.$set({ disabled: false });
     }
   }
 
   /**
    * Supprimer le RDV.
    */
-  function supprimerRdv() {
+  function deleteAppointment() {
     if (!id) return;
 
-    boutonSupprimer.$set({ disabled: true });
+    deleteButton.$set({ disabled: true });
 
     // Demande de confirmation
     Notiflix.Confirm.show(
@@ -318,10 +318,10 @@
         } catch (erreur) {
           Notiflix.Notify.failure(erreur.message);
           console.error(erreur);
-          boutonSupprimer.$set({ disabled: false });
+          deleteButton.$set({ disabled: false });
         }
       },
-      () => boutonSupprimer.$set({ disabled: false }),
+      () => deleteButton.$set({ disabled: false }),
       notiflixOptions.themes.red
     );
   }
@@ -333,12 +333,12 @@
 <main class="mx-auto w-10/12 lg:w-1/3">
   <PageHeading>Rendez-vous</PageHeading>
 
-  {#if !rdv}
+  {#if !appointment}
     <Chargement />
   {:else}
     <form
       class="flex flex-col gap-3 mb-4"
-      bind:this={formulaire}
+      bind:this={form}
       use:preventFormSubmitOnEnterKeydown
     >
       <div class="flex flex-col lg:flex-row gap-3 lg:gap-8">
@@ -350,15 +350,15 @@
             id="date_rdv"
             name="date_rdv"
             data-nom="Date"
-            bind:value={rdv.date_rdv}
-            required={!rdv.attente}
+            bind:value={appointment.date_rdv}
+            required={!appointment.attente}
             class="w-full lg:w-max"
           />
         </div>
 
         <!-- En attente -->
         <div class="lg:self-center">
-          <Toggle name="attente" bind:checked={rdv.attente}
+          <Toggle name="attente" bind:checked={appointment.attente}
             >En attente de confirmation</Toggle
           >
         </div>
@@ -383,7 +383,6 @@
           <Label for="heure_depart">Heure départ (hh:mm)</Label>
           <Input
             type="time"
-            name="heure_depart"
             id="heure_depart"
             bind:value={heure_depart}
             placeholder="hh:mm"
@@ -396,7 +395,7 @@
       <div>
         <Label for="fournisseur"
           >Fournisseur
-          {#if rdv.fournisseur && rdv.affreteur && rdv.fournisseur !== rdv.affreteur && $tiers?.get(rdv.affreteur)?.roles.bois_fournisseur}
+          {#if appointment.fournisseur && appointment.affreteur && appointment.fournisseur !== appointment.affreteur && $tiers?.get(appointment.affreteur)?.roles.bois_fournisseur}
             <span
               class="warning-fournisseur"
               title="Erreur possible : vérifier que le fournisseur et l'affréteur sont corrects"
@@ -408,7 +407,7 @@
           inputId="fournisseur"
           type="tiers"
           role="bois_fournisseur"
-          bind:value={rdv.fournisseur}
+          bind:value={appointment.fournisseur}
           name="Fournisseur"
           required
         />
@@ -421,7 +420,7 @@
           inputId="chargement"
           type="tiers"
           role="bois_client"
-          bind:value={rdv.chargement}
+          bind:value={appointment.chargement}
           name="Chargement"
           required
         />
@@ -434,7 +433,7 @@
           inputId="client"
           type="tiers"
           role="bois_client"
-          bind:value={rdv.client}
+          bind:value={appointment.client}
           name="Client"
           on:change={autoFillDeliveryPlace}
           required
@@ -448,7 +447,7 @@
           inputId="livraison"
           type="tiers"
           role="bois_client"
-          bind:value={rdv.livraison}
+          bind:value={appointment.livraison}
           name="Livraison"
           required
         />
@@ -458,12 +457,12 @@
       <div>
         <Label for="transporteur"
           >Transporteur
-          {#if rdv.affreteur === 1 || rdv.affreteur === null}
+          {#if appointment.affreteur === 1 || appointment.affreteur === null}
             <span>
               <LucideButton
                 icon={SparklesIcon}
                 title="Suggestions de transporteurs"
-                on:click={afficherSuggestionsTransporteurs}
+                on:click={showCarrierSuggestions}
               />
             </span>
           {/if}
@@ -472,7 +471,7 @@
           inputId="transporteur"
           type="tiers"
           role="bois_transporteur"
-          bind:value={rdv.transporteur}
+          bind:value={appointment.transporteur}
           name="Transporteur"
         />
       </div>
@@ -481,7 +480,7 @@
       <div>
         <Label for="affreteur"
           >Affréteur
-          {#if rdv.fournisseur && rdv.affreteur && rdv.fournisseur !== rdv.affreteur && $tiers?.get(rdv.affreteur)?.roles.bois_fournisseur}
+          {#if appointment.fournisseur && appointment.affreteur && appointment.fournisseur !== appointment.affreteur && $tiers?.get(appointment.affreteur)?.roles.bois_fournisseur}
             <span
               class="warning-fournisseur"
               title="Erreur possible : vérifier que le fournisseur et l'affréteur sont corrects"
@@ -493,14 +492,14 @@
           inputId="affreteur"
           type="tiers"
           role="bois_affreteur"
-          bind:value={rdv.affreteur}
+          bind:value={appointment.affreteur}
           name="Affréteur"
         />
       </div>
 
       <!-- Commande prête -->
       <div>
-        <Toggle name="commande_prete" bind:checked={rdv.commande_prete}
+        <Toggle name="commande_prete" bind:checked={appointment.commande_prete}
           >Commande prête</Toggle
         >
       </div>
@@ -509,9 +508,9 @@
       <div>
         <Toggle
           name="confirmation_affretement"
-          bind:checked={rdv.confirmation_affretement}
-          disabled={$tiers?.get(rdv.affreteur)?.lie_agence === false ||
-            !rdv.transporteur}>Confirmation d'affrètement</Toggle
+          bind:checked={appointment.confirmation_affretement}
+          disabled={$tiers?.get(appointment.affreteur)?.lie_agence === false ||
+            !appointment.transporteur}>Confirmation d'affrètement</Toggle
         >
       </div>
 
@@ -534,7 +533,7 @@
           id="commentaire_public"
           rows={3}
           cols={30}
-          bind:value={rdv.commentaire_public}
+          bind:value={appointment.commentaire_public}
         />
       </div>
 
@@ -550,7 +549,7 @@
           id="commentaire_prive"
           rows={3}
           cols={30}
-          bind:value={rdv.commentaire_cache}
+          bind:value={appointment.commentaire_cache}
         />
       </div>
     </form>
@@ -561,21 +560,21 @@
         <!-- Bouton "Ajouter" -->
         <BoutonAction
           preset="ajouter"
-          on:click={ajouterRdv}
-          bind:this={boutonAjouter}
+          on:click={createAppointment}
+          bind:this={createButton}
         />
       {:else}
         <!-- Bouton "Modifier" -->
         <BoutonAction
           preset="modifier"
-          on:click={modifierRdv}
-          bind:this={boutonModifier}
+          on:click={updateAppointment}
+          bind:this={updateButton}
         />
         <!-- Bouton "Supprimer" -->
         <BoutonAction
           preset="supprimer"
-          on:click={supprimerRdv}
-          bind:this={boutonSupprimer}
+          on:click={deleteAppointment}
+          bind:this={deleteButton}
         />
       {/if}
 

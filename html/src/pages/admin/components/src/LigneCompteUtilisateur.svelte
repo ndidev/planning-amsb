@@ -23,7 +23,7 @@
   } from "flowbite-svelte";
   import { CircleHelpIcon, HistoryIcon } from "lucide-svelte";
 
-  import { LucideButton } from "@app/components";
+  import { LucideButton, Badge } from "@app/components";
 
   import { adminUsers, currentUser, authInfo } from "@app/stores";
 
@@ -439,7 +439,7 @@
           {compteInitital.nom}
         </span>
         {#if compteInitital.roles.admin}
-          <span class="admin">Administrateur</span>
+          <Badge size="xs">Administrateur</Badge>
         {/if}
       {:else}
         Nouveau compte
@@ -512,7 +512,7 @@
 
         <!-- Boutons modification-->
         <div
-          class="[grid-area:c] justify-self-center self-center"
+          class="place-self-center [grid-area:c]"
           style:visibility={modificationEnCours ? "visible" : "hidden"}
         >
           <LucideButton
@@ -526,28 +526,23 @@
         </div>
 
         <!-- Rôles -->
-        <div class="roles [grid-area:d]">
+        <div class="roles grid [grid-area:d]">
           {#each [...sitemap] as [module, { affichage, type }]}
             <fieldset
               name={module}
-              class="rubrique"
+              class="mt-2 disabled:text-gray-500 disabled:opacity-50"
               disabled={/* Désactivé si admin : un administrateur ne peut pas se retirer lui-même le privilège */ module ===
                 "admin" && self}
             >
-              <legend>{affichage}</legend>
+              <legend class="text-sm">{affichage}</legend>
 
               <!-- Module de type "Accès" -->
               {#if type === TypesModules.ACCESS}
-                <Radio
-                  bind:group={compte.roles[module]}
-                  name={module}
-                  value={UserRoles.NONE}
-                >
+                <Radio bind:group={compte.roles[module]} value={UserRoles.NONE}>
                   Pas accès
                 </Radio>
                 <Radio
                   bind:group={compte.roles[module]}
-                  name={module}
                   value={UserRoles.ACCESS}
                 >
                   Accès
@@ -556,25 +551,16 @@
 
               <!-- Module de type "Modifier" -->
               {#if type === TypesModules.EDIT}
-                <Radio
-                  bind:group={compte.roles[module]}
-                  name={module}
-                  value={UserRoles.NONE}
-                >
+                <Radio bind:group={compte.roles[module]} value={UserRoles.NONE}>
                   Aucun
                 </Radio>
                 <Radio
                   bind:group={compte.roles[module]}
-                  name={module}
                   value={UserRoles.ACCESS}
                 >
                   Voir
                 </Radio>
-                <Radio
-                  bind:group={compte.roles[module]}
-                  name={module}
-                  value={UserRoles.EDIT}
-                >
+                <Radio bind:group={compte.roles[module]} value={UserRoles.EDIT}>
                   Modifier
                 </Radio>
               {/if}
@@ -586,7 +572,7 @@
 
     <!-- Boutons -->
     {#if !self && !isNew}
-      <div class="boutons-action [grid-area:e]">
+      <div class="place-self-center [grid-area:e]">
         <Button
           on:click={reinitialiserCompte}
           disabled={compte.statut === AccountStatus.PENDING}
@@ -621,64 +607,10 @@
     --statut-locked: hsl(0, 60%, 50%);
   }
 
-  .compte {
-    width: 80%;
-    margin: 5px auto;
-    padding: 10px;
-    border-radius: 5px;
-    border: 2px solid #ddd;
-    background-color: #eee;
-    list-style-type: none;
-  }
-
   /* -------------- */
-
-  .champ {
-    display: flex;
-    flex-direction: column;
-    margin-left: 1%;
-  }
-
-  fieldset:disabled {
-    color: darkgray;
-  }
-
-  .compte textarea {
-    padding: 5px;
-  }
 
   .modificationEnCours {
     background-color: lightyellow;
-  }
-
-  .roles {
-    display: grid;
-  }
-
-  .roles > .rubrique {
-    margin-top: 10px;
-  }
-
-  .boutons-action {
-    justify-self: center;
-  }
-
-  .action {
-    display: inline-block;
-    margin-block: 5px;
-  }
-
-  .action > button {
-    padding: 5px;
-    cursor: pointer;
-  }
-
-  .action > button:disabled {
-    cursor: auto;
-  }
-
-  .action.red > button:not(:disabled) {
-    color: var(--statut-locked);
   }
 
   /* Notiflix */
@@ -692,19 +624,10 @@
     .roles {
       grid-template-columns: repeat(2, 1fr);
     }
-
-    .action,
-    .action > button {
-      width: 100%;
-    }
   }
 
   /* Desktop */
   @media screen and (min-width: 768px) {
-    .compte {
-      min-width: 650px;
-    }
-
     .roles {
       grid-column: 1 / span 3;
       grid-template-columns: repeat(4, 1fr);
