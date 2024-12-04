@@ -187,10 +187,10 @@ final class ShippingService
             ->setApproximate($rawDataAH->getBool('environ'))
             ->setBlTonnage($rawDataAH->getFloat('tonnage_bl'))
             ->setBlVolume($rawDataAH->getFloat('cubage_bl'))
-            ->setBlVolume($rawDataAH->getInt('nombre_bl'))
+            ->setBlUnits($rawDataAH->getInt('nombre_bl'))
             ->setOutturnTonnage($rawDataAH->getFloat('tonnage_outturn'))
             ->setOutturnVolume($rawDataAH->getFloat('cubage_outturn'))
-            ->setOutturnVolume($rawDataAH->getInt('nombre_outturn'));
+            ->setOutturnUnits($rawDataAH->getInt('nombre_outturn'));
 
         return $cargo;
     }
