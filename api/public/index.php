@@ -40,6 +40,7 @@ use App\Controller\Utils\CountryController;
 use App\Controller\Utils\PortController;
 use App\Controller\Utils\TideController;
 use App\Core\Array\Environment;
+use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Exceptions\Server\ServerException;
 use App\Core\HTTP\HTTPResponse;
 use App\Core\Router\Router;
@@ -126,21 +127,20 @@ try {
     $router = new Router($routes, Environment::getString('API_PATH'));
     $match = $router->match();
 
-    if (\is_array($match)) {
-        $controllerClass = $match["target"];
-        $params = $match["params"];
-        $name = $match["name"];
-
-        if (!\is_string($controllerClass) || !class_exists($controllerClass)) {
-            throw new ServerException("Controller not found");
-        }
-
-        /** @var Controller $controller */
-        $controller = new $controllerClass(...$params);
-    } else {
-        // 404 Not Found
-        $controller = new RootController(true);
+    if (!\is_array($match)) {
+        throw new NotFoundException("Route not found");
     }
+
+    $controllerClass = $match["target"];
+    $params = $match["params"];
+    $name = $match["name"];
+
+    if (!\is_string($controllerClass) || !class_exists($controllerClass)) {
+        throw new ServerException("Controller not found");
+    }
+
+    /** @var Controller $controller */
+    $controller = new $controllerClass(...$params);
 
     $response = $controller->getResponse();
 
