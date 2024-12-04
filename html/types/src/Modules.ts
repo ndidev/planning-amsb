@@ -34,9 +34,14 @@ export type Roles = {
   consignation?: 0 | 1 | 2;
 
   /**
-   * Accès au planning affrètement maritime.
+   * Accès au planning d'affrètement maritime.
    */
   chartering?: 0 | 1 | 2;
+
+  /**
+   * Accès à la section manutention.
+   */
+  manutention?: 0 | 1 | 2;
 
   /**
    * Accès à la page des tiers.

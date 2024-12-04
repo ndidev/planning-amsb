@@ -9,7 +9,7 @@ namespace App\Core\Validation;
 /**
  * This class represents the result of a validation.
  */
-class ValidationResult
+class ValidationResult implements \Stringable
 {
     public function __construct(
         private bool $hasErrors = false,
@@ -43,5 +43,10 @@ class ValidationResult
     {
         $this->hasErrors = $this->hasErrors || $validationResult->hasErrors();
         $this->errorMessage = trim($this->errorMessage . PHP_EOL . $validationResult->getErrorMessage());
+    }
+
+    public function __toString(): string
+    {
+        return $this->errorMessage;
     }
 }

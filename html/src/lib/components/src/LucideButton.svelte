@@ -139,6 +139,8 @@
    */
   export let size: string = "24px";
 
+  export let align: string = "middle";
+
   function colorIsCode(color: string): boolean {
     return (
       color.startsWith("#") ||
@@ -156,6 +158,7 @@
     : `var(--${hoverColor}-color)`}
   style:width={size}
   style:height={size}
+  style:vertical-align={align}
   {title}
   on:click
 >
@@ -183,7 +186,7 @@
     font-size: var(--font-size);
     position: relative;
     isolation: isolate;
-    vertical-align: middle;
+    /* vertical-align: middle; */
     transition: color var(--transition-time) linear;
   }
 

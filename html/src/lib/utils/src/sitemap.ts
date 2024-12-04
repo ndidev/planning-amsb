@@ -53,6 +53,12 @@ export const sitemap: Map<ModuleId, Module> = new Map([
             href: "/vrac/produits",
             devices: ["mobile", "desktop"],
           },
+          {
+            affichage: "Dispatch",
+            roleMini: UserRoles.EDIT,
+            href: "/vrac/dispatch",
+            devices: ["mobile", "desktop"],
+          },
         ],
       },
     },
@@ -109,6 +115,23 @@ export const sitemap: Map<ModuleId, Module> = new Map([
             affichage: "Archives",
             roleMini: UserRoles.ACCESS,
             href: "/chartering/charters?archives",
+            devices: ["mobile", "desktop"],
+          },
+        ],
+      },
+    },
+  ],
+  [
+    "manutention",
+    {
+      affichage: "Manutention",
+      type: TypesModules.EDIT,
+      tree: {
+        children: [
+          {
+            affichage: "Personnel",
+            roleMini: UserRoles.ACCESS,
+            href: "/manutention/personnel",
             devices: ["mobile", "desktop"],
           },
         ],

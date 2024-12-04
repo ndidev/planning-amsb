@@ -7,6 +7,7 @@ export type Stores = {
   vracProduits: typeof stores.vracProduits;
   consignationEscales: ReturnType<typeof stores.consignationEscales>;
   charteringCharters: ReturnType<typeof stores.charteringCharters>;
+  stevedoringStaff: typeof stores.stevedoringStaff;
   tiers: typeof stores.tiers;
   configBandeauInfo: typeof stores.configBandeauInfo;
   configPdf: typeof stores.configPdf;

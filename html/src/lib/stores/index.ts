@@ -20,6 +20,9 @@ export { consignationEscales } from "./src/flatStores/consignation";
 // Chartering
 export { charteringCharters } from "./src/flatStores/chartering";
 
+// Manutention
+export { stevedoringStaff } from "./src/flatStores/manutention";
+
 // Tiers
 export { tiers } from "./src/flatStores/tiers";
 

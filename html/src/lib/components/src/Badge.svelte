@@ -14,7 +14,7 @@ Usage :
 <script lang="ts">
   import { luminance } from "@app/utils";
 
-  export let color: string = "white";
+  export let color: string = "lightgray";
 
   export let size:
     | "xs"

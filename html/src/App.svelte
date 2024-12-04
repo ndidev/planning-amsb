@@ -17,6 +17,7 @@
     vracProduits: stores.vracProduits,
     consignationEscales: stores.consignationEscales(),
     charteringCharters: stores.charteringCharters(),
+    stevedoringStaff: stores.stevedoringStaff,
     tiers: stores.tiers,
     configBandeauInfo: stores.configBandeauInfo,
     configPdf: stores.configPdf,
