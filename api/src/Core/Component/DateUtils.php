@@ -100,7 +100,7 @@ abstract class DateUtils
                 $dateYmd = $date;
             }
 
-            $datetime = new \DateTime($dateYmd);
+            $datetime = new \DateTime($dateYmd, new \DateTimeZone(self::TIMEZONE));
         }
 
         return $datetime;
@@ -121,25 +121,25 @@ abstract class DateUtils
 
         $year = (int) $date->format("Y");
 
-        $easter = new \DateTime("@" . easter_date($year));
+        $easter = new \DateTime("@" . easter_date($year), new \DateTimeZone(self::TIMEZONE));
 
         /**
          * @var \DateTime[] Public holidays list.
          */
         $public_holidays = [
-            "jour_an" => new \DateTime("$year-01-01"),
+            "jour_an" => new \DateTime("$year-01-01", new \DateTimeZone(self::TIMEZONE)),
             "paques" => $easter,
             "lundi_paques" => (clone $easter)->add(new \DateInterval("P1D")),
-            "fete_travail" => new \DateTime("$year-05-01"),
-            "victoire_1945" => new \DateTime("$year-05-08"),
+            "fete_travail" => new \DateTime("$year-05-01", new \DateTimeZone(self::TIMEZONE)),
+            "victoire_1945" => new \DateTime("$year-05-08", new \DateTimeZone(self::TIMEZONE)),
             "ascension" => (clone $easter)->add(new \DateInterval("P39D")),
             "pentecote" => (clone $easter)->add(new \DateInterval("P49D")),
             "lundi_pentecote" => (clone $easter)->add(new \DateInterval("P50D")),
-            "fete_nationale" => new \DateTime("$year-07-14"),
-            "assomption" => new \DateTime("$year-08-15"),
-            "toussaint" => new \DateTime("$year-11-01"),
-            "armistice_1918" => new \DateTime("$year-11-11"),
-            "noel" => new \DateTime("$year-12-25"),
+            "fete_nationale" => new \DateTime("$year-07-14", new \DateTimeZone(self::TIMEZONE)),
+            "assomption" => new \DateTime("$year-08-15", new \DateTimeZone(self::TIMEZONE)),
+            "toussaint" => new \DateTime("$year-11-01", new \DateTimeZone(self::TIMEZONE)),
+            "armistice_1918" => new \DateTime("$year-11-11", new \DateTimeZone(self::TIMEZONE)),
+            "noel" => new \DateTime("$year-12-25", new \DateTimeZone(self::TIMEZONE)),
         ];
 
 
@@ -270,5 +270,23 @@ abstract class DateUtils
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    public static function isInThePast(\DateTimeInterface|string $date): bool
+    {
+        $date = self::convertDate($date);
+
+        $now = new \DateTime("now", new \DateTimeZone(self::TIMEZONE));
+
+        return $date < $now;
+    }
+
+    public static function isInTheFuture(\DateTimeInterface|string $date): bool
+    {
+        $date = self::convertDate($date);
+
+        $now = new \DateTime("now", new \DateTimeZone(self::TIMEZONE));
+
+        return $date > $now;
     }
 }

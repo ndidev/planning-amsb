@@ -325,25 +325,28 @@ class User
             }
         }
 
-        if (
-            !isset($apiKeyInfo["uid"]) || !\is_string($apiKeyInfo["uid"])
-            || !isset($apiKeyInfo["status"]) || !\is_string($apiKeyInfo["status"])
-            || !isset($apiKeyInfo["expiration"]) || !\is_string($apiKeyInfo["expiration"])
-        ) {
-            throw new InvalidApiKeyException();
+        $uid = $apiKeyInfo["uid"] ?? null;
+        $status = $apiKeyInfo["status"] ?? null;
+        $expiration = $apiKeyInfo["expiration"] ?? null;
+
+        $expirationIsInThePast = true;
+
+        if (null === $expiration || "" === $expiration) {
+            $expirationIsInThePast = false;
         }
+
+        try {
+            $expirationIsInThePast = \is_string($expiration) && "" !== $expiration && DateUtils::isInThePast($expiration);
+        } catch (\Exception) {
+            $expirationIsInThePast = true;
+        }
+
 
         $this->redis->hMSet("admin:apikeys:{$apiKeyHash}", $apiKeyInfo);
         $this->redis->expire("admin:apikeys:{$apiKeyHash}", ONE_WEEK);
 
-        [
-            "uid" => $uid,
-            "status" => $status,
-            "expiration" => $expiration
-        ] = $apiKeyInfo;
 
-
-        if (!$uid) {
+        if (!\is_string($uid)) {
             throw new InvalidApiKeyException();
         }
 
@@ -351,8 +354,7 @@ class User
             throw new InvalidApiKeyException();
         }
 
-        $now = DateUtils::format(DateUtils::SQL_TIMESTAMP, new \DateTime());
-        if ($expiration && $expiration < $now) {
+        if ($expirationIsInThePast) {
             throw new InvalidApiKeyException();
         }
 
