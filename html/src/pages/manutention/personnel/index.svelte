@@ -18,9 +18,13 @@
     // @ts-expect-error
     (search,
     [...($stevedoringStaff?.values() || [])]
-      .filter((staff) => staff.type === "cdi")
+      .filter((staff) => staff.type === "mensuel")
       .filter((staff) => staff.deletedAt === null)
-      .filter(filterStaffBySearch));
+      .filter(filterStaffBySearch)).sort(
+      (a, b) =>
+        a.lastname.localeCompare(b.lastname) ||
+        a.firstname.localeCompare(b.firstname)
+    );
 
   $: temporaryStaff =
     // @ts-expect-error
@@ -28,7 +32,11 @@
     [...($stevedoringStaff?.values() || [])]
       .filter((staff) => staff.type === "interim")
       .filter((staff) => staff.deletedAt === null)
-      .filter(filterStaffBySearch));
+      .filter(filterStaffBySearch)).sort(
+      (a, b) =>
+        a.lastname.localeCompare(b.lastname) ||
+        a.firstname.localeCompare(b.firstname)
+    );
 
   function groupStaffByLastnameInitial(staffList: StevedoringStaff[]) {
     return staffList.reduce((map, staff) => {
@@ -72,7 +80,7 @@
     <Accordion multiple>
       <!-- CDI -->
       <AccordionItem open>
-        <span slot="header">CDI ({permanentStaff.length})</span>
+        <span slot="header">Mensuel ({permanentStaff.length})</span>
         <div class="flex flex-col gap-4">
           {#each [...groupStaffByLastnameInitial(permanentStaff).entries()] as [initial, staffList]}
             <div class="mb-2">

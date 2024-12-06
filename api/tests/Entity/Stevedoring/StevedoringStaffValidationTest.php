@@ -96,7 +96,7 @@ final class StevedoringStaffValidationTest extends TestCase
         return (new StevedoringStaff())
             ->setFirstname('John')
             ->setLastname('Doe')
-            ->setType('cdi')
+            ->setType('mensuel')
             ->setActive(true);
     }
 }

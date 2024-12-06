@@ -17,29 +17,36 @@
   import { Svelecte } from "@app/components";
   import { Filtre } from "@app/utils";
 
-  import type { FiltreBois } from "@app/types";
+  import type { TimberFilter } from "@app/types";
 
-  const filtre = getContext<Writable<Filtre<FiltreBois>>>("filtre");
+  type FilterContext = {
+    emptyFilter: TimberFilter;
+    filterStore: Writable<Filtre<TimberFilter>>;
+    filterName: string;
+  };
 
-  let _filtre = { ...$filtre.data };
+  const { emptyFilter, filterStore, filterName } =
+    getContext<FilterContext>("filter");
+
+  let filterData = { ...$filterStore.data };
 
   /**
    * Enregistrer le filtre.
    */
   async function applyFilter() {
-    sessionStorage.setItem("filtre-stats-bois", JSON.stringify(_filtre));
+    sessionStorage.setItem(filterName, JSON.stringify(filterData));
 
-    filtre.set(new Filtre(_filtre));
+    filterStore.set(new Filtre(filterData));
   }
 
   /**
    * Supprimer le filtre.
    */
   function removeFilter() {
-    sessionStorage.removeItem("filtre-stats-bois");
+    sessionStorage.removeItem(filterName);
 
-    filtre.set(new Filtre({}));
-    _filtre = {};
+    filterData = structuredClone(emptyFilter);
+    filterStore.set(new Filtre(filterData));
   }
 </script>
 
@@ -53,7 +60,7 @@
       type="date"
       id="date_debut"
       name="date_debut"
-      bind:value={_filtre.date_debut}
+      bind:value={filterData.date_debut}
     />
   </div>
 
@@ -63,7 +70,7 @@
       type="date"
       id="date_fin"
       name="date_fin"
-      bind:value={_filtre.date_fin}
+      bind:value={filterData.date_fin}
     />
   </div>
 
@@ -74,7 +81,7 @@
       inputId="filtre_fournisseur"
       type="tiers"
       role="bois_fournisseur"
-      bind:value={_filtre.fournisseur}
+      bind:value={filterData.fournisseur}
       placeholder="Fournisseur"
       multiple
     />
@@ -87,7 +94,7 @@
       inputId="filtre_client"
       type="tiers"
       role="bois_client"
-      bind:value={_filtre.client}
+      bind:value={filterData.client}
       placeholder="Client"
       multiple
     />
@@ -100,7 +107,7 @@
       inputId="filtre_chargement"
       type="tiers"
       role="bois_client"
-      bind:value={_filtre.chargement}
+      bind:value={filterData.chargement}
       placeholder="Chargement"
       multiple
     />
@@ -113,7 +120,7 @@
       inputId="filtre_livraison"
       type="tiers"
       role="bois_client"
-      bind:value={_filtre.livraison}
+      bind:value={filterData.livraison}
       placeholder="Livraison"
       multiple
     />
@@ -126,7 +133,7 @@
       inputId="filtre_transporteur"
       type="tiers"
       role="bois_transporteur"
-      bind:value={_filtre.transporteur}
+      bind:value={filterData.transporteur}
       placeholder="Transporteur"
       multiple
     />
@@ -139,7 +146,7 @@
       inputId="filtre_affreteur"
       type="tiers"
       role="bois_affreteur"
-      bind:value={_filtre.affreteur}
+      bind:value={filterData.affreteur}
       placeholder="Affréteur"
       multiple
     />
@@ -147,18 +154,11 @@
 
   <!-- Boutons filtre -->
   <div>
-    <Button type="submit" name="filtrer" class="w-full" on:click={applyFilter}>
-      Filtrer
-    </Button>
+    <Button type="submit" class="w-full" on:click={applyFilter}>Filtrer</Button>
   </div>
 
   <div>
-    <Button
-      type="reset"
-      name="supprimer_filtre"
-      class="w-full"
-      on:click={removeFilter}
-    >
+    <Button type="reset" class="w-full" on:click={removeFilter}>
       Supprimer le filtre
     </Button>
   </div>

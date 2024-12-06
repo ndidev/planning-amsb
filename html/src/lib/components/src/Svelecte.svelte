@@ -111,7 +111,7 @@
   /**
    * Type prédéfini.
    */
-  const typesPredefinis = ["tiers", "port", "pays"] as const;
+  const typesPredefinis = ["tiers", "port", "pays", "staff"] as const;
 
   export let type: (typeof typesPredefinis)[number] | undefined = undefined;
 
@@ -156,6 +156,8 @@
           });
       }
     });
+
+    virtualList = true;
   }
 
   if (type === "pays") {
@@ -172,6 +174,8 @@
         });
       }
     });
+
+    virtualList = true;
   }
 
   if (type === "port") {
@@ -190,6 +194,54 @@
     });
 
     virtualList = true;
+  }
+
+  if (type === "staff") {
+    const { stevedoringStaff } = getContext<Stores>("stores");
+    unsubscribe = stevedoringStaff.subscribe((staffList) => {
+      if (staffList) {
+        options = [
+          {
+            label: "Mensuels",
+            options: [...staffList.values()]
+              .filter((staff) => staff.isActive)
+              .filter((staff) => staff.type === "mensuel")
+              .sort(
+                (a, b) =>
+                  a.lastname.localeCompare(b.lastname) ||
+                  a.firstname.localeCompare(b.firstname)
+              )
+              .map((staff): ItemFormat => {
+                return {
+                  id: staff.id,
+                  search: staff.fullname,
+                  label: staff.fullname,
+                  tag: staff.fullname,
+                };
+              }),
+          },
+          {
+            label: "Intérimaires",
+            options: [...staffList.values()]
+              .filter((staff) => staff.isActive)
+              .filter((staff) => staff.type === "interim")
+              .sort(
+                (a, b) =>
+                  a.lastname.localeCompare(b.lastname) ||
+                  a.firstname.localeCompare(b.firstname)
+              )
+              .map((staff): ItemFormat => {
+                return {
+                  id: staff.id,
+                  search: staff.fullname,
+                  label: `${staff.fullname} (${staff.tempWorkAgency})`,
+                  tag: staff.fullname,
+                };
+              }),
+          },
+        ];
+      }
+    });
   }
 
   onDestroy(() => {

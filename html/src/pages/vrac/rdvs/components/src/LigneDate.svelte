@@ -37,7 +37,7 @@
   {#if maree}
     <span
       class="relative ms-3 inline cursor-help align-top text-red-500"
-      title="Navires potentiellement à quai"><WavesIcon /></span
+      title="Vives-eaux : navires potentiellement à quai"><WavesIcon /></span
     >
   {/if}
 

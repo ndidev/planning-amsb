@@ -17,11 +17,18 @@
   import { Svelecte } from "@app/components";
   import { Filtre, fetcher } from "@app/utils";
 
-  import type { FiltreConsignation } from "@app/types";
+  import type { ShippingFilter } from "@app/types";
 
-  const filtre = getContext<Writable<Filtre<FiltreConsignation>>>("filtre");
+  type FilterContext = {
+    emptyFilter: ShippingFilter;
+    filterStore: Writable<Filtre<ShippingFilter>>;
+    filterName: string;
+  };
 
-  let _filtre = { ...$filtre.data };
+  const { emptyFilter, filterStore, filterName } =
+    getContext<FilterContext>("filter");
+
+  let filterData = { ...$filterStore.data };
 
   let listeNavires: string[] = [];
   let listeMarchandises: string[] = [];
@@ -31,22 +38,19 @@
    * Enregistrer le filtre.
    */
   async function applyFilter() {
-    sessionStorage.setItem(
-      "filtre-stats-consignation",
-      JSON.stringify(_filtre)
-    );
+    sessionStorage.setItem(filterName, JSON.stringify(filterData));
 
-    filtre.set(new Filtre(_filtre));
+    filterStore.set(new Filtre(filterData));
   }
 
   /**
    * Supprimer le filtre.
    */
   function removeFilter() {
-    sessionStorage.removeItem("filtre-stats-consignation");
+    sessionStorage.removeItem(filterName);
 
-    filtre.set(new Filtre({}));
-    _filtre = {};
+    filterData = structuredClone(emptyFilter);
+    filterStore.set(new Filtre(filterData));
   }
 
   onMount(async () => {
@@ -62,12 +66,12 @@
   <!-- Dates -->
   <div>
     <Label for="date_debut">Du</Label>
-    <Input type="date" id="date_debut" bind:value={_filtre.date_debut} />
+    <Input type="date" id="date_debut" bind:value={filterData.date_debut} />
   </div>
 
   <div>
     <Label for="date_fin">Au</Label>
-    <Input type="date" id="date_fin" bind:value={_filtre.date_fin} />
+    <Input type="date" id="date_fin" bind:value={filterData.date_fin} />
   </div>
 
   <!-- Filtre navire -->
@@ -76,7 +80,7 @@
     <Svelecte
       inputId="filtre_navire"
       options={listeNavires}
-      bind:value={_filtre.navire}
+      bind:value={filterData.navire}
       placeholder="Navires"
       multiple
       virtualList
@@ -90,7 +94,7 @@
       inputId="filtre_armateur"
       type="tiers"
       role="maritime_armateur"
-      bind:value={_filtre.armateur}
+      bind:value={filterData.armateur}
       placeholder="Armateurs"
       multiple
     />
@@ -102,7 +106,7 @@
     <Svelecte
       inputId="filtre_marchandise"
       options={listeMarchandises}
-      bind:value={_filtre.marchandise}
+      bind:value={filterData.marchandise}
       placeholder="Marchandises"
       multiple
       virtualList
@@ -115,7 +119,7 @@
     <Svelecte
       inputId="filtre_client"
       options={listeClients}
-      bind:value={_filtre.client}
+      bind:value={filterData.client}
       placeholder="Clients"
       multiple
       virtualList
@@ -128,7 +132,7 @@
     <Svelecte
       inputId="filtre_last_port"
       type="port"
-      bind:value={_filtre.last_port}
+      bind:value={filterData.last_port}
       placeholder="Ports précédents"
       multiple
       virtualList
@@ -141,7 +145,7 @@
     <Svelecte
       inputId="filtre_next_port"
       type="port"
-      bind:value={_filtre.next_port}
+      bind:value={filterData.next_port}
       placeholder="Ports suivants"
       multiple
       virtualList

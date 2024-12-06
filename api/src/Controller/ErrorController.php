@@ -10,6 +10,7 @@ use App\Core\Exceptions\AppException;
 use App\Core\Exceptions\Server\ServerException;
 use App\Core\HTTP\HTTPResponse;
 use App\Core\Logger\ErrorLogger;
+use Error;
 
 final class ErrorController extends Controller
 {
@@ -44,6 +45,10 @@ final class ErrorController extends Controller
             ->setCode($this->exception->httpStatus)
             ->setType("text")
             ->setBody($this->exception->getMessage());
+
+        if ($this->exception instanceof ServerException) {
+            ErrorLogger::log($this->exception);
+        }
     }
 
     private function handleThrowable(): void

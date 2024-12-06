@@ -3,30 +3,44 @@
   import { onDestroy, setContext } from "svelte";
   import { writable } from "svelte/store";
 
-  import { Filtre as BandeauFiltre, CarteEscale } from "./components";
+  import { FilterBanner, CarteEscale } from "./components";
   import { PageHeading } from "@app/components";
 
   import { fetcher, Filtre } from "@app/utils";
 
-  import type { FiltreConsignation, EscaleConsignation } from "@app/types";
+  import type { ShippingFilter, EscaleConsignation } from "@app/types";
   import Notiflix from "notiflix";
 
-  let filtre = new Filtre<FiltreConsignation>(
-    JSON.parse(sessionStorage.getItem("filtre-stats-consignation")) || {}
+  const emptyFilter: ShippingFilter = {
+    date_debut: "",
+    date_fin: "",
+    navire: [],
+    marchandise: "",
+    client: "",
+    armateur: [],
+    last_port: [],
+    next_port: [],
+  };
+
+  const filterName = "shipping-stats-filter";
+
+  let filter = new Filtre<ShippingFilter>(
+    JSON.parse(sessionStorage.getItem(filterName)) ||
+      structuredClone(emptyFilter)
   );
 
   let stats: Stats;
   let details: EscaleConsignation[] = [];
 
-  const storeFiltre = writable(filtre);
+  const filterStore = writable(filter);
 
-  const unsubscribeFiltre = storeFiltre.subscribe((value) => {
-    filtre = value;
-    recupererStats();
+  const unsubscribeFilter = filterStore.subscribe((value) => {
+    filter = value;
+    fetchStats();
     details = [];
   });
 
-  setContext("filtre", storeFiltre);
+  setContext("filter", { emptyFilter, filterStore, filterName });
 
   type Stats = {
     Total: number;
@@ -53,10 +67,10 @@
    *
    * @returns Statistiques au format JSON
    */
-  async function recupererStats() {
+  async function fetchStats() {
     try {
       stats = await fetcher("consignation/stats", {
-        searchParams: filtre.toSearchParams(),
+        searchParams: filter.toSearchParams(),
       });
     } catch (error) {
       Notiflix.Notify.failure(error.message);
@@ -78,7 +92,7 @@
   }
 
   onDestroy(() => {
-    unsubscribeFiltre();
+    unsubscribeFilter();
   });
 </script>
 
@@ -88,7 +102,7 @@
   <PageHeading>Statistiques</PageHeading>
 
   <!-- Filtre par date/client -->
-  <BandeauFiltre />
+  <FilterBanner />
 
   <div id="statistiques">
     {#if stats}

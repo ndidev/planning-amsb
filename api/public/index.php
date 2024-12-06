@@ -28,6 +28,7 @@ use App\Controller\Shipping\ShippingCustomersListController;
 use App\Controller\Shipping\ShippingStatsController;
 use App\Controller\Shipping\ShipsInOpsController;
 use App\Controller\Shipping\VoyageNumberController;
+use App\Controller\Stevedoring\DispatchController;
 use App\Controller\Stevedoring\EquipmentController;
 use App\Controller\Stevedoring\StaffController;
 use App\Controller\ThirdParty\AppointmentCountController;
@@ -94,6 +95,7 @@ $routes = [
     // Manutention
     ["/manutention/personnel/[i:id]?", StaffController::class],
     ["/manutention/equipements/[i:id]?", EquipmentController::class],
+    ["/manutention/dispatch", DispatchController::class],
 
     // Utilitaires
     ["/ports/[a:locode]?", PortController::class],

@@ -415,7 +415,16 @@
 
       <!-- Chargement -->
       <div>
-        <Label for="chargement">Chargement</Label>
+        <Label for="chargement"
+          >Chargement
+          {#if appointment.chargement && appointment.livraison === appointment.chargement}
+            <span
+              class="warning-fournisseur"
+              title="Les lieux de chargement et livraison sont identiques"
+              ><TriangleAlertIcon /></span
+            >
+          {/if}
+        </Label>
         <Svelecte
           inputId="chargement"
           type="tiers"
@@ -442,7 +451,16 @@
 
       <!-- Livraison -->
       <div>
-        <Label for="livraison">Livraison</Label>
+        <Label for="livraison"
+          >Livraison
+          {#if appointment.livraison && appointment.livraison === appointment.chargement}
+            <span
+              class="warning-fournisseur"
+              title="Les lieux de chargement et livraison sont identiques"
+              ><TriangleAlertIcon /></span
+            >
+          {/if}
+        </Label>
         <Svelecte
           inputId="livraison"
           type="tiers"

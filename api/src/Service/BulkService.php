@@ -9,9 +9,11 @@ namespace App\Service;
 use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Client\NotFoundException;
+use App\Core\Exceptions\Server\DB\DBException;
 use App\Core\HTTP\HTTPRequestBody;
 use App\DTO\Filter\BulkFilterDTO;
 use App\Entity\Bulk\BulkAppointment;
+use App\Entity\Bulk\BulkDispatchItem;
 use App\Entity\Bulk\BulkProduct;
 use App\Entity\Bulk\BulkQuality;
 use App\Entity\ThirdParty;
@@ -22,18 +24,21 @@ use App\Repository\BulkProductRepository;
  * @phpstan-import-type BulkAppointmentArray from \App\Repository\BulkAppointmentRepository
  * @phpstan-import-type BulkProductArray from \App\Repository\BulkProductRepository
  * @phpstan-import-type BulkQualityArray from \App\Repository\BulkProductRepository
+ * @phpstan-import-type BulkDispatchArray from \App\Repository\BulkAppointmentRepository
  */
 final class BulkService
 {
     private BulkAppointmentRepository $appointmentRepository;
     private BulkProductRepository $productRepository;
     private ThirdPartyService $thirdPartyService;
+    private StevedoringService $stevedoringService;
 
     public function __construct()
     {
         $this->appointmentRepository = new BulkAppointmentRepository($this);
         $this->productRepository = new BulkProductRepository($this);
         $this->thirdPartyService = new ThirdPartyService();
+        $this->stevedoringService = new StevedoringService();
     }
 
     // ============
@@ -97,7 +102,14 @@ final class BulkService
             ->setOrderNumber($requestBody->getString('num_commande'))
             ->setPublicComments($requestBody->getString('commentaire_public'))
             ->setPrivateComments($requestBody->getString('commentaire_prive'))
-            ->setArchive($requestBody->getBool('archive'));
+            ->setArchive($requestBody->getBool('archive'))
+            ->setDispatch(
+                array_map(
+                    // @phpstan-ignore argument.type
+                    fn(array $dispatchRaw) => $this->makeBulkDispatchItemFromFormData(new ArrayHandler($dispatchRaw)),
+                    $requestBody->getArray('dispatch')
+                )
+            );
 
         return $appointment;
     }
@@ -210,6 +222,18 @@ final class BulkService
 
         if ($input->isSet('commande_prete')) {
             $appointment = $this->appointmentRepository->setIsReady($id, $input->getBool('commande_prete'));
+        }
+
+        if ($input->isSet('dispatch')) {
+            $this->appointmentRepository->deleteDispatchForAppointment($id);
+            $this->appointmentRepository->insertDispatchForAppointment(
+                $id,
+                array_map(
+                    // @phpstan-ignore argument.type
+                    fn(array $dispatchRaw) => $this->makeBulkDispatchItemFromFormData(new ArrayHandler($dispatchRaw)),
+                    $input->getArray('dispatch')
+                )
+            );
         }
 
         if ($input->isSet('archive')) {
@@ -442,5 +466,52 @@ final class BulkService
         }
 
         return $this->productRepository->fetchQuality($id);
+    }
+
+    // ========
+    // Dispatch
+    // ========
+
+    /**
+     * Creates a bulk dispatch from database data.
+     * 
+     * @param array $rawData 
+     * 
+     * @phpstan-param BulkDispatchArray $rawData
+     * 
+     * @return BulkDispatchItem 
+     * 
+     * @throws DBException 
+     */
+    public function makeBulkDispatchItemFromDatabase(array $rawData): BulkDispatchItem
+    {
+        $rawDataAH = new ArrayHandler($rawData);
+
+        $dispatch = (new BulkDispatchItem())
+            ->setStaff($this->stevedoringService->getStaff($rawDataAH->getInt('staff_id')))
+            ->setRemarks($rawDataAH->getString('remarks'));
+
+        return $dispatch;
+    }
+
+    public function makeBulkDispatchItemFromFormData(ArrayHandler $requestBody): BulkDispatchItem
+    {
+        $dispatch = (new BulkDispatchItem())
+            ->setStaff($this->stevedoringService->getStaff($requestBody->getInt('staffId')))
+            ->setRemarks($requestBody->getString('remarks'));
+
+        return $dispatch;
+    }
+
+    /**
+     * Retrieves the dispatch items of a bulk appointment.
+     * 
+     * @param int $appointmentId ID of the appointment.
+     * 
+     * @return BulkDispatchItem[] Retrieved dispatch.
+     */
+    public function getDispatchForAppointment(int $appointmentId): array
+    {
+        return $this->appointmentRepository->fetchDispatchForAppointment($appointmentId);
     }
 }

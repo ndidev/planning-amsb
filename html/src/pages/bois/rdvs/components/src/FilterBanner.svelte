@@ -17,17 +17,24 @@
   import { Svelecte } from "@app/components";
   import { Filtre, device } from "@app/utils";
 
-  import type { FiltreBois } from "@app/types";
+  import type { TimberFilter } from "@app/types";
 
-  const filtre = getContext<Writable<Filtre<FiltreBois>>>("filtre");
+  type FilterContext = {
+    emptyFilter: TimberFilter;
+    filterStore: Writable<Filtre<TimberFilter>>;
+    filterName: string;
+  };
 
-  let _filtre = { ...$filtre.data };
+  const { emptyFilter, filterStore, filterName } =
+    getContext<FilterContext>("filter");
 
-  $: filtreActif =
-    Object.values({ ...$filtre.data }).filter((value) =>
+  let filterData = { ...$filterStore.data };
+
+  $: filterIsActive =
+    Object.values({ ...$filterStore.data }).filter((value) =>
       Array.isArray(value) ? (value.length > 0 ? value : undefined) : value
     ).length > 0;
-  $: filterIsDisplayed = filtreActif && $device.is("desktop");
+  $: filterIsDisplayed = filterIsActive && $device.is("desktop");
 
   /**
    * Enregistrer le filtre.
@@ -35,25 +42,25 @@
   async function applyFilter(e: Event) {
     e.preventDefault();
 
-    sessionStorage.setItem("filtre-planning-bois", JSON.stringify(_filtre));
+    sessionStorage.setItem(filterName, JSON.stringify(filterData));
 
-    filtre.set(new Filtre(_filtre));
+    filterStore.set(new Filtre(filterData));
   }
 
   /**
    * Supprimer le filtre.
    */
   function removeFilter() {
-    sessionStorage.removeItem("filtre-planning-bois");
+    sessionStorage.removeItem(filterName);
 
-    filtre.set(new Filtre({}));
-    _filtre = {};
+    filterData = structuredClone(emptyFilter);
+    filterStore.set(new Filtre(filterData));
   }
 </script>
 
 <div
   class="w-[90%]"
-  style:background={filtreActif ? "hsl(0, 100%, 92%)" : "white"}
+  style:background={filterIsActive ? "hsl(0, 100%, 92%)" : "white"}
 >
   <button
     class="my-4 w-full cursor-pointer border-b-[1px] border-b-gray-300"
@@ -74,7 +81,7 @@
         type="date"
         id="date_debut"
         name="date_debut"
-        bind:value={_filtre.date_debut}
+        bind:value={filterData.date_debut}
       />
     </div>
 
@@ -85,7 +92,7 @@
         type="date"
         id="date_fin"
         name="date_fin"
-        bind:value={_filtre.date_fin}
+        bind:value={filterData.date_fin}
       />
     </div>
 
@@ -96,7 +103,7 @@
         inputId="filtre_fournisseur"
         type="tiers"
         role="bois_fournisseur"
-        bind:value={_filtre.fournisseur}
+        bind:value={filterData.fournisseur}
         placeholder="Fournisseur"
         multiple
       />
@@ -109,7 +116,7 @@
         inputId="filtre_client"
         type="tiers"
         role="bois_client"
-        bind:value={_filtre.client}
+        bind:value={filterData.client}
         placeholder="Client"
         multiple
       />
@@ -122,7 +129,7 @@
         inputId="filtre_chargement"
         type="tiers"
         role="bois_client"
-        bind:value={_filtre.chargement}
+        bind:value={filterData.chargement}
         placeholder="Chargement"
         multiple
       />
@@ -135,7 +142,7 @@
         inputId="filtre_livraison"
         type="tiers"
         role="bois_client"
-        bind:value={_filtre.livraison}
+        bind:value={filterData.livraison}
         placeholder="Livraison"
         multiple
       />
@@ -148,7 +155,7 @@
         inputId="filtre_transporteur"
         type="tiers"
         role="bois_transporteur"
-        bind:value={_filtre.transporteur}
+        bind:value={filterData.transporteur}
         placeholder="Transporteur"
         multiple
       />
@@ -161,7 +168,7 @@
         inputId="filtre_affreteur"
         type="tiers"
         role="bois_affreteur"
-        bind:value={_filtre.affreteur}
+        bind:value={filterData.affreteur}
         placeholder="Affréteur"
         multiple
       />

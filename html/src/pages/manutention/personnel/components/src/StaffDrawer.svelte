@@ -37,10 +37,7 @@
   <div class="flex flex-col gap-2 lg:gap-6 mt-8">
     <!-- Nom -->
     <div class="text-3xl *:align-baseline">
-      <span class="font-bold">
-        {staff.firstname}
-        {staff.lastname}
-      </span>
+      <span class="font-bold">{staff.fullname}</span>
 
       {#if $currentUser.canEdit("manutention")}
         <LucideButton
@@ -78,7 +75,7 @@
 
     <!-- Type de contrat -->
     <div>
-      Type de contrat : {staff.type === "cdi" ? "CDI" : "Intérimaire"}
+      Type de contrat : {staff.type === "interim" ? "Intérimaire" : "Mensuel"}
     </div>
 
     <!-- Agence d'intérim -->

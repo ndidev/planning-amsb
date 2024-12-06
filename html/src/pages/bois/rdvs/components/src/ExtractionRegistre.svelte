@@ -17,18 +17,24 @@
   import { ScrollTextIcon } from "lucide-svelte";
 
   import { LucideButton } from "@app/components";
-  import { type Filtre, fetcher, notiflixOptions, DateUtils } from "@app/utils";
-  import type { FiltreBois } from "@app/types";
+  import { type Filtre, fetcher, DateUtils } from "@app/utils";
+  import type { TimberFilter } from "@app/types";
 
-  const filtre = getContext<Writable<Filtre<FiltreBois>>>("filtre");
+  type FilterContext = {
+    emptyFilter: TimberFilter;
+    filterStore: Writable<Filtre<TimberFilter>>;
+  };
+
+  const { filterStore } = getContext<FilterContext>("filter");
 
   // Affichage de la fenêtre modale
   let showModal = false;
   $: startDate =
-    $filtre.data.date_debut ??
+    $filterStore.data.date_debut ??
     new DateUtils(new Date()).jourOuvrePrecedent().toLocaleISODateString();
   $: endDate =
-    $filtre.data.date_fin ?? new DateUtils(new Date()).toLocaleISODateString();
+    $filterStore.data.date_fin ??
+    new DateUtils(new Date()).toLocaleISODateString();
 
   /**
    * Bouton registre

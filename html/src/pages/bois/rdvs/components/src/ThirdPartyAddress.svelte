@@ -7,7 +7,7 @@
 
   export let thirdParty: Tiers;
 
-  const address = thirdParty
+  $: address = thirdParty
     ? [
         thirdParty.nom_court,
         thirdParty.pays?.toLowerCase() === "fr"

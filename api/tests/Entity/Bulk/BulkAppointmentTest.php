@@ -7,8 +7,10 @@ declare(strict_types=1);
 namespace App\Tests\Entity\Bulk;
 
 use App\Entity\Bulk\BulkAppointment;
+use App\Entity\Bulk\BulkDispatchItem;
 use App\Entity\Bulk\BulkProduct;
 use App\Entity\Bulk\BulkQuality;
+use App\Entity\Stevedoring\StevedoringStaff;
 use App\Entity\ThirdParty;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -18,6 +20,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(BulkProduct::class)]
 #[UsesClass(BulkQuality::class)]
 #[UsesClass(ThirdParty::class)]
+#[UsesClass(BulkDispatchItem::class)]
 class BulkAppointmentTest extends TestCase
 {
     public function testSetAndGetDate(): void
@@ -217,6 +220,20 @@ class BulkAppointmentTest extends TestCase
         $this->assertTrue($actualIsArchive);
     }
 
+    public function testSetAndGetDispatch(): void
+    {
+        // Given
+        $bulkAppointment = new BulkAppointment();
+        $dispatch = \array_fill(0, 3, new BulkDispatchItem());
+
+        // When
+        $bulkAppointment->setDispatch($dispatch);
+        $actualIsDispatch = $bulkAppointment->getDispatch();
+
+        // Then
+        $this->assertSame($dispatch, $actualIsDispatch);
+    }
+
     public function testToArray(): void
     {
         // Given
@@ -235,7 +252,14 @@ class BulkAppointmentTest extends TestCase
             ->setOrderNumber('ORD123456')
             ->setPublicComments('This is a public comment.')
             ->setPrivateComments('This is a private comment.')
-            ->setArchive(true);
+            ->setArchive(true)
+            ->setDispatch(
+                array_map(function (array $item) {
+                    return (new BulkDispatchItem())
+                        ->setStaff((new StevedoringStaff())->setId($item[0]))
+                        ->setRemarks($item[1]);
+                }, [[1, "A"], [2, "B"], [3, "C"]])
+            );
 
         $expectedArray = [
             'id' => 1,
@@ -253,6 +277,11 @@ class BulkAppointmentTest extends TestCase
             'commentaire_public' => 'This is a public comment.',
             'commentaire_prive' => 'This is a private comment.',
             'archive' => true,
+            'dispatch' => [
+                ['appointmentId' => 1, 'staffId' => 1, 'remarks' => 'A'],
+                ['appointmentId' => 1, 'staffId' => 2, 'remarks' => 'B'],
+                ['appointmentId' => 1, 'staffId' => 3, 'remarks' => 'C'],
+            ],
         ];
 
         // When

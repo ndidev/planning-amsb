@@ -1,5 +1,5 @@
 import { createFlatStore } from "../generics/flatStore";
-import type { RdvBois, FiltreBois } from "@app/types";
+import type { RdvBois, TimberFilter } from "@app/types";
 import { DateUtils, type FetcherOptions } from "@app/utils";
 
 /**
@@ -9,24 +9,36 @@ export const boisRdvs = (
   params: FetcherOptions["searchParams"] = new URLSearchParams()
 ) => createFlatStore<RdvBois>("bois/rdvs", { params, satisfiesParams });
 
-function satisfiesParams(rdv: RdvBois, searchParams: URLSearchParams) {
-  const filtre: { [P in keyof FiltreBois]: string } =
+function satisfiesParams(appointment: RdvBois, searchParams: URLSearchParams) {
+  const filter: { [P in keyof TimberFilter]: string } =
     Object.fromEntries(searchParams);
 
   return (
-    rdv.attente ||
-    ((filtre.date_debut ?? new DateUtils().toLocaleISODateString()) <=
-      rdv.date_rdv &&
-      (filtre.date_fin ?? "9") >= rdv.date_rdv &&
-      (filtre.fournisseur?.split(",").includes(rdv.fournisseur.toString()) ??
+    appointment.attente ||
+    ((filter.date_debut ?? new DateUtils().toLocaleISODateString()) <=
+      appointment.date_rdv &&
+      (filter.date_fin ?? "9") >= appointment.date_rdv &&
+      (filter.fournisseur
+        ?.split(",")
+        .includes(appointment.fournisseur.toString()) ??
         true) &&
-      (filtre.client?.split(",").includes(rdv.client.toString()) ?? true) &&
-      (filtre.chargement?.split(",").includes(rdv.chargement.toString()) ??
+      (filter.client?.split(",").includes(appointment.client.toString()) ??
         true) &&
-      (filtre.livraison?.split(",").includes(rdv.livraison.toString()) ??
+      (filter.chargement
+        ?.split(",")
+        .includes(appointment.chargement.toString()) ??
         true) &&
-      (filtre.transporteur?.split(",").includes(rdv.transporteur.toString()) ??
+      (filter.livraison
+        ?.split(",")
+        .includes(appointment.livraison.toString()) ??
         true) &&
-      (filtre.affreteur?.split(",").includes(rdv.affreteur.toString()) ?? true))
+      (filter.transporteur
+        ?.split(",")
+        .includes(appointment.transporteur.toString()) ??
+        true) &&
+      (filter.affreteur
+        ?.split(",")
+        .includes(appointment.affreteur.toString()) ??
+        true))
   );
 }

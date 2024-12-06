@@ -10,6 +10,7 @@ use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\DTO\Filter\BulkFilterDTO;
 use App\Entity\Bulk\BulkAppointment;
+use App\Entity\Bulk\BulkDispatchItem;
 use App\Entity\ThirdParty;
 use App\Service\BulkService;
 
@@ -31,6 +32,12 @@ use App\Service\BulkService;
  *                                      commentaire_prive: string,
  *                                      archive: int,
  *                                    }
+ * 
+ * @phpstan-type BulkDispatchArray array{
+ *                                   appointment_id: int,
+ *                                   staff_id: int,
+ *                                   remarks: string,
+ *                                 }
  */
 final class BulkAppointmentRepository extends Repository
 {
@@ -81,21 +88,33 @@ final class BulkAppointmentRepository extends Repository
             WHERE archive = $archiveFilter
             ORDER BY date_rdv";
 
-        $request = $this->mysql->query($statement);
+        try {
+            $request = $this->mysql->query($statement);
 
-        if (!$request) {
-            throw new DBException("Impossible de récupérer les RDV vrac.");
+            if (!$request) {
+                throw new DBException("Impossible de récupérer les RDV vrac.");
+            }
+
+            /** @phpstan-var BulkAppointmentArray[] $appointmentsRaw */
+            $appointmentsRaw = $request->fetchAll();
+
+            $appointments = \array_map(
+                fn(array $appointmentRaw) => $this->bulkService->makeBulkAppointmentFromDatabase($appointmentRaw),
+                $appointmentsRaw
+            );
+
+            // Get all dispatch
+            foreach ($appointments as $appointment) {
+                /** @var int $id */
+                $id = $appointment->getId();
+                $dispatch = $this->fetchDispatchForAppointment($id);
+                $appointment->setDispatch($dispatch);
+            }
+
+            return new Collection($appointments);
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer les RDV vrac.", previous: $e);
         }
-
-        /** @phpstan-var BulkAppointmentArray[] $appointmentsRaw */
-        $appointmentsRaw = $request->fetchAll();
-
-        $appointments = \array_map(
-            fn(array $appointmentRaw) => $this->bulkService->makeBulkAppointmentFromDatabase($appointmentRaw),
-            $appointmentsRaw
-        );
-
-        return new Collection($appointments);
     }
 
     /**
@@ -127,17 +146,26 @@ final class BulkAppointmentRepository extends Repository
             FROM vrac_planning
             WHERE id = :id";
 
-        $request = $this->mysql->prepare($statement);
-        $request->execute(["id" => $id]);
-        $appointmentRaw = $request->fetch();
+        try {
+            $request = $this->mysql->prepare($statement);
 
-        if (!\is_array($appointmentRaw)) return null;
+            if (!$request) {
+                throw new DBException("Impossible de récupérer le RDV vrac {$id}");
+            }
 
-        /** @phpstan-var BulkAppointmentArray $appointmentRaw */
+            $request->execute(["id" => $id]);
+            $appointmentRaw = $request->fetch();
 
-        $appointment = $this->bulkService->makeBulkAppointmentFromDatabase($appointmentRaw);
+            if (!\is_array($appointmentRaw)) return null;
 
-        return $appointment;
+            /** @phpstan-var BulkAppointmentArray $appointmentRaw */
+
+            $appointment = $this->bulkService->makeBulkAppointmentFromDatabase($appointmentRaw);
+
+            return $appointment;
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer le RDV vrac {$id}", previous: $e);
+        }
     }
 
     /**
@@ -168,33 +196,44 @@ final class BulkAppointmentRepository extends Repository
                 archive = :archive
                 ";
 
-        $request = $this->mysql->prepare($statement);
+        try {
+            $request = $this->mysql->prepare($statement);
 
-        $this->mysql->beginTransaction();
-        $request->execute([
-            'date' => $appointment->getSqlDate(),
-            'time' => $appointment->getSqlTime(),
-            'productId' => $appointment->getProduct()?->getId(),
-            'qualityId' => $appointment->getQuality()?->getId(),
-            'quantity' => $appointment->getQuantityValue(),
-            'max' => (int) $appointment->getQuantityIsMax(),
-            'orderIsReady' => (int) $appointment->isReady(),
-            'supplierId' => $appointment->getSupplier()?->getId(),
-            'customerId' => $appointment->getCustomer()?->getId(),
-            'carrierId' => $appointment->getCarrier()?->getId(),
-            'orderNumber' => $appointment->getOrderNumber(),
-            'publicComments' => $appointment->getPublicComments(),
-            'privateComments' => $appointment->getPrivateComments(),
-            'archive' => (int) $appointment->isArchive(),
-        ]);
+            if (!$request) {
+                throw new DBException("Impossible de créer le RDV vrac.");
+            }
 
-        $lastInsertId = (int) $this->mysql->lastInsertId();
-        $this->mysql->commit();
+            $this->mysql->beginTransaction();
+            $request->execute([
+                'date' => $appointment->getSqlDate(),
+                'time' => $appointment->getSqlTime(),
+                'productId' => $appointment->getProduct()?->getId(),
+                'qualityId' => $appointment->getQuality()?->getId(),
+                'quantity' => $appointment->getQuantityValue(),
+                'max' => (int) $appointment->getQuantityIsMax(),
+                'orderIsReady' => (int) $appointment->isReady(),
+                'supplierId' => $appointment->getSupplier()?->getId(),
+                'customerId' => $appointment->getCustomer()?->getId(),
+                'carrierId' => $appointment->getCarrier()?->getId(),
+                'orderNumber' => $appointment->getOrderNumber(),
+                'publicComments' => $appointment->getPublicComments(),
+                'privateComments' => $appointment->getPrivateComments(),
+                'archive' => (int) $appointment->isArchive(),
+            ]);
 
-        /** @var BulkAppointment */
-        $newAppointment = $this->getAppointment($lastInsertId);
+            $lastInsertId = (int) $this->mysql->lastInsertId();
 
-        return $newAppointment;
+            $this->insertDispatchForAppointment($lastInsertId, $appointment->getDispatch());
+
+            $this->mysql->commit();
+
+            /** @var BulkAppointment */
+            $newAppointment = $this->getAppointment($lastInsertId);
+
+            return $newAppointment;
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de créer le RDV vrac.", previous: $e);
+        }
     }
 
     /**
@@ -225,32 +264,45 @@ final class BulkAppointmentRepository extends Repository
                 archive = :archive
             WHERE id = :id";
 
-        $request = $this->mysql->prepare($statement);
-        $request->execute([
-            'date' => $appointment->getSqlDate(),
-            'time' => $appointment->getSqlTime(),
-            'productId' => $appointment->getProduct()?->getId(),
-            'qualityId' => $appointment->getQuality()?->getId(),
-            'quantity' => $appointment->getQuantityValue(),
-            'max' => (int) $appointment->getQuantityIsMax(),
-            'orderIsReady' => (int) $appointment->isReady(),
-            'supplierId' => $appointment->getSupplier()?->getId(),
-            'customerId' => $appointment->getCustomer()?->getId(),
-            'carrierId' => $appointment->getCarrier()?->getId(),
-            'orderNumber' => $appointment->getOrderNumber(),
-            'publicComments' => $appointment->getPublicComments(),
-            'privateComments' => $appointment->getPrivateComments(),
-            'archive' => (int) $appointment->isArchive(),
-            'id' => $appointment->getId(),
-        ]);
+        try {
+            $request = $this->mysql->prepare($statement);
 
-        /** @var int */
-        $id = $appointment->getId();
+            if (!$request) {
+                throw new DBException("Impossible de mettre à jour le RDV vrac.");
+            }
 
-        /** @var BulkAppointment */
-        $updatedAppointment = $this->getAppointment($id);
+            $request->execute([
+                'date' => $appointment->getSqlDate(),
+                'time' => $appointment->getSqlTime(),
+                'productId' => $appointment->getProduct()?->getId(),
+                'qualityId' => $appointment->getQuality()?->getId(),
+                'quantity' => $appointment->getQuantityValue(),
+                'max' => (int) $appointment->getQuantityIsMax(),
+                'orderIsReady' => (int) $appointment->isReady(),
+                'supplierId' => $appointment->getSupplier()?->getId(),
+                'customerId' => $appointment->getCustomer()?->getId(),
+                'carrierId' => $appointment->getCarrier()?->getId(),
+                'orderNumber' => $appointment->getOrderNumber(),
+                'publicComments' => $appointment->getPublicComments(),
+                'privateComments' => $appointment->getPrivateComments(),
+                'archive' => (int) $appointment->isArchive(),
+                'id' => $appointment->getId(),
+            ]);
 
-        return $updatedAppointment;
+
+            /** @var int */
+            $id = $appointment->getId();
+
+            $this->deleteDispatchForAppointment($id);
+            $this->insertDispatchForAppointment($id, $appointment->getDispatch());
+
+            /** @var BulkAppointment */
+            $updatedAppointment = $this->getAppointment($id);
+
+            return $updatedAppointment;
+        } catch (\Throwable $th) {
+            throw new DBException("Impossible de mettre à jour le RDV vrac.", previous: $th);
+        }
     }
 
     /**
@@ -375,5 +427,98 @@ final class BulkAppointmentRepository extends Repository
         );
 
         return new Collection($appointments);
+    }
+
+    // ========
+    // Dispatch
+    // ========
+
+    /**
+     * Fetch the dispatch for an appointment.
+     * 
+     * @param int $id Appointment ID.
+     * 
+     * @return BulkDispatchItem[]
+     * 
+     * @throws DBException
+     */
+    public function fetchDispatchForAppointment(int $id): array
+    {
+        $statement =
+            "SELECT
+                staff_id,
+                remarks
+            FROM stevedoring_bulk_dispatch
+            WHERE appointment_id = :id";
+
+        try {
+            $request = $this->mysql->prepare($statement);
+            $request->execute(["id" => $id]);
+
+            /** @phpstan-var BulkDispatchArray[] */
+            $dispatchesRaw = $request->fetchAll();
+
+            $dispatches = \array_map(
+                fn(array $dispatchRaw) => $this->bulkService->makeBulkDispatchItemFromDatabase($dispatchRaw),
+                $dispatchesRaw
+            );
+
+            return $dispatches;
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer le dispatch pour le RDV {$id}", previous: $e);
+        }
+    }
+
+    /**
+     * Insert the dispatch for an appointment.
+     * 
+     * @param int $id Appointment ID.
+     * @param BulkDispatchItem[] $dispatch 
+     * 
+     * @return void 
+     */
+    public function insertDispatchForAppointment(int $id, array $dispatch): void
+    {
+        $statement =
+            "INSERT INTO stevedoring_bulk_dispatch
+             SET
+                appointment_id = :id,
+                staff_id = :staffId,
+                remarks = :remarks";
+
+        try {
+            $request = $this->mysql->prepare($statement);
+
+            foreach ($dispatch as $dispatchItem) {
+                $request->execute([
+                    'id' => $id,
+                    'staffId' => $dispatchItem->getStaff()?->getId(),
+                    'remarks' => $dispatchItem->getRemarks(),
+                ]);
+            }
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible d'enregistrer le dispatch", previous: $e);
+        }
+    }
+
+    /**
+     * Delete the dispatch for an appointment.
+     * 
+     * @param int $id Appointment ID.
+     * 
+     * @return void 
+     * 
+     * @throws DBException 
+     */
+    public function deleteDispatchForAppointment(int $id): void
+    {
+        $statement = "DELETE FROM stevedoring_bulk_dispatch WHERE appointment_id = :id";
+
+        try {
+            $request = $this->mysql->prepare($statement);
+            $request->execute(["id" => $id]);
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de supprimer le dispatch du RDV {$id}", previous: $e);
+        }
     }
 }

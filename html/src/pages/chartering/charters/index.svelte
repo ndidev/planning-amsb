@@ -5,19 +5,31 @@
   import { params } from "@roxi/routify";
 
   import { Chargement, BandeauInfo, SseConnection } from "@app/components";
-  import { Filtre as BandeauFiltre, LigneCharter } from "./components";
+  import { FilterBanner, LigneCharter } from "./components";
 
   import { Filtre } from "@app/utils";
-  import type { Stores, FiltreCharter } from "@app/types";
+  import type { Stores, CharteringFilter } from "@app/types";
 
   const { charteringCharters } = getContext<Stores>("stores");
 
+  const emptyFilter: CharteringFilter = {
+    date_debut: "",
+    date_fin: "",
+    affreteur: [],
+    armateur: [],
+    courtier: [],
+    statut: [],
+  };
+
+  const filterName = "chartering-planning-filter";
+
   // Stores Filtre et affrètements
-  let filtre = new Filtre<FiltreCharter>(
-    JSON.parse(sessionStorage.getItem("filtre-planning-chartering")) || {}
+  let filter = new Filtre<CharteringFilter>(
+    JSON.parse(sessionStorage.getItem(filterName)) ||
+      structuredClone(emptyFilter)
   );
 
-  const storeFiltre = writable(filtre);
+  const filterStore = writable(filter);
 
   let charters: typeof $charteringCharters;
 
@@ -25,7 +37,7 @@
 
   setContext("archives", archives);
 
-  const unsubscribeFiltre = storeFiltre.subscribe((value) => {
+  const unsubscribeFilter = filterStore.subscribe((value) => {
     const params = value.toSearchParams();
 
     if (archives) params.append("archives", "");
@@ -37,11 +49,11 @@
     charters = value;
   });
 
-  setContext("filtre", storeFiltre);
+  setContext("filter", { emptyFilter, filterStore, filterName });
 
   onDestroy(() => {
     unsubscribeCharters();
-    unsubscribeFiltre();
+    unsubscribeFilter();
   });
 </script>
 
@@ -55,7 +67,7 @@
 <div class="sticky top-0 z-[1] ml-16 lg:ml-24">
   <BandeauInfo module="chartering" pc />
 
-  <BandeauFiltre />
+  <FilterBanner />
 </div>
 
 <main class="divide-y">

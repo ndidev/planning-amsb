@@ -18,6 +18,11 @@ export type StevedoringStaff = {
   lastname: string;
 
   /**
+   * Nom complet.
+   */
+  fullname: string;
+
+  /**
    * Téléphone.
    */
   phone: string;
@@ -25,7 +30,7 @@ export type StevedoringStaff = {
   /**
    * Type de contrat.
    */
-  type: "cdi" | "interim";
+  type: "mensuel" | "interim";
 
   /**
    * Agency d'intérim.

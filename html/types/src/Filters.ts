@@ -1,6 +1,11 @@
-import type { RdvBois, Charter, EscaleConsignation } from "@app/types";
+import type {
+  RdvBois,
+  Charter,
+  EscaleConsignation,
+  StevedoringStaff,
+} from "@app/types";
 
-export type FiltreBois = {
+export type TimberFilter = {
   date_debut?: string;
   date_fin?: string;
   fournisseur?: RdvBois["fournisseur"][];
@@ -11,7 +16,7 @@ export type FiltreBois = {
   affreteur?: RdvBois["affreteur"][];
 };
 
-export type FiltreCharter = {
+export type CharteringFilter = {
   date_debut?: string;
   date_fin?: string;
   affreteur?: Charter["affreteur"][];
@@ -20,7 +25,7 @@ export type FiltreCharter = {
   statut?: Charter["statut"][];
 };
 
-export type FiltreConsignation = {
+export type ShippingFilter = {
   date_debut?: string;
   date_fin?: string;
   navire?: EscaleConsignation["navire"][];
@@ -29,4 +34,10 @@ export type FiltreConsignation = {
   armateur?: EscaleConsignation["armateur"][];
   last_port?: EscaleConsignation["last_port"][];
   next_port?: EscaleConsignation["next_port"][];
+};
+
+export type StevedoringDispatchFilter = {
+  startDate?: string;
+  endDate?: string;
+  staff?: StevedoringStaff["id"][];
 };

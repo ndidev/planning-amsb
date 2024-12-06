@@ -25,12 +25,12 @@
 
   const { vracRdvs, vracProduits } = getContext<Stores>("stores");
 
-  let formulaire: HTMLFormElement;
-  let boutonAjouter: BoutonAction;
-  let boutonModifier: BoutonAction;
-  let boutonSupprimer: BoutonAction;
+  let form: HTMLFormElement;
+  let createButton: BoutonAction;
+  let updateButton: BoutonAction;
+  let deleteButton: BoutonAction;
 
-  const nouveauRdv: RdvVrac = {
+  const newAppointment: RdvVrac = {
     id: null,
     date_rdv: new Date()
       .toLocaleDateString(locale)
@@ -50,9 +50,10 @@
     commentaire_public: "",
     commentaire_prive: "",
     archive: false,
+    dispatch: [],
   };
 
-  const produitVierge: Partial<ProduitVrac> = {
+  const newProduct: Partial<ProduitVrac> = {
     id: null,
     nom: "",
     unite: "",
@@ -68,7 +69,7 @@
   const copie = parseInt($params.copie);
   const archives = "archives" in $params;
 
-  let rdv: RdvVrac = isNew && !copie ? { ...nouveauRdv } : null;
+  let rdv: RdvVrac = isNew && !copie ? { ...newAppointment } : null;
 
   (async () => {
     try {
@@ -81,7 +82,7 @@
     }
   })();
 
-  $: produit = $vracProduits?.get(rdv?.produit) || produitVierge;
+  $: product = $vracProduits?.get(rdv?.produit) || newProduct;
 
   /**
    * Aide à la saisie.
@@ -91,16 +92,16 @@
    */
   async function selectionnerPremiereQualite() {
     await tick(); // Attendre la mise à jour du composant après le changement de la liste déroulante
-    rdv.qualite = produit.qualites[0]?.id || null;
+    rdv.qualite = product.qualites[0]?.id || null;
   }
 
   /**
    * Créer le RDV.
    */
-  async function ajouterRdv() {
-    if (!validerFormulaire(formulaire)) return;
+  async function createAppointment() {
+    if (!validerFormulaire(form)) return;
 
-    boutonAjouter.$set({ disabled: true });
+    createButton.$set({ disabled: true });
 
     try {
       await vracRdvs.create(rdv);
@@ -111,17 +112,17 @@
       $goto(`./${rdv.archive ? "?archives" : ""}`);
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
-      boutonAjouter.$set({ disabled: false });
+      createButton.$set({ disabled: false });
     }
   }
 
   /**
    * Modifier le RDV.
    */
-  async function modifierRdv() {
-    if (!validerFormulaire(formulaire)) return;
+  async function updateAppointment() {
+    if (!validerFormulaire(form)) return;
 
-    boutonModifier.$set({ disabled: true });
+    updateButton.$set({ disabled: true });
 
     try {
       await vracRdvs.update(rdv);
@@ -132,17 +133,17 @@
       $goto(`./${rdv.archive ? "?archives" : ""}`);
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
-      boutonModifier.$set({ disabled: false });
+      updateButton.$set({ disabled: false });
     }
   }
 
   /**
    * Supprimer le RDV.
    */
-  function supprimerRdv() {
+  function deleteAppointment() {
     if (!id) return;
 
-    boutonSupprimer.$set({ disabled: true });
+    deleteButton.$set({ disabled: true });
 
     // Demande de confirmation
     Notiflix.Confirm.show(
@@ -158,10 +159,10 @@
           $goto(`./${archives ? "?archives" : ""}`);
         } catch (erreur) {
           Notiflix.Notify.failure(erreur.message);
-          boutonSupprimer.$set({ disabled: false });
+          deleteButton.$set({ disabled: false });
         }
       },
-      () => boutonSupprimer.$set({ disabled: false }),
+      () => deleteButton.$set({ disabled: false }),
       notiflixOptions.themes.red
     );
   }
@@ -176,6 +177,22 @@
       "Fermer"
     );
   }
+
+  function addDispatchLine() {
+    rdv.dispatch = [
+      ...rdv.dispatch,
+      {
+        staffId: null,
+        role: "",
+      },
+    ];
+  }
+
+  function deleteDispatchLine(index: number) {
+    rdv.dispatch.splice(index, 1);
+
+    rdv.dispatch = rdv.dispatch;
+  }
 </script>
 
 <!-- routify:options param-is-page -->
@@ -189,7 +206,7 @@
   {:else}
     <form
       class="flex flex-col gap-3 mb-4"
-      bind:this={formulaire}
+      bind:this={form}
       use:preventFormSubmitOnEnterKeydown
     >
       <!-- Produit -->
@@ -222,9 +239,9 @@
           data-nom="Qualité"
           bind:value={rdv.qualite}
           placeholder=""
-          disabled={produit.qualites.length === 0}
+          disabled={product.qualites.length === 0}
         >
-          {#each produit.qualites as qualite}
+          {#each product.qualites as qualite}
             <option value={qualite.id}>{qualite.nom}</option>
           {/each}
         </Select>
@@ -260,8 +277,8 @@
       <div>
         <Label for="quantite">
           Quantité
-          {#if produit.unite}
-            (<span id="unite">{produit.unite}</span>)
+          {#if product.unite}
+            (<span id="unite">{product.unite}</span>)
           {/if}
         </Label>
         <Input
@@ -369,6 +386,47 @@
       <div>
         <Toggle name="archive" bind:checked={rdv.archive}>Archivé</Toggle>
       </div>
+
+      <!-- Dispatch -->
+      <div>
+        <div class="text-xl font-bold">
+          Dispatch
+          <LucideButton
+            preset="add"
+            title="Ajouter une ligne"
+            on:click={addDispatchLine}
+          />
+        </div>
+        <div class="divide-y">
+          {#each rdv.dispatch as dispatchItem, index}
+            <div
+              class="flex flex-col items-center gap-2 py-1 lg:flex-row lg:gap-4 lg:py-2"
+            >
+              <div class="w-full">
+                <Label for="">Personnel</Label>
+                <Svelecte
+                  type="staff"
+                  inputId="staff-{index}"
+                  bind:value={dispatchItem.staffId}
+                  placeholder="Sélectionner le personnel"
+                  required
+                />
+              </div>
+              <div class="w-full">
+                <Label for="role-{index}">Rôle</Label>
+                <Input type="text" bind:value={dispatchItem.role} />
+              </div>
+              <div>
+                <LucideButton
+                  preset="delete"
+                  title="Supprimer la ligne"
+                  on:click={() => deleteDispatchLine(index)}
+                />
+              </div>
+            </div>
+          {/each}
+        </div>
+      </div>
     </form>
 
     <!-- Validation/Annulation/Suppression -->
@@ -377,21 +435,21 @@
         <!-- Bouton "Ajouter" -->
         <BoutonAction
           preset="ajouter"
-          on:click={ajouterRdv}
-          bind:this={boutonAjouter}
+          on:click={createAppointment}
+          bind:this={createButton}
         />
       {:else}
         <!-- Bouton "Modifier" -->
         <BoutonAction
           preset="modifier"
-          on:click={modifierRdv}
-          bind:this={boutonModifier}
+          on:click={updateAppointment}
+          bind:this={updateButton}
         />
         <!-- Bouton "Supprimer" -->
         <BoutonAction
           preset="supprimer"
-          on:click={supprimerRdv}
-          bind:this={boutonSupprimer}
+          on:click={deleteAppointment}
+          bind:this={deleteButton}
         />
       {/if}
 

@@ -41,6 +41,34 @@ final class StevedoringStaffTest extends TestCase
         $this->assertSame($lastname, $actualName);
     }
 
+    public function testGetFullname(): void
+    {
+        // Given
+        $stevedoringStaff = new StevedoringStaff();
+        $stevedoringStaff->setFirstname('John');
+        $stevedoringStaff->setLastname('Doe');
+
+        // When
+        $fullname = $stevedoringStaff->getFullname();
+
+        // Then
+        $this->assertSame('John Doe', $fullname);
+    }
+
+    public function testGetEmptyFullname(): void
+    {
+        // Given
+        $stevedoringStaff = new StevedoringStaff();
+        $stevedoringStaff->setFirstname('');
+        $stevedoringStaff->setLastname('');
+
+        // When
+        $fullname = $stevedoringStaff->getFullname();
+
+        // Then
+        $this->assertSame('', $fullname);
+    }
+
     public function testSetAndGetPhone(): void
     {
         // Given
@@ -145,6 +173,7 @@ final class StevedoringStaffTest extends TestCase
             'id' => 1,
             'firstname' => 'John',
             'lastname' => 'Doe',
+            'fullname' => 'John Doe',
             'phone' => '0123456789',
             'type' => 'interim',
             'tempWorkAgency' => 'Some agency',

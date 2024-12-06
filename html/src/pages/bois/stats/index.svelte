@@ -3,26 +3,40 @@
   import { onDestroy, setContext } from "svelte";
   import { writable } from "svelte/store";
 
-  import { Filtre as BandeauFiltre } from "./components";
+  import { FilterBanner } from "./components";
   import { PageHeading } from "@app/components";
 
   import { fetcher, Filtre } from "@app/utils";
 
-  import type { FiltreBois } from "@app/types";
+  import type { TimberFilter } from "@app/types";
   import Notiflix from "notiflix";
 
-  let filtre = new Filtre<FiltreBois>(
-    JSON.parse(sessionStorage.getItem("filtre-stats-bois")) || {}
+  const emptyFilter: TimberFilter = {
+    date_debut: "",
+    date_fin: "",
+    fournisseur: [],
+    client: [],
+    chargement: [],
+    livraison: [],
+    transporteur: [],
+    affreteur: [],
+  };
+
+  const filterName = "timber-stats-filter";
+
+  let filter = new Filtre<TimberFilter>(
+    JSON.parse(sessionStorage.getItem(filterName)) ||
+      structuredClone(emptyFilter)
   );
 
-  const storeFiltre = writable(filtre);
+  const filterStore = writable(filter);
 
-  const unsubscribeFiltre = storeFiltre.subscribe((value) => {
-    filtre = value;
-    recupererStats();
+  const unsubscribeFiltre = filterStore.subscribe((value) => {
+    filter = value;
+    fetchStats();
   });
 
-  setContext("filtre", storeFiltre);
+  setContext("filter", { emptyFilter, filterStore, filterName });
 
   type Stats = {
     Total: number;
@@ -51,10 +65,10 @@
    *
    * @returns Statistiques au format JSON
    */
-  async function recupererStats() {
+  async function fetchStats() {
     try {
       stats = await fetcher("bois/stats", {
-        searchParams: filtre.toSearchParams(),
+        searchParams: filter.toSearchParams(),
       });
     } catch (error) {
       Notiflix.Notify.failure(error.message);
@@ -73,7 +87,7 @@
   <PageHeading>Statistiques</PageHeading>
 
   <!-- Filtre par date/client -->
-  <BandeauFiltre />
+  <FilterBanner />
 
   <div id="statistiques">
     {#if stats}

@@ -15,7 +15,7 @@
 
   import Notiflix from "notiflix";
   import Hammer from "hammerjs";
-  import { Modal } from "flowbite-svelte";
+  import { Modal, Tooltip } from "flowbite-svelte";
   import {
     PackageIcon,
     PackageCheckIcon,
@@ -24,9 +24,17 @@
     ArchiveRestoreIcon,
     MessageSquareOffIcon,
     MessageSquareTextIcon,
+    UserRoundIcon,
+    UserRoundCheckIcon,
   } from "lucide-svelte";
 
-  import { LucideButton, BoutonAction, IconText } from "@app/components";
+  import { DispatchModal } from "../";
+  import {
+    LucideButton,
+    BoutonAction,
+    IconText,
+    Svelecte,
+  } from "@app/components";
 
   import { notiflixOptions, device } from "@app/utils";
   import type {
@@ -38,14 +46,18 @@
   } from "@app/types";
 
   // Stores
-  const { currentUser, vracProduits, vracRdvs, tiers } =
+  const { currentUser, vracProduits, vracRdvs, tiers, stevedoringStaff } =
     getContext<Stores>("stores");
 
-  export let rdv: RdvVrac;
+  export let appointment: RdvVrac;
   let ligne: HTMLDivElement;
 
   let mc: HammerManager;
-  let showModal = false;
+  let showMenuModal = false;
+
+  let showDispatchModal = false;
+
+  let awaitingDispatchBeforeArchive = false;
 
   const archives: boolean = getContext("archives");
 
@@ -64,14 +76,14 @@
     couleur: "#000000",
   };
 
-  $: client = $tiers?.get(rdv.client) || { ...tiersVierge };
+  $: client = $tiers?.get(appointment.client) || { ...tiersVierge };
 
-  $: transporteur = $tiers?.get(rdv.transporteur) || { ...tiersVierge };
+  $: transporteur = $tiers?.get(appointment.transporteur) || { ...tiersVierge };
 
-  $: produit = $vracProduits?.get(rdv.produit) || { ...produitVierge };
+  $: produit = $vracProduits?.get(appointment.produit) || { ...produitVierge };
 
   $: qualite = produit.qualites.find(
-    (qualite) => qualite.id === rdv.qualite
+    (qualite) => qualite.id === appointment.qualite
   ) || { ...qualiteVierge };
 
   /**
@@ -79,9 +91,9 @@
    */
   async function toggleOrderReady() {
     try {
-      const newState = !rdv.commande_prete;
+      const newState = !appointment.commande_prete;
 
-      await vracRdvs.patch(rdv.id, {
+      await vracRdvs.patch(appointment.id, {
         commande_prete: newState,
       });
 
@@ -93,30 +105,32 @@
     } catch (err) {
       Notiflix.Notify.failure(err.message);
     } finally {
-      showModal = false;
+      showMenuModal = false;
     }
   }
 
   function toggleArchive() {
     Notiflix.Confirm.show(
-      rdv.archive ? "Restauration RDV" : "Archivage RDV",
-      rdv.archive
+      appointment.archive ? "Restauration RDV" : "Archivage RDV",
+      appointment.archive
         ? "Voulez-vous vraiment restaurer le RDV ?"
         : "Voulez-vous vraiment archiver le RDV ?",
-      rdv.archive ? "Restaurer" : "Archiver",
+      appointment.archive ? "Restaurer" : "Archiver",
       "Annuler",
       async function () {
         try {
           Notiflix.Block.dots(
             [ligne],
-            `${rdv.archive ? "Restauration" : "Archivage"} en cours...`
+            `${appointment.archive ? "Restauration" : "Archivage"} en cours...`
           );
           ligne.style.minHeight = "initial";
 
-          await vracRdvs.patch(rdv.id, { archive: !rdv.archive });
+          await vracRdvs.patch(appointment.id, {
+            archive: !appointment.archive,
+          });
 
           Notiflix.Notify.success(
-            `Le RDV a été ${rdv.archive ? "restauré" : "archivé"}`
+            `Le RDV a été ${appointment.archive ? "restauré" : "archivé"}`
           );
         } catch (erreur) {
           Notiflix.Notify.failure(erreur.message);
@@ -127,14 +141,14 @@
       notiflixOptions.themes.orange
     );
 
-    showModal = false;
+    showMenuModal = false;
   }
 
   onMount(() => {
     mc = new Hammer(ligne);
     mc.on("press", () => {
       if ($device.is("mobile")) {
-        showModal = true;
+        showMenuModal = true;
       }
     });
   });
@@ -144,40 +158,43 @@
   });
 </script>
 
-<Modal bind:open={showModal} outsideclose dismissable={false}>
-  <BoutonAction preset="modifier" on:click={$goto(`./${rdv.id}`)} />
-  <BoutonAction preset="copier" on:click={$goto(`./new?copie=${rdv.id}`)} />
+<Modal bind:open={showMenuModal} outsideclose dismissable={false}>
+  <BoutonAction preset="modifier" on:click={$goto(`./${appointment.id}`)} />
   <BoutonAction
-    text={rdv.archive ? "Restaurer" : "Archiver"}
+    preset="copier"
+    on:click={$goto(`./new?copie=${appointment.id}`)}
+  />
+  <BoutonAction
+    text={appointment.archive ? "Restaurer" : "Archiver"}
     color="hsl(32, 100%, 50%)"
     on:click={toggleArchive}
   />
-  <BoutonAction preset="annuler" on:click={() => (showModal = false)} />
+  <BoutonAction preset="annuler" on:click={() => (showMenuModal = false)} />
 </Modal>
 
 <div
-  class="group grid grid-cols-[50px_1fr] gap-2 py-2 lg:grid-cols-[4%_16%_4%_8%_29%_8%_16%_auto] lg:text-lg"
+  class="group grid grid-cols-[50px_1fr] gap-2 py-2 lg:grid-cols-[4%_16%_3%_3%_8%_27%_8%_16%_auto] lg:text-lg"
   bind:this={ligne}
 >
   <!-- Heure -->
   <div
     class="font-bold text-[#d91ffa] [grid-area:1/1/6/2] lg:col-auto lg:row-auto"
   >
-    {rdv.heure ?? ""}
+    {appointment.heure ?? ""}
   </div>
 
   <!-- Produit + qualité -->
   <div class="font-bold">
     <span style:color={produit.couleur}>{produit.nom}</span>
 
-    {#if rdv.qualite}
+    {#if appointment.qualite}
       <span style:color={qualite.couleur}>{qualite.nom}</span>
     {/if}
   </div>
 
   <!-- Commande prête -->
   <div class="col-start-1 row-start-2 lg:col-auto lg:row-auto">
-    {#if rdv.commande_prete}
+    {#if appointment.commande_prete}
       <div
         class="text-center lg:group-hover:[display:var(--display-on-over)] align-middle"
         style:--display-on-over={$currentUser.canEdit("vrac")
@@ -191,8 +208,8 @@
     {#if $currentUser.canEdit("vrac")}
       <div class="hidden text-center lg:group-hover:block align-middle">
         <LucideButton
-          icon={rdv.commande_prete ? PackageXIcon : PackageCheckIcon}
-          title={rdv.commande_prete
+          icon={appointment.commande_prete ? PackageXIcon : PackageCheckIcon}
+          title={appointment.commande_prete
             ? "Annuler la préparation de commande"
             : "Renseigner commande prête"}
           on:click={toggleOrderReady}
@@ -201,11 +218,56 @@
     {/if}
   </div>
 
+  <!-- Dispatch -->
+  <div class="col-start-1 row-start-3 lg:col-auto lg:row-auto">
+    <div class="text-center align-middle">
+      {#if appointment.dispatch.length > 0}
+        {#if $currentUser.canEdit("vrac")}
+          <LucideButton
+            icon={UserRoundCheckIcon}
+            color="green"
+            staticallyColored
+            title="Renseigner le dispatch"
+            on:click={() => (showDispatchModal = true)}
+          />
+          <Tooltip type="auto">
+            {#each appointment.dispatch as { staffId, remarks }, index}
+              <div>
+                {$stevedoringStaff.get(staffId)?.fullname ||
+                  "(Personnel supprimé)"}
+                {#if remarks}
+                  : {remarks}
+                {/if}
+              </div>
+            {/each}
+          </Tooltip>
+        {:else}
+          <UserRoundCheckIcon />
+        {/if}
+      {:else if $currentUser.canEdit("vrac")}
+        <LucideButton
+          icon={UserRoundIcon}
+          title="Renseigner le dispatch"
+          on:click={() => (showDispatchModal = true)}
+        />
+      {:else}
+        <UserRoundIcon />
+      {/if}
+    </div>
+
+    <DispatchModal
+      bind:appointment
+      bind:showDispatchModal
+      bind:awaitingDispatchBeforeArchive
+      {toggleArchive}
+    />
+  </div>
+
   <!-- Quantité + unité + max -->
-  <div style:color={rdv.max ? "red" : "initial"}>
-    <span class="font-bold">{rdv.quantite}</span>
+  <div style:color={appointment.max ? "red" : "initial"}>
+    <span class="font-bold">{appointment.quantite}</span>
     <span>{produit.unite}</span>
-    <span>{rdv.max ? "max" : ""}</span>
+    <span>{appointment.max ? "max" : ""}</span>
   </div>
 
   <!-- Client -->
@@ -220,26 +282,33 @@
   </div>
 
   <!-- Numéro de commande -->
-  <div>{rdv.num_commande}</div>
+  <div>{appointment.num_commande}</div>
 
   {#if $currentUser.canEdit("vrac")}
     <div class="no-mobile invisible ms-auto group-hover:visible">
       <LucideButton
         preset="copy"
         on:click={() => {
-          $goto(`./new?copie=${rdv.id}${archives ? "&archives" : ""}`);
+          $goto(`./new?copie=${appointment.id}${archives ? "&archives" : ""}`);
         }}
       />
       <LucideButton
         preset="edit"
         on:click={() => {
-          $goto(`./${rdv.id}${archives ? "?archives" : ""}`);
+          $goto(`./${appointment.id}${archives ? "?archives" : ""}`);
         }}
       />
       <LucideButton
-        icon={rdv.archive ? ArchiveRestoreIcon : ArchiveIcon}
-        on:click={toggleArchive}
-        title={rdv.archive ? "Restaurer" : "Archiver"}
+        icon={appointment.archive ? ArchiveRestoreIcon : ArchiveIcon}
+        on:click={() => {
+          if (appointment.dispatch.length === 0 && !appointment.archive) {
+            awaitingDispatchBeforeArchive = true;
+            showDispatchModal = true;
+          } else {
+            toggleArchive();
+          }
+        }}
+        title={appointment.archive ? "Restaurer" : "Archiver"}
         hoverColor="hsl(32, 100%, 50%)"
       />
     </div>
@@ -251,14 +320,14 @@
   <!-- Commentaires -->
   <div class="lg:col-span-4">
     <!-- Commentaire public -->
-    {#if rdv.commentaire_public}
+    {#if appointment.commentaire_public}
       <div class="lg:pl-1">
         <IconText hideIcon={["desktop"]}>
           <span slot="icon" title="Commentaire public"
             ><MessageSquareTextIcon /></span
           >
           <span slot="text"
-            >{@html rdv.commentaire_public.replace(
+            >{@html appointment.commentaire_public.replace(
               /(?:\r\n|\r|\n)/g,
               "<br>"
             )}</span
@@ -267,12 +336,12 @@
       </div>
     {/if}
 
-    {#if rdv.commentaire_public && rdv.commentaire_prive}
+    {#if appointment.commentaire_public && appointment.commentaire_prive}
       <div class="h-3" />
     {/if}
 
     <!-- Commentaire privé -->
-    {#if rdv.commentaire_prive}
+    {#if appointment.commentaire_prive}
       <div
         class="text-gray-400 lg:border-l-[1px] lg:border-dotted lg:border-l-gray-400 lg:pl-1"
       >
@@ -281,7 +350,7 @@
             ><MessageSquareOffIcon /></span
           >
           <span slot="text"
-            >{@html rdv.commentaire_prive.replace(
+            >{@html appointment.commentaire_prive.replace(
               /(?:\r\n|\r|\n)/g,
               "<br>"
             )}</span

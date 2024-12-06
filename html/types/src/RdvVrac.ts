@@ -1,4 +1,9 @@
-import type { Tiers, ProduitVrac, QualiteVrac } from "@app/types";
+import type {
+  Tiers,
+  ProduitVrac,
+  QualiteVrac,
+  StevedoringStaff,
+} from "@app/types";
 
 /**
  * RDV de planning vrac.
@@ -80,4 +85,12 @@ export type RdvVrac = {
    * `true` si le RDV est archivé.
    */
   archive: boolean;
+
+  /**
+   * Personnel de manutention ayant effecté les opérations.
+   */
+  dispatch: {
+    staffId: StevedoringStaff["id"];
+    remarks: string;
+  }[];
 };

@@ -50,6 +50,9 @@ class BulkAppointment extends AbstractEntity
 
     private bool $isArchive = false;
 
+    /** @var BulkDispatchItem[] */
+    private array $dispatch = [];
+
     public function setDate(\DateTimeInterface|string $date): static
     {
         $this->date = DateUtils::makeDateTimeImmutable($date);
@@ -228,6 +231,28 @@ class BulkAppointment extends AbstractEntity
         return $this->isArchive;
     }
 
+    /**
+     * @param BulkDispatchItem[] $dispatch 
+     */
+    public function setDispatch(array $dispatch): static
+    {
+        $this->dispatch = $dispatch;
+
+        foreach ($dispatch as $dispatch) {
+            $dispatch->setAppointment($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return BulkDispatchItem[]
+     */
+    public function getDispatch(): array
+    {
+        return $this->dispatch;
+    }
+
     #[\Override]
     public function toArray(): array
     {
@@ -247,6 +272,10 @@ class BulkAppointment extends AbstractEntity
             "commentaire_public" => $this->getPublicComments(),
             "commentaire_prive" => $this->getPrivateComments(),
             "archive" => $this->isArchive(),
+            "dispatch" => array_map(
+                fn(BulkDispatchItem $dispatch) => $dispatch->toArray(),
+                $this->getDispatch()
+            )
         ];
     }
 }

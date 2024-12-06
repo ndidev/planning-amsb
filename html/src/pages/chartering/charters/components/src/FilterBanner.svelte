@@ -18,45 +18,49 @@
 
   import { Filtre, device } from "@app/utils";
 
-  import type { FiltreCharter } from "@app/types";
+  import type { CharteringFilter } from "@app/types";
 
-  const filtre = getContext<Writable<Filtre<FiltreCharter>>>("filtre");
+  type FilterContext = {
+    emptyFilter: CharteringFilter;
+    filterStore: Writable<Filtre<CharteringFilter>>;
+    filterName: string;
+  };
 
-  let _filtre = { ...$filtre.data };
+  const { emptyFilter, filterStore, filterName } =
+    getContext<FilterContext>("filter");
 
-  $: filtreActif =
-    Object.values({ ...$filtre.data }).filter((value) =>
+  let filterData = { ...$filterStore.data };
+
+  $: filtreIsActive =
+    Object.values({ ...$filterStore.data }).filter((value) =>
       Array.isArray(value) ? (value.length > 0 ? value : undefined) : value
     ).length > 0;
-  $: filterIsDisplayed = filtreActif && $device.is("desktop");
+  $: filterIsDisplayed = filtreIsActive && $device.is("desktop");
 
   /**
    * Enregistrer le filtre.
    */
   async function applyFilter() {
-    sessionStorage.setItem(
-      "filtre-planning-chartering",
-      JSON.stringify(_filtre)
-    );
+    sessionStorage.setItem(filterName, JSON.stringify(filterData));
 
-    filtre.set(new Filtre(_filtre));
+    filterStore.set(new Filtre(filterData));
   }
 
   /**
    * Supprimer le filtre.
    */
   function removeFilter() {
-    sessionStorage.removeItem("filtre-planning-chartering");
+    sessionStorage.removeItem(filterName);
 
-    filtre.set(new Filtre({}));
-    _filtre = {};
+    filterData = structuredClone(emptyFilter);
+    filterStore.set(new Filtre(filterData));
   }
 </script>
 
 <!-- Filtre par date/client -->
 <div
   class="w-[90%]"
-  style:background={filtreActif ? "hsl(0, 100%, 92%)" : "white"}
+  style:background={filtreIsActive ? "hsl(0, 100%, 92%)" : "white"}
 >
   <button
     class="my-4 w-full cursor-pointer border-b-[1px] border-b-gray-300"
@@ -73,13 +77,13 @@
     <!-- Date début -->
     <div>
       <Label for="date_debut">Du</Label>
-      <Input type="date" id="date_debut" bind:value={_filtre.date_debut} />
+      <Input type="date" id="date_debut" bind:value={filterData.date_debut} />
     </div>
 
     <!-- Date fin -->
     <div>
       <Label for="date_fin">Au</Label>
-      <Input type="date" id="date_fin" bind:value={_filtre.date_fin} />
+      <Input type="date" id="date_fin" bind:value={filterData.date_fin} />
     </div>
 
     <!-- Filtre affréteur -->
@@ -89,7 +93,7 @@
         inputId="filtre_affreteur"
         type="tiers"
         role="maritime_affreteur"
-        bind:value={_filtre.affreteur}
+        bind:value={filterData.affreteur}
         placeholder="Affréteur"
         multiple
       />
@@ -102,7 +106,7 @@
         inputId="filtre_armateur"
         type="tiers"
         role="maritime_armateur"
-        bind:value={_filtre.armateur}
+        bind:value={filterData.armateur}
         placeholder="Armateur"
         multiple
       />
@@ -115,7 +119,7 @@
         inputId="filtre_courtier"
         type="tiers"
         role="maritime_courtier"
-        bind:value={_filtre.courtier}
+        bind:value={filterData.courtier}
         placeholder="Courtier"
         multiple
       />
@@ -124,7 +128,7 @@
     <!-- Filtre statut -->
     <div>
       <Label for="filtre_statut">Statut</Label>
-      <Select id="filtre_statut" bind:value={_filtre.statut}>
+      <Select id="filtre_statut" bind:value={filterData.statut}>
         <option value="">Tous</option>
         <option value="0">Plannifié (pas confirmé)</option>
         <option value="1">Confirmé par l'affréteur</option>
@@ -136,23 +140,13 @@
 
     <!-- Boutons filtre -->
     <div>
-      <Button
-        type="submit"
-        name="filtrer"
-        class="w-full"
-        on:click={applyFilter}
-      >
+      <Button type="submit" class="w-full" on:click={applyFilter}>
         Filtrer
       </Button>
     </div>
 
     <div>
-      <Button
-        type="reset"
-        name="supprimer_filtre"
-        class="w-full"
-        on:click={removeFilter}
-      >
+      <Button type="reset" class="w-full" on:click={removeFilter}>
         Supprimer le filtre
       </Button>
     </div>

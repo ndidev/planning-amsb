@@ -33,8 +33,9 @@
     id: null,
     firstname: "",
     lastname: "",
+    fullname: "",
     phone: "",
-    type: "cdi",
+    type: "mensuel",
     tempWorkAgency: null,
     isActive: true,
     comments: "",
@@ -192,7 +193,7 @@
       <div>
         <Label for="type">Type</Label>
         <Select id="type" bind:value={staff.type} placeholder="" required>
-          <option value="cdi">CDI</option>
+          <option value="mensuel">Mensuel</option>
           <option value="interim">Intérimaire</option>
         </Select>
       </div>

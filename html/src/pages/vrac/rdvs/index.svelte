@@ -58,17 +58,19 @@
   /**
    * Grouper et trier les RDVs.
    */
-  function groupAppointments(rdvs: RdvVrac[], dates: Set<DateString>) {
-    const rdvsParDate: GroupesRdv = new Map<DateString, RdvVrac[]>();
+  function groupAppointments(appointments: RdvVrac[], dates: Set<DateString>) {
+    const appointmentsByDate: GroupesRdv = new Map<DateString, RdvVrac[]>();
 
     dates.forEach((date) => {
-      rdvsParDate.set(
+      appointmentsByDate.set(
         date,
-        rdvs.filter(({ date_rdv }) => date_rdv === date).sort(triPlanning)
+        appointments
+          .filter(({ date_rdv }) => date_rdv === date)
+          .sort(triPlanning)
       );
     });
 
-    return rdvsParDate;
+    return appointmentsByDate;
   }
 
   /**
@@ -205,15 +207,15 @@
 
 <main class="w-11/12 mx-auto mb-8">
   {#if $vracRdvs && $vracProduits}
-    {#each archives ? [...groupedAppointments].reverse() : [...groupedAppointments] as [date, rdvs] (date)}
+    {#each archives ? [...groupedAppointments].reverse() : [...groupedAppointments] as [date, appointments] (date)}
       <LigneDate
         {date}
         maree={datesMareesSup4m.has(date)}
         navires={naviresParDate.get(date) || []}
       />
       <div class="divide-y">
-        {#each rdvs as rdv (rdv.id)}
-          <LigneRdv {rdv} />
+        {#each appointments as appointment (appointment.id)}
+          <LigneRdv {appointment} />
         {/each}
       </div>
     {:else}

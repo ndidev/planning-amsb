@@ -8,6 +8,8 @@ namespace App\Repository;
 
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\DB\DBException;
+use App\DTO\Filter\StevedoringDispatchFilterDTO;
+use App\DTO\StevedoringDispatchDTO;
 use App\Entity\Stevedoring\StevedoringEquipment;
 use App\Entity\Stevedoring\StevedoringStaff;
 use App\Service\StevedoringService;
@@ -48,7 +50,10 @@ final class StevedoringRepository extends Repository
      */
     public function fetchAllStaff(): Collection
     {
-        $staffStatement = "SELECT * FROM stevedoring_staff ORDER BY lastname ASC";
+        $staffStatement =
+            "SELECT *
+            FROM stevedoring_staff
+            ORDER BY lastname ASC, firstname ASC";
 
         $staffRequest = $this->mysql->query($staffStatement);
 
@@ -367,11 +372,60 @@ final class StevedoringRepository extends Repository
         }
     }
 
-    public function fetchTasksCountForEquipment(int $id): int
-    {
-        // TODO: implement
+    // ========
+    // Dispatch
+    // ========
 
-        return 0;
+    public function fetchDispatch(StevedoringDispatchFilterDTO $filter): StevedoringDispatchDTO
+    {
+        $sqlFilter = $filter->getSqlStaffFilter();
+
+        $bulkDispatchStatement =
+            "SELECT
+                pl.date_rdv as `date`,
+                CONCAT(staff.firstname, ' ', staff.lastname) as `staffName`,
+                staff.type as `staffContractType`,
+                staff.temp_work_agency as `staffTempWorkAgency`,
+                sbd.remarks as `remarks`,
+                p.nom as `productName`,
+                q.nom as `qualityName`
+            FROM vrac_planning pl
+            JOIN vrac_produits p ON pl.produit = p.id
+            JOIN vrac_qualites q ON pl.qualite = q.id
+            JOIN stevedoring_bulk_dispatch sbd ON pl.id = sbd.appointment_id
+            JOIN stevedoring_staff staff ON sbd.staff_id = staff.id
+            WHERE pl.date_rdv BETWEEN :startDate AND :endDate
+            $sqlFilter
+            ORDER BY
+                pl.date_rdv ASC,
+                FIELD(staff.type, 'mensuel', 'interim'),
+                staff.lastname ASC,
+                staff.firstname ASC
+            ";
+
+        $bulkDispatchRequest = $this->mysql->prepare($bulkDispatchStatement);
+
+        $bulkDispatchRequest->execute([
+            "startDate" => $filter->getSqlStartDate(),
+            "endDate" => $filter->getSqlEndDate(),
+        ]);
+
+        /** 
+         * @var array{
+         *        date: string,
+         *        staffName: string,
+         *        staffContractType: string,
+         *        staffTempWorkAgency: string,
+         *        remarks: string,
+         *        productName: string,
+         *        qualityName: string
+         *      }[]
+         */
+        $bulkData = $bulkDispatchRequest->fetchAll();
+
+        $dispatchDTO = new StevedoringDispatchDTO(bulkData: $bulkData);
+
+        return $dispatchDTO;
     }
 
     // =====
@@ -381,5 +435,12 @@ final class StevedoringRepository extends Repository
     public function taskExists(int $id): bool
     {
         return $this->mysql->exists("stevedoring_tasks", $id);
+    }
+
+    public function fetchTasksCountForEquipment(int $id): int
+    {
+        // TODO: implement
+
+        return 0;
     }
 }

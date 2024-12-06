@@ -6,7 +6,7 @@
   import { BandeauInfo, SseConnection } from "@app/components";
   import {
     ExtractionRegistre,
-    Filtre as BandeauFiltre,
+    FilterBanner,
     Placeholder,
     LigneDate,
     LigneRdv,
@@ -15,23 +15,42 @@
   } from "./components";
 
   import { Filtre } from "@app/utils";
-  import type { Stores, RdvBois, FiltreBois, CamionsParDate } from "@app/types";
+  import type {
+    Stores,
+    RdvBois,
+    TimberFilter,
+    CamionsParDate,
+  } from "@app/types";
 
   const { boisRdvs, tiers } = getContext<Stores>("stores");
 
   type DateString = string;
   type GroupesRdv = Map<DateString, RdvBois[]>;
 
+  const emptyFilter: TimberFilter = {
+    date_debut: "",
+    date_fin: "",
+    fournisseur: [],
+    client: [],
+    chargement: [],
+    livraison: [],
+    transporteur: [],
+    affreteur: [],
+  };
+
+  const filterName = "timber-planning-filter";
+
   // Stores Filtre et RDVs
-  let filtre = new Filtre<FiltreBois>(
-    JSON.parse(sessionStorage.getItem("filtre-planning-bois")) || {}
+  let filter = new Filtre<TimberFilter>(
+    JSON.parse(sessionStorage.getItem(filterName)) ||
+      structuredClone(emptyFilter)
   );
 
-  const storeFiltre = writable(filtre);
+  const filterStore = writable(filter);
 
   let rdvsBois: typeof $boisRdvs = null;
 
-  const unsubscribeFiltre = storeFiltre.subscribe((value) => {
+  const unsubscribeFiltre = filterStore.subscribe((value) => {
     boisRdvs.setSearchParams(value.toSearchParams());
   });
 
@@ -39,7 +58,7 @@
     rdvsBois = rdvs;
   });
 
-  setContext("filtre", storeFiltre);
+  setContext("filter", { emptyFilter, filterStore, filterName });
 
   let dates: Set<DateString>;
   let rdvsGroupes: GroupesRdv;
@@ -180,7 +199,7 @@
 <div class="sticky top-0 z-[1] ml-16 lg:ml-24">
   <BandeauInfo module="bois" pc />
 
-  <BandeauFiltre />
+  <FilterBanner />
 </div>
 
 <ExtractionRegistre />

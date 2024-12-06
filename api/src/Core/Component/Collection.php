@@ -70,6 +70,18 @@ class Collection implements \IteratorAggregate, \Countable, Arrayable, \JsonSeri
     }
 
     /**
+     * Apply a callback to every item of the collection.
+     * 
+     * @param callable $callback 
+     * 
+     * @return array<mixed>
+     */
+    public function map(callable $callback): array
+    {
+        return \array_map($callback, $this->items);
+    }
+
+    /**
      * Transform the collection to an array.
      * 
      * Every item of the collection is also transformed to an array.

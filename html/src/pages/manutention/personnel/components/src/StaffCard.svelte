@@ -28,8 +28,7 @@
     <button
       on:click={() => (drawerHidden = false)}
       class="hover:underline"
-      class:opacity-50={!staff.isActive}
-      >{staff.firstname} {staff.lastname}</button
+      class:opacity-50={!staff.isActive}>{staff.fullname}</button
     >
   </div>
 

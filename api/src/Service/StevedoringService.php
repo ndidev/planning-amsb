@@ -9,6 +9,8 @@ namespace App\Service;
 use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
 use App\Core\HTTP\HTTPRequestBody;
+use App\DTO\Filter\StevedoringDispatchFilterDTO;
+use App\DTO\StevedoringDispatchDTO;
 use App\Entity\Stevedoring\StevedoringEquipment;
 use App\Entity\Stevedoring\StevedoringStaff;
 use App\Repository\StevedoringRepository;
@@ -79,8 +81,12 @@ final class StevedoringService
         return $this->stevedoringRepository->fetchAllStaff();
     }
 
-    public function getStaff(int $id): ?StevedoringStaff
+    public function getStaff(?int $id): ?StevedoringStaff
     {
+        if ($id === null) {
+            return null;
+        }
+
         return $this->stevedoringRepository->fetchStaff($id);
     }
 
@@ -185,5 +191,10 @@ final class StevedoringService
     public function deleteEquipment(int $id): void
     {
         $this->stevedoringRepository->deleteEquipment($id);
+    }
+
+    public function getDispatch(StevedoringDispatchFilterDTO $filter): StevedoringDispatchDTO
+    {
+        return $this->stevedoringRepository->fetchDispatch($filter);
     }
 }

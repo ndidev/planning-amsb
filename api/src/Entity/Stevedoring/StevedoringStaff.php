@@ -25,7 +25,7 @@ class StevedoringStaff extends AbstractEntity
 
     private string $phone = '';
 
-    #[InArray(values: ['cdi', 'interim'], message: "Le type de contrat n'est pas valide.")]
+    #[InArray(values: ['mensuel', 'interim'], message: "Le type de contrat n'est pas valide.")]
     private string $type = '';
 
     private ?string $tempWorkAgency = null;
@@ -58,6 +58,11 @@ class StevedoringStaff extends AbstractEntity
     public function getLastname(): string
     {
         return $this->lastname;
+    }
+
+    public function getFullname(): string
+    {
+        return trim($this->firstname . ' ' . $this->lastname);
     }
 
     public function setPhone(string $phone): static
@@ -139,6 +144,7 @@ class StevedoringStaff extends AbstractEntity
             'id' => $this->getId(),
             'firstname' => $this->getFirstname(),
             'lastname' => $this->getLastname(),
+            'fullname' => $this->getFullname(),
             'phone' => $this->getPhone(),
             'type' => $this->getType(),
             'tempWorkAgency' => $this->getTempWorkAgency(),
