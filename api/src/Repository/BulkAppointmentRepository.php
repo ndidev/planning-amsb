@@ -8,6 +8,8 @@ namespace App\Repository;
 
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\DB\DBException;
+use App\DTO\BulkDispatchStatsDTO;
+use App\DTO\Filter\BulkDispatchStatsFilterDTO;
 use App\DTO\Filter\BulkFilterDTO;
 use App\Entity\Bulk\BulkAppointment;
 use App\Entity\Bulk\BulkDispatchItem;
@@ -519,6 +521,58 @@ final class BulkAppointmentRepository extends Repository
             $request->execute(["id" => $id]);
         } catch (\PDOException $e) {
             throw new DBException("Impossible de supprimer le dispatch du RDV {$id}", previous: $e);
+        }
+    }
+
+    public function fetchDispatchStats(BulkDispatchStatsFilterDTO $filter): BulkDispatchStatsDTO
+    {
+        $sqlFilter = $filter->getSqlStaffFilter();
+
+        $dispatchStatement =
+            "SELECT
+                pl.date_rdv as `date`,
+                p.unite as `unit`,
+                IF(
+                    staff.type = 'interim',
+                    'Intérimaires',
+                    CONCAT(staff.lastname, ' ', staff.firstname)
+                ) as `staffLabel`,
+                sbd.remarks as `remarks`
+            FROM vrac_planning pl
+            JOIN vrac_produits p ON pl.produit = p.id
+            JOIN stevedoring_bulk_dispatch sbd ON pl.id = sbd.appointment_id
+            JOIN stevedoring_staff staff ON sbd.staff_id = staff.id
+            WHERE pl.date_rdv BETWEEN :startDate AND :endDate
+            $sqlFilter
+            ORDER BY
+                pl.date_rdv ASC,
+                staff.lastname ASC,
+                staff.firstname ASC
+            ";
+
+        try {
+            $dispatchRequest = $this->mysql->prepare($dispatchStatement);
+
+            $dispatchRequest->execute([
+                "startDate" => $filter->getSqlStartDate(),
+                "endDate" => $filter->getSqlEndDate(),
+            ]);
+
+            /** 
+             * @var array{
+             *        date: string,
+             *        unit: string,
+             *        staffLabel: string,
+             *        remarks: string,
+             *      }[]
+             */
+            $rawData = $dispatchRequest->fetchAll();
+
+            $dispatchDTO = new BulkDispatchStatsDTO($rawData);
+
+            return $dispatchDTO;
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer les statistiques de dispatch", previous: $e);
         }
     }
 }

@@ -8,6 +8,8 @@
   import { StaffCard } from "./components";
   import { Chargement, PageHeading, SseConnection } from "@app/components";
 
+  import { removeDiacritics } from "@app/utils";
+
   import type { StevedoringStaff, Stores } from "@app/types";
 
   const { stevedoringStaff } = getContext<Stores>("stores");
@@ -48,9 +50,13 @@
   }
 
   function filterStaffBySearch(staff: StevedoringStaff) {
+    const normalizedSearch = removeDiacritics(search);
+    const normalizedFirstname = removeDiacritics(staff.firstname);
+    const normalizedLastname = removeDiacritics(staff.lastname);
+
     return (
-      staff.lastname.toLocaleLowerCase().includes(search) ||
-      staff.firstname.toLocaleLowerCase().includes(search)
+      normalizedLastname.includes(normalizedSearch) ||
+      normalizedFirstname.includes(normalizedSearch)
     );
   }
 </script>

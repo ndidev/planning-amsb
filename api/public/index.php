@@ -8,6 +8,7 @@ require_once __DIR__ . "/../bootstrap.php";
 
 use App\Controller\Admin\UserAccountController;
 use App\Controller\Bulk\BulkAppointmentController;
+use App\Controller\Bulk\BulkDispatchController;
 use App\Controller\Bulk\BulkProductController;
 use App\Controller\Chartering\CharterController;
 use App\Controller\Config\AgencyController;
@@ -78,6 +79,7 @@ $routes = [
     // Vrac
     ["/vrac/rdvs/[i:id]?", BulkAppointmentController::class],
     ["/vrac/produits/[i:id]?", BulkProductController::class],
+    ["/vrac/dispatch", BulkDispatchController::class],
 
     // Consignation
     ["/consignation/escales/[i:id]?", ShippingCallController::class],

@@ -41,3 +41,9 @@ export type StevedoringDispatchFilter = {
   endDate?: string;
   staff?: StevedoringStaff["id"][];
 };
+
+export type BulkDispatchFilter = {
+  startDate?: string;
+  endDate?: string;
+  staff?: StevedoringStaff["id"][];
+};

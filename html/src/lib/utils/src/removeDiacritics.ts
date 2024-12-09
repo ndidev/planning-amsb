@@ -7,6 +7,16 @@
  *
  * @returns {string} String without diacritics
  */
-export function removeDiacritics(string: string): string {
-  return string.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+export function removeDiacritics(
+  string: string,
+  toLowerCase: boolean = true
+): string {
+  if (toLowerCase) {
+    return string
+      .toLocaleLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  } else {
+    return string.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
 }

@@ -183,7 +183,7 @@
       ...rdv.dispatch,
       {
         staffId: null,
-        role: "",
+        remarks: "",
       },
     ];
   }
@@ -413,8 +413,17 @@
                 />
               </div>
               <div class="w-full">
-                <Label for="role-{index}">Rôle</Label>
-                <Input type="text" bind:value={dispatchItem.role} />
+                <Label for="remarks-{index}">Remarques</Label>
+                <Input
+                  type="text"
+                  id="remarks-{index}"
+                  bind:value={dispatchItem.remarks}
+                  list="remarks"
+                />
+                <datalist id="remarks">
+                  <option value="JCB"></option>
+                  <option value="Trémie"></option>
+                </datalist>
               </div>
               <div>
                 <LucideButton

@@ -53,12 +53,12 @@ export const sitemap: Map<ModuleId, Module> = new Map([
             href: "/vrac/produits",
             devices: ["mobile", "desktop"],
           },
-          // {
-          //   affichage: "Dispatch",
-          //   roleMini: UserRoles.EDIT,
-          //   href: "/vrac/dispatch",
-          //   devices: ["mobile", "desktop"],
-          // },
+          {
+            affichage: "Dispatch",
+            roleMini: UserRoles.ACCESS,
+            href: "/vrac/dispatch",
+            devices: ["mobile", "desktop"],
+          },
         ],
       },
     },

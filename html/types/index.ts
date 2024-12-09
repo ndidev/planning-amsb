@@ -19,6 +19,7 @@ export type {
   CharteringFilter,
   ShippingFilter,
   StevedoringDispatchFilter,
+  BulkDispatchFilter,
 } from "./src/Filters";
 export type { LoginInfo } from "./src/LoginInfo";
 export type { Maree } from "./src/Maree";

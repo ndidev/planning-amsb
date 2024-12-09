@@ -11,6 +11,8 @@ use App\Core\Component\Collection;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\Core\HTTP\HTTPRequestBody;
+use App\DTO\BulkDispatchStatsDTO;
+use App\DTO\Filter\BulkDispatchStatsFilterDTO;
 use App\DTO\Filter\BulkFilterDTO;
 use App\Entity\Bulk\BulkAppointment;
 use App\Entity\Bulk\BulkDispatchItem;
@@ -513,5 +515,10 @@ final class BulkService
     public function getDispatchForAppointment(int $appointmentId): array
     {
         return $this->appointmentRepository->fetchDispatchForAppointment($appointmentId);
+    }
+
+    public function getBulkDispatchStats(BulkDispatchStatsFilterDTO $filter): BulkDispatchStatsDTO
+    {
+        return $this->appointmentRepository->fetchDispatchStats($filter);
     }
 }

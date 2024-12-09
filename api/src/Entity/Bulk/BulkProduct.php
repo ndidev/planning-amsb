@@ -22,7 +22,6 @@ class BulkProduct extends AbstractEntity
     #[Required("La couleur est obligatoire.")]
     private string $color = self::DEFAULT_COLOR;
 
-    #[Required("L'unité est obligatoire.")]
     private string $unit = "";
 
     /** @var BulkQuality[] */

@@ -39,20 +39,7 @@ final class ShippingStatsSummaryDTO implements \JsonSerializable
     {
         $this->stats["Total"] = count($this->statsSummaryRaw);
 
-        $yearTemplate = [
-            1 => ["nombre" => 0, "ids" => []],
-            2 => ["nombre" => 0, "ids" => []],
-            3 => ["nombre" => 0, "ids" => []],
-            4 => ["nombre" => 0, "ids" => []],
-            5 => ["nombre" => 0, "ids" => []],
-            6 => ["nombre" => 0, "ids" => []],
-            7 => ["nombre" => 0, "ids" => []],
-            8 => ["nombre" => 0, "ids" => []],
-            9 => ["nombre" => 0, "ids" => []],
-            10 => ["nombre" => 0, "ids" => []],
-            11 => ["nombre" => 0, "ids" => []],
-            12 => ["nombre" => 0, "ids" => []],
-        ];
+        $yearTemplate = \array_fill(1, 12, ["nombre" => 0, "ids" => []]);
 
         // Compilation du nombre de RDV par année et par mois
         foreach ($this->statsSummaryRaw as $call) {
@@ -60,9 +47,7 @@ final class ShippingStatsSummaryDTO implements \JsonSerializable
             $year = (int) $date[0];
             $month = (int) $date[1];
 
-            if (!array_key_exists($year, $this->stats["ByYear"])) {
-                $this->stats["ByYear"][$year] = $yearTemplate;
-            };
+            $this->stats["ByYear"][$year] ??= $yearTemplate;
 
             $this->stats["ByYear"][$year][(int) $month]["nombre"]++;
             $this->stats["ByYear"][$year][(int) $month]["ids"][] = $call["id"];

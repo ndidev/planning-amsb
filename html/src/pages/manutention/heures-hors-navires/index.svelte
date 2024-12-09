@@ -41,7 +41,7 @@
       [contractType in "mensuel" | "interim"]: {
         [staffName: string]: {
           tempWorkAgency: string;
-          bulk: { product: string; quality: string; role: string }[];
+          bulk: { product: string; quality: string; remarks: string }[];
         };
       };
     };
@@ -103,11 +103,11 @@
 
                   <div class="ml-2">Vrac</div>
                   <ul>
-                    {#each dispatch[date][contractType][staffName].bulk as { product, quality, role }}
+                    {#each dispatch[date][contractType][staffName].bulk as { product, quality, remarks }}
                       <li class="ml-4 flex flex-row gap-1">
                         <span>{product}</span>
                         <span>{quality}</span>
-                        <span class="ml-2">{role}</span>
+                        <span class="ml-2">{remarks}</span>
                       </li>
                     {/each}
                   </ul>
