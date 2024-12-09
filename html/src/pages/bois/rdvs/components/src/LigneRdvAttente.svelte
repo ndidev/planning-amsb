@@ -255,8 +255,8 @@
           >
           <span slot="text"
             >{@html rdv.commentaire_public.replace(
-              /(?:\r\n|\r|\n)/g,
-              "<br>"
+              /\r\n|\r|\n/g,
+              "<br/>"
             )}</span
           >
         </IconText>
@@ -276,10 +276,7 @@
             ><MessageSquareOffIcon /></span
           >
           <span slot="text"
-            >{@html rdv.commentaire_cache.replace(
-              /(?:\r\n|\r|\n)/g,
-              "<br>"
-            )}</span
+            >{@html rdv.commentaire_cache.replace(/\r\n|\r|\n/g, "<br/>")}</span
           >
         </IconText>
       </div>

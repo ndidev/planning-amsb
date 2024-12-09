@@ -208,7 +208,7 @@
    * Afficher l'historique du compte.
    */
   function afficherHistorique() {
-    compte.historique = compte.historique.replaceAll("\n", "<br/>");
+    compte.historique = compte.historique.replace(/\r\n|\r|\n/g, "<br/>");
 
     Notiflix.Report.info(
       "Historique du compte",
@@ -231,7 +231,7 @@
   function checkLoginIsAvailable() {
     loginInput.value = loginInput.value
       .toLowerCase()
-      .replaceAll(/[^a-z0-9_-]/g, "");
+      .replace(/[^a-z0-9_-]/g, "");
 
     const newLogin = loginInput.value;
 

@@ -328,8 +328,8 @@
           >
           <span slot="text"
             >{@html appointment.commentaire_public.replace(
-              /(?:\r\n|\r|\n)/g,
-              "<br>"
+              /\r\n|\r|\n/g,
+              "<br/>"
             )}</span
           >
         </IconText>
@@ -351,8 +351,8 @@
           >
           <span slot="text"
             >{@html appointment.commentaire_prive.replace(
-              /(?:\r\n|\r|\n)/g,
-              "<br>"
+              /\r\n|\r|\n/g,
+              "<br/>"
             )}</span
           >
         </IconText>

@@ -88,7 +88,7 @@
       <div>Commentaires :</div>
       {#if staff.comments}
         <div class="ml-2">
-          {@html staff.comments.replace("\r\n|\r|\n", "<br/>")}
+          {@html staff.comments.replace(/\r\n|\r|\n/g, "<br/>")}
         </div>
       {:else}
         <div class="ml-2 italic">Aucun commentaire</div>
