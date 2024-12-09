@@ -51,6 +51,9 @@ class TimberAppointment extends AbstractEntity
 
     private string $privateComment = "";
 
+    /** @var TimberDispatchItem[] */
+    private array $dispatch = [];
+
     public function setOnHold(bool|int $attente): static
     {
         $this->isOnHold = (bool) $attente;
@@ -246,6 +249,28 @@ class TimberAppointment extends AbstractEntity
         return $this->privateComment;
     }
 
+    /**
+     * @param TimberDispatchItem[] $dispatch 
+     */
+    public function setDispatch(array $dispatch): static
+    {
+        $this->dispatch = $dispatch;
+
+        foreach ($dispatch as $dispatch) {
+            $dispatch->setAppointment($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return TimberDispatchItem[]
+     */
+    public function getDispatch(): array
+    {
+        return $this->dispatch;
+    }
+
     #[\Override]
     public function toArray(): array
     {
@@ -266,8 +291,13 @@ class TimberAppointment extends AbstractEntity
             "numero_bl" => $this->getDeliveryNoteNumber(),
             "commentaire_public" => $this->getPublicComment(),
             "commentaire_cache" => $this->getPrivateComment(),
+            "dispatch" => array_map(
+                fn(TimberDispatchItem $dispatch) => $dispatch->toArray(),
+                $this->getDispatch()
+            ),
         ];
     }
+
     #[\Override]
     public function validate(bool $throw = true): ValidationResult
     {
@@ -275,6 +305,10 @@ class TimberAppointment extends AbstractEntity
 
         if (null === $this->date && false === $this->isOnHold) {
             $validationResult->addError("La date de rendez-vous est obligatoire si le RDV n'est pas en attente.");
+        }
+
+        foreach ($this->dispatch as $dispatch) {
+            $validationResult->merge($dispatch->validate(false));
         }
 
         $validationResult->merge(parent::validate(false));

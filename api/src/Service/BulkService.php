@@ -227,15 +227,17 @@ final class BulkService
         }
 
         if ($input->isSet('dispatch')) {
-            $this->appointmentRepository->deleteDispatchForAppointment($id);
-            $this->appointmentRepository->insertDispatchForAppointment(
-                $id,
-                array_map(
-                    // @phpstan-ignore argument.type
-                    fn(array $dispatchRaw) => $this->makeBulkDispatchItemFromFormData(new ArrayHandler($dispatchRaw)),
-                    $input->getArray('dispatch')
-                )
+            $dispatchItems = array_map(
+                // @phpstan-ignore argument.type
+                function (array $dispatchRaw) {
+                    $dispatchItem = $this->makeBulkDispatchItemFromFormData(new ArrayHandler($dispatchRaw));
+                    $dispatchItem->validate();
+                    return $dispatchItem;
+                },
+                $input->getArray('dispatch')
             );
+            $this->appointmentRepository->deleteDispatchForAppointment($id);
+            $this->appointmentRepository->insertDispatchForAppointment($id, $dispatchItems);
         }
 
         if ($input->isSet('archive')) {
@@ -503,18 +505,6 @@ final class BulkService
             ->setRemarks($requestBody->getString('remarks'));
 
         return $dispatch;
-    }
-
-    /**
-     * Retrieves the dispatch items of a bulk appointment.
-     * 
-     * @param int $appointmentId ID of the appointment.
-     * 
-     * @return BulkDispatchItem[] Retrieved dispatch.
-     */
-    public function getDispatchForAppointment(int $appointmentId): array
-    {
-        return $this->appointmentRepository->fetchDispatchForAppointment($appointmentId);
     }
 
     public function getBulkDispatchStats(BulkDispatchStatsFilterDTO $filter): BulkDispatchStatsDTO

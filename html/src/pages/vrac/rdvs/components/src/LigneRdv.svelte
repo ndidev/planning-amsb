@@ -29,12 +29,7 @@
   } from "lucide-svelte";
 
   import { DispatchModal } from "../";
-  import {
-    LucideButton,
-    BoutonAction,
-    IconText,
-    Svelecte,
-  } from "@app/components";
+  import { LucideButton, BoutonAction, IconText } from "@app/components";
 
   import { notiflixOptions, device } from "@app/utils";
   import type {

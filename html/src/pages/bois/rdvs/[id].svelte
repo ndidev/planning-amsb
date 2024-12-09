@@ -59,6 +59,7 @@
     numero_bl: "",
     commentaire_public: "",
     commentaire_cache: "",
+    dispatch: [],
   };
 
   /**
@@ -325,6 +326,23 @@
       notiflixOptions.themes.red
     );
   }
+
+  function addDispatchLine() {
+    appointment.dispatch = [
+      ...appointment.dispatch,
+      {
+        staffId: null,
+        date: "",
+        remarks: "",
+      },
+    ];
+  }
+
+  function deleteDispatchLine(index: number) {
+    appointment.dispatch.splice(index, 1);
+
+    appointment.dispatch = appointment.dispatch;
+  }
 </script>
 
 <!-- routify:options param-is-page -->
@@ -569,6 +587,69 @@
           cols={30}
           bind:value={appointment.commentaire_cache}
         />
+      </div>
+
+      <!-- Dispatch -->
+      <div>
+        <div class="text-xl font-bold">
+          Dispatch
+          <LucideButton
+            preset="add"
+            title="Ajouter une ligne"
+            on:click={addDispatchLine}
+          />
+        </div>
+        <div class="divide-y">
+          {#each appointment.dispatch as dispatchItem, index}
+            <div
+              class="flex flex-col items-center gap-2 py-1 lg:flex-row lg:gap-4 lg:py-2"
+            >
+              <div class="w-full">
+                <Label for="">Personnel</Label>
+                <Svelecte
+                  type="staff"
+                  inputId="staff-{index}"
+                  name="Personnel"
+                  bind:value={dispatchItem.staffId}
+                  placeholder="Sélectionner le personnel"
+                  required
+                />
+              </div>
+
+              <div class="w-min">
+                <Label for="date-{index}">Date</Label>
+                <Input
+                  type="date"
+                  id="date-{index}"
+                  name="Date"
+                  bind:value={dispatchItem.date}
+                  required
+                />
+              </div>
+
+              <div class="w-full">
+                <Label for="remarks-{index}">Remarques</Label>
+                <Input
+                  type="text"
+                  id="remarks-{index}"
+                  bind:value={dispatchItem.remarks}
+                  list="remarks"
+                />
+                <datalist id="remarks">
+                  <option value="JCB"></option>
+                  <option value="Trémie"></option>
+                </datalist>
+              </div>
+              <div>
+                <LucideButton
+                  preset="delete"
+                  title="Supprimer la ligne"
+                  on:click={() => deleteDispatchLine(index)}
+                />
+              </div>
+            </div>
+          {/each}
+        </div>
       </div>
     </form>
 

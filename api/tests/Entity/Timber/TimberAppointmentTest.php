@@ -6,14 +6,18 @@ declare(strict_types=1);
 
 namespace App\Tests\Entity\Timber;
 
+use App\Entity\Stevedoring\StevedoringStaff;
 use App\Entity\ThirdParty;
 use App\Entity\Timber\TimberAppointment;
+use App\Entity\Timber\TimberDispatchItem;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(TimberAppointment::class)]
 #[UsesClass(ThirdParty::class)]
+#[UsesClass(TimberDispatchItem::class)]
+#[UsesClass(StevedoringStaff::class)]
 class TimberAppointmentTest extends TestCase
 {
     public function testSetAndGetOnHold(): void
@@ -310,6 +314,20 @@ class TimberAppointmentTest extends TestCase
         $this->assertEquals($privateComment, $actualComment);
     }
 
+    public function testSetAndGetDispatch(): void
+    {
+        // Given
+        $bulkAppointment = new TimberAppointment();
+        $dispatch = \array_fill(0, 3, new TimberDispatchItem());
+
+        // When
+        $bulkAppointment->setDispatch($dispatch);
+        $actualIsDispatch = $bulkAppointment->getDispatch();
+
+        // Then
+        $this->assertSame($dispatch, $actualIsDispatch);
+    }
+
     public function testToArray(): void
     {
         // Given
@@ -330,7 +348,15 @@ class TimberAppointmentTest extends TestCase
             ->setCharteringConfirmationSent(true)
             ->setDeliveryNoteNumber('DN12345')
             ->setPublicComment('This is a public comment.')
-            ->setPrivateComment('This is a private comment.');
+            ->setPrivateComment('This is a private comment.')
+            ->setDispatch(
+                array_map(function (array $item) {
+                    return (new TimberDispatchItem())
+                        ->setStaff((new StevedoringStaff())->setId($item[0]))
+                        ->setDate('2023-10-01')
+                        ->setRemarks($item[1]);
+                }, [[1, "A"], [2, "B"], [3, "C"]])
+            );;
 
         $expectedArray = [
             'id' => 1,
@@ -349,6 +375,26 @@ class TimberAppointmentTest extends TestCase
             'numero_bl' => 'DN12345',
             'commentaire_public' => 'This is a public comment.',
             'commentaire_cache' => 'This is a private comment.',
+            'dispatch' => [
+                [
+                    'appointmentId' => 1,
+                    'staffId' => 1,
+                    'date' => '2023-10-01',
+                    'remarks' => 'A',
+                ],
+                [
+                    'appointmentId' => 1,
+                    'staffId' => 2,
+                    'date' => '2023-10-01',
+                    'remarks' => 'B',
+                ],
+                [
+                    'appointmentId' => 1,
+                    'staffId' => 3,
+                    'date' => '2023-10-01',
+                    'remarks' => 'C',
+                ],
+            ]
         ];
 
         // When

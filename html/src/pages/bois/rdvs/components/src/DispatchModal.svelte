@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { onMount, getContext } from "svelte";
+  import { onDestroy, getContext } from "svelte";
+  import type { Writable } from "svelte/store";
 
   import { Modal, Label, Input } from "flowbite-svelte";
   import Notiflix from "notiflix";
@@ -8,26 +9,38 @@
 
   import { validerFormulaire } from "@app/utils";
 
-  import type { RdvVrac, Stores } from "@app/types";
+  import type { RdvBois, Stores } from "@app/types";
 
-  const { vracRdvs } = getContext<Stores>("stores");
+  const { boisRdvs } = getContext<Stores>("stores");
 
   let form: HTMLFormElement;
   let updateButton: BoutonAction;
 
-  export let showDispatchModal = false;
-  export let appointment: RdvVrac;
-  export let awaitingDispatchBeforeArchive: boolean;
-  export let toggleArchive: () => void;
+  export let showDispatchModal: Writable<boolean>;
+  export let appointment: RdvBois;
+
+  export let awaitingDispatchBeforeOrderReady: boolean;
+  export let toggleOrderReady: () => void;
+
+  export let awaitingDispatchBeforeSettingDepartureTime: boolean;
+  export let setDepartureTime: () => void;
 
   let dispatch: typeof appointment.dispatch;
+
+  const unsubscribeShowModal = showDispatchModal.subscribe((modalIsShown) => {
+    if (modalIsShown) {
+      dispatch = structuredClone(appointment.dispatch);
+    }
+  });
 
   function addDispatchLine() {
     dispatch = [
       ...dispatch,
       {
         staffId: null,
+        date: new Date().toISOString().split("T")[0],
         remarks: "",
+        new: true,
       },
     ];
   }
@@ -44,21 +57,30 @@
     try {
       updateButton.$set({ disabled: true });
 
-      await vracRdvs.patch(appointment.id, {
+      await boisRdvs.patch(appointment.id, {
         dispatch,
       });
 
       Notiflix.Notify.success("Le dispatch a été mis à jour.");
 
+      dispatch.forEach((item) => {
+        delete item.new;
+      });
+
       appointment.dispatch = dispatch;
 
-      showDispatchModal = false;
+      $showDispatchModal = false;
 
-      if (awaitingDispatchBeforeArchive === true) {
-        toggleArchive();
+      if (awaitingDispatchBeforeOrderReady === true) {
+        toggleOrderReady();
       }
 
-      awaitingDispatchBeforeArchive = false;
+      if (awaitingDispatchBeforeSettingDepartureTime === true) {
+        setDepartureTime();
+      }
+
+      awaitingDispatchBeforeOrderReady = false;
+      awaitingDispatchBeforeSettingDepartureTime = false;
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
     } finally {
@@ -66,16 +88,18 @@
     }
   }
 
-  function restoreDispatch() {
-    dispatch = structuredClone(appointment.dispatch);
+  function cancelUpdate() {
+    appointment.dispatch = dispatch.filter((item) => !item.new);
+
+    $showDispatchModal = false;
   }
 
-  onMount(() => {
-    restoreDispatch();
+  onDestroy(() => {
+    unsubscribeShowModal();
   });
 </script>
 
-<Modal title="Dispatch" bind:open={showDispatchModal} dismissable={false}>
+<Modal title="Dispatch" bind:open={$showDispatchModal} dismissable={false}>
   <div class="text-lg">
     Ajouter une ligne
     <LucideButton
@@ -101,20 +125,33 @@
             required
           />
         </div>
+
+        <div class="w-min">
+          <Label for="date-{index}">Date</Label>
+          <Input
+            type="date"
+            id="date-{index}"
+            name="Date"
+            bind:value={dispatchItem.date}
+            required
+          />
+        </div>
+
         <div class="w-full">
           <Label for="remarks-{index}">Remarques</Label>
           <Input
             type="text"
             id="remarks-{index}"
-            name="Date"
             bind:value={dispatchItem.remarks}
             list="remarks"
           />
           <datalist id="remarks">
-            <option value="JCB"></option>
-            <option value="Trémie"></option>
+            <option value="Chargement"></option>
+            <option value="Déchargement"></option>
+            <option value="Préparation"></option>
           </datalist>
         </div>
+
         <div>
           <LucideButton
             preset="delete"
@@ -135,12 +172,6 @@
     />
 
     <!-- Bouton "Annuler" -->
-    <BoutonAction
-      preset="annuler"
-      on:click={() => {
-        restoreDispatch();
-        showDispatchModal = false;
-      }}
-    />
+    <BoutonAction preset="annuler" on:click={cancelUpdate} />
   </div>
 </Modal>

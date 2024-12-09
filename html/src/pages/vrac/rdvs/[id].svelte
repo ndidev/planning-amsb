@@ -69,20 +69,20 @@
   const copie = parseInt($params.copie);
   const archives = "archives" in $params;
 
-  let rdv: RdvVrac = isNew && !copie ? { ...newAppointment } : null;
+  let appointment: RdvVrac = isNew && !copie ? { ...newAppointment } : null;
 
   (async () => {
     try {
       if (id || copie) {
-        rdv = structuredClone(await vracRdvs.get(id || copie));
-        if (!rdv) throw new Error();
+        appointment = structuredClone(await vracRdvs.get(id || copie));
+        if (!appointment) throw new Error();
       }
     } catch (error) {
       $redirect("./new");
     }
   })();
 
-  $: product = $vracProduits?.get(rdv?.produit) || newProduct;
+  $: product = $vracProduits?.get(appointment?.produit) || newProduct;
 
   /**
    * Aide à la saisie.
@@ -92,7 +92,7 @@
    */
   async function selectionnerPremiereQualite() {
     await tick(); // Attendre la mise à jour du composant après le changement de la liste déroulante
-    rdv.qualite = product.qualites[0]?.id || null;
+    appointment.qualite = product.qualites[0]?.id || null;
   }
 
   /**
@@ -104,12 +104,15 @@
     createButton.$set({ disabled: true });
 
     try {
-      await vracRdvs.create(rdv);
+      await vracRdvs.create(appointment);
 
       Notiflix.Notify.success("Le RDV a été ajouté");
       // Preset archive to avoid fetching race condition
-      vracRdvs.setSearchParams(rdv.archive ? { archives: "true" } : {}, false);
-      $goto(`./${rdv.archive ? "?archives" : ""}`);
+      vracRdvs.setSearchParams(
+        appointment.archive ? { archives: "true" } : {},
+        false
+      );
+      $goto(`./${appointment.archive ? "?archives" : ""}`);
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
       createButton.$set({ disabled: false });
@@ -125,12 +128,15 @@
     updateButton.$set({ disabled: true });
 
     try {
-      await vracRdvs.update(rdv);
+      await vracRdvs.update(appointment);
 
       Notiflix.Notify.success("Le RDV a été modifié");
       // Preset archive to avoid fetching race condition
-      vracRdvs.setSearchParams(rdv.archive ? { archives: "true" } : {}, false);
-      $goto(`./${rdv.archive ? "?archives" : ""}`);
+      vracRdvs.setSearchParams(
+        appointment.archive ? { archives: "true" } : {},
+        false
+      );
+      $goto(`./${appointment.archive ? "?archives" : ""}`);
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
       updateButton.$set({ disabled: false });
@@ -179,8 +185,8 @@
   }
 
   function addDispatchLine() {
-    rdv.dispatch = [
-      ...rdv.dispatch,
+    appointment.dispatch = [
+      ...appointment.dispatch,
       {
         staffId: null,
         remarks: "",
@@ -189,9 +195,9 @@
   }
 
   function deleteDispatchLine(index: number) {
-    rdv.dispatch.splice(index, 1);
+    appointment.dispatch.splice(index, 1);
 
-    rdv.dispatch = rdv.dispatch;
+    appointment.dispatch = appointment.dispatch;
   }
 </script>
 
@@ -201,7 +207,7 @@
 <main class="mx-auto w-10/12 lg:w-1/3">
   <PageHeading>Rendez-vous</PageHeading>
 
-  {#if !rdv}
+  {#if !appointment}
     <Chargement />
   {:else}
     <form
@@ -216,7 +222,7 @@
           id="produit"
           name="produit"
           data-nom="Produit"
-          bind:value={rdv.produit}
+          bind:value={appointment.produit}
           on:change={selectionnerPremiereQualite}
           required
           placeholder=""
@@ -237,7 +243,7 @@
           id="qualite"
           name="qualite"
           data-nom="Qualité"
-          bind:value={rdv.qualite}
+          bind:value={appointment.qualite}
           placeholder=""
           disabled={product.qualites.length === 0}
         >
@@ -255,7 +261,7 @@
           name="date_rdv"
           id="date_rdv"
           data-nom="Date"
-          bind:value={rdv.date_rdv}
+          bind:value={appointment.date_rdv}
           required
         />
       </div>
@@ -269,7 +275,7 @@
           id="heure"
           step="60"
           data-nom="Heure"
-          bind:value={rdv.heure}
+          bind:value={appointment.heure}
         />
       </div>
 
@@ -287,21 +293,21 @@
           name="quantite"
           id="quantite"
           data-nom="Quantité"
-          bind:value={rdv.quantite}
+          bind:value={appointment.quantite}
           required
         />
       </div>
 
       <!-- Max -->
       <div>
-        <Toggle name="max" bind:checked={rdv.max}
+        <Toggle name="max" bind:checked={appointment.max}
           >Max (la quantité ne doit pas être dépassée)</Toggle
         >
       </div>
 
       <!-- Commande prête -->
       <div>
-        <Toggle name="commande_prete" bind:checked={rdv.commande_prete}
+        <Toggle name="commande_prete" bind:checked={appointment.commande_prete}
           >Commande prête</Toggle
         >
       </div>
@@ -314,7 +320,7 @@
           type="tiers"
           role="vrac_fournisseur"
           name="Fournisseur"
-          bind:value={rdv.fournisseur}
+          bind:value={appointment.fournisseur}
           required
         />
       </div>
@@ -327,7 +333,7 @@
           type="tiers"
           role="vrac_client"
           name="Client"
-          bind:value={rdv.client}
+          bind:value={appointment.client}
           required
         />
       </div>
@@ -340,7 +346,7 @@
           type="tiers"
           role="vrac_transporteur"
           name="Transporteur"
-          bind:value={rdv.transporteur}
+          bind:value={appointment.transporteur}
         />
       </div>
 
@@ -350,7 +356,7 @@
         <Input
           type="text"
           id="num_commande"
-          bind:value={rdv.num_commande}
+          bind:value={appointment.num_commande}
           data-nom="Numéro commande"
         />
       </div>
@@ -360,7 +366,7 @@
         <Label for="public-comments">Commentaire public</Label>
         <Textarea
           id="public-comments"
-          bind:value={rdv.commentaire_public}
+          bind:value={appointment.commentaire_public}
           rows={3}
           cols={30}
         />
@@ -376,7 +382,7 @@
         >
         <Textarea
           id="private-comments"
-          bind:value={rdv.commentaire_prive}
+          bind:value={appointment.commentaire_prive}
           rows={3}
           cols={30}
         />
@@ -384,7 +390,9 @@
 
       <!-- Archive -->
       <div>
-        <Toggle name="archive" bind:checked={rdv.archive}>Archivé</Toggle>
+        <Toggle name="archive" bind:checked={appointment.archive}
+          >Archivé</Toggle
+        >
       </div>
 
       <!-- Dispatch -->
@@ -398,7 +406,7 @@
           />
         </div>
         <div class="divide-y">
-          {#each rdv.dispatch as dispatchItem, index}
+          {#each appointment.dispatch as dispatchItem, index}
             <div
               class="flex flex-col items-center gap-2 py-1 lg:flex-row lg:gap-4 lg:py-2"
             >

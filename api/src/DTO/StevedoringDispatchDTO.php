@@ -8,39 +8,130 @@ namespace App\DTO;
 
 final class StevedoringDispatchDTO implements \JsonSerializable
 {
-    /** @var array<mixed> */
+    /** @var array<string,
+     *         array<'mensuel'|'interim',
+     *           array<string,
+     *             array{
+     *               tempWorkAgency: string|null,
+     *               bulk?: array<int,
+     *                 array{
+     *                   product: string,
+     *                   quality: string,
+     *                   remarks: string,
+     *                   multiplier: int,
+     *                 },
+     *               >,
+     *               timber?: array<int,
+     *                 array{
+     *                   remarks: string,
+     *                   multiplier: int,
+     *                 },
+     *               >,
+     *             }
+     *           >
+     *         >
+     *       >
+     */
     private array $dispatch = [];
 
     /**
      * @param array{
      *          date: string,
      *          staffName: string,
-     *          staffContractType: string,
+     *          staffContractType: 'mensuel'|'interim',
      *          staffTempWorkAgency: string,
      *          remarks: string,
      *          productName: string,
-     *          qualityName: string
+     *          qualityName: string,
      *        }[] $bulkData 
+     * 
+     * @param array{
+     *          date: string,
+     *          staffName: string,
+     *          staffContractType: 'mensuel'|'interim',
+     *          staffTempWorkAgency: string,
+     *          remarks: string,
+     *        }[] $timberData 
      */
-    public function __construct(private array $bulkData)
-    {
-        $this->bulkData = $bulkData;
-
+    public function __construct(
+        private array $bulkData,
+        private array $timberData,
+    ) {
         $this->makeDispatch();
     }
 
     private function makeDispatch(): void
     {
+        // Bulk
         foreach ($this->bulkData as $data) {
-            // @phpstan-ignore-next-line
-            $this->dispatch[$data["date"]][$data["staffContractType"]][$data["staffName"]]["tempWorkAgency"] = $data["staffTempWorkAgency"];
+            $this->dispatch[$data['date']][$data['staffContractType']][$data['staffName']] ??= ['tempWorkAgency' => $data['staffTempWorkAgency']];
 
-            // @phpstan-ignore-next-line
-            $this->dispatch[$data["date"]][$data["staffContractType"]][$data["staffName"]]["bulk"][] = [
-                "product" => $data["productName"],
-                "quality" => $data["qualityName"],
-                "remarks" => $data["remarks"],
-            ];
+            $currentItem = &$this->dispatch[$data['date']][$data['staffContractType']][$data['staffName']];
+
+            $currentItem['tempWorkAgency'] = $data['staffTempWorkAgency'];
+
+            $currentItem['bulk'] ??= [];
+
+            $newItem = true;
+
+            foreach ($currentItem['bulk'] as &$line) {
+                if (
+                    $line['remarks'] === $data['remarks']
+                    && $line['product'] === $data['productName']
+                    && $line['quality'] === $data['qualityName']
+                ) {
+                    $line['multiplier']++;
+                    $newItem = false;
+                    break;
+                }
+            }
+
+            if ($newItem) {
+                $currentItem['bulk'][] = [
+                    'product' => $data['productName'],
+                    'quality' => $data['qualityName'],
+                    'remarks' => $data['remarks'],
+                    'multiplier' => 1,
+                ];
+            }
+        }
+
+        // Timber
+        foreach ($this->timberData as $data) {
+            $this->dispatch[$data['date']][$data['staffContractType']][$data['staffName']] ??= ['tempWorkAgency' => $data['staffTempWorkAgency']];
+
+            $currentItem = &$this->dispatch[$data['date']][$data['staffContractType']][$data['staffName']];
+
+            $currentItem['tempWorkAgency'] = $data['staffTempWorkAgency'];
+
+            $currentItem['timber'] ??= [];
+
+            $newItem = true;
+
+            foreach ($currentItem['timber'] as &$line) {
+                if ($line['remarks'] === $data['remarks']) {
+                    $line['multiplier']++;
+                    $newItem = false;
+                    break;
+                }
+            }
+
+            if ($newItem) {
+                $currentItem['timber'][] = [
+                    'remarks' => $data['remarks'],
+                    'multiplier' => 1,
+                ];
+            }
+        }
+
+        foreach ($this->dispatch as $date => &$dispatchByContractType) {
+            if (isset($dispatchByContractType['mensuel'])) {
+                \ksort($dispatchByContractType['mensuel']);
+            }
+
+            if (isset($dispatchByContractType['interim'])) {
+                \ksort($dispatchByContractType['interim']);
+            }
         }
     }
 

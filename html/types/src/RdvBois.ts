@@ -1,4 +1,4 @@
-import type { Tiers } from "@app/types";
+import type { Tiers, StevedoringStaff } from "@app/types";
 
 /**
  * RDV de planning bois.
@@ -86,4 +86,14 @@ export type RdvBois = {
    * Commentaire caché.
    */
   commentaire_cache: string;
+
+  /**
+   * Personnel de manutention ayant effecté les opérations.
+   */
+  dispatch: {
+    staffId: StevedoringStaff["id"];
+    date: string;
+    remarks: string;
+    new?: boolean;
+  }[];
 };

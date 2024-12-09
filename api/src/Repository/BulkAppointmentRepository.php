@@ -164,6 +164,10 @@ final class BulkAppointmentRepository extends Repository
 
             $appointment = $this->bulkService->makeBulkAppointmentFromDatabase($appointmentRaw);
 
+            // Get dispatch
+            $dispatch = $this->fetchDispatchForAppointment($id);
+            $appointment->setDispatch($dispatch);
+
             return $appointment;
         } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer le RDV vrac {$id}", previous: $e);
@@ -539,9 +543,9 @@ final class BulkAppointmentRepository extends Repository
                 ) as `staffLabel`,
                 sbd.remarks as `remarks`
             FROM vrac_planning pl
-            JOIN vrac_produits p ON pl.produit = p.id
-            JOIN stevedoring_bulk_dispatch sbd ON pl.id = sbd.appointment_id
-            JOIN stevedoring_staff staff ON sbd.staff_id = staff.id
+            INNER JOIN vrac_produits p ON pl.produit = p.id
+            INNER JOIN stevedoring_bulk_dispatch sbd ON pl.id = sbd.appointment_id
+            INNER JOIN stevedoring_staff staff ON sbd.staff_id = staff.id
             WHERE pl.date_rdv BETWEEN :startDate AND :endDate
             $sqlFilter
             ORDER BY

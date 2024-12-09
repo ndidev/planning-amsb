@@ -9,12 +9,13 @@
   ```
  -->
 <script lang="ts">
-  import { onMount, onDestroy, getContext } from "svelte";
+  import { onMount, onDestroy, getContext, setContext } from "svelte";
+  import { writable } from "svelte/store";
   import { goto } from "@roxi/routify";
 
   import Notiflix from "notiflix";
   import Hammer from "hammerjs";
-  import { Modal } from "flowbite-svelte";
+  import { Modal, Tooltip } from "flowbite-svelte";
   import {
     ArrowRightFromLineIcon,
     ArrowRightToLineIcon,
@@ -27,46 +28,57 @@
     ReceiptTextIcon,
     TruckIcon,
     UserIcon,
+    UserRoundIcon,
+    UserRoundCheckIcon,
   } from "lucide-svelte";
 
-  import { ThirdPartyAddress, ThirdPartyTooltip } from "../";
+  import { ThirdPartyAddress, ThirdPartyTooltip, DispatchModal } from "../";
   import { LucideButton, BoutonAction, IconText } from "@app/components";
 
-  import { notiflixOptions, device } from "@app/utils";
+  import { notiflixOptions, device, removeDiacritics } from "@app/utils";
   import { HTTP } from "@app/errors";
   import type { Stores, RdvBois } from "@app/types";
 
-  const { currentUser, boisRdvs, tiers } = getContext<Stores>("stores");
+  const { currentUser, boisRdvs, tiers, stevedoringStaff } =
+    getContext<Stores>("stores");
 
-  export let rdv: RdvBois;
+  export let appointment: RdvBois;
   let ligne: HTMLDivElement;
 
   let inputNumeroBL: HTMLDivElement;
 
   let mc: HammerManager;
-  let showModal = false;
+  let showMenuModal = false;
 
-  $: client = $tiers?.get(rdv.client);
-  $: livraison = $tiers?.get(rdv.livraison);
-  $: chargement = $tiers?.get(rdv.chargement);
-  $: transporteur = $tiers?.get(rdv.transporteur);
-  $: fournisseur = $tiers?.get(rdv.fournisseur);
-  $: affreteur = $tiers?.get(rdv.affreteur);
+  let showDispatchModal = writable(false);
+  let dispatchModal: DispatchModal;
 
-  $: loadingPlaceIsDisplayed = rdv.chargement && rdv.chargement !== 1;
-  $: deliveryPlaceIsDisplayed = rdv.livraison && rdv.client !== rdv.livraison;
+  let awaitingDispatchBeforeOrderReady = false;
+  let awaitingDispatchBeforeSettingDepartureTime = false;
+
+  $: client = $tiers?.get(appointment.client);
+  $: livraison = $tiers?.get(appointment.livraison);
+  $: chargement = $tiers?.get(appointment.chargement);
+  $: transporteur = $tiers?.get(appointment.transporteur);
+  $: fournisseur = $tiers?.get(appointment.fournisseur);
+  $: affreteur = $tiers?.get(appointment.affreteur);
+
+  $: loadingPlaceIsDisplayed =
+    appointment.chargement && appointment.chargement !== 1;
+  $: deliveryPlaceIsDisplayed =
+    appointment.livraison && appointment.client !== appointment.livraison;
 
   $: statut = (() => {
-    if (rdv.heure_arrivee && !rdv.heure_depart) return "arrive";
-    if (rdv.heure_arrivee && rdv.heure_depart) return "parti";
+    if (appointment.heure_arrivee && !appointment.heure_depart) return "arrive";
+    if (appointment.heure_arrivee && appointment.heure_depart) return "parti";
     return "";
   })();
 
-  let numero_bl = rdv.numero_bl;
+  let numero_bl = appointment.numero_bl;
 
   const unsubscribe = boisRdvs.subscribe((rdvs) => {
     if (rdvs) {
-      numero_bl = rdvs.get(rdv.id)?.numero_bl;
+      numero_bl = rdvs.get(appointment.id)?.numero_bl;
     }
   });
 
@@ -75,30 +87,30 @@
    *
    * \+ Numéro BL automatique (Stora Enso).
    */
-  async function renseignerHeureArrivee() {
+  async function setArrivalTime() {
     try {
-      await boisRdvs.patch(rdv.id, {
+      await boisRdvs.patch(appointment.id, {
         heure_arrivee: new Date().toLocaleTimeString(),
       });
     } catch (err) {
       Notiflix.Notify.failure(err.message);
     } finally {
-      showModal = false;
+      showMenuModal = false;
     }
   }
 
   /**
    * Renseigner l'heure de départ en cliquant sur l'horloge.
    */
-  async function renseignerHeureDepart() {
+  async function setDepartureTime() {
     try {
-      await boisRdvs.patch(rdv.id, {
+      await boisRdvs.patch(appointment.id, {
         heure_depart: new Date().toLocaleTimeString(),
       });
     } catch (err) {
       Notiflix.Notify.failure(err.message);
     } finally {
-      showModal = false;
+      showMenuModal = false;
     }
   }
 
@@ -107,8 +119,8 @@
    */
   async function toggleConfirmationAffretement() {
     try {
-      await boisRdvs.patch(rdv.id, {
-        confirmation_affretement: !rdv.confirmation_affretement,
+      await boisRdvs.patch(appointment.id, {
+        confirmation_affretement: !appointment.confirmation_affretement,
       });
     } catch (err) {
       Notiflix.Notify.failure(err.message);
@@ -120,9 +132,9 @@
    */
   async function toggleOrderReady() {
     try {
-      const newState = !rdv.commande_prete;
+      const newState = !appointment.commande_prete;
 
-      await boisRdvs.patch(rdv.id, {
+      await boisRdvs.patch(appointment.id, {
         commande_prete: newState,
       });
 
@@ -134,7 +146,7 @@
     } catch (err) {
       Notiflix.Notify.failure(err.message);
     } finally {
-      showModal = false;
+      showMenuModal = false;
     }
   }
 
@@ -144,10 +156,10 @@
   async function changerNumeroBL() {
     numero_bl = numero_bl.trim();
 
-    if (numero_bl === rdv.numero_bl) return;
+    if (numero_bl === appointment.numero_bl) return;
 
     try {
-      await boisRdvs.patch(rdv.id, { numero_bl });
+      await boisRdvs.patch(appointment.id, { numero_bl });
     } catch (err: unknown) {
       const error = err as HTTP.Error | Error;
       if (error instanceof HTTP.BadRequest) {
@@ -155,7 +167,7 @@
       } else {
         Notiflix.Notify.failure(error.message);
       }
-      numero_bl = rdv.numero_bl;
+      numero_bl = appointment.numero_bl;
     }
   }
 
@@ -173,7 +185,7 @@
           Notiflix.Block.dots([ligne], notiflixOptions.texts.suppression);
           ligne.style.minHeight = "initial";
 
-          boisRdvs.delete(rdv.id);
+          boisRdvs.delete(appointment.id);
 
           Notiflix.Notify.success("Le RDV a été supprimé");
         } catch (erreur) {
@@ -185,14 +197,14 @@
       notiflixOptions.themes.red
     );
 
-    showModal = false;
+    showMenuModal = false;
   }
 
   onMount(() => {
     mc = new Hammer(ligne);
     mc.on("press", (event) => {
       if ($device.is("mobile")) {
-        showModal = true;
+        showMenuModal = true;
       }
     });
   });
@@ -203,44 +215,47 @@
   });
 </script>
 
-<Modal bind:open={showModal} outsideclose dismissable={false}>
-  {#if !rdv.heure_arrivee}
-    <BoutonAction on:click={renseignerHeureArrivee}
+<Modal bind:open={showMenuModal} outsideclose dismissable={false}>
+  {#if !appointment.heure_arrivee}
+    <BoutonAction on:click={setArrivalTime}
       >Renseigner heure d'arrivée</BoutonAction
     >
   {/if}
-  {#if rdv.heure_arrivee && !rdv.heure_depart}
-    <BoutonAction on:click={renseignerHeureDepart}
+  {#if appointment.heure_arrivee && !appointment.heure_depart}
+    <BoutonAction on:click={setDepartureTime}
       >Renseigner heure de départ</BoutonAction
     >
   {/if}
-  <BoutonAction preset="modifier" on:click={$goto(`./${rdv.id}`)} />
-  <BoutonAction preset="copier" on:click={$goto(`./new?copie=${rdv.id}`)} />
+  <BoutonAction preset="modifier" on:click={$goto(`./${appointment.id}`)} />
+  <BoutonAction
+    preset="copier"
+    on:click={$goto(`./new?copie=${appointment.id}`)}
+  />
   <BoutonAction preset="supprimer" on:click={supprimerRdv} />
-  <BoutonAction preset="annuler" on:click={() => (showModal = false)} />
+  <BoutonAction preset="annuler" on:click={() => (showMenuModal = false)} />
 </Modal>
 
 <div
   bind:this={ligne}
-  class="group grid grid-cols-[50px_1fr] gap-2 lg:grid-cols-[4%_4%_20%_8%_3%_8%_8%_3%_8%_20%_auto] py-2 lg:min-h-11"
+  class="group grid grid-cols-[50px_1fr] gap-2 lg:grid-cols-[4%_4%_19%_8%_3%_8%_8%_2%_2%_8%_20%_auto] py-2 lg:min-h-11"
   style:--bg-arrive="hsl(44, 100%, 79%)"
   style:--bg-parti="hsl(104, 100%, 89%)"
   style:background-color={`var(--bg-${statut}, none)`}
 >
   <!-- Heure d'arrivée -->
   <div class="[grid-area:1/1/6/2] lg:col-auto lg:row-auto">
-    {#if rdv.heure_arrivee}
+    {#if appointment.heure_arrivee}
       <div class="font-bold text-[#d91ffa] text-center">
-        {rdv.heure_arrivee.substring(0, 5)}
+        {appointment.heure_arrivee.substring(0, 5)}
       </div>
     {/if}
 
-    {#if !rdv.heure_arrivee && $currentUser.canEdit("bois")}
+    {#if !appointment.heure_arrivee && $currentUser.canEdit("bois")}
       <div class="invisible group-hover:visible text-center">
         <LucideButton
           icon={ClockIcon}
           title="Renseigner l'heure d'arrvée"
-          on:click={renseignerHeureArrivee}
+          on:click={setArrivalTime}
         />
       </div>
     {/if}
@@ -248,18 +263,43 @@
 
   <!-- Heure de départ -->
   <div class="col-start-1 row-start-2 lg:col-auto lg:row-auto">
-    {#if rdv.heure_depart}
+    {#if appointment.heure_depart}
       <div class="font-bold text-[#d91ffa] text-center">
-        {rdv.heure_depart.substring(0, 5)}
+        {appointment.heure_depart.substring(0, 5)}
       </div>
     {/if}
 
-    {#if rdv.heure_arrivee && !rdv.heure_depart && $currentUser.canEdit("bois")}
+    {#if appointment.heure_arrivee && !appointment.heure_depart && $currentUser.canEdit("bois")}
       <div class="invisible group-hover:visible text-center">
         <LucideButton
           icon={ClockIcon}
           title="Renseigner l'heure de départ"
-          on:click={renseignerHeureDepart}
+          on:click={() => {
+            const remarks = removeDiacritics(
+              appointment.dispatch.map(({ remarks }) => remarks).join()
+            );
+            if (
+              (appointment.chargement === 1 || appointment.livraison === 1) &&
+              !remarks.includes("charge")
+            ) {
+              appointment.dispatch = [
+                ...appointment.dispatch,
+                {
+                  staffId: null,
+                  date: new Date().toISOString().split("T")[0],
+                  remarks:
+                    appointment.chargement === 1
+                      ? "Chargement"
+                      : "Déchargement",
+                  new: true,
+                },
+              ];
+              awaitingDispatchBeforeSettingDepartureTime = true;
+              $showDispatchModal = true;
+            } else {
+              setDepartureTime();
+            }
+          }}
         />
       </div>
     {/if}
@@ -314,8 +354,11 @@
 
   <!-- Transporteur -->
   <div>
-    {#if rdv.transporteur}
-      <IconText hideIcon={["desktop"]} showTooltip={rdv.transporteur >= 11}>
+    {#if appointment.transporteur}
+      <IconText
+        hideIcon={["desktop"]}
+        showTooltip={appointment.transporteur >= 11}
+      >
         <span slot="icon" title="Transporteur"><TruckIcon /></span>
         <span slot="text" style:font-weight="bold"
           >{transporteur?.nom_court || ""}</span
@@ -331,10 +374,10 @@
   <!-- Confirmation d'affrètement -->
   <div
     class="confirmation_affretement col-start-1 row-start-4 lg:col-auto lg:row-auto text-center"
-    style:visibility={$tiers?.get(rdv.affreteur)?.lie_agence
+    style:visibility={$tiers?.get(appointment.affreteur)?.lie_agence
       ? "visible"
       : "hidden"}
-    data-confirme={rdv.confirmation_affretement ? "1" : "0"}
+    data-confirme={appointment.confirmation_affretement ? "1" : "0"}
   >
     {#if $currentUser.canEdit("bois")}
       <LucideButton
@@ -367,7 +410,7 @@
 
   <!-- Commande prête -->
   <div class="col-start-1 row-start-3 lg:col-auto lg:row-auto">
-    {#if rdv.commande_prete}
+    {#if appointment.commande_prete}
       <div
         class="text-center lg:group-hover:[display:var(--display-on-over)]"
         style:--display-on-over={$currentUser.canEdit("bois")
@@ -381,14 +424,81 @@
     {#if $currentUser.canEdit("bois")}
       <div class="hidden text-center lg:group-hover:block">
         <LucideButton
-          icon={rdv.commande_prete ? PackageXIcon : PackageCheckIcon}
-          title={rdv.commande_prete
+          icon={appointment.commande_prete ? PackageXIcon : PackageCheckIcon}
+          title={appointment.commande_prete
             ? "Annuler la préparation de commande"
             : "Renseigner commande prête"}
-          on:click={toggleOrderReady}
+          on:click={() => {
+            const remarks = removeDiacritics(
+              appointment.dispatch.map(({ remarks }) => remarks).join()
+            );
+            if (!appointment.commande_prete && !remarks.includes("prepa")) {
+              appointment.dispatch = [
+                ...appointment.dispatch,
+                {
+                  staffId: null,
+                  date: new Date().toISOString().split("T")[0],
+                  remarks: "Préparation",
+                  new: true,
+                },
+              ];
+              awaitingDispatchBeforeOrderReady = true;
+              $showDispatchModal = true;
+            } else {
+              toggleOrderReady();
+            }
+          }}
         />
       </div>
     {/if}
+  </div>
+
+  <!-- Dispatch -->
+  <div class="col-start-1 row-start-4 lg:col-auto lg:row-auto">
+    <div class="text-center align-middle">
+      {#if appointment.dispatch.length > 0}
+        {#if $currentUser.canEdit("vrac")}
+          <LucideButton
+            icon={UserRoundCheckIcon}
+            color="green"
+            staticallyColored
+            title="Renseigner le dispatch"
+            on:click={() => ($showDispatchModal = true)}
+          />
+          <Tooltip type="auto">
+            {#each appointment.dispatch as { staffId, remarks }, index}
+              <div>
+                {$stevedoringStaff.get(staffId)?.fullname ||
+                  "(Personnel supprimé)"}
+                {#if remarks}
+                  : {remarks}
+                {/if}
+              </div>
+            {/each}
+          </Tooltip>
+        {:else}
+          <UserRoundCheckIcon />
+        {/if}
+      {:else if $currentUser.canEdit("vrac")}
+        <LucideButton
+          icon={UserRoundIcon}
+          title="Renseigner le dispatch"
+          on:click={() => ($showDispatchModal = true)}
+        />
+      {:else}
+        <UserRoundIcon />
+      {/if}
+    </div>
+
+    <DispatchModal
+      bind:this={dispatchModal}
+      bind:appointment
+      bind:showDispatchModal
+      bind:awaitingDispatchBeforeOrderReady
+      {toggleOrderReady}
+      bind:awaitingDispatchBeforeSettingDepartureTime
+      {setDepartureTime}
+    />
   </div>
 
   <!-- Numéro B/L -->
@@ -404,7 +514,7 @@
           inputNumeroBL.blur();
         }
         if (e.key === "Escape") {
-          numero_bl = rdv.numero_bl;
+          numero_bl = appointment.numero_bl;
           inputNumeroBL.blur();
         }
       }}
@@ -414,21 +524,21 @@
     />
   {:else}
     <div class="no-mobile">
-      {rdv.numero_bl}
+      {appointment.numero_bl}
     </div>
   {/if}
 
   <!-- Commentaires -->
   <div>
     <!-- Commentaire public -->
-    {#if rdv.commentaire_public}
+    {#if appointment.commentaire_public}
       <div class="lg:pl-1">
         <IconText hideIcon={["desktop"]}>
           <span slot="icon" title="Commentaire public"
             ><MessageSquareTextIcon /></span
           >
           <span slot="text"
-            >{@html rdv.commentaire_public.replace(
+            >{@html appointment.commentaire_public.replace(
               /\r\n|\r|\n/g,
               "<br/>"
             )}</span
@@ -437,12 +547,12 @@
       </div>
     {/if}
 
-    {#if rdv.commentaire_public && rdv.commentaire_cache}
+    {#if appointment.commentaire_public && appointment.commentaire_cache}
       <div class="h-3" />
     {/if}
 
     <!-- Commentaire caché -->
-    {#if rdv.commentaire_cache}
+    {#if appointment.commentaire_cache}
       <div
         class="text-gray-400 lg:border-l-[1px] lg:border-dotted lg:border-l-gray-400 lg:pl-1"
       >
@@ -451,7 +561,10 @@
             ><MessageSquareOffIcon /></span
           >
           <span slot="text"
-            >{@html rdv.commentaire_cache.replace(/\r\n|\r|\n/g, "<br/>")}</span
+            >{@html appointment.commentaire_cache.replace(
+              /\r\n|\r|\n/g,
+              "<br/>"
+            )}</span
           >
         </IconText>
       </div>
@@ -464,13 +577,13 @@
       <LucideButton
         preset="copy"
         on:click={() => {
-          $goto(`./new?copie=${rdv.id}`);
+          $goto(`./new?copie=${appointment.id}`);
         }}
       />
       <LucideButton
         preset="edit"
         on:click={() => {
-          $goto(`./${rdv.id}`);
+          $goto(`./${appointment.id}`);
         }}
       />
       <LucideButton preset="delete" on:click={supprimerRdv} />

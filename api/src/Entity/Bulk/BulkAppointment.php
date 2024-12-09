@@ -6,10 +6,12 @@ declare(strict_types=1);
 
 namespace App\Entity\Bulk;
 
-use App\Core\Validation\Constraints\Required;
 use App\Core\Component\DateUtils;
+use App\Core\Exceptions\Client\ValidationException;
 use App\Core\Traits\IdentifierTrait;
 use App\Core\Validation\Constraints\PositiveOrNullNumber;
+use App\Core\Validation\Constraints\Required;
+use App\Core\Validation\ValidationResult;
 use App\Entity\AbstractEntity;
 use App\Entity\ThirdParty;
 
@@ -277,5 +279,23 @@ class BulkAppointment extends AbstractEntity
                 $this->getDispatch()
             )
         ];
+    }
+
+    #[\Override]
+    public function validate(bool $throw = true): ValidationResult
+    {
+        $validationResult = new ValidationResult();
+
+        foreach ($this->dispatch as $dispatch) {
+            $validationResult->merge($dispatch->validate(false));
+        }
+
+        $validationResult->merge(parent::validate(false));
+
+        if ($throw && $validationResult->hasErrors()) {
+            throw new ValidationException(errors: $validationResult->getErrorMessage());
+        }
+
+        return $validationResult;
     }
 }

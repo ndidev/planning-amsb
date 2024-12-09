@@ -207,6 +207,7 @@ final class TimberAppointmentController extends Controller
             deliveryNoteNumber: $input->getString('numero_bl', null),
             setArrivalTime: $input->isSet('heure_arrivee'),
             setDepartureTime: $input->isSet('heure_depart'),
+            dispatch: $input->getArray('dispatch', null),
         );
 
         $this->response->setJSON($appointment);

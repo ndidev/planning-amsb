@@ -41,7 +41,13 @@
       [contractType in "mensuel" | "interim"]: {
         [staffName: string]: {
           tempWorkAgency: string;
-          bulk: { product: string; quality: string; remarks: string }[];
+          bulk?: {
+            product: string;
+            quality: string;
+            remarks: string;
+            multiplier: number;
+          }[];
+          timber?: { remarks: string; multiplier: number }[];
         };
       };
     };
@@ -101,16 +107,39 @@
                     {/if}
                   </div>
 
-                  <div class="ml-2">Vrac</div>
-                  <ul>
-                    {#each dispatch[date][contractType][staffName].bulk as { product, quality, remarks }}
-                      <li class="ml-4 flex flex-row gap-1">
-                        <span>{product}</span>
-                        <span>{quality}</span>
-                        <span class="ml-2">{remarks}</span>
-                      </li>
-                    {/each}
-                  </ul>
+                  {#if dispatch[date][contractType][staffName].bulk?.length > 0}
+                    <div class="ml-2">Vrac</div>
+                    <ul>
+                      {#each dispatch[date][contractType][staffName].bulk as { product, quality, remarks, multiplier }}
+                        <li class="ml-4 flex flex-row gap-1">
+                          <span>{product}</span>
+                          <span>{quality}</span>
+
+                          {#if remarks}
+                            <span class="ml-2">{remarks}</span>
+                          {/if}
+
+                          {#if multiplier > 1}
+                            <span class="ml-2">x{multiplier}</span>
+                          {/if}
+                        </li>
+                      {/each}
+                    </ul>
+                  {/if}
+
+                  {#if dispatch[date][contractType][staffName].timber?.length > 0}
+                    <div class="ml-2">Bois</div>
+                    <ul>
+                      {#each dispatch[date][contractType][staffName].timber as { remarks, multiplier }}
+                        <li class="ml-4 flex flex-row gap-1">
+                          <span>{remarks}</span>
+                          {#if multiplier > 1}
+                            <span class="ml-2">x{multiplier}</span>
+                          {/if}
+                        </li>
+                      {/each}
+                    </ul>
+                  {/if}
                 </div>
               {/each}
             {/each}

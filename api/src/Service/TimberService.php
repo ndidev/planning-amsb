@@ -20,21 +20,25 @@ use App\DTO\TimberStatsDTO;
 use App\DTO\TimberTransportSuggestionsDTO;
 use App\Entity\ThirdParty;
 use App\Entity\Timber\TimberAppointment;
+use App\Entity\Timber\TimberDispatchItem;
 use App\Repository\TimberAppointmentRepository;
 
 /**
  * @phpstan-import-type TimberAppointmentArray from \App\Repository\TimberAppointmentRepository
  * @phpstan-import-type TimberRegistryEntryArray from \App\Repository\TimberAppointmentRepository
+ * @phpstan-import-type TimberDispatchArray from \App\Repository\TimberAppointmentRepository
  */
 final class TimberService
 {
-    private TimberAppointmentRepository $timberAppointmentRepository;
+    private TimberAppointmentRepository $appointmentRepository;
     private ThirdPartyService $thirdPartyService;
+    private StevedoringService $stevedoringService;
 
     public function __construct()
     {
-        $this->timberAppointmentRepository = new TimberAppointmentRepository($this);
+        $this->appointmentRepository = new TimberAppointmentRepository($this);
         $this->thirdPartyService = new ThirdPartyService();
+        $this->stevedoringService = new StevedoringService();
     }
 
     /**
@@ -96,7 +100,14 @@ final class TimberService
             ->setCharteringConfirmationSent($rawData->getBool('confirmation_affretement'))
             ->setDeliveryNoteNumber($rawData->getString('numero_bl'))
             ->setPublicComment($rawData->getString('commentaire_public'))
-            ->setPrivateComment($rawData->getString('commentaire_cache'));
+            ->setPrivateComment($rawData->getString('commentaire_cache'))
+            ->setDispatch(
+                array_map(
+                    // @phpstan-ignore argument.type
+                    fn(array $dispatchRaw) => $this->makeTimberDispatchItemFromFormData(new ArrayHandler($dispatchRaw)),
+                    $rawData->getArray('dispatch')
+                )
+            );
 
         return $appointment;
     }
@@ -135,7 +146,7 @@ final class TimberService
      */
     public function appointmentExists(int $id): bool
     {
-        return $this->timberAppointmentRepository->appointmentExists($id);
+        return $this->appointmentRepository->appointmentExists($id);
     }
 
     /**
@@ -147,7 +158,7 @@ final class TimberService
      */
     public function getAppointments(TimberFilterDTO $filter): Collection
     {
-        return $this->timberAppointmentRepository->fetchAppointments($filter);
+        return $this->appointmentRepository->fetchAppointments($filter);
     }
 
     /**
@@ -159,7 +170,7 @@ final class TimberService
      */
     public function getAppointment(int $id): ?TimberAppointment
     {
-        return $this->timberAppointmentRepository->fetchAppointment($id);
+        return $this->appointmentRepository->fetchAppointment($id);
     }
 
     /**
@@ -175,7 +186,7 @@ final class TimberService
 
         $appointment->validate();
 
-        return $this->timberAppointmentRepository->createAppointment($appointment);
+        return $this->appointmentRepository->createAppointment($appointment);
     }
 
     /**
@@ -192,18 +203,19 @@ final class TimberService
 
         $appointment->validate();
 
-        return $this->timberAppointmentRepository->updateAppointment($appointment);
+        return $this->appointmentRepository->updateAppointment($appointment);
     }
 
     /**
      * Met à jour certaines proriétés d'un RDV bois.
      * 
-     * @param int     $appointmentId                id du RDV à modifier.
-     * @param ?bool   $isOrderReady                 Commande prête.
-     * @param ?bool   $isCharteringConfirmationSent Confirmation d'affrètement envoyée.
-     * @param ?string $deliveryNoteNumber           Numéro de BL.
-     * @param bool    $setArrivalTime               Heure d'arrivée.
-     * @param bool    $setDepartureTime             Heure de départ.
+     * @param int           $appointmentId                id du RDV à modifier.
+     * @param ?bool         $isOrderReady                 Commande prête.
+     * @param ?bool         $isCharteringConfirmationSent Confirmation d'affrètement envoyée.
+     * @param ?string       $deliveryNoteNumber           Numéro de BL.
+     * @param bool          $setArrivalTime               Heure d'arrivée.
+     * @param bool          $setDepartureTime             Heure de départ.
+     * @param ?array<mixed> $dispatch                     Dispatch.
      * 
      * @return TimberAppointment RDV modifié.
      * 
@@ -216,6 +228,7 @@ final class TimberService
         ?string $deliveryNoteNumber = null,
         bool $setArrivalTime = false,
         bool $setDepartureTime = false,
+        ?array $dispatch = null,
     ): TimberAppointment {
         $appointment = $this->getAppointment($appointmentId);
 
@@ -224,14 +237,14 @@ final class TimberService
         }
 
         if (!is_null($isOrderReady)) {
-            $appointment = $this->timberAppointmentRepository->setOrderReady(
+            $appointment = $this->appointmentRepository->setOrderReady(
                 $appointmentId,
                 $isOrderReady
             );
         }
 
         if (!is_null($isCharteringConfirmationSent)) {
-            $appointment = $this->timberAppointmentRepository->setCharteringConfirmationSent(
+            $appointment = $this->appointmentRepository->setCharteringConfirmationSent(
                 $appointmentId,
                 $isCharteringConfirmationSent
             );
@@ -251,7 +264,7 @@ final class TimberService
                 );
             }
 
-            $appointment = $this->timberAppointmentRepository->setDeliveryNoteNumber(
+            $appointment = $this->appointmentRepository->setDeliveryNoteNumber(
                 $appointmentId,
                 $deliveryNoteNumber
             );
@@ -260,7 +273,7 @@ final class TimberService
         if ($setArrivalTime) {
             $arrivalTime = new \DateTimeImmutable();
 
-            $appointment = $this->timberAppointmentRepository->setArrivalTime(
+            $appointment = $this->appointmentRepository->setArrivalTime(
                 $appointmentId,
                 $arrivalTime
             );
@@ -278,7 +291,7 @@ final class TimberService
                 && $appointment->getDeliveryNoteNumber() === ""
                 && $nextDeliveryNoteNumber = $this->getNextDeliveryNoteNumber($supplierId)
             ) {
-                $appointment = $this->timberAppointmentRepository->setDeliveryNoteNumber(
+                $appointment = $this->appointmentRepository->setDeliveryNoteNumber(
                     $appointmentId,
                     $nextDeliveryNoteNumber
                 );
@@ -288,10 +301,24 @@ final class TimberService
         if ($setDepartureTime) {
             $departureTime = new \DateTimeImmutable();
 
-            $appointment = $this->timberAppointmentRepository->setDepartureTime(
+            $appointment = $this->appointmentRepository->setDepartureTime(
                 $appointmentId,
                 $departureTime
             );
+        }
+
+        if (!\is_null($dispatch)) {
+            $dispatchItems = array_map(
+                // @phpstan-ignore argument.type
+                function (array $dispatchRaw) {
+                    $dispatchItem = $this->makeTimberDispatchItemFromFormData(new ArrayHandler($dispatchRaw));
+                    $dispatchItem->validate();
+                    return $dispatchItem;
+                },
+                $dispatch
+            );
+            $this->appointmentRepository->deleteDispatchForAppointment($appointmentId);
+            $this->appointmentRepository->insertDispatchForAppointment($appointmentId, $dispatchItems);
         }
 
         return $appointment;
@@ -308,7 +335,7 @@ final class TimberService
      */
     public function deleteAppointment(int $id): void
     {
-        $this->timberAppointmentRepository->deleteAppointment($id);
+        $this->appointmentRepository->deleteAppointment($id);
     }
 
     /**
@@ -332,7 +359,7 @@ final class TimberService
         try {
             $registryEntries =
                 $this
-                ->timberAppointmentRepository
+                ->appointmentRepository
                 ->getCharteringRegistryEntries($startDate, $endDate);
 
             // UTF-8 BOM
@@ -387,12 +414,12 @@ final class TimberService
         int $loadingPlaceId,
         int $deliveryPlaceId
     ): TimberTransportSuggestionsDTO {
-        return $this->timberAppointmentRepository->fetchTransportSuggestions($loadingPlaceId, $deliveryPlaceId);
+        return $this->appointmentRepository->fetchTransportSuggestions($loadingPlaceId, $deliveryPlaceId);
     }
 
     public function getStats(TimberFilterDTO $filter): TimberStatsDTO
     {
-        return $this->timberAppointmentRepository->getStats($filter);
+        return $this->appointmentRepository->getStats($filter);
     }
 
     public function isDeliveryNoteNumberAvailable(
@@ -412,7 +439,7 @@ final class TimberService
             return true;
         }
 
-        return $this->timberAppointmentRepository->isDeliveryNoteNumberAvailable(
+        return $this->appointmentRepository->isDeliveryNoteNumberAvailable(
             $deliveryNoteNumber,
             $supplierId,
             $appointmentId,
@@ -467,7 +494,7 @@ final class TimberService
             return null;
         }
 
-        $lastDeliveryNoteNumber = $this->timberAppointmentRepository->getLastDeliveryNoteNumber($supplierDto);
+        $lastDeliveryNoteNumber = $this->appointmentRepository->getLastDeliveryNoteNumber($supplierDto);
 
         if (!$lastDeliveryNoteNumber) {
             return null;
@@ -495,10 +522,47 @@ final class TimberService
         \DateTimeInterface $startDate,
         \DateTimeInterface $endDate,
     ): array {
-        return $this->timberAppointmentRepository->getPdfAppointments(
+        return $this->appointmentRepository->getPdfAppointments(
             $supplier,
             $startDate,
             $endDate
         );
+    }
+
+    // ========
+    // Dispatch
+    // ========
+
+    /**
+     * Creates a bulk dispatch from database data.
+     * 
+     * @param array $rawData 
+     * 
+     * @phpstan-param TimberDispatchArray $rawData
+     * 
+     * @return TimberDispatchItem 
+     * 
+     * @throws DBException 
+     */
+    public function makeTimberDispatchItemFromDatabase(array $rawData): TimberDispatchItem
+    {
+        $rawDataAH = new ArrayHandler($rawData);
+
+        $dispatch = (new TimberDispatchItem())
+            ->setStaff($this->stevedoringService->getStaff($rawDataAH->getInt('staff_id')))
+            ->setDate($rawDataAH->getDatetime('date'))
+            ->setRemarks($rawDataAH->getString('remarks'));
+
+        return $dispatch;
+    }
+
+    public function makeTimberDispatchItemFromFormData(ArrayHandler $requestBody): TimberDispatchItem
+    {
+        $dispatch = (new TimberDispatchItem())
+            ->setStaff($this->stevedoringService->getStaff($requestBody->getInt('staffId')))
+            ->setDate($requestBody->getDatetime('date'))
+            ->setRemarks($requestBody->getString('remarks'));
+
+        return $dispatch;
     }
 }

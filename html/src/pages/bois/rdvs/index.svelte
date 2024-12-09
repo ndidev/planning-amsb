@@ -223,7 +223,7 @@
           <LigneDate {date} camions={camions.get(date)} />
           <div class="divide-y">
             {#each rdvs as rdv (rdv.id)}
-              <LigneRdv {rdv} />
+              <LigneRdv appointment={rdv} />
             {/each}
           </div>
         </div>

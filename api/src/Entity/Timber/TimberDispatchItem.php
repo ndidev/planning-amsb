@@ -1,31 +1,37 @@
 <?php
 
-// Path: api/src/Entity/Bulk/BulkDispatch.php
+// Path: api/src/Entity/Timber/TimberDispatch.php
 
-namespace App\Entity\Bulk;
+namespace App\Entity\Timber;
 
+use App\Core\Component\DateUtils;
 use App\Core\Validation\Constraints\Required;
 use App\Entity\AbstractEntity;
-use App\Entity\Bulk\BulkAppointment;
 use App\Entity\Stevedoring\StevedoringStaff;
+use App\Entity\Timber\TimberAppointment;
+use DateTimeImmutable;
 
-class BulkDispatchItem extends AbstractEntity
+class TimberDispatchItem extends AbstractEntity
 {
-    private ?BulkAppointment $appointment = null;
+    // #[Required("Le rendez-vous est obligatoire.")]
+    private ?TimberAppointment $appointment = null;
 
     #[Required("Le personnel est obligatoire.")]
     private ?StevedoringStaff $staff = null;
 
+    #[Required("La date est obligatoire.")]
+    private ?DateTimeImmutable $date = null;
+
     private string $remarks = '';
 
-    public function setAppointment(BulkAppointment $appointment): static
+    public function setAppointment(TimberAppointment $appointment): static
     {
         $this->appointment = $appointment;
 
         return $this;
     }
 
-    public function getAppointment(): ?BulkAppointment
+    public function getAppointment(): ?TimberAppointment
     {
         return $this->appointment;
     }
@@ -40,6 +46,18 @@ class BulkDispatchItem extends AbstractEntity
     public function getStaff(): ?StevedoringStaff
     {
         return $this->staff;
+    }
+
+    public function setDate(\DateTimeImmutable|string|null $date): static
+    {
+        $this->date = DateUtils::makeDateTimeImmutable($date);
+
+        return $this;
+    }
+
+    public function getDate(): ?\DateTimeImmutable
+    {
+        return $this->date;
     }
 
     public function setRemarks(string $role): static
@@ -59,6 +77,7 @@ class BulkDispatchItem extends AbstractEntity
         return [
             'appointmentId' => $this->getAppointment()?->getId(),
             'staffId' => $this->getStaff()?->getId(),
+            'date' => $this->getDate()?->format('Y-m-d'),
             'remarks' => $this->getRemarks(),
         ];
     }

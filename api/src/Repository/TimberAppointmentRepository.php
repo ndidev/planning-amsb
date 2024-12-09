@@ -8,13 +8,14 @@ namespace App\Repository;
 
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\DB\DBException;
-use App\DTO\SupplierWithUniqueDeliveryNoteNumber;
 use App\DTO\Filter\TimberFilterDTO;
+use App\DTO\SupplierWithUniqueDeliveryNoteNumber;
 use App\DTO\TimberRegistryEntryDTO;
 use App\DTO\TimberStatsDTO;
 use App\DTO\TimberTransportSuggestionsDTO;
 use App\Entity\ThirdParty;
 use App\Entity\Timber\TimberAppointment;
+use App\Entity\Timber\TimberDispatchItem;
 use App\Service\TimberService;
 
 /**
@@ -55,6 +56,12 @@ use App\Service\TimberService;
  *                                       attente: Collection<TimberAppointment>,
  *                                       non_attente: Collection<TimberAppointment>
  *                                     }
+ * 
+ * @phpstan-type TimberDispatchArray array{
+ *                                     appointment_id: int,
+ *                                     staff_id: int,
+ *                                     remarks: string,
+ *                                   }
  */
 final class TimberAppointmentRepository extends Repository
 {
@@ -133,6 +140,14 @@ final class TimberAppointmentRepository extends Repository
             $appointmentsRaw
         );
 
+        // Get all dispatch
+        foreach ($appointments as $appointment) {
+            /** @var int $id */
+            $id = $appointment->getId();
+            $dispatch = $this->fetchDispatchForAppointment($id);
+            $appointment->setDispatch($dispatch);
+        }
+
         return new Collection($appointments);
     }
 
@@ -175,6 +190,10 @@ final class TimberAppointmentRepository extends Repository
         /** @phpstan-var TimberAppointmentArray $appointmentRaw */
 
         $appointment = $this->timberService->makeTimberAppointmentFromDatabase($appointmentRaw);
+
+        // Get dispatch
+        $dispatch = $this->fetchDispatchForAppointment($id);
+        $appointment->setDispatch($dispatch);
 
         return $appointment;
     }
@@ -232,6 +251,9 @@ final class TimberAppointmentRepository extends Repository
             ]);
 
             $lastInsertId = (int) $this->mysql->lastInsertId();
+
+            $this->insertDispatchForAppointment($lastInsertId, $appointment->getDispatch());
+
             $this->mysql->commit();
 
             /** @var TimberAppointment */
@@ -295,6 +317,9 @@ final class TimberAppointmentRepository extends Repository
 
             /** @var int */
             $id = $appointment->getId();
+
+            $this->deleteDispatchForAppointment($id);
+            $this->insertDispatchForAppointment($id, $appointment->getDispatch());
 
             /** @var TimberAppointment */
             $updatedAppointment = $this->fetchAppointment($id);
@@ -678,9 +703,9 @@ final class TimberAppointmentRepository extends Repository
                 SUBSTRING(l.cp, 1, 2) as l_cp,
                 l.pays as l_pays
                 FROM bois_planning p
-                JOIN tiers t ON p.transporteur = t.id
-                JOIN tiers c ON p.chargement = c.id
-                JOIN tiers l ON p.livraison = l.id
+                INNER JOIN tiers t ON p.transporteur = t.id
+                INNER JOIN tiers c ON p.chargement = c.id
+                INNER JOIN tiers l ON p.livraison = l.id
                 WHERE
                     t.actif = 1
                 AND t.non_modifiable = 0
@@ -849,5 +874,101 @@ final class TimberAppointmentRepository extends Repository
             "non_attente" => new Collection($scheduledAppointments),
             "attente" => new Collection($onHoldAppointments),
         ];
+    }
+
+    // ========
+    // Dispatch
+    // ========
+
+    /**
+     * Fetch the dispatch for an appointment.
+     * 
+     * @param int $id Appointment ID.
+     * 
+     * @return TimberDispatchItem[]
+     * 
+     * @throws DBException
+     */
+    public function fetchDispatchForAppointment(int $id): array
+    {
+        $statement =
+            "SELECT
+                staff_id,
+                `date`,
+                remarks
+            FROM stevedoring_timber_dispatch
+            WHERE appointment_id = :id";
+
+        try {
+            $request = $this->mysql->prepare($statement);
+            $request->execute(["id" => $id]);
+
+            /** @phpstan-var TimberDispatchArray[] */
+            $dispatchesRaw = $request->fetchAll();
+
+            $dispatches = \array_map(
+                fn(array $dispatchRaw) => $this->timberService->makeTimberDispatchItemFromDatabase($dispatchRaw),
+                $dispatchesRaw
+            );
+
+            return $dispatches;
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer le dispatch pour le RDV {$id}", previous: $e);
+        }
+    }
+
+    /**
+     * Insert the dispatch for an appointment.
+     * 
+     * @param int $id Appointment ID.
+     * @param TimberDispatchItem[] $dispatch 
+     * 
+     * @return void 
+     */
+    public function insertDispatchForAppointment(int $id, array $dispatch): void
+    {
+        $statement =
+            "INSERT INTO stevedoring_timber_dispatch
+             SET
+                appointment_id = :id,
+                `date` = :date,
+                staff_id = :staffId,
+                remarks = :remarks";
+
+        try {
+            $request = $this->mysql->prepare($statement);
+
+            foreach ($dispatch as $dispatchItem) {
+                $request->execute([
+                    'id' => $id,
+                    'staffId' => $dispatchItem->getStaff()?->getId(),
+                    'date' => $dispatchItem->getDate()?->format('Y-m-d'),
+                    'remarks' => $dispatchItem->getRemarks(),
+                ]);
+            }
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible d'enregistrer le dispatch", previous: $e);
+        }
+    }
+
+    /**
+     * Delete the dispatch for an appointment.
+     * 
+     * @param int $id Appointment ID.
+     * 
+     * @return void 
+     * 
+     * @throws DBException 
+     */
+    public function deleteDispatchForAppointment(int $id): void
+    {
+        $statement = "DELETE FROM stevedoring_timber_dispatch WHERE appointment_id = :id";
+
+        try {
+            $request = $this->mysql->prepare($statement);
+            $request->execute(["id" => $id]);
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de supprimer le dispatch du RDV {$id}", previous: $e);
+        }
     }
 }

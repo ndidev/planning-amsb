@@ -380,20 +380,23 @@ final class StevedoringRepository extends Repository
     {
         $sqlFilter = $filter->getSqlStaffFilter();
 
+
+        // Bulk
+
         $bulkDispatchStatement =
             "SELECT
                 pl.date_rdv as `date`,
-                CONCAT(staff.firstname, ' ', staff.lastname) as `staffName`,
+                CONCAT(staff.lastname, ' ', staff.firstname) as `staffName`,
                 staff.type as `staffContractType`,
                 staff.temp_work_agency as `staffTempWorkAgency`,
-                sbd.remarks as `remarks`,
+                dispatch.remarks as `remarks`,
                 p.nom as `productName`,
                 q.nom as `qualityName`
-            FROM vrac_planning pl
-            JOIN vrac_produits p ON pl.produit = p.id
-            JOIN vrac_qualites q ON pl.qualite = q.id
-            JOIN stevedoring_bulk_dispatch sbd ON pl.id = sbd.appointment_id
-            JOIN stevedoring_staff staff ON sbd.staff_id = staff.id
+            FROM stevedoring_bulk_dispatch dispatch
+            INNER JOIN vrac_planning pl ON pl.id = dispatch.appointment_id
+            INNER JOIN vrac_produits p ON pl.produit = p.id
+            INNER JOIN vrac_qualites q ON pl.qualite = q.id
+            INNER JOIN stevedoring_staff staff ON dispatch.staff_id = staff.id
             WHERE pl.date_rdv BETWEEN :startDate AND :endDate
             $sqlFilter
             ORDER BY
@@ -414,7 +417,7 @@ final class StevedoringRepository extends Repository
          * @var array{
          *        date: string,
          *        staffName: string,
-         *        staffContractType: string,
+         *        staffContractType: 'mensuel'|'interim',
          *        staffTempWorkAgency: string,
          *        remarks: string,
          *        productName: string,
@@ -423,7 +426,47 @@ final class StevedoringRepository extends Repository
          */
         $bulkData = $bulkDispatchRequest->fetchAll();
 
-        $dispatchDTO = new StevedoringDispatchDTO(bulkData: $bulkData);
+        // Timber
+
+        $timberDispatchStatement =
+            "SELECT
+                dispatch.date,
+                CONCAT(staff.lastname, ' ', staff.firstname) as `staffName`,
+                staff.type as `staffContractType`,
+                staff.temp_work_agency as `staffTempWorkAgency`,
+                dispatch.remarks as `remarks`
+            FROM stevedoring_timber_dispatch dispatch
+            INNER JOIN bois_planning pl ON pl.id = dispatch.appointment_id
+            INNER JOIN stevedoring_staff staff ON dispatch.staff_id = staff.id
+            WHERE dispatch.date BETWEEN :startDate AND :endDate
+            $sqlFilter
+            ORDER BY
+                dispatch.date ASC,
+                FIELD(staff.type, 'mensuel', 'interim'),
+                staff.lastname ASC,
+                staff.firstname ASC
+            ";
+
+        $timberDispatchRequest = $this->mysql->prepare($timberDispatchStatement);
+
+        $timberDispatchRequest->execute([
+            "startDate" => $filter->getSqlStartDate(),
+            "endDate" => $filter->getSqlEndDate(),
+        ]);
+
+        /** 
+         * @var array{
+         *        date: string,
+         *        staffName: string,
+         *        staffContractType: 'mensuel'|'interim',
+         *        staffTempWorkAgency: string,
+         *        remarks: string,
+         *      }[]
+         */
+        $timberData = $timberDispatchRequest->fetchAll();
+
+
+        $dispatchDTO = new StevedoringDispatchDTO(bulkData: $bulkData, timberData: $timberData);
 
         return $dispatchDTO;
     }

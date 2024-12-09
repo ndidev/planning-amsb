@@ -64,6 +64,51 @@ final class StevedoringDispatchDTOTest extends TestCase
             ],
         ];
 
+        $timberDispatchData = [
+            [
+                "date" => "2021-01-01",
+                "staffName" => "Staff 1",
+                "staffContractType" => "interim",
+                "staffTempWorkAgency" => "Agency 1",
+                "remarks" => "Remarks 1",
+            ],
+            [
+                "date" => "2021-01-01",
+                "staffName" => "Staff 1",
+                "staffContractType" => "interim",
+                "staffTempWorkAgency" => "Agency 1",
+                "remarks" => "Remarks 1",
+            ],
+            [
+                "date" => "2021-01-01",
+                "staffName" => "Staff 2",
+                "staffContractType" => "mensuel",
+                "staffTempWorkAgency" => "",
+                "remarks" => "Remarks 2",
+            ],
+            [
+                "date" => "2021-01-02",
+                "staffName" => "Staff 1",
+                "staffContractType" => "interim",
+                "staffTempWorkAgency" => "Agency 1",
+                "remarks" => "Remarks 3",
+            ],
+            [
+                "date" => "2021-01-02",
+                "staffName" => "Staff 3",
+                "staffContractType" => "mensuel",
+                "staffTempWorkAgency" => "",
+                "remarks" => "",
+            ],
+            [
+                "date" => "2021-01-02",
+                "staffName" => "Staff 4",
+                "staffContractType" => "interim",
+                "staffTempWorkAgency" => "Agency 2",
+                "remarks" => "Remarks 5",
+            ],
+        ];
+
         $expectedOutput = [
             "2021-01-01" => [
                 "interim" => [
@@ -74,6 +119,13 @@ final class StevedoringDispatchDTOTest extends TestCase
                                 "product" => "Product 1",
                                 "quality" => "Quality 1",
                                 "remarks" => "Remarks 1",
+                                "multiplier" => 1,
+                            ],
+                        ],
+                        "timber" => [
+                            [
+                                "remarks" => "Remarks 1",
+                                "multiplier" => 2,
                             ],
                         ],
                     ],
@@ -86,6 +138,13 @@ final class StevedoringDispatchDTOTest extends TestCase
                                 "product" => "Product 2",
                                 "quality" => "Quality 2",
                                 "remarks" => "Remarks 2",
+                                "multiplier" => 1,
+                            ],
+                        ],
+                        "timber" => [
+                            [
+                                "remarks" => "Remarks 2",
+                                "multiplier" => 1,
                             ],
                         ],
                     ],
@@ -100,6 +159,13 @@ final class StevedoringDispatchDTOTest extends TestCase
                                 "product" => "Product 3",
                                 "quality" => "Quality 3",
                                 "remarks" => "Remarks 3",
+                                "multiplier" => 1,
+                            ],
+                        ],
+                        "timber" => [
+                            [
+                                "remarks" => "Remarks 3",
+                                "multiplier" => 1,
                             ],
                         ],
                     ],
@@ -110,6 +176,13 @@ final class StevedoringDispatchDTOTest extends TestCase
                                 "product" => "Product 2",
                                 "quality" => "Quality 1",
                                 "remarks" => "Remarks 5",
+                                "multiplier" => 1,
+                            ],
+                        ],
+                        "timber" => [
+                            [
+                                "remarks" => "Remarks 5",
+                                "multiplier" => 1,
                             ],
                         ],
                     ],
@@ -122,6 +195,13 @@ final class StevedoringDispatchDTOTest extends TestCase
                                 "product" => "Product 1",
                                 "quality" => "Quality 2",
                                 "remarks" => "",
+                                "multiplier" => 1,
+                            ],
+                        ],
+                        "timber" => [
+                            [
+                                "remarks" => "",
+                                "multiplier" => 1,
                             ],
                         ],
                     ],
@@ -129,7 +209,10 @@ final class StevedoringDispatchDTOTest extends TestCase
             ],
         ];
 
-        $StevedoringDispatchDTO = new StevedoringDispatchDTO($bulkDispatchData);
+        $StevedoringDispatchDTO = new StevedoringDispatchDTO(
+            bulkData: $bulkDispatchData,
+            timberData: $timberDispatchData
+        );
 
         // When
         $dataToBeSerialized = $StevedoringDispatchDTO->jsonSerialize();
