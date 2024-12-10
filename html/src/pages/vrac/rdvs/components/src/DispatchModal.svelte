@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { onMount, getContext } from "svelte";
+  import { onDestroy, getContext } from "svelte";
+  import type { Writable } from "svelte/store";
 
   import { Modal, Label, Input } from "flowbite-svelte";
   import Notiflix from "notiflix";
@@ -15,19 +16,31 @@
   let form: HTMLFormElement;
   let updateButton: BoutonAction;
 
-  export let showDispatchModal = false;
+  export let showDispatchModal: Writable<boolean>;
   export let appointment: RdvVrac;
+
+  export let awaitingDispatchBeforeOrderReady: boolean = false;
+  export let toggleOrderReady: () => void = () => {};
+
   export let awaitingDispatchBeforeArchive: boolean;
   export let toggleArchive: () => void;
 
   let dispatch: typeof appointment.dispatch;
+
+  const unsubscribeShowModal = showDispatchModal.subscribe((modalIsShown) => {
+    if (modalIsShown) {
+      dispatch = structuredClone(appointment.dispatch);
+    }
+  });
 
   function addDispatchLine() {
     dispatch = [
       ...dispatch,
       {
         staffId: null,
+        date: new Date().toISOString().split("T")[0],
         remarks: "",
+        new: true,
       },
     ];
   }
@@ -50,15 +63,23 @@
 
       Notiflix.Notify.success("Le dispatch a été mis à jour.");
 
+      dispatch.forEach((item) => {
+        delete item.new;
+      });
+
       appointment.dispatch = dispatch;
 
-      showDispatchModal = false;
+      $showDispatchModal = false;
+
+      if (awaitingDispatchBeforeOrderReady === true) {
+        toggleOrderReady();
+        awaitingDispatchBeforeOrderReady = false;
+      }
 
       if (awaitingDispatchBeforeArchive === true) {
         toggleArchive();
+        awaitingDispatchBeforeArchive = false;
       }
-
-      awaitingDispatchBeforeArchive = false;
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
     } finally {
@@ -66,16 +87,20 @@
     }
   }
 
-  function restoreDispatch() {
-    dispatch = structuredClone(appointment.dispatch);
+  function cancelUpdate() {
+    appointment.dispatch = dispatch.filter((item) => !item.new);
+    awaitingDispatchBeforeOrderReady = false;
+    awaitingDispatchBeforeArchive = false;
+
+    $showDispatchModal = false;
   }
 
-  onMount(() => {
-    restoreDispatch();
+  onDestroy(() => {
+    unsubscribeShowModal();
   });
 </script>
 
-<Modal title="Dispatch" bind:open={showDispatchModal} dismissable={false}>
+<Modal title="Dispatch" bind:open={$showDispatchModal} dismissable={false}>
   <div class="text-lg">
     Ajouter une ligne
     <LucideButton
@@ -101,6 +126,18 @@
             required
           />
         </div>
+
+        <div class="w-min">
+          <Label for="date-{index}">Date</Label>
+          <Input
+            type="date"
+            id="date-{index}"
+            name="Date"
+            bind:value={dispatchItem.date}
+            required
+          />
+        </div>
+
         <div class="w-full">
           <Label for="remarks-{index}">Remarques</Label>
           <Input
@@ -135,12 +172,6 @@
     />
 
     <!-- Bouton "Annuler" -->
-    <BoutonAction
-      preset="annuler"
-      on:click={() => {
-        restoreDispatch();
-        showDispatchModal = false;
-      }}
-    />
+    <BoutonAction preset="annuler" on:click={cancelUpdate} />
   </div>
 </Modal>

@@ -110,6 +110,12 @@ final class BulkDispatchStatsDTO implements \JsonSerializable
             'citern',
         ];
 
+        $hintsForLoader = [
+            'charge',
+            'volvo',
+            'cater',
+        ];
+
         $remarksToLowerCase = $this->transliterator?->transliterate($remarks);
 
         if (!\is_string($remarksToLowerCase)) {
@@ -132,8 +138,12 @@ final class BulkDispatchStatsDTO implements \JsonSerializable
             }
         }
 
-        if ($unit === 'T') {
-            return self::LOADER;
+        $remarksContainHintForLoader = false;
+        foreach ($hintsForLoader as $hint) {
+            if (\str_contains($remarksToLowerCase, $hint)) {
+                $remarksContainHintForLoader = true;
+                break;
+            }
         }
 
         if ($unit === 'BB' && $remarksContainHintForJcb) {
@@ -142,6 +152,10 @@ final class BulkDispatchStatsDTO implements \JsonSerializable
 
         if ($unit === 'BB' && $remarksContainHintForFunnel) {
             return self::FUNNEL;
+        }
+
+        if ($unit === 'T' && $remarksContainHintForLoader) {
+            return self::LOADER;
         }
 
         return null;

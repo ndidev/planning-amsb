@@ -10,6 +10,7 @@
  -->
 <script lang="ts">
   import { onMount, onDestroy, getContext } from "svelte";
+  import { writable } from "svelte/store";
 
   import { goto } from "@roxi/routify";
 
@@ -31,7 +32,7 @@
   import { DispatchModal } from "../";
   import { LucideButton, BoutonAction, IconText } from "@app/components";
 
-  import { notiflixOptions, device } from "@app/utils";
+  import { notiflixOptions, device, removeDiacritics } from "@app/utils";
   import type {
     Stores,
     RdvVrac,
@@ -50,8 +51,9 @@
   let mc: HammerManager;
   let showMenuModal = false;
 
-  let showDispatchModal = false;
+  let showDispatchModal = writable(false);
 
+  let awaitingDispatchBeforeOrderReady = false;
   let awaitingDispatchBeforeArchive = false;
 
   const archives: boolean = getContext("archives");
@@ -80,6 +82,111 @@
   $: qualite = produit.qualites.find(
     (qualite) => qualite.id === appointment.qualite
   ) || { ...qualiteVierge };
+
+  function showDispatchIfNecessary(type: "beforeOrderReady" | "beforeArchive") {
+    const normalizedRemarks = removeDiacritics(
+      appointment.dispatch.map(({ remarks }) => remarks).join()
+    );
+
+    switch (type) {
+      case "beforeOrderReady":
+        if (
+          !appointment.commande_prete &&
+          !normalizedRemarks.includes("prepa")
+        ) {
+          appointment.dispatch = [
+            ...appointment.dispatch,
+            {
+              staffId: null,
+              date: new Date().toISOString().split("T")[0],
+              remarks: "Préparation",
+              new: true,
+            },
+          ];
+
+          awaitingDispatchBeforeOrderReady = true;
+          $showDispatchModal = true;
+        }
+        break;
+
+      case "beforeArchive":
+        if (
+          !appointment.archive &&
+          produit.unite === "BB" &&
+          !normalizedRemarks.includes("jcb") &&
+          !normalizedRemarks.includes("tremi")
+        ) {
+          appointment.dispatch = [
+            ...appointment.dispatch,
+            {
+              staffId: null,
+              date: new Date().toISOString().split("T")[0],
+              remarks: "JCB",
+              new: true,
+            },
+            {
+              staffId: null,
+              date: new Date().toISOString().split("T")[0],
+              remarks: "Trémie",
+              new: true,
+            },
+          ];
+
+          awaitingDispatchBeforeArchive = true;
+          $showDispatchModal = true;
+        }
+
+        if (
+          !appointment.archive &&
+          produit.unite === "T" &&
+          !normalizedRemarks.includes("charge")
+        ) {
+          appointment.dispatch = [
+            ...appointment.dispatch,
+            {
+              staffId: null,
+              date: new Date().toISOString().split("T")[0],
+              remarks: "Chargeuse",
+              new: true,
+            },
+          ];
+
+          awaitingDispatchBeforeArchive = true;
+          $showDispatchModal = true;
+        }
+
+        if (!appointment.archive && appointment.dispatch.length === 0) {
+          appointment.dispatch = [
+            ...appointment.dispatch,
+            {
+              staffId: null,
+              date: new Date().toISOString().split("T")[0],
+              remarks: "",
+              new: true,
+            },
+          ];
+
+          awaitingDispatchBeforeArchive = true;
+          $showDispatchModal = true;
+        }
+
+        break;
+
+      default:
+        if (appointment.dispatch.length === 0 && !appointment.archive) {
+          appointment.dispatch = [
+            ...appointment.dispatch,
+            {
+              staffId: null,
+              date: new Date().toISOString().split("T")[0],
+              remarks: "",
+              new: true,
+            },
+          ];
+        }
+        break;
+    }
+  }
 
   /**
    * Renseigner commande prête en cliquant sur l'icône paquet.
@@ -207,7 +314,13 @@
           title={appointment.commande_prete
             ? "Annuler la préparation de commande"
             : "Renseigner commande prête"}
-          on:click={toggleOrderReady}
+          on:click={() => {
+            showDispatchIfNecessary("beforeOrderReady");
+
+            if (awaitingDispatchBeforeOrderReady === false) {
+              toggleOrderReady();
+            }
+          }}
         />
       </div>
     {/if}
@@ -223,7 +336,7 @@
             color="green"
             staticallyColored
             title="Renseigner le dispatch"
-            on:click={() => (showDispatchModal = true)}
+            on:click={() => ($showDispatchModal = true)}
           />
           <Tooltip type="auto">
             {#each appointment.dispatch as { staffId, remarks }, index}
@@ -243,7 +356,7 @@
         <LucideButton
           icon={UserRoundIcon}
           title="Renseigner le dispatch"
-          on:click={() => (showDispatchModal = true)}
+          on:click={() => ($showDispatchModal = true)}
         />
       {:else}
         <UserRoundIcon />
@@ -253,6 +366,8 @@
     <DispatchModal
       bind:appointment
       bind:showDispatchModal
+      bind:awaitingDispatchBeforeOrderReady
+      {toggleOrderReady}
       bind:awaitingDispatchBeforeArchive
       {toggleArchive}
     />
@@ -296,10 +411,9 @@
       <LucideButton
         icon={appointment.archive ? ArchiveRestoreIcon : ArchiveIcon}
         on:click={() => {
-          if (appointment.dispatch.length === 0 && !appointment.archive) {
-            awaitingDispatchBeforeArchive = true;
-            showDispatchModal = true;
-          } else {
+          showDispatchIfNecessary("beforeArchive");
+
+          if (awaitingDispatchBeforeArchive === false) {
             toggleArchive();
           }
         }}

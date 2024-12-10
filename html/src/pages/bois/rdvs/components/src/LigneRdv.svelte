@@ -9,7 +9,7 @@
   ```
  -->
 <script lang="ts">
-  import { onMount, onDestroy, getContext, setContext } from "svelte";
+  import { onMount, onDestroy, getContext } from "svelte";
   import { writable } from "svelte/store";
   import { goto } from "@roxi/routify";
 
@@ -32,14 +32,14 @@
     UserRoundCheckIcon,
   } from "lucide-svelte";
 
-  import { ThirdPartyAddress, ThirdPartyTooltip, DispatchModal } from "../";
+  import { ThirdPartyAddress, DispatchModal } from "../";
   import { LucideButton, BoutonAction, IconText } from "@app/components";
 
   import { notiflixOptions, device, removeDiacritics } from "@app/utils";
   import { HTTP } from "@app/errors";
-  import type { Stores, RdvBois } from "@app/types";
+  import type { Stores, RdvBois, Tiers } from "@app/types";
 
-  const { currentUser, boisRdvs, tiers, stevedoringStaff } =
+  const { currentUser, boisRdvs, tiers, stevedoringStaff, pays } =
     getContext<Stores>("stores");
 
   export let appointment: RdvBois;
@@ -51,7 +51,6 @@
   let showMenuModal = false;
 
   let showDispatchModal = writable(false);
-  let dispatchModal: DispatchModal;
 
   let awaitingDispatchBeforeOrderReady = false;
   let awaitingDispatchBeforeSettingDepartureTime = false;
@@ -81,6 +80,98 @@
       numero_bl = rdvs.get(appointment.id)?.numero_bl;
     }
   });
+
+  function makeThirdPartyTooltip(
+    thirdParty: Tiers,
+    role: "chargement" | "client" | "livraison"
+  ) {
+    return thirdParty
+      ? [
+          role.charAt(0).toUpperCase() + role.slice(1) + " :",
+          thirdParty.nom_complet,
+          thirdParty.adresse_ligne_1,
+          thirdParty.adresse_ligne_2,
+          [thirdParty.cp || "", thirdParty.ville || ""]
+            .filter((champ) => champ)
+            .join(" "),
+          thirdParty.pays.toLowerCase() === "zz"
+            ? ""
+            : $pays?.find(({ iso }) => thirdParty.pays === iso)?.nom ||
+              thirdParty.pays,
+          thirdParty.telephone,
+          thirdParty.commentaire ? " " : "",
+          thirdParty.commentaire,
+        ]
+          .filter((champ) => champ)
+          .join("\n")
+      : "";
+  }
+
+  function showDispatchIfNecessary(
+    type: "beforeOrderReady" | "beforeSettingDepartureTime"
+  ) {
+    const normalizedRemarks = removeDiacritics(
+      appointment.dispatch.map(({ remarks }) => remarks).join()
+    );
+
+    switch (type) {
+      case "beforeOrderReady":
+        if (
+          !appointment.commande_prete &&
+          !normalizedRemarks.includes("prepa")
+        ) {
+          appointment.dispatch = [
+            ...appointment.dispatch,
+            {
+              staffId: null,
+              date: new Date().toISOString().split("T")[0],
+              remarks: "Préparation",
+              new: true,
+            },
+          ];
+
+          awaitingDispatchBeforeOrderReady = true;
+          $showDispatchModal = true;
+        }
+        break;
+
+      case "beforeSettingDepartureTime":
+        if (
+          !appointment.heure_depart &&
+          !normalizedRemarks.includes("charge")
+        ) {
+          appointment.dispatch = [
+            ...appointment.dispatch,
+            {
+              staffId: null,
+              date: new Date().toISOString().split("T")[0],
+              remarks:
+                appointment.chargement === 1 ? "Chargement" : "Déchargement",
+              new: true,
+            },
+          ];
+
+          awaitingDispatchBeforeSettingDepartureTime = true;
+          $showDispatchModal = true;
+        }
+
+        break;
+
+      default:
+        if (appointment.dispatch.length === 0) {
+          appointment.dispatch = [
+            ...appointment.dispatch,
+            {
+              staffId: null,
+              date: new Date().toISOString().split("T")[0],
+              remarks: "",
+              new: true,
+            },
+          ];
+        }
+        break;
+    }
+  }
 
   /**
    * Renseigner l'heure d'arrivée en cliquant sur l'horloge.
@@ -275,28 +366,9 @@
           icon={ClockIcon}
           title="Renseigner l'heure de départ"
           on:click={() => {
-            const remarks = removeDiacritics(
-              appointment.dispatch.map(({ remarks }) => remarks).join()
-            );
-            if (
-              (appointment.chargement === 1 || appointment.livraison === 1) &&
-              !remarks.includes("charge")
-            ) {
-              appointment.dispatch = [
-                ...appointment.dispatch,
-                {
-                  staffId: null,
-                  date: new Date().toISOString().split("T")[0],
-                  remarks:
-                    appointment.chargement === 1
-                      ? "Chargement"
-                      : "Déchargement",
-                  new: true,
-                },
-              ];
-              awaitingDispatchBeforeSettingDepartureTime = true;
-              $showDispatchModal = true;
-            } else {
+            showDispatchIfNecessary("beforeSettingDepartureTime");
+
+            if (awaitingDispatchBeforeSettingDepartureTime === false) {
               setDepartureTime();
             }
           }}
@@ -313,12 +385,9 @@
         <IconText>
           <span slot="icon" title="Chargement"><ArrowRightFromLineIcon /></span>
           <span slot="text"><ThirdPartyAddress thirdParty={chargement} /></span>
-          <span slot="tooltip"
-            ><ThirdPartyTooltip
-              thirdParty={chargement}
-              role="chargement"
-            /></span
-          >
+          <span slot="tooltip">
+            {makeThirdPartyTooltip(chargement, "chargement")}
+          </span>
         </IconText>
       </div>
     {/if}
@@ -332,9 +401,9 @@
           {/if}
         </span>
         <span slot="text"><ThirdPartyAddress thirdParty={client} /></span>
-        <span slot="tooltip"
-          ><ThirdPartyTooltip thirdParty={client} role="client" /></span
-        >
+        <span slot="tooltip">
+          {makeThirdPartyTooltip(client, "client")}
+        </span>
       </IconText>
     </div>
 
@@ -344,9 +413,9 @@
         <IconText>
           <span slot="icon" title="Livraison"><ArrowRightToLineIcon /></span>
           <span slot="text"><ThirdPartyAddress thirdParty={livraison} /></span>
-          <span slot="tooltip"
-            ><ThirdPartyTooltip thirdParty={livraison} role="livraison" /></span
-          >
+          <span slot="tooltip">
+            {makeThirdPartyTooltip(livraison, "livraison")}
+          </span>
         </IconText>
       </div>
     {/if}
@@ -429,22 +498,9 @@
             ? "Annuler la préparation de commande"
             : "Renseigner commande prête"}
           on:click={() => {
-            const remarks = removeDiacritics(
-              appointment.dispatch.map(({ remarks }) => remarks).join()
-            );
-            if (!appointment.commande_prete && !remarks.includes("prepa")) {
-              appointment.dispatch = [
-                ...appointment.dispatch,
-                {
-                  staffId: null,
-                  date: new Date().toISOString().split("T")[0],
-                  remarks: "Préparation",
-                  new: true,
-                },
-              ];
-              awaitingDispatchBeforeOrderReady = true;
-              $showDispatchModal = true;
-            } else {
+            showDispatchIfNecessary("beforeOrderReady");
+
+            if (awaitingDispatchBeforeOrderReady === false) {
               toggleOrderReady();
             }
           }}
@@ -491,7 +547,6 @@
     </div>
 
     <DispatchModal
-      bind:this={dispatchModal}
       bind:appointment
       bind:showDispatchModal
       bind:awaitingDispatchBeforeOrderReady

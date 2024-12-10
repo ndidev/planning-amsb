@@ -91,6 +91,8 @@ export type RdvVrac = {
    */
   dispatch: {
     staffId: StevedoringStaff["id"];
+    date: string;
     remarks: string;
+    new?: boolean;
   }[];
 };

@@ -5,16 +5,17 @@
 
   Usage :
   ```tsx
-  <LigneRdvAttente rdv: RdvBois={rdv} />
+  <LigneRdvAttente appointment: RdvBois={appointment} />
   ```
  -->
 <script lang="ts">
   import { onMount, onDestroy, getContext } from "svelte";
+  import { writable } from "svelte/store";
   import { goto } from "@roxi/routify";
 
   import Notiflix from "notiflix";
   import Hammer from "hammerjs";
-  import { Modal } from "flowbite-svelte";
+  import { Modal, Tooltip } from "flowbite-svelte";
   import {
     ArrowRightFromLineIcon,
     ArrowRightToLineIcon,
@@ -25,45 +26,127 @@
     PackageXIcon,
     TruckIcon,
     UserIcon,
+    UserRoundIcon,
+    UserRoundCheckIcon,
   } from "lucide-svelte";
 
-  import { ThirdPartyAddress, ThirdPartyTooltip } from "../";
+  import { ThirdPartyAddress, DispatchModal } from "../";
   import { LucideButton, BoutonAction, IconText } from "@app/components";
 
-  import { notiflixOptions, device, DateUtils } from "@app/utils";
-  import type { Stores, RdvBois } from "@app/types";
+  import {
+    notiflixOptions,
+    device,
+    DateUtils,
+    removeDiacritics,
+  } from "@app/utils";
+  import type { Stores, RdvBois, Tiers } from "@app/types";
 
   // Stores
-  const { boisRdvs, currentUser, tiers } = getContext<Stores>("stores");
+  const { boisRdvs, currentUser, tiers, stevedoringStaff, pays } =
+    getContext<Stores>("stores");
 
-  export let rdv: RdvBois;
+  export let appointment: RdvBois;
   let ligne: HTMLDivElement;
 
   let mc: HammerManager;
   let showModal = false;
 
-  $: client = $tiers?.get(rdv.client);
-  $: livraison = $tiers?.get(rdv.livraison);
-  $: chargement = $tiers?.get(rdv.chargement);
-  $: transporteur = $tiers?.get(rdv.transporteur);
-  $: fournisseur = $tiers?.get(rdv.fournisseur);
-  $: affreteur = $tiers?.get(rdv.affreteur);
+  let showDispatchModal = writable(false);
 
-  $: loadingPlaceIsDisplayed = rdv.chargement && rdv.chargement !== 1;
-  $: deliveryPlaceIsDisplayed = rdv.livraison && rdv.client !== rdv.livraison;
+  let awaitingDispatchBeforeOrderReady = false;
 
-  const formattedDate = rdv.date_rdv
-    ? new DateUtils(rdv.date_rdv).format().long
+  $: client = $tiers?.get(appointment.client);
+  $: livraison = $tiers?.get(appointment.livraison);
+  $: chargement = $tiers?.get(appointment.chargement);
+  $: transporteur = $tiers?.get(appointment.transporteur);
+  $: fournisseur = $tiers?.get(appointment.fournisseur);
+  $: affreteur = $tiers?.get(appointment.affreteur);
+
+  $: loadingPlaceIsDisplayed =
+    appointment.chargement && appointment.chargement !== 1;
+  $: deliveryPlaceIsDisplayed =
+    appointment.livraison && appointment.client !== appointment.livraison;
+
+  const formattedDate = appointment.date_rdv
+    ? new DateUtils(appointment.date_rdv).format().long
     : "Pas de date";
+
+  function makeThirdPartyTooltip(
+    thirdParty: Tiers,
+    role: "chargement" | "client" | "livraison"
+  ) {
+    return thirdParty
+      ? [
+          role.charAt(0).toUpperCase() + role.slice(1) + " :",
+          thirdParty.nom_complet,
+          thirdParty.adresse_ligne_1,
+          thirdParty.adresse_ligne_2,
+          [thirdParty.cp || "", thirdParty.ville || ""]
+            .filter((champ) => champ)
+            .join(" "),
+          thirdParty.pays.toLowerCase() === "zz"
+            ? ""
+            : $pays?.find(({ iso }) => thirdParty.pays === iso)?.nom ||
+              thirdParty.pays,
+          thirdParty.telephone,
+          thirdParty.commentaire ? " " : "",
+          thirdParty.commentaire,
+        ]
+          .filter((champ) => champ)
+          .join("\n")
+      : "";
+  }
+
+  function showDispatchIfNecessary(type: "beforeOrderReady") {
+    const normalizedRemarks = removeDiacritics(
+      appointment.dispatch.map(({ remarks }) => remarks).join()
+    );
+
+    switch (type) {
+      case "beforeOrderReady":
+        if (
+          !appointment.commande_prete &&
+          !normalizedRemarks.includes("prepa")
+        ) {
+          appointment.dispatch = [
+            ...appointment.dispatch,
+            {
+              staffId: null,
+              date: new Date().toISOString().split("T")[0],
+              remarks: "Préparation",
+              new: true,
+            },
+          ];
+
+          awaitingDispatchBeforeOrderReady = true;
+          $showDispatchModal = true;
+        }
+        break;
+
+      default:
+        if (appointment.dispatch.length === 0) {
+          appointment.dispatch = [
+            ...appointment.dispatch,
+            {
+              staffId: null,
+              date: new Date().toISOString().split("T")[0],
+              remarks: "",
+              new: true,
+            },
+          ];
+        }
+        break;
+    }
+  }
 
   /**
    * Renseigner commande prête en cliquant sur l'icône paquet.
    */
   async function toggleOrderReady() {
     try {
-      const newState = !rdv.commande_prete;
+      const newState = !appointment.commande_prete;
 
-      await boisRdvs.patch(rdv.id, {
+      await boisRdvs.patch(appointment.id, {
         commande_prete: newState,
       });
 
@@ -93,7 +176,7 @@
           Notiflix.Block.dots([ligne], notiflixOptions.texts.suppression);
           ligne.style.minHeight = "initial";
 
-          boisRdvs.delete(rdv.id);
+          boisRdvs.delete(appointment.id);
 
           Notiflix.Notify.success("Le RDV a été supprimé");
         } catch (erreur) {
@@ -123,14 +206,17 @@
 </script>
 
 <Modal bind:open={showModal} outsideclose dismissable={false}>
-  <BoutonAction preset="modifier" on:click={$goto(`./${rdv.id}`)} />
-  <BoutonAction preset="copier" on:click={$goto(`./new?copie=${rdv.id}`)} />
+  <BoutonAction preset="modifier" on:click={$goto(`./${appointment.id}`)} />
+  <BoutonAction
+    preset="copier"
+    on:click={$goto(`./new?copie=${appointment.id}`)}
+  />
   <BoutonAction preset="supprimer" on:click={supprimerRdv} />
   <BoutonAction preset="annuler" on:click={() => (showModal = false)} />
 </Modal>
 
 <div
-  class="group grid py-2 text-gray-500 lg:min-h-11 lg:grid-cols-[17%_20%_8%_8%_8%_3%_24%_auto]"
+  class="group grid py-2 text-gray-500 lg:min-h-11 lg:grid-cols-[17%_20%_8%_8%_8%_3%_3%_21%_auto]"
   bind:this={ligne}
 >
   <!-- Date -->
@@ -146,12 +232,9 @@
         <IconText>
           <span slot="icon" title="Chargement"><ArrowRightFromLineIcon /></span>
           <span slot="text"><ThirdPartyAddress thirdParty={chargement} /></span>
-          <span slot="tooltip"
-            ><ThirdPartyTooltip
-              thirdParty={chargement}
-              role="chargement"
-            /></span
-          >
+          <span slot="tooltip">
+            {makeThirdPartyTooltip(chargement, "chargement")}
+          </span>
         </IconText>
       </div>
     {/if}
@@ -165,9 +248,9 @@
           {/if}
         </span>
         <span slot="text"><ThirdPartyAddress thirdParty={client} /></span>
-        <span slot="tooltip"
-          ><ThirdPartyTooltip thirdParty={client} role="client" /></span
-        >
+        <span slot="tooltip">
+          {makeThirdPartyTooltip(client, "client")}
+        </span>
       </IconText>
     </div>
 
@@ -177,23 +260,23 @@
         <IconText>
           <span slot="icon" title="Livraison"><ArrowRightToLineIcon /></span>
           <span slot="text"><ThirdPartyAddress thirdParty={livraison} /></span>
-          <span slot="tooltip"
-            ><ThirdPartyTooltip thirdParty={livraison} role="livraison" /></span
-          >
+          <span slot="tooltip">
+            {makeThirdPartyTooltip(livraison, "livraison")}
+          </span>
         </IconText>
       </div>
     {/if}
   </div>
 
   <div>
-    {#if rdv.transporteur}
+    {#if appointment.transporteur}
       <IconText hideIcon={["desktop"]}>
         <span slot="icon" title="Transporteur"><TruckIcon /></span>
         <span slot="text" style:font-weight="bold"
           >{transporteur?.nom_court || ""}</span
         >
         <span slot="tooltip">
-          {#if rdv.transporteur >= 11}
+          {#if appointment.transporteur >= 11}
             <!-- Transporteur non "spécial" -->
             {transporteur?.telephone || "Téléphone non renseigné"}
           {/if}
@@ -220,7 +303,7 @@
 
   <!-- Commande prête -->
   <div class="col-start-1 row-start-2 lg:col-auto lg:row-auto">
-    {#if rdv.commande_prete}
+    {#if appointment.commande_prete}
       <div
         class="lg:text-center lg:group-hover:[display:var(--display-on-over)]"
         style:--display-on-over={$currentUser.canEdit("bois")
@@ -235,26 +318,77 @@
     {#if $currentUser.canEdit("bois")}
       <div class="hidden text-center lg:group-hover:block">
         <LucideButton
-          icon={rdv.commande_prete ? PackageXIcon : PackageCheckIcon}
-          title={rdv.commande_prete
+          icon={appointment.commande_prete ? PackageXIcon : PackageCheckIcon}
+          title={appointment.commande_prete
             ? "Annuler la préparation de commande"
             : "Renseigner commande prête"}
-          on:click={toggleOrderReady}
+          on:click={() => {
+            showDispatchIfNecessary("beforeOrderReady");
+
+            if (awaitingDispatchBeforeOrderReady === false) {
+              toggleOrderReady();
+            }
+          }}
         />
       </div>
     {/if}
   </div>
 
+  <!-- Dispatch -->
+  <div class="col-start-1 row-start-4 lg:col-auto lg:row-auto">
+    <div class="text-center align-middle">
+      {#if appointment.dispatch.length > 0}
+        {#if $currentUser.canEdit("vrac")}
+          <LucideButton
+            icon={UserRoundCheckIcon}
+            color="green"
+            staticallyColored
+            title="Renseigner le dispatch"
+            on:click={() => ($showDispatchModal = true)}
+          />
+          <Tooltip type="auto">
+            {#each appointment.dispatch as { staffId, remarks }, index}
+              <div>
+                {$stevedoringStaff.get(staffId)?.fullname ||
+                  "(Personnel supprimé)"}
+                {#if remarks}
+                  : {remarks}
+                {/if}
+              </div>
+            {/each}
+          </Tooltip>
+        {:else}
+          <UserRoundCheckIcon />
+        {/if}
+      {:else if $currentUser.canEdit("vrac")}
+        <LucideButton
+          icon={UserRoundIcon}
+          title="Renseigner le dispatch"
+          on:click={() => ($showDispatchModal = true)}
+        />
+      {:else}
+        <UserRoundIcon />
+      {/if}
+    </div>
+
+    <DispatchModal
+      bind:appointment
+      bind:showDispatchModal
+      bind:awaitingDispatchBeforeOrderReady
+      {toggleOrderReady}
+    />
+  </div>
+
   <!-- Commentaires -->
   <div>
-    {#if rdv.commentaire_public}
+    {#if appointment.commentaire_public}
       <div class="lg:pl-1">
         <IconText hideIcon={["desktop"]}>
           <span slot="icon" title="Commentaire public"
             ><MessageSquareTextIcon /></span
           >
           <span slot="text"
-            >{@html rdv.commentaire_public.replace(
+            >{@html appointment.commentaire_public.replace(
               /\r\n|\r|\n/g,
               "<br/>"
             )}</span
@@ -263,11 +397,11 @@
       </div>
     {/if}
 
-    {#if rdv.commentaire_public && rdv.commentaire_cache}
+    {#if appointment.commentaire_public && appointment.commentaire_cache}
       <div class="h-3" />
     {/if}
 
-    {#if rdv.commentaire_cache}
+    {#if appointment.commentaire_cache}
       <div
         class="text-gray-400 lg:border-l-[1px] lg:border-dotted lg:border-l-gray-400 lg:pl-1"
       >
@@ -276,7 +410,10 @@
             ><MessageSquareOffIcon /></span
           >
           <span slot="text"
-            >{@html rdv.commentaire_cache.replace(/\r\n|\r|\n/g, "<br/>")}</span
+            >{@html appointment.commentaire_cache.replace(
+              /\r\n|\r|\n/g,
+              "<br/>"
+            )}</span
           >
         </IconText>
       </div>
@@ -289,13 +426,13 @@
       <LucideButton
         preset="copy"
         on:click={() => {
-          $goto(`./new?copie=${rdv.id}`);
+          $goto(`./new?copie=${appointment.id}`);
         }}
       />
       <LucideButton
         preset="edit"
         on:click={() => {
-          $goto(`./${rdv.id}`);
+          $goto(`./${appointment.id}`);
         }}
       />
       <LucideButton preset="delete" on:click={supprimerRdv} />

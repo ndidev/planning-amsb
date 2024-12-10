@@ -4,6 +4,7 @@
 
 namespace App\Entity\Bulk;
 
+use App\Core\Component\DateUtils;
 use App\Core\Validation\Constraints\Required;
 use App\Entity\AbstractEntity;
 use App\Entity\Bulk\BulkAppointment;
@@ -15,6 +16,9 @@ class BulkDispatchItem extends AbstractEntity
 
     #[Required("Le personnel est obligatoire.")]
     private ?StevedoringStaff $staff = null;
+
+    #[Required("La date est obligatoire.")]
+    private ?\DateTimeImmutable $date = null;
 
     private string $remarks = '';
 
@@ -42,6 +46,18 @@ class BulkDispatchItem extends AbstractEntity
         return $this->staff;
     }
 
+    public function setDate(\DateTimeImmutable|string|null $date): static
+    {
+        $this->date = DateUtils::makeDateTimeImmutable($date);
+
+        return $this;
+    }
+
+    public function getDate(): ?\DateTimeImmutable
+    {
+        return $this->date;
+    }
+
     public function setRemarks(string $role): static
     {
         $this->remarks = $role;
@@ -59,6 +75,7 @@ class BulkDispatchItem extends AbstractEntity
         return [
             'appointmentId' => $this->getAppointment()?->getId(),
             'staffId' => $this->getStaff()?->getId(),
+            'date' => $this->getDate()?->format('Y-m-d'),
             'remarks' => $this->getRemarks(),
         ];
     }

@@ -210,20 +210,20 @@
     <div>
       <LigneDateAttente camions={camions.get("attente")} />
       <div class="divide-y">
-        {#each [...rdvsGroupes.get("attente")] as rdv (rdv.id)}
-          <LigneRdvAttente {rdv} />
+        {#each [...rdvsGroupes.get("attente")] as appointment (appointment.id)}
+          <LigneRdvAttente {appointment} />
         {/each}
       </div>
     </div>
 
     <!-- RDVs plannifiés -->
-    {#each [...rdvsGroupes] as [date, rdvs] (date)}
+    {#each [...rdvsGroupes] as [date, scheduledAppointments] (date)}
       {#if date !== "attente" && date !== null}
         <div>
           <LigneDate {date} camions={camions.get(date)} />
           <div class="divide-y">
-            {#each rdvs as rdv (rdv.id)}
-              <LigneRdv appointment={rdv} />
+            {#each scheduledAppointments as appointment (appointment.id)}
+              <LigneRdv {appointment} />
             {/each}
           </div>
         </div>

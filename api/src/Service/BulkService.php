@@ -493,6 +493,7 @@ final class BulkService
 
         $dispatch = (new BulkDispatchItem())
             ->setStaff($this->stevedoringService->getStaff($rawDataAH->getInt('staff_id')))
+            ->setDate($rawDataAH->getDatetime('date'))
             ->setRemarks($rawDataAH->getString('remarks'));
 
         return $dispatch;
@@ -502,6 +503,7 @@ final class BulkService
     {
         $dispatch = (new BulkDispatchItem())
             ->setStaff($this->stevedoringService->getStaff($requestBody->getInt('staffId')))
+            ->setDate($requestBody->getDatetime('date'))
             ->setRemarks($requestBody->getString('remarks'));
 
         return $dispatch;

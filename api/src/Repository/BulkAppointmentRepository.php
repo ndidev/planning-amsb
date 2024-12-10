@@ -38,6 +38,7 @@ use App\Service\BulkService;
  * @phpstan-type BulkDispatchArray array{
  *                                   appointment_id: int,
  *                                   staff_id: int,
+ *                                   date: string,
  *                                   remarks: string,
  *                                 }
  */
@@ -453,6 +454,7 @@ final class BulkAppointmentRepository extends Repository
         $statement =
             "SELECT
                 staff_id,
+                `date`,
                 remarks
             FROM stevedoring_bulk_dispatch
             WHERE appointment_id = :id";
@@ -490,6 +492,7 @@ final class BulkAppointmentRepository extends Repository
              SET
                 appointment_id = :id,
                 staff_id = :staffId,
+                `date` = :date,
                 remarks = :remarks";
 
         try {
@@ -499,6 +502,7 @@ final class BulkAppointmentRepository extends Repository
                 $request->execute([
                     'id' => $id,
                     'staffId' => $dispatchItem->getStaff()?->getId(),
+                    'date' => $dispatchItem->getDate()?->format('Y-m-d'),
                     'remarks' => $dispatchItem->getRemarks(),
                 ]);
             }
@@ -534,22 +538,22 @@ final class BulkAppointmentRepository extends Repository
 
         $dispatchStatement =
             "SELECT
-                pl.date_rdv as `date`,
-                p.unite as `unit`,
+                dispatch.date,
                 IF(
                     staff.type = 'interim',
                     'Intérimaires',
                     CONCAT(staff.lastname, ' ', staff.firstname)
                 ) as `staffLabel`,
-                sbd.remarks as `remarks`
-            FROM vrac_planning pl
+                dispatch.remarks as `remarks`,
+                p.unite as `unit`
+            FROM stevedoring_bulk_dispatch dispatch
+            INNER JOIN vrac_planning pl ON pl.id = dispatch.appointment_id
             INNER JOIN vrac_produits p ON pl.produit = p.id
-            INNER JOIN stevedoring_bulk_dispatch sbd ON pl.id = sbd.appointment_id
-            INNER JOIN stevedoring_staff staff ON sbd.staff_id = staff.id
-            WHERE pl.date_rdv BETWEEN :startDate AND :endDate
+            INNER JOIN stevedoring_staff staff ON dispatch.staff_id = staff.id
+            WHERE dispatch.date BETWEEN :startDate AND :endDate
             $sqlFilter
             ORDER BY
-                pl.date_rdv ASC,
+                dispatch.date ASC,
                 staff.lastname ASC,
                 staff.firstname ASC
             ";
@@ -565,9 +569,9 @@ final class BulkAppointmentRepository extends Repository
             /** 
              * @var array{
              *        date: string,
-             *        unit: string,
              *        staffLabel: string,
              *        remarks: string,
+             *        unit: string,
              *      }[]
              */
             $rawData = $dispatchRequest->fetchAll();

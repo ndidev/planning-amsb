@@ -19,11 +19,11 @@
   export let showDispatchModal: Writable<boolean>;
   export let appointment: RdvBois;
 
-  export let awaitingDispatchBeforeOrderReady: boolean;
-  export let toggleOrderReady: () => void;
+  export let awaitingDispatchBeforeOrderReady: boolean = false;
+  export let toggleOrderReady: () => void = () => {};
 
-  export let awaitingDispatchBeforeSettingDepartureTime: boolean;
-  export let setDepartureTime: () => void;
+  export let awaitingDispatchBeforeSettingDepartureTime: boolean = false;
+  export let setDepartureTime: () => void = () => {};
 
   let dispatch: typeof appointment.dispatch;
 
@@ -73,14 +73,13 @@
 
       if (awaitingDispatchBeforeOrderReady === true) {
         toggleOrderReady();
+        awaitingDispatchBeforeOrderReady = false;
       }
 
       if (awaitingDispatchBeforeSettingDepartureTime === true) {
         setDepartureTime();
+        awaitingDispatchBeforeSettingDepartureTime = false;
       }
-
-      awaitingDispatchBeforeOrderReady = false;
-      awaitingDispatchBeforeSettingDepartureTime = false;
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
     } finally {
@@ -90,6 +89,8 @@
 
   function cancelUpdate() {
     appointment.dispatch = dispatch.filter((item) => !item.new);
+    awaitingDispatchBeforeOrderReady = false;
+    awaitingDispatchBeforeSettingDepartureTime = false;
 
     $showDispatchModal = false;
   }

@@ -46,6 +46,20 @@ class BulkDispatchItemTest extends TestCase
         $this->assertSame($stevedoringStaff, $actualStevedoringStaff);
     }
 
+    public function testSetAndGetDate(): void
+    {
+        // Given
+        $bulkDispatchItem = new BulkDispatchItem();
+        $date = new \DateTimeImmutable();
+
+        // When
+        $bulkDispatchItem->setDate($date);
+        $actualDate = $bulkDispatchItem->getDate();
+
+        // Then
+        $this->assertEquals($date, $actualDate);
+    }
+
     public function testSetAndGetRemarks(): void
     {
         // Given
@@ -71,11 +85,13 @@ class BulkDispatchItemTest extends TestCase
         $bulkDispatchItem = (new BulkDispatchItem())
             ->setAppointment((new BulkAppointment())->setId($bulkAppointmentId))
             ->setStaff((new StevedoringStaff())->setId($stevedoringStaffId))
+            ->setDate('2023-10-01')
             ->setRemarks($remarks);
 
         $expectedArray = [
             'appointmentId' => $bulkAppointmentId,
             'staffId' => $stevedoringStaffId,
+            'date' => '2023-10-01',
             'remarks' => $remarks,
         ];
 

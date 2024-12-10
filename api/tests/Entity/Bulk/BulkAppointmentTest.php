@@ -257,6 +257,7 @@ class BulkAppointmentTest extends TestCase
                 array_map(function (array $item) {
                     return (new BulkDispatchItem())
                         ->setStaff((new StevedoringStaff())->setId($item[0]))
+                        ->setDate('2023-10-01')
                         ->setRemarks($item[1]);
                 }, [[1, "A"], [2, "B"], [3, "C"]])
             );
@@ -278,9 +279,24 @@ class BulkAppointmentTest extends TestCase
             'commentaire_prive' => 'This is a private comment.',
             'archive' => true,
             'dispatch' => [
-                ['appointmentId' => 1, 'staffId' => 1, 'remarks' => 'A'],
-                ['appointmentId' => 1, 'staffId' => 2, 'remarks' => 'B'],
-                ['appointmentId' => 1, 'staffId' => 3, 'remarks' => 'C'],
+                [
+                    'appointmentId' => 1,
+                    'staffId' => 1,
+                    'date' => '2023-10-01',
+                    'remarks' => 'A'
+                ],
+                [
+                    'appointmentId' => 1,
+                    'staffId' => 2,
+                    'date' => '2023-10-01',
+                    'remarks' => 'B'
+                ],
+                [
+                    'appointmentId' => 1,
+                    'staffId' => 3,
+                    'date' => '2023-10-01',
+                    'remarks' => 'C'
+                ],
             ],
         ];
 

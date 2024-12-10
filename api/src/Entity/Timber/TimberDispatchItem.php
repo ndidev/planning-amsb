@@ -9,18 +9,16 @@ use App\Core\Validation\Constraints\Required;
 use App\Entity\AbstractEntity;
 use App\Entity\Stevedoring\StevedoringStaff;
 use App\Entity\Timber\TimberAppointment;
-use DateTimeImmutable;
 
 class TimberDispatchItem extends AbstractEntity
 {
-    // #[Required("Le rendez-vous est obligatoire.")]
     private ?TimberAppointment $appointment = null;
 
     #[Required("Le personnel est obligatoire.")]
     private ?StevedoringStaff $staff = null;
 
     #[Required("La date est obligatoire.")]
-    private ?DateTimeImmutable $date = null;
+    private ?\DateTimeImmutable $date = null;
 
     private string $remarks = '';
 
