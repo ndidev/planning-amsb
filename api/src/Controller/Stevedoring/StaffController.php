@@ -72,10 +72,6 @@ final class StaffController extends Controller
 
     public function readAll(): void
     {
-        if (!$this->user->canAccess($this->module)) {
-            throw new AccessException("Vous n'avez pas les droits pour accéder au personnel de manutention.");
-        }
-
         $allStaff = $this->stevedoringService->getAllStaff();
 
         $etag = ETag::get($allStaff);
