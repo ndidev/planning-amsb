@@ -83,10 +83,10 @@
   activateClickOutside={false}
   transitionType="fly"
   transitionParams={{ x: -320, duration: 200, easing: sineIn }}
-  width="w-64"
+  width="w-2/3 md:w-1/3 lg:w-64"
   id="menu-drawer"
 >
-  <Sidebar class="fixed inset-y-0 left-0 w-64" {activeUrl}>
+  <Sidebar class="fixed inset-y-0 left-0 w-2/3 md:w-1/3 lg:w-64" {activeUrl}>
     <SidebarWrapper class="pt-16 h-full flex flex-col">
       {#each [...sitemap] as [module, { affichage, tree: { href, children, devices } }]}
         {@const deviceMatches = devices?.includes($device.type) ?? true}
