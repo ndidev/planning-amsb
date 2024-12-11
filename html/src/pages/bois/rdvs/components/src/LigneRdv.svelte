@@ -15,32 +15,32 @@
 
   import Notiflix from "notiflix";
   import Hammer from "hammerjs";
-  import { Modal, Tooltip } from "flowbite-svelte";
+  import { Modal } from "flowbite-svelte";
   import {
     ArrowRightFromLineIcon,
     ArrowRightToLineIcon,
     ClockIcon,
     MessageSquareOffIcon,
     MessageSquareTextIcon,
-    PackageCheckIcon,
-    PackageIcon,
-    PackageXIcon,
     ReceiptTextIcon,
     TruckIcon,
     UserIcon,
-    UserRoundIcon,
-    UserRoundCheckIcon,
   } from "lucide-svelte";
 
   import { ThirdPartyAddress, DispatchModal } from "../";
-  import { LucideButton, BoutonAction, IconText } from "@app/components";
+  import {
+    LucideButton,
+    BoutonAction,
+    IconText,
+    DispatchButton,
+    OrderReadyButton,
+  } from "@app/components";
 
   import { notiflixOptions, device, removeDiacritics } from "@app/utils";
   import { HTTP } from "@app/errors";
   import type { Stores, RdvBois, Tiers } from "@app/types";
 
-  const { currentUser, boisRdvs, tiers, stevedoringStaff, pays } =
-    getContext<Stores>("stores");
+  const { currentUser, boisRdvs, tiers, pays } = getContext<Stores>("stores");
 
   export let appointment: RdvBois;
   let ligne: HTMLDivElement;
@@ -470,66 +470,20 @@
 
   <!-- Commande prête -->
   <div class="col-start-1 row-start-3 lg:col-auto lg:row-auto">
-    {#if appointment.commande_prete}
-      <div
-        class="text-center lg:group-hover:[display:var(--display-on-over)]"
-        style:--display-on-over={$currentUser.canEdit("bois")
-          ? "none"
-          : "block"}
-      >
-        <PackageIcon />
-      </div>
-    {/if}
-
-    {#if $currentUser.canEdit("bois")}
-      <div class="hidden text-center lg:group-hover:block">
-        <LucideButton
-          icon={appointment.commande_prete ? PackageXIcon : PackageCheckIcon}
-          title={appointment.commande_prete
-            ? "Annuler la préparation de commande"
-            : "Renseigner commande prête"}
-          on:click={toggleOrderReady}
-        />
-      </div>
-    {/if}
+    <OrderReadyButton
+      bind:orderReady={appointment.commande_prete}
+      module="bois"
+      {toggleOrderReady}
+    />
   </div>
 
   <!-- Dispatch -->
   <div class="col-start-1 row-start-4 lg:col-auto lg:row-auto">
-    <div class="text-center align-middle">
-      {#if appointment.dispatch.filter((item) => !item.new).length > 0}
-        {#if $currentUser.canEdit("vrac")}
-          <LucideButton
-            icon={UserRoundCheckIcon}
-            color="green"
-            staticallyColored
-            title="Renseigner le dispatch"
-            on:click={() => ($showDispatchModal = true)}
-          />
-          <Tooltip type="auto">
-            {#each appointment.dispatch as { staffId, remarks }, index}
-              <div>
-                {$stevedoringStaff?.get(staffId)?.fullname ||
-                  "(Personnel supprimé)"}
-                {#if remarks}
-                  : {remarks}
-                {/if}
-              </div>
-            {/each}
-          </Tooltip>
-        {:else}
-          <UserRoundCheckIcon />
-        {/if}
-      {:else if $currentUser.canEdit("vrac")}
-        <LucideButton
-          icon={UserRoundIcon}
-          title="Renseigner le dispatch"
-          on:click={() => ($showDispatchModal = true)}
-        />
-      {:else}
-        <UserRoundIcon />
-      {/if}
-    </div>
+    <DispatchButton
+      bind:dispatch={appointment.dispatch}
+      bind:showDispatchModal
+      module="bois"
+    />
 
     <DispatchModal
       bind:appointment
