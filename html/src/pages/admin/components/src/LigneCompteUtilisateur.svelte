@@ -461,7 +461,7 @@
 
     <form bind:this={ligne} class="mb-3" class:modificationEnCours>
       <div
-        class="grid [grid-template-areas:'a''b''d''e''c'] lg:[grid-template-areas:'a_b_c''d_d_d''e_e_e'] gap-3"
+        class="grid [grid-template-areas:'a''b''d''c'] lg:[grid-template-areas:'a_b_c''d_d_d'] gap-3"
       >
         <div class="[grid-area:a]">
           <!-- Nom -->
@@ -572,7 +572,7 @@
 
     <!-- Boutons -->
     {#if !self && !isNew}
-      <div class="place-self-center [grid-area:e]">
+      <div class="flex flex-col justify-center gap-2 lg:flex-row">
         <Button
           on:click={reinitialiserCompte}
           disabled={compte.statut === AccountStatus.PENDING}
