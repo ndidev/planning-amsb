@@ -158,17 +158,6 @@
         break;
 
       default:
-        if (appointment.dispatch.length === 0) {
-          appointment.dispatch = [
-            ...appointment.dispatch,
-            {
-              staffId: null,
-              date: new Date().toISOString().split("T")[0],
-              remarks: "",
-              new: true,
-            },
-          ];
-        }
         break;
     }
   }
@@ -194,6 +183,10 @@
    * Renseigner l'heure de départ en cliquant sur l'horloge.
    */
   async function setDepartureTime() {
+    showDispatchIfNecessary("beforeSettingDepartureTime");
+
+    if (awaitingDispatchBeforeSettingDepartureTime) return;
+
     try {
       await boisRdvs.patch(appointment.id, {
         heure_depart: new Date().toLocaleTimeString(),
@@ -222,6 +215,10 @@
    * Renseigner commande prête en cliquant sur l'icône paquet.
    */
   async function toggleOrderReady() {
+    showDispatchIfNecessary("beforeOrderReady");
+
+    if (awaitingDispatchBeforeOrderReady) return;
+
     try {
       const newState = !appointment.commande_prete;
 
@@ -365,13 +362,7 @@
         <LucideButton
           icon={ClockIcon}
           title="Renseigner l'heure de départ"
-          on:click={() => {
-            showDispatchIfNecessary("beforeSettingDepartureTime");
-
-            if (awaitingDispatchBeforeSettingDepartureTime === false) {
-              setDepartureTime();
-            }
-          }}
+          on:click={setDepartureTime}
         />
       </div>
     {/if}
@@ -497,13 +488,7 @@
           title={appointment.commande_prete
             ? "Annuler la préparation de commande"
             : "Renseigner commande prête"}
-          on:click={() => {
-            showDispatchIfNecessary("beforeOrderReady");
-
-            if (awaitingDispatchBeforeOrderReady === false) {
-              toggleOrderReady();
-            }
-          }}
+          on:click={toggleOrderReady}
         />
       </div>
     {/if}
@@ -512,7 +497,7 @@
   <!-- Dispatch -->
   <div class="col-start-1 row-start-4 lg:col-auto lg:row-auto">
     <div class="text-center align-middle">
-      {#if appointment.dispatch.length > 0}
+      {#if appointment.dispatch.filter((item) => !item.new).length > 0}
         {#if $currentUser.canEdit("vrac")}
           <LucideButton
             icon={UserRoundCheckIcon}
@@ -524,7 +509,7 @@
           <Tooltip type="auto">
             {#each appointment.dispatch as { staffId, remarks }, index}
               <div>
-                {$stevedoringStaff.get(staffId)?.fullname ||
+                {$stevedoringStaff?.get(staffId)?.fullname ||
                   "(Personnel supprimé)"}
                 {#if remarks}
                   : {remarks}

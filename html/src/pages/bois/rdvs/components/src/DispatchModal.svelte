@@ -25,7 +25,14 @@
   export let awaitingDispatchBeforeSettingDepartureTime: boolean = false;
   export let setDepartureTime: () => void = () => {};
 
-  let dispatch: typeof appointment.dispatch;
+  type Dispatch = Array<
+    RdvBois["dispatch"][number] & {
+      new?: boolean;
+      deleted?: boolean;
+    }
+  >;
+
+  let dispatch: Dispatch;
 
   const unsubscribeShowModal = showDispatchModal.subscribe((modalIsShown) => {
     if (modalIsShown) {
@@ -46,7 +53,11 @@
   }
 
   function deleteDispatchLine(index: number) {
-    dispatch.splice(index, 1);
+    if (dispatch[index].new) {
+      dispatch.splice(index, 1);
+    } else {
+      dispatch[index].deleted = true;
+    }
 
     dispatch = dispatch;
   }
@@ -57,28 +68,30 @@
     try {
       updateButton.$set({ disabled: true });
 
+      const savedDispatch = dispatch.filter((item) => !item.deleted);
+
       await boisRdvs.patch(appointment.id, {
-        dispatch,
+        dispatch: savedDispatch,
       });
 
       Notiflix.Notify.success("Le dispatch a été mis à jour.");
 
-      dispatch.forEach((item) => {
+      savedDispatch.forEach((item) => {
         delete item.new;
       });
 
-      appointment.dispatch = dispatch;
+      appointment.dispatch = savedDispatch;
 
       $showDispatchModal = false;
 
       if (awaitingDispatchBeforeOrderReady === true) {
-        toggleOrderReady();
         awaitingDispatchBeforeOrderReady = false;
+        toggleOrderReady();
       }
 
       if (awaitingDispatchBeforeSettingDepartureTime === true) {
-        setDepartureTime();
         awaitingDispatchBeforeSettingDepartureTime = false;
+        setDepartureTime();
       }
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
@@ -88,7 +101,13 @@
   }
 
   function cancelUpdate() {
-    appointment.dispatch = dispatch.filter((item) => !item.new);
+    appointment.dispatch = dispatch
+      .filter((item) => !item.new)
+      .map((item) => {
+        delete item.deleted;
+        return item;
+      });
+
     awaitingDispatchBeforeOrderReady = false;
     awaitingDispatchBeforeSettingDepartureTime = false;
 
@@ -112,55 +131,57 @@
 
   <form class="divide-y" bind:this={form}>
     {#each dispatch as dispatchItem, index}
-      <div
-        class="flex flex-col items-center gap-2 py-1 lg:flex-row lg:gap-4 lg:py-2"
-      >
-        <div class="w-full">
-          <Label for="">Personnel</Label>
-          <Svelecte
-            type="staff"
-            inputId="staff-{index}"
-            name="Personnel"
-            bind:value={dispatchItem.staffId}
-            placeholder="Sélectionner le personnel"
-            required
-          />
-        </div>
+      {#if !dispatchItem.deleted}
+        <div
+          class="flex flex-col items-center gap-2 py-1 lg:flex-row lg:gap-4 lg:py-2"
+        >
+          <div class="w-full">
+            <Label for="">Personnel</Label>
+            <Svelecte
+              type="staff"
+              inputId="staff-{index}"
+              name="Personnel"
+              bind:value={dispatchItem.staffId}
+              placeholder="Sélectionner le personnel"
+              required
+            />
+          </div>
 
-        <div class="w-min">
-          <Label for="date-{index}">Date</Label>
-          <Input
-            type="date"
-            id="date-{index}"
-            name="Date"
-            bind:value={dispatchItem.date}
-            required
-          />
-        </div>
+          <div class="w-min">
+            <Label for="date-{index}">Date</Label>
+            <Input
+              type="date"
+              id="date-{index}"
+              name="Date"
+              bind:value={dispatchItem.date}
+              required
+            />
+          </div>
 
-        <div class="w-full">
-          <Label for="remarks-{index}">Remarques</Label>
-          <Input
-            type="text"
-            id="remarks-{index}"
-            bind:value={dispatchItem.remarks}
-            list="remarks"
-          />
-          <datalist id="remarks">
-            <option value="Chargement"></option>
-            <option value="Déchargement"></option>
-            <option value="Préparation"></option>
-          </datalist>
-        </div>
+          <div class="w-full">
+            <Label for="remarks-{index}">Remarques</Label>
+            <Input
+              type="text"
+              id="remarks-{index}"
+              bind:value={dispatchItem.remarks}
+              list="remarks"
+            />
+            <datalist id="remarks">
+              <option value="Chargement"></option>
+              <option value="Déchargement"></option>
+              <option value="Préparation"></option>
+            </datalist>
+          </div>
 
-        <div>
-          <LucideButton
-            preset="delete"
-            title="Supprimer la ligne"
-            on:click={() => deleteDispatchLine(index)}
-          />
+          <div>
+            <LucideButton
+              preset="delete"
+              title="Supprimer la ligne"
+              on:click={() => deleteDispatchLine(index)}
+            />
+          </div>
         </div>
-      </div>
+      {/if}
     {/each}
   </form>
 

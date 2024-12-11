@@ -189,6 +189,7 @@
       ...appointment.dispatch,
       {
         staffId: null,
+        date: "",
         remarks: "",
       },
     ];
@@ -420,6 +421,18 @@
                   required
                 />
               </div>
+
+              <div class="w-full lg:w-min">
+                <Label for="date-{index}">Date</Label>
+                <Input
+                  type="date"
+                  id="date-{index}"
+                  name="Date"
+                  bind:value={dispatchItem.date}
+                  required
+                />
+              </div>
+
               <div class="w-full">
                 <Label for="remarks-{index}">Remarques</Label>
                 <Input
@@ -431,6 +444,7 @@
                 <datalist id="remarks">
                   <option value="JCB"></option>
                   <option value="Trémie"></option>
+                  <option value="Chargeuse"></option>
                 </datalist>
               </div>
               <div>

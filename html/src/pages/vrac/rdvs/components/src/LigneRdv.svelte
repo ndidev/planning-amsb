@@ -110,30 +110,41 @@
         break;
 
       case "beforeArchive":
-        if (
-          !appointment.archive &&
-          produit.unite === "BB" &&
-          !normalizedRemarks.includes("jcb") &&
-          !normalizedRemarks.includes("tremi")
-        ) {
-          appointment.dispatch = [
-            ...appointment.dispatch,
-            {
-              staffId: null,
-              date: new Date().toISOString().split("T")[0],
-              remarks: "JCB",
-              new: true,
-            },
-            {
-              staffId: null,
-              date: new Date().toISOString().split("T")[0],
-              remarks: "Trémie",
-              new: true,
-            },
-          ];
+        if (!appointment.archive && produit.unite === "BB") {
+          if (!normalizedRemarks.includes("jcb")) {
+            appointment.dispatch = [
+              ...appointment.dispatch,
+              {
+                staffId: null,
+                date: new Date().toISOString().split("T")[0],
+                remarks: "JCB",
+                new: true,
+              },
+            ];
 
-          awaitingDispatchBeforeArchive = true;
-          $showDispatchModal = true;
+            if (
+              !normalizedRemarks.includes("tremi") &&
+              !appointment.commentaire_public
+                .toLocaleLowerCase()
+                .includes("taut") &&
+              !appointment.commentaire_prive
+                .toLocaleLowerCase()
+                .includes("taut")
+            ) {
+              appointment.dispatch = [
+                ...appointment.dispatch,
+                {
+                  staffId: null,
+                  date: new Date().toISOString().split("T")[0],
+                  remarks: "Trémie",
+                  new: true,
+                },
+              ];
+            }
+
+            awaitingDispatchBeforeArchive = true;
+            $showDispatchModal = true;
+          }
         }
 
         if (
@@ -173,17 +184,6 @@
         break;
 
       default:
-        if (appointment.dispatch.length === 0 && !appointment.archive) {
-          appointment.dispatch = [
-            ...appointment.dispatch,
-            {
-              staffId: null,
-              date: new Date().toISOString().split("T")[0],
-              remarks: "",
-              new: true,
-            },
-          ];
-        }
         break;
     }
   }
@@ -192,6 +192,10 @@
    * Renseigner commande prête en cliquant sur l'icône paquet.
    */
   async function toggleOrderReady() {
+    showDispatchIfNecessary("beforeOrderReady");
+
+    if (awaitingDispatchBeforeOrderReady) return;
+
     try {
       const newState = !appointment.commande_prete;
 
@@ -212,6 +216,10 @@
   }
 
   function toggleArchive() {
+    showDispatchIfNecessary("beforeArchive");
+
+    if (awaitingDispatchBeforeArchive) return;
+
     Notiflix.Confirm.show(
       appointment.archive ? "Restauration RDV" : "Archivage RDV",
       appointment.archive
@@ -314,13 +322,7 @@
           title={appointment.commande_prete
             ? "Annuler la préparation de commande"
             : "Renseigner commande prête"}
-          on:click={() => {
-            showDispatchIfNecessary("beforeOrderReady");
-
-            if (awaitingDispatchBeforeOrderReady === false) {
-              toggleOrderReady();
-            }
-          }}
+          on:click={toggleOrderReady}
         />
       </div>
     {/if}
@@ -329,7 +331,7 @@
   <!-- Dispatch -->
   <div class="col-start-1 row-start-3 lg:col-auto lg:row-auto">
     <div class="text-center align-middle">
-      {#if appointment.dispatch.length > 0}
+      {#if appointment.dispatch.filter((item) => !item.new).length > 0}
         {#if $currentUser.canEdit("vrac")}
           <LucideButton
             icon={UserRoundCheckIcon}
@@ -341,7 +343,7 @@
           <Tooltip type="auto">
             {#each appointment.dispatch as { staffId, remarks }, index}
               <div>
-                {$stevedoringStaff.get(staffId)?.fullname ||
+                {$stevedoringStaff?.get(staffId)?.fullname ||
                   "(Personnel supprimé)"}
                 {#if remarks}
                   : {remarks}
@@ -410,13 +412,7 @@
       />
       <LucideButton
         icon={appointment.archive ? ArchiveRestoreIcon : ArchiveIcon}
-        on:click={() => {
-          showDispatchIfNecessary("beforeArchive");
-
-          if (awaitingDispatchBeforeArchive === false) {
-            toggleArchive();
-          }
-        }}
+        on:click={toggleArchive}
         title={appointment.archive ? "Restaurer" : "Archiver"}
         hoverColor="hsl(32, 100%, 50%)"
       />
