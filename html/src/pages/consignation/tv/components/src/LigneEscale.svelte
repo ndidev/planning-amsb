@@ -244,7 +244,11 @@
                 {/if}
               </span>{cargo.marchandise}</td
             >
-            <td class="environ">{cargo.environ ? "~" : ""}</td>
+            <td class="environ">
+              {#if cargo.tonnage_bl || cargo.cubage_bl || cargo.nombre_bl}
+                {cargo.environ ? "~" : ""}
+              {/if}
+            </td>
 
             <td class="text-right">
               {#if cargo.tonnage_bl}
