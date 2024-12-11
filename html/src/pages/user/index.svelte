@@ -151,7 +151,7 @@
   onDestroy(unsubscribeCurrentUser);
 </script>
 
-<main class="w-7/12 mx-auto">
+<main class="mx-auto w-11/12 lg:w-7/12">
   <PageHeading>Utilisateur</PageHeading>
 
   <form>

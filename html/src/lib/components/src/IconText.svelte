@@ -68,7 +68,7 @@
     visibility: hidden;
     font-size: 0.8em;
     font-weight: normal;
-    white-space: pre;
+    white-space: break-spaces;
     background-color: black;
     color: white;
     padding: 5px;
@@ -102,6 +102,9 @@
     .icon {
       text-align: center;
       min-width: 24px;
+    }
+    .tooltip {
+      margin-right: 20px;
     }
   }
 

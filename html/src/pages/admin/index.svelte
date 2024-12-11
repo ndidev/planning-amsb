@@ -15,7 +15,7 @@
 
 <SseConnection subscriptions={["admin/users"]} />
 
-<main class="w-7/12 mx-auto">
+<main class="mx-auto w-11/12 lg:w-7/12">
   <PageHeading>Administration</PageHeading>
 
   <div class="text-center mb-4">

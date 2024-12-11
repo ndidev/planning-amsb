@@ -302,7 +302,7 @@
 
 <SseConnection subscriptions={["tiers"]} />
 
-<main class="w-1/2 mx-auto">
+<main class="mx-auto w-11/12 lg:w-7/12">
   <PageHeading>Tiers</PageHeading>
 
   <!-- Liste déroulante -->

@@ -433,7 +433,7 @@
 
   <!-- Confirmation d'affrètement -->
   <div
-    class="confirmation_affretement col-start-1 row-start-4 lg:col-auto lg:row-auto text-center"
+    class="confirmation_affretement col-start-1 row-start-5 lg:col-auto lg:row-auto text-center"
     style:visibility={$tiers?.get(appointment.affreteur)?.lie_agence
       ? "visible"
       : "hidden"}
