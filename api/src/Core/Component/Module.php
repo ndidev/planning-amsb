@@ -13,6 +13,7 @@ abstract class Module
     const CONFIG = 'config';
     const SHIPPING = 'consignation';
     const STEVEDORING = 'manutention';
+    const STEVEDORING_STAFF = 'personnel';
     const TIMBER = 'bois';
     const THIRD_PARTY = 'tiers';
     const USER = 'user';

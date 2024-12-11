@@ -49,6 +49,11 @@ export type Roles = {
   tiers?: 0 | 1;
 
   /**
+   * Accès à la page du personnel de manutention.
+   */
+  personnel?: 0 | 1;
+
+  /**
    * Accès à la page de configuration.
    */
   config?: 0 | 1;

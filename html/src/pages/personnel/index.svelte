@@ -61,7 +61,7 @@
   }
 </script>
 
-<!-- routify:options guard="manutention" -->
+<!-- routify:options guard="personnel" -->
 
 <SseConnection subscriptions={["stevedoring/staff"]} />
 

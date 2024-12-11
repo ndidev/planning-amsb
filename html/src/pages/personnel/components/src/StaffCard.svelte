@@ -14,7 +14,7 @@
 <script lang="ts">
   import { Card } from "flowbite-svelte";
 
-  import { StaffDrawer } from "../";
+  import { StaffDrawer } from "..";
 
   import type { StevedoringStaff } from "@app/types";
 

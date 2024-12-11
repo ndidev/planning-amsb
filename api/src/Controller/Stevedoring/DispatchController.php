@@ -52,8 +52,8 @@ final class DispatchController extends Controller
 
     public function readAll(): void
     {
-        if (!$this->user->canAccess($this->module)) {
-            throw new AccessException("Vous n'avez pas les droits pour accéder aux heures du personnel de manutention.");
+        if (!$this->user->canEdit($this->module)) {
+            throw new AccessException("Vous n'avez pas les droits pour accéder aux heures de manutention.");
         }
 
         $filter = new StevedoringDispatchFilterDTO($this->request->getQuery());

@@ -128,12 +128,6 @@ export const sitemap: Map<ModuleId, Module> = new Map([
       type: TypesModules.EDIT,
       tree: {
         children: [
-          {
-            affichage: "Personnel",
-            roleMini: UserRoles.ACCESS,
-            href: "/manutention/personnel",
-            devices: ["mobile", "desktop"],
-          },
           // {
           //   affichage: "Équipements",
           //   roleMini: UserRoles.ACCESS,
@@ -142,11 +136,23 @@ export const sitemap: Map<ModuleId, Module> = new Map([
           // },
           {
             affichage: "Heures hors navires",
-            roleMini: UserRoles.ACCESS,
+            roleMini: UserRoles.EDIT,
             href: "/manutention/heures-hors-navires",
             devices: ["desktop"],
           },
         ],
+      },
+    },
+  ],
+  [
+    "personnel",
+    {
+      affichage: "Personnel de manutention",
+      type: TypesModules.ACCESS,
+      tree: {
+        href: "/personnel",
+        roleMini: UserRoles.ACCESS,
+        devices: ["mobile", "desktop"],
       },
     },
   ],

@@ -19,7 +19,7 @@ use App\Service\StevedoringService;
 final class StaffController extends Controller
 {
     private StevedoringService $stevedoringService;
-    private string $module = Module::STEVEDORING;
+    private string $module = Module::STEVEDORING_STAFF;
     private string $sseEventName = "stevedoring/staff";
 
     public function __construct(
@@ -88,10 +88,6 @@ final class StaffController extends Controller
 
     public function read(int $id): void
     {
-        if (!$this->user->canAccess($this->module)) {
-            throw new AccessException("Vous n'avez pas les droits pour accéder au personnel de manutention.");
-        }
-
         $staff = $this->stevedoringService->getStaff($id);
 
         if (!$staff) {
@@ -112,7 +108,7 @@ final class StaffController extends Controller
 
     public function create(): void
     {
-        if (!$this->user->canEdit($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour ajouter du personnel de manutention.");
         }
 
@@ -133,7 +129,7 @@ final class StaffController extends Controller
 
     public function update(?int $id = null): void
     {
-        if (!$this->user->canEdit($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour modifier le personnel de manutention.");
         }
 
@@ -158,7 +154,7 @@ final class StaffController extends Controller
 
     public function delete(?int $id = null): void
     {
-        if (!$this->user->canEdit($this->module)) {
+        if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour supprimer du personnel de manutention.");
         }
 
