@@ -327,7 +327,9 @@
         </div>
 
         <div>
-          <span>{cargo.environ ? "~" : ""}</span>
+          {#if cargo.tonnage_bl || cargo.cubage_bl || cargo.nombre_bl}
+            <span>{cargo.environ ? "~" : ""}</span>
+          {/if}
 
           {#if cargo.tonnage_bl}
             <span class="ml-3">
