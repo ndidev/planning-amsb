@@ -924,6 +924,8 @@ final class TimberAppointmentRepository extends Repository
      * @param TimberDispatchItem[] $dispatch 
      * 
      * @return void 
+     * 
+     * @throws DBException 
      */
     public function insertDispatchForAppointment(int $id, array $dispatch): void
     {
@@ -970,5 +972,26 @@ final class TimberAppointmentRepository extends Repository
         } catch (\PDOException $e) {
             throw new DBException("Impossible de supprimer le dispatch du RDV {$id}", previous: $e);
         }
+    }
+
+    /**
+     * Update the dispatch for an appointment.
+     * 
+     * @param int $id Appointment ID.
+     * @param TimberDispatchItem[] $dispatch 
+     * 
+     * @return TimberAppointment Updated appointment. 
+     * 
+     * @throws DBException 
+     */
+    public function updateDispatchForAppointment(int $id, array $dispatch): TimberAppointment
+    {
+        $this->deleteDispatchForAppointment($id);
+        $this->insertDispatchForAppointment($id, $dispatch);
+
+        /** @var TimberAppointment */
+        $updatedAppointment = $this->fetchAppointment($id);
+
+        return $updatedAppointment;
     }
 }

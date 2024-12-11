@@ -317,8 +317,10 @@ final class TimberService
                 },
                 $dispatch
             );
-            $this->appointmentRepository->deleteDispatchForAppointment($appointmentId);
-            $this->appointmentRepository->insertDispatchForAppointment($appointmentId, $dispatchItems);
+            $appointment = $this->appointmentRepository->updateDispatchForAppointment(
+                $appointmentId,
+                $dispatchItems
+            );
         }
 
         return $appointment;

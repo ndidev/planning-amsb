@@ -199,6 +199,9 @@
 </script>
 
 <Modal bind:open={showModal} outsideclose dismissable={false}>
+  <BoutonAction on:click={toggleOrderReady}
+    >{appointment.commande_prete ? "Annuler" : "Renseigner"} commande prête</BoutonAction
+  >
   <BoutonAction preset="modifier" on:click={$goto(`./${appointment.id}`)} />
   <BoutonAction
     preset="copier"

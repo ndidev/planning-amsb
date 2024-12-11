@@ -484,6 +484,8 @@ final class BulkAppointmentRepository extends Repository
      * @param BulkDispatchItem[] $dispatch 
      * 
      * @return void 
+     * 
+     * @throws DBException 
      */
     public function insertDispatchForAppointment(int $id, array $dispatch): void
     {
@@ -530,6 +532,27 @@ final class BulkAppointmentRepository extends Repository
         } catch (\PDOException $e) {
             throw new DBException("Impossible de supprimer le dispatch du RDV {$id}", previous: $e);
         }
+    }
+
+    /**
+     * Insert the dispatch for an appointment.
+     * 
+     * @param int $id Appointment ID.
+     * @param BulkDispatchItem[] $dispatch 
+     * 
+     * @return BulkAppointment Updated appointment.
+     * 
+     * @throws DBException 
+     */
+    public function updateDispatchForAppointment(int $id, array $dispatch): BulkAppointment
+    {
+        $this->deleteDispatchForAppointment($id);
+        $this->insertDispatchForAppointment($id, $dispatch);
+
+        /** @var BulkAppointment */
+        $updatedAppointment = $this->getAppointment($id);
+
+        return $updatedAppointment;
     }
 
     public function fetchDispatchStats(BulkDispatchStatsFilterDTO $filter): BulkDispatchStatsDTO

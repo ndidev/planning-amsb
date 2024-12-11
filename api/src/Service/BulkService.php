@@ -236,8 +236,7 @@ final class BulkService
                 },
                 $input->getArray('dispatch')
             );
-            $this->appointmentRepository->deleteDispatchForAppointment($id);
-            $this->appointmentRepository->insertDispatchForAppointment($id, $dispatchItems);
+            $appointment = $this->appointmentRepository->updateDispatchForAppointment($id, $dispatchItems);
         }
 
         if ($input->isSet('archive')) {

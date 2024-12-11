@@ -147,7 +147,7 @@
             />
           </div>
 
-          <div class="w-min">
+          <div class="w-full lg:w-min">
             <Label for="date-{index}">Date</Label>
             <Input
               type="date"
