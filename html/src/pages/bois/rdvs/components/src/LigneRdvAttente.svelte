@@ -298,7 +298,7 @@
   </div>
 
   <!-- Commande prête -->
-  <div class="col-start-1 row-start-2 lg:col-auto lg:row-auto">
+  <div class="no-mobile">
     <OrderReadyButton
       bind:orderReady={appointment.commande_prete}
       module="bois"
@@ -307,20 +307,20 @@
   </div>
 
   <!-- Dispatch -->
-  <div class="col-start-1 row-start-4 lg:col-auto lg:row-auto">
+  <div class="no-mobile">
     <DispatchButton
       bind:dispatch={appointment.dispatch}
       bind:showDispatchModal
       module="bois"
     />
-
-    <DispatchModal
-      bind:appointment
-      bind:showDispatchModal
-      bind:awaitingDispatchBeforeOrderReady
-      {toggleOrderReady}
-    />
   </div>
+
+  <DispatchModal
+    bind:appointment
+    bind:showDispatchModal
+    bind:awaitingDispatchBeforeOrderReady
+    {toggleOrderReady}
+  />
 
   <!-- Commentaires -->
   <div>
