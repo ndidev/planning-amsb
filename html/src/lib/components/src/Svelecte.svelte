@@ -1,20 +1,20 @@
 <script lang="ts" context="module">
   import Svelecte, { addRenderer, config } from "svelecte";
 
-  type ItemFormat = {
+  type Item = {
     id: number | string;
     search: string;
     label: string;
     tag: string;
   };
 
-  addRenderer("classic", (item: ItemFormat, isSelected, inputValue) => {
+  addRenderer("classic", (item: Item, isSelected, inputValue) => {
     return isSelected
       ? `<div title="${item.label}">${item.label}</div>`
       : `<span>${item.label}</span>`;
   });
 
-  addRenderer("withTags", (item: ItemFormat, isSelected, inputValue) => {
+  addRenderer("withTags", (item: Item, isSelected, inputValue) => {
     return isSelected
       ? `<div title="${item.label}">${item.tag}</div>`
       : `<span>${item.label}</span>`;
@@ -34,6 +34,7 @@
   export let disabled = false;
   // basic
   export let options = [];
+  let optionResolver = null;
   export let valueField = config.valueField;
   export let labelField = config.labelField;
   export let groupLabelField = config.groupLabelField;
@@ -115,6 +116,8 @@
 
   export let type: (typeof typesPredefinis)[number] | undefined = undefined;
 
+  export let includeInactive = false;
+
   /**
    * Rôle du tiers.
    */
@@ -145,8 +148,14 @@
     unsubscribe = tiers.subscribe((listeTiers) => {
       if (listeTiers) {
         options = [...listeTiers.values()]
-          .filter((tiers) => (role ? tiers.roles[role] : true))
-          .map((tiers): ItemFormat => {
+          .filter((tiers) => {
+            return (
+              value === tiers.id || // Include the selected value even if it's inactive or doesn't match the role
+              ((role ? tiers.roles[role] : true) &&
+                (includeInactive ? true : tiers.actif))
+            );
+          })
+          .map((tiers): Item => {
             return {
               id: tiers.id,
               search: `${tiers.nom_court} ${tiers.nom_complet} ${tiers.ville}`,
@@ -164,7 +173,7 @@
     const { pays } = getContext<Stores>("stores");
     unsubscribe = pays.subscribe((listePays) => {
       if (listePays) {
-        options = listePays.map((pays): ItemFormat => {
+        options = listePays.map((pays): Item => {
           return {
             id: pays.iso,
             search: `${pays.nom} ${pays.iso}`,
@@ -182,7 +191,7 @@
     const { ports } = getContext<Stores>("stores");
     unsubscribe = ports.subscribe((listePorts) => {
       if (listePorts) {
-        options = listePorts.map((port): ItemFormat => {
+        options = listePorts.map((port): Item => {
           return {
             id: port.locode,
             search: `${port.nom} ${port.nom_affichage} ${port.locode}`,
@@ -204,14 +213,19 @@
           {
             label: "Mensuels",
             options: [...staffList.values()]
-              .filter((staff) => staff.isActive)
-              .filter((staff) => staff.type === "mensuel")
+              .filter((staff) => {
+                return (
+                  value === staff.id ||
+                  (staff.type === "mensuel" &&
+                    (includeInactive ? true : staff.isActive))
+                );
+              })
               .sort(
                 (a, b) =>
                   a.lastname.localeCompare(b.lastname) ||
                   a.firstname.localeCompare(b.firstname)
               )
-              .map((staff): ItemFormat => {
+              .map((staff): Item => {
                 return {
                   id: staff.id,
                   search: staff.fullname,
@@ -223,14 +237,19 @@
           {
             label: "Intérimaires",
             options: [...staffList.values()]
-              .filter((staff) => staff.isActive)
-              .filter((staff) => staff.type === "interim")
+              .filter((staff) => {
+                return (
+                  value === staff.id ||
+                  (staff.type === "interim" &&
+                    (includeInactive ? true : staff.isActive))
+                );
+              })
               .sort(
                 (a, b) =>
                   a.lastname.localeCompare(b.lastname) ||
                   a.firstname.localeCompare(b.firstname)
               )
-              .map((staff): ItemFormat => {
+              .map((staff): Item => {
                 return {
                   id: staff.id,
                   search: staff.fullname,
@@ -256,6 +275,9 @@
     {required}
     {disabled}
     {options}
+    {optionResolver}
+    bind:value
+    {valueAsObject}
     {valueField}
     {labelField}
     {groupLabelField}
@@ -292,8 +314,6 @@
     class={svelecteClass}
     {i18n}
     {readSelection}
-    bind:value
-    {valueAsObject}
     on:input
     on:change
     {highlightFirstItem}

@@ -93,6 +93,7 @@
         inputId="filtre_affreteur"
         type="tiers"
         role="maritime_affreteur"
+        includeInactive
         bind:value={filterData.affreteur}
         placeholder="Affréteur"
         multiple
@@ -106,6 +107,7 @@
         inputId="filtre_armateur"
         type="tiers"
         role="maritime_armateur"
+        includeInactive
         bind:value={filterData.armateur}
         placeholder="Armateur"
         multiple
@@ -119,6 +121,7 @@
         inputId="filtre_courtier"
         type="tiers"
         role="maritime_courtier"
+        includeInactive
         bind:value={filterData.courtier}
         placeholder="Courtier"
         multiple

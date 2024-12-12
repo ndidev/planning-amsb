@@ -68,6 +68,7 @@
     <Svelecte
       inputId="staff-filter"
       type="staff"
+      includeInactive
       bind:value={filterData.staff}
       placeholder="Personnel"
       multiple

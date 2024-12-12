@@ -103,6 +103,7 @@
         inputId="filtre_fournisseur"
         type="tiers"
         role="bois_fournisseur"
+        includeInactive
         bind:value={filterData.fournisseur}
         placeholder="Fournisseur"
         multiple
@@ -116,6 +117,7 @@
         inputId="filtre_client"
         type="tiers"
         role="bois_client"
+        includeInactive
         bind:value={filterData.client}
         placeholder="Client"
         multiple
@@ -129,6 +131,7 @@
         inputId="filtre_chargement"
         type="tiers"
         role="bois_client"
+        includeInactive
         bind:value={filterData.chargement}
         placeholder="Chargement"
         multiple
@@ -142,6 +145,7 @@
         inputId="filtre_livraison"
         type="tiers"
         role="bois_client"
+        includeInactive
         bind:value={filterData.livraison}
         placeholder="Livraison"
         multiple
@@ -155,6 +159,7 @@
         inputId="filtre_transporteur"
         type="tiers"
         role="bois_transporteur"
+        includeInactive
         bind:value={filterData.transporteur}
         placeholder="Transporteur"
         multiple
@@ -168,6 +173,7 @@
         inputId="filtre_affreteur"
         type="tiers"
         role="bois_affreteur"
+        includeInactive
         bind:value={filterData.affreteur}
         placeholder="Affréteur"
         multiple
