@@ -143,7 +143,7 @@
   }
 </script>
 
-<!-- routify:options guard="manutention/edit" -->
+<!-- routify:options guard="personnel" -->
 
 <main class="mx-auto w-10/12 lg:w-1/3">
   <PageHeading>Personnel de manutention</PageHeading>

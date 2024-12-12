@@ -43,7 +43,7 @@
         <LucideButton
           preset="edit"
           icon={PencilIcon}
-          on:click={$goto(`/manutention/personnel/${staff.id}`)}
+          on:click={$goto(`/personnel/${staff.id}`)}
           align="baseline"
         />
       {/if}
