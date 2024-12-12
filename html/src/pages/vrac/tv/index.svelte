@@ -1,9 +1,10 @@
 <!-- routify:options title="Planning AMSB - Vrac" -->
 <script lang="ts">
+  import { onDestroy } from "svelte";
+
   import { LigneDate, LigneRdv } from "./components";
   import { BandeauInfo, SseConnection } from "@app/components";
 
-  // import { vracRdvs, vracProduits, currentUser } from "@app/stores";
   const { vracRdvs, vracProduits, currentUser } = getContext<Stores>("stores");
 
   import type { RdvVrac, Stores } from "@app/types";
@@ -11,26 +12,30 @@
 
   type GroupesRdv = Map<string, RdvVrac[]>;
 
-  let dates: Set<string>;
-  let rdvsGroupes: GroupesRdv;
+  vracRdvs.setSearchParams({ tv: "true" });
 
-  $: if ($vracRdvs && $vracProduits) {
-    dates = new Set(
-      [...$vracRdvs.values()].map(({ date_rdv }) => date_rdv).sort()
-    );
-    rdvsGroupes = grouperRdvs([...$vracRdvs.values()]);
-  }
+  let appointments: RdvVrac[];
+  let dates: Set<string>;
+  let groupedAppointments: GroupesRdv;
+
+  const unsubscribeAppointments = vracRdvs.subscribe((value) => {
+    if (!value) return;
+
+    appointments = [...value.values()];
+    dates = new Set(appointments.map(({ date_rdv }) => date_rdv).sort());
+    groupedAppointments = groupAppointments(appointments, dates);
+  });
 
   /**
    * Grouper et trier les RDVs.
    */
-  function grouperRdvs(rdvs: RdvVrac[]) {
+  function groupAppointments(rdvs: RdvVrac[], dates: Set<string>): GroupesRdv {
     const groupes: GroupesRdv = new Map<string, RdvVrac[]>();
 
     dates.forEach((date) => {
       groupes.set(
         date,
-        rdvs.filter(({ date_rdv }) => date_rdv === date).sort(triPlanning)
+        rdvs.filter(({ date_rdv }) => date_rdv === date).sort(sortPlanning)
       );
     });
 
@@ -45,7 +50,7 @@
    * - heure, croissant (null en dernier)
    * - nom de qualite, croissant
    */
-  function triPlanning(a: RdvVrac, b: RdvVrac): number {
+  function sortPlanning(a: RdvVrac, b: RdvVrac): number {
     if (!$vracProduits) return 0;
 
     return (
@@ -76,6 +81,10 @@
       );
     }
   }
+
+  onDestroy(() => {
+    unsubscribeAppointments();
+  });
 </script>
 
 {#if $currentUser.canUseApp && $currentUser.canAccess("vrac")}
@@ -94,7 +103,7 @@
 
   <main class="w-[95vw] mx-auto">
     {#if $vracRdvs && $vracProduits}
-      {#each [...rdvsGroupes] as [date, rdvs] (date)}
+      {#each [...groupedAppointments] as [date, rdvs] (date)}
         <LigneDate {date} />
         <div class="divide-y">
           {#each rdvs as rdv (rdv.id)}

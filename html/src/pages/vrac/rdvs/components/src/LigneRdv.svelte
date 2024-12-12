@@ -34,13 +34,7 @@
   } from "@app/components";
 
   import { notiflixOptions, device, removeDiacritics } from "@app/utils";
-  import type {
-    Stores,
-    RdvVrac,
-    ProduitVrac,
-    QualiteVrac,
-    Tiers,
-  } from "@app/types";
+  import type { Stores, RdvVrac, ProduitVrac, QualiteVrac } from "@app/types";
 
   // Stores
   const { currentUser, vracProduits, vracRdvs, tiers } =
@@ -59,10 +53,6 @@
 
   const archives: boolean = getContext("archives");
 
-  const tiersVierge: Partial<Tiers> = {
-    nom_court: "",
-  };
-
   const produitVierge: Partial<ProduitVrac> = {
     nom: "",
     couleur: "#000000",
@@ -73,10 +63,6 @@
     nom: "",
     couleur: "#000000",
   };
-
-  $: client = $tiers?.get(appointment.client) || { ...tiersVierge };
-
-  $: transporteur = $tiers?.get(appointment.transporteur) || { ...tiersVierge };
 
   $: produit = $vracProduits?.get(appointment.produit) || { ...produitVierge };
 
@@ -111,6 +97,7 @@
         break;
 
       case "beforeArchive":
+        // Big bags
         if (!appointment.archive && produit.unite === "BB") {
           if (!normalizedRemarks.includes("jcb")) {
             appointment.dispatch = [
@@ -148,6 +135,7 @@
           }
         }
 
+        // Bulk
         if (
           !appointment.archive &&
           produit.unite === "T" &&
@@ -159,6 +147,26 @@
               staffId: null,
               date: new Date().toISOString().split("T")[0],
               remarks: "Chargeuse",
+              new: true,
+            },
+          ];
+
+          awaitingDispatchBeforeArchive = true;
+          $showDispatchModal = true;
+        }
+
+        // Animal feed
+        if (
+          !appointment.archive &&
+          appointment.produit === 1 &&
+          appointment.dispatch.length === 0
+        ) {
+          appointment.dispatch = [
+            ...appointment.dispatch,
+            {
+              staffId: null,
+              date: new Date().toISOString().split("T")[0],
+              remarks: "x" + appointment.quantite,
               new: true,
             },
           ];
@@ -342,13 +350,13 @@
 
   <!-- Client -->
   <div>
-    {client.nom_court}
-    {client.ville}
+    {$tiers?.get(appointment.client)?.nom_court || ""}
+    {$tiers?.get(appointment.client)?.ville || ""}
   </div>
 
   <!-- Transporteur -->
   <div class="font-bold">
-    {transporteur.nom_court}
+    {$tiers?.get(appointment.transporteur)?.nom_court || ""}
   </div>
 
   <!-- Numéro de commande -->

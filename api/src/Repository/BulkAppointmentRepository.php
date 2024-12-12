@@ -32,6 +32,7 @@ use App\Service\BulkService;
  *                                      num_commande: string,
  *                                      commentaire_public: string,
  *                                      commentaire_prive: string,
+ *                                      show_on_tv: int,
  *                                      archive: int,
  *                                    }
  * 
@@ -68,6 +69,8 @@ final class BulkAppointmentRepository extends Repository
      */
     public function getAppointments(BulkFilterDTO $filter): Collection
     {
+        $sqlFilter = $filter->getSqlTvFilter();
+
         $archiveFilter = (int) $filter->isArchive();
 
         $statement =
@@ -86,9 +89,11 @@ final class BulkAppointmentRepository extends Repository
                 num_commande,
                 commentaire_public,
                 commentaire_prive,
+                show_on_tv,
                 archive
             FROM vrac_planning
             WHERE archive = $archiveFilter
+            $sqlFilter
             ORDER BY date_rdv";
 
         try {
@@ -145,6 +150,7 @@ final class BulkAppointmentRepository extends Repository
                 num_commande,
                 commentaire_public,
                 commentaire_prive,
+                show_on_tv,
                 archive
             FROM vrac_planning
             WHERE id = :id";
@@ -200,6 +206,7 @@ final class BulkAppointmentRepository extends Repository
                 num_commande = :orderNumber,
                 commentaire_public = :publicComments,
                 commentaire_prive = :privateComments,
+                show_on_tv = :showOnTv,
                 archive = :archive
                 ";
 
@@ -225,6 +232,7 @@ final class BulkAppointmentRepository extends Repository
                 'orderNumber' => $appointment->getOrderNumber(),
                 'publicComments' => $appointment->getPublicComments(),
                 'privateComments' => $appointment->getPrivateComments(),
+                'showOnTv' => (int) $appointment->isOnTv(),
                 'archive' => (int) $appointment->isArchive(),
             ]);
 
@@ -268,6 +276,7 @@ final class BulkAppointmentRepository extends Repository
                 num_commande = :orderNumber,
                 commentaire_public = :publicComments,
                 commentaire_prive = :privateComments,
+                show_on_tv = :showOnTv,
                 archive = :archive
             WHERE id = :id";
 
@@ -292,6 +301,7 @@ final class BulkAppointmentRepository extends Repository
                 'orderNumber' => $appointment->getOrderNumber(),
                 'publicComments' => $appointment->getPublicComments(),
                 'privateComments' => $appointment->getPrivateComments(),
+                'showOnTv' => (int) $appointment->isOnTv(),
                 'archive' => (int) $appointment->isArchive(),
                 'id' => $appointment->getId(),
             ]);

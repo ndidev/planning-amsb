@@ -82,6 +82,11 @@ export type RdvVrac = {
   commentaire_prive: string;
 
   /**
+   * `true` si le RDV est à afficher sur l'écran TV.
+   */
+  showOnTv: boolean;
+
+  /**
    * `true` si le RDV est archivé.
    */
   archive: boolean;

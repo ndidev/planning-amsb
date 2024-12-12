@@ -207,6 +207,19 @@ class BulkAppointmentTest extends TestCase
         $this->assertEquals($comments, $actualComments);
     }
 
+    public function testSetAndGetOnTv(): void
+    {
+        // Given
+        $bulkAppointment = new BulkAppointment();
+
+        // When
+        $bulkAppointment->setOnTv(true);
+        $actualIsOnTv = $bulkAppointment->isOnTv();
+
+        // Then
+        $this->assertTrue($actualIsOnTv);
+    }
+
     public function testSetAndGetArchive(): void
     {
         // Given
@@ -252,6 +265,7 @@ class BulkAppointmentTest extends TestCase
             ->setOrderNumber('ORD123456')
             ->setPublicComments('This is a public comment.')
             ->setPrivateComments('This is a private comment.')
+            ->setOnTv(true)
             ->setArchive(true)
             ->setDispatch(
                 array_map(function (array $item) {
@@ -277,6 +291,7 @@ class BulkAppointmentTest extends TestCase
             'num_commande' => 'ORD123456',
             'commentaire_public' => 'This is a public comment.',
             'commentaire_prive' => 'This is a private comment.',
+            'showOnTv' => true,
             'archive' => true,
             'dispatch' => [
                 [

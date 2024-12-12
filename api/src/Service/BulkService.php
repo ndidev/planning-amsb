@@ -75,6 +75,7 @@ final class BulkService
             ->setOrderNumber($rawDataAH->getString('num_commande'))
             ->setPublicComments($rawDataAH->getString('commentaire_public'))
             ->setPrivateComments($rawDataAH->getString('commentaire_prive'))
+            ->setOnTv($rawDataAH->getBool('show_on_tv'))
             ->setArchive($rawDataAH->getBool('archive'));
 
         return $appointment;
@@ -104,6 +105,7 @@ final class BulkService
             ->setOrderNumber($requestBody->getString('num_commande'))
             ->setPublicComments($requestBody->getString('commentaire_public'))
             ->setPrivateComments($requestBody->getString('commentaire_prive'))
+            ->setOnTv($requestBody->getBool('showOnTv'))
             ->setArchive($requestBody->getBool('archive'))
             ->setDispatch(
                 array_map(

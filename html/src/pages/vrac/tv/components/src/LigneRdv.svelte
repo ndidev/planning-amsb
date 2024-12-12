@@ -12,42 +12,28 @@
   import { PackageIcon } from "lucide-svelte";
 
   import { tiers, vracProduits } from "@app/stores";
-  import type { RdvVrac, ProduitVrac, QualiteVrac, Tiers } from "@app/types";
+  import type { RdvVrac } from "@app/types";
 
   export let rdv: RdvVrac;
 
-  const tiersVierge: Partial<Tiers> = {
-    nom_court: "",
-  };
+  $: client = $tiers?.get(rdv.client);
 
-  const produitVierge: Partial<ProduitVrac> = {
-    nom: "",
-    couleur: "#000000",
-    qualites: [],
-  };
+  $: transporteur = $tiers?.get(rdv.transporteur);
 
-  const qualiteVierge: Partial<QualiteVrac> = {
-    nom: "",
-    couleur: "#000000",
-  };
+  $: produit = $vracProduits?.get(rdv.produit);
 
-  $: client = $tiers?.get(rdv.client) || { ...tiersVierge };
-
-  $: transporteur = $tiers?.get(rdv.transporteur) || { ...tiersVierge };
-
-  $: produit = $vracProduits?.get(rdv.produit) || { ...produitVierge };
-
-  $: qualite = produit.qualites.find(
-    (qualite) => qualite.id === rdv.qualite
-  ) || { ...qualiteVierge };
+  $: qualite = produit?.qualites.find((qualite) => qualite.id === rdv.qualite);
 </script>
 
 <div class="grid grid-cols-[16%_4%_4%_8%_29%_8%_16%] gap-2 px-1 py-2 text-xl">
   <!-- Produit + Qualité -->
   <div class="font-bold">
-    <span style:color={produit.couleur}>{produit.nom}</span>
+    <span style:color={produit?.couleur || "#000000"}>{produit?.nom || ""}</span
+    >
     {#if rdv.qualite}
-      <span style:color={qualite.couleur}>{qualite.nom}</span>
+      <span style:color={qualite?.couleur || "#000000"}
+        >{qualite?.nom || ""}</span
+      >
     {/if}
   </div>
 
@@ -72,13 +58,13 @@
 
   <!-- Client -->
   <div>
-    {client.nom_court}
-    {client.ville}
+    {client?.nom_court || ""}
+    {client?.ville || ""}
   </div>
 
   <!-- Transporteur -->
   <div class="font-bold">
-    {transporteur.nom_court}
+    {transporteur?.nom_court || ""}
   </div>
 
   <!-- Numéro de commande -->

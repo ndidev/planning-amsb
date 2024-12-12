@@ -50,6 +50,8 @@ class BulkAppointment extends AbstractEntity
 
     private string $privateComments = "";
 
+    private bool $isOnTv = true;
+
     private bool $isArchive = false;
 
     /** @var BulkDispatchItem[] */
@@ -221,6 +223,18 @@ class BulkAppointment extends AbstractEntity
         return $this->privateComments;
     }
 
+    public function setOnTv(bool $onTv): static
+    {
+        $this->isOnTv = $onTv;
+
+        return $this;
+    }
+
+    public function isOnTv(): bool
+    {
+        return $this->isOnTv;
+    }
+
     public function setArchive(bool $archive): static
     {
         $this->isArchive = $archive;
@@ -273,6 +287,7 @@ class BulkAppointment extends AbstractEntity
             "num_commande" => $this->getOrderNumber(),
             "commentaire_public" => $this->getPublicComments(),
             "commentaire_prive" => $this->getPrivateComments(),
+            "showOnTv" => $this->isOnTv(),
             "archive" => $this->isArchive(),
             "dispatch" => array_map(
                 fn(BulkDispatchItem $dispatch) => $dispatch->toArray(),

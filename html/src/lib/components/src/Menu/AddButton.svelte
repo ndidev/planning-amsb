@@ -12,20 +12,17 @@
   import { getContext } from "svelte";
   import { goto } from "@roxi/routify";
 
-  // import Hammer from "hammerjs";
   import { PlusIcon } from "lucide-svelte";
 
   import { LucideButton } from "@app/components";
   import AjoutsRapidesBois from "./AjoutsRapidesBois.svelte";
+  import AjoutsRapidesVrac from "./AjoutsRapidesVrac.svelte";
 
   import { device } from "@app/utils";
 
   import type { Stores, ModuleId } from "@app/types";
 
-  const { configAjoutsRapides } = getContext<Stores>("stores");
-
-  // let mc: HammerManager;
-  let addButton: HTMLSpanElement;
+  // const { configAjoutsRapides } = getContext<Stores>("stores");
 
   type Nouveau =
     | {
@@ -47,8 +44,10 @@
     ],
   ]);
 
-  const ajoutsRapides: { [P in keyof typeof $configAjoutsRapides]: any } = {
+  // const ajoutsRapides: { [P in keyof typeof $configAjoutsRapides]: any } = {
+  const ajoutsRapides = {
     bois: AjoutsRapidesBois,
+    vrac: AjoutsRapidesVrac,
   };
 
   /**
@@ -57,25 +56,10 @@
   export let rubrique: ModuleId;
 
   $: nouveau = nouveaux.get(rubrique);
-
-  // let afficherAjoutsRapides = false;
-
-  // onMount(() => {
-  //   mc = new Hammer(addButton);
-  //   mc.on("press", () => {
-  //     if ($device.is("mobile")) {
-  //       afficherAjoutsRapides = true;
-  //     }
-  //   });
-  // });
-
-  // onDestroy(() => {
-  //   mc.destroy();
-  // });
 </script>
 
 {#if nouveau}
-  <span class="add-button" bind:this={addButton}>
+  <span class="add-button">
     <LucideButton
       icon={PlusIcon}
       title={nouveau.title}
@@ -94,21 +78,7 @@
   @media screen and (max-width: 767px) {
     .add-button {
       display: inline-block;
-      position: relative;
-      /* isolation: isolate; */
     }
-
-    /* .add-button::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      background-color: aqua;
-      z-index: -1;
-    } */
   }
 
   /* Desktop */

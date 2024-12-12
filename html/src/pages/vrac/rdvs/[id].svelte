@@ -44,6 +44,7 @@
     num_commande: "",
     commentaire_public: "",
     commentaire_prive: "",
+    showOnTv: true,
     archive: false,
     dispatch: [],
   };
@@ -375,6 +376,13 @@
           rows={3}
           cols={30}
         />
+      </div>
+
+      <!-- Show on TV -->
+      <div>
+        <Toggle name="showOnTv" bind:checked={appointment.showOnTv}
+          >Afficher sur la TV</Toggle
+        >
       </div>
 
       <!-- Archive -->

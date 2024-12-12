@@ -15,11 +15,6 @@
   type DateString = string;
   type GroupesRdv = Map<DateString, RdvVrac[]>;
 
-  let dates: Set<DateString>;
-  let filteredAppointments: RdvVrac[] = [];
-  let groupedAppointments: GroupesRdv;
-  let datesMareesSup4m = new Set<string>();
-
   const archives = "archives" in $params;
 
   setContext("archives", archives);
@@ -30,14 +25,21 @@
     vracRdvs.setSearchParams({});
   }
 
-  $: if ($vracRdvs && $vracProduits) {
-    filteredAppointments = filterArchivedAppointments($vracRdvs);
-    dates = makeDatesSet(filteredAppointments);
-    groupedAppointments = groupAppointments(filteredAppointments, dates);
+  let appointments: RdvVrac[];
+  let groupedAppointments: GroupesRdv;
+  let dates: Set<DateString>;
+  let datesMareesSup4m = new Set<DateString>();
+
+  const unsubscribeAppointments = vracRdvs.subscribe((value) => {
+    if (!value) return;
+
+    appointments = [...value.values()];
+    dates = makeDatesSet(appointments);
+    groupedAppointments = groupAppointments(appointments, dates);
 
     updateNaviresParDate();
     updateTides();
-  }
+  });
 
   $: datesMareesSup4m = new Set(
     ($marees || [])
@@ -45,14 +47,10 @@
       .map((maree) => maree.date)
   );
 
-  function filterArchivedAppointments(appointments: typeof $vracRdvs) {
-    return [...appointments.values()].filter(
-      (appointment) => appointment.archive === archives
-    );
-  }
-
   function makeDatesSet(appointments: RdvVrac[]) {
-    return new Set(appointments.map(({ date_rdv }) => date_rdv).sort());
+    return new Set(
+      [...appointments.values()].map(({ date_rdv }) => date_rdv).sort()
+    );
   }
 
   /**
@@ -64,9 +62,9 @@
     dates.forEach((date) => {
       appointmentsByDate.set(
         date,
-        appointments
+        [...appointments.values()]
           .filter(({ date_rdv }) => date_rdv === date)
-          .sort(triPlanning)
+          .sort(sortAppointments)
       );
     });
 
@@ -81,31 +79,40 @@
    * - nom de produit, croissant
    * - nom de qualite, croissant
    */
-  function triPlanning(a: RdvVrac, b: RdvVrac): number {
-    return (
-      comparerHeure(a, b) || comparerProduit(a, b) || comparerQualite(a, b)
-    );
+  function sortAppointments(a: RdvVrac, b: RdvVrac): number {
+    if (
+      $vracProduits?.get(a.produit)?.nom === "Vrac agro" &&
+      $vracProduits?.get(b.produit)?.nom !== "Vrac agro"
+    )
+      return -1;
+    if (
+      $vracProduits?.get(b.produit)?.nom === "Vrac agro" &&
+      $vracProduits?.get(a.produit)?.nom !== "Vrac agro"
+    )
+      return 1;
 
-    function comparerHeure(a: RdvVrac, b: RdvVrac): number {
+    return compareTime(a, b) || compareProduct(a, b) || compareQuality(a, b);
+
+    function compareTime(a: RdvVrac, b: RdvVrac): number {
       if (a.heure < b.heure || (a.heure && !b.heure)) return -1;
       if (a.heure > b.heure || (!a.heure && b.heure)) return 1;
       return 0;
     }
 
-    function comparerProduit(a: RdvVrac, b: RdvVrac): number {
-      return ($vracProduits.get(a.produit)?.nom || "").localeCompare(
-        $vracProduits.get(b.produit)?.nom || ""
+    function compareProduct(a: RdvVrac, b: RdvVrac): number {
+      return ($vracProduits?.get(a.produit)?.nom || "").localeCompare(
+        $vracProduits?.get(b.produit)?.nom || ""
       );
     }
 
-    function comparerQualite(a: RdvVrac, b: RdvVrac): number {
+    function compareQuality(a: RdvVrac, b: RdvVrac): number {
       return (
         $vracProduits
-          .get(a.produit)
+          ?.get(a.produit)
           ?.qualites.find((qualite) => qualite.id === a.qualite)?.nom || ""
       ).localeCompare(
         $vracProduits
-          .get(b.produit)
+          ?.get(b.produit)
           ?.qualites.find((qualite) => qualite.id === b.qualite)?.nom || ""
       );
     }
@@ -184,6 +191,8 @@
       "planning:consignation/escales",
       updateNaviresParDate
     );
+
+    unsubscribeAppointments();
   });
 </script>
 
@@ -206,7 +215,7 @@
 </div>
 
 <main class="w-11/12 mx-auto mb-8">
-  {#if $vracRdvs && $vracProduits}
+  {#if appointments && $vracProduits}
     {#each archives ? [...groupedAppointments].reverse() : [...groupedAppointments] as [date, appointments] (date)}
       <LigneDate
         {date}
