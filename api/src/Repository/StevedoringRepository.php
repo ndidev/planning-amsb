@@ -395,7 +395,7 @@ final class StevedoringRepository extends Repository
             FROM stevedoring_bulk_dispatch dispatch
             INNER JOIN vrac_planning pl ON pl.id = dispatch.appointment_id
             INNER JOIN vrac_produits p ON pl.produit = p.id
-            INNER JOIN vrac_qualites q ON pl.qualite = q.id
+            LEFT JOIN vrac_qualites q ON pl.qualite = q.id
             INNER JOIN stevedoring_staff staff ON dispatch.staff_id = staff.id
             WHERE dispatch.date BETWEEN :startDate AND :endDate
             $sqlFilter
@@ -403,7 +403,9 @@ final class StevedoringRepository extends Repository
                 dispatch.date ASC,
                 FIELD(staff.type, 'mensuel', 'interim'),
                 staff.lastname ASC,
-                staff.firstname ASC
+                staff.firstname ASC,
+                p.nom ASC,
+                q.nom ASC
             ";
 
         $bulkDispatchRequest = $this->mysql->prepare($bulkDispatchStatement);
