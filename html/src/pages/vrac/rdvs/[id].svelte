@@ -18,7 +18,6 @@
     notiflixOptions,
     validerFormulaire,
     preventFormSubmitOnEnterKeydown,
-    locale,
   } from "@app/utils";
 
   import type { Stores, RdvVrac, ProduitVrac } from "@app/types";
@@ -32,11 +31,7 @@
 
   const newAppointment: RdvVrac = {
     id: null,
-    date_rdv: new Date()
-      .toLocaleDateString(locale)
-      .split("/")
-      .reverse()
-      .join("-"),
+    date_rdv: new Date().toISOString().split("T")[0],
     heure: "",
     produit: null,
     qualite: null,
@@ -107,12 +102,8 @@
       await vracRdvs.create(appointment);
 
       Notiflix.Notify.success("Le RDV a été ajouté");
-      // Preset archive to avoid fetching race condition
-      vracRdvs.setSearchParams(
-        appointment.archive ? { archives: "true" } : {},
-        false
-      );
-      $goto(`./${appointment.archive ? "?archives" : ""}`);
+
+      $goto(`./${archives ? "?archives" : ""}`);
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
       createButton.$set({ disabled: false });
@@ -131,12 +122,8 @@
       await vracRdvs.update(appointment);
 
       Notiflix.Notify.success("Le RDV a été modifié");
-      // Preset archive to avoid fetching race condition
-      vracRdvs.setSearchParams(
-        appointment.archive ? { archives: "true" } : {},
-        false
-      );
-      $goto(`./${appointment.archive ? "?archives" : ""}`);
+
+      $goto(`./${archives ? "?archives" : ""}`);
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
       updateButton.$set({ disabled: false });
@@ -162,6 +149,7 @@
           await vracRdvs.delete(id);
 
           Notiflix.Notify.success("Le RDV a été supprimé");
+
           $goto(`./${archives ? "?archives" : ""}`);
         } catch (erreur) {
           Notiflix.Notify.failure(erreur.message);

@@ -176,21 +176,14 @@ export function createFlatStore<T extends { id: string | number }>(
    * Mettre à jour les paramètres du store.
    *
    * @param params Paramètres de requête
-   * @param fetch  Si `true`, effectuer une nouvelle requête
    */
-  function setSearchParams(
-    newParams: FetcherOptions["searchParams"] = {},
-    fetch: boolean = true
-  ) {
+  function setSearchParams(newParams: FetcherOptions["searchParams"] = {}) {
     const newSearchParams = new URLSearchParams(newParams);
 
     if (searchParams.toString() !== newSearchParams.toString()) {
       set(initial);
       current = initial;
       searchParams = newSearchParams;
-    }
-
-    if (fetch) {
       fetchAll();
     }
   }

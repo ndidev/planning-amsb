@@ -113,7 +113,9 @@
                       {#each dispatch[date][contractType][staffName].bulk as { product, quality, remarks, multiplier }}
                         <li class="ml-4 flex flex-row gap-1">
                           <span>{product}</span>
-                          <span>{quality}</span>
+                          {#if quality}
+                            <span>{quality}</span>
+                          {/if}
 
                           {#if remarks}
                             <span class="ml-2">{remarks}</span>

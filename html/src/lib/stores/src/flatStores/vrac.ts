@@ -15,7 +15,7 @@ export const vracRdvs = (
   });
 
 function satisfiesParams(rdv: RdvVrac, searchParams: URLSearchParams) {
-  const archives = "archives" in Object.fromEntries(searchParams);
+  const archives = searchParams.has("archives");
 
   return rdv.archive === archives;
 }

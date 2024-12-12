@@ -28,9 +28,9 @@
   let escales: EscaleConsignation[];
 
   const unsubscribeEscales = consignationEscales.subscribe((value) => {
-    if (value) {
-      escales = [...value.values()];
-    }
+    if (!value) return;
+
+    escales = [...value.values()];
   });
 
   onDestroy(() => {
@@ -58,7 +58,7 @@
 <main class="w-full flex-auto">
   {#if escales}
     <div class="divide-y">
-      {#each [...escales.values()] as escale (escale.id)}
+      {#each escales as escale (escale.id)}
         <LigneEscale {escale} />
       {/each}
     </div>
