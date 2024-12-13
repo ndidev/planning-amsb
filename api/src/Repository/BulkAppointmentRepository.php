@@ -584,7 +584,8 @@ final class BulkAppointmentRepository extends Repository
             INNER JOIN vrac_produits p ON pl.produit = p.id
             INNER JOIN stevedoring_staff staff ON dispatch.staff_id = staff.id
             WHERE dispatch.date BETWEEN :startDate AND :endDate
-            $sqlFilter
+                AND p.unite IN ('T', 'BB')
+                $sqlFilter
             ORDER BY
                 dispatch.date ASC,
                 staff.lastname ASC,
