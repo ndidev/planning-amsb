@@ -80,16 +80,10 @@
    * - nom de qualite, croissant
    */
   function sortAppointments(a: RdvVrac, b: RdvVrac): number {
-    if (
-      $vracProduits?.get(a.produit)?.nom === "Vrac agro" &&
-      $vracProduits?.get(b.produit)?.nom !== "Vrac agro"
-    )
-      return -1;
-    if (
-      $vracProduits?.get(b.produit)?.nom === "Vrac agro" &&
-      $vracProduits?.get(a.produit)?.nom !== "Vrac agro"
-    )
-      return 1;
+    // Vracs agro et Divers en premier
+    if ([1, 2].includes(a.produit) || [1, 2].includes(b.produit)) {
+      return a.produit - b.produit;
+    }
 
     return compareTime(a, b) || compareProduct(a, b) || compareQuality(a, b);
 

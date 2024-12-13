@@ -6,16 +6,15 @@
 
   const { vracRdvs } = getContext<Stores>("stores");
 
-  async function createAnimalFeedAppointment() {
+  async function createSpecialAppointment(productId: number) {
     const miscelaneousThirdPartyId = 6;
-    const animalFeedLoadingsProductId = 1;
 
     try {
       await vracRdvs.create({
         id: null,
         date_rdv: new Date().toISOString().split("T")[0],
         heure: null,
-        produit: animalFeedLoadingsProductId,
+        produit: productId,
         qualite: null,
         quantite: 0,
         max: false,
@@ -40,7 +39,10 @@
 
 <ul>
   <li>
-    <button on:click={createAnimalFeedAppointment}> Vracs agro </button>
+    <button on:click={() => createSpecialAppointment(1)}>Vracs agro</button>
+  </li>
+  <li>
+    <button on:click={() => createSpecialAppointment(2)}>Divers</button>
   </li>
 </ul>
 
