@@ -135,10 +135,10 @@ export const sitemap: Map<ModuleId, Module> = new Map([
           //   devices: ["mobile", "desktop"],
           // },
           {
-            affichage: "Heures hors navires",
+            affichage: "Activités hors navires",
             roleMini: UserRoles.EDIT,
-            href: "/manutention/heures-hors-navires",
-            devices: ["desktop"],
+            href: "/manutention/activites-hors-navires",
+            devices: ["desktop", "mobile"],
           },
         ],
       },

@@ -1,4 +1,4 @@
-<!-- routify:options title="Planning AMSB - Heures hors navires" -->
+<!-- routify:options title="Planning AMSB - Activités hors navires" -->
 <script lang="ts">
   import { onDestroy, setContext } from "svelte";
   import { writable } from "svelte/store";
@@ -79,7 +79,7 @@
 <!-- routify:options guard="manutention" -->
 
 <main class="mx-auto w-10/12 lg:w-2/3">
-  <PageHeading>Heures hors navires</PageHeading>
+  <PageHeading>Activités hors navires</PageHeading>
 
   <FilterBanner />
 
@@ -121,9 +121,9 @@
                             <span class="ml-2">{remarks}</span>
                           {/if}
 
-                          {#if multiplier > 1}
-                            <span class="ml-2">x{multiplier}</span>
-                          {/if}
+                          <!-- {#if multiplier > 1} -->
+                          <span class="ml-2">x{multiplier}</span>
+                          <!-- {/if} -->
                         </li>
                       {/each}
                     </ul>
@@ -135,9 +135,9 @@
                       {#each dispatch[date][contractType][staffName].timber as { remarks, multiplier }}
                         <li class="ml-4 flex flex-row gap-1">
                           <span>{remarks}</span>
-                          {#if multiplier > 1}
-                            <span class="ml-2">x{multiplier}</span>
-                          {/if}
+                          <!-- {#if multiplier > 1} -->
+                          <span class="ml-2">x{multiplier}</span>
+                          <!-- {/if} -->
                         </li>
                       {/each}
                     </ul>
