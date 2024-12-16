@@ -1,59 +1,35 @@
 <!-- routify:options title="Planning AMSB - Statistiques bois" -->
 <script lang="ts">
-  import { onDestroy, setContext } from "svelte";
-  import { writable } from "svelte/store";
+  import { onDestroy } from "svelte";
 
-  import { FilterBanner } from "./components";
-  import { PageHeading } from "@app/components";
-
-  import { fetcher, Filtre } from "@app/utils";
-
-  import type { TimberFilter } from "@app/types";
   import Notiflix from "notiflix";
 
-  const emptyFilter: TimberFilter = {
-    date_debut: "",
-    date_fin: "",
-    fournisseur: [],
-    client: [],
-    chargement: [],
-    livraison: [],
-    transporteur: [],
-    affreteur: [],
-  };
+  import { FilterBanner, filter } from "./components";
+  import { PageHeading } from "@app/components";
 
-  const filterName = "timber-stats-filter";
+  import { fetcher } from "@app/utils";
 
-  let filter = new Filtre<TimberFilter>(
-    JSON.parse(sessionStorage.getItem(filterName)) ||
-      structuredClone(emptyFilter)
-  );
-
-  const filterStore = writable(filter);
-
-  const unsubscribeFiltre = filterStore.subscribe((value) => {
-    filter = value;
+  const unsubscribeFiltre = filter.subscribe((value) => {
     fetchStats();
   });
-
-  setContext("filter", { emptyFilter, filterStore, filterName });
 
   type Stats = {
     Total: number;
     ByYear: {
       [year: string]: {
-        "1": number;
-        "2": number;
-        "3": number;
-        "4": number;
-        "5": number;
-        "6": number;
-        "7": number;
-        "8": number;
-        "9": number;
-        "10": number;
-        "11": number;
-        "12": number;
+        [month in
+          | "1"
+          | "2"
+          | "3"
+          | "4"
+          | "5"
+          | "6"
+          | "7"
+          | "8"
+          | "9"
+          | "10"
+          | "11"
+          | "12"]: number;
       };
     };
   };
@@ -68,7 +44,7 @@
   async function fetchStats() {
     try {
       stats = await fetcher("bois/stats", {
-        searchParams: filter.toSearchParams(),
+        searchParams: $filter.toSearchParams(),
       });
     } catch (error) {
       Notiflix.Notify.failure(error.message);
@@ -161,10 +137,8 @@
 
 <style>
   main {
-    /* Largeur du menu = 256px */
-    --margin-left: 280px;
-    width: calc(95% - var(--margin-left));
-    margin-left: var(--margin-left);
+    width: calc(95%);
+    margin: auto;
   }
 
   /* STATS */
@@ -219,10 +193,12 @@
     background-color: #eee;
   }
 
-  @media screen and (max-width: 480px) {
+  @media screen and (min-width: 768px) {
     main {
-      width: calc(95%);
-      margin: auto;
+      /* Largeur du menu = 256px */
+      --margin-left: 280px;
+      width: calc(95% - var(--margin-left));
+      margin-left: var(--margin-left);
     }
   }
 </style>

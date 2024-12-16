@@ -7,11 +7,15 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Core\Component\Collection;
+use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\DTO\Filter\StevedoringDispatchFilterDTO;
+use App\DTO\Filter\StevedoringStaffFilterDTO;
+use App\DTO\Filter\StevedoringTempWorkHoursFilterDTO;
 use App\DTO\StevedoringDispatchDTO;
 use App\Entity\Stevedoring\StevedoringEquipment;
 use App\Entity\Stevedoring\StevedoringStaff;
+use App\Entity\Stevedoring\TempWorkHoursEntry;
 use App\Service\StevedoringService;
 
 final class StevedoringRepository extends Repository
@@ -48,11 +52,15 @@ final class StevedoringRepository extends Repository
     /**
      * @return Collection<StevedoringStaff>
      */
-    public function fetchAllStaff(): Collection
+    public function fetchAllStaff(StevedoringStaffFilterDTO $filter): Collection
     {
+        $sqlFilter = $filter->getSqlFilter();
+
         $staffStatement =
             "SELECT *
             FROM stevedoring_staff
+            WHERE 1
+                $sqlFilter
             ORDER BY lastname ASC, firstname ASC";
 
         $staffRequest = $this->mysql->query($staffStatement);
@@ -108,13 +116,13 @@ final class StevedoringRepository extends Repository
                 is_active = :isActive,
                 comments = :comments";
 
-        $request = $this->mysql->prepare($statement);
-
-        if (!$request) {
-            throw new DBException("Impossible de créer le personnel de manutention.");
-        }
-
         try {
+            $request = $this->mysql->prepare($statement);
+
+            if (!$request) {
+                throw new DBException("Impossible de créer le personnel de manutention.");
+            }
+
             $this->mysql->beginTransaction();
 
             $request->execute([
@@ -156,13 +164,13 @@ final class StevedoringRepository extends Repository
             WHERE
                 id = :id";
 
-        $request = $this->mysql->prepare($statement);
-
-        if (!$request) {
-            throw new DBException("Impossible de mettre à jour le personnel de manutention.");
-        }
-
         try {
+            $request = $this->mysql->prepare($statement);
+
+            if (!$request) {
+                throw new DBException("Impossible de mettre à jour le personnel de manutention.");
+            }
+
             $request->execute([
                 'firstname' => $staff->getFirstname(),
                 'lastname' => $staff->getLastname(),
@@ -378,7 +386,7 @@ final class StevedoringRepository extends Repository
 
     public function fetchDispatch(StevedoringDispatchFilterDTO $filter): StevedoringDispatchDTO
     {
-        $sqlFilter = $filter->getSqlStaffFilter();
+        $sqlFilter = $filter->getSqlFilter();
 
 
         // Bulk
@@ -471,6 +479,262 @@ final class StevedoringRepository extends Repository
         $dispatchDTO = new StevedoringDispatchDTO(bulkData: $bulkData, timberData: $timberData);
 
         return $dispatchDTO;
+    }
+
+    /**
+     * @return array<int>
+     */
+    public function fetchTempWorkDispatchNamesForDate(\DateTimeImmutable $date): array
+    {
+        // Bulk
+
+        $statement =
+            "SELECT DISTINCT staff.id
+            FROM stevedoring_bulk_dispatch bulkDispatch
+            INNER JOIN stevedoring_staff staff ON bulkDispatch.staff_id = staff.id
+            WHERE bulkDispatch.date = :date
+            AND staff.type = 'interim'
+            UNION
+            SELECT DISTINCT staff.id
+            FROM stevedoring_timber_dispatch timberDispatch
+            INNER JOIN stevedoring_staff staff ON timberDispatch.staff_id = staff.id
+            WHERE timberDispatch.date = :date
+            AND staff.type = 'interim'
+            ";
+
+        $request = $this->mysql->prepare($statement);
+
+        $request->execute([
+            "date" => $date->format('Y-m-d'),
+        ]);
+
+        /** 
+         * @var array<int>
+         */
+        $data = $request->fetchAll(\PDO::FETCH_COLUMN);
+
+        return $data;
+    }
+
+    // ===============
+    // Temp work hours
+    // ===============
+
+    public function tempWorkHoursEntryExists(int $id): bool
+    {
+        return $this->mysql->exists("stevedoring_temp_work_hours", $id);
+    }
+
+    /**
+     * @return Collection<TempWorkHoursEntry>
+     */
+    public function fetchAllTempWorkHours(StevedoringTempWorkHoursFilterDTO $filter): Collection
+    {
+        $sqlFilter = $filter->getSqlFilter();
+
+        $statement =
+            "SELECT
+                hours.id,
+                hours.date,
+                hours.staff_id,
+                hours.hours_worked,
+                hours.comments
+            FROM stevedoring_temp_work_hours hours
+            INNER JOIN stevedoring_staff staff ON hours.staff_id = staff.id
+            WHERE hours.date BETWEEN :startDate AND :endDate
+                $sqlFilter
+            ORDER BY
+                hours.date ASC,
+                staff.lastname ASC,
+                staff.firstname ASC";
+
+        try {
+            $request = $this->mysql->prepare($statement);
+
+            if (!$request) {
+                throw new DBException("Impossible de récupérer les heures des intérimaires.");
+            }
+
+            $request->execute([
+                'startDate' => $filter->getSqlStartDate(),
+                'endDate' => $filter->getSqlEndDate(),
+            ]);
+
+            /** @var array<array<mixed>> */
+            $rawData = $request->fetchAll();
+
+            $tempWorkHours = array_map(
+                fn(array $data) => $this->stevedoringService->makeTempWorkHoursEntryFromDatabase($data),
+                $rawData
+            );
+
+            return new Collection($tempWorkHours);
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer les heures des intérimaires.", previous: $e);
+        }
+    }
+
+    public function fetchTempWorkHoursEntry(int $id): ?TempWorkHoursEntry
+    {
+        $statement = "SELECT * FROM stevedoring_temp_work_hours WHERE id = :id";
+
+        try {
+            $request = $this->mysql->prepare($statement);
+
+            if (!$request) {
+                throw new DBException("Impossible de récupérer les heures de l'intérimaire.");
+            }
+
+            $request->execute(['id' => $id]);
+
+            $rawData = $request->fetch();
+
+            if (!\is_array($rawData)) {
+                return null;
+            }
+
+            $tempWorkHoursEntry = $this->stevedoringService->makeTempWorkHoursEntryFromDatabase($rawData);
+
+            return $tempWorkHoursEntry;
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer les heures de l'intérimaire.", previous: $e);
+        }
+    }
+
+    /**
+     * @return Collection<TempWorkHoursEntry>
+     */
+    public function fetchTempWorkHoursForStaff(
+        int $staffId,
+        StevedoringTempWorkHoursFilterDTO $filter
+    ): Collection {
+        $statement =
+            "SELECT
+                hours.id,
+                hours.date,
+                hours.staff_id,
+                hours.hours_worked,
+                hours.comments
+            FROM stevedoring_temp_work_hours hours
+            INNER JOIN stevedoring_staff staff ON hours.staff_id = staff.id
+            WHERE
+                hours.staff_id = :staffId
+                AND hours.date BETWEEN :startDate AND :endDate
+            ORDER BY
+                hours.date ASC";
+
+        try {
+            $request = $this->mysql->prepare($statement);
+
+            if (!$request) {
+                throw new DBException("Impossible de récupérer les heures de l'intérimaire.");
+            }
+
+            $request->execute([
+                'staffId' => $staffId,
+                'startDate' => $filter->getSqlStartDate(),
+                'endDate' => $filter->getSqlEndDate(),
+            ]);
+
+            /** @var array<array<mixed>> */
+            $rawData = $request->fetchAll();
+
+            $tempWorkHours = array_map(
+                fn(array $data) => $this->stevedoringService->makeTempWorkHoursEntryFromDatabase($data),
+                $rawData
+            );
+
+            return new Collection($tempWorkHours);
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer les heures de l'intérimaire.", previous: $e);
+        }
+    }
+
+    public function createTempWorkHours(TempWorkHoursEntry $tempWorkHoursEntry): TempWorkHoursEntry
+    {
+        $statement =
+            "INSERT INTO stevedoring_temp_work_hours
+            SET
+                date = :date,
+                staff_id = :staffId,
+                hours_worked = :hoursWorked,
+                comments = :comments";
+
+        try {
+            $request = $this->mysql->prepare($statement);
+
+            if (!$request) {
+                throw new DBException("Impossible de créer les heures de l'intérimaire.");
+            }
+
+            $this->mysql->beginTransaction();
+
+            $request->execute([
+                'date' => $tempWorkHoursEntry->getDate()?->format('Y-m-d'),
+                'staffId' => $tempWorkHoursEntry->getStaff()?->getId(),
+                'hoursWorked' => $tempWorkHoursEntry->getHoursWorked(),
+                'comments' => $tempWorkHoursEntry->getComments(),
+            ]);
+
+            $lastInsertId = (int) $this->mysql->lastInsertId();
+
+            $this->mysql->commit();
+
+            /** @var TempWorkHoursEntry */
+            $createdTempWorkHoursEntry = $this->fetchTempWorkHoursEntry($lastInsertId);
+
+            return $createdTempWorkHoursEntry;
+        } catch (\PDOException $e) {
+            if ($e->getCode() == 23000) {
+                throw new ClientException("Impossible de créer les heures de l'intérimaire. Les heures pour cette date existent déjà.", previous: $e);
+            }
+
+            throw new DBException("Impossible de créer les heures de l'intérimaire.", previous: $e);
+        }
+    }
+
+    public function updateTempWorkHours(TempWorkHoursEntry $tempWorkHoursEntry): TempWorkHoursEntry
+    {
+        $statement =
+            "UPDATE stevedoring_temp_work_hours
+            SET
+                `date` = :date,
+                staff_id = :staffId,
+                hours_worked = :hoursWorked,
+                comments = :comments
+            WHERE
+                id = :id";
+
+        try {
+            $request = $this->mysql->prepare($statement);
+
+            if (!$request) {
+                throw new DBException("Impossible de mettre à jour les heures de l'intérimaire.");
+            }
+
+            $request->execute([
+                'date' => $tempWorkHoursEntry->getDate()?->format('Y-m-d'),
+                'staffId' => $tempWorkHoursEntry->getStaff()?->getId(),
+                'hoursWorked' => $tempWorkHoursEntry->getHoursWorked(),
+                'comments' => $tempWorkHoursEntry->getComments(),
+                'id' => $tempWorkHoursEntry->getId(),
+            ]);
+
+            return $tempWorkHoursEntry;
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de mettre à jour les heures de l'intérimaire.", previous: $e);
+        }
+    }
+
+    public function deleteTempWorkHours(int $id): void
+    {
+        try {
+            $deleteStatement = "DELETE FROM stevedoring_temp_work_hours WHERE id = :id";
+            $deleteRequest = $this->mysql->prepare($deleteStatement);
+            $deleteRequest->execute(['id' => $id]);
+        } catch (\PDOException $e) {
+            throw new DBException("Erreur lors de la suppression.", previous: $e);
+        }
     }
 
     // =====

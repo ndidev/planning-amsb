@@ -9,6 +9,7 @@ export type Stores = {
   charteringCharters: ReturnType<typeof stores.charteringCharters>;
   stevedoringStaff: typeof stores.stevedoringStaff;
   stevedoringEquipments: typeof stores.stevedoringEquipments;
+  stevedoringTempWorkHours: typeof stores.stevedoringTempWorkHours;
   tiers: typeof stores.tiers;
   configBandeauInfo: typeof stores.configBandeauInfo;
   configPdf: typeof stores.configPdf;

@@ -97,3 +97,24 @@ export type RdvBois = {
     new?: boolean;
   }[];
 };
+
+/**
+ * Nombre de camions de bois pour chaque date.
+ */
+export type CamionsParDate = {
+  total: number;
+  attendus?: number;
+  sur_parc?: number;
+  charges?: number;
+};
+
+export type TimberFilter = {
+  date_debut?: string;
+  date_fin?: string;
+  fournisseur?: RdvBois["fournisseur"][];
+  client?: RdvBois["client"][];
+  chargement?: RdvBois["chargement"][];
+  livraison?: RdvBois["livraison"][];
+  transporteur?: RdvBois["transporteur"][];
+  affreteur?: RdvBois["affreteur"][];
+};

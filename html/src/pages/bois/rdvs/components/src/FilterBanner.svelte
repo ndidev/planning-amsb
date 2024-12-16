@@ -5,33 +5,58 @@
 
   Usage :
   ```tsx
-  <Filtre />
+  <FilterBanner />
   ```
  -->
-<script lang="ts">
-  import { getContext } from "svelte";
-  import type { Writable } from "svelte/store";
+<script lang="ts" context="module">
+  import { writable } from "svelte/store";
 
+  import { Filter } from "@app/utils";
+
+  import type { RdvBois } from "@app/types";
+
+  type TimberFilter = {
+    date_debut?: string;
+    date_fin?: string;
+    fournisseur?: RdvBois["fournisseur"][];
+    client?: RdvBois["client"][];
+    chargement?: RdvBois["chargement"][];
+    livraison?: RdvBois["livraison"][];
+    transporteur?: RdvBois["transporteur"][];
+    affreteur?: RdvBois["affreteur"][];
+  };
+
+  const emptyFilter: TimberFilter = {
+    date_debut: "",
+    date_fin: "",
+    fournisseur: [],
+    client: [],
+    chargement: [],
+    livraison: [],
+    transporteur: [],
+    affreteur: [],
+  };
+
+  const filterName = "timber-planning-filter";
+
+  export const filter = writable(
+    new Filter<TimberFilter>(
+      JSON.parse(sessionStorage.getItem(filterName)) ||
+        structuredClone(emptyFilter)
+    )
+  );
+</script>
+
+<script lang="ts">
   import { Label, Input, Button } from "flowbite-svelte";
 
   import { Svelecte } from "@app/components";
-  import { Filtre, device } from "@app/utils";
+  import { device } from "@app/utils";
 
-  import type { TimberFilter } from "@app/types";
-
-  type FilterContext = {
-    emptyFilter: TimberFilter;
-    filterStore: Writable<Filtre<TimberFilter>>;
-    filterName: string;
-  };
-
-  const { emptyFilter, filterStore, filterName } =
-    getContext<FilterContext>("filter");
-
-  let filterData = { ...$filterStore.data };
+  let filterData = { ...$filter.data };
 
   $: filterIsActive =
-    Object.values({ ...$filterStore.data }).filter((value) =>
+    Object.values({ ...$filter.data }).filter((value) =>
       Array.isArray(value) ? (value.length > 0 ? value : undefined) : value
     ).length > 0;
   $: filterIsDisplayed = filterIsActive && $device.is("desktop");
@@ -44,7 +69,7 @@
 
     sessionStorage.setItem(filterName, JSON.stringify(filterData));
 
-    filterStore.set(new Filtre(filterData));
+    filter.set(new Filter(filterData));
   }
 
   /**
@@ -54,7 +79,7 @@
     sessionStorage.removeItem(filterName);
 
     filterData = structuredClone(emptyFilter);
-    filterStore.set(new Filtre(filterData));
+    filter.set(new Filter(filterData));
   }
 </script>
 
@@ -81,6 +106,7 @@
         type="date"
         id="date_debut"
         name="date_debut"
+        max={filterData.date_fin}
         bind:value={filterData.date_debut}
       />
     </div>
@@ -92,6 +118,7 @@
         type="date"
         id="date_fin"
         name="date_fin"
+        min={filterData.date_debut}
         bind:value={filterData.date_fin}
       />
     </div>

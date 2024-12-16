@@ -70,7 +70,7 @@
 
   {#if $stevedoringStaff}
     <div class="text-center">
-      <Button href="/manutention/personnel/new" class="mb-4">
+      <Button href="/personnel/new" class="mb-4">
         Ajouter un membre du personnel
       </Button>
     </div>

@@ -8,7 +8,7 @@ namespace App\DTO\Filter;
 
 use App\Core\HTTP\HTTPRequestQuery;
 
-final readonly class TimberFilterDTO
+final readonly class TimberFilterDTO extends Filter
 {
     private \DateTimeInterface $startDate;
     private \DateTimeInterface $endDate;
@@ -96,5 +96,15 @@ final readonly class TimberFilterDTO
         return $this->chartererFilter === ""
             ? ""
             : " AND affreteur IN ($this->chartererFilter)";
+    }
+
+    public function getSqlFilter(): string
+    {
+        return $this->getSqlSupplierFilter()
+            . $this->getSqlCustomerFilter()
+            . $this->getSqlLoadingPlaceFilter()
+            . $this->getSqlDeliveryPlaceFilter()
+            . $this->getSqlTransportFilter()
+            . $this->getSqlChartererFilter();
     }
 }

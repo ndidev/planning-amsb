@@ -62,7 +62,7 @@ class StevedoringStaff extends AbstractEntity
 
     public function getFullname(): string
     {
-        return trim($this->firstname . ' ' . $this->lastname);
+        return trim($this->firstname . ' ' . $this->lastname) ?: '(Personnel supprimé)';
     }
 
     public function setPhone(string $phone): static

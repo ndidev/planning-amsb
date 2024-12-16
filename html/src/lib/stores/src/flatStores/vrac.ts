@@ -8,7 +8,7 @@ import type { FetcherOptions } from "@app/utils";
 export const vracRdvs = (
   params: FetcherOptions["searchParams"] = new URLSearchParams()
 ) =>
-  createFlatStore<RdvVrac>("vrac/rdvs", {
+  createFlatStore<RdvVrac>("vrac/rdvs", null, {
     params,
     satisfiesParams,
     additionalEvents: ["vrac/produits"],

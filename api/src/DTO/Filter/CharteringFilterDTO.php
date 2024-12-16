@@ -8,7 +8,7 @@ namespace App\DTO\Filter;
 
 use App\Core\HTTP\HTTPRequestQuery;
 
-final class CharteringFilterDTO
+final readonly class CharteringFilterDTO extends Filter
 {
     private \DateTimeInterface $startDate;
     private \DateTimeInterface $endDate;
@@ -84,5 +84,13 @@ final class CharteringFilterDTO
     public function isArchive(): bool
     {
         return $this->isArchive;
+    }
+
+    public function getSqlFilter(): string
+    {
+        return $this->getSqlStatusFilter()
+            . $this->getSqlChartererFilter()
+            . $this->getSqlOwnerFilter()
+            . $this->getSqlBrokerFilter();
     }
 }

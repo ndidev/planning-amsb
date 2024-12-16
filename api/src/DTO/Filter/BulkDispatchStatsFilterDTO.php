@@ -8,7 +8,7 @@ namespace App\DTO\Filter;
 
 use App\Core\HTTP\HTTPRequestQuery;
 
-final readonly class BulkDispatchStatsFilterDTO
+final readonly class BulkDispatchStatsFilterDTO extends Filter
 {
     private \DateTimeInterface $startDate;
     private \DateTimeInterface $endDate;
@@ -46,5 +46,10 @@ final readonly class BulkDispatchStatsFilterDTO
         return $this->staffFilter === ""
             ? ""
             : " AND staff_id IN ($this->staffFilter)";
+    }
+
+    public function getSqlFilter(): string
+    {
+        return $this->getSqlStaffFilter();
     }
 }

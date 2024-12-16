@@ -43,7 +43,18 @@
         {/each}
       </Tooltip>
     {:else}
-      <UserRoundCheckIcon />
+      <UserRoundCheckIcon color="green" />
+      <Tooltip type="auto">
+        {#each dispatch as { staffId, remarks }, index}
+          <div>
+            {$stevedoringStaff?.get(staffId)?.fullname ||
+              "(Personnel supprimé)"}
+            {#if remarks}
+              : {remarks}
+            {/if}
+          </div>
+        {/each}
+      </Tooltip>
     {/if}
   {:else if $currentUser.canEdit("vrac")}
     <LucideButton
@@ -52,6 +63,6 @@
       on:click={() => ($showDispatchModal = true)}
     />
   {:else}
-    <UserRoundIcon />
+    <UserRoundIcon color="lightgray" />
   {/if}
 </div>

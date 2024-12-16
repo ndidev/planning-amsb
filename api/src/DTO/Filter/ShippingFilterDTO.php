@@ -8,7 +8,7 @@ namespace App\DTO\Filter;
 
 use App\Core\HTTP\HTTPRequestQuery;
 
-final readonly class ShippingFilterDTO
+final readonly class ShippingFilterDTO extends Filter
 {
     private \DateTimeInterface $startDate;
     private \DateTimeInterface $endDate;
@@ -108,8 +108,13 @@ final readonly class ShippingFilterDTO
             : " AND {$table}.next_port IN ($this->nextPortFilter)";
     }
 
-    private function splitStringParameters(string $param): string
+    public function getSqlFilter(): string
     {
-        return (string) preg_replace("/([^,]+),?/", "'$1',", $param);
+        return $this->getSqlShipFilter()
+            . $this->getSqlCargoFilter()
+            . $this->getSqlShipOwnerFilter()
+            . $this->getSqlCustomerFilter()
+            . $this->getSqlLastPortFilter()
+            . $this->getSqlNextPortFilter();
     }
 }

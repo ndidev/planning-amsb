@@ -10,10 +10,14 @@ use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
 use App\Core\HTTP\HTTPRequestBody;
 use App\DTO\Filter\StevedoringDispatchFilterDTO;
+use App\DTO\Filter\StevedoringStaffFilterDTO;
+use App\DTO\Filter\StevedoringTempWorkHoursFilterDTO;
 use App\DTO\StevedoringDispatchDTO;
 use App\Entity\Stevedoring\StevedoringEquipment;
 use App\Entity\Stevedoring\StevedoringStaff;
+use App\Entity\Stevedoring\TempWorkHoursEntry;
 use App\Repository\StevedoringRepository;
+use DateTimeImmutable;
 
 final class StevedoringService
 {
@@ -76,9 +80,9 @@ final class StevedoringService
     /**
      * @return Collection<StevedoringStaff>
      */
-    public function getAllStaff(): Collection
+    public function getAllStaff(StevedoringStaffFilterDTO $filter): Collection
     {
-        return $this->stevedoringRepository->fetchAllStaff();
+        return $this->stevedoringRepository->fetchAllStaff($filter);
     }
 
     public function getStaff(?int $id): ?StevedoringStaff
@@ -193,8 +197,96 @@ final class StevedoringService
         $this->stevedoringRepository->deleteEquipment($id);
     }
 
+    // ========
+    // Dispatch
+    // ========
+
     public function getDispatch(StevedoringDispatchFilterDTO $filter): StevedoringDispatchDTO
     {
         return $this->stevedoringRepository->fetchDispatch($filter);
+    }
+
+    /**
+     * @return array<int>
+     */
+    public function getTempWorkDispatchNamesForDate(\DateTimeImmutable $date): array
+    {
+        return $this->stevedoringRepository->fetchTempWorkDispatchNamesForDate($date);
+    }
+
+    // ===============
+    // Temp work hours
+    // ===============
+
+    /**
+     * @param array<mixed> $rawData 
+     * 
+     * @return TempWorkHoursEntry 
+     */
+    public function makeTempWorkHoursEntryFromDatabase(array $rawData): TempWorkHoursEntry
+    {
+        $rawDataAH = new ArrayHandler($rawData);
+
+        $tempWorkHoursEntry = (new TempWorkHoursEntry())
+            ->setId($rawDataAH->getInt('id'))
+            ->setStaff($this->getStaff($rawDataAH->getInt('staff_id')))
+            ->setDate($rawDataAH->getDatetime('date'))
+            ->setHoursWorked($rawDataAH->getFloat('hours_worked', 0))
+            ->setComments($rawDataAH->getString('comments'));
+
+        return $tempWorkHoursEntry;
+    }
+
+    public function makeTempWorkHoursEntryFromRequest(HTTPRequestBody $requestBody): TempWorkHoursEntry
+    {
+        $tempWorkHoursEntry = (new TempWorkHoursEntry())
+            ->setId($requestBody->getInt('id'))
+            ->setStaff($this->getStaff($requestBody->getInt('staffId')))
+            ->setDate($requestBody->getDatetime('date'))
+            ->setHoursWorked($requestBody->getFloat('hoursWorked', 0))
+            ->setComments($requestBody->getString('comments'));
+
+        return $tempWorkHoursEntry;
+    }
+
+    public function tempWorkHoursEntryExists(int $id): bool
+    {
+        return $this->stevedoringRepository->tempWorkHoursEntryExists($id);
+    }
+
+    /**
+     * @return Collection<TempWorkHoursEntry>
+     */
+    public function getAllTempWorkHours(StevedoringTempWorkHoursFilterDTO $filter): Collection
+    {
+        return $this->stevedoringRepository->fetchAllTempWorkHours($filter);
+    }
+
+    public function getTempWorkHoursEntry(int $id): ?TempWorkHoursEntry
+    {
+        return $this->stevedoringRepository->fetchTempWorkHoursEntry($id);
+    }
+
+    public function createTempWorkHours(HTTPRequestBody $requestBody): TempWorkHoursEntry
+    {
+        $tempWorkHoursEntry = $this->makeTempWorkHoursEntryFromRequest($requestBody);
+
+        $tempWorkHoursEntry->validate();
+
+        return $this->stevedoringRepository->createTempWorkHours($tempWorkHoursEntry);
+    }
+
+    public function updateTempWorkHours(int $id, HTTPRequestBody $requestBody): TempWorkHoursEntry
+    {
+        $tempWorkHoursEntry = $this->makeTempWorkHoursEntryFromRequest($requestBody)->setId($id);
+
+        $tempWorkHoursEntry->validate();
+
+        return $this->stevedoringRepository->updateTempWorkHours($tempWorkHoursEntry);
+    }
+
+    public function deleteTempWorkHours(int $id): void
+    {
+        $this->stevedoringRepository->deleteTempWorkHours($id);
     }
 }

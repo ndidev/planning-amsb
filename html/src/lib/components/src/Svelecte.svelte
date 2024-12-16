@@ -112,7 +112,14 @@
   /**
    * Type prédéfini.
    */
-  const typesPredefinis = ["tiers", "port", "pays", "staff"] as const;
+  const typesPredefinis = [
+    "tiers",
+    "port",
+    "pays",
+    "staff",
+    "mensuels",
+    "interimaires",
+  ] as const;
 
   export let type: (typeof typesPredefinis)[number] | undefined = undefined;
 
@@ -217,7 +224,8 @@
                 return (
                   value === staff.id ||
                   (staff.type === "mensuel" &&
-                    (includeInactive ? true : staff.isActive))
+                    (includeInactive ? true : staff.isActive) &&
+                    !staff.deletedAt)
                 );
               })
               .sort(
@@ -241,7 +249,8 @@
                 return (
                   value === staff.id ||
                   (staff.type === "interim" &&
-                    (includeInactive ? true : staff.isActive))
+                    (includeInactive ? true : staff.isActive) &&
+                    !staff.deletedAt)
                 );
               })
               .sort(
@@ -259,6 +268,66 @@
               }),
           },
         ];
+      }
+    });
+  }
+
+  if (type === "mensuels") {
+    const { stevedoringStaff } = getContext<Stores>("stores");
+    unsubscribe = stevedoringStaff.subscribe((staffList) => {
+      if (staffList) {
+        options = [...staffList.values()]
+          .filter((staff) => {
+            return (
+              value === staff.id ||
+              (staff.type === "mensuel" &&
+                (includeInactive ? true : staff.isActive) &&
+                !staff.deletedAt)
+            );
+          })
+          .sort(
+            (a, b) =>
+              a.lastname.localeCompare(b.lastname) ||
+              a.firstname.localeCompare(b.firstname)
+          )
+          .map((staff): Item => {
+            return {
+              id: staff.id,
+              search: staff.fullname,
+              label: `${staff.fullname} (${staff.tempWorkAgency})`,
+              tag: staff.fullname,
+            };
+          });
+      }
+    });
+  }
+
+  if (type === "interimaires") {
+    const { stevedoringStaff } = getContext<Stores>("stores");
+    unsubscribe = stevedoringStaff.subscribe((staffList) => {
+      if (staffList) {
+        options = [...staffList.values()]
+          .filter((staff) => {
+            return (
+              value === staff.id ||
+              (staff.type === "interim" &&
+                (includeInactive ? true : staff.isActive) &&
+                !staff.deletedAt)
+            );
+          })
+          .sort(
+            (a, b) =>
+              a.lastname.localeCompare(b.lastname) ||
+              a.firstname.localeCompare(b.firstname)
+          )
+          .map((staff): Item => {
+            return {
+              id: staff.id,
+              search: staff.fullname,
+              label: `${staff.fullname} (${staff.tempWorkAgency})`,
+              tag: staff.fullname,
+            };
+          });
       }
     });
   }

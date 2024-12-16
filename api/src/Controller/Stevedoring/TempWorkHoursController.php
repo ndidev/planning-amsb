@@ -1,6 +1,6 @@
 <?php
 
-// Path: api/src/Controller/Stevedoring/StaffController.php
+// Path: api/src/Controller/Stevedoring/TempWorkHoursController.php
 
 declare(strict_types=1);
 
@@ -14,14 +14,14 @@ use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
-use App\DTO\Filter\StevedoringStaffFilterDTO;
+use App\DTO\Filter\StevedoringTempWorkHoursFilterDTO;
 use App\Service\StevedoringService;
 
-final class StaffController extends Controller
+final class TempWorkHoursController extends Controller
 {
     private StevedoringService $stevedoringService;
     private string $module = Module::STEVEDORING_STAFF;
-    private string $sseEventName = "stevedoring/staff";
+    private string $sseEventName = "stevedoring/temp-work-hours";
 
     public function __construct(
         private ?int $id = null,
@@ -73,11 +73,11 @@ final class StaffController extends Controller
 
     public function readAll(): void
     {
-        $filter = new StevedoringStaffFilterDTO($this->request->getQuery());
+        $filter = new StevedoringTempWorkHoursFilterDTO($this->request->getQuery());
 
-        $allStaff = $this->stevedoringService->getAllStaff($filter);
+        $allTempWorkHours = $this->stevedoringService->getAllTempWorkHours($filter);
 
-        $etag = ETag::get($allStaff);
+        $etag = ETag::get($allTempWorkHours);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
@@ -86,18 +86,18 @@ final class StaffController extends Controller
 
         $this->response
             ->addHeader("ETag", $etag)
-            ->setJSON($allStaff);
+            ->setJSON($allTempWorkHours);
     }
 
     public function read(int $id): void
     {
-        $staff = $this->stevedoringService->getStaff($id);
+        $tempWorkHours = $this->stevedoringService->getTempWorkHoursEntry($id);
 
-        if (!$staff) {
-            throw new NotFoundException("Le personnel de manutention n'existe pas.");
+        if (!$tempWorkHours) {
+            throw new NotFoundException("Cette entrée n'xiste pas.");
         }
 
-        $etag = ETag::get($staff);
+        $etag = ETag::get($tempWorkHours);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
@@ -106,70 +106,70 @@ final class StaffController extends Controller
 
         $this->response
             ->addHeader("ETag", $etag)
-            ->setJSON($staff);
+            ->setJSON($tempWorkHours);
     }
 
     public function create(): void
     {
         if (!$this->user->canAccess($this->module)) {
-            throw new AccessException("Vous n'avez pas les droits pour ajouter du personnel de manutention.");
+            throw new AccessException("Vous n'avez pas les droits pour ajouter les heures des intérimaires.");
         }
 
         $requestBody = $this->request->getBody();
 
-        $staff = $this->stevedoringService->createStaff($requestBody);
+        $newTempWorkHours = $this->stevedoringService->createTempWorkHours($requestBody);
 
         /** @var int $id */
-        $id = $staff->getId();
+        $id = $newTempWorkHours->getId();
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)
-            ->addHeader("Location", Environment::getString('API_URL') . "/manutention/personnel/$id")
-            ->setJSON($staff);
+            ->addHeader("Location", Environment::getString('API_URL') . "/manutention/heures-interimaires/$id")
+            ->setJSON($newTempWorkHours);
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $staff);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $newTempWorkHours);
     }
 
     public function update(?int $id = null): void
     {
         if (!$this->user->canAccess($this->module)) {
-            throw new AccessException("Vous n'avez pas les droits pour modifier le personnel de manutention.");
+            throw new AccessException("Vous n'avez pas les droits pour modifier les heures des intérimaires.");
         }
 
         if (!$id) {
-            throw new BadRequestException("L'identifiant du personnel est obligatoire.");
+            throw new BadRequestException("L'identifiant de l'intérimaire est obligatoire.");
         }
 
-        if (!$this->stevedoringService->staffExists($id)) {
-            throw new NotFoundException("Le personnel de manutention n'existe pas.");
+        if (!$this->stevedoringService->tempWorkHoursEntryExists($id)) {
+            throw new NotFoundException("L'intérimaire n'existe pas.");
         }
 
         $requestBody = $this->request->getBody();
 
-        $staff = $this->stevedoringService->updateStaff($id, $requestBody);
+        $updatedTempWorkHours = $this->stevedoringService->updateTempWorkHours($id, $requestBody);
 
         $this->response
             ->setCode(HTTPResponse::HTTP_OK_200)
-            ->setJSON($staff);
+            ->setJSON($updatedTempWorkHours);
 
-        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $staff);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $updatedTempWorkHours);
     }
 
     public function delete(?int $id = null): void
     {
         if (!$this->user->canAccess($this->module)) {
-            throw new AccessException("Vous n'avez pas les droits pour supprimer du personnel de manutention.");
+            throw new AccessException("Vous n'avez pas les droits pour supprimer les heures des intérimaires.");
         }
 
         if (!$id) {
-            throw new BadRequestException("L'identifiant du personnel est obligatoire.");
+            throw new BadRequestException("L'identifiant de l'intérimaire est obligatoire.");
         }
 
-        if (!$this->stevedoringService->staffExists($id)) {
-            throw new NotFoundException("Le personnel de manutention n'existe pas.");
+        if (!$this->stevedoringService->tempWorkHoursEntryExists($id)) {
+            throw new NotFoundException("L'intérimaire n'existe pas.");
         }
 
-        $this->stevedoringService->deleteStaff($id);
+        $this->stevedoringService->deleteTempWorkHours($id);
 
         $this->response->setCode(HTTPResponse::HTTP_NO_CONTENT_204);
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);

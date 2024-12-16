@@ -1,1 +1,1 @@
-export { default as FilterBanner } from "./src/FilterBanner.svelte";
+export { default as FilterBanner, filter } from "./src/FilterBanner.svelte";

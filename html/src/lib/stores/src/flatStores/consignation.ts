@@ -8,7 +8,7 @@ import { DateUtils, type FetcherOptions } from "@app/utils";
 export const consignationEscales = (
   params: FetcherOptions["searchParams"] = new URLSearchParams()
 ) =>
-  createFlatStore<EscaleConsignation>("consignation/escales", {
+  createFlatStore<EscaleConsignation>("consignation/escales", null, {
     params,
     satisfiesParams,
   });

@@ -13,24 +13,26 @@
 
   import { Filter } from "@app/utils";
 
-  import type { StevedoringStaff } from "@app/types";
+  import type { StevedoringStaff, Stores } from "@app/types";
 
-  type StevedoringDispatchFilter = {
+  type TempWorkHoursFilter = {
     startDate?: string;
     endDate?: string;
     staff?: StevedoringStaff["id"][];
+    agency?: string[];
   };
 
-  const emptyFilter: StevedoringDispatchFilter = {
-    startDate: "",
+  const emptyFilter: TempWorkHoursFilter = {
+    startDate: new Date().toISOString().split("T")[0],
     endDate: "",
     staff: [],
+    agency: [],
   };
 
-  const filterName = "stevedoring-dispatch-filter";
+  const filterName = "stevedoring-temp-work-hours-filter";
 
   export const filter = writable(
-    new Filter<StevedoringDispatchFilter>(
+    new Filter<TempWorkHoursFilter>(
       JSON.parse(sessionStorage.getItem(filterName)) ||
         structuredClone(emptyFilter)
     )
@@ -38,11 +40,28 @@
 </script>
 
 <script lang="ts">
+  import { getContext } from "svelte";
+
   import { Label, Input, Button } from "flowbite-svelte";
 
   import { Svelecte } from "@app/components";
 
+  const { stevedoringStaff } = getContext<Stores>("stores");
+
   let filterData = { ...$filter.data };
+
+  let agenciesList: string[] = [];
+
+  $: if ($stevedoringStaff) {
+    agenciesList = [
+      ...new Set(
+        [...$stevedoringStaff.values()]
+          .filter((staff) => staff.type === "interim")
+          .map((staff) => staff.tempWorkAgency)
+          .sort()
+      ).values(),
+    ];
+  }
 
   /**
    * Enregistrer le filtre.
@@ -68,23 +87,46 @@
   <!-- Dates -->
   <div>
     <Label for="startDate">Du</Label>
-    <Input type="date" id="startDate" bind:value={filterData.startDate} />
+    <Input
+      type="date"
+      id="startDate"
+      bind:value={filterData.startDate}
+      max={filterData.endDate}
+    />
   </div>
 
   <div>
     <Label for="endDate">Au</Label>
-    <Input type="date" id="endDate" bind:value={filterData.endDate} />
+    <Input
+      type="date"
+      id="endDate"
+      bind:value={filterData.endDate}
+      min={filterData.startDate}
+    />
   </div>
 
   <!-- Filtre personnel -->
   <div class="flex-auto">
     <Label for="staff-filter">Personnel</Label>
     <Svelecte
+      type="interimaires"
       inputId="staff-filter"
-      type="staff"
-      includeInactive
+      name="staff-filter"
       bind:value={filterData.staff}
       placeholder="Personnel"
+      multiple
+    />
+  </div>
+
+  <!-- Filtre agence -->
+  <div class="flex-auto">
+    <Label for="agency-filter">Agence</Label>
+    <Svelecte
+      inputId="agency-filter"
+      name="agency-filter"
+      options={agenciesList}
+      bind:value={filterData.agency}
+      placeholder="Agence"
       multiple
     />
   </div>

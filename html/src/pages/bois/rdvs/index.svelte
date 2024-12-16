@@ -1,12 +1,12 @@
 <!-- routify:options title="Planning AMSB - Bois" -->
 <script lang="ts">
-  import { onDestroy, setContext, getContext } from "svelte";
-  import { writable } from "svelte/store";
+  import { onDestroy, getContext } from "svelte";
 
   import { BandeauInfo, SseConnection } from "@app/components";
   import {
     ExtractionRegistre,
     FilterBanner,
+    filter,
     Placeholder,
     LigneDate,
     LigneRdv,
@@ -14,51 +14,22 @@
     LigneRdvAttente,
   } from "./components";
 
-  import { Filtre } from "@app/utils";
-  import type {
-    Stores,
-    RdvBois,
-    TimberFilter,
-    CamionsParDate,
-  } from "@app/types";
+  import type { Stores, RdvBois, CamionsParDate } from "@app/types";
 
   const { boisRdvs, tiers } = getContext<Stores>("stores");
 
   type DateString = string;
   type GroupesRdv = Map<DateString, RdvBois[]>;
 
-  const emptyFilter: TimberFilter = {
-    date_debut: "",
-    date_fin: "",
-    fournisseur: [],
-    client: [],
-    chargement: [],
-    livraison: [],
-    transporteur: [],
-    affreteur: [],
-  };
-
-  const filterName = "timber-planning-filter";
-
-  // Stores Filtre et RDVs
-  let filter = new Filtre<TimberFilter>(
-    JSON.parse(sessionStorage.getItem(filterName)) ||
-      structuredClone(emptyFilter)
-  );
-
-  const filterStore = writable(filter);
-
   let rdvsBois: typeof $boisRdvs = null;
 
-  const unsubscribeFiltre = filterStore.subscribe((value) => {
+  const unsubscribeFiltre = filter.subscribe((value) => {
     boisRdvs.setSearchParams(value.toSearchParams());
   });
 
   const unsubscribeRdvs = boisRdvs.subscribe((rdvs) => {
     rdvsBois = rdvs;
   });
-
-  setContext("filter", { emptyFilter, filterStore, filterName });
 
   let dates: Set<DateString>;
   let rdvsGroupes: GroupesRdv;

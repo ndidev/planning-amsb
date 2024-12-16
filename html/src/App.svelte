@@ -19,6 +19,7 @@
     charteringCharters: stores.charteringCharters(),
     stevedoringStaff: stores.stevedoringStaff,
     stevedoringEquipments: stores.stevedoringEquipments,
+    stevedoringTempWorkHours: stores.stevedoringTempWorkHours,
     tiers: stores.tiers,
     configBandeauInfo: stores.configBandeauInfo,
     configPdf: stores.configPdf,

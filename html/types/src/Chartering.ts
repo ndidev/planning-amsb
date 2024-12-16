@@ -93,3 +93,12 @@ export type Charter = {
    */
   archive: boolean;
 };
+
+export type CharteringFilter = {
+  date_debut?: string;
+  date_fin?: string;
+  affreteur?: Charter["affreteur"][];
+  armateur?: Charter["armateur"][];
+  courtier?: Charter["courtier"][];
+  statut?: Charter["statut"][];
+};

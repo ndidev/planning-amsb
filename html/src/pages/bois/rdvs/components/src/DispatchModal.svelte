@@ -119,7 +119,12 @@
   });
 </script>
 
-<Modal title="Dispatch" bind:open={$showDispatchModal} dismissable={false}>
+<Modal
+  title="Dispatch"
+  bind:open={$showDispatchModal}
+  dismissable={false}
+  size="lg"
+>
   <div class="text-lg">
     Ajouter une ligne
     <LucideButton

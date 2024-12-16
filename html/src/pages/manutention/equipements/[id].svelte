@@ -4,7 +4,7 @@
   import { getContext } from "svelte";
   import { params, goto, redirect } from "@roxi/routify";
 
-  import { Label, Input, Toggle, Select, Textarea } from "flowbite-svelte";
+  import { Label, Input, Toggle, Textarea } from "flowbite-svelte";
   import Notiflix from "notiflix";
 
   import {
@@ -41,7 +41,7 @@
   };
 
   /**
-   * Identifiant du personnel.
+   * Identifiant de l'équipement.
    */
   let id: StevedoringEquipment["id"] = parseInt($params.id);
 

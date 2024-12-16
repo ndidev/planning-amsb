@@ -9,32 +9,21 @@
   ```
  -->
 <script lang="ts">
-  import { getContext } from "svelte";
-  import type { Writable } from "svelte/store";
-
   import Notiflix from "notiflix";
   import { Modal, Label, Input, Button } from "flowbite-svelte";
   import { ScrollTextIcon } from "lucide-svelte";
 
+  import { filter } from "../";
   import { LucideButton } from "@app/components";
-  import { type Filtre, fetcher, DateUtils } from "@app/utils";
-  import type { TimberFilter } from "@app/types";
-
-  type FilterContext = {
-    emptyFilter: TimberFilter;
-    filterStore: Writable<Filtre<TimberFilter>>;
-  };
-
-  const { filterStore } = getContext<FilterContext>("filter");
+  import { fetcher, DateUtils } from "@app/utils";
 
   // Affichage de la fenêtre modale
   let showModal = false;
   $: startDate =
-    $filterStore.data.date_debut ??
+    $filter.data.date_debut ||
     new DateUtils(new Date()).jourOuvrePrecedent().toLocaleISODateString();
   $: endDate =
-    $filterStore.data.date_fin ??
-    new DateUtils(new Date()).toLocaleISODateString();
+    $filter.data.date_fin || new DateUtils(new Date()).toLocaleISODateString();
 
   /**
    * Bouton registre

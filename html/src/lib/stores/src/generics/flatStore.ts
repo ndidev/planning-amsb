@@ -14,6 +14,7 @@ import type { DBEventData } from "@app/types";
  */
 export function createFlatStore<T extends { id: string | number }>(
   endpoint: string,
+  itemTemplate: T = null,
   options: {
     params?: FetcherOptions["searchParams"];
     satisfiesParams?: (data: T, searchParams: URLSearchParams) => boolean;
@@ -53,16 +54,46 @@ export function createFlatStore<T extends { id: string | number }>(
   return {
     subscribe,
     get,
+    new: _new,
+    cancel: _cancel,
     create: _dbCreate,
     update: _dbUpdate,
     patch: _dbPatch,
     delete: _dbDelete,
     refresh: fetchAll,
+    getTemplate: () => structuredClone(itemTemplate),
     setSearchParams,
     endpoint,
   };
 
   // FONCTIONS
+
+  /**
+   * Ajouter un item.
+   */
+  function _new() {
+    if (!itemTemplate) return null;
+
+    const tmpItem = structuredClone(itemTemplate);
+    tmpItem.id = Math.random();
+
+    update((items) => {
+      items.set(tmpItem.id, tmpItem);
+
+      return items;
+    });
+
+    return tmpItem;
+  }
+
+  /**
+   * Annuler un ajout d'item.
+   *
+   * @param id Identifiant de l'item'
+   */
+  function _cancel(id: T["id"]) {
+    _delete(id);
+  }
 
   /**
    * Récupérer un item.
@@ -102,6 +133,10 @@ export function createFlatStore<T extends { id: string | number }>(
       searchParams,
     });
 
+    // Suppression de l'item temporaire (si existant)
+    _delete(data.id);
+
+    // Mise à jour du store avec l'item créé
     _create(item);
 
     return item;

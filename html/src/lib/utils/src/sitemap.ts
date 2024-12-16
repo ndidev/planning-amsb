@@ -136,8 +136,14 @@ export const sitemap: Map<ModuleId, Module> = new Map([
           // },
           {
             affichage: "Activités hors navires",
-            roleMini: UserRoles.EDIT,
+            roleMini: UserRoles.ACCESS,
             href: "/manutention/activites-hors-navires",
+            devices: ["desktop", "mobile"],
+          },
+          {
+            affichage: "Heures intérimaires",
+            roleMini: UserRoles.ACCESS,
+            href: "/manutention/heures-interimaires",
             devices: ["desktop", "mobile"],
           },
         ],

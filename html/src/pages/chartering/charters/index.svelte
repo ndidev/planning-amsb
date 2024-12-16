@@ -1,35 +1,14 @@
 <!-- routify:options title="Planning AMSB - Affrètement maritime" -->
 <script lang="ts">
   import { onDestroy, getContext, setContext } from "svelte";
-  import { writable } from "svelte/store";
   import { params } from "@roxi/routify";
 
   import { Chargement, BandeauInfo, SseConnection } from "@app/components";
-  import { FilterBanner, LigneCharter } from "./components";
+  import { FilterBanner, filter, LigneCharter } from "./components";
 
-  import { Filtre } from "@app/utils";
-  import type { Stores, CharteringFilter } from "@app/types";
+  import type { Stores } from "@app/types";
 
   const { charteringCharters } = getContext<Stores>("stores");
-
-  const emptyFilter: CharteringFilter = {
-    date_debut: "",
-    date_fin: "",
-    affreteur: [],
-    armateur: [],
-    courtier: [],
-    statut: [],
-  };
-
-  const filterName = "chartering-planning-filter";
-
-  // Stores Filtre et affrètements
-  let filter = new Filtre<CharteringFilter>(
-    JSON.parse(sessionStorage.getItem(filterName)) ||
-      structuredClone(emptyFilter)
-  );
-
-  const filterStore = writable(filter);
 
   let charters: typeof $charteringCharters;
 
@@ -37,7 +16,7 @@
 
   setContext("archives", archives);
 
-  const unsubscribeFilter = filterStore.subscribe((value) => {
+  const unsubscribeFilter = filter.subscribe((value) => {
     const params = value.toSearchParams();
 
     if (archives) params.append("archives", "");
@@ -48,8 +27,6 @@
   const unsubscribeCharters = charteringCharters.subscribe((value) => {
     charters = value;
   });
-
-  setContext("filter", { emptyFilter, filterStore, filterName });
 
   onDestroy(() => {
     unsubscribeCharters();

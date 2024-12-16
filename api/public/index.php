@@ -32,6 +32,8 @@ use App\Controller\Shipping\VoyageNumberController;
 use App\Controller\Stevedoring\DispatchController;
 use App\Controller\Stevedoring\EquipmentController;
 use App\Controller\Stevedoring\StaffController;
+use App\Controller\Stevedoring\TempWorkDispatchNamesController;
+use App\Controller\Stevedoring\TempWorkHoursController;
 use App\Controller\ThirdParty\AppointmentCountController;
 use App\Controller\ThirdParty\ThirdPartyController;
 use App\Controller\Timber\TimberAppointmentController;
@@ -98,6 +100,8 @@ $routes = [
     ["/manutention/personnel/[i:id]?", StaffController::class],
     ["/manutention/equipements/[i:id]?", EquipmentController::class],
     ["/manutention/dispatch", DispatchController::class],
+    ["/manutention/dispatch-interimaire/[date:date]", TempWorkDispatchNamesController::class],
+    ["/manutention/heures-interimaires/[i:id]?", TempWorkHoursController::class],
 
     // Utilitaires
     ["/ports/[a:locode]?", PortController::class],
@@ -134,7 +138,11 @@ $response = new HTTPResponse();
  * Routeur
  */
 try {
-    $router = new Router($routes, Environment::getString('API_PATH'));
+    $router = new Router(
+        $routes,
+        Environment::getString('API_PATH'),
+        ['date' => '\d{4}-\d{2}-\d{2}']
+    );
     $match = $router->match();
 
     if (!\is_array($match)) {

@@ -24,6 +24,7 @@ export { charteringCharters } from "./src/flatStores/chartering";
 export {
   stevedoringStaff,
   stevedoringEquipments,
+  stevedoringTempWorkHours,
 } from "./src/flatStores/manutention";
 
 // Tiers

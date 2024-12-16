@@ -360,11 +360,11 @@
 >
   <div>
     <Label for="start-date">Date début :</Label>
-    <Input type="date" id="start-date" bind:value={startDate} />
+    <Input type="date" id="start-date" bind:value={startDate} max={endDate} />
   </div>
   <div>
     <Label for="end-date">Date fin :</Label>
-    <Input type="date" id="end-date" bind:value={endDate} />
+    <Input type="date" id="end-date" bind:value={endDate} min={startDate} />
   </div>
   <div class="text-center">
     <Button

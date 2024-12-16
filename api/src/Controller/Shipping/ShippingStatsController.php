@@ -20,7 +20,7 @@ final class ShippingStatsController extends Controller
     private string $module = Module::SHIPPING;
 
     public function __construct(
-        private ?string $ids = null,
+        private string|int|null $ids = null,
     ) {
         parent::__construct();
         $this->shippingService = new ShippingService();
@@ -39,7 +39,7 @@ final class ShippingStatsController extends Controller
             case 'GET':
             case 'HEAD':
                 if ($this->ids) {
-                    $this->readDetails($this->ids);
+                    $this->readDetails((string) $this->ids);
                 } else {
                     $this->readSummary();
                 }

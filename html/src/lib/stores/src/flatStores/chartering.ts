@@ -8,7 +8,7 @@ import type { FetcherOptions } from "@app/utils";
 export const charteringCharters = (
   params: FetcherOptions["searchParams"] = new URLSearchParams()
 ) =>
-  createFlatStore<Charter>("chartering/charters", {
+  createFlatStore<Charter>("chartering/charters", null, {
     params,
     satisfiesParams,
   });

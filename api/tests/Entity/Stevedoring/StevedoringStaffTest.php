@@ -61,12 +61,13 @@ final class StevedoringStaffTest extends TestCase
         $stevedoringStaff = new StevedoringStaff();
         $stevedoringStaff->setFirstname('');
         $stevedoringStaff->setLastname('');
+        $expected = '(Personnel supprimé)';
 
         // When
         $fullname = $stevedoringStaff->getFullname();
 
         // Then
-        $this->assertSame('', $fullname);
+        $this->assertSame($expected, $fullname);
     }
 
     public function testSetAndGetPhone(): void

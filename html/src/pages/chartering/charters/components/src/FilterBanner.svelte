@@ -5,34 +5,55 @@
 
   Usage :
   ```tsx
-  <Filtre />
+  <FilterBanner />
   ```
  -->
-<script lang="ts">
-  import { getContext } from "svelte";
-  import type { Writable } from "svelte/store";
+<script lang="ts" context="module">
+  import { writable } from "svelte/store";
 
+  import { Filter } from "@app/utils";
+
+  import type { Charter } from "@app/types";
+
+  type CharteringFilter = {
+    date_debut?: string;
+    date_fin?: string;
+    affreteur?: Charter["affreteur"][];
+    armateur?: Charter["armateur"][];
+    courtier?: Charter["courtier"][];
+    statut?: Charter["statut"][];
+  };
+
+  const emptyFilter: CharteringFilter = {
+    date_debut: "",
+    date_fin: "",
+    affreteur: [],
+    armateur: [],
+    courtier: [],
+    statut: [],
+  };
+
+  const filterName = "chartering-planning-filter";
+
+  export const filter = writable(
+    new Filter<CharteringFilter>(
+      JSON.parse(sessionStorage.getItem(filterName)) ||
+        structuredClone(emptyFilter)
+    )
+  );
+</script>
+
+<script lang="ts">
   import { Label, Input, Button, Select } from "flowbite-svelte";
 
   import { Svelecte } from "@app/components";
 
-  import { Filtre, device } from "@app/utils";
+  import { device } from "@app/utils";
 
-  import type { CharteringFilter } from "@app/types";
-
-  type FilterContext = {
-    emptyFilter: CharteringFilter;
-    filterStore: Writable<Filtre<CharteringFilter>>;
-    filterName: string;
-  };
-
-  const { emptyFilter, filterStore, filterName } =
-    getContext<FilterContext>("filter");
-
-  let filterData = { ...$filterStore.data };
+  let filterData = { ...$filter.data };
 
   $: filtreIsActive =
-    Object.values({ ...$filterStore.data }).filter((value) =>
+    Object.values({ ...$filter.data }).filter((value) =>
       Array.isArray(value) ? (value.length > 0 ? value : undefined) : value
     ).length > 0;
   $: filterIsDisplayed = filtreIsActive && $device.is("desktop");
@@ -43,7 +64,7 @@
   async function applyFilter() {
     sessionStorage.setItem(filterName, JSON.stringify(filterData));
 
-    filterStore.set(new Filtre(filterData));
+    filter.set(new Filter(filterData));
   }
 
   /**
@@ -53,7 +74,7 @@
     sessionStorage.removeItem(filterName);
 
     filterData = structuredClone(emptyFilter);
-    filterStore.set(new Filtre(filterData));
+    filter.set(new Filter(filterData));
   }
 </script>
 
@@ -77,13 +98,23 @@
     <!-- Date début -->
     <div>
       <Label for="date_debut">Du</Label>
-      <Input type="date" id="date_debut" bind:value={filterData.date_debut} />
+      <Input
+        type="date"
+        id="date_debut"
+        bind:value={filterData.date_debut}
+        max={filterData.date_fin}
+      />
     </div>
 
     <!-- Date fin -->
     <div>
       <Label for="date_fin">Au</Label>
-      <Input type="date" id="date_fin" bind:value={filterData.date_fin} />
+      <Input
+        type="date"
+        id="date_fin"
+        bind:value={filterData.date_fin}
+        min={filterData.date_debut}
+      />
     </div>
 
     <!-- Filtre affréteur -->

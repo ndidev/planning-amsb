@@ -1,6 +1,6 @@
 <?php
 
-// Path: api/src/Controller/Stevedoring/DispatchController.php
+// Path: api/src/Controller/Stevedoring/TempWorkDispatchNamesController.php
 
 declare(strict_types=1);
 
@@ -9,17 +9,17 @@ namespace App\Controller\Stevedoring;
 use App\Controller\Controller;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
+use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
-use App\DTO\Filter\StevedoringDispatchFilterDTO;
 use App\Service\StevedoringService;
 
-final class DispatchController extends Controller
+final class TempWorkDispatchNamesController extends Controller
 {
     private StevedoringService $stevedoringService;
     private string $module = Module::STEVEDORING;
 
-    public function __construct()
+    public function __construct(private string $date)
     {
         parent::__construct("OPTIONS, HEAD, GET");
 
@@ -39,7 +39,7 @@ final class DispatchController extends Controller
 
             case 'HEAD':
             case 'GET':
-                $this->readAll();
+                $this->read($this->date);
                 break;
 
             default:
@@ -50,17 +50,21 @@ final class DispatchController extends Controller
         }
     }
 
-    public function readAll(): void
+    public function read(string $date): void
     {
         if (!$this->user->canAccess($this->module)) {
             throw new AccessException("Vous n'avez pas les droits pour accéder aux heures de manutention.");
         }
 
-        $filter = new StevedoringDispatchFilterDTO($this->request->getQuery());
+        try {
+            $dateTime = new \DateTimeImmutable($date);
+        } catch (\Exception) {
+            throw new BadRequestException("La date n'est pas valide.");
+        }
 
-        $dispatchDto = $this->stevedoringService->getDispatch($filter);
+        $staffIds = $this->stevedoringService->getTempWorkDispatchNamesForDate($dateTime);
 
-        $etag = ETag::get($dispatchDto);
+        $etag = ETag::get($staffIds);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
@@ -69,6 +73,6 @@ final class DispatchController extends Controller
 
         $this->response
             ->addHeader("ETag", $etag)
-            ->setJSON($dispatchDto);
+            ->setJSON($staffIds);
     }
 }

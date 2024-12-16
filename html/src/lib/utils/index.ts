@@ -2,7 +2,7 @@ export { appURLs } from "./src/appURLs";
 export { DateUtils } from "./src/DateUtils";
 export { device, breakpoints } from "./src/device";
 export { fetcher } from "./src/fetcher";
-export { Filtre } from "./src/Filtre";
+export { Filter } from "./src/Filter";
 export { formatDecimal } from "./src/formatDecimal";
 export { jsonify, mapify } from "./src/mapUtils";
 export { locale } from "./src/locale";

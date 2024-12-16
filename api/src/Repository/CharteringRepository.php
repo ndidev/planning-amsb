@@ -70,11 +70,7 @@ final class CharteringRepository extends Repository
      */
     public function fetchCharters(CharteringFilterDTO $filter): Collection
     {
-        $sqlFilter =
-            $filter->getSqlStatusFilter()
-            . $filter->getSqlChartererFilter()
-            . $filter->getSqlOwnerFilter()
-            . $filter->getSqlBrokerFilter();
+        $sqlFilter = $filter->getSqlFilter();
 
         $archiveFilter = (int) $filter->isArchive();
 
@@ -103,9 +99,9 @@ final class CharteringRepository extends Repository
                 archive
             FROM chartering_registre
             WHERE archive = $archiveFilter
-            AND (lc_debut <= :endDate OR lc_debut IS NULL)
-            AND (lc_fin >= :startDate OR lc_fin IS NULL)
-            $sqlFilter
+                AND (lc_debut <= :endDate OR lc_debut IS NULL)
+                AND (lc_fin >= :startDate OR lc_fin IS NULL)
+                $sqlFilter
             ORDER BY " . ($archiveFilter ? "-lc_debut ASC, -lc_fin ASC" : "-lc_debut DESC, -lc_fin DESC");
 
 

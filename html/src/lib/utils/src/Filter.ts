@@ -1,4 +1,4 @@
-export class Filtre<
+export class Filter<
   T extends { [k: string]: (string | number) | string[] | number[] }
 > {
   data: T;

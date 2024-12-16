@@ -145,3 +145,61 @@ export type EscaleConsignation = {
    */
   commentaire: string;
 };
+
+export type ShippingFilter = {
+  date_debut?: string;
+  date_fin?: string;
+  navire?: EscaleConsignation["navire"][];
+  marchandise?: EscaleConsignation["marchandises"][number]["marchandise"];
+  client?: EscaleConsignation["marchandises"][number]["client"];
+  armateur?: EscaleConsignation["armateur"][];
+  last_port?: EscaleConsignation["last_port"][];
+  next_port?: EscaleConsignation["next_port"][];
+};
+
+/**
+ * Marée.
+ */
+export type Maree = {
+  /**
+   * Date de la marée.
+   * "yyyy-mm-dd"
+   */
+  date: string;
+
+  /**
+   * Heure de la pleine mer.
+   * "HH:mm"
+   */
+  heure: string;
+
+  /**
+   * Hauteur d'eau à Cesson (en mètres).
+   */
+  te_cesson: number;
+
+  /**
+   * Hauteur d'eau au bassin (en mètres).
+   */
+  te_bassin: number;
+};
+
+/**
+ * Côte.
+ */
+export type Cote = {
+  /**
+   * Identifiant de la côte.
+   */
+  cote: string;
+
+  /**
+   * Nom d'affichage de la côte.
+   */
+  affichage: string;
+
+  /**
+   * Valeur de la côte en mètres.
+   */
+  valeur: number;
+};

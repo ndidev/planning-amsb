@@ -69,7 +69,7 @@ final class BulkAppointmentRepository extends Repository
      */
     public function getAppointments(BulkFilterDTO $filter): Collection
     {
-        $sqlFilter = $filter->getSqlTvFilter();
+        $sqlFilter = $filter->getSqlFilter();
 
         $archiveFilter = (int) $filter->isArchive();
 
@@ -567,7 +567,7 @@ final class BulkAppointmentRepository extends Repository
 
     public function fetchDispatchStats(BulkDispatchStatsFilterDTO $filter): BulkDispatchStatsDTO
     {
-        $sqlFilter = $filter->getSqlStaffFilter();
+        $sqlFilter = $filter->getSqlFilter();
 
         $dispatchStatement =
             "SELECT

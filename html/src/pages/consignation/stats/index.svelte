@@ -1,63 +1,40 @@
 <!-- routify:options title="Planning AMSB - Statistiques consignation" -->
 <script lang="ts">
-  import { onDestroy, setContext } from "svelte";
-  import { writable } from "svelte/store";
+  import { onDestroy } from "svelte";
 
-  import { FilterBanner, CarteEscale } from "./components";
+  import { FilterBanner, filter, CarteEscale } from "./components";
   import { PageHeading } from "@app/components";
 
-  import { fetcher, Filtre } from "@app/utils";
+  import { fetcher } from "@app/utils";
 
-  import type { ShippingFilter, EscaleConsignation } from "@app/types";
+  import type { EscaleConsignation } from "@app/types";
   import Notiflix from "notiflix";
-
-  const emptyFilter: ShippingFilter = {
-    date_debut: "",
-    date_fin: "",
-    navire: [],
-    marchandise: "",
-    client: "",
-    armateur: [],
-    last_port: [],
-    next_port: [],
-  };
-
-  const filterName = "shipping-stats-filter";
-
-  let filter = new Filtre<ShippingFilter>(
-    JSON.parse(sessionStorage.getItem(filterName)) ||
-      structuredClone(emptyFilter)
-  );
 
   let stats: Stats;
   let details: EscaleConsignation[] = [];
 
-  const filterStore = writable(filter);
-
-  const unsubscribeFilter = filterStore.subscribe((value) => {
-    filter = value;
+  const unsubscribeFilter = filter.subscribe((value) => {
     fetchStats();
     details = [];
   });
 
-  setContext("filter", { emptyFilter, filterStore, filterName });
-
   type Stats = {
     Total: number;
     ByYear: {
-      [annee: string]: {
-        "1": { nombre: number; ids: number[] };
-        "2": { nombre: number; ids: number[] };
-        "3": { nombre: number; ids: number[] };
-        "4": { nombre: number; ids: number[] };
-        "5": { nombre: number; ids: number[] };
-        "6": { nombre: number; ids: number[] };
-        "7": { nombre: number; ids: number[] };
-        "8": { nombre: number; ids: number[] };
-        "9": { nombre: number; ids: number[] };
-        "10": { nombre: number; ids: number[] };
-        "11": { nombre: number; ids: number[] };
-        "12": { nombre: number; ids: number[] };
+      [year: string]: {
+        [month in
+          | "1"
+          | "2"
+          | "3"
+          | "4"
+          | "5"
+          | "6"
+          | "7"
+          | "8"
+          | "9"
+          | "10"
+          | "11"
+          | "12"]: { nombre: number; ids: number[] };
       };
     };
   };
@@ -70,7 +47,7 @@
   async function fetchStats() {
     try {
       stats = await fetcher("consignation/stats", {
-        searchParams: filter.toSearchParams(),
+        searchParams: $filter.toSearchParams(),
       });
     } catch (error) {
       Notiflix.Notify.failure(error.message);
@@ -218,10 +195,8 @@
 
 <style>
   main {
-    /* Largeur du menu = 256px */
-    --margin-left: 280px;
-    width: calc(95% - var(--margin-left));
-    margin-left: var(--margin-left);
+    width: calc(95%);
+    margin: auto;
   }
 
   .bold {
@@ -300,10 +275,12 @@
     list-style-type: none;
   }
 
-  @media screen and (max-width: 480px) {
+  @media screen and (min-width: 768px) {
     main {
-      width: calc(95%);
-      margin: auto;
+      /* Largeur du menu = 256px */
+      --margin-left: 280px;
+      width: calc(95% - var(--margin-left));
+      margin-left: var(--margin-left);
     }
   }
 </style>

@@ -5,30 +5,44 @@
 
   Usage :
   ```tsx
-  <Filtre />
+  <FilterBanner />
   ```
  -->
-<script lang="ts">
-  import { getContext } from "svelte";
-  import type { Writable } from "svelte/store";
+<script lang="ts" context="module">
+  import { writable } from "svelte/store";
 
+  import { Filter } from "@app/utils";
+
+  import type { StevedoringStaff } from "@app/types";
+
+  type BulkDispatchFilter = {
+    startDate?: string;
+    endDate?: string;
+    staff?: StevedoringStaff["id"][];
+  };
+
+  const emptyFilter: BulkDispatchFilter = {
+    startDate: "",
+    endDate: "",
+    staff: [],
+  };
+
+  const filterName = "bulk-dispatch-stats-filter";
+
+  export const filter = writable(
+    new Filter<BulkDispatchFilter>(
+      JSON.parse(sessionStorage.getItem(filterName)) ||
+        structuredClone(emptyFilter)
+    )
+  );
+</script>
+
+<script lang="ts">
   import { Label, Input, Button } from "flowbite-svelte";
 
   import { Svelecte } from "@app/components";
-  import { Filtre } from "@app/utils";
 
-  import type { BulkDispatchFilter } from "@app/types";
-
-  type FilterContext = {
-    emptyFilter: BulkDispatchFilter;
-    filterStore: Writable<Filtre<BulkDispatchFilter>>;
-    filterName: string;
-  };
-
-  const { emptyFilter, filterStore, filterName } =
-    getContext<FilterContext>("filter");
-
-  let filterData = { ...$filterStore.data };
+  let filterData = { ...$filter.data };
 
   /**
    * Enregistrer le filtre.
@@ -36,7 +50,7 @@
   async function applyFilter() {
     sessionStorage.setItem(filterName, JSON.stringify(filterData));
 
-    filterStore.set(new Filtre(filterData));
+    filter.set(new Filter(filterData));
   }
 
   /**
@@ -46,7 +60,7 @@
     sessionStorage.removeItem(filterName);
 
     filterData = structuredClone(emptyFilter);
-    filterStore.set(new Filtre(filterData));
+    filter.set(new Filter(filterData));
   }
 </script>
 
@@ -54,12 +68,22 @@
   <!-- Dates -->
   <div>
     <Label for="startDate">Du</Label>
-    <Input type="date" id="startDate" bind:value={filterData.startDate} />
+    <Input
+      type="date"
+      id="startDate"
+      bind:value={filterData.startDate}
+      max={filterData.endDate}
+    />
   </div>
 
   <div>
     <Label for="endDate">Au</Label>
-    <Input type="date" id="endDate" bind:value={filterData.endDate} />
+    <Input
+      type="date"
+      id="endDate"
+      bind:value={filterData.endDate}
+      min={filterData.startDate}
+    />
   </div>
 
   <!-- Filtre personnel -->

@@ -684,13 +684,7 @@ final class ShippingRepository extends Repository
      */
     public function fetchStatsSummary(ShippingFilterDTO $filter): ShippingStatsSummaryDTO
     {
-        $sqlFilter =
-            $filter->getSqlShipFilter()
-            . $filter->getSqlCargoFilter()
-            . $filter->getSqlShipOwnerFilter()
-            . $filter->getSqlCustomerFilter()
-            . $filter->getSqlLastPortFilter()
-            . $filter->getSqlNextPortFilter();
+        $sqlFilter = $filter->getSqlFilter();
 
         $callsStatement =
             "SELECT

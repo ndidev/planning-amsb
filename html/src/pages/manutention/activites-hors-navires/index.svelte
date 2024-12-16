@@ -1,40 +1,18 @@
 <!-- routify:options title="Planning AMSB - Activités hors navires" -->
 <script lang="ts">
-  import { onDestroy, setContext } from "svelte";
-  import { writable } from "svelte/store";
+  import { onDestroy } from "svelte";
 
   import { Accordion, AccordionItem } from "flowbite-svelte";
-
-  import { FilterBanner } from "./components";
-  import { PageHeading, Chargement } from "@app/components";
-
-  import { fetcher, Filtre, DateUtils } from "@app/utils";
-
-  import type { StevedoringDispatchFilter } from "@app/types";
   import Notiflix from "notiflix";
 
-  const emptyFilter: StevedoringDispatchFilter = {
-    startDate: "",
-    endDate: "",
-    staff: [],
-  };
+  import { FilterBanner, filter } from "./components";
+  import { PageHeading, Chargement } from "@app/components";
 
-  const filterName = "stevedoring-dispatch-filter";
+  import { fetcher, DateUtils } from "@app/utils";
 
-  let filter = new Filtre<StevedoringDispatchFilter>(
-    JSON.parse(sessionStorage.getItem(filterName)) ||
-      structuredClone(emptyFilter)
-  );
-
-  const filterStore = writable(filter);
-
-  const unsubscribeFilter = filterStore.subscribe((value) => {
-    filter = value;
+  const unsubscribeFilter = filter.subscribe((value) => {
     fetchDispatch();
   });
-
-  // Contexte pour le compoant BandeauFiltre
-  setContext("filter", { emptyFilter, filterStore, filterName });
 
   type Dispatch = {
     [date: string]: {
@@ -63,7 +41,7 @@
   async function fetchDispatch() {
     try {
       dispatch = await fetcher("manutention/dispatch", {
-        searchParams: filter.toSearchParams(),
+        searchParams: $filter.toSearchParams(),
       });
     } catch (error) {
       Notiflix.Notify.failure(error.message);
@@ -121,9 +99,7 @@
                             <span class="ml-2">{remarks}</span>
                           {/if}
 
-                          <!-- {#if multiplier > 1} -->
                           <span class="ml-2">x{multiplier}</span>
-                          <!-- {/if} -->
                         </li>
                       {/each}
                     </ul>
@@ -135,9 +111,7 @@
                       {#each dispatch[date][contractType][staffName].timber as { remarks, multiplier }}
                         <li class="ml-4 flex flex-row gap-1">
                           <span>{remarks}</span>
-                          <!-- {#if multiplier > 1} -->
                           <span class="ml-2">x{multiplier}</span>
-                          <!-- {/if} -->
                         </li>
                       {/each}
                     </ul>

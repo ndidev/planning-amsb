@@ -89,13 +89,7 @@ final class TimberAppointmentRepository extends Repository
      */
     public function fetchAppointments(TimberFilterDTO $filter): Collection
     {
-        $sqlFilter =
-            $filter->getSqlSupplierFilter()
-            . $filter->getSqlCustomerFilter()
-            . $filter->getSqlLoadingPlaceFilter()
-            . $filter->getSqlDeliveryPlaceFilter()
-            . $filter->getSqlTransportFilter()
-            . $filter->getSqlChartererFilter();
+        $sqlFilter = $filter->getSqlFilter();
 
         $statement =
             "SELECT
@@ -760,13 +754,7 @@ final class TimberAppointmentRepository extends Repository
      */
     public function getStats(TimberFilterDTO $filter): TimberStatsDTO
     {
-        $sqlFilter =
-            $filter->getSqlSupplierFilter()
-            . $filter->getSqlCustomerFilter()
-            . $filter->getSqlLoadingPlaceFilter()
-            . $filter->getSqlDeliveryPlaceFilter()
-            . $filter->getSqlTransportFilter()
-            . $filter->getSqlChartererFilter();
+        $sqlFilter = $filter->getSqlFilter();
 
         $appointmentsStatement =
             "SELECT date_rdv

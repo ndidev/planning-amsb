@@ -69,7 +69,7 @@
       }
 
       if (source.readyState === source.CLOSED) {
-        console.error("SSE : Connexion perdue, redémarrage...");
+        console.warn("SSE : Connexion perdue, redémarrage...");
         restartSseConnection();
         isReconnect = true;
       }

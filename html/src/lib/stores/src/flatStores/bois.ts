@@ -7,7 +7,7 @@ import { DateUtils, type FetcherOptions } from "@app/utils";
  */
 export const boisRdvs = (
   params: FetcherOptions["searchParams"] = new URLSearchParams()
-) => createFlatStore<RdvBois>("bois/rdvs", { params, satisfiesParams });
+) => createFlatStore<RdvBois>("bois/rdvs", null, { params, satisfiesParams });
 
 function satisfiesParams(appointment: RdvBois, searchParams: URLSearchParams) {
   const filter: { [P in keyof TimberFilter]: string } =
