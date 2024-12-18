@@ -1,7 +1,6 @@
 <!-- routify:options title="Planning AMSB - Personnel de manutention" -->
 
 <script lang="ts">
-  import { getContext } from "svelte";
   import { params, goto, redirect } from "@roxi/routify";
 
   import { Label, Input, Toggle, Textarea } from "flowbite-svelte";
@@ -20,25 +19,14 @@
     preventFormSubmitOnEnterKeydown,
   } from "@app/utils";
 
-  import type { StevedoringEquipment, Stores } from "@app/types";
+  import { stevedoringEquipments } from "@app/stores";
 
-  const { stevedoringEquipments } = getContext<Stores>("stores");
+  import type { StevedoringEquipment } from "@app/types";
 
   let form: HTMLFormElement;
   let createButton: BoutonAction;
   let updateButton: BoutonAction;
   let deleteButton: BoutonAction;
-
-  const newEquipment: StevedoringEquipment = {
-    id: null,
-    brand: "",
-    model: "",
-    type: "",
-    internalNumber: "",
-    serialNumber: "",
-    isActive: true,
-    comments: "",
-  };
 
   /**
    * Identifiant de l'équipement.
@@ -47,7 +35,7 @@
 
   let isNew = $params.id === "new";
 
-  let equipment: StevedoringEquipment = { ...newEquipment };
+  let equipment = stevedoringEquipments.getTemplate();
 
   (async () => {
     try {

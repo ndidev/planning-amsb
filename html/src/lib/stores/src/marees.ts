@@ -14,10 +14,12 @@ type ParamsMarees = {
 };
 
 // Marées
-export const marees = (params: ParamsMarees = {}) => {
+export const marees = createStore();
+
+function createStore() {
   const initial = null;
   const endpoint = "marees";
-  let searchParams = new URLSearchParams(params);
+  let searchParams = new URLSearchParams();
 
   const { subscribe, set, update } = writable<Maree[]>(initial, () => {
     fetchAll();
@@ -186,7 +188,7 @@ export const marees = (params: ParamsMarees = {}) => {
       return annees;
     });
   }
-};
+}
 
 export const mareesAnnees = writable<string[]>(null, (set) => {
   fetcher<string[]>("marees/annees").then((annees) =>

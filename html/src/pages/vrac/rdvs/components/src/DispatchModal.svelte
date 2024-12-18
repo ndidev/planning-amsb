@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy, getContext } from "svelte";
+  import { onDestroy } from "svelte";
   import type { Writable } from "svelte/store";
 
   import { Modal, Label, Input } from "flowbite-svelte";
@@ -9,9 +9,9 @@
 
   import { validerFormulaire } from "@app/utils";
 
-  import type { RdvVrac, Stores } from "@app/types";
+  import { vracRdvs } from "@app/stores";
 
-  const { vracRdvs } = getContext<Stores>("stores");
+  import type { RdvVrac } from "@app/types";
 
   let form: HTMLFormElement;
   let updateButton: BoutonAction;

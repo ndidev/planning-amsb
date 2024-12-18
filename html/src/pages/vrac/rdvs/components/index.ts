@@ -1,3 +1,4 @@
+export { default as BlocDate } from "./src/BlocDate.svelte";
 export { default as LigneDate } from "./src/LigneDate.svelte";
 export { default as LigneRdv } from "./src/LigneRdv.svelte";
 export { default as Placeholder } from "./src/Placeholder.svelte";

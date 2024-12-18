@@ -1,9 +1,7 @@
 <script lang="ts">
-  import { getContext } from "svelte";
+  import { pays } from "@app/stores";
 
-  import type { Tiers, Stores } from "@app/types";
-
-  const { pays } = getContext<Stores>("stores");
+  import type { Tiers } from "@app/types";
 
   export let thirdParty: Tiers;
 

@@ -32,6 +32,5 @@ export type {
   TempWorkHours,
 } from "./src/Stevedoring";
 export type { RdvBois, CamionsParDate, TimberFilter } from "./src/Timber";
-export type { Stores } from "./src/Stores";
 export type { Tiers } from "./src/ThirdParty";
 export type { CompteUtilisateur } from "./src/UserAccount";

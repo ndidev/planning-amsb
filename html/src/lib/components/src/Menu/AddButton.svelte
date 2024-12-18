@@ -9,7 +9,6 @@
   ```
  -->
 <script lang="ts">
-  import { getContext } from "svelte";
   import { goto } from "@roxi/routify";
 
   import { PlusIcon } from "lucide-svelte";
@@ -20,9 +19,9 @@
 
   import { device } from "@app/utils";
 
-  import type { Stores, ModuleId } from "@app/types";
+  import { configAjoutsRapides } from "@app/stores";
 
-  // const { configAjoutsRapides } = getContext<Stores>("stores");
+  import type { ModuleId } from "@app/types";
 
   type Nouveau =
     | {

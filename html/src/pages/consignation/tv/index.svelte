@@ -1,13 +1,9 @@
 <!-- routify:options title="Planning AMSB - Consignation" -->
 <script lang="ts">
-  import { getContext } from "svelte";
-
   import { BandeauInfo, CoteCesson, SseConnection } from "@app/components";
   import { LigneEscale } from "./components";
 
-  import type { Stores } from "@app/types";
-
-  const { currentUser, consignationEscales } = getContext<Stores>("stores");
+  import { currentUser, consignationEscales } from "@app/stores";
 </script>
 
 {#if $currentUser.canUseApp && $currentUser.canAccess("consignation")}
@@ -20,7 +16,7 @@
     ]}
   />
 
-  <CoteCesson tv />
+  <CoteCesson />
   <BandeauInfo module="consignation" tv />
 
   <main class="divide-y">

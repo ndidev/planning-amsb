@@ -9,7 +9,7 @@
   ```
  -->
 <script lang="ts">
-  import { onMount, onDestroy, getContext } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { writable } from "svelte/store";
   import { goto } from "@roxi/routify";
 
@@ -40,10 +40,10 @@
     DateUtils,
     removeDiacritics,
   } from "@app/utils";
-  import type { Stores, RdvBois, Tiers } from "@app/types";
 
-  // Stores
-  const { boisRdvs, currentUser, tiers, pays } = getContext<Stores>("stores");
+  import { boisRdvs, currentUser, tiers, pays } from "@app/stores";
+
+  import type { RdvBois, Tiers } from "@app/types";
 
   export let appointment: RdvBois;
   let ligne: HTMLDivElement;

@@ -1,6 +1,5 @@
 <!-- routify:options title="Planning AMSB - RDV bois" -->
 <script lang="ts">
-  import { getContext } from "svelte";
   import { params, goto, redirect } from "@roxi/routify";
 
   import { Label, Input, Toggle, Textarea } from "flowbite-svelte";
@@ -24,43 +23,18 @@
     notiflixOptions,
     validerFormulaire,
     preventFormSubmitOnEnterKeydown,
-    locale,
   } from "@app/utils";
 
   import { HTTP } from "@app/errors";
 
-  import type { RdvBois, Stores } from "@app/types";
+  import { boisRdvs, tiers } from "@app/stores";
 
-  const { boisRdvs, tiers } = getContext<Stores>("stores");
+  import type { RdvBois } from "@app/types";
 
   let form: HTMLFormElement;
   let createButton: BoutonAction;
   let updateButton: BoutonAction;
   let deleteButton: BoutonAction;
-
-  const newAppointment: RdvBois = {
-    id: null,
-    attente: false,
-    date_rdv: new Date()
-      .toLocaleDateString(locale)
-      .split("/")
-      .reverse()
-      .join("-"),
-    heure_arrivee: null,
-    heure_depart: null,
-    fournisseur: null,
-    chargement: 1, // AMSB
-    client: null,
-    livraison: null,
-    transporteur: null,
-    affreteur: null,
-    commande_prete: false,
-    confirmation_affretement: false,
-    numero_bl: "",
-    commentaire_public: "",
-    commentaire_cache: "",
-    dispatch: [],
-  };
 
   /**
    * Identifiant du RDV.
@@ -70,7 +44,7 @@
   let isNew = $params.id === "new";
   const copie = parseInt($params.copie);
 
-  let appointment: RdvBois = { ...newAppointment };
+  let appointment = boisRdvs.getTemplate();
   let numero_bl = appointment?.numero_bl;
   let heure_arrivee = appointment?.heure_arrivee?.substring(0, 5) ?? "";
   let heure_depart = appointment?.heure_depart?.substring(0, 5) ?? "";

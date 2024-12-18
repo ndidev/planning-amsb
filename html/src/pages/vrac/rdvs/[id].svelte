@@ -1,6 +1,6 @@
 <!-- routify:options title="Planning AMSB - RDV vrac" -->
 <script lang="ts">
-  import { tick, getContext } from "svelte";
+  import { tick } from "svelte";
   import { params, goto, redirect } from "@roxi/routify";
 
   import { Label, Input, Textarea, Toggle, Select } from "flowbite-svelte";
@@ -20,41 +20,14 @@
     preventFormSubmitOnEnterKeydown,
   } from "@app/utils";
 
-  import type { Stores, RdvVrac, ProduitVrac } from "@app/types";
+  import { vracRdvs, vracProduits } from "@app/stores";
 
-  const { vracRdvs, vracProduits } = getContext<Stores>("stores");
+  import type { RdvVrac } from "@app/types";
 
   let form: HTMLFormElement;
   let createButton: BoutonAction;
   let updateButton: BoutonAction;
   let deleteButton: BoutonAction;
-
-  const newAppointment: RdvVrac = {
-    id: null,
-    date_rdv: new Date().toISOString().split("T")[0],
-    heure: "",
-    produit: null,
-    qualite: null,
-    quantite: 0,
-    max: false,
-    commande_prete: false,
-    fournisseur: null,
-    client: null,
-    transporteur: null,
-    num_commande: "",
-    commentaire_public: "",
-    commentaire_prive: "",
-    showOnTv: true,
-    archive: false,
-    dispatch: [],
-  };
-
-  const newProduct: Partial<ProduitVrac> = {
-    id: null,
-    nom: "",
-    unite: "",
-    qualites: [],
-  };
 
   /**
    * Identifiant du RDV.
@@ -65,7 +38,8 @@
   const copie = parseInt($params.copie);
   const archives = "archives" in $params;
 
-  let appointment: RdvVrac = isNew && !copie ? { ...newAppointment } : null;
+  let appointment: RdvVrac =
+    isNew && !copie ? { ...vracRdvs.getTemplate() } : null;
 
   (async () => {
     try {
@@ -78,7 +52,8 @@
     }
   })();
 
-  $: product = $vracProduits?.get(appointment?.produit) || newProduct;
+  $: product =
+    $vracProduits?.get(appointment?.produit) || vracProduits.getTemplate();
 
   /**
    * Aide à la saisie.

@@ -1,14 +1,12 @@
 <!-- routify:options title="Planning AMSB - Affrètement maritime" -->
 <script lang="ts">
-  import { onDestroy, getContext, setContext } from "svelte";
+  import { onDestroy, setContext } from "svelte";
   import { params } from "@roxi/routify";
 
   import { Chargement, BandeauInfo, SseConnection } from "@app/components";
   import { FilterBanner, filter, LigneCharter } from "./components";
 
-  import type { Stores } from "@app/types";
-
-  const { charteringCharters } = getContext<Stores>("stores");
+  import { charteringCharters } from "@app/stores";
 
   let charters: typeof $charteringCharters;
 

@@ -1,13 +1,11 @@
 <script lang="ts">
-  import { getContext } from "svelte";
-
   import { ArrowDownIcon, ArrowUpIcon } from "lucide-svelte";
 
   import { locale, luminance } from "@app/utils";
 
-  import type { EscaleConsignation, Stores } from "@app/types";
+  import { ports } from "@app/stores";
 
-  const { ports } = getContext<Stores>("stores");
+  import type { EscaleConsignation } from "@app/types";
 
   export let escale: EscaleConsignation;
 

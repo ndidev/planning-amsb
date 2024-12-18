@@ -1,16 +1,9 @@
 <!-- routify:options title="Planning AMSB - Escale consignation" -->
 <script lang="ts">
-  import { getContext, onMount } from "svelte";
+  import { onMount } from "svelte";
   import { params, goto, redirect } from "@roxi/routify";
 
-  import {
-    Label,
-    Input,
-    Textarea,
-    Checkbox,
-    Select,
-    Heading,
-  } from "flowbite-svelte";
+  import { Label, Input, Textarea, Checkbox, Select } from "flowbite-svelte";
   import Notiflix from "notiflix";
 
   import {
@@ -29,58 +22,14 @@
     preventFormSubmitOnEnterKeydown,
   } from "@app/utils";
 
-  import type { Stores, EscaleConsignation } from "@app/types";
+  import { consignationEscales } from "@app/stores";
 
-  const { consignationEscales } = getContext<Stores>("stores");
+  import type { EscaleConsignation } from "@app/types";
 
   let form: HTMLFormElement;
   let createCallButton: BoutonAction;
   let updateCallButton: BoutonAction;
   let deleteCallButton: BoutonAction;
-
-  const nouvelleEscale: EscaleConsignation = {
-    id: null,
-    navire: "TBN",
-    voyage: null,
-    armateur: null,
-    eta_date: null,
-    eta_heure: "",
-    nor_date: null,
-    nor_heure: "",
-    pob_date: null,
-    pob_heure: "",
-    etb_date: null,
-    etb_heure: "",
-    ops_date: null,
-    ops_heure: "",
-    etc_date: null,
-    etc_heure: "",
-    etd_date: null,
-    etd_heure: "",
-    te_arrivee: null,
-    te_depart: null,
-    last_port: "",
-    next_port: "",
-    call_port: "Le Légué",
-    quai: "",
-    marchandises: [],
-    commentaire: "",
-  };
-
-  const nouvelleMarchandise: EscaleConsignation["marchandises"][0] = {
-    id: null,
-    escale_id: null,
-    operation: "import",
-    marchandise: "",
-    client: "",
-    environ: true,
-    tonnage_bl: null,
-    cubage_bl: null,
-    nombre_bl: null,
-    tonnage_outturn: null,
-    cubage_outturn: null,
-    nombre_outturn: null,
-  };
 
   /**
    * Identifiant du RDV.
@@ -97,7 +46,9 @@
 
   const isNew = $params.id === "new";
 
-  let escale: EscaleConsignation = isNew ? { ...nouvelleEscale } : null;
+  let escale: EscaleConsignation = isNew
+    ? consignationEscales.getTemplate()
+    : null;
   const archives = "archives" in $params;
 
   // Récupérer les données de l'escale
@@ -156,7 +107,20 @@
   function ajouterMarchandise() {
     escale.marchandises = [
       ...escale.marchandises,
-      structuredClone(nouvelleMarchandise),
+      {
+        id: null,
+        escale_id: null,
+        operation: "import",
+        marchandise: "",
+        client: "",
+        environ: true,
+        tonnage_bl: null,
+        cubage_bl: null,
+        nombre_bl: null,
+        tonnage_outturn: null,
+        cubage_outturn: null,
+        nombre_outturn: null,
+      },
     ];
   }
 

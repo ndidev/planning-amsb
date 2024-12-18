@@ -1,6 +1,6 @@
 <!-- routify:options title="Planning AMSB - Consignation" -->
 <script lang="ts">
-  import { onDestroy, getContext, setContext } from "svelte";
+  import { onDestroy, setContext } from "svelte";
   import { params } from "@roxi/routify";
 
   import {
@@ -11,9 +11,9 @@
   } from "@app/components";
   import { LigneEscale } from "./components";
 
-  import type { EscaleConsignation, Stores } from "@app/types";
+  import { consignationEscales } from "@app/stores";
 
-  const { consignationEscales } = getContext<Stores>("stores");
+  import type { EscaleConsignation } from "@app/types";
 
   const archives = "archives" in $params;
 

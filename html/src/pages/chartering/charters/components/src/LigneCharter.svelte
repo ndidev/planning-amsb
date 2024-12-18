@@ -19,9 +19,9 @@
 
   import { device, locale } from "@app/utils";
 
-  import type { Charter, Stores } from "@app/types";
+  import { currentUser, tiers, ports } from "@app/stores";
 
-  const { currentUser, tiers, ports } = getContext<Stores>("stores");
+  import type { Charter } from "@app/types";
 
   export let charter: Charter;
   let ligne: HTMLDivElement;

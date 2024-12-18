@@ -1,8 +1,6 @@
 <!-- routify:options title="Planning AMSB - Personnel de manutention" -->
 
 <script lang="ts">
-  import { getContext } from "svelte";
-
   import { Accordion, AccordionItem, Button, Search } from "flowbite-svelte";
 
   import { StaffCard } from "./components";
@@ -10,9 +8,9 @@
 
   import { removeDiacritics } from "@app/utils";
 
-  import type { StevedoringStaff, Stores } from "@app/types";
+  import { stevedoringStaff } from "@app/stores";
 
-  const { stevedoringStaff } = getContext<Stores>("stores");
+  import type { StevedoringStaff } from "@app/types";
 
   let search: string = "";
 

@@ -1,16 +1,8 @@
 <!-- routify:options title="Planning AMSB - Affrètement maritime" -->
 <script lang="ts">
-  import { getContext } from "svelte";
   import { params, goto, redirect } from "@roxi/routify";
 
-  import {
-    Label,
-    Input,
-    Toggle,
-    Textarea,
-    Select,
-    Heading,
-  } from "flowbite-svelte";
+  import { Label, Input, Toggle, Textarea, Select } from "flowbite-svelte";
   import Notiflix from "notiflix";
 
   import {
@@ -28,44 +20,14 @@
     preventFormSubmitOnEnterKeydown,
   } from "@app/utils";
 
-  import type { Stores, Charter } from "@app/types";
+  import { charteringCharters } from "@app/stores";
 
-  const { charteringCharters } = getContext<Stores>("stores");
+  import type { Charter } from "@app/types";
 
   let form: HTMLFormElement;
   let createCharterButton: BoutonAction;
   let updateCharterButton: BoutonAction;
   let deleteCharterButton: BoutonAction;
-
-  const nouvelAffretement: Charter = {
-    id: null,
-    statut: 0,
-    lc_debut: null,
-    lc_fin: null,
-    cp_date: null,
-    navire: "TBN",
-    affreteur: null,
-    armateur: null,
-    courtier: null,
-    fret_achat: null,
-    fret_vente: null,
-    surestaries_achat: null,
-    surestaries_vente: null,
-    legs: [],
-    commentaire: "",
-    archive: false,
-  };
-
-  const nouvelleEtape: Charter["legs"][0] = {
-    id: null,
-    charter: null,
-    bl_date: null,
-    pol: null,
-    pod: null,
-    marchandise: "",
-    quantite: "",
-    commentaire: "",
-  };
 
   /**
    * Identifiant du RDV.
@@ -79,7 +41,7 @@
 
   const isNew = $params.id === "new";
 
-  let charter: Charter = isNew ? { ...nouvelAffretement } : null;
+  let charter: Charter = isNew ? charteringCharters.getTemplate() : null;
   const archives = "archives" in $params;
 
   (async () => {
@@ -97,7 +59,19 @@
    * Ajouter une étape.
    */
   function addLeg() {
-    charter.legs = [...charter.legs, structuredClone(nouvelleEtape)];
+    charter.legs = [
+      ...charter.legs,
+      {
+        id: null,
+        charter: null,
+        bl_date: null,
+        pol: null,
+        pod: null,
+        marchandise: "",
+        quantite: "",
+        commentaire: "",
+      },
+    ];
   }
 
   /**

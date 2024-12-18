@@ -17,21 +17,6 @@
   let boutonModifier: BoutonAction;
   let boutonSupprimer: BoutonAction;
 
-  const modeleProduit: ProduitVrac = {
-    id: null,
-    nom: "",
-    couleur: "#000000",
-    unite: "",
-    qualites: [],
-  };
-
-  const modeleQualite: QualiteVrac = {
-    id: null,
-    produit: null,
-    nom: "",
-    couleur: "#000000",
-  };
-
   /**
    * Id du produit séctionné.
    */
@@ -48,14 +33,24 @@
    *
    */
   function getProduit(id: ProduitVrac["id"]) {
-    produit = structuredClone($vracProduits?.get(id) || modeleProduit);
+    produit = structuredClone(
+      $vracProduits?.get(id) || vracProduits.getTemplate()
+    );
   }
 
   /**
    * Ajouter une qualité.
    */
   function ajouterQualite() {
-    produit.qualites = [...produit.qualites, structuredClone(modeleQualite)];
+    produit.qualites = [
+      ...produit.qualites,
+      {
+        id: null,
+        produit: null,
+        nom: "",
+        couleur: "#000000",
+      },
+    ];
   }
 
   /**

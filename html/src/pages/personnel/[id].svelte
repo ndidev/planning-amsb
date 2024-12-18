@@ -1,7 +1,6 @@
 <!-- routify:options title="Planning AMSB - Personnel de manutention" -->
 
 <script lang="ts">
-  import { getContext } from "svelte";
   import { params, goto, redirect } from "@roxi/routify";
 
   import { Label, Input, Toggle, Select, Textarea } from "flowbite-svelte";
@@ -20,27 +19,14 @@
     preventFormSubmitOnEnterKeydown,
   } from "@app/utils";
 
-  import type { StevedoringStaff, Stores } from "@app/types";
+  import { stevedoringStaff } from "@app/stores";
 
-  const { stevedoringStaff } = getContext<Stores>("stores");
+  import type { StevedoringStaff } from "@app/types";
 
   let form: HTMLFormElement;
   let createButton: BoutonAction;
   let updateButton: BoutonAction;
   let deleteButton: BoutonAction;
-
-  const newStaff: StevedoringStaff = {
-    id: null,
-    firstname: "",
-    lastname: "",
-    fullname: "",
-    phone: "",
-    type: "mensuel",
-    tempWorkAgency: null,
-    isActive: true,
-    comments: "",
-    deletedAt: null,
-  };
 
   /**
    * Identifiant du personnel.
@@ -49,7 +35,7 @@
 
   let isNew = $params.id === "new";
 
-  let staff: StevedoringStaff = { ...newStaff };
+  let staff = stevedoringStaff.getTemplate();
 
   (async () => {
     try {

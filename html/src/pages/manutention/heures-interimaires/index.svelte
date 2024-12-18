@@ -1,14 +1,8 @@
 <!-- routify:options title="Planning AMSB - Heures intérimaires" -->
 <script lang="ts">
-  import { onDestroy, getContext } from "svelte";
+  import { onDestroy } from "svelte";
 
-  import {
-    Accordion,
-    AccordionItem,
-    Button,
-    Input,
-    ButtonGroup,
-  } from "flowbite-svelte";
+  import { Button, Input, ButtonGroup } from "flowbite-svelte";
   import { PlusCircleIcon, RectangleEllipsisIcon } from "lucide-svelte";
   import Notiflix from "notiflix";
 
@@ -21,13 +15,12 @@
   import { PageHeading, Chargement, SseConnection } from "@app/components";
 
   import { DateUtils, fetcher } from "@app/utils";
-  import type { TempWorkHours, Stores } from "@app/types";
 
-  const { stevedoringTempWorkHours, currentUser } =
-    getContext<Stores>("stores");
+  import { stevedoringTempWorkHours, currentUser } from "@app/stores";
+
+  import type { TempWorkHours } from "@app/types";
 
   const unsubscribeFilter = filter.subscribe((value) => {
-    console.log(value.data);
     stevedoringTempWorkHours.setSearchParams(value.toSearchParams());
   });
 

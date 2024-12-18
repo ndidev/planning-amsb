@@ -1,17 +1,44 @@
 import { createFlatStore } from "../generics/flatStore";
 import type { EscaleConsignation } from "@app/types";
-import { DateUtils, type FetcherOptions } from "@app/utils";
+import { DateUtils } from "@app/utils";
 
 /**
  * Store escales consignation.
  */
-export const consignationEscales = (
-  params: FetcherOptions["searchParams"] = new URLSearchParams()
-) =>
-  createFlatStore<EscaleConsignation>("consignation/escales", null, {
-    params,
+export const consignationEscales = createFlatStore<EscaleConsignation>(
+  "consignation/escales",
+  {
+    id: null,
+    navire: "TBN",
+    voyage: null,
+    armateur: null,
+    eta_date: null,
+    eta_heure: "",
+    nor_date: null,
+    nor_heure: "",
+    pob_date: null,
+    pob_heure: "",
+    etb_date: null,
+    etb_heure: "",
+    ops_date: null,
+    ops_heure: "",
+    etc_date: null,
+    etc_heure: "",
+    etd_date: null,
+    etd_heure: "",
+    te_arrivee: null,
+    te_depart: null,
+    last_port: "",
+    next_port: "",
+    call_port: "Le Légué",
+    quai: "",
+    marchandises: [],
+    commentaire: "",
+  },
+  {
     satisfiesParams,
-  });
+  }
+);
 
 function satisfiesParams(
   escale: EscaleConsignation,

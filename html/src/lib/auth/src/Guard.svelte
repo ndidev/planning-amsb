@@ -11,13 +11,12 @@
   ```
  -->
 <script lang="ts">
-  import { getContext } from "svelte";
   import { goto, page } from "@roxi/routify";
 
   import { UserRoles } from "@app/auth";
-  import type { ModuleId, Stores } from "@app/types";
+  import type { ModuleId } from "@app/types";
 
-  const { currentUser } = getContext<Stores>("stores");
+  import { currentUser } from "@app/stores";
 
   let canDisplay = $currentUser.canUseApp;
 

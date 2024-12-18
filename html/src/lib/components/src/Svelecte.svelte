@@ -22,10 +22,11 @@
 </script>
 
 <script lang="ts">
-  import { onDestroy, getContext } from "svelte";
-  import type { Stores } from "@app/types";
+  import { onDestroy } from "svelte";
   import type { Unsubscriber } from "svelte/store";
   import type { SearchProps } from "svelecte/dist/utils/list";
+
+  import { tiers, stevedoringStaff, ports, pays } from "@app/stores";
 
   // form and CE
   export let name = "svelecte";
@@ -151,7 +152,6 @@
   let unsubscribe: Unsubscriber;
 
   if (type === "tiers") {
-    const { tiers } = getContext<Stores>("stores");
     unsubscribe = tiers.subscribe((listeTiers) => {
       if (listeTiers) {
         options = [...listeTiers.values()]
@@ -177,7 +177,6 @@
   }
 
   if (type === "pays") {
-    const { pays } = getContext<Stores>("stores");
     unsubscribe = pays.subscribe((listePays) => {
       if (listePays) {
         options = listePays.map((pays): Item => {
@@ -195,7 +194,6 @@
   }
 
   if (type === "port") {
-    const { ports } = getContext<Stores>("stores");
     unsubscribe = ports.subscribe((listePorts) => {
       if (listePorts) {
         options = listePorts.map((port): Item => {
@@ -213,7 +211,6 @@
   }
 
   if (type === "staff") {
-    const { stevedoringStaff } = getContext<Stores>("stores");
     unsubscribe = stevedoringStaff.subscribe((staffList) => {
       if (staffList) {
         options = [
@@ -273,7 +270,6 @@
   }
 
   if (type === "mensuels") {
-    const { stevedoringStaff } = getContext<Stores>("stores");
     unsubscribe = stevedoringStaff.subscribe((staffList) => {
       if (staffList) {
         options = [...staffList.values()]
@@ -303,7 +299,6 @@
   }
 
   if (type === "interimaires") {
-    const { stevedoringStaff } = getContext<Stores>("stores");
     unsubscribe = stevedoringStaff.subscribe((staffList) => {
       if (staffList) {
         options = [...staffList.values()]

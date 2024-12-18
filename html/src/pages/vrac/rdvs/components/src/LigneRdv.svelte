@@ -34,11 +34,9 @@
   } from "@app/components";
 
   import { notiflixOptions, device, removeDiacritics } from "@app/utils";
-  import type { Stores, RdvVrac, ProduitVrac, QualiteVrac } from "@app/types";
+  import type { RdvVrac, ProduitVrac, QualiteVrac } from "@app/types";
 
-  // Stores
-  const { currentUser, vracProduits, vracRdvs, tiers } =
-    getContext<Stores>("stores");
+  import { currentUser, vracProduits, vracRdvs, tiers } from "@app/stores";
 
   export let appointment: RdvVrac;
   let ligne: HTMLDivElement;
@@ -53,22 +51,13 @@
 
   const archives: boolean = getContext("archives");
 
-  const produitVierge: Partial<ProduitVrac> = {
-    nom: "",
-    couleur: "#000000",
-    qualites: [],
+  $: produit = $vracProduits?.get(appointment.produit) || {
+    ...vracProduits.getTemplate(),
   };
-
-  const qualiteVierge: Partial<QualiteVrac> = {
-    nom: "",
-    couleur: "#000000",
-  };
-
-  $: produit = $vracProduits?.get(appointment.produit) || { ...produitVierge };
 
   $: qualite = produit.qualites.find(
     (qualite) => qualite.id === appointment.qualite
-  ) || { ...qualiteVierge };
+  );
 
   function showDispatchIfNecessary(type: "beforeOrderReady" | "beforeArchive") {
     const normalizedRemarks = removeDiacritics(
@@ -310,7 +299,7 @@
     <span style:color={produit.couleur}>{produit.nom}</span>
 
     {#if appointment.qualite}
-      <span style:color={qualite.couleur}>{qualite.nom}</span>
+      <span style:color={qualite?.couleur}>{qualite?.nom}</span>
     {/if}
   </div>
 

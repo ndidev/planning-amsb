@@ -9,14 +9,36 @@ import type {
  * Store personnel de manutention.
  */
 export const stevedoringStaff = createFlatStore<StevedoringStaff>(
-  "manutention/personnel"
+  "manutention/personnel",
+  {
+    id: null,
+    firstname: "",
+    lastname: "",
+    fullname: "",
+    phone: "",
+    type: "mensuel",
+    tempWorkAgency: null,
+    isActive: true,
+    comments: "",
+    deletedAt: null,
+  }
 );
 
 /**
  * Store des équipements de manutention.
  */
 export const stevedoringEquipments = createFlatStore<StevedoringEquipment>(
-  "manutention/equipements"
+  "manutention/equipements",
+  {
+    id: null,
+    brand: "",
+    model: "",
+    type: "",
+    internalNumber: "",
+    serialNumber: "",
+    isActive: true,
+    comments: "",
+  }
 );
 
 /**

@@ -13,7 +13,7 @@
 
   import { Filter } from "@app/utils";
 
-  import type { StevedoringStaff, Stores } from "@app/types";
+  import type { StevedoringStaff } from "@app/types";
 
   type TempWorkHoursFilter = {
     startDate?: string;
@@ -40,13 +40,11 @@
 </script>
 
 <script lang="ts">
-  import { getContext } from "svelte";
-
   import { Label, Input, Button } from "flowbite-svelte";
 
   import { Svelecte } from "@app/components";
 
-  const { stevedoringStaff } = getContext<Stores>("stores");
+  import { stevedoringStaff } from "@app/stores";
 
   let filterData = { ...$filter.data };
 

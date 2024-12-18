@@ -1,16 +1,17 @@
 <script lang="ts">
-  import { getContext } from "svelte";
-
   import { Label, Input } from "flowbite-svelte";
   import Notiflix from "notiflix";
 
   import { LucideButton, Svelecte, NumericInput } from "@app/components";
   import { notiflixOptions, DateUtils } from "@app/utils";
 
-  import type { TempWorkHours, StevedoringStaff, Stores } from "@app/types";
+  import type { TempWorkHours, StevedoringStaff } from "@app/types";
 
-  const { stevedoringStaff, stevedoringTempWorkHours, currentUser } =
-    getContext<Stores>("stores");
+  import {
+    stevedoringStaff,
+    stevedoringTempWorkHours,
+    currentUser,
+  } from "@app/stores";
 
   export let tempWorkHours: TempWorkHours;
 

@@ -1,13 +1,33 @@
 import { createFlatStore } from "../generics/flatStore";
 import type { RdvBois, TimberFilter } from "@app/types";
-import { DateUtils, type FetcherOptions } from "@app/utils";
+import { DateUtils } from "@app/utils";
 
 /**
  * Store RDVs bois.
  */
-export const boisRdvs = (
-  params: FetcherOptions["searchParams"] = new URLSearchParams()
-) => createFlatStore<RdvBois>("bois/rdvs", null, { params, satisfiesParams });
+export const boisRdvs = createFlatStore<RdvBois>(
+  "bois/rdvs",
+  {
+    id: null,
+    attente: false,
+    date_rdv: new Date().toISOString().split("T")[0],
+    heure_arrivee: null,
+    heure_depart: null,
+    fournisseur: null,
+    chargement: 1, // AMSB
+    client: null,
+    livraison: null,
+    transporteur: null,
+    affreteur: null,
+    commande_prete: false,
+    confirmation_affretement: false,
+    numero_bl: "",
+    commentaire_public: "",
+    commentaire_cache: "",
+    dispatch: [],
+  },
+  { satisfiesParams }
+);
 
 function satisfiesParams(appointment: RdvBois, searchParams: URLSearchParams) {
   const filter: { [P in keyof TimberFilter]: string } =

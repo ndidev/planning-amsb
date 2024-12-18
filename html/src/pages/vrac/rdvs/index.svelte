@@ -1,6 +1,6 @@
 <!-- routify:options title="Planning AMSB - Vrac" -->
 <script lang="ts">
-  import { onMount, onDestroy, setContext, getContext } from "svelte";
+  import { onMount, onDestroy, setContext } from "svelte";
   import { params } from "@roxi/routify";
 
   import { LigneDate, LigneRdv, Placeholder } from "./components";
@@ -8,9 +8,9 @@
 
   import { fetcher } from "@app/utils";
 
-  const { vracRdvs, vracProduits, marees } = getContext<Stores>("stores");
+  import { vracRdvs, vracProduits, marees } from "@app/stores";
 
-  import type { RdvVrac, Stores } from "@app/types";
+  import type { RdvVrac } from "@app/types";
 
   type DateString = string;
   type GroupesRdv = Map<DateString, RdvVrac[]>;
@@ -216,6 +216,7 @@
         maree={datesMareesSup4m.has(date)}
         navires={naviresParDate.get(date) || []}
       />
+
       <div class="divide-y">
         {#each appointments as appointment (appointment.id)}
           <LigneRdv {appointment} />

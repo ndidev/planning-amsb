@@ -1,10 +1,7 @@
 <script lang="ts">
-  import { getContext } from "svelte";
   import Notiflix from "notiflix";
 
-  import type { Stores } from "@app/types";
-
-  const { vracRdvs } = getContext<Stores>("stores");
+  import { vracRdvs } from "@app/stores";
 
   async function createSpecialAppointment(productId: number) {
     const miscelaneousThirdPartyId = 6;

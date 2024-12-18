@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { onDestroy, getContext } from "svelte";
+  import { onDestroy } from "svelte";
   import Notiflix from "notiflix";
 
-  import type { Stores, AjoutRapideBois, Tiers } from "@app/types";
+  import { configAjoutsRapides, boisRdvs, tiers } from "@app/stores";
 
-  const { configAjoutsRapides, boisRdvs, tiers } = getContext<Stores>("stores");
+  import type { AjoutRapideBois, Tiers } from "@app/types";
 
   let ajoutsRapides: Map<Tiers["id"], AjoutRapideBois[]>;
 

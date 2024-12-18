@@ -16,18 +16,16 @@ export function createFlatStore<T extends { id: string | number }>(
   endpoint: string,
   itemTemplate: T = null,
   options: {
-    params?: FetcherOptions["searchParams"];
     satisfiesParams?: (data: T, searchParams: URLSearchParams) => boolean;
     additionalEvents?: string[];
   } = {}
 ) {
   let {
-    params = {},
     satisfiesParams = (data: T, searchParams: URLSearchParams) => true,
     additionalEvents = [],
   } = options;
 
-  let searchParams = new URLSearchParams(params);
+  let searchParams = new URLSearchParams();
 
   const initial = null;
 

@@ -1,6 +1,6 @@
 <!-- routify:options title="Planning AMSB - Bois" -->
 <script lang="ts">
-  import { onDestroy, getContext } from "svelte";
+  import { onDestroy } from "svelte";
 
   import { BandeauInfo, SseConnection } from "@app/components";
   import {
@@ -14,9 +14,9 @@
     LigneRdvAttente,
   } from "./components";
 
-  import type { Stores, RdvBois, CamionsParDate } from "@app/types";
+  import { boisRdvs, tiers } from "@app/stores";
 
-  const { boisRdvs, tiers } = getContext<Stores>("stores");
+  import type { RdvBois, CamionsParDate } from "@app/types";
 
   type DateString = string;
   type GroupesRdv = Map<DateString, RdvBois[]>;

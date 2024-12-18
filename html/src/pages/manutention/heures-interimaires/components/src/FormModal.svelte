@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { getContext } from "svelte";
-
   import { Modal, Label, Input } from "flowbite-svelte";
   import Notiflix from "notiflix";
 
@@ -12,9 +10,9 @@
     preventFormSubmitOnEnterKeydown,
   } from "@app/utils";
 
-  import type { TempWorkHours, Stores } from "@app/types";
+  import { stevedoringTempWorkHours } from "@app/stores";
 
-  const { stevedoringTempWorkHours } = getContext<Stores>("stores");
+  import type { TempWorkHours } from "@app/types";
 
   let form: HTMLFormElement;
   let createButton: BoutonAction;

@@ -20,9 +20,9 @@
 
   import { device, locale } from "@app/utils";
 
-  import type { EscaleConsignation, Stores } from "@app/types";
+  import { currentUser, tiers, ports } from "@app/stores";
 
-  const { currentUser, tiers, ports } = getContext<Stores>("stores");
+  import type { EscaleConsignation } from "@app/types";
 
   export let escale: EscaleConsignation;
   let line: HTMLDivElement;
