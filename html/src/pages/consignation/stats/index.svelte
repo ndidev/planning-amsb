@@ -2,7 +2,7 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
 
-  import { FilterBanner, filter, CarteEscale } from "./components";
+  import { FilterModal, filter, CarteEscale } from "./components";
   import { PageHeading } from "@app/components";
 
   import { fetcher } from "@app/utils";
@@ -14,7 +14,8 @@
   let details: EscaleConsignation[] = [];
 
   const unsubscribeFilter = filter.subscribe((value) => {
-    fetchStats();
+    const params = value.toSearchParams();
+    fetchStats(params);
     details = [];
   });
 
@@ -44,10 +45,10 @@
    *
    * @returns Statistiques au format JSON
    */
-  async function fetchStats() {
+  async function fetchStats(searchParams: URLSearchParams) {
     try {
       stats = await fetcher("consignation/stats", {
-        searchParams: $filter.toSearchParams(),
+        searchParams,
       });
     } catch (error) {
       Notiflix.Notify.failure(error.message);
@@ -78,8 +79,7 @@
 <main>
   <PageHeading>Statistiques</PageHeading>
 
-  <!-- Filtre par date/client -->
-  <FilterBanner />
+  <FilterModal />
 
   <div id="statistiques">
     {#if stats}

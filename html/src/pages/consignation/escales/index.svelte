@@ -1,7 +1,6 @@
 <!-- routify:options title="Planning AMSB - Consignation" -->
 <script lang="ts">
-  import { onDestroy, setContext } from "svelte";
-  import { params } from "@roxi/routify";
+  import { onDestroy } from "svelte";
 
   import {
     BandeauInfo,
@@ -9,31 +8,34 @@
     Chargement,
     SseConnection,
   } from "@app/components";
-  import { LigneEscale } from "./components";
+  import { LigneEscale, FilterModal, filter } from "./components";
 
   import { consignationEscales } from "@app/stores";
 
   import type { EscaleConsignation } from "@app/types";
 
-  const archives = "archives" in $params;
-
-  setContext("archives", archives);
-
-  if (archives) {
-    consignationEscales.setSearchParams({ archives: "true" });
-  } else {
-    consignationEscales.setSearchParams({});
-  }
-
   let escales: EscaleConsignation[];
+
+  const unsubscribeFilter = filter.subscribe((value) => {
+    const params = value.toSearchParams();
+    consignationEscales.setSearchParams(params);
+  });
 
   const unsubscribeEscales = consignationEscales.subscribe((value) => {
     if (!value) return;
 
-    escales = [...value.values()];
+    escales = [...value.values()].sort((a, b) => {
+      return (
+        (a.eta_date ?? "9").localeCompare(b.eta_date ?? "9") ||
+        a.eta_heure.localeCompare(b.eta_heure) ||
+        (a.etb_date ?? "9").localeCompare(b.etb_date ?? "9") ||
+        a.etb_heure.localeCompare(b.etb_heure)
+      );
+    });
   });
 
   onDestroy(() => {
+    unsubscribeFilter();
     unsubscribeEscales();
   });
 </script>
@@ -55,11 +57,15 @@
   <BandeauInfo module="consignation" pc />
 </div>
 
+<FilterModal />
+
 <main class="w-full flex-auto">
   {#if escales}
     <div class="divide-y">
       {#each escales as escale (escale.id)}
         <LigneEscale {escale} />
+      {:else}
+        <div class="p-4 text-center">Aucune escale trouvée.</div>
       {/each}
     </div>
   {:else}

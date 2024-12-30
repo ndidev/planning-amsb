@@ -12,14 +12,15 @@ final readonly class ShippingFilterDTO extends Filter
 {
     private \DateTimeInterface $startDate;
     private \DateTimeInterface $endDate;
-    private string $shipFilter;
-    private string $shipOwnerFilter;
-    private string $cargoFilter;
-    private string $customerFilter;
-    private string $lastPortFilter;
-    private string $nextPortFilter;
+    private string $shipsFilter;
+    private string $shipOwnersFilter;
+    private string $cargoesFilter;
+    private bool $strictCargoesFilter;
+    private string $customersFilter;
+    private string $lastPortsFilter;
+    private string $nextPortsFilter;
 
-    public const DEFAULT_START_DATE = '0001-01-01';
+    public const DEFAULT_START_DATE = 'now';
     public const DEFAULT_END_DATE = '9999-12-31';
 
     /**
@@ -29,31 +30,23 @@ final readonly class ShippingFilterDTO extends Filter
      */
     public function __construct(HTTPRequestQuery $query)
     {
-        $this->startDate = $query->getDatetime('date_debut', self::DEFAULT_START_DATE);
+        $this->startDate = $query->getDatetime('startDate', self::DEFAULT_START_DATE);
 
-        $this->endDate = $query->getDatetime('date_fin', self::DEFAULT_END_DATE);
+        $this->endDate = $query->getDatetime('endDate', self::DEFAULT_END_DATE);
 
-        /** @var string */
-        $shipFilter = preg_replace(
-            "/([^,]+),?/",
-            "'$1',",
-            $query->getString('navire')
-        );
-        $this->shipFilter = trim($shipFilter, ",");
+        $this->shipsFilter = trim($this->splitStringParameters($query->getString('ships')), ',');
 
-        $this->shipOwnerFilter = trim($query->getString('armateur'));
+        $this->shipOwnersFilter = trim($query->getString('shipOwners'));
 
-        $this->cargoFilter =
-            trim($this->splitStringParameters($query->getString('marchandise')), ',');
+        $this->cargoesFilter = trim($this->splitStringParameters($query->getString('cargoes')), ',');
 
-        $this->customerFilter =
-            trim($this->splitStringParameters($query->getString('client')), ',');
+        $this->strictCargoesFilter = $query->getBool('strictCargoes', false);
 
-        $this->lastPortFilter =
-            trim($this->splitStringParameters($query->getString('last_port')), ',');
+        $this->customersFilter = trim($this->splitStringParameters($query->getString('customers')), ',');
 
-        $this->nextPortFilter =
-            trim($this->splitStringParameters($query->getString('next_port')), ',');
+        $this->lastPortsFilter = trim($this->splitStringParameters($query->getString('lastPorts')), ',');
+
+        $this->nextPortsFilter = trim($this->splitStringParameters($query->getString('nextPorts')), ',');
     }
 
     public function getSqlStartDate(): string
@@ -66,55 +59,61 @@ final readonly class ShippingFilterDTO extends Filter
         return $this->endDate->format('Y-m-d');
     }
 
-    public function getSqlShipFilter(string $table = 'cp'): string
+    public function getSqlShipsFilter(string $table = 'cp'): string
     {
-        return $this->shipFilter === ""
+        return $this->shipsFilter === ""
             ? ""
-            : " AND {$table}.navire IN ($this->shipFilter)";
+            : " AND {$table}.navire IN ($this->shipsFilter)";
     }
 
-    public function getSqlShipOwnerFilter(string $table = 'cp'): string
+    public function getSqlShipOwnersFilter(string $table = 'cp'): string
     {
-        return $this->shipOwnerFilter === ""
+        return $this->shipOwnersFilter === ""
             ? ""
-            : " AND {$table}.armateur IN ($this->shipOwnerFilter)";
+            : " AND {$table}.armateur IN ($this->shipOwnersFilter)";
     }
 
-    public function getSqlCargoFilter(string $table = 'cem'): string
+    public function getSqlCargoesFilter(string $table = 'cem'): string
     {
-        return $this->cargoFilter === ""
+        $cargoRegexp = str_replace(',', '|', $this->cargoesFilter);
+        $cargoRegexp = str_replace("'", '', $cargoRegexp);
+
+        return $this->cargoesFilter === ""
             ? ""
-            : " AND {$table}.marchandise IN ($this->cargoFilter)";
+            : ($this->strictCargoesFilter
+                ? " AND {$table}.marchandise IN ($this->cargoesFilter)"
+                : " AND {$table}.marchandise REGEXP '$cargoRegexp'"
+            );
     }
 
-    public function getSqlCustomerFilter(string $table = 'cem'): string
+    public function getSqlCustomersFilter(string $table = 'cem'): string
     {
-        return $this->customerFilter === ""
+        return $this->customersFilter === ""
             ? ""
-            : " AND {$table}.client IN ($this->customerFilter)";
+            : " AND {$table}.client IN ($this->customersFilter)";
     }
 
-    public function getSqlLastPortFilter(string $table = 'cp'): string
+    public function getSqlLastPortsFilter(string $table = 'cp'): string
     {
-        return $this->lastPortFilter === ""
+        return $this->lastPortsFilter === ""
             ? ""
-            : " AND {$table}.last_port IN ($this->lastPortFilter)";
+            : " AND {$table}.last_port IN ($this->lastPortsFilter)";
     }
 
-    public function getSqlNextPortFilter(string $table = 'cp'): string
+    public function getSqlNextPortsFilter(string $table = 'cp'): string
     {
-        return $this->nextPortFilter === ""
+        return $this->nextPortsFilter === ""
             ? ""
-            : " AND {$table}.next_port IN ($this->nextPortFilter)";
+            : " AND {$table}.next_port IN ($this->nextPortsFilter)";
     }
 
     public function getSqlFilter(): string
     {
-        return $this->getSqlShipFilter()
-            . $this->getSqlCargoFilter()
-            . $this->getSqlShipOwnerFilter()
-            . $this->getSqlCustomerFilter()
-            . $this->getSqlLastPortFilter()
-            . $this->getSqlNextPortFilter();
+        return $this->getSqlShipsFilter()
+            . $this->getSqlShipOwnersFilter()
+            . $this->getSqlCargoesFilter()
+            . $this->getSqlCustomersFilter()
+            . $this->getSqlLastPortsFilter()
+            . $this->getSqlNextPortsFilter();
     }
 }

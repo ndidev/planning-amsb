@@ -146,16 +146,17 @@ export type EscaleConsignation = {
   commentaire: string;
 };
 
-export type ShippingFilter = {
-  date_debut?: string;
-  date_fin?: string;
-  navire?: EscaleConsignation["navire"][];
-  marchandise?: EscaleConsignation["marchandises"][number]["marchandise"];
-  client?: EscaleConsignation["marchandises"][number]["client"];
-  armateur?: EscaleConsignation["armateur"][];
-  last_port?: EscaleConsignation["last_port"][];
-  next_port?: EscaleConsignation["next_port"][];
-};
+export type ShippingFilter = Partial<{
+  startDate: string;
+  endDate: string;
+  ships: EscaleConsignation["navire"][];
+  shipOwners: EscaleConsignation["armateur"][];
+  cargoes: EscaleConsignation["marchandises"][number]["marchandise"][];
+  strictCargoes: boolean;
+  customers: EscaleConsignation["marchandises"][number]["client"][];
+  lastPorts: EscaleConsignation["last_port"][];
+  nextPorts: EscaleConsignation["next_port"][];
+}>;
 
 /**
  * Marée.

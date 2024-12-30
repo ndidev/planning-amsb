@@ -92,16 +92,23 @@ final class BulkAppointmentRepository extends Repository
                 show_on_tv,
                 archive
             FROM vrac_planning
-            WHERE archive = $archiveFilter
-            $sqlFilter
+            WHERE
+                date_rdv BETWEEN :startDate AND :endDate
+                AND archive = $archiveFilter
+                $sqlFilter
             ORDER BY date_rdv";
 
         try {
-            $request = $this->mysql->query($statement);
+            $request = $this->mysql->prepare($statement);
 
             if (!$request) {
                 throw new DBException("Impossible de récupérer les RDV vrac.");
             }
+
+            $request->execute([
+                'startDate' => $filter->getSqlStartDate(),
+                'endDate' => $filter->getSqlEndDate(),
+            ]);
 
             /** @phpstan-var BulkAppointmentArray[] $appointmentsRaw */
             $appointmentsRaw = $request->fetchAll();

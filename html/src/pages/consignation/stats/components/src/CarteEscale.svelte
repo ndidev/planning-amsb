@@ -11,11 +11,14 @@
       >{escale.navire}</a
     >
   </div>
-  <div>
-    {new DateUtils(escale.ops_date).format().long} &gt; {new DateUtils(
-      escale.etc_date
-    ).format().long}
-  </div>
+
+  {#if escale.ops_date && escale.etc_date}
+    <div>
+      {new DateUtils(escale.ops_date).format().long} &gt; {new DateUtils(
+        escale.etc_date
+      ).format().long}
+    </div>
+  {/if}
 
   <ul class="mt-2">
     {#each escale.marchandises as marchandise}

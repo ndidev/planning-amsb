@@ -94,11 +94,12 @@ export type Charter = {
   archive: boolean;
 };
 
-export type CharteringFilter = {
-  date_debut?: string;
-  date_fin?: string;
-  affreteur?: Charter["affreteur"][];
-  armateur?: Charter["armateur"][];
-  courtier?: Charter["courtier"][];
-  statut?: Charter["statut"][];
-};
+export type CharteringFilter = Partial<{
+  startDate: string;
+  endDate: string;
+  charterers: Charter["affreteur"][];
+  shipOwners: Charter["armateur"][];
+  brokers: Charter["courtier"][];
+  status: Charter["statut"][];
+  archives: boolean;
+}>;

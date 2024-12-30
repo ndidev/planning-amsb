@@ -10,7 +10,6 @@
  -->
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { writable } from "svelte/store";
   import { goto } from "@roxi/routify";
 
   import Notiflix from "notiflix";
@@ -51,7 +50,7 @@
   let mc: HammerManager;
   let showModal = false;
 
-  let showDispatchModal = writable(false);
+  let showDispatchModal = false;
 
   let awaitingDispatchBeforeOrderReady = false;
 
@@ -119,7 +118,7 @@
           ];
 
           awaitingDispatchBeforeOrderReady = true;
-          $showDispatchModal = true;
+          showDispatchModal = true;
         }
         break;
 
@@ -317,7 +316,7 @@
 
   <DispatchModal
     bind:appointment
-    bind:showDispatchModal
+    bind:open={showDispatchModal}
     bind:awaitingDispatchBeforeOrderReady
     {toggleOrderReady}
   />

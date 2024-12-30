@@ -152,8 +152,20 @@ export type QualiteVrac = {
   couleur: string;
 };
 
-export type BulkDispatchFilter = {
-  startDate?: string;
-  endDate?: string;
-  staff?: StevedoringStaff["id"][];
-};
+export type BulkPlanningFilter = Partial<{
+  date_debut: string;
+  date_fin: string;
+  produit: RdvVrac["produit"][];
+  qualite: RdvVrac["qualite"][];
+  fournisseur: RdvVrac["fournisseur"][];
+  client: RdvVrac["client"][];
+  transporteur: RdvVrac["transporteur"][];
+  archives: boolean;
+  tv: boolean;
+}>;
+
+export type BulkDispatchFilter = Partial<{
+  startDate: string;
+  endDate: string;
+  staff: StevedoringStaff["id"][];
+}>;

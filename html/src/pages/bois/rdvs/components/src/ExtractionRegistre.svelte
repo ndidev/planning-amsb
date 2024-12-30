@@ -89,8 +89,8 @@
 
     place-items: center;
     position: fixed;
-    right: 30px;
-    top: 15px;
+    right: 20px;
+    bottom: calc(var(--footer-height) + 70px);
     width: var(--size);
     height: var(--size);
     z-index: 3;

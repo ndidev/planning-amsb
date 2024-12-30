@@ -14,7 +14,7 @@
     position: "right-bottom",
     cssAnimationStyle: "from-bottom",
     plainText: false,
-    messageMaxLength: 250,
+    messageMaxLength: 500,
     timeout: 5000,
   });
 

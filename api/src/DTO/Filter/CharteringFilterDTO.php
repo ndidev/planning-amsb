@@ -28,19 +28,19 @@ final readonly class CharteringFilterDTO extends Filter
      */
     public function __construct(HTTPRequestQuery $query)
     {
-        $this->startDate = $query->getDatetime('date_debut', self::DEFAULT_START_DATE);
+        $this->startDate = $query->getDatetime('startDate', self::DEFAULT_START_DATE);
 
-        $this->endDate = $query->getDatetime('date_fin', self::DEFAULT_END_DATE);
+        $this->endDate = $query->getDatetime('endDate', self::DEFAULT_END_DATE);
 
-        $this->statusFilter = trim($query->getString('statut'), ',');
+        $this->statusFilter = trim($query->getString('status'), ',');
 
-        $this->chartererFilter = trim($query->getString('affreteur'), ',');
+        $this->chartererFilter = trim($query->getString('charterers'), ',');
 
-        $this->ownerFilter = trim($query->getString('armateur'), ',');
+        $this->ownerFilter = trim($query->getString('shipOwners'), ',');
 
-        $this->brokerFilter = trim($query->getString('courtier'), ',');
+        $this->brokerFilter = trim($query->getString('brokers'), ',');
 
-        $this->isArchive = $query->isSet('archives');
+        $this->isArchive = $query->getBool('archives');
     }
 
     public function getSqlStartDate(): string

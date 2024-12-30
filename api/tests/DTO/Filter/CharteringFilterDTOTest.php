@@ -21,7 +21,7 @@ final class CharteringFilterDTOTest extends TestCase
     {
         // Given
         $date = '2023-01-01';
-        $_SERVER['REQUEST_URI'] = "/path?date_debut={$date}";
+        $_SERVER['REQUEST_URI'] = "/path?startDate={$date}";
         $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
 
@@ -50,7 +50,7 @@ final class CharteringFilterDTOTest extends TestCase
     public function testGetSqlStartDateWithEmptyString(): void
     {
         // Given
-        $_SERVER['REQUEST_URI'] = "/path?date_debut=";
+        $_SERVER['REQUEST_URI'] = "/path?startDate=";
         $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
         $expected = (new \DateTime(CharteringFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
@@ -65,7 +65,7 @@ final class CharteringFilterDTOTest extends TestCase
     public function testGetSqlStartDateWithIllegalString(): void
     {
         // Given
-        $_SERVER['REQUEST_URI'] = "/path?date_debut=illegal";
+        $_SERVER['REQUEST_URI'] = "/path?startDate=illegal";
         $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
         $expected = (new \DateTime(CharteringFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
@@ -81,7 +81,7 @@ final class CharteringFilterDTOTest extends TestCase
     {
         // Given
         $date = '2023-12-31';
-        $_SERVER['REQUEST_URI'] = "/path?date_fin={$date}";
+        $_SERVER['REQUEST_URI'] = "/path?endDate={$date}";
         $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
 
@@ -110,7 +110,7 @@ final class CharteringFilterDTOTest extends TestCase
     public function testGetSqlEndDateWithEmptyString(): void
     {
         // Given
-        $_SERVER['REQUEST_URI'] = "/path?date_fin=";
+        $_SERVER['REQUEST_URI'] = "/path?endDate=";
         $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
         $expected = (new \DateTime(CharteringFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
@@ -125,7 +125,7 @@ final class CharteringFilterDTOTest extends TestCase
     public function testGetSqlEndDateWithIllegalString(): void
     {
         // Given
-        $_SERVER['REQUEST_URI'] = "/path?date_fin=illegal";
+        $_SERVER['REQUEST_URI'] = "/path?endDate=illegal";
         $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
         $expected = (new \DateTime(CharteringFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
@@ -140,7 +140,7 @@ final class CharteringFilterDTOTest extends TestCase
     public function testGetSqlStatusFilter(): void
     {
         // Given
-        $_SERVER['REQUEST_URI'] = "/path?statut=1,2";
+        $_SERVER['REQUEST_URI'] = "/path?status=1,2";
         $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
 
@@ -168,7 +168,7 @@ final class CharteringFilterDTOTest extends TestCase
     public function testGetSqlChartererFilter(): void
     {
         // Given
-        $_SERVER['REQUEST_URI'] = "/path?affreteur=1,2";
+        $_SERVER['REQUEST_URI'] = "/path?charterers=1,2";
         $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
 
@@ -196,7 +196,7 @@ final class CharteringFilterDTOTest extends TestCase
     public function testGetSqlOwnerFilter(): void
     {
         // Given
-        $_SERVER['REQUEST_URI'] = "/path?armateur=1,2";
+        $_SERVER['REQUEST_URI'] = "/path?shipOwners=1,2";
         $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
 
@@ -224,7 +224,7 @@ final class CharteringFilterDTOTest extends TestCase
     public function testGetSqlBrokerFilter(): void
     {
         // Given
-        $_SERVER['REQUEST_URI'] = "/path?courtier=1,2";
+        $_SERVER['REQUEST_URI'] = "/path?brokers=1,2";
         $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
 
@@ -252,7 +252,7 @@ final class CharteringFilterDTOTest extends TestCase
     public function testIsArchive(): void
     {
         // Given
-        $_SERVER['REQUEST_URI'] = "/path?archives";
+        $_SERVER['REQUEST_URI'] = "/path?archives=true";
         $query = new HTTPRequestQuery();
         $dto = new CharteringFilterDTO($query);
 

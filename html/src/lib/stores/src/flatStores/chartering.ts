@@ -1,5 +1,6 @@
 import { createFlatStore } from "../generics/flatStore";
-import type { Charter } from "@app/types";
+import type { Charter, CharteringFilter } from "@app/types";
+import { DateUtils } from "@app/utils";
 
 /**
  * Store affrètements maritimes.
@@ -29,8 +30,47 @@ export const charteringCharters = createFlatStore<Charter>(
   }
 );
 
-function satisfiesParams(charter: Charter, params: URLSearchParams) {
-  const archives = "archives" in Object.fromEntries(params);
+function satisfiesParams(charter: Charter, searchParams: URLSearchParams) {
+  const filter: { [P in keyof CharteringFilter]: string } =
+    Object.fromEntries(searchParams);
 
-  return charter.archive === archives;
+  const startDateMatches = (filter.startDate ?? "") <= charter.lc_fin;
+
+  const endDateMatches = (filter.endDate ?? "9") >= charter.lc_debut;
+
+  const chartererMatches =
+    filter.charterers?.split(",").includes(charter.affreteur.toString()) ??
+    true;
+
+  const shipOwnerMatches =
+    filter.shipOwners?.split(",").includes(charter.armateur.toString()) ?? true;
+
+  const brokerMatches =
+    filter.brokers?.split(",").includes(charter.courtier.toString()) ?? true;
+
+  const statusMatches =
+    filter.status?.split(",").includes(charter.statut.toString()) ?? true;
+
+  const archiveMatches =
+    charter.archive === (filter.archives === "true" ? true : false);
+
+  console.log({
+    startDateMatches,
+    endDateMatches,
+    chartererMatches,
+    shipOwnerMatches,
+    brokerMatches,
+    statusMatches,
+    archiveMatches,
+  });
+
+  return (
+    startDateMatches &&
+    endDateMatches &&
+    chartererMatches &&
+    shipOwnerMatches &&
+    brokerMatches &&
+    statusMatches &&
+    archiveMatches
+  );
 }

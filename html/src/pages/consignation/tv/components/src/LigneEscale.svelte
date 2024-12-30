@@ -147,7 +147,7 @@
     let timeRegex = /^((([01][0-9]|[2][0-3]):[0-5][0-9])|24:00)/;
 
     if (!timeRegex.test(time)) {
-      time = "00:00"; // Si heure non renseignée
+      time = "23:59:59"; // Si heure non renseignée
     } else {
       time = time.substring(0, 5);
     }

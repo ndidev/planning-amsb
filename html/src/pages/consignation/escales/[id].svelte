@@ -41,15 +41,14 @@
    */
   let i: number;
 
-  let listeMarchandises: string[] = [];
-  let listeClients: string[] = [];
+  let listeMarchandises: string[];
+  let listeClients: string[];
 
   const isNew = $params.id === "new";
 
   let escale: EscaleConsignation = isNew
     ? consignationEscales.getTemplate()
     : null;
-  const archives = "archives" in $params;
 
   // Récupérer les données de l'escale
   (async () => {
@@ -216,7 +215,7 @@
       await consignationEscales.create(escale);
 
       Notiflix.Notify.success("L'escale a été créée");
-      $goto(`./${archives ? "?archives" : ""}`);
+      $goto("./");
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
       createCallButton.$set({ block: false });
@@ -235,7 +234,7 @@
       await consignationEscales.update(escale);
 
       Notiflix.Notify.success("L'escale a été modifiée");
-      $goto(`./${archives ? "?archives" : ""}`);
+      $goto("./");
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
       console.error(erreur);
@@ -262,7 +261,7 @@
           await consignationEscales.delete(id);
 
           Notiflix.Notify.success("L'escale a été supprimée");
-          $goto(`./${archives ? "?archives" : ""}`);
+          $goto("./");
         } catch (erreur) {
           Notiflix.Notify.failure(erreur.message);
         }
@@ -454,7 +453,7 @@
         </div>
         <div>
           <ul>
-            {#each escale.marchandises as cargo ((i = cargo.id ||= Math.random()))}
+            {#each escale.marchandises as cargo, index ((i = cargo.id ||= Math.random()))}
               <li
                 class="my-1 flex flex-col items-end gap-2 rounded-lg border-[1px] border-gray-300 p-2 lg:flex-row"
               >
@@ -463,6 +462,7 @@
                     <Label for="marchandise_{i}">Marchandise*</Label>
                     <Svelecte
                       inputId="marchandise_{i}"
+                      name="Marchandise {index + 1}"
                       options={listeMarchandises}
                       virtualList
                       allowEditing
@@ -478,6 +478,7 @@
                     <Label for="client_{i}">Client*</Label>
                     <Svelecte
                       inputId="client_{i}"
+                      name="Client {index + 1}"
                       options={listeClients}
                       virtualList
                       allowEditing
@@ -601,12 +602,7 @@
       {/if}
 
       <!-- Bouton "Annuler" -->
-      <BoutonAction
-        preset="annuler"
-        on:click={() => {
-          $goto(`./${archives ? "?archives" : ""}`);
-        }}
-      />
+      <BoutonAction preset="annuler" on:click={() => $goto("./")} />
     </div>
   {/if}
 </main>

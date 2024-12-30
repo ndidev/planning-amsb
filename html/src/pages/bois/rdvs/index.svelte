@@ -5,7 +5,7 @@
   import { BandeauInfo, SseConnection } from "@app/components";
   import {
     ExtractionRegistre,
-    FilterBanner,
+    FilterModal,
     filter,
     Placeholder,
     LigneDate,
@@ -21,33 +21,35 @@
   type DateString = string;
   type GroupesRdv = Map<DateString, RdvBois[]>;
 
-  let rdvsBois: typeof $boisRdvs = null;
+  let appointments: typeof $boisRdvs = null;
 
-  const unsubscribeFiltre = filter.subscribe((value) => {
-    boisRdvs.setSearchParams(value.toSearchParams());
+  const unsubscribeFilter = filter.subscribe((value) => {
+    const params = value.toSearchParams();
+    boisRdvs.setSearchParams(params);
   });
 
-  const unsubscribeRdvs = boisRdvs.subscribe((rdvs) => {
-    rdvsBois = rdvs;
+  const unsubscribeAppointments = boisRdvs.subscribe((value) => {
+    appointments = value;
   });
 
   let dates: Set<DateString>;
-  let rdvsGroupes: GroupesRdv;
-  let camions: Map<DateString, CamionsParDate>;
+  let groupedAppointments: GroupesRdv;
+  let trucks: Map<DateString, CamionsParDate>;
 
-  $: if (rdvsBois) {
+  $: if (appointments) {
     dates = new Set(
-      [...rdvsBois.values()]
+      [...appointments.values()]
         .map(({ date_rdv, attente }) => (attente ? null : date_rdv))
         .sort()
     );
 
-    rdvsGroupes = ($tiers, grouperRdvs([...rdvsBois.values()]));
+    groupedAppointments =
+      ($tiers, groupAppointments([...appointments.values()]));
 
-    camions = new Map();
+    trucks = new Map();
 
-    rdvsGroupes.forEach((rdvs, date) => {
-      const statsCamions: CamionsParDate = {
+    groupedAppointments.forEach((rdvs, date) => {
+      const trucksStats: CamionsParDate = {
         total: rdvs.length,
         attendus: rdvs.filter((rdv) => !rdv.heure_arrivee && !rdv.heure_depart)
           .length,
@@ -57,28 +59,31 @@
           .length,
       };
 
-      camions.set(date, statsCamions);
+      trucks.set(date, trucksStats);
     });
   }
 
   /**
    * Grouper et trier les RDVs.
    */
-  function grouperRdvs(rdvs: RdvBois[]) {
-    const rdvsParDate: GroupesRdv = new Map<DateString, RdvBois[]>();
+  function groupAppointments(appointments: RdvBois[]) {
+    const appointmentsByDate: GroupesRdv = new Map<DateString, RdvBois[]>();
 
     dates.forEach((date) => {
-      rdvsParDate.set(
+      appointmentsByDate.set(
         date,
-        rdvs
+        appointments
           .filter(({ date_rdv, attente }) => date_rdv === date && !attente)
-          .sort(triPlanning)
+          .sort(sortPlanning)
       );
     });
 
-    rdvsParDate.set("attente", rdvs.filter(({ attente }) => attente).sort());
+    appointmentsByDate.set(
+      "attente",
+      appointments.filter(({ attente }) => attente).sort()
+    );
 
-    return rdvsParDate;
+    return appointmentsByDate;
   }
 
   /**
@@ -90,16 +95,16 @@
    * - nom de client, croissant
    * - numéro de BL, croissant
    */
-  function triPlanning(a: RdvBois, b: RdvBois): number {
+  function sortPlanning(a: RdvBois, b: RdvBois): number {
     return (
-      comparerHeureArrivee(a, b) ||
-      comparerHeureDepart(a, b) ||
-      comparerFournisseur(a, b) ||
-      comparerClient(a, b) ||
-      comparerNumeroBL(a, b)
+      compareArrivalTime(a, b) ||
+      compareDepartureTime(a, b) ||
+      compareSupplierName(a, b) ||
+      compareCustomerName(a, b) ||
+      compareDeliveryNoteNumber(a, b)
     );
 
-    function comparerHeureArrivee(a: RdvBois, b: RdvBois): number {
+    function compareArrivalTime(a: RdvBois, b: RdvBois): number {
       if (
         a.heure_arrivee < b.heure_arrivee ||
         (a.heure_arrivee && !b.heure_arrivee)
@@ -113,7 +118,7 @@
       return 0;
     }
 
-    function comparerHeureDepart(a: RdvBois, b: RdvBois): number {
+    function compareDepartureTime(a: RdvBois, b: RdvBois): number {
       if (
         a.heure_depart < b.heure_depart ||
         (a.heure_depart && !b.heure_depart)
@@ -127,7 +132,7 @@
       return 0;
     }
 
-    function comparerClient(a: RdvBois, b: RdvBois): number {
+    function compareCustomerName(a: RdvBois, b: RdvBois): number {
       if (!$tiers) return 0;
 
       return ($tiers.get(a.client)?.nom_court || "").localeCompare(
@@ -135,7 +140,7 @@
       );
     }
 
-    function comparerFournisseur(a: RdvBois, b: RdvBois): number {
+    function compareSupplierName(a: RdvBois, b: RdvBois): number {
       if (!$tiers) return 0;
 
       return ($tiers.get(a.fournisseur)?.nom_court || "").localeCompare(
@@ -143,7 +148,7 @@
       );
     }
 
-    function comparerNumeroBL(a: RdvBois, b: RdvBois): number {
+    function compareDeliveryNoteNumber(a: RdvBois, b: RdvBois): number {
       if (a.numero_bl < b.numero_bl) return -1;
       if (a.numero_bl > b.numero_bl) return 1;
       return 0;
@@ -151,8 +156,8 @@
   }
 
   onDestroy(() => {
-    unsubscribeRdvs();
-    unsubscribeFiltre();
+    unsubscribeAppointments();
+    unsubscribeFilter();
   });
 </script>
 
@@ -169,29 +174,29 @@
 
 <div class="sticky top-0 z-[1] ml-16 lg:ml-24">
   <BandeauInfo module="bois" pc />
-
-  <FilterBanner />
 </div>
 
 <ExtractionRegistre />
 
+<FilterModal />
+
 <main class="w-11/12 mx-auto mb-24">
-  {#if rdvsBois}
+  {#if appointments}
     <!-- RDVs en attente -->
     <div>
-      <LigneDateAttente camions={camions.get("attente")} />
+      <LigneDateAttente camions={trucks.get("attente")} />
       <div class="divide-y">
-        {#each [...rdvsGroupes.get("attente")] as appointment (appointment.id)}
+        {#each [...groupedAppointments.get("attente")] as appointment (appointment.id)}
           <LigneRdvAttente {appointment} />
         {/each}
       </div>
     </div>
 
     <!-- RDVs plannifiés -->
-    {#each [...rdvsGroupes] as [date, scheduledAppointments] (date)}
+    {#each [...groupedAppointments] as [date, scheduledAppointments] (date)}
       {#if date !== "attente" && date !== null}
         <div>
-          <LigneDate {date} camions={camions.get(date)} />
+          <LigneDate {date} camions={trucks.get(date)} />
           <div class="divide-y">
             {#each scheduledAppointments as appointment (appointment.id)}
               <LigneRdv {appointment} />

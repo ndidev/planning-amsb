@@ -10,7 +10,6 @@
  -->
 <script lang="ts">
   import { onMount, onDestroy, getContext } from "svelte";
-  import { writable } from "svelte/store";
 
   import { goto } from "@roxi/routify";
 
@@ -34,7 +33,7 @@
   } from "@app/components";
 
   import { notiflixOptions, device, removeDiacritics } from "@app/utils";
-  import type { RdvVrac, ProduitVrac, QualiteVrac } from "@app/types";
+  import type { RdvVrac } from "@app/types";
 
   import { currentUser, vracProduits, vracRdvs, tiers } from "@app/stores";
 
@@ -44,7 +43,7 @@
   let mc: HammerManager;
   let showMenuModal = false;
 
-  let showDispatchModal = writable(false);
+  let showDispatchModal = false;
 
   let awaitingDispatchBeforeOrderReady = false;
   let awaitingDispatchBeforeArchive = false;
@@ -81,7 +80,7 @@
           ];
 
           awaitingDispatchBeforeOrderReady = true;
-          $showDispatchModal = true;
+          showDispatchModal = true;
         }
         break;
 
@@ -120,7 +119,7 @@
             }
 
             awaitingDispatchBeforeArchive = true;
-            $showDispatchModal = true;
+            showDispatchModal = true;
           }
         }
 
@@ -141,7 +140,7 @@
           ];
 
           awaitingDispatchBeforeArchive = true;
-          $showDispatchModal = true;
+          showDispatchModal = true;
         }
 
         // Animal feed
@@ -161,7 +160,7 @@
           ];
 
           awaitingDispatchBeforeArchive = true;
-          $showDispatchModal = true;
+          showDispatchModal = true;
         }
 
         if (!appointment.archive && appointment.dispatch.length === 0) {
@@ -176,7 +175,7 @@
           ];
 
           awaitingDispatchBeforeArchive = true;
-          $showDispatchModal = true;
+          showDispatchModal = true;
         }
 
         break;
@@ -322,7 +321,7 @@
 
     <DispatchModal
       bind:appointment
-      bind:showDispatchModal
+      bind:open={showDispatchModal}
       bind:awaitingDispatchBeforeOrderReady
       {toggleOrderReady}
       bind:awaitingDispatchBeforeArchive

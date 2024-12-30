@@ -20,25 +20,17 @@
   <BandeauInfo module="consignation" tv />
 
   <main class="divide-y">
-    {#each [...($consignationEscales?.values() || [])] as escale (escale.id)}
+    {#each [] as escale (escale.id)}
       <LigneEscale {escale} />
+    {:else}
+      <div class="grid w-full h-[90svh] place-items-center">
+        <div class="text-3xl">Aucun navire à l'horizon...</div>
+      </div>
     {/each}
   </main>
 {/if}
 
 <style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  /* body {
-    width: 100vw;
-    overflow-x: hidden;
-    font-family: sans-serif;
-  } */
-
   ::-webkit-scrollbar {
     display: none;
   }

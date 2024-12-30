@@ -9,6 +9,7 @@ export type {
   RdvVrac,
   ProduitVrac,
   QualiteVrac,
+  BulkPlanningFilter,
   BulkDispatchFilter,
 } from "./src/Bulk";
 export type { Charter, CharteringFilter } from "./src/Chartering";

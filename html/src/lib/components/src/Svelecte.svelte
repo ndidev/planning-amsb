@@ -34,55 +34,30 @@
   export let required = false;
   export let disabled = false;
   // basic
-  export let options = [];
-  let optionResolver = null;
+  export let options: any[] = null;
   export let valueField = config.valueField;
   export let labelField = config.labelField;
-  export let groupLabelField = config.groupLabelField;
-  export let groupItemsField = config.groupItemsField;
-  export let disabledField = config.disabledField;
-  export let placeholder = name !== "svelecte" ? name : config.placeholder;
+  export let placeholder = disabled ? "" : "Sélectionnez";
   // UI, UX
-  export let searchable = config.searchable;
   export let searchProps: SearchProps = {};
-  export let clearable = config.clearable;
   export let renderer = null;
-  export let disableHighlight = false;
   export let selectOnTab = config.selectOnTab;
-  export let resetOnBlur = config.resetOnBlur;
-  export let resetOnSelect = config.resetOnSelect;
-  export let closeAfterSelect = config.closeAfterSelect;
-  export let dndzone = () => ({ noop: true, destroy: () => {} });
   // multiple
   export let multiple = config.multiple;
-  export let max = config.max;
   export let collapseSelection = config.collapseSelection;
   // creating
   export let creatable = config.creatable;
   export let creatablePrefix = config.creatablePrefix;
   export let allowEditing = config.allowEditing;
   export let keepCreated = config.keepCreated;
-  export let delimiter = config.delimiter;
-  // remote
-  export let fetch = null;
-  export let fetchMode: "auto" | "init" = "auto";
-  export let fetchCallback = config.fetchCallback;
-  export let fetchResetOnBlur = true;
-  export let minQuery = config.minQuery;
-  // performance
-  export let lazyDropdown = config.lazyDropdown;
   // virtual list
   export let virtualList = config.virtualList;
-  export let vlHeight = config.vlHeight;
-  export let vlItemSize = config.vlItemSize;
   // styling
   let className = "svelecte-control";
   export { className as class };
   // i18n override
   export let i18n = null;
-  export let readSelection = null;
   export let value = null;
-  export let valueAsObject = config.valueAsObject;
 
   export let highlightFirstItem = true;
 
@@ -332,54 +307,33 @@
   });
 </script>
 
-{#if options.length > 0}
+{#if options}
   <Svelecte
     {name}
     {inputId}
     {required}
     {disabled}
     {options}
-    {optionResolver}
     bind:value
-    {valueAsObject}
     {valueField}
     {labelField}
-    {groupLabelField}
-    {groupItemsField}
-    {disabledField}
     {placeholder}
-    {searchable}
     {searchProps}
-    {clearable}
     {renderer}
-    {disableHighlight}
     {selectOnTab}
-    {resetOnBlur}
-    {resetOnSelect}
-    {closeAfterSelect}
-    {dndzone}
     {multiple}
-    {max}
     {collapseSelection}
     {creatable}
     {creatablePrefix}
     {allowEditing}
     {keepCreated}
-    {delimiter}
-    {fetch}
-    {fetchMode}
-    {fetchCallback}
-    {fetchResetOnBlur}
-    {minQuery}
-    {lazyDropdown}
     {virtualList}
-    {vlHeight}
-    {vlItemSize}
     class={svelecteClass}
     {i18n}
-    {readSelection}
     on:input
     on:change
+    on:createoption
+    on:invalidValue
     {highlightFirstItem}
   />
 {:else}

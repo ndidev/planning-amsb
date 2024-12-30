@@ -7,13 +7,14 @@ declare(strict_types=1);
 namespace App\Controller\Shipping;
 
 use App\Controller\Controller;
+use App\Core\Array\Environment;
 use App\Core\Component\Module;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
-use App\Core\Array\Environment;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
+use App\DTO\Filter\ShippingFilterDTO;
 use App\Service\ShippingService;
 
 final class ShippingCallController extends Controller
@@ -77,9 +78,9 @@ final class ShippingCallController extends Controller
             throw new AccessException("Vous n'avez pas les droits pour accéder aux escales.");
         }
 
-        $archives = $this->request->getQuery()->isSet('archives');
+        $filter = new ShippingFilterDTO($this->request->getQuery());
 
-        $calls = $this->shippingService->getShippingCalls($archives);
+        $calls = $this->shippingService->getShippingCalls($filter);
 
         $etag = ETag::get($calls);
 

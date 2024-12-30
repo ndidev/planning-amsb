@@ -1,23 +1,16 @@
 <!-- routify:options title="Planning AMSB - Affrètement maritime" -->
 <script lang="ts">
-  import { onDestroy, setContext } from "svelte";
-  import { params } from "@roxi/routify";
+  import { onDestroy } from "svelte";
 
   import { Chargement, BandeauInfo, SseConnection } from "@app/components";
-  import { FilterBanner, filter, LigneCharter } from "./components";
+  import { FilterModal, filter, LigneCharter } from "./components";
 
   import { charteringCharters } from "@app/stores";
 
   let charters: typeof $charteringCharters;
 
-  const archives = "archives" in $params;
-
-  setContext("archives", archives);
-
   const unsubscribeFilter = filter.subscribe((value) => {
     const params = value.toSearchParams();
-
-    if (archives) params.append("archives", "");
 
     charteringCharters.setSearchParams(params);
   });
@@ -32,7 +25,6 @@
   });
 </script>
 
-<!-- routify:options query-params-is-page -->
 <!-- routify:options guard="chartering" -->
 
 <SseConnection
@@ -42,13 +34,15 @@
 <div class="sticky top-0 z-[1] ml-16 lg:ml-24">
   <BandeauInfo module="chartering" pc />
 
-  <FilterBanner />
+  <FilterModal />
 </div>
 
 <main class="divide-y">
   {#if charters}
     {#each [...charters.values()] as charter (charter.id)}
       <LigneCharter {charter} />
+    {:else}
+      <div class="p-4 text-center">Aucun affrètement trouvé.</div>
     {/each}
   {:else}
     <Chargement />

@@ -20,7 +20,7 @@
   const unsubscribeAppointments = vracRdvs.subscribe((value) => {
     if (!value) return;
 
-    appointments = [...value.values()];
+    appointments = [...value.values()].filter(({ showOnTv }) => showOnTv);
     dates = new Set(appointments.map(({ date_rdv }) => date_rdv).sort());
     groupedAppointments = groupAppointments(appointments, dates);
   });

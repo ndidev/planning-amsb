@@ -108,13 +108,13 @@ export type CamionsParDate = {
   charges?: number;
 };
 
-export type TimberFilter = {
-  date_debut?: string;
-  date_fin?: string;
-  fournisseur?: RdvBois["fournisseur"][];
-  client?: RdvBois["client"][];
-  chargement?: RdvBois["chargement"][];
-  livraison?: RdvBois["livraison"][];
-  transporteur?: RdvBois["transporteur"][];
-  affreteur?: RdvBois["affreteur"][];
-};
+export type TimberFilter = Partial<{
+  date_debut: string;
+  date_fin: string;
+  fournisseur: RdvBois["fournisseur"][];
+  client: RdvBois["client"][];
+  chargement: RdvBois["chargement"][];
+  livraison: RdvBois["livraison"][];
+  transporteur: RdvBois["transporteur"][];
+  affreteur: RdvBois["affreteur"][];
+}>;

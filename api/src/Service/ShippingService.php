@@ -210,9 +210,9 @@ final class ShippingService
     /**
      * @return Collection<ShippingCall>
      */
-    public function getShippingCalls(bool $archives = false): Collection
+    public function getShippingCalls(ShippingFilterDTO $filter): Collection
     {
-        return $this->shippingRepository->fetchAllCalls($archives);
+        return $this->shippingRepository->fetchAllCalls($filter);
     }
 
     public function getShippingCall(int $id): ?ShippingCall

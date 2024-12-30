@@ -42,12 +42,6 @@ export const sitemap: Map<ModuleId, Module> = new Map([
             devices: ["mobile", "desktop"],
           },
           {
-            affichage: "Archives",
-            roleMini: UserRoles.ACCESS,
-            href: "/vrac/rdvs?archives",
-            devices: ["mobile", "desktop"],
-          },
-          {
             affichage: "Produits",
             roleMini: UserRoles.EDIT,
             href: "/vrac/produits",
@@ -77,12 +71,6 @@ export const sitemap: Map<ModuleId, Module> = new Map([
             devices: ["mobile", "desktop"],
           },
           {
-            affichage: "Archives",
-            roleMini: UserRoles.ACCESS,
-            href: "/consignation/escales?archives",
-            devices: ["mobile", "desktop"],
-          },
-          {
             affichage: "Tirants d'eau",
             roleMini: UserRoles.ACCESS,
             href: "/consignation/te",
@@ -109,12 +97,6 @@ export const sitemap: Map<ModuleId, Module> = new Map([
             affichage: "Planning",
             roleMini: UserRoles.ACCESS,
             href: "/chartering/charters",
-            devices: ["mobile", "desktop"],
-          },
-          {
-            affichage: "Archives",
-            roleMini: UserRoles.ACCESS,
-            href: "/chartering/charters?archives",
             devices: ["mobile", "desktop"],
           },
         ],

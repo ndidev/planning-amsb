@@ -1,6 +1,4 @@
 <script lang="ts">
-  import type { Writable } from "svelte/store";
-
   import { UserRoundIcon, UserRoundCheckIcon } from "lucide-svelte";
   import { Tooltip } from "flowbite-svelte";
 
@@ -17,7 +15,7 @@
   };
 
   export let dispatch: DispatchItem[];
-  export let showDispatchModal: Writable<boolean>;
+  export let showDispatchModal: boolean;
   export let module: ModuleId;
 </script>
 
@@ -29,7 +27,7 @@
         color="green"
         staticallyColored
         title="Renseigner le dispatch"
-        on:click={() => ($showDispatchModal = true)}
+        on:click={() => (showDispatchModal = true)}
       />
       <Tooltip type="auto">
         {#each dispatch as { staffId, remarks }, index}
@@ -60,7 +58,7 @@
     <LucideButton
       icon={UserRoundIcon}
       title="Renseigner le dispatch"
-      on:click={() => ($showDispatchModal = true)}
+      on:click={() => (showDispatchModal = true)}
     />
   {:else}
     <UserRoundIcon color="lightgray" />

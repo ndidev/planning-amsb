@@ -1,7 +1,4 @@
 <script lang="ts">
-  import { onDestroy } from "svelte";
-  import type { Writable } from "svelte/store";
-
   import { Modal, Label, Input } from "flowbite-svelte";
   import Notiflix from "notiflix";
 
@@ -16,7 +13,7 @@
   let form: HTMLFormElement;
   let updateButton: BoutonAction;
 
-  export let showDispatchModal: Writable<boolean>;
+  export let open: boolean;
   export let appointment: RdvBois;
 
   export let awaitingDispatchBeforeOrderReady: boolean = false;
@@ -33,12 +30,6 @@
   >;
 
   let dispatch: Dispatch;
-
-  const unsubscribeShowModal = showDispatchModal.subscribe((modalIsShown) => {
-    if (modalIsShown) {
-      dispatch = structuredClone(appointment.dispatch);
-    }
-  });
 
   function addDispatchLine() {
     dispatch = [
@@ -82,7 +73,7 @@
 
       appointment.dispatch = savedDispatch;
 
-      $showDispatchModal = false;
+      open = false;
 
       if (awaitingDispatchBeforeOrderReady === true) {
         awaitingDispatchBeforeOrderReady = false;
@@ -111,19 +102,16 @@
     awaitingDispatchBeforeOrderReady = false;
     awaitingDispatchBeforeSettingDepartureTime = false;
 
-    $showDispatchModal = false;
+    open = false;
   }
-
-  onDestroy(() => {
-    unsubscribeShowModal();
-  });
 </script>
 
 <Modal
   title="Dispatch"
-  bind:open={$showDispatchModal}
+  bind:open
   dismissable={false}
   size="lg"
+  on:open={() => (dispatch = structuredClone(appointment.dispatch))}
 >
   <div class="text-lg">
     Ajouter une ligne

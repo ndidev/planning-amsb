@@ -117,89 +117,60 @@ final class ShippingRepository extends Repository
      * 
      * @return Collection<ShippingCall> Toutes les escale récupérées
      */
-    public function fetchAllCalls(bool $archives = false): Collection
+    public function fetchAllCalls(ShippingFilterDTO $filter): Collection
     {
-        $yesterday = (new \DateTime())->sub(new \DateInterval("P1D"))->format('Y-m-d');
+        $sqlFilter = $filter->getSqlFilter();
 
-        if ($archives) {
-            $callsStatement =
-                "SELECT
-                    id,
-                    navire,
-                    voyage,
-                    armateur,
-                    eta_date,
-                    eta_heure,
-                    nor_date,
-                    nor_heure,
-                    pob_date,
-                    pob_heure,
-                    etb_date,
-                    etb_heure,
-                    ops_date,
-                    ops_heure,
-                    etc_date,
-                    etc_heure,
-                    etd_date,
-                    etd_heure,
-                    te_arrivee,
-                    te_depart,
-                    last_port,
-                    next_port,
-                    call_port,
-                    quai,
-                    commentaire
-                FROM consignation_planning
-                WHERE etd_date <= '$yesterday'
-                ORDER BY
-                    -eta_date ASC,
-                    eta_heure,
-                    -etb_date ASC,
-                    etb_heure";
-        } else {
-            $callsStatement =
-                "SELECT
-                    id,
-                    navire,
-                    voyage,
-                    armateur,
-                    eta_date,
-                    eta_heure,
-                    nor_date,
-                    nor_heure,
-                    pob_date,
-                    pob_heure,
-                    etb_date,
-                    etb_heure,
-                    ops_date,
-                    ops_heure,
-                    etc_date,
-                    etc_heure,
-                    etd_date,
-                    etd_heure,
-                    te_arrivee,
-                    te_depart,
-                    last_port,
-                    next_port,
-                    call_port,
-                    quai,
-                    commentaire
-                FROM consignation_planning
-                WHERE etd_date >= '$yesterday'
-                OR etd_date IS NULL
-                ORDER BY
-                    -eta_date DESC,
-                    eta_heure,
-                    -etb_date DESC,
-                    etb_heure";
-        }
+        $callsStatement =
+            "SELECT
+                cp.id,
+                cp.navire,
+                cp.voyage,
+                cp.armateur,
+                cp.eta_date,
+                cp.eta_heure,
+                cp.nor_date,
+                cp.nor_heure,
+                cp.pob_date,
+                cp.pob_heure,
+                cp.etb_date,
+                cp.etb_heure,
+                cp.ops_date,
+                cp.ops_heure,
+                cp.etc_date,
+                cp.etc_heure,
+                cp.etd_date,
+                cp.etd_heure,
+                cp.te_arrivee,
+                cp.te_depart,
+                cp.last_port,
+                cp.next_port,
+                cp.call_port,
+                cp.quai,
+                cp.commentaire
+            FROM consignation_planning cp
+            LEFT JOIN consignation_escales_marchandises cem ON cem.escale_id = cp.id
+            WHERE
+                    (etd_date >= :startDate OR etd_date IS NULL)
+                AND (eta_date <= :endDate OR eta_date IS NULL)
+                $sqlFilter
+            ORDER BY
+                -eta_date DESC,
+                eta_heure,
+                -etb_date DESC,
+                etb_heure";
 
         // Escales
-        $callsRequest = $this->mysql->query($callsStatement);
+        $callsRequest = $this->mysql->prepare($callsStatement);
 
         if (!$callsRequest) {
             throw new DBException("Impossible de récupérer les escales.");
         }
+
+        $callsRequest->execute([
+            "startDate" => $filter->getSqlStartDate(),
+            "endDate" => $filter->getSqlEndDate(),
+        ]);
 
         /** @phpstan-var ShippingCallArray[] $callsRaw */
         $callsRaw = $callsRequest->fetchAll();

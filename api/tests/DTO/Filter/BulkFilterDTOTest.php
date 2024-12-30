@@ -20,7 +20,7 @@ final class BulkFilterDTOTest extends TestCase
     public function testIsArchive(): void
     {
         // Given
-        $_SERVER['REQUEST_URI'] = "/path?archives";
+        $_SERVER['REQUEST_URI'] = "/path?archives=true";
         $query = new HTTPRequestQuery();
         $dto = new BulkFilterDTO($query);
 

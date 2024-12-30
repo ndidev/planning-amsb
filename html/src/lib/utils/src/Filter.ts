@@ -1,5 +1,5 @@
 export class Filter<
-  T extends { [k: string]: (string | number) | string[] | number[] }
+  T extends { [k: string]: (string | number | boolean) | string[] | number[] }
 > {
   data: T;
 

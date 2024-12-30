@@ -1,9 +1,14 @@
 <!-- routify:options title="Planning AMSB - Vrac" -->
 <script lang="ts">
-  import { onMount, onDestroy, setContext } from "svelte";
-  import { params } from "@roxi/routify";
+  import { onMount, onDestroy } from "svelte";
 
-  import { LigneDate, LigneRdv, Placeholder } from "./components";
+  import {
+    LigneDate,
+    LigneRdv,
+    Placeholder,
+    FilterModal,
+    filter,
+  } from "./components";
   import { BandeauInfo, SseConnection } from "@app/components";
 
   import { fetcher } from "@app/utils";
@@ -15,20 +20,17 @@
   type DateString = string;
   type GroupesRdv = Map<DateString, RdvVrac[]>;
 
-  const archives = "archives" in $params;
-
-  setContext("archives", archives);
-
-  if (archives) {
-    vracRdvs.setSearchParams({ archives: "true" });
-  } else {
-    vracRdvs.setSearchParams({});
-  }
-
   let appointments: RdvVrac[];
   let groupedAppointments: GroupesRdv;
   let dates: Set<DateString>;
   let datesMareesSup4m = new Set<DateString>();
+
+  const unsubscribeFilter = filter.subscribe((value) => {
+    appointments = null;
+
+    const params = value.toSearchParams();
+    vracRdvs.setSearchParams(params);
+  });
 
   const unsubscribeAppointments = vracRdvs.subscribe((value) => {
     if (!value) return;
@@ -187,6 +189,7 @@
     );
 
     unsubscribeAppointments();
+    unsubscribeFilter();
   });
 </script>
 
@@ -206,11 +209,14 @@
 
 <div class="sticky top-0 z-[1] ml-16 lg:ml-24">
   <BandeauInfo module="vrac" pc />
+
+  <!-- <FilterBanner /> -->
+  <FilterModal />
 </div>
 
 <main class="w-11/12 mx-auto mb-8">
   {#if appointments && $vracProduits}
-    {#each archives ? [...groupedAppointments].reverse() : [...groupedAppointments] as [date, appointments] (date)}
+    {#each groupedAppointments as [date, appointments] (date)}
       <LigneDate
         {date}
         maree={datesMareesSup4m.has(date)}

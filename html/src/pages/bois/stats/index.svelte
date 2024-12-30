@@ -4,7 +4,7 @@
 
   import Notiflix from "notiflix";
 
-  import { FilterBanner, filter } from "./components";
+  import { FilterModal, filter } from "./components";
   import { PageHeading } from "@app/components";
 
   import { fetcher } from "@app/utils";
@@ -62,8 +62,7 @@
 <main>
   <PageHeading>Statistiques</PageHeading>
 
-  <!-- Filtre par date/client -->
-  <FilterBanner />
+  <FilterModal />
 
   <div id="statistiques">
     {#if stats}

@@ -1,6 +1,6 @@
 import { createFlatStore } from "../generics/flatStore";
-import type { EscaleConsignation } from "@app/types";
-import { DateUtils } from "@app/utils";
+import type { EscaleConsignation, ShippingFilter } from "@app/types";
+import { DateUtils, removeDiacritics } from "@app/utils";
 
 /**
  * Store escales consignation.
@@ -41,21 +41,67 @@ export const consignationEscales = createFlatStore<EscaleConsignation>(
 );
 
 function satisfiesParams(
-  escale: EscaleConsignation,
+  call: EscaleConsignation,
   searchParams: URLSearchParams
 ) {
-  const archives = "archives" in Object.fromEntries(searchParams);
+  const filter: { [P in keyof ShippingFilter]: string } =
+    Object.fromEntries(searchParams);
 
-  if (!archives) {
-    return (
-      escale.etd_date === null ||
-      escale.etd_date >= new DateUtils().decaler(-1).toLocaleISODateString()
-    );
-  }
+  const startDateMatches =
+    (filter.startDate ?? new DateUtils().toLocaleISODateString()) <=
+    (call.etd_date ?? "9");
 
-  if (archives) {
-    return (
-      escale.etd_date <= new DateUtils().decaler(-1).toLocaleISODateString()
-    );
-  }
+  const endDateMatches = (filter.endDate ?? "9") >= call.eta_date;
+
+  const shipsMatch = filter.ships?.split(",").includes(call.navire) ?? true;
+
+  const shipOwnersMatch =
+    filter.shipOwners?.split(",").includes(call.armateur.toString()) ?? true;
+
+  const customersMatch =
+    filter.customers
+      ?.split(",")
+      .some((customersFilterItems) =>
+        call.marchandises
+          .flatMap((marchandise) => marchandise.client)
+          .includes(customersFilterItems)
+      ) ?? true;
+
+  const cargoesMatch =
+    filter.strictCargoes ?? false
+      ? filter.cargoes
+          ?.split(",")
+          .some((cargoFilterItems) =>
+            call.marchandises
+              .flatMap((cargo) => cargo.marchandise)
+              .includes(cargoFilterItems)
+          ) ?? true
+      : filter.cargoes
+          ?.split(",")
+          .some((cargoFilterItem) =>
+            call.marchandises
+              .flatMap((cargo) => cargo.marchandise)
+              .some((cargoName) =>
+                removeDiacritics(cargoName).includes(
+                  removeDiacritics(cargoFilterItem)
+                )
+              )
+          ) ?? true;
+
+  const lastPortsMatch =
+    filter.lastPorts?.split(",").includes(call.last_port) ?? true;
+
+  const nextPortsMatch =
+    filter.nextPorts?.split(",").includes(call.next_port) ?? true;
+
+  return (
+    startDateMatches &&
+    endDateMatches &&
+    shipsMatch &&
+    shipOwnersMatch &&
+    customersMatch &&
+    cargoesMatch &&
+    lastPortsMatch &&
+    nextPortsMatch
+  );
 }

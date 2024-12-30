@@ -30,7 +30,7 @@
   const formattedDate = new DateUtils(date).format().long;
 </script>
 
-<div class="mb-2 mt-5 w-full lg:mb-4 lg:mt-8 lg:text-lg">
+<div class="mb-2 mt-5 w-full first:mt-12 lg:mb-4 lg:mt-8 lg:text-lg">
   <span class="text-green-400">{formattedDate}</span>
 
   <!-- Point d'exclamation si vive-eau -->

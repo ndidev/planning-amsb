@@ -33,32 +33,48 @@ function satisfiesParams(appointment: RdvBois, searchParams: URLSearchParams) {
   const filter: { [P in keyof TimberFilter]: string } =
     Object.fromEntries(searchParams);
 
+  const appointmentIsOnHold = appointment.attente;
+
+  const startDateMatches =
+    (filter.date_debut ?? new DateUtils().toLocaleISODateString()) <=
+    appointment.date_rdv;
+
+  const endDateMatches = (filter.date_fin ?? "9") >= appointment.date_rdv;
+
+  const supplierMatches =
+    filter.fournisseur
+      ?.split(",")
+      .includes(appointment.fournisseur.toString()) ?? true;
+
+  const customerMatches =
+    filter.client?.split(",").includes(appointment.client.toString()) ?? true;
+
+  const loadingPlaceMatches =
+    filter.chargement?.split(",").includes(appointment.chargement.toString()) ??
+    true;
+
+  const deliveryPlaceMatches =
+    filter.livraison?.split(",").includes(appointment.livraison.toString()) ??
+    true;
+
+  const carrierMatches =
+    filter.transporteur
+      ?.split(",")
+      .includes(appointment.transporteur.toString()) ?? true;
+
+  const chartererMatches =
+    filter.affreteur?.split(",").includes(appointment.affreteur.toString()) ??
+    true;
+
   return (
-    appointment.attente ||
-    ((filter.date_debut ?? new DateUtils().toLocaleISODateString()) <=
-      appointment.date_rdv &&
-      (filter.date_fin ?? "9") >= appointment.date_rdv &&
-      (filter.fournisseur
-        ?.split(",")
-        .includes(appointment.fournisseur.toString()) ??
-        true) &&
-      (filter.client?.split(",").includes(appointment.client.toString()) ??
-        true) &&
-      (filter.chargement
-        ?.split(",")
-        .includes(appointment.chargement.toString()) ??
-        true) &&
-      (filter.livraison
-        ?.split(",")
-        .includes(appointment.livraison.toString()) ??
-        true) &&
-      (filter.transporteur
-        ?.split(",")
-        .includes(appointment.transporteur.toString()) ??
-        true) &&
-      (filter.affreteur
-        ?.split(",")
-        .includes(appointment.affreteur.toString()) ??
-        true))
+    appointmentIsOnHold ||
+    (startDateMatches &&
+      endDateMatches &&
+      supplierMatches &&
+      customerMatches &&
+      loadingPlaceMatches &&
+      deliveryPlaceMatches &&
+      carrierMatches &&
+      chartererMatches)
   );
 }

@@ -19,7 +19,7 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $date = '2023-01-01';
-        $_SERVER['REQUEST_URI'] = "/path?date_debut={$date}";
+        $_SERVER['REQUEST_URI'] = "/path?startDate={$date}";
         $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
@@ -48,7 +48,7 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlStartDateWithEmptyString(): void
     {
         // Given
-        $_SERVER['REQUEST_URI'] = "/path?date_debut=";
+        $_SERVER['REQUEST_URI'] = "/path?startDate=";
         $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
         $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
@@ -63,7 +63,7 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlStartDateWithIllegalString(): void
     {
         // Given
-        $_SERVER['REQUEST_URI'] = "/path?date_debut=illegal";
+        $_SERVER['REQUEST_URI'] = "/path?startDate=illegal";
         $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
         $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
@@ -79,7 +79,7 @@ final class ShippingFilterDTOTest extends TestCase
     {
         // Given
         $date = '2023-12-31';
-        $_SERVER['REQUEST_URI'] = "/path?date_fin={$date}";
+        $_SERVER['REQUEST_URI'] = "/path?endDate={$date}";
         $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
@@ -108,7 +108,7 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlEndDateWithEmptyString(): void
     {
         // Given
-        $_SERVER['REQUEST_URI'] = "/path?date_fin=";
+        $_SERVER['REQUEST_URI'] = "/path?endDate=";
         $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
         $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
@@ -123,7 +123,7 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlEndDateWithIllegalString(): void
     {
         // Given
-        $_SERVER['REQUEST_URI'] = "/path?date_fin=illegal";
+        $_SERVER['REQUEST_URI'] = "/path?endDate=illegal";
         $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
         $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
@@ -138,12 +138,12 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlShipFilter(): void
     {
         // Given
-        $_SERVER['REQUEST_URI'] = "/path?navire=Ship1,Ship2";
+        $_SERVER['REQUEST_URI'] = "/path?ships=Ship1,Ship2";
         $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
         // When
-        $result = $dto->getSqlShipFilter();
+        $result = $dto->getSqlShipsFilter();
 
         // Then
         $this->assertSame(" AND cp.navire IN ('Ship1','Ship2')", $result);
@@ -157,7 +157,7 @@ final class ShippingFilterDTOTest extends TestCase
         $dto = new ShippingFilterDTO($query);
 
         // When
-        $result = $dto->getSqlShipFilter();
+        $result = $dto->getSqlShipsFilter();
 
         // Then
         $this->assertSame('', $result);
@@ -166,12 +166,12 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlShipOwnerFilter(): void
     {
         // Given
-        $_SERVER['REQUEST_URI'] = "/path?armateur=1,2";
+        $_SERVER['REQUEST_URI'] = "/path?shipOwners=1,2";
         $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
         // When
-        $result = $dto->getSqlShipOwnerFilter();
+        $result = $dto->getSqlShipOwnersFilter();
 
         // Then
         $this->assertSame(" AND cp.armateur IN (1,2)", $result);
@@ -185,24 +185,38 @@ final class ShippingFilterDTOTest extends TestCase
         $dto = new ShippingFilterDTO($query);
 
         // When
-        $result = $dto->getSqlShipOwnerFilter();
+        $result = $dto->getSqlShipOwnersFilter();
 
         // Then
         $this->assertSame('', $result);
     }
 
-    public function testGetSqlCargoFilter(): void
+    public function testGetSqlStrictCargoFilter(): void
     {
         // Given
-        $_SERVER['REQUEST_URI'] = "/path?marchandise=Cargo1,Cargo2";
+        $_SERVER['REQUEST_URI'] = "/path?cargoes=Cargo1,Cargo2&strictCargoes=true";
         $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
         // When
-        $result = $dto->getSqlCargoFilter();
+        $result = $dto->getSqlCargoesFilter();
 
         // Then
         $this->assertSame(" AND cem.marchandise IN ('Cargo1','Cargo2')", $result);
+    }
+
+    public function testGetSqlNonStrictCargoFilter(): void
+    {
+        // Given
+        $_SERVER['REQUEST_URI'] = "/path?cargoes=Cargo1,Cargo2";
+        $query = new HTTPRequestQuery();
+        $dto = new ShippingFilterDTO($query);
+
+        // When
+        $result = $dto->getSqlCargoesFilter();
+
+        // Then
+        $this->assertSame(" AND cem.marchandise REGEXP 'Cargo1|Cargo2'", $result);
     }
 
     public function testGetEmptySqlCargoFilter(): void
@@ -213,7 +227,7 @@ final class ShippingFilterDTOTest extends TestCase
         $dto = new ShippingFilterDTO($query);
 
         // When
-        $result = $dto->getSqlCargoFilter();
+        $result = $dto->getSqlCargoesFilter();
 
         // Then
         $this->assertSame('', $result);
@@ -222,12 +236,12 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlCustomerFilter(): void
     {
         // Given
-        $_SERVER['REQUEST_URI'] = "/path?client=Customer1,Customer2";
+        $_SERVER['REQUEST_URI'] = "/path?customers=Customer1,Customer2";
         $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
         // When
-        $result = $dto->getSqlCustomerFilter();
+        $result = $dto->getSqlCustomersFilter();
 
         // Then
         $this->assertSame(" AND cem.client IN ('Customer1','Customer2')", $result);
@@ -241,7 +255,7 @@ final class ShippingFilterDTOTest extends TestCase
         $dto = new ShippingFilterDTO($query);
 
         // When
-        $result = $dto->getSqlCustomerFilter();
+        $result = $dto->getSqlCustomersFilter();
 
         // Then
         $this->assertSame('', $result);
@@ -250,12 +264,12 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlLastPortFilter(): void
     {
         // Given
-        $_SERVER['REQUEST_URI'] = "/path?last_port=Port1,Port2";
+        $_SERVER['REQUEST_URI'] = "/path?lastPorts=Port1,Port2";
         $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
         // When
-        $result = $dto->getSqlLastPortFilter();
+        $result = $dto->getSqlLastPortsFilter();
 
         // Then
         $this->assertSame(" AND cp.last_port IN ('Port1','Port2')", $result);
@@ -269,7 +283,7 @@ final class ShippingFilterDTOTest extends TestCase
         $dto = new ShippingFilterDTO($query);
 
         // When
-        $result = $dto->getSqlLastPortFilter();
+        $result = $dto->getSqlLastPortsFilter();
 
         // Then
         $this->assertSame('', $result);
@@ -278,12 +292,12 @@ final class ShippingFilterDTOTest extends TestCase
     public function testGetSqlNextPortFilter(): void
     {
         // Given
-        $_SERVER['REQUEST_URI'] = "/path?next_port=Port3,Port4";
+        $_SERVER['REQUEST_URI'] = "/path?nextPorts=Port3,Port4";
         $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
 
         // When
-        $result = $dto->getSqlNextPortFilter();
+        $result = $dto->getSqlNextPortsFilter();
 
         // Then
         $this->assertSame(" AND cp.next_port IN ('Port3','Port4')", $result);
@@ -297,7 +311,7 @@ final class ShippingFilterDTOTest extends TestCase
         $dto = new ShippingFilterDTO($query);
 
         // When
-        $result = $dto->getSqlNextPortFilter();
+        $result = $dto->getSqlNextPortsFilter();
 
         // Then
         $this->assertSame('', $result);
