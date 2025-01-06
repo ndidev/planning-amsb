@@ -21,7 +21,7 @@
   let showModal = false;
   $: startDate =
     $filter.data.date_debut ||
-    new DateUtils(new Date()).jourOuvrePrecedent().toLocaleISODateString();
+  getPreviousWorkingDayw Date()).jourOuvrePrecedent().toLocaleISODateString();
   $: endDate =
     $filter.data.date_fin || new DateUtils(new Date()).toLocaleISODateString();
 

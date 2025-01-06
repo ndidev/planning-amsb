@@ -3,14 +3,19 @@
   import { onDestroy } from "svelte";
 
   import { Button, Input, ButtonGroup } from "flowbite-svelte";
-  import { PlusCircleIcon, RectangleEllipsisIcon } from "lucide-svelte";
+  import {
+    PlusCircleIcon,
+    RectangleEllipsisIcon,
+    DownloadIcon,
+  } from "lucide-svelte";
   import Notiflix from "notiflix";
 
   import {
     FilterBanner,
     filter,
     TempWorkHoursLine,
-    FormModal,
+    AddHoursModal,
+    ReportModal,
   } from "./components";
   import { PageHeading, Chargement, SseConnection } from "@app/components";
 
@@ -32,7 +37,8 @@
 
   let prefillDate = new Date().toISOString().split("T")[0];
 
-  let newModalOpen = false;
+  let addHoursModalOpen = false;
+  let reportModalOpen = false;
 
   $: if ($stevedoringTempWorkHours) {
     tempWorkHoursByDate = [...$stevedoringTempWorkHours.values()]
@@ -95,8 +101,10 @@
 />
 
 {#if $currentUser.canEdit("manutention")}
-  <FormModal bind:open={newModalOpen} />
+  <AddHoursModal bind:open={addHoursModalOpen} />
 {/if}
+
+<ReportModal bind:open={reportModalOpen} />
 
 <main class="mx-auto w-10/12 lg:w-2/3">
   <PageHeading>Heures intérimaires</PageHeading>
@@ -105,7 +113,7 @@
 
   {#if $currentUser.canEdit("manutention")}
     <div class="mt-6 flex flex-col lg:flex-row gap-2 lg:gap-4 justify-center">
-      <Button on:click={() => (newModalOpen = true)}>
+      <Button on:click={() => (addHoursModalOpen = true)}>
         <PlusCircleIcon size={20} />
         <span class="ms-2">Ajouter des heures</span>
       </Button>
@@ -121,6 +129,11 @@
           <span class="ms-2">Pré-remplir </span>
         </Button>
       </ButtonGroup>
+
+      <Button on:click={() => (reportModalOpen = true)}>
+        <DownloadIcon size={20} />
+        <span class="ms-2">Télécharger les heures</span>
+      </Button>
     </div>
   {/if}
 

@@ -1,0 +1,17 @@
+<table style="width: 100%; margin: 0; font-style: italic; font-size: 0.8rem; border-bottom: 1px solid #000;">
+  <tr>
+    <td style="text-align: left;">
+      <strong>{{ agency.fullName }}</strong> - {{ agency.addressLine1 }}
+      {% if agency.addressLine2 %}
+        - {{ agency.addressLine2 }}
+      {% endif %}
+      - {{ agency.postCode }} {{ agency.city }}
+      {% if agency.phone %}
+        - Tél : {{ agency.phone }}
+      {% endif %}
+    </td>
+    <td style="text-align: right;">
+      Relevé des heures intérimaires - {{ tempWorkAgency }} - Semaine {{ week }}/{{ year }}
+    </td>
+  </tr>
+</table>

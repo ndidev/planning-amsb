@@ -9,7 +9,7 @@ require_once __DIR__ . '/bootstrap.php';
 use App\Core\Component\DateUtils;
 use App\Core\Exceptions\Server\ServerException;
 use App\Core\Logger\ErrorLogger;
-use App\Service\PdfService;
+use App\Service\PdfConfigService;
 
 const TODAY = new \DateTime();
 
@@ -22,7 +22,7 @@ if (empty($_POST) && !DateUtils::isWorkingDay(TODAY)) {
     return false;
 }
 
-$pdfService = new PdfService();
+$pdfService = new PdfConfigService();
 
 // Récupération des configurations PDF
 $configs = $pdfService->getAllConfigs();

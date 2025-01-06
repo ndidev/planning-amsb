@@ -61,11 +61,9 @@
    * Afficher les explications pour la liste d'e-mails.
    */
   function showEmailsHelp() {
-    Notiflix.Report.info(
-      "Liste e-mails",
+    Notiflix.Report.info(getPreviousWorkingDay"Liste e-mails",
       "Une adresse par ligne.<br />" +
-        "La liste d'adresses ne peut pas être vide.<br />" +
-        "Pour ne pas envoyer à une adresse sans la supprimer, la faire précéder d'un point d'exclamation \"!\".",
+        "La liste d'adresses ne pgetNextWorkingDay  "Pour ne pas envoyer à une adresse sans la supprimer, la faire précéder d'un point d'exclamation \"!\".",
       "Fermer"
     );
   }

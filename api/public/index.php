@@ -32,7 +32,8 @@ use App\Controller\Shipping\VoyageNumberController;
 use App\Controller\Stevedoring\DispatchController;
 use App\Controller\Stevedoring\EquipmentController;
 use App\Controller\Stevedoring\StaffController;
-use App\Controller\Stevedoring\TempWorkDispatchNamesController;
+use App\Controller\Stevedoring\TempWorkHoursReportController;
+use App\Controller\Stevedoring\TempWorkDispatchForDateController;
 use App\Controller\Stevedoring\TempWorkHoursController;
 use App\Controller\ThirdParty\AppointmentCountController;
 use App\Controller\ThirdParty\ThirdPartyController;
@@ -100,8 +101,9 @@ $routes = [
     ["/manutention/personnel/[i:id]?", StaffController::class],
     ["/manutention/equipements/[i:id]?", EquipmentController::class],
     ["/manutention/dispatch", DispatchController::class],
-    ["/manutention/dispatch-interimaire/[date:date]", TempWorkDispatchNamesController::class],
+    ["/manutention/dispatch-interimaire/[date:date]", TempWorkDispatchForDateController::class],
     ["/manutention/heures-interimaires/[i:id]?", TempWorkHoursController::class],
+    ["/manutention/heures-interimaires/rapport", TempWorkHoursReportController::class],
 
     // Utilitaires
     ["/ports/[a:locode]?", PortController::class],

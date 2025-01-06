@@ -8,6 +8,9 @@ namespace App\Service;
 
 use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
+use App\Core\Exceptions\Client\ClientException;
+use App\Core\Exceptions\Server\DB\DBException;
+use App\Core\Exceptions\Server\ServerException;
 use App\Core\HTTP\HTTPRequestBody;
 use App\DTO\Filter\StevedoringDispatchFilterDTO;
 use App\DTO\Filter\StevedoringStaffFilterDTO;
@@ -17,7 +20,7 @@ use App\Entity\Stevedoring\StevedoringEquipment;
 use App\Entity\Stevedoring\StevedoringStaff;
 use App\Entity\Stevedoring\TempWorkHoursEntry;
 use App\Repository\StevedoringRepository;
-use DateTimeImmutable;
+use Mpdf\Mpdf;
 
 final class StevedoringService
 {
@@ -209,9 +212,9 @@ final class StevedoringService
     /**
      * @return array<int>
      */
-    public function getTempWorkDispatchNamesForDate(\DateTimeImmutable $date): array
+    public function getTempWorkDispatchIdsForDate(\DateTimeImmutable $date): array
     {
-        return $this->stevedoringRepository->fetchTempWorkDispatchNamesForDate($date);
+        return $this->stevedoringRepository->fetchTempWorkDispatchIdsForDate($date);
     }
 
     // ===============
@@ -288,5 +291,99 @@ final class StevedoringService
     public function deleteTempWorkHours(int $id): void
     {
         $this->stevedoringRepository->deleteTempWorkHours($id);
+    }
+
+    /**
+     * Create a ZIP archive containing the temp work hours reports for the week of the given date.
+     * 
+     * @param \DateTimeImmutable $date 
+     * 
+     * @return string Filename of the ZIP archive.
+     * 
+     * @throws DBException 
+     */
+    public function getTempWorkHoursReports(\DateTimeImmutable $date): string
+    {
+        $diffToMonday = $date->format('N') - 1; // 'N' returns 1 for Monday, 7 for Sunday
+        $monday = $date->sub(new \DateInterval("P{$diffToMonday}D"));
+        $sunday = $monday->add(new \DateInterval('P6D'));
+
+        $weekNumber = $date->format('W');
+        $year = $weekNumber === "01" ? $sunday->format('Y') : $monday->format('Y');
+
+        $reportDataDto = $this->stevedoringRepository->fetchTempWorkHoursReportData($monday, $sunday);
+
+        $agencyInfo = (new AgencyService())->getDepartment('general');
+
+        $twigLoader = new \Twig\Loader\FilesystemLoader(API . '/src/templates');
+        $twig = new \Twig\Environment($twigLoader);
+        $twig->addExtension(new \Twig\Extra\Intl\IntlExtension());
+
+        if (!\extension_loaded('zip')) {
+            throw new ServerException(
+                "Impossible de générer le fichier ZIP.",
+                previous: new \Exception("Zip extension is not loaded.")
+            );
+        }
+
+        $tmpFilename = tempnam(sys_get_temp_dir(), "temp-work-reports-");
+
+        if (!$tmpFilename) {
+            throw new ServerException(
+                "Impossible de générer le fichier ZIP.",
+                previous: new \Exception("Unable to create temporary file.")
+            );
+        }
+
+        $zipFile = new \ZipArchive();
+
+        if ($zipFile->open($tmpFilename, \ZipArchive::OVERWRITE) !== true) {
+            throw new ServerException(
+                "Impossible de générer le fichier ZIP.",
+                previous: new \Exception("Unable to open ZIP archive.")
+            );
+        }
+
+        foreach ($reportDataDto->getData() as $tempWorkAgency => $agencyData) {
+            $htmlReport = $twig->render('temp-work-report/report.html.twig', [
+                'tempWorkAgency' => $tempWorkAgency,
+                'startDate' => $monday,
+                'endDate' => $sunday,
+                'week' => $weekNumber,
+                'year' => $year,
+                'hoursData' => $agencyData,
+            ]);
+
+            $header = $twig->render('temp-work-report/header.html.twig', [
+                'agency' => $agencyInfo,
+                'tempWorkAgency' => $tempWorkAgency,
+                'week' => $weekNumber,
+                'year' => $year,
+            ]);
+
+            $footer = $twig->render('temp-work-report/footer.html.twig');
+
+            $pdfReport = new Mpdf([
+                'format' => 'A4',
+                'orientation' => 'L',
+                'tempDir' => sys_get_temp_dir(),
+            ]);
+            $pdfReport->SetHTMLHeader($header);
+            $pdfReport->SetHTMLFooter($footer);
+            $pdfReport->WriteHTML($htmlReport);
+            /** @var string */
+            $pdfAsString = $pdfReport->Output('', 'S');
+
+            $zipFile->addFromString("{$tempWorkAgency} - {$weekNumber}-{$year}.pdf", $pdfAsString);
+        }
+
+        if ($zipFile->count() === 0) {
+            \unlink($tmpFilename);
+            throw new ClientException("Aucune donnée pour la semaine choisie.");
+        }
+
+        $zipFile->close();
+
+        return $tmpFilename;
     }
 }

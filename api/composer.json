@@ -3,7 +3,10 @@
     "phpmailer/phpmailer": "^6.2",
     "setasign/tfpdf": "^1.32",
     "vlucas/phpdotenv": "^5.3",
-    "psr/log": "^3.0"
+    "psr/log": "^3.0",
+    "twig/twig": "^3.0",
+    "twig/intl-extra": "^3.18",
+    "mpdf/mpdf": "^8.2"
   },
   "require-dev": {
     "symfony/var-dumper": "^7.0",

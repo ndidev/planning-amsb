@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heures intérimaires {{ tempWorkAgency }}</title>
+    <style>
+      .text-center {
+        text-align: center;
+      }
+
+      .text-left {
+        text-align: left;
+      }
+
+      .text-right {
+        text-align: right;
+      }
+
+      .border-top {
+        border-top: 1px solid #ccc;
+      }
+
+      .border-bottom {
+        border-bottom: 1px solid #ccc;
+      }
+
+      .border-left {
+        border-left: 1px solid #ccc;
+      }
+
+      .w-9 {
+        width: 9%;
+      }
+
+      .bg-gray {
+        background-color: #f0f0f0;
+      }
+
+      .bg-lightgray {
+        background-color: #fafafa;
+      }
+
+      .p-5 {
+        padding: 5px;
+      }
+
+      .p-10 {
+        padding: 10px;
+      }
+
+      .address {
+        position: absolute;
+        top: 4rem;
+        left: 1rem;
+      }
+
+      .heading {
+        text-align: center;
+        text-decoration: underline;
+        text-transform: uppercase;
+      }
+
+      .agency-name-wrapper {
+        margin: 2rem;
+        text-align: center;
+      }
+
+      .agency-name {
+        font-size: 1.5rem;
+        padding: 0.5rem;
+        text-transform: uppercase;
+      }
+
+      table {
+        margin: 2rem 5% 0 5%;
+        border-collapse: collapse;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1 class="heading">Relevé des heures intérimaires</h1>
+
+    <div class="agency-name-wrapper">
+      <span class="agency-name bg-lightgray">&nbsp;{{ tempWorkAgency }}&nbsp;</span>
+    </div>
+
+    <div class="text-center">
+        Période : <strong>semaine {{ week }}/{{ year }}</strong> du {{ startDate|format_date('short') }} au {{ endDate|format_date('short') }}
+      </div>
+
+    <table>
+      <thead>
+        <tr class="border-bottom bg-gray">
+          <th class="text-left p-5">Prénom NOM</th>
+          {% for offset in 0..6 %}
+            <th class="w-9 p-10">{{ startDate|date_modify('+' ~ offset ~ ' days')|format_date(pattern: 'EEEE dd/MM/Y', locale: 'fr') }}</th>
+          {% endfor %}
+          <th class="w-9 p-10">Total</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for staffName in hoursData.staff|keys %}
+          <tr class="{{ loop.index % 2 ? '' : 'bg-lightgray' }}">
+            <td class="p-5">{{ staffName }}</td>
+            {% for offset in 0..6 %}
+              {% set date = startDate|date_modify('+' ~ offset ~ ' days')|date('Y-m-d') %}
+              <td class="border-left w-9 p-5 text-center">{{ hoursData.staff[staffName][date] ?? 0 }}</td>
+            {% endfor %}
+            <td class="border-left w-9 p-5 text-center"><strong>{{ hoursData.staff[staffName].total }}</strong></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+
+      <tfoot>
+        <tr class="border-top bg-gray">
+          <td colspan="8" class="text-right p-10">Total</td>
+          <td class="text-center p-10"><strong>{{ hoursData.total }}</strong></td>
+        </tr>
+      </tfoot>
+    </table>
+  </body>
+</html>

@@ -9,7 +9,7 @@ namespace App\Repository;
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\Config\PdfConfig;
-use App\Service\PdfService;
+use App\Service\PdfConfigService;
 
 /**
  * @phpstan-type PdfConfigArray array{
@@ -24,7 +24,7 @@ use App\Service\PdfService;
  */
 final class PdfConfigRepository extends Repository
 {
-    public function __construct(private PdfService $pdfService)
+    public function __construct(private PdfConfigService $pdfService)
     {
         parent::__construct();
     }

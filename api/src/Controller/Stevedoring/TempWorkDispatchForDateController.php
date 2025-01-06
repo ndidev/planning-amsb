@@ -14,7 +14,7 @@ use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\StevedoringService;
 
-final class TempWorkDispatchNamesController extends Controller
+final class TempWorkDispatchForDateController extends Controller
 {
     private StevedoringService $stevedoringService;
     private string $module = Module::STEVEDORING;
@@ -62,7 +62,7 @@ final class TempWorkDispatchNamesController extends Controller
             throw new BadRequestException("La date n'est pas valide.");
         }
 
-        $staffIds = $this->stevedoringService->getTempWorkDispatchNamesForDate($dateTime);
+        $staffIds = $this->stevedoringService->getTempWorkDispatchIdsForDate($dateTime);
 
         $etag = ETag::get($staffIds);
 

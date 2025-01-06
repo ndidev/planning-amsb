@@ -13,6 +13,7 @@ use App\DTO\Filter\StevedoringDispatchFilterDTO;
 use App\DTO\Filter\StevedoringStaffFilterDTO;
 use App\DTO\Filter\StevedoringTempWorkHoursFilterDTO;
 use App\DTO\StevedoringDispatchDTO;
+use App\DTO\TempWorkHoursReportDataDTO;
 use App\Entity\Stevedoring\StevedoringEquipment;
 use App\Entity\Stevedoring\StevedoringStaff;
 use App\Entity\Stevedoring\TempWorkHoursEntry;
@@ -484,7 +485,7 @@ final class StevedoringRepository extends Repository
     /**
      * @return array<int>
      */
-    public function fetchTempWorkDispatchNamesForDate(\DateTimeImmutable $date): array
+    public function fetchTempWorkDispatchIdsForDate(\DateTimeImmutable $date): array
     {
         // Bulk
 
@@ -576,7 +577,15 @@ final class StevedoringRepository extends Repository
 
     public function fetchTempWorkHoursEntry(int $id): ?TempWorkHoursEntry
     {
-        $statement = "SELECT * FROM stevedoring_temp_work_hours WHERE id = :id";
+        $statement =
+            "SELECT
+                hours.id,
+                hours.date,
+                hours.staff_id,
+                hours.hours_worked,
+                hours.comments
+            FROM stevedoring_temp_work_hours hours
+            WHERE id = :id";
 
         try {
             $request = $this->mysql->prepare($statement);
@@ -734,6 +743,47 @@ final class StevedoringRepository extends Repository
             $deleteRequest->execute(['id' => $id]);
         } catch (\PDOException $e) {
             throw new DBException("Erreur lors de la suppression.", previous: $e);
+        }
+    }
+
+    public function fetchTempWorkHoursReportData(
+        \DateTimeImmutable $startDate,
+        \DateTimeImmutable $endDate
+    ): TempWorkHoursReportDataDTO {
+        $statement =
+            "SELECT
+                hours.date,
+                CONCAT(staff.firstname, ' ', staff.lastname) as `staffName`,
+                staff.temp_work_agency as `agency`,
+                hours.hours_worked as `hoursWorked`
+            FROM stevedoring_temp_work_hours hours
+            INNER JOIN stevedoring_staff staff ON hours.staff_id = staff.id
+            WHERE hours.date BETWEEN :startDate AND :endDate
+            ORDER BY
+                hours.date ASC,
+                staff.lastname ASC,
+                staff.firstname ASC";
+
+        try {
+            $request = $this->mysql->prepare($statement);
+
+            if (!$request) {
+                throw new DBException("Impossible de récupérer les heures de travail.");
+            }
+
+            $request->execute([
+                'startDate' => $startDate->format('Y-m-d'),
+                'endDate' => $endDate->format('Y-m-d'),
+            ]);
+
+            /** @var array<array<mixed>> */
+            $rawData = $request->fetchAll();
+
+            $tempWorkHoursReportDataDto = new TempWorkHoursReportDataDTO($rawData);
+
+            return $tempWorkHoursReportDataDto;
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer les heures de travail.", previous: $e);
         }
     }
 
