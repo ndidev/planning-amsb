@@ -8,17 +8,16 @@ namespace App\Core\Traits;
 
 trait IdentifierTrait
 {
-    private ?int $id = null;
+    public ?int $id = null {
+        set(?int $id) {
+            $this->id = $id < 1 ? null : $id;
+        }
+    }
 
     public function setId(?int $id): static
     {
-        $this->id = $id;
+        $this->id = $id < 1 ? null : $id;
 
         return $this;
-    }
-
-    public function getId(): ?int
-    {
-        return $this->id;
     }
 }

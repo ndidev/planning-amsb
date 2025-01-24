@@ -63,7 +63,7 @@
 
   <div class="mt-12">
     {#if dispatch}
-      <Accordion>
+      <Accordion multiple>
         {#each Object.keys(dispatch) as date}
           <AccordionItem>
             <span slot="header">{new DateUtils(date).format().long}</span>

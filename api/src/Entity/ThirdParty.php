@@ -275,7 +275,7 @@ class ThirdParty extends AbstractEntity
     public function toArray(): array
     {
         return [
-            "id" => $this->getId(),
+            "id" => $this->id,
             "nom_court" => $this->getShortName(),
             "nom_complet" => $this->getFullName(),
             "adresse_ligne_1" => $this->getAddressLine1(),

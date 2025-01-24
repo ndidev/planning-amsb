@@ -26,7 +26,13 @@
   import type { Unsubscriber } from "svelte/store";
   import type { SearchProps } from "svelecte/dist/utils/list";
 
-  import { tiers, stevedoringStaff, ports, pays } from "@app/stores";
+  import {
+    tiers,
+    stevedoringStaff,
+    stevedoringEquipments,
+    ports,
+    pays,
+  } from "@app/stores";
 
   // form and CE
   export let name = "svelecte";
@@ -95,6 +101,7 @@
     "staff",
     "mensuels",
     "interimaires",
+    "equipments",
   ] as const;
 
   export let type: (typeof typesPredefinis)[number] | undefined = undefined;
@@ -265,7 +272,7 @@
             return {
               id: staff.id,
               search: staff.fullname,
-              label: `${staff.fullname} (${staff.tempWorkAgency})`,
+              label: staff.fullname,
               tag: staff.fullname,
             };
           });
@@ -296,6 +303,30 @@
               search: staff.fullname,
               label: `${staff.fullname} (${staff.tempWorkAgency})`,
               tag: staff.fullname,
+            };
+          });
+      }
+    });
+  }
+
+  if (type === "equipments") {
+    unsubscribe = stevedoringEquipments.subscribe((equipmentList) => {
+      if (equipmentList) {
+        options = [...equipmentList.values()]
+          .filter((equipment) => value === equipment.id || equipment.isActive)
+          .sort(
+            (a, b) =>
+              a.brand.localeCompare(b.brand) ||
+              a.model.localeCompare(b.model) ||
+              a.internalNumber.localeCompare(b.internalNumber)
+          )
+          .map((equipment): Item => {
+            return {
+              id: equipment.id,
+              search: `${equipment.brand} (${equipment.model})`,
+              label:
+                `${equipment.brand} ${equipment.model} ${equipment.internalNumber}`.trim(),
+              tag: `${equipment.model} ${equipment.internalNumber}`.trim(),
             };
           });
       }

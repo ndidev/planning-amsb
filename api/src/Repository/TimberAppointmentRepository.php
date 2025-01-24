@@ -65,10 +65,7 @@ use App\Service\TimberService;
  */
 final class TimberAppointmentRepository extends Repository
 {
-    public function __construct(private TimberService $timberService)
-    {
-        parent::__construct();
-    }
+    public function __construct(private TimberService $timberService) {}
 
     /**
      * Vérifie si une entrée existe dans la base de données.
@@ -137,7 +134,7 @@ final class TimberAppointmentRepository extends Repository
         // Get all dispatch
         foreach ($appointments as $appointment) {
             /** @var int $id */
-            $id = $appointment->getId();
+            $id = $appointment->id;
             $dispatch = $this->fetchDispatchForAppointment($id);
             $appointment->setDispatch($dispatch);
         }
@@ -231,12 +228,12 @@ final class TimberAppointmentRepository extends Repository
                 'date_rdv' => $appointment->getSqlDate(),
                 'heure_arrivee' => $appointment->getSqlArrivalTime(),
                 'heure_depart' => $appointment->getSqlDepartureTime(),
-                'chargement' => $appointment->getLoadingPlace()?->getId(),
-                'client' => $appointment->getCustomer()?->getId(),
-                'livraison' => $appointment->getDeliveryPlace()?->getId(),
-                'transporteur' => $appointment->getCarrier()?->getId(),
-                'affreteur' => $appointment->getTransportBroker()?->getId(),
-                'fournisseur' => $appointment->getSupplier()?->getId(),
+                'chargement' => $appointment->getLoadingPlace()?->id,
+                'client' => $appointment->getCustomer()?->id,
+                'livraison' => $appointment->getDeliveryPlace()?->id,
+                'transporteur' => $appointment->getCarrier()?->id,
+                'affreteur' => $appointment->getTransportBroker()?->id,
+                'fournisseur' => $appointment->getSupplier()?->id,
                 'commande_prete' => (int) $appointment->isReady(),
                 'confirmation_affretement' => (int) $appointment->isCharteringConfirmationSent(),
                 'numero_bl' => $appointment->getDeliveryNoteNumber(),
@@ -295,22 +292,22 @@ final class TimberAppointmentRepository extends Repository
                 'date_rdv' => $appointment->getSqlDate(),
                 'heure_arrivee' => $appointment->getSqlArrivalTime(),
                 'heure_depart' => $appointment->getSqlDepartureTime(),
-                'chargement' => $appointment->getLoadingPlace()?->getId(),
-                'client' => $appointment->getCustomer()?->getId(),
-                'livraison' => $appointment->getDeliveryPlace()?->getId(),
-                'transporteur' => $appointment->getCarrier()?->getId(),
-                'affreteur' => $appointment->getTransportBroker()?->getId(),
-                'fournisseur' => $appointment->getSupplier()?->getId(),
+                'chargement' => $appointment->getLoadingPlace()?->id,
+                'client' => $appointment->getCustomer()?->id,
+                'livraison' => $appointment->getDeliveryPlace()?->id,
+                'transporteur' => $appointment->getCarrier()?->id,
+                'affreteur' => $appointment->getTransportBroker()?->id,
+                'fournisseur' => $appointment->getSupplier()?->id,
                 'commande_prete' => (int) $appointment->isReady(),
                 'confirmation_affretement' => (int) $appointment->isCharteringConfirmationSent(),
                 'numero_bl' => $appointment->getDeliveryNoteNumber(),
                 'commentaire_public' => $appointment->getPublicComment(),
                 'commentaire_cache' => $appointment->getPrivateComment(),
-                'id' => $appointment->getId(),
+                'id' => $appointment->id,
             ]);
 
             /** @var int */
-            $id = $appointment->getId();
+            $id = $appointment->id;
 
             $this->deleteDispatchForAppointment($id);
             $this->insertDispatchForAppointment($id, $appointment->getDispatch());
@@ -473,7 +470,7 @@ final class TimberAppointmentRepository extends Repository
                 LIMIT 10"
         );
 
-        $previousDeliveryNotesRequest->execute(["supplierId" => $supplierDto->getId()]);
+        $previousDeliveryNotesRequest->execute(["supplierId" => $supplierDto->id]);
 
         /** @var string[] */
         $previousDeliveryNotesResponse = $previousDeliveryNotesRequest->fetchAll(\PDO::FETCH_COLUMN);
@@ -485,7 +482,7 @@ final class TimberAppointmentRepository extends Repository
             // Si le dernier numéro de BL est composé (ex: "200101 + 200102")
             // alors séparation/tri de la chaîne de caractères puis récupération du numéro le plus élevé
             $matches = NULL; // Tableau pour récupérer les numéros de BL
-            $regexp = $supplierDto->getRegexp(); // Récupération de l'expression régulière
+            $regexp = $supplierDto->regexp; // Récupération de l'expression régulière
             // \preg_match_all("/\d{6}/", $deliveryNoteNumber["numero_bl"], $matches); // Filtre sur les numéros valides (6 chiffres)
             \preg_match_all("/$regexp/", $deliveryNoteNumber, $matches); // Filtre sur les numéros valides (6 chiffres)
             $matches = $matches[0]; // Extraction des résultats
@@ -834,7 +831,7 @@ final class TimberAppointmentRepository extends Repository
 
         $scheduledRequest = $this->mysql->prepare($scheduledStatement);
         $scheduledRequest->execute([
-            "supplierId" => $supplier->getId(),
+            "supplierId" => $supplier->id,
             "startDate" => $startDate->format('Y-m-d'),
             "endDate" => $endDate->format('Y-m-d'),
         ]);
@@ -842,7 +839,7 @@ final class TimberAppointmentRepository extends Repository
         $scheduledAppointmentsRaw = $scheduledRequest->fetchAll();
 
         $onHoldRequest = $this->mysql->prepare($onHoldStatement);
-        $onHoldRequest->execute(["supplierId" => $supplier->getId()]);
+        $onHoldRequest->execute(["supplierId" => $supplier->id]);
         /** @phpstan-var TimberAppointmentArray[] */
         $onHoldAppointmentsRaw = $onHoldRequest->fetchAll();
 
@@ -917,6 +914,8 @@ final class TimberAppointmentRepository extends Repository
      */
     public function insertDispatchForAppointment(int $id, array $dispatch): void
     {
+        if (\count($dispatch) === 0) return;
+
         $statement =
             "INSERT INTO stevedoring_timber_dispatch
              SET
@@ -931,7 +930,7 @@ final class TimberAppointmentRepository extends Repository
             foreach ($dispatch as $dispatchItem) {
                 $request->execute([
                     'id' => $id,
-                    'staffId' => $dispatchItem->getStaff()?->getId(),
+                    'staffId' => $dispatchItem->getStaff()?->id,
                     'date' => $dispatchItem->getDate()?->format('Y-m-d'),
                     'remarks' => $dispatchItem->getRemarks(),
                 ]);

@@ -17,11 +17,6 @@ final readonly class StevedoringDispatchFilterDTO extends Filter
     public const DEFAULT_START_DATE = 'now';
     public const DEFAULT_END_DATE = '9999-12-31';
 
-    /**
-     * TimberFilterDTO constructor.
-     * 
-     * @param HTTPRequestQuery $query
-     */
     public function __construct(HTTPRequestQuery $query)
     {
         $this->startDate = $query->getDatetime('startDate', self::DEFAULT_START_DATE);

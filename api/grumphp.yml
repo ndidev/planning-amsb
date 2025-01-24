@@ -1,2 +1,5 @@
 grumphp:
-    tasks: { phpstan: null, phpunit: null }
+    tasks:
+        phpstan:
+            configuration: phpstan.neon
+        phpunit: null

@@ -11,12 +11,12 @@ use App\Core\Validation\Constraints\Required;
 class Port extends AbstractEntity
 {
     #[Required("Le code LOCODE est obligatoire.")]
-    private string $locode = '';
+    public string $locode = '';
 
     #[Required("Le nom est obligatoire.")]
-    private string $name = '';
+    public string $name = '';
 
-    private string $displayName = '';
+    public string $displayName = '';
 
     public function getLocode(): string
     {
@@ -58,9 +58,9 @@ class Port extends AbstractEntity
     public function toArray(): array
     {
         return [
-            "locode" => $this->getLocode(),
-            "nom" => $this->getName(),
-            "nom_affichage" => $this->getDisplayName(),
+            "locode" => $this->locode,
+            "nom" => $this->name,
+            "nom_affichage" => $this->displayName,
         ];
     }
 }

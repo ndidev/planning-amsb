@@ -45,6 +45,16 @@ class Collection implements \IteratorAggregate, \Countable, Arrayable, \JsonSeri
     }
 
     /**
+     * Clear the collection.
+     */
+    public function clear(): static
+    {
+        $this->items = [];
+
+        return $this;
+    }
+
+    /**
      * @return \ArrayIterator<int, T>
      */
     public function getIterator(): \ArrayIterator

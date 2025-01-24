@@ -273,17 +273,17 @@ class BulkAppointment extends AbstractEntity
     public function toArray(): array
     {
         return  [
-            "id" => $this->getId(),
+            "id" => $this->id,
             "date_rdv" => $this->getDate()?->format('Y-m-d'),
             "heure" => $this->getTime()?->format('H:i'),
-            "produit" => $this->getProduct()?->getId(),
-            "qualite" => $this->getQuality()?->getId(),
+            "produit" => $this->getProduct()?->id,
+            "qualite" => $this->getQuality()?->id,
             "quantite" => $this->getQuantityValue(),
             "max" => $this->getQuantityIsMax(),
             "commande_prete" => $this->isReady(),
-            "fournisseur" => $this->getSupplier()?->getId(),
-            "client" => $this->getCustomer()?->getId(),
-            "transporteur" => $this->getCarrier()?->getId(),
+            "fournisseur" => $this->getSupplier()?->id,
+            "client" => $this->getCustomer()?->id,
+            "transporteur" => $this->getCarrier()?->id,
             "num_commande" => $this->getOrderNumber(),
             "commentaire_public" => $this->getPublicComments(),
             "commentaire_prive" => $this->getPrivateComments(),
@@ -299,13 +299,11 @@ class BulkAppointment extends AbstractEntity
     #[\Override]
     public function validate(bool $throw = true): ValidationResult
     {
-        $validationResult = new ValidationResult();
+        $validationResult = parent::validate(false);
 
         foreach ($this->dispatch as $dispatch) {
             $validationResult->merge($dispatch->validate(false));
         }
-
-        $validationResult->merge(parent::validate(false));
 
         if ($throw && $validationResult->hasErrors()) {
             throw new ValidationException(errors: $validationResult->getErrorMessage());

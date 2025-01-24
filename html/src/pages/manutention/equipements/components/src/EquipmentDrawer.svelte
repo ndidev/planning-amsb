@@ -3,13 +3,14 @@
 
   import { Drawer, CloseButton } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
-  import { PencilIcon, PhoneCallIcon } from "lucide-svelte";
+  import { PencilIcon } from "lucide-svelte";
 
   import { LucideButton, Badge } from "@app/components";
 
   import { currentUser } from "@app/stores";
 
   import type { StevedoringEquipment } from "@app/types";
+  // import { StevedoringEquipment } from "@app/entities";
 
   export let equipment: StevedoringEquipment;
 

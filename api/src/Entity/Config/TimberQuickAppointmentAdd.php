@@ -108,14 +108,14 @@ class TimberQuickAppointmentAdd extends QuickAppointmentAdd
     public function toArray(): array
     {
         return [
-            "id" => $this->getId(),
+            "id" => $this->id,
             "module" => $this->getModule(),
-            "fournisseur" => $this->getSupplier()?->getId(),
-            "transporteur" => $this->getCarrier()?->getId(),
-            "affreteur" => $this->getCharterer()?->getId(),
-            "chargement" => $this->getLoading()?->getId(),
-            "client" => $this->getCustomer()?->getId(),
-            "livraison" => $this->getDelivery()?->getId(),
+            "fournisseur" => $this->getSupplier()?->id,
+            "transporteur" => $this->getCarrier()?->id,
+            "affreteur" => $this->getCharterer()?->id,
+            "chargement" => $this->getLoading()?->id,
+            "client" => $this->getCustomer()?->id,
+            "livraison" => $this->getDelivery()?->id,
         ];
     }
 }

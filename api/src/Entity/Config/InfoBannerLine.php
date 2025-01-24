@@ -79,7 +79,7 @@ class InfoBannerLine extends AbstractEntity
     public function toArray(): array
     {
         return [
-            'id' => $this->getId(),
+            'id' => $this->id,
             'module' => $this->getModule(),
             'pc' => $this->isPc(),
             'tv' => $this->isTv(),

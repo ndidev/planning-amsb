@@ -120,7 +120,7 @@ final class StaffController extends Controller
         $staff = $this->stevedoringService->createStaff($requestBody);
 
         /** @var int $id */
-        $id = $staff->getId();
+        $id = $staff->id;
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)

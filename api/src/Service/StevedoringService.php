@@ -8,20 +8,36 @@ namespace App\Service;
 
 use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
+use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\Core\Exceptions\Server\ServerException;
 use App\Core\HTTP\HTTPRequestBody;
+use App\DTO\CallWithoutReportDTO;
 use App\DTO\Filter\StevedoringDispatchFilterDTO;
+use App\DTO\Filter\StevedoringReportsFilterDataDTO;
+use App\DTO\Filter\StevedoringReportsFilterDTO;
 use App\DTO\Filter\StevedoringStaffFilterDTO;
 use App\DTO\Filter\StevedoringTempWorkHoursFilterDTO;
 use App\DTO\StevedoringDispatchDTO;
+use App\Entity\Stevedoring\ShipReport;
+use App\Entity\Stevedoring\ShipReportEquipmentEntry;
+use App\Entity\Stevedoring\ShipReportStaffEntry;
+use App\Entity\Stevedoring\ShipReportStorageEntry;
+use App\Entity\Stevedoring\ShipReportSubcontractEntry;
 use App\Entity\Stevedoring\StevedoringEquipment;
 use App\Entity\Stevedoring\StevedoringStaff;
 use App\Entity\Stevedoring\TempWorkHoursEntry;
 use App\Repository\StevedoringRepository;
 use Mpdf\Mpdf;
 
+/**
+ * @phpstan-import-type ShipReportEquipmentEntryArray from \App\Repository\StevedoringRepository
+ * @phpstan-import-type ShipReportStaffEntryArray from \App\Repository\StevedoringRepository
+ * @phpstan-import-type ShipReportSubcontractEntryArray from \App\Repository\StevedoringRepository
+ * @phpstan-import-type ShippingCallCargoArray from \App\Repository\ShippingRepository
+ * @phpstan-import-type ShipReportStorageEntryArray from \App\Repository\StevedoringRepository
+ */
 final class StevedoringService
 {
     private StevedoringRepository $stevedoringRepository;
@@ -42,34 +58,34 @@ final class StevedoringService
     {
         $rawDataAH = new ArrayHandler($rawData);
 
-        $stevedoringStaff = (new StevedoringStaff())
-            ->setId($rawDataAH->getInt('id'))
-            ->setFirstname($rawDataAH->getString('firstname'))
-            ->setLastname($rawDataAH->getString('lastname'))
-            ->setPhone($rawDataAH->getString('phone'))
-            ->setType($rawDataAH->getString('type'))
-            ->setTempWorkAgency($rawDataAH->getString('temp_work_agency', null))
-            ->setActive($rawDataAH->getBool('is_active'))
-            ->setComments($rawDataAH->getString('comments'))
-            ->setDeletedAt($rawDataAH->getDatetime('deleted_at'));
+        $stevedoringStaff = new StevedoringStaff();
+        $stevedoringStaff->id = $rawDataAH->getInt('id');
+        $stevedoringStaff->firstname = $rawDataAH->getString('firstname');
+        $stevedoringStaff->lastname = $rawDataAH->getString('lastname');
+        $stevedoringStaff->phone = $rawDataAH->getString('phone');
+        $stevedoringStaff->type = $rawDataAH->getString('type');
+        $stevedoringStaff->tempWorkAgency = $rawDataAH->getString('temp_work_agency', null);
+        $stevedoringStaff->isActive = $rawDataAH->getBool('is_active');
+        $stevedoringStaff->comments = $rawDataAH->getString('comments');
+        $stevedoringStaff->deletedAt = $rawDataAH->getDatetime('deleted_at');
 
         return $stevedoringStaff;
     }
 
     public function makeStevedoringStaffFromRequest(HTTPRequestBody $requestBody): StevedoringStaff
     {
-        $stevedoringStaff = (new StevedoringStaff())
-            ->setId($requestBody->getInt('id'))
-            ->setFirstname($requestBody->getString('firstname'))
-            ->setLastname($requestBody->getString('lastname'))
-            ->setPhone($requestBody->getString('phone'))
-            ->setType($requestBody->getString('type'))
-            ->setTempWorkAgency($requestBody->getString('tempWorkAgency', null))
-            ->setActive($requestBody->getBool('isActive'))
-            ->setComments($requestBody->getString('comments'));
+        $stevedoringStaff = new StevedoringStaff();
+        $stevedoringStaff->id = $requestBody->getInt('id');
+        $stevedoringStaff->firstname = $requestBody->getString('firstname');
+        $stevedoringStaff->lastname = $requestBody->getString('lastname');
+        $stevedoringStaff->phone = $requestBody->getString('phone');
+        $stevedoringStaff->type = $requestBody->getString('type');
+        $stevedoringStaff->tempWorkAgency = $requestBody->getString('tempWorkAgency', null);
+        $stevedoringStaff->isActive = $requestBody->getBool('isActive');
+        $stevedoringStaff->comments = $requestBody->getString('comments');
 
-        if ($stevedoringStaff->getType() === "cdi") {
-            $stevedoringStaff->setTempWorkAgency(null);
+        if ($stevedoringStaff->type === "cdi") {
+            $stevedoringStaff->tempWorkAgency = null;
         }
 
         return $stevedoringStaff;
@@ -108,7 +124,8 @@ final class StevedoringService
 
     public function updateStaff(int $id, HTTPRequestBody $requestBody): StevedoringStaff
     {
-        $stevedoringStaff = $this->makeStevedoringStaffFromRequest($requestBody)->setId($id);
+        $stevedoringStaff = $this->makeStevedoringStaffFromRequest($requestBody);
+        $stevedoringStaff->id = $id;
 
         $stevedoringStaff->validate();
 
@@ -131,30 +148,30 @@ final class StevedoringService
     {
         $rawDataAH = new ArrayHandler($rawData);
 
-        $stevedoringEquipment = (new StevedoringEquipment())
-            ->setId($rawDataAH->getInt('id'))
-            ->setType($rawDataAH->getString('type'))
-            ->setBrand($rawDataAH->getString('brand'))
-            ->setModel($rawDataAH->getString('model'))
-            ->setInternalNumber($rawDataAH->getString('internal_number'))
-            ->setSerialNumber($rawDataAH->getString('serial_number'))
-            ->setComments($rawDataAH->getString('comments'))
-            ->setActive($rawDataAH->getBool('is_active'));
+        $stevedoringEquipment = new StevedoringEquipment();
+        $stevedoringEquipment->id = $rawDataAH->getInt('id');
+        $stevedoringEquipment->type = $rawDataAH->getString('type');
+        $stevedoringEquipment->brand = $rawDataAH->getString('brand');
+        $stevedoringEquipment->model = $rawDataAH->getString('model');
+        $stevedoringEquipment->internalNumber = $rawDataAH->getString('internal_number');
+        $stevedoringEquipment->serialNumber = $rawDataAH->getString('serial_number');
+        $stevedoringEquipment->comments = $rawDataAH->getString('comments');
+        $stevedoringEquipment->isActive = $rawDataAH->getBool('is_active');
 
         return $stevedoringEquipment;
     }
 
     public function makeStevedoringEquipmentFromRequest(HTTPRequestBody $requestBody): StevedoringEquipment
     {
-        $stevedoringEquipment = (new StevedoringEquipment())
-            ->setId($requestBody->getInt('id'))
-            ->setType($requestBody->getString('type'))
-            ->setBrand($requestBody->getString('brand'))
-            ->setModel($requestBody->getString('model'))
-            ->setInternalNumber($requestBody->getString('internalNumber'))
-            ->setSerialNumber($requestBody->getString('serialNumber'))
-            ->setComments($requestBody->getString('comments'))
-            ->setActive($requestBody->getBool('isActive'));
+        $stevedoringEquipment = new StevedoringEquipment();
+        $stevedoringEquipment->id = $requestBody->getInt('id');
+        $stevedoringEquipment->type = $requestBody->getString('type');
+        $stevedoringEquipment->brand = $requestBody->getString('brand');
+        $stevedoringEquipment->model = $requestBody->getString('model');
+        $stevedoringEquipment->internalNumber = $requestBody->getString('internalNumber');
+        $stevedoringEquipment->serialNumber = $requestBody->getString('serialNumber');
+        $stevedoringEquipment->comments = $requestBody->getString('comments');
+        $stevedoringEquipment->isActive = $requestBody->getBool('isActive');
 
         return $stevedoringEquipment;
     }
@@ -172,8 +189,12 @@ final class StevedoringService
         return $this->stevedoringRepository->fetchAllEquipments();
     }
 
-    public function getEquipment(int $id): ?StevedoringEquipment
+    public function getEquipment(?int $id): ?StevedoringEquipment
     {
+        if ($id === null) {
+            return null;
+        }
+
         return $this->stevedoringRepository->fetchEquipment($id);
     }
 
@@ -230,24 +251,24 @@ final class StevedoringService
     {
         $rawDataAH = new ArrayHandler($rawData);
 
-        $tempWorkHoursEntry = (new TempWorkHoursEntry())
-            ->setId($rawDataAH->getInt('id'))
-            ->setStaff($this->getStaff($rawDataAH->getInt('staff_id')))
-            ->setDate($rawDataAH->getDatetime('date'))
-            ->setHoursWorked($rawDataAH->getFloat('hours_worked', 0))
-            ->setComments($rawDataAH->getString('comments'));
+        $tempWorkHoursEntry = new TempWorkHoursEntry();
+        $tempWorkHoursEntry->id = $rawDataAH->getInt('id');
+        $tempWorkHoursEntry->staff = $this->getStaff($rawDataAH->getInt('staff_id'));
+        $tempWorkHoursEntry->date = $rawDataAH->getDatetime('date');
+        $tempWorkHoursEntry->hoursWorked = $rawDataAH->getFloat('hours_worked', 0);
+        $tempWorkHoursEntry->comments = $rawDataAH->getString('comments');
 
         return $tempWorkHoursEntry;
     }
 
     public function makeTempWorkHoursEntryFromRequest(HTTPRequestBody $requestBody): TempWorkHoursEntry
     {
-        $tempWorkHoursEntry = (new TempWorkHoursEntry())
-            ->setId($requestBody->getInt('id'))
-            ->setStaff($this->getStaff($requestBody->getInt('staffId')))
-            ->setDate($requestBody->getDatetime('date'))
-            ->setHoursWorked($requestBody->getFloat('hoursWorked', 0))
-            ->setComments($requestBody->getString('comments'));
+        $tempWorkHoursEntry = new TempWorkHoursEntry();
+        $tempWorkHoursEntry->id = $requestBody->getInt('id');
+        $tempWorkHoursEntry->staff = $this->getStaff($requestBody->getInt('staffId'));
+        $tempWorkHoursEntry->date = $requestBody->getDatetime('date');
+        $tempWorkHoursEntry->hoursWorked = $requestBody->getFloat('hoursWorked', 0);
+        $tempWorkHoursEntry->comments = $requestBody->getString('comments');
 
         return $tempWorkHoursEntry;
     }
@@ -385,5 +406,363 @@ final class StevedoringService
         $zipFile->close();
 
         return $tmpFilename;
+    }
+
+    // ============
+    // Ship reports
+    // ============
+
+    /**
+     * @param array<mixed> $rawData 
+     */
+    public function makeShipReportFromDatabase(array $rawData): ShipReport
+    {
+        $rawDataAH = new ArrayHandler($rawData);
+
+        $stevedoringShipReport = new ShipReport();
+        $stevedoringShipReport->id = $rawDataAH->getInt('id');
+        $stevedoringShipReport->isArchive = $rawDataAH->getBool('is_archive');
+        $stevedoringShipReport->linkedShippingCall = new ShippingService()->getShippingCall($rawDataAH->getInt('linked_shipping_call_id'));
+        $stevedoringShipReport->ship = $rawDataAH->getString('ship');
+        $stevedoringShipReport->port = $rawDataAH->getString('port');
+        $stevedoringShipReport->berth = $rawDataAH->getString('berth');
+        $stevedoringShipReport->comments = $rawDataAH->getString('comments');
+        $stevedoringShipReport->startDate = $rawDataAH->getDatetime('start_date');
+        $stevedoringShipReport->endDate = $rawDataAH->getDatetime('end_date');
+
+        /** @phpstan-var ShipReportEquipmentEntryArray[] */
+        $equipmentEntries = $rawDataAH->getArray('equipment_entries');
+
+        $stevedoringShipReport->setEquipmentEntries(
+            \array_map(
+                fn(array $entry) => $this->makeShipReportEquipmentEntryFromDatabase($entry),
+                $equipmentEntries
+            )
+        );
+
+        /** @phpstan-var ShipReportStaffEntryArray[] */
+        $staffEntries = $rawDataAH->getArray('staff_entries');
+
+        $stevedoringShipReport->setStaffEntries(
+            \array_map(
+                fn(array $entry) => $this->makeShipReportStaffEntryFromDatabase($entry),
+                $staffEntries
+            )
+        );
+
+        /** @phpstan-var ShipReportSubcontractEntryArray[] */
+        $subcontractEntries = $rawDataAH->getArray('subcontract_entries');
+
+        $stevedoringShipReport->setSubcontractEntries(
+            \array_map(
+                fn(array $entry) => $this->makeShipReportSubcontractEntryFromDatabase($entry),
+                $subcontractEntries
+            )
+        );
+
+        return $stevedoringShipReport;
+    }
+
+    public function makeShipReportFromRequest(HTTPRequestBody $request): ShipReport
+    {
+        $stevedoringShipReport = new ShipReport();
+        $stevedoringShipReport->id = $request->getInt('id');
+        $stevedoringShipReport->isArchive = $request->getBool('isArchive');
+        $stevedoringShipReport->ship = $request->getString('ship');
+        $stevedoringShipReport->port = $request->getString('port');
+        $stevedoringShipReport->berth = $request->getString('berth');
+        $stevedoringShipReport->comments = $request->getString('comments');
+
+        $linkedShippingCallId = $request->getInt('linkedShippingCallId');
+
+        if ($linkedShippingCallId !== null) {
+            $stevedoringShipReport->linkedShippingCall = new ShippingService()->getShippingCall($linkedShippingCallId);
+
+            if (!$stevedoringShipReport->linkedShippingCall) {
+                throw new BadRequestException("L'escale consignation {$linkedShippingCallId} n'existe pas.");
+            }
+        }
+
+        $entriesByDate = $request->getArray('entriesByDate');
+
+        /**
+         * @var string $date
+         * @phpstan-var array{
+         *                 permanentStaff: ShipReportStaffEntryArray[],
+         *                 tempStaff: ShipReportStaffEntryArray[],
+         *                 equipments: ShipReportEquipmentEntryArray[],
+         *                 subcontracts: ShipReportSubcontractEntryArray[],
+         *               } $entriesByType
+         */
+        foreach ($entriesByDate as $date => $entriesByType) {
+            foreach ($entriesByType as $type => $entries) {
+                foreach ($entries as $entryAsArray) {
+                    if ($type === 'permanentStaff' || $type === 'tempStaff') {
+                        /** @phpstan-var ShipReportStaffEntryArray $entryAsArray */
+                        $entry = $this->makeShipReportStaffEntryFromRequest($entryAsArray);
+                        $entry->report = $stevedoringShipReport;
+                        $entry->date = $date;
+                        $stevedoringShipReport->staffEntries->add($entry);
+                    } elseif ($type === 'equipments') {
+                        /** @phpstan-var ShipReportEquipmentEntryArray $entryAsArray */
+                        $entry = $this->makeShipReportEquipmentEntryFromRequest($entryAsArray);
+                        $entry->report = $stevedoringShipReport;
+                        $entry->date = $date;
+                        $stevedoringShipReport->equipmentEntries->add($entry);
+                    } elseif ($type === 'subcontracts') {
+                        /** @phpstan-var ShipReportSubcontractEntryArray $entryAsArray */
+                        $entry = $this->makeShipReportSubcontractEntryFromRequest($entryAsArray);
+                        $entry->report = $stevedoringShipReport;
+                        $entry->date = $date;
+                        $stevedoringShipReport->subcontractEntries->add($entry);
+                    }
+                }
+            }
+        }
+
+        /** @phpstan-var ShippingCallCargoArray[] */
+        $cargoEntries = $request->getArray('cargoEntries');
+
+        $stevedoringShipReport->setCargoEntries(
+            \array_map(
+                fn(array $entry) => new ShippingService()->makeShippingCallCargoFromRequest($entry),
+                $cargoEntries
+            )
+        );
+
+        /** @phpstan-var ShipReportStorageEntryArray[] */
+        $storageEntries = $request->getArray('storageEntries');
+
+        $stevedoringShipReport->setStorageEntries(
+            \array_map(
+                fn(array $entry) => $this->makeShipReportStorageEntryFromRequest($entry),
+                $storageEntries
+            )
+        );
+
+        return $stevedoringShipReport;
+    }
+
+    public function shipReportExists(int $id): bool
+    {
+        return $this->stevedoringRepository->shipReportExists($id);
+    }
+
+    /**
+     * @return Collection<ShipReport>
+     */
+    public function getAllShipReports(StevedoringReportsFilterDTO $filter): Collection
+    {
+        return $this->stevedoringRepository->fetchAllShipReports($filter);
+    }
+
+    public function getShipReport(?int $id): ?ShipReport
+    {
+        if ($id === null) {
+            return null;
+        }
+
+        return $this->stevedoringRepository->fetchShipReport($id);
+    }
+
+    public function createShipReport(HTTPRequestBody $requestBody): ShipReport
+    {
+        $stevedoringShipReport = $this->makeShipReportFromRequest($requestBody);
+
+        $stevedoringShipReport->validate();
+
+        return $this->stevedoringRepository->createShipReport($stevedoringShipReport);
+    }
+
+    public function updateShipReport(int $id, HTTPRequestBody $requestBody): ShipReport
+    {
+        $stevedoringShipReport = $this->makeShipReportFromRequest($requestBody);
+        $stevedoringShipReport->id = $id;
+
+        $stevedoringShipReport->validate();
+
+        return $this->stevedoringRepository->updateShipReport($stevedoringShipReport);
+    }
+
+    public function deleteShipReport(int $id): void
+    {
+        $this->stevedoringRepository->deleteShipReport($id);
+    }
+
+    // =============================
+    // Ship report equipment entries
+    // =============================
+
+    /**
+     * @param array<mixed> $rawData 
+     */
+    public function makeShipReportEquipmentEntryFromDatabase(array $rawData): ShipReportEquipmentEntry
+    {
+        $rawDataAH = new ArrayHandler($rawData);
+
+        $entry = new ShipReportEquipmentEntry();
+        $entry->id = $rawDataAH->getInt('id');
+        $entry->equipment = $this->getEquipment($rawDataAH->getInt('equipment_id'));
+        $entry->date = $rawDataAH->getDatetime('date');
+        $entry->hoursWorked = $rawDataAH->getFloat('hours_worked', 0);
+        $entry->comments = $rawDataAH->getString('comments');
+
+        return $entry;
+    }
+
+    /**
+     * @phpstan-param ShipReportEquipmentEntryArray $rawData
+     */
+    public function makeShipReportEquipmentEntryFromRequest(array $rawData): ShipReportEquipmentEntry
+    {
+        $rawDataAH = new ArrayHandler($rawData);
+
+        $entry = new ShipReportEquipmentEntry();
+        $entry->id = $rawDataAH->getInt('id');
+        $entry->equipment = $this->getEquipment($rawDataAH->getInt('equipmentId'));
+        $entry->date = $rawDataAH->getDatetime('date');
+        $entry->hoursWorked = $rawDataAH->getFloat('hoursWorked', 0);
+        $entry->comments = $rawDataAH->getString('comments');
+
+        return $entry;
+    }
+
+    // =========================
+    // Ship report staff entries
+    // =========================
+
+    /**
+     * @phpstan-param ShipReportStaffEntryArray $rawData 
+     */
+    public function makeShipReportStaffEntryFromDatabase(array $rawData): ShipReportStaffEntry
+    {
+        $rawDataAH = new ArrayHandler($rawData);
+
+        $entry = new ShipReportStaffEntry();
+        $entry->id = $rawDataAH->getInt('id');
+        $entry->staff = $this->getStaff($rawDataAH->getInt('staff_id'));
+        $entry->date = $rawDataAH->getDatetime('date');
+        $entry->hoursWorked = $rawDataAH->getFloat('hours_worked', 0);
+        $entry->comments = $rawDataAH->getString('comments');
+
+        return $entry;
+    }
+
+    /**
+     * @phpstan-param ShipReportStaffEntryArray $rawData 
+     */
+    public function makeShipReportStaffEntryFromRequest(array $rawData): ShipReportStaffEntry
+    {
+        $rawDataAH = new ArrayHandler($rawData);
+
+        $entry = new ShipReportStaffEntry();
+        $entry->id = $rawDataAH->getInt('id');
+        $entry->staff = $this->getStaff($rawDataAH->getInt('staffId'));
+        $entry->date = $rawDataAH->getDatetime('date');
+        $entry->hoursWorked = $rawDataAH->getFloat('hoursWorked', 0);
+        $entry->comments = $rawDataAH->getString('comments');
+
+        return $entry;
+    }
+
+    // ===============================
+    // Ship report subcontract entries
+    // ===============================
+
+    /**
+     * @phpstan-param ShipReportSubcontractEntryArray $rawData 
+     */
+    public function makeShipReportSubcontractEntryFromDatabase(array $rawData): ShipReportSubcontractEntry
+    {
+        $rawDataAH = new ArrayHandler($rawData);
+
+        $entry = new ShipReportSubcontractEntry();
+        $entry->id = $rawDataAH->getInt('id');
+        $entry->subcontractorName = $rawDataAH->getString('subcontractor_name');
+        $entry->type = $rawDataAH->getString('type');
+        $entry->date = $rawDataAH->getDatetime('date');
+        $entry->hoursWorked = $rawDataAH->getFloat('hours_worked', 0);
+        $entry->cost = $rawDataAH->getFloat('cost', 0);
+        $entry->comments = $rawDataAH->getString('comments');
+
+        return $entry;
+    }
+
+    /**
+     * @phpstan-param ShipReportSubcontractEntryArray $rawData 
+     */
+    public function makeShipReportSubcontractEntryFromRequest(array $rawData): ShipReportSubcontractEntry
+    {
+        $rawDataAH = new ArrayHandler($rawData);
+
+        $entry = new ShipReportSubcontractEntry();
+        $entry->id = $rawDataAH->getInt('id');
+        $entry->subcontractorName = $rawDataAH->getString('subcontractorName');
+        $entry->type = $rawDataAH->getString('type');
+        $entry->date = $rawDataAH->getDatetime('date');
+        $entry->hoursWorked = $rawDataAH->getFloat('hoursWorked');
+        $entry->cost = $rawDataAH->getFloat('cost');
+        $entry->comments = $rawDataAH->getString('comments');
+
+        return $entry;
+    }
+
+    // ===========================
+    // Ship report storage entries
+    // ===========================
+
+    /**
+     * @phpstan-param ShipReportStorageEntryArray $rawData 
+     */
+    public function makeShipReportStorageEntryFromDatabase(array $rawData): ShipReportStorageEntry
+    {
+        $rawDataAH = new ArrayHandler($rawData);
+
+        $entry = new ShipReportStorageEntry();
+        $entry->id = $rawDataAH->getInt('id');
+        $entry->cargo = new ShippingService()->getCargoEntry($rawDataAH->getInt('cargo_id'));
+        $entry->storageName = $rawDataAH->getString('storage_name');
+        $entry->tonnage = $rawDataAH->getFloat('tonnage', 0);
+        $entry->volume = $rawDataAH->getFloat('volume', 0);
+        $entry->units = $rawDataAH->getInt('units', 0);
+        $entry->comments = $rawDataAH->getString('comments');
+
+        return $entry;
+    }
+
+    /**
+     * @phpstan-param ShipReportStorageEntryArray $rawData 
+     */
+    public function makeShipReportStorageEntryFromRequest(array $rawData): ShipReportStorageEntry
+    {
+        $rawDataAH = new ArrayHandler($rawData);
+
+        $entry = new ShipReportStorageEntry();
+        $entry->id = $rawDataAH->getInt('id');
+        $entry->cargo = new ShippingService()->getCargoEntry($rawDataAH->getInt('cargoId'));
+        $entry->storageName = $rawDataAH->getString('storageName');
+        $entry->tonnage = $rawDataAH->getFloat('tonnage', 0);
+        $entry->volume = $rawDataAH->getFloat('volume', 0);
+        $entry->units = $rawDataAH->getInt('units', 0);
+        $entry->comments = $rawDataAH->getString('comments');
+
+        return $entry;
+    }
+
+    // ======
+    // Others
+    // ======
+
+    public function getShipReportsFilterData(): StevedoringReportsFilterDataDTO
+    {
+        return $this->stevedoringRepository->fetchShipReportsFilterData();
+    }
+
+    /**
+     * @return Collection<CallWithoutReportDTO>
+     */
+    public function getCallsWithoutReport(): Collection
+    {
+        return $this->stevedoringRepository->fetchCallsWithoutReport();
     }
 }

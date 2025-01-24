@@ -28,10 +28,7 @@ use App\Service\AgencyService;
  */
 final class AgencyRepository extends Repository
 {
-    public function __construct(private AgencyService $agencyService)
-    {
-        parent::__construct();
-    }
+    public function __construct(private AgencyService $agencyService) {}
 
     /**
      * Vérifie si une entrée existe dans la base de données.

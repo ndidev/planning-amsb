@@ -56,7 +56,7 @@ foreach ($configs as $config) {
         $formattedStartDate = DateUtils::format(DateUtils::DATE_FULL, $startDate);
         $formattedEndDate = DateUtils::format(DateUtils::DATE_FULL, $endDate);
 
-        $configId = $config->getId();
+        $configId = $config->id;
 
         if (!$configId) {
             throw new ServerException("Erreur : l'identifiant de la configuration n'a pas été trouvé");
@@ -70,7 +70,7 @@ foreach ($configs as $config) {
         );
 
         // Mise à jour du rapport
-        $rapport .= "• {$config->getModule()}/{$config->getSupplier()?->getId()} ({$config->getSupplier()?->getShortName()}) : succès" . PHP_EOL;
+        $rapport .= "• {$config->getModule()}/{$config->getSupplier()?->id} ({$config->getSupplier()?->getShortName()}) : succès" . PHP_EOL;
         $rapport .= "  Dates : du {$formattedStartDate} au {$formattedEndDate}" . PHP_EOL;
         $rapport .= "  Adresses : " . PHP_EOL;
         $rapport .= "    From : " . $resultat["adresses"]["from"] . PHP_EOL;
@@ -87,7 +87,7 @@ foreach ($configs as $config) {
             $rapport .= "      $address" . PHP_EOL;
         }
     } catch (\Exception $e) {
-        $rapport .= "• {$config->getModule()}/{$config->getSupplier()?->getId()} ({$config->getSupplier()?->getShortName()}) : échec" . PHP_EOL;
+        $rapport .= "• {$config->getModule()}/{$config->getSupplier()?->id} ({$config->getSupplier()?->getShortName()}) : échec" . PHP_EOL;
         $rapport .= "  Erreur : {$e->getMessage()}" . PHP_EOL;
         ErrorLogger::log($e);
     } finally {

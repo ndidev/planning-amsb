@@ -1,5 +1,6 @@
 # Local
 .vscode/
+DEVSENSE/
 .DS_Store
 docker/
 node_modules/

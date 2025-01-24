@@ -11,193 +11,99 @@ use App\Core\Component\CargoOperation;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
+use App\Entity\Stevedoring\ShipReport;
 
 final class ShippingCallCargo extends AbstractEntity
 {
     use IdentifierTrait;
 
-    private ?ShippingCall $shippingCall = null;
+    public ?ShippingCall $shippingCall = null;
+
+    public ?ShipReport $shipReport = null;
 
     #[Required("Le nom de la marchandise est obligatoire.")]
-    private string $cargoName = '';
+    public string $cargoName = '';
 
     #[Required("Le client est obligatoire.")]
-    private string $customer = '';
+    public string $customer = '';
 
     /** @phpstan-var CargoOperation::* $operation */
-    private string $operation = CargoOperation::IMPORT;
+    public string $operation = CargoOperation::IMPORT {
+        set(string $value) {
+            $operationFromEnum = CargoOperation::tryFrom($value);
 
-    private bool $approximate = false;
+            if (null === $operationFromEnum) {
+                throw new BadRequestException("Opération invalide : '{$value}'");
+            }
 
-    private ?float $blTonnage = null;
-
-    private ?float $blVolume = null;
-
-    private ?int $blUnits = null;
-
-    private ?float $outturnTonnage = null;
-
-    private ?float $outturnVolume = null;
-
-    private ?int $outturnUnits = null;
-
-    public function getShippingCall(): ?ShippingCall
-    {
-        return $this->shippingCall;
-    }
-
-    public function setShippingCall(?ShippingCall $shippingCall): static
-    {
-        $this->shippingCall = $shippingCall;
-
-        return $this;
-    }
-
-    public function getCargoName(): string
-    {
-        return $this->cargoName;
-    }
-
-    public function setCargoName(string $cargoName): static
-    {
-        $this->cargoName = $cargoName;
-
-        return $this;
-    }
-
-    public function getCustomer(): string
-    {
-        return $this->customer;
-    }
-
-    public function setCustomer(string $customer): static
-    {
-        $this->customer = $customer;
-
-        return $this;
-    }
-
-    /**
-     *  @phpstan-return CargoOperation::*
-     */
-    public function getOperation(): string
-    {
-        return $this->operation;
-    }
-
-    public function setOperation(string $operation): static
-    {
-        $operationFromEnum = CargoOperation::tryFrom($operation);
-
-        if (null === $operationFromEnum) {
-            throw new BadRequestException("Opération invalide");
+            $this->operation = $operationFromEnum;
         }
-
-        $this->operation = $operationFromEnum;
-
-        return $this;
     }
 
-    public function isApproximate(): bool
-    {
-        return $this->approximate;
+    public bool $isApproximate = false;
+
+    public ?float $blTonnage = null;
+
+    public ?float $blVolume = null;
+
+    public ?int $blUnits = null;
+
+    public ?float $outturnTonnage = null;
+
+    public ?float $outturnVolume = null;
+
+    public ?int $outturnUnits = null;
+
+    public ?float $tonnageDifference {
+        get {
+            if (null === $this->blTonnage || null === $this->outturnTonnage) {
+                return null;
+            }
+
+            return $this->outturnTonnage - $this->blTonnage;
+        }
     }
 
-    public function setApproximate(bool $approximate): static
-    {
-        $this->approximate = $approximate;
+    public ?float $volumeDifference {
+        get {
+            if (null === $this->blVolume || null === $this->outturnVolume) {
+                return null;
+            }
 
-        return $this;
+            return $this->outturnVolume - $this->blVolume;
+        }
     }
 
-    public function getBlTonnage(): ?float
-    {
-        return $this->blTonnage;
-    }
+    public ?int $unitsDifference {
+        get {
+            if (null === $this->blUnits || null === $this->outturnUnits) {
+                return null;
+            }
 
-    public function setBlTonnage(?float $blTonnage): static
-    {
-        $this->blTonnage = $blTonnage;
-
-        return $this;
-    }
-
-    public function getBlVolume(): ?float
-    {
-        return $this->blVolume;
-    }
-
-    public function setBlVolume(?float $blVolume): static
-    {
-        $this->blVolume = $blVolume;
-
-        return $this;
-    }
-
-    public function getBlUnits(): ?int
-    {
-        return $this->blUnits;
-    }
-
-    public function setBlUnits(?int $blUnits): static
-    {
-        $this->blUnits = $blUnits;
-
-        return $this;
-    }
-
-    public function getOutturnTonnage(): ?float
-    {
-        return $this->outturnTonnage;
-    }
-
-    public function setOutturnTonnage(?float $outturnTonnage): static
-    {
-        $this->outturnTonnage = $outturnTonnage;
-
-        return $this;
-    }
-
-    public function getOutturnVolume(): ?float
-    {
-        return $this->outturnVolume;
-    }
-
-    public function setOutturnVolume(?float $outturnVolume): static
-    {
-        $this->outturnVolume = $outturnVolume;
-
-        return $this;
-    }
-
-    public function getOutturnUnits(): ?int
-    {
-        return $this->outturnUnits;
-    }
-
-    public function setOutturnUnits(?int $outturnUnits): static
-    {
-        $this->outturnUnits = $outturnUnits;
-
-        return $this;
+            return $this->outturnUnits - $this->blUnits;
+        }
     }
 
     #[\Override]
     public function toArray(): array
     {
         return [
-            'id' => $this->getId(),
-            'escale_id' => $this->getShippingCall()?->getId(),
-            'marchandise' => $this->getCargoName(),
-            'client' => $this->getCustomer(),
-            'operation' => $this->getOperation(),
-            'environ' => $this->isApproximate(),
-            'tonnage_bl' => $this->getBlTonnage(),
-            'cubage_bl' => $this->getBlVolume(),
-            'nombre_bl' => $this->getBlUnits(),
-            'tonnage_outturn' => $this->getOutturnTonnage(),
-            'cubage_outturn' => $this->getOutturnVolume(),
-            'nombre_outturn' => $this->getOutturnUnits(),
+            'id' => $this->id,
+            'escale_id' => $this->shippingCall?->id,
+            'shipReportId' => $this->shipReport?->id,
+            'cargoName' => $this->cargoName,
+            'customer' => $this->customer,
+            'operation' => $this->operation,
+            'isApproximate' => $this->isApproximate,
+            'blTonnage' => $this->blTonnage,
+            'blVolume' => $this->blVolume,
+            'blUnits' => $this->blUnits,
+            'outturnTonnage' => $this->outturnTonnage,
+            'outturnVolume' => $this->outturnVolume,
+            'outturnUnits' => $this->outturnUnits,
+            'tonnageDifference' => $this->tonnageDifference,
+            'volumeDifference' => $this->volumeDifference,
+            'unitsDifference' => $this->unitsDifference,
         ];
     }
 }

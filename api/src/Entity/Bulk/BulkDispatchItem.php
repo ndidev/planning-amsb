@@ -73,8 +73,8 @@ class BulkDispatchItem extends AbstractEntity
     public function toArray(): array
     {
         return [
-            'appointmentId' => $this->getAppointment()?->getId(),
-            'staffId' => $this->getStaff()?->getId(),
+            'appointmentId' => $this->getAppointment()?->id,
+            'staffId' => $this->getStaff()?->id,
             'date' => $this->getDate()?->format('Y-m-d'),
             'remarks' => $this->getRemarks(),
         ];

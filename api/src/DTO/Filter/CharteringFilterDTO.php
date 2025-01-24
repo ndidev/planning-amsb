@@ -21,11 +21,6 @@ final readonly class CharteringFilterDTO extends Filter
     public const DEFAULT_START_DATE = '0001-01-01';
     public const DEFAULT_END_DATE = '9999-12-31';
 
-    /**
-     * CharteringFilterDTO constructor.
-     * 
-     * @param HTTPRequestQuery $query
-     */
     public function __construct(HTTPRequestQuery $query)
     {
         $this->startDate = $query->getDatetime('startDate', self::DEFAULT_START_DATE);

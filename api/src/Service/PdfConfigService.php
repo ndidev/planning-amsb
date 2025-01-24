@@ -252,7 +252,7 @@ final class PdfConfigService
                 throw new NotFoundException("Configuration PDF non trouvée");
             }
 
-            $supplierId = $config->getSupplier()?->getId();
+            $supplierId = $config->getSupplier()?->id;
 
             if (!$supplierId) {
                 throw new NotFoundException("Fournisseur non trouvé");

@@ -2,7 +2,13 @@ import { writable } from "svelte/store";
 
 import Notiflix from "notiflix";
 
-import { fetcher, type FetcherOptions, jsonify, mapify } from "@app/utils";
+import {
+  fetcher,
+  type FetcherOptions,
+  jsonify,
+  mapify,
+  ReadyPromise,
+} from "@app/utils";
 import { HTTP } from "@app/errors";
 import type { DBEventData } from "@app/types";
 
@@ -31,6 +37,8 @@ export function createFlatStore<T extends { id: string | number }>(
 
   let current: Map<T["id"], T> = initial;
 
+  let readyPromise: ReadyPromise = new ReadyPromise();
+
   const { subscribe, set, update } = writable<Map<T["id"], T>>(initial, () => {
     fetchAll();
 
@@ -52,19 +60,174 @@ export function createFlatStore<T extends { id: string | number }>(
   return {
     subscribe,
     get,
+    getAll: fetchAll,
     new: _new,
     cancel: _cancel,
     create: _dbCreate,
     update: _dbUpdate,
     patch: _dbPatch,
     delete: _dbDelete,
-    refresh: fetchAll,
     getTemplate: () => structuredClone(itemTemplate),
     setSearchParams,
     endpoint,
+    getReadyState,
   };
 
   // FONCTIONS
+
+  function resetReady() {
+    readyPromise = new ReadyPromise();
+  }
+
+  /**
+   * Retrieves the promise representing the readiness state.
+   *
+   * @returns A promise that resolves when the store data is fetched.
+   */
+  function getReadyState() {
+    return readyPromise.promise;
+  }
+
+  /**
+   * Récupérer toutes les données.
+   */
+  async function fetchAll() {
+    try {
+      if (readyPromise.isPending === false) {
+        resetReady();
+      }
+
+      const items = mapify<T>(await fetcher(endpoint, { searchParams }));
+
+      // Si la valeur n'a pas changé, ne pas mettre à jour
+      if (jsonify(current) === jsonify(items)) {
+        readyPromise.resolve();
+        return current;
+      }
+
+      set(items);
+      current = items;
+
+      readyPromise.resolve();
+      return items;
+    } catch (err: unknown) {
+      const error = err as HTTP.Error | Error;
+
+      if (
+        error instanceof HTTP.ResponseError &&
+        !(error instanceof HTTP.Unauthorized)
+      ) {
+        Notiflix.Notify.failure(error.message);
+      } else {
+        Notiflix.Notify.failure("Erreur");
+        console.error(error);
+      }
+
+      readyPromise.reject(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Récupérer un item.
+   *
+   * @param id Identifiant de l'item
+   */
+  async function get(id: T["id"]) {
+    try {
+      const storedItem = current?.get(id);
+
+      if (storedItem) {
+        return storedItem;
+      }
+
+      const fetchedItem = await fetcher<T>(`${endpoint}/${id}`);
+
+      update((items) => {
+        if (!items) {
+          items = new Map();
+        }
+
+        items.set(fetchedItem.id, fetchedItem);
+
+        return (current = items);
+      });
+
+      return fetchedItem;
+    } catch (err: unknown) {
+      const error = err as HTTP.Error | Error;
+      if (error instanceof HTTP.ResponseError) {
+        Notiflix.Notify.failure(error.message);
+      } else {
+        Notiflix.Notify.failure("Erreur");
+        console.error(error);
+      }
+
+      return null;
+    }
+  }
+
+  /**
+   * Mettre à jour les paramètres du store.
+   *
+   * @param params Paramètres de requête
+   */
+  function setSearchParams(newParams: FetcherOptions["searchParams"] = {}) {
+    const newSearchParams = new URLSearchParams(newParams);
+
+    if (searchParams.toString() !== newSearchParams.toString()) {
+      set(initial);
+      current = initial;
+      searchParams = newSearchParams;
+      fetchAll();
+    }
+  }
+
+  /**
+   * Gestionnaire d'événement appelé lorsqu'une modification
+   * de la base de données a été notifiée.
+   *
+   * Vérification du contenu de l'événement,
+   * puis appel de la fonction appropriée.
+   */
+  function handleDBEvent(event: CustomEvent<DBEventData<T>>) {
+    // Événement générique
+    if (!event.detail) {
+      fetchAll();
+      return;
+    }
+
+    const { type, id, data } = event.detail;
+
+    // En fonction d'un événement particulier
+    try {
+      switch (type) {
+        case "create":
+          _create(data);
+          break;
+
+        case "update":
+        case "patch":
+          if (data) {
+            _update(data);
+          } else {
+            fetchAll();
+          }
+          break;
+
+        case "delete":
+          _delete(id);
+          break;
+
+        default:
+          fetchAll();
+          break;
+      }
+    } catch (error) {
+      console.error(error);
+      fetchAll();
+    }
+  }
 
   /**
    * Ajouter un item.
@@ -91,27 +254,6 @@ export function createFlatStore<T extends { id: string | number }>(
    */
   function _cancel(id: T["id"]) {
     _delete(id);
-  }
-
-  /**
-   * Récupérer un item.
-   *
-   * @param id Identifiant de l'item
-   */
-  async function get(id: T["id"]) {
-    try {
-      return current?.get(id) || (await fetcher(`${endpoint}/${id}`));
-    } catch (err: unknown) {
-      const error = err as HTTP.Error | Error;
-      if (error instanceof HTTP.ResponseError) {
-        Notiflix.Notify.failure(error.message);
-      } else {
-        Notiflix.Notify.failure("Erreur");
-        console.error(error);
-      }
-
-      return null;
-    }
   }
 
   /**
@@ -206,96 +348,6 @@ export function createFlatStore<T extends { id: string | number }>(
   }
 
   /**
-   * Mettre à jour les paramètres du store.
-   *
-   * @param params Paramètres de requête
-   */
-  function setSearchParams(newParams: FetcherOptions["searchParams"] = {}) {
-    const newSearchParams = new URLSearchParams(newParams);
-
-    if (searchParams.toString() !== newSearchParams.toString()) {
-      set(initial);
-      current = initial;
-      searchParams = newSearchParams;
-      fetchAll();
-    }
-  }
-
-  /**
-   * Gestionnaire d'événement appelé lorsqu'une modification
-   * de la base de données a été notifiée.
-   *
-   * Vérification du contenu de l'événement,
-   * puis appel de la fonction appropriée.
-   */
-  function handleDBEvent(event: CustomEvent<DBEventData<T>>) {
-    // Événement générique
-    if (!event.detail) {
-      fetchAll();
-      return;
-    }
-
-    const { type, id, data } = event.detail;
-
-    // En fonction d'un événement particulier
-    try {
-      switch (type) {
-        case "create":
-          _create(data);
-          break;
-
-        case "update":
-        case "patch":
-          if (data) {
-            _update(data);
-          } else {
-            fetchAll();
-          }
-          break;
-
-        case "delete":
-          _delete(id);
-          break;
-
-        default:
-          fetchAll();
-          break;
-      }
-    } catch (error) {
-      console.error(error);
-      fetchAll();
-    }
-  }
-
-  /**
-   * Récupérer toutes les données.
-   */
-  async function fetchAll() {
-    try {
-      const items = mapify<T>(await fetcher(endpoint, { searchParams }));
-
-      // Si la valeur n'a pas changé, ne pas mettre à jour
-      if (jsonify(current) === jsonify(items)) return;
-
-      set(items);
-      current = items;
-    } catch (err: unknown) {
-      const error = err as HTTP.Error | Error;
-      console.error(error);
-
-      if (
-        error instanceof HTTP.ResponseError &&
-        !(error instanceof HTTP.Unauthorized)
-      ) {
-        Notiflix.Notify.failure(error.message);
-      } else {
-        Notiflix.Notify.failure("Erreur");
-        console.error(error);
-      }
-    }
-  }
-
-  /**
    * Créer un item.
    *
    * @param item Données de la ressource
@@ -305,7 +357,9 @@ export function createFlatStore<T extends { id: string | number }>(
     if (!satisfiesParams(item, searchParams)) return;
 
     update((items) => {
-      if (!items) return;
+      if (!items) {
+        items = new Map();
+      }
 
       items.set(item.id, item);
 
@@ -330,7 +384,9 @@ export function createFlatStore<T extends { id: string | number }>(
 
     // Si tout OK ci-dessus, mettre à jour
     update((items) => {
-      if (!items) return;
+      if (!items) {
+        items = new Map();
+      }
 
       items.set(item.id, item);
 

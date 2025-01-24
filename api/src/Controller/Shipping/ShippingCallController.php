@@ -137,7 +137,7 @@ final class ShippingCallController extends Controller
         $newCall = $this->shippingService->createShippingCall($input);
 
         /** @var int $id */
-        $id = $newCall->getId();
+        $id = $newCall->id;
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)

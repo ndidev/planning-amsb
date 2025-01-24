@@ -120,7 +120,7 @@ final class TempWorkHoursController extends Controller
         $newTempWorkHours = $this->stevedoringService->createTempWorkHours($requestBody);
 
         /** @var int $id */
-        $id = $newTempWorkHours->getId();
+        $id = $newTempWorkHours->id;
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)

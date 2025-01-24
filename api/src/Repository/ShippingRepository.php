@@ -8,6 +8,7 @@ namespace App\Repository;
 
 use App\Core\Component\Collection;
 use App\Core\Component\ETAConverter;
+use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\DTO\Filter\ShippingFilterDTO;
@@ -16,10 +17,12 @@ use App\DTO\ShippingStatsSummaryDTO;
 use App\Entity\Shipping\ShippingCall;
 use App\Entity\Shipping\ShippingCallCargo;
 use App\Service\ShippingService;
+use RuntimeException;
 
 /**
  * @phpstan-type ShippingCallArray array{
  *                                   id: int,
+ *                                   stevedoring_ship_report_id: int|null,
  *                                   navire: string,
  *                                   voyage: string,
  *                                   armateur: int|null,
@@ -49,7 +52,8 @@ use App\Service\ShippingService;
  * 
  * @phpstan-type ShippingCallCargoArray array{
  *                                        id: int,
- *                                        escale_id: int,
+ *                                        escale_id: int|null,
+ *                                        ship_report_id: int|null,
  *                                        marchandise: string,
  *                                        client: string,
  *                                        operation: string,
@@ -97,10 +101,11 @@ use App\Service\ShippingService;
  */
 final class ShippingRepository extends Repository
 {
-    public function __construct(private ShippingService $shippingService)
-    {
-        parent::__construct();
-    }
+    public function __construct(private ShippingService $shippingService) {}
+
+    // =====
+    // Calls
+    // =====
 
     /**
      * Vérifie si une entrée existe dans la base de données.
@@ -124,6 +129,7 @@ final class ShippingRepository extends Repository
         $callsStatement =
             "SELECT
                 cp.id,
+                cp.stevedoring_ship_report_id,
                 cp.navire,
                 cp.voyage,
                 cp.armateur,
@@ -215,7 +221,7 @@ final class ShippingRepository extends Repository
             $filteredCargoesRaw = array_values(
                 array_filter(
                     $cargoesRaw,
-                    fn($cargo) => ($cargo["escale_id"]) === $call->getId()
+                    fn($cargo) => ($cargo["escale_id"]) === $call->id
                 )
             );
 
@@ -244,6 +250,7 @@ final class ShippingRepository extends Repository
         $callStatement =
             "SELECT
                 id,
+                stevedoring_ship_report_id,
                 navire,
                 voyage,
                 armateur,
@@ -274,7 +281,6 @@ final class ShippingRepository extends Repository
         $cargoesStatement =
             "SELECT
                 id,
-                escale_id,
                 IFNULL(marchandise, '') as marchandise,
                 IFNULL(client, '') as client,
                 operation,
@@ -369,7 +375,7 @@ final class ShippingRepository extends Repository
         $callRequest->execute([
             'navire' => $call->getShipName() ?: "TBN",
             'voyage' => $call->getVoyage(),
-            'armateur' => $call->getShipOperator()?->getId(),
+            'armateur' => $call->getShipOperator()?->id,
             'eta_date' => $call->getEtaDate()?->format('Y-m-d'),
             'eta_heure' => ETAConverter::toDigits($call->getEtaTime()),
             'nor_date' => $call->getNorDate()?->format('Y-m-d'),
@@ -402,16 +408,16 @@ final class ShippingRepository extends Repository
         foreach ($cargoes as $cargo) {
             $insertCargoRequest->execute([
                 'escale_id' => $lastInsertId,
-                'marchandise' => $cargo->getCargoName(),
-                'client' => $cargo->getCustomer(),
-                'operation' => $cargo->getOperation(),
-                'environ' => (int) $cargo->isApproximate(),
-                'tonnage_bl' => $cargo->getBlTonnage(),
-                'cubage_bl' => $cargo->getBlVolume(),
-                'nombre_bl' => $cargo->getBlUnits(),
-                'tonnage_outturn' => $cargo->getOutturnTonnage(),
-                'cubage_outturn' => $cargo->getOutturnVolume(),
-                'nombre_outturn' => $cargo->getOutturnUnits(),
+                'marchandise' => $cargo->cargoName,
+                'client' => $cargo->customer,
+                'operation' => $cargo->operation,
+                'environ' => (int) $cargo->isApproximate,
+                'tonnage_bl' => $cargo->blTonnage,
+                'cubage_bl' => $cargo->blVolume,
+                'nombre_bl' => $cargo->blUnits,
+                'tonnage_outturn' => $cargo->outturnTonnage,
+                'cubage_outturn' => $cargo->outturnVolume,
+                'nombre_outturn' => $cargo->outturnUnits,
             ]);
         }
 
@@ -430,7 +436,7 @@ final class ShippingRepository extends Repository
      */
     public function updateCall(ShippingCall $call): ShippingCall
     {
-        $id = $call->getId();
+        $id = $call->id;
 
         if (!$id) {
             throw new ClientException("ID de l'escale manquant");
@@ -440,6 +446,7 @@ final class ShippingRepository extends Repository
             "UPDATE consignation_planning
             SET
                 navire = :navire,
+                stevedoring_ship_report_id = :shipReportId,
                 voyage = :voyage,
                 armateur = :armateur,
                 eta_date = :eta_date,
@@ -470,6 +477,7 @@ final class ShippingRepository extends Repository
             SET
                 id = :id,
                 escale_id = :escale_id,
+                ship_report_id = :shipReportId,
                 marchandise = :marchandise,
                 client = :client,
                 operation = :operation,
@@ -494,9 +502,10 @@ final class ShippingRepository extends Repository
 
         $callRequest = $this->mysql->prepare($callStatement);
         $callRequest->execute([
-            'navire' => $call->getShipName() ?: "TBN",
+            'navire' => $call->shipName,
+            'shipReportId' => $call->shipReport?->id,
             'voyage' => $call->getVoyage(),
-            'armateur' => $call->getShipOperator()?->getId(),
+            'armateur' => $call->getShipOperator()?->id,
             'eta_date' => $call->getEtaDate()?->format('Y-m-d'),
             'eta_heure' => ETAConverter::toDigits($call->getEtaTime()),
             'nor_date' => $call->getNorDate()?->format('Y-m-d'),
@@ -518,7 +527,7 @@ final class ShippingRepository extends Repository
             'call_port' => $call->getCallPort(),
             'quai' => $call->getQuay(),
             'commentaire' => $call->getComment(),
-            'id' => $call->getId(),
+            'id' => $call->id,
         ]);
 
         // MARCHANDISES
@@ -528,13 +537,13 @@ final class ShippingRepository extends Repository
         $existingCargoesIdsRequest = $this->mysql->prepare(
             "SELECT id FROM consignation_escales_marchandises WHERE escale_id = :callId"
         );
-        $existingCargoesIdsRequest->execute(['callId' => $call->getId()]);
+        $existingCargoesIdsRequest->execute(['callId' => $call->id]);
         $existingCargoesIds = $existingCargoesIdsRequest->fetchAll(\PDO::FETCH_COLUMN);
 
-        $submittedCargoesIds = \array_map(fn(ShippingCallCargo $cargo) => $cargo->getId(), $call->getCargoes()->asArray());
-        $cargoesIdsToBeDeleted = array_diff($existingCargoesIds, $submittedCargoesIds);
+        $submittedCargoesIds = \array_map(fn(ShippingCallCargo $cargo) => $cargo->id, $call->getCargoes()->asArray());
+        $cargoesIdsToBeDeleted = \array_diff($existingCargoesIds, $submittedCargoesIds);
 
-        if (count($cargoesIdsToBeDeleted) > 0) {
+        if (\count($cargoesIdsToBeDeleted) > 0) {
             $this->mysql->exec("DELETE FROM consignation_escales_marchandises WHERE id IN (" . implode(",", $cargoesIdsToBeDeleted) . ")");
         }
 
@@ -543,18 +552,19 @@ final class ShippingRepository extends Repository
         $cargoes = $call->getCargoes();
         foreach ($cargoes as $cargo) {
             $cargoRequest->execute([
-                'id' => $cargo->getId(),
-                'escale_id' => $call->getId(),
-                'marchandise' => $cargo->getCargoName(),
-                'client' => $cargo->getCustomer(),
-                'operation' => $cargo->getOperation(),
-                'environ' => (int) $cargo->isApproximate(),
-                'tonnage_bl' => $cargo->getBlTonnage(),
-                'cubage_bl' => $cargo->getBlVolume(),
-                'nombre_bl' => $cargo->getBlUnits(),
-                'tonnage_outturn' => $cargo->getOutturnTonnage(),
-                'cubage_outturn' => $cargo->getOutturnVolume(),
-                'nombre_outturn' => $cargo->getOutturnUnits(),
+                'id' => $cargo->id,
+                'escale_id' => $call->id,
+                'shipReportId' => $cargo->shipReport?->id,
+                'marchandise' => $cargo->cargoName,
+                'client' => $cargo->customer,
+                'operation' => $cargo->operation,
+                'environ' => (int) $cargo->isApproximate,
+                'tonnage_bl' => $cargo->blTonnage,
+                'cubage_bl' => $cargo->blVolume,
+                'nombre_bl' => $cargo->blUnits,
+                'tonnage_outturn' => $cargo->outturnTonnage,
+                'cubage_outturn' => $cargo->outturnVolume,
+                'nombre_outturn' => $cargo->outturnUnits,
             ]);
         }
 
@@ -582,6 +592,103 @@ final class ShippingRepository extends Repository
 
         return $success;
     }
+
+    // =======
+    // Cargoes
+    // =======
+
+    /**
+     * Vérifie si une entrée existe dans la base de données.
+     * 
+     * @param int $id Identifiant de l'entrée.
+     */
+    public function cargoEntryExists(int $id): bool
+    {
+        return $this->mysql->exists("consignation_escales_marchandises", $id);
+    }
+
+    public function fetchCargoEntry(int $id): ?ShippingCallCargo
+    {
+        $statement = "SELECT * FROM consignation_escales_marchandises WHERE id = :id";
+
+        try {
+            $request = $this->mysql->prepare($statement);
+
+            if (!$request) {
+                throw new DBException("Impossible de récupérer la marchandise.");
+            }
+
+            $request->execute(["id" => $id]);
+
+            $cargoRaw = $request->fetch();
+
+            if (!\is_array($cargoRaw)) return null;
+
+            /** @phpstan-var ShippingCallCargoArray $cargoRaw */
+
+            $cargo = $this->shippingService->makeShippingCallCargoFromDatabase($cargoRaw);
+
+            return $cargo;
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer la marchandise.", previous: $e);
+        }
+    }
+
+    /**
+     * @param int $callId 
+     * 
+     * @return Collection<ShippingCallCargo>
+     */
+    public function fetchCargoEntriesForCall(int $callId): Collection
+    {
+        $statement = "SELECT * FROM consignation_escales_marchandises WHERE escale_id = :callId";
+
+        try {
+            /** @phpstan-var ShippingCallCargoArray[] */
+            $cargoesRaw = $this->mysql
+                ->prepareAndExecute($statement, ["callId" => $callId])
+                ->fetchAll();
+
+            $cargoes = \array_map(
+                fn($cargoRaw) => $this->shippingService->makeShippingCallCargoFromDatabase($cargoRaw),
+                $cargoesRaw
+            );
+
+            return new Collection($cargoes);
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer les marchandises.", previous: $e);
+        }
+    }
+
+    /**
+     * @param int $reportId 
+     * 
+     * @return Collection<ShippingCallCargo>
+     */
+    public function fetchCargoEntriesForShipReport(int $reportId): Collection
+    {
+        $statement = "SELECT * FROM consignation_escales_marchandises WHERE ship_report_id = :reportId";
+
+        try {
+            /** @phpstan-var ShippingCallCargoArray[] */
+            $cargoesRaw = $this->mysql
+                ->prepareAndExecute($statement, ["reportId" => $reportId])
+                ->fetchAll();
+
+            $cargoes = \array_map(
+                fn($cargoRaw) => $this->shippingService->makeShippingCallCargoFromDatabase($cargoRaw),
+                $cargoesRaw
+            );
+
+            return new Collection($cargoes);
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer les marchandises.", previous: $e);
+        }
+    }
+
+    // ======
+    // Others
+    // ======
 
     /**
      * Récupère un numéro de voyage pour un navire.

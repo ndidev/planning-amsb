@@ -25,6 +25,7 @@ export {
   stevedoringStaff,
   stevedoringEquipments,
   stevedoringTempWorkHours,
+  stevedoringShipReports,
 } from "./src/flatStores/manutention";
 
 // Tiers

@@ -25,10 +25,7 @@ use App\Service\QuickAppointmentAddService;
  */
 final class QuickAppointmentAddRepository extends Repository
 {
-    public function __construct(private QuickAppointmentAddService $quickAppointmentAddService)
-    {
-        parent::__construct();
-    }
+    public function __construct(private QuickAppointmentAddService $quickAppointmentAddService) {}
 
     public function quickAddExists(string $module, int $id): bool
     {
@@ -127,12 +124,12 @@ final class QuickAppointmentAddRepository extends Repository
         $this->mysql->beginTransaction();
         $request->execute([
             'module' => $quickAdd->getModule(),
-            'supplierId' => $quickAdd->getSupplier()?->getId(),
-            'carrierId' => $quickAdd->getCarrier()?->getId(),
-            'chartererId' => $quickAdd->getCharterer()?->getId(),
-            'loadingId' => $quickAdd->getLoading()?->getId(),
-            'customerId' => $quickAdd->getCustomer()?->getId(),
-            'deliveryId' => $quickAdd->getDelivery()?->getId(),
+            'supplierId' => $quickAdd->getSupplier()?->id,
+            'carrierId' => $quickAdd->getCarrier()?->id,
+            'chartererId' => $quickAdd->getCharterer()?->id,
+            'loadingId' => $quickAdd->getLoading()?->id,
+            'customerId' => $quickAdd->getCustomer()?->id,
+            'deliveryId' => $quickAdd->getDelivery()?->id,
         ]);
 
         $lastInsertId = (int) $this->mysql->lastInsertId();
@@ -166,17 +163,17 @@ final class QuickAppointmentAddRepository extends Repository
 
         $request = $this->mysql->prepare($statement);
         $request->execute([
-            'supplierId' => $quickAdd->getSupplier()?->getId(),
-            'carrierId' => $quickAdd->getCarrier()?->getId(),
-            'chartererId' => $quickAdd->getCharterer()?->getId(),
-            'loadingId' => $quickAdd->getLoading()?->getId(),
-            'customerId' => $quickAdd->getCustomer()?->getId(),
-            'deliveryId' => $quickAdd->getDelivery()?->getId(),
-            'id' => $quickAdd->getId(),
+            'supplierId' => $quickAdd->getSupplier()?->id,
+            'carrierId' => $quickAdd->getCarrier()?->id,
+            'chartererId' => $quickAdd->getCharterer()?->id,
+            'loadingId' => $quickAdd->getLoading()?->id,
+            'customerId' => $quickAdd->getCustomer()?->id,
+            'deliveryId' => $quickAdd->getDelivery()?->id,
+            'id' => $quickAdd->id,
         ]);
 
         /** @var int */
-        $id = $quickAdd->getId();
+        $id = $quickAdd->id;
 
         /** @var TimberQuickAppointmentAdd */
         $updatedQuickAdd = $this->fetchImtberQuickAppointmentAdd($id);

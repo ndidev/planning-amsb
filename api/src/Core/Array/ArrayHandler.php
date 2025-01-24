@@ -38,6 +38,8 @@ class ArrayHandler
      * 
      * @param int|string $key            Name of the key.
      * @param ?string    $default        Default value.
+     * @param bool       $allowEmpty     Allow empty value.
+     * @param bool       $trim           Trim the value.
      * @param bool       $throwException If `true`, throw an exception if the value cannot be cast to a `string`.
      *                                   If `false`, return the default value.
      * 
@@ -49,6 +51,7 @@ class ArrayHandler
         int|string $key,
         ?string $default = '',
         bool $allowEmpty = true,
+        bool $trim = true,
         bool $throwException = false,
     ): ?string {
         $value = $this->get($key, $default);
@@ -62,7 +65,8 @@ class ArrayHandler
         }
 
         if (\is_scalar($value)) {
-            return (string) $value;
+            $stringValue = (string) $value;
+            return $trim ? \trim($stringValue) : $stringValue;
         }
 
         if ($throwException) {

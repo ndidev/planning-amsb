@@ -22,6 +22,7 @@
   import { stevedoringEquipments } from "@app/stores";
 
   import type { StevedoringEquipment } from "@app/types";
+  // import { StevedoringEquipment } from "@app/entities";
 
   let form: HTMLFormElement;
   let createButton: BoutonAction;
@@ -67,7 +68,7 @@
     try {
       await stevedoringEquipments.create(equipment);
 
-      Notiflix.Notify.success("Le personnel a été ajouté");
+      Notiflix.Notify.success("L'équipement a été ajouté");
       $goto("./");
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
@@ -87,7 +88,7 @@
     try {
       await stevedoringEquipments.update(equipment);
 
-      Notiflix.Notify.success("Le personnel a été modifié");
+      Notiflix.Notify.success("L'équipement a été modifié");
       $goto("./");
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
@@ -106,7 +107,7 @@
 
     // Demande de confirmation
     Notiflix.Confirm.show(
-      "Suppression de personnel",
+      "Suppression d'équipement",
       `Voulez-vous vraiment supprimer l'équipement ?`,
       "Supprimer",
       "Annuler",

@@ -141,7 +141,7 @@ final class PdfConfigController extends Controller
         $newPdfConfig = $this->pdfService->createConfig($input);
 
         /** @var int $id */
-        $id = $newPdfConfig->getId();
+        $id = $newPdfConfig->id;
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)

@@ -1,3 +1,5 @@
+import { NumberUtils } from "../";
+
 /**
  * Bibliothèque de fonctions permettant de :
  *  - vérifier les jours ouvrés
@@ -178,15 +180,15 @@ export class DateUtils {
    * @returns Date
    */
   getPreviousWorkingDay(nombreJours = 1) {
-    let jourOuvrePrecedent = new Date(this.date);
+    let previousWorkingDay = new Date(this.date);
 
     for (let i = 0; i < nombreJours; i++) {
       do {
-        jourOuvrePrecedent = new DateUtils(jourOuvrePrecedent).offset(-1).date;
-      } while (!new DateUtils(jourOuvrePrecedent).isWorkingDay());
+        previousWorkingDay = new DateUtils(previousWorkingDay).offset(-1).date;
+      } while (!new DateUtils(previousWorkingDay).isWorkingDay());
     }
 
-    return new DateUtils(jourOuvrePrecedent);
+    return new DateUtils(previousWorkingDay);
   }
 
   /**
@@ -206,15 +208,15 @@ export class DateUtils {
    * @returns Date
    */
   getNextWorkingDay(nombreJours = 1) {
-    let jourOuvreSuivant = new Date(this.date);
+    let nextWorkingDay = new Date(this.date);
 
     for (let i = 0; i < nombreJours; i++) {
       do {
-        jourOuvreSuivant = new DateUtils(jourOuvreSuivant).offset(+1).date;
-      } while (!new DateUtils(jourOuvreSuivant).isWorkingDay());
+        nextWorkingDay = new DateUtils(nextWorkingDay).offset(+1).date;
+      } while (!new DateUtils(nextWorkingDay).isWorkingDay());
     }
 
-    return new DateUtils(jourOuvreSuivant);
+    return new DateUtils(nextWorkingDay);
   }
 
   /**
@@ -263,5 +265,9 @@ export class DateUtils {
     let diffToMonday = previousWeek.getDate() - day + (day == 0 ? -6 : 1);
 
     return new Date(previousWeek.setDate(diffToMonday + 6));
+  }
+
+  static stringifyTime(time: number): string {
+    return NumberUtils.stringifyTime(time);
   }
 }

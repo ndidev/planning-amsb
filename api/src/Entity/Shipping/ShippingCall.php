@@ -11,64 +11,70 @@ use App\Core\Component\DateUtils;
 use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
 use App\Entity\Port;
+use App\Entity\Stevedoring\ShipReport;
 use App\Entity\ThirdParty;
 
 class ShippingCall extends AbstractEntity
 {
     use IdentifierTrait;
 
-    private string $shipName = 'TBN';
+    public ?ShipReport $shipReport = null;
 
-    private string $voyage = '';
+    public string $shipName = 'TBN' {
+        get => $this->shipName ?: 'TBN';
+        set => \trim($value);
+    }
 
-    private ?ThirdParty $shipOperator = null;
+    public string $voyageNumber = '';
 
-    private ?\DateTimeImmutable $etaDate = null;
+    public ?ThirdParty $shipOperator = null;
 
-    private string $etaTime = '';
+    public ?\DateTimeImmutable $etaDate = null;
 
-    private ?\DateTimeImmutable $norDate = null;
+    public string $etaTime = '';
 
-    private string $norTime = '';
+    public ?\DateTimeImmutable $norDate = null;
 
-    private ?\DateTimeImmutable $pobDate = null;
+    public string $norTime = '';
 
-    private string $pobTime = '';
+    public ?\DateTimeImmutable $pobDate = null;
 
-    private ?\DateTimeImmutable $etbDate = null;
+    public string $pobTime = '';
 
-    private string $etbTime = '';
+    public ?\DateTimeImmutable $etbDate = null;
 
-    private ?\DateTimeImmutable $opsDate = null;
+    public string $etbTime = '';
 
-    private string $opsTime = '';
+    public ?\DateTimeImmutable $opsDate = null;
 
-    private ?\DateTimeImmutable $etcDate = null;
+    public string $opsTime = '';
 
-    private string $etcTime = '';
+    public ?\DateTimeImmutable $etcDate = null;
 
-    private ?\DateTimeImmutable $etdDate = null;
+    public string $etcTime = '';
 
-    private string $etdTime = '';
+    public ?\DateTimeImmutable $etdDate = null;
 
-    private ?float $arrivalDraft = null;
+    public string $etdTime = '';
 
-    private ?float $departureDraft = null;
+    public ?float $arrivalDraft = null;
 
-    private ?Port $lastPort = null;
+    public ?float $departureDraft = null;
 
-    private ?Port $nextPort = null;
+    public ?Port $lastPort = null;
 
-    private string $callPort = '';
+    public ?Port $nextPort = null;
 
-    private string $quay = '';
+    public string $callPort = '';
 
-    private string $comment = '';
+    public string $quay = '';
+
+    public string $comment = '';
 
     /**
      * @var Collection<ShippingCallCargo>
      */
-    private Collection $cargoes;
+    public Collection $cargoes;
 
     public function __construct()
     {
@@ -77,7 +83,7 @@ class ShippingCall extends AbstractEntity
 
     public function setShipName(string $shipName): static
     {
-        $this->shipName = trim($shipName);
+        $this->shipName = $shipName;
 
         return $this;
     }
@@ -89,14 +95,14 @@ class ShippingCall extends AbstractEntity
 
     public function setVoyage(string $voyage): static
     {
-        $this->voyage = $voyage;
+        $this->voyageNumber = $voyage;
 
         return $this;
     }
 
     public function getVoyage(): string
     {
-        return $this->voyage;
+        return $this->voyageNumber;
     }
 
     public function setShipOperator(?ThirdParty $shipOperator): static
@@ -369,7 +375,15 @@ class ShippingCall extends AbstractEntity
     public function setCargoes(array $cargoes): static
     {
         $this->cargoes = new Collection(
-            \array_map(fn(ShippingCallCargo $cargo) => $cargo->setShippingCall($this), $cargoes)
+            \array_map(
+                function (ShippingCallCargo $cargo) {
+                    /** @disregard P1006 */
+                    $cargo->shippingCall = $this;
+                    $cargo->shipReport = $this->shipReport;
+                    return $cargo;
+                },
+                $cargoes
+            )
         );
 
         return $this;
@@ -387,32 +401,33 @@ class ShippingCall extends AbstractEntity
     public function toArray(): array
     {
         return [
-            'id' => $this->getId(),
-            'navire' => $this->getShipName(),
-            'voyage' => $this->getVoyage(),
-            'armateur' => $this->getShipOperator()?->getId(),
-            'eta_date' => $this->getEtaDate()?->format('Y-m-d'),
-            'eta_heure' => $this->getEtaTime(),
-            'nor_date' => $this->getNorDate()?->format('Y-m-d'),
-            'nor_heure' => $this->getNorTime(),
-            'pob_date' => $this->getPobDate()?->format('Y-m-d'),
-            'pob_heure' => $this->getPobTime(),
-            'etb_date' => $this->getEtbDate()?->format('Y-m-d'),
-            'etb_heure' => $this->getEtbTime(),
-            'ops_date' => $this->getOpsDate()?->format('Y-m-d'),
-            'ops_heure' => $this->getOpsTime(),
-            'etc_date' => $this->getEtcDate()?->format('Y-m-d'),
-            'etc_heure' => $this->getEtcTime(),
-            'etd_date' => $this->getEtdDate()?->format('Y-m-d'),
-            'etd_heure' => $this->getEtdTime(),
-            'te_arrivee' => $this->getArrivalDraft(),
-            'te_depart' => $this->getDepartureDraft(),
-            'last_port' => $this->getLastPort()?->getLocode(),
-            'next_port' => $this->getNextPort()?->getLocode(),
-            'call_port' => $this->getCallPort(),
-            'quai' => $this->getQuay(),
-            'commentaire' => $this->getComment(),
-            'marchandises' => $this->getCargoes()->toArray(),
+            'id' => $this->id,
+            'shipReportId' => $this->shipReport?->id,
+            'navire' => $this->shipName,
+            'voyage' => $this->voyageNumber,
+            'armateur' => $this->shipOperator?->id,
+            'eta_date' => $this->etaDate?->format('Y-m-d'),
+            'eta_heure' => $this->etaTime,
+            'nor_date' => $this->norDate?->format('Y-m-d'),
+            'nor_heure' => $this->norTime,
+            'pob_date' => $this->pobDate?->format('Y-m-d'),
+            'pob_heure' => $this->pobTime,
+            'etb_date' => $this->etbDate?->format('Y-m-d'),
+            'etb_heure' => $this->etbTime,
+            'ops_date' => $this->opsDate?->format('Y-m-d'),
+            'ops_heure' => $this->opsTime,
+            'etc_date' => $this->etcDate?->format('Y-m-d'),
+            'etc_heure' => $this->etcTime,
+            'etd_date' => $this->etdDate?->format('Y-m-d'),
+            'etd_heure' => $this->etdTime,
+            'te_arrivee' => $this->arrivalDraft,
+            'te_depart' => $this->departureDraft,
+            'last_port' => $this->lastPort?->locode,
+            'next_port' => $this->nextPort?->locode,
+            'call_port' => $this->callPort,
+            'quai' => $this->quay,
+            'commentaire' => $this->comment,
+            'marchandises' => $this->cargoes->toArray(),
         ];
     }
 }

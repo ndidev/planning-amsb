@@ -1,6 +1,12 @@
 <!--
 @component
 
+  En-tête de page.
+
+  Usage :
+  ```tsx
+  <PageHeading>Titre de la page</PageHeading>
+  ```
 -->
 <script lang="ts">
   import { Heading } from "flowbite-svelte";

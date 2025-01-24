@@ -113,9 +113,9 @@ class PdfConfig extends AbstractEntity
     public function toArray(): array
     {
         return [
-            "id" => $this->getId(),
+            "id" => $this->id,
             "module" => $this->getModule(),
-            "fournisseur" => $this->getSupplier()?->getId(),
+            "fournisseur" => $this->getSupplier()?->id,
             "envoi_auto" => $this->isAutoSend(),
             "liste_emails" => $this->getEmailsAsString(),
             "jours_avant" => $this->getDaysBefore(),

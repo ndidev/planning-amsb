@@ -56,6 +56,9 @@
     newEntry.hoursWorked = 8;
   }
 
+  // BUG: when selecting an already existing staff memeber in the list and confirming
+  // (we get a response 400), when clicking cancel and then "add hours", the staff member is reset to the already existing one.
+
   async function preFillForDate(date: string) {
     try {
       const ids = await fetcher<number[]>(
@@ -111,8 +114,8 @@
 
   <FilterBanner />
 
-  {#if $currentUser.canEdit("manutention")}
-    <div class="mt-6 flex flex-col lg:flex-row gap-2 lg:gap-4 justify-center">
+  <div class="mt-6 flex flex-col lg:flex-row gap-2 lg:gap-4 justify-center">
+    {#if $currentUser.canEdit("manutention")}
       <Button on:click={() => (addHoursModalOpen = true)}>
         <PlusCircleIcon size={20} />
         <span class="ms-2">Ajouter des heures</span>
@@ -129,13 +132,13 @@
           <span class="ms-2">Pré-remplir </span>
         </Button>
       </ButtonGroup>
+    {/if}
 
-      <Button on:click={() => (reportModalOpen = true)}>
-        <DownloadIcon size={20} />
-        <span class="ms-2">Télécharger les heures</span>
-      </Button>
-    </div>
-  {/if}
+    <Button on:click={() => (reportModalOpen = true)}>
+      <DownloadIcon size={20} />
+      <span class="ms-2">Télécharger les heures</span>
+    </Button>
+  </div>
 
   <div class="mt-12">
     {#if tempWorkHoursByDate}

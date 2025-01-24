@@ -1,6 +1,6 @@
 <?php
 
-// Path: api/src/Core/Interfaces/Validation.php
+// Path: api/src/Core/Validation/Validation.php
 
 declare(strict_types=1);
 
@@ -9,7 +9,7 @@ namespace App\Core\Validation;
 use App\Core\Exceptions\Client\ValidationException;
 
 /**
- * This interface defines a validate() method that validates an object.
+ * This interface defines a `validate()` method that validates an object.
  */
 interface Validation
 {

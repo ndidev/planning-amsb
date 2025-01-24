@@ -252,7 +252,7 @@ final class TimberService
 
         if (!is_null($deliveryNoteNumber)) {
             $supplier = $appointment->getSupplier();
-            $supplierId = $supplier?->getId();
+            $supplierId = $supplier?->id;
 
             // Check if the delivery note number is available
             if (
@@ -282,12 +282,12 @@ final class TimberService
             // and the loading place is the agency
             // and the delivery note number is not set
             // set the next delivery note number
-            $supplierId = $appointment->getSupplier()?->getId();
+            $supplierId = $appointment->getSupplier()?->id;
 
             if (
                 $supplierId
                 && $this->isSupplierWithUniqueDeliveryNoteNumbers($supplierId)
-                && $appointment->getLoadingPlace()?->getId() === 1
+                && $appointment->getLoadingPlace()?->id === 1
                 && $appointment->getDeliveryNoteNumber() === ""
                 && $nextDeliveryNoteNumber = $this->getNextDeliveryNoteNumber($supplierId)
             ) {
@@ -466,9 +466,11 @@ final class TimberService
         $dtoArray = [];
 
         foreach ($suppliersWithUniqueDeliveryNoteNumbers as $info) {
-            $dtoArray[$info["supplierId"]] = (new SupplierWithUniqueDeliveryNoteNumber())
-                ->setId($info["supplierId"])
-                ->setRegexp($info["regexp"]);
+            $dto = new SupplierWithUniqueDeliveryNoteNumber();
+            $dto->id = $info['supplierId'];
+            $dto->regexp = $info['regexp'];
+
+            $dtoArray[$info['supplierId']] = $dto;
         }
 
         return $dtoArray;

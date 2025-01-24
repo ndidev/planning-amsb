@@ -3,7 +3,15 @@
   import { onMount } from "svelte";
   import { params, goto, redirect } from "@roxi/routify";
 
-  import { Label, Input, Textarea, Checkbox, Select } from "flowbite-svelte";
+  import {
+    Label,
+    Input,
+    Textarea,
+    Checkbox,
+    Select,
+    Button,
+  } from "flowbite-svelte";
+  import { PlusCircleIcon } from "lucide-svelte";
   import Notiflix from "notiflix";
 
   import {
@@ -35,11 +43,6 @@
    * Identifiant du RDV.
    */
   let id: EscaleConsignation["id"] = parseInt($params.id);
-
-  /**
-   * Clé "each" de ligne marchandise.
-   */
-  let i: number;
 
   let listeMarchandises: string[];
   let listeClients: string[];
@@ -103,22 +106,23 @@
   /**
    * Ajouter une ligne marchandise.
    */
-  function ajouterMarchandise() {
+  function addCargo() {
     escale.marchandises = [
       ...escale.marchandises,
       {
         id: null,
         escale_id: null,
+        shipReportId: null,
         operation: "import",
-        marchandise: "",
-        client: "",
-        environ: true,
-        tonnage_bl: null,
-        cubage_bl: null,
-        nombre_bl: null,
-        tonnage_outturn: null,
-        cubage_outturn: null,
-        nombre_outturn: null,
+        cargoName: "",
+        customer: "",
+        isApproximate: true,
+        blTonnage: null,
+        blVolume: null,
+        blUnits: null,
+        outturnTonnage: null,
+        outturnVolume: null,
+        outturnUnits: null,
       },
     ];
   }
@@ -442,18 +446,16 @@
 
       <!-- Marchandises -->
       <div class="flex flex-col gap-3 mb-4 w-full lg:w-7/12">
-        <div class="font-bold text-2xl">Marchandises</div>
         <div>
-          Ajouter une marchandise
-          <LucideButton
-            preset="add"
-            title="Ajouter une marchandise"
-            on:click={ajouterMarchandise}
-          />
+          <span class="font-bold text-2xl me-2">Marchandises</span>
+          <Button on:click={addCargo} color="light" class="mb-4" size="sm">
+            <PlusCircleIcon size={16} />
+            <span class="ms-2">Ajouter une marchandise</span>
+          </Button>
         </div>
         <div>
           <ul>
-            {#each escale.marchandises as cargo, index ((i = cargo.id ||= Math.random()))}
+            {#each escale.marchandises as cargo, i ((cargo.id ||= Math.random()))}
               <li
                 class="my-1 flex flex-col items-end gap-2 rounded-lg border-[1px] border-gray-300 p-2 lg:flex-row"
               >
@@ -462,7 +464,7 @@
                     <Label for="marchandise_{i}">Marchandise*</Label>
                     <Svelecte
                       inputId="marchandise_{i}"
-                      name="Marchandise {index + 1}"
+                      name="Marchandise {i + 1}"
                       options={listeMarchandises}
                       virtualList
                       allowEditing
@@ -470,7 +472,7 @@
                       creatablePrefix=""
                       keepCreated
                       placeholder="Marchandise"
-                      bind:value={cargo.marchandise}
+                      bind:value={cargo.cargoName}
                       required
                     />
                   </div>
@@ -478,7 +480,7 @@
                     <Label for="client_{i}">Client*</Label>
                     <Svelecte
                       inputId="client_{i}"
-                      name="Client {index + 1}"
+                      name="Client {i + 1}"
                       options={listeClients}
                       virtualList
                       allowEditing
@@ -486,7 +488,7 @@
                       creatablePrefix=""
                       keepCreated
                       placeholder="Client"
-                      bind:value={cargo.client}
+                      bind:value={cargo.customer}
                       required
                     />
                   </div>
@@ -505,60 +507,73 @@
                   <div class="font-bold">
                     BL (<Checkbox
                       class="environ checkbox-environ inline ml-1"
-                      bind:checked={cargo.environ}
+                      bind:checked={cargo.isApproximate}
                       >environ)
                     </Checkbox>
                   </div>
                   <div>
-                    <Label for="tonnage_bl_{i}">Tonnage</Label>
+                    <Label for="bl-tonnage-{i}">Tonnage</Label>
                     <NumericInput
-                      id="tonnage_bl_{i}"
+                      id="bl-tonnage-{i}"
                       format="+3"
-                      bind:value={cargo.tonnage_bl}
+                      bind:value={cargo.blTonnage}
                     />
                   </div>
                   <div>
-                    <Label for="cubage_bl_{i}">Cubage</Label>
+                    <Label for="bl-volume-{i}">Cubage</Label>
                     <NumericInput
-                      id="cubage_bl_{i}"
+                      id="bl-volume-{i}"
                       format="+3"
-                      bind:value={cargo.cubage_bl}
+                      bind:value={cargo.blVolume}
                     />
                   </div>
                   <div>
-                    <Label for="nombre_bl_{i}">Colis</Label>
+                    <Label for="bl-units-{i}">Colis</Label>
                     <NumericInput
-                      id="nombre_bl_{i}"
+                      id="bl-units-{i}"
                       format="+0"
-                      bind:value={cargo.nombre_bl}
+                      bind:value={cargo.blUnits}
                     />
                   </div>
                 </div>
 
                 <div class="flex w-full flex-col gap-1 lg:w-fit">
-                  <div class="font-bold">Outturn</div>
-                  <div>
-                    <Label for="tonnage_outturn_{i}">Tonnage</Label>
-                    <NumericInput
-                      id="tonnage_outturn_{i}"
-                      format="+3"
-                      bind:value={cargo.tonnage_outturn}
+                  <div class="font-bold">
+                    Outturn
+                    <LucideButton
+                      preset="copy"
+                      title="Copier les données BL vers Outturn"
+                      size="1em"
+                      on:click={() => {
+                        cargo.outturnTonnage = cargo.blTonnage;
+                        cargo.outturnVolume = cargo.blVolume;
+                        cargo.outturnUnits = cargo.blUnits;
+                      }}
                     />
                   </div>
                   <div>
-                    <Label for="cubage_outturn_{i}">Cubage</Label>
+                    <Label for="outturn-tonnage-{i}">Tonnage</Label>
+                    <!-- <Input bind:value={cargo.outturnTonnage} /> -->
                     <NumericInput
-                      id="cubage_outturn_{i}"
+                      id="outturn-tonnage-{i}"
                       format="+3"
-                      bind:value={cargo.cubage_outturn}
+                      bind:value={cargo.outturnTonnage}
                     />
                   </div>
                   <div>
-                    <Label for="nombre_outturn_{i}">Colis</Label>
+                    <Label for="outturn-volume-{i}">Cubage</Label>
                     <NumericInput
-                      id="nombre_outturn_{i}"
+                      id="outturn-volume-{i}"
+                      format="+3"
+                      bind:value={cargo.outturnVolume}
+                    />
+                  </div>
+                  <div>
+                    <Label for="outturn-units-{i}">Colis</Label>
+                    <NumericInput
+                      id="outturn-units-{i}"
                       format="+0"
-                      bind:value={cargo.nombre_outturn}
+                      bind:value={cargo.outturnUnits}
                     />
                   </div>
                 </div>

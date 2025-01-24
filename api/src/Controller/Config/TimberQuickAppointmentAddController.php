@@ -134,7 +134,7 @@ final class TimberQuickAppointmentAddController extends Controller
         $newQuickAppointment = $this->quickAppointmentAddService->createTimberQuickAppointmentAdd($input);
 
         /** @var int $id */
-        $id = $newQuickAppointment->getId();
+        $id = $newQuickAppointment->id;
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)

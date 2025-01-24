@@ -1,11 +1,11 @@
 <!-- 
   @component
   
-  Bandeau filtre pour le planning vrac.
+  Modal filtre pour le planning vrac.
 
   Usage :
   ```tsx
-  <FilterBanner />
+  <FilterModal />
   ```
  -->
 <script lang="ts" context="module">

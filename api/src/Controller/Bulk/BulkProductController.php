@@ -134,7 +134,7 @@ final class BulkProductController extends Controller
         $product = $this->bulkService->createProduct($input);
 
         /** @var int $id */
-        $id = $product->getId();
+        $id = $product->id;
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)

@@ -17,6 +17,7 @@
   import { EquipmentDrawer } from "../";
 
   import type { StevedoringEquipment } from "@app/types";
+  // import { StevedoringEquipment } from "@app/entities";
 
   export let equipment: StevedoringEquipment;
 

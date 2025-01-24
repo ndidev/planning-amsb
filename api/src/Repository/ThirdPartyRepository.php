@@ -34,10 +34,7 @@ use App\Service\ThirdPartyService;
  */
 final class ThirdPartyRepository extends Repository
 {
-    public function __construct(private ThirdPartyService $thirdPartyService)
-    {
-        parent::__construct();
-    }
+    public function __construct(private ThirdPartyService $thirdPartyService) {}
 
     /**
      * Vérifie si une entrée existe dans la base de données.
@@ -160,7 +157,7 @@ final class ThirdPartyRepository extends Repository
      */
     public function updateThirdParty(ThirdParty $thirdParty): ThirdParty
     {
-        $id = $thirdParty->getId();
+        $id = $thirdParty->id;
 
         if (!$id) {
             throw new ClientException("Impossible de mettre à jour un tiers sans ID.");
@@ -200,7 +197,7 @@ final class ThirdPartyRepository extends Repository
             'comments' => $thirdParty->getComments(),
             'roles' => \json_encode($thirdParty->getRoles()),
             'active' => (int) $thirdParty->isActive(),
-            'id' => $thirdParty->getId(),
+            'id' => $thirdParty->id,
         ];
 
         if ($thirdParty->getLogoFilename() !== false) {

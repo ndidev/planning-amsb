@@ -137,7 +137,7 @@ final class CharterController extends Controller
         $newCharter = $this->charteringService->createCharter($input);
 
         /** @var int $id */
-        $id = $newCharter->getId();
+        $id = $newCharter->id;
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)

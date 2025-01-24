@@ -121,7 +121,7 @@ abstract class DateUtils
 
         $year = (int) $date->format("Y");
 
-        $easter = new \DateTime("@" . easter_date($year), new \DateTimeZone(self::TIMEZONE));
+        $easter = new \DateTime("@" . \easter_date($year), new \DateTimeZone(self::TIMEZONE));
 
         /**
          * @var \DateTime[] Public holidays list.

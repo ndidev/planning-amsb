@@ -18,7 +18,7 @@
 
   import { Badge, LucideButton, BoutonAction } from "@app/components";
 
-  import { device, locale } from "@app/utils";
+  import { device, locale, NumberUtils } from "@app/utils";
 
   import { currentUser, tiers, ports } from "@app/stores";
 
@@ -32,16 +32,16 @@
 
   const archives: boolean = getContext("archives");
 
-  $: tonnageTotal = escale.marchandises.reduce(
-    (sum, { tonnage_bl }) => sum + tonnage_bl,
+  $: totalTonnage = escale.marchandises.reduce(
+    (sum, { blTonnage }) => sum + blTonnage,
     0
   );
-  $: cubageTotal = escale.marchandises.reduce(
-    (sum, { cubage_bl }) => sum + cubage_bl,
+  $: totalVolume = escale.marchandises.reduce(
+    (sum, { blVolume }) => sum + blVolume,
     0
   );
-  $: nombreTotal = escale.marchandises.reduce(
-    (sum, { nombre_bl }) => sum + nombre_bl,
+  $: totalUnits = escale.marchandises.reduce(
+    (sum, { blUnits }) => sum + blUnits,
     0
   );
 
@@ -322,34 +322,30 @@
               <ArrowUpIcon size="1em" />
             {/if}
           </span>
-          <span class="font-bold">{cargo.marchandise}</span>
-          <span class="ml-2">{cargo.client}</span>
+          <span class="font-bold">{cargo.cargoName}</span>
+          <span class="ml-2">{cargo.customer}</span>
         </div>
 
         <div>
-          {#if cargo.tonnage_bl || cargo.cubage_bl || cargo.nombre_bl}
-            <span>{cargo.environ ? "~" : ""}</span>
+          {#if cargo.blTonnage || cargo.blVolume || cargo.blUnits}
+            <span>{cargo.isApproximate ? "~" : ""}</span>
           {/if}
 
-          {#if cargo.tonnage_bl}
+          {#if cargo.blTonnage}
             <span class="ml-3">
-              {cargo.tonnage_bl.toLocaleString("fr-FR", {
-                minimumFractionDigits: 3,
-              }) + " MT"}
+              {NumberUtils.formatTonnage(cargo.blTonnage)}
             </span>
           {/if}
 
-          {#if cargo.cubage_bl}
+          {#if cargo.blVolume}
             <span class="ml-3 italic">
-              {cargo.cubage_bl.toLocaleString("fr-FR", {
-                minimumFractionDigits: 3,
-              }) + " m3"}
+              {NumberUtils.formatVolume(cargo.blVolume)}
             </span>
           {/if}
 
-          {#if cargo.nombre_bl}
+          {#if cargo.blUnits}
             <span class="ml-3">
-              {cargo.nombre_bl.toLocaleString("fr-FR") + " colis"}
+              {NumberUtils.formatUnits(cargo.blUnits)}
             </span>
           {/if}
         </div>
@@ -357,28 +353,24 @@
     {/each}
 
     <!-- Total -->
-    {#if escale.marchandises.length > 1 && (tonnageTotal || cubageTotal || nombreTotal)}
+    {#if escale.marchandises.length > 1 && (totalTonnage || totalVolume || totalUnits)}
       <div class="mt-1">
         Total
-        {#if tonnageTotal}
+        {#if totalTonnage}
           <span class="ml-3">
-            {tonnageTotal.toLocaleString("fr-FR", {
-              minimumFractionDigits: 3,
-            }) + " MT"}
+            {NumberUtils.formatTonnage(totalTonnage)}
           </span>
         {/if}
 
-        {#if cubageTotal}
+        {#if totalVolume}
           <span class="ml-3 italic">
-            {cubageTotal.toLocaleString("fr-FR", {
-              minimumFractionDigits: 3,
-            }) + " m3"}
+            {NumberUtils.formatVolume(totalVolume)}
           </span>
         {/if}
 
-        {#if nombreTotal}
+        {#if totalUnits}
           <span class="ml-3">
-            {nombreTotal.toLocaleString("fr-FR") + " colis"}
+            {NumberUtils.formatUnits(totalUnits)}
           </span>
         {/if}
       </div>

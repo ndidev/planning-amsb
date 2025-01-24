@@ -23,6 +23,7 @@ export type { Port } from "./src/Port";
 export type { ServiceAgence } from "./src/ServiceAgence";
 export type {
   EscaleConsignation,
+  ShippingCallCargo,
   ShippingFilter,
   Maree,
   Cote,
@@ -31,6 +32,13 @@ export type {
   StevedoringStaff,
   StevedoringEquipment,
   TempWorkHours,
+  StevedoringShipReport,
+  StevedoringShipReportEquipmentEntry,
+  StevedoringShipReportStaffEntry,
+  StevedoringShipReportSubcontractEntry,
+  StevedoringShipReportStorageEntry,
+  StevedoringShipReportFilter,
+  StevedoringShipReportFilterData,
 } from "./src/Stevedoring";
 export type { RdvBois, CamionsParDate, TimberFilter } from "./src/Timber";
 export type { Tiers } from "./src/ThirdParty";

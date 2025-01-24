@@ -51,19 +51,21 @@
   let showModal = false;
   let modalAction: "view" | "send";
   let startDate = new DateUtils(new Date())
-    .jourOuvrePrecedent(config.jours_avant)
+    .getPreviousWorkingDay(config.jours_avant)
     .toLocaleISODateString();
   let endDate = new DateUtils(new Date())
-    .jourOuvreSuivant(config.jours_apres)
+    .getNextWorkingDay(config.jours_apres)
     .toLocaleISODateString();
 
   /**
    * Afficher les explications pour la liste d'e-mails.
    */
   function showEmailsHelp() {
-    Notiflix.Report.info(getPreviousWorkingDay"Liste e-mails",
+    Notiflix.Report.info(
+      "Liste e-mails",
       "Une adresse par ligne.<br />" +
-        "La liste d'adresses ne pgetNextWorkingDay  "Pour ne pas envoyer à une adresse sans la supprimer, la faire précéder d'un point d'exclamation \"!\".",
+        "La liste d'adresses ne peut pas être vide.<br />" +
+        "Pour ne pas envoyer à une adresse sans la supprimer, la faire précéder d'un point d'exclamation \"!\".",
       "Fermer"
     );
   }

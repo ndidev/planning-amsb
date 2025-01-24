@@ -12,13 +12,13 @@ use App\Core\Array\Environment;
 /**
  * Connection to MySQL.
  */
-class MySQL extends \PDO
+class MySQL extends \Pdo\Mysql
 {
     /**
      * @param string|null $database Optional. Name of the database.
      * @return void 
      */
-    public function __construct(string $database = null)
+    public function __construct(?string $database = null)
     {
         $host = Environment::getString('DB_HOST');
         $port = Environment::getInt('DB_PORT', 3306);
@@ -60,5 +60,45 @@ class MySQL extends \PDO
         $exists = (bool) $request->fetch(\PDO::FETCH_COLUMN);
 
         return $exists;
+    }
+
+    /**
+     * Prepares and executes a statement.
+     * 
+     * @param string                           $statement  The SQL statement.
+     * @param array<mixed>|array<array<mixed>> $parameters An array of parameters or an array of arrays of parameters.
+     * 
+     * @return \PDOStatement 
+     * 
+     * @throws \PDOException 
+     */
+    public function prepareAndExecute(string $statement, array $parameters = []): \PDOStatement
+    {
+        /** @var array<string, \PDOStatement> */
+        static $statementCache = [];
+
+        $statementHash = \md5($statement);
+
+        $request = $statementCache[$statementHash] ??= $this->prepare($statement);
+
+        // If the first parameter is not an array, then it is not an array of parameters.
+        if (!isset($parameters[0]) || !\is_array($parameters[0])) {
+            $parameters = [$parameters];
+        }
+
+        /** @var array<array<mixed>> $parameters */
+
+        foreach ($parameters as $parametersItem) {
+            $request->execute($parametersItem);
+        }
+
+        return $request;
+    }
+
+    public function rollbackIfNeeded(): void
+    {
+        if ($this->inTransaction()) {
+            $this->rollBack();
+        }
     }
 }

@@ -120,7 +120,7 @@
       <Svelecte
         type="interimaires"
         inputId="staff"
-        name="staff"
+        name="Intérimaire"
         bind:value={tempWorkHours.staffId}
         placeholder="Intérimaire"
         required
@@ -145,6 +145,8 @@
       <NumericInput
         id="hoursWorked"
         format="+2"
+        max={24}
+        name="Heures"
         bind:value={tempWorkHours.hoursWorked}
         placeholder="Heures"
         required

@@ -35,6 +35,10 @@ final class ShippingService
         $this->portService = new PortService();
     }
 
+    // =====
+    // Calls
+    // =====
+
     /**
      * Creates a ShippingCall object from database data.
      * 
@@ -95,7 +99,7 @@ final class ShippingService
      * 
      * @return ShippingCall
      */
-    public function makeShippingCallFromForm(HTTPRequestBody $requestBody): ShippingCall
+    public function makeShippingCallFromRequest(HTTPRequestBody $requestBody): ShippingCall
     {
         $shippingCall = (new ShippingCall())
             ->setId($requestBody->getInt('id'))
@@ -129,70 +133,12 @@ final class ShippingService
 
         $shippingCall->setCargoes(
             \array_map(
-                fn(array $cargo) => $this->makeShippingCallCargoFromForm($cargo),
+                fn(array $cargo) => $this->makeShippingCallCargoFromRequest($cargo),
                 $cargoes
             )
         );
 
         return $shippingCall;
-    }
-
-    /**
-     * Creates a ShippingCallCargo object from database data.
-     * 
-     * @param array $rawData Raw data from the database.
-     * 
-     * @phpstan-param ShippingCallCargoArray $rawData
-     * 
-     * @return ShippingCallCargo 
-     */
-    public function makeShippingCallCargoFromDatabase(array $rawData): ShippingCallCargo
-    {
-        $rawDataAH = new ArrayHandler($rawData);
-
-        $cargo = (new ShippingCallCargo())
-            ->setId($rawDataAH->getInt('id'))
-            ->setCargoName($rawDataAH->getString('marchandise'))
-            ->setCustomer($rawDataAH->getString('client'))
-            ->setOperation($rawDataAH->getString('operation'))
-            ->setApproximate($rawDataAH->getBool('environ'))
-            ->setBlTonnage($rawDataAH->getFloat('tonnage_bl', null))
-            ->setBlVolume($rawDataAH->getFloat('cubage_bl', null))
-            ->setBlUnits($rawDataAH->getInt('nombre_bl', null))
-            ->setOutturnTonnage($rawDataAH->getFloat('tonnage_outturn', null))
-            ->setOutturnVolume($rawDataAH->getFloat('cubage_outturn', null))
-            ->setOutturnUnits($rawDataAH->getInt('nombre_outturn', null));
-
-        return $cargo;
-    }
-
-    /**
-     * Creates a ShippingCallCargo object from form data.
-     * 
-     * @param array $rawData Raw data from the form.
-     * 
-     * @phpstan-param ShippingCallCargoArray $rawData
-     * 
-     * @return ShippingCallCargo 
-     */
-    public function makeShippingCallCargoFromForm(array $rawData): ShippingCallCargo
-    {
-        $rawDataAH = new ArrayHandler($rawData);
-
-        $cargo = (new ShippingCallCargo())
-            ->setId($rawDataAH->getInt('id'))
-            ->setCargoName($rawDataAH->getString('marchandise'))
-            ->setCustomer($rawDataAH->getString('client'))
-            ->setOperation($rawDataAH->getString('operation'))
-            ->setApproximate($rawDataAH->getBool('environ'))
-            ->setBlTonnage($rawDataAH->getFloat('tonnage_bl'))
-            ->setBlVolume($rawDataAH->getFloat('cubage_bl'))
-            ->setBlUnits($rawDataAH->getInt('nombre_bl'))
-            ->setOutturnTonnage($rawDataAH->getFloat('tonnage_outturn'))
-            ->setOutturnVolume($rawDataAH->getFloat('cubage_outturn'))
-            ->setOutturnUnits($rawDataAH->getInt('nombre_outturn'));
-
-        return $cargo;
     }
 
     /**
@@ -215,8 +161,12 @@ final class ShippingService
         return $this->shippingRepository->fetchAllCalls($filter);
     }
 
-    public function getShippingCall(int $id): ?ShippingCall
+    public function getShippingCall(?int $id): ?ShippingCall
     {
+        if ($id === null) {
+            return null;
+        }
+
         return $this->shippingRepository->fetchCall($id);
     }
 
@@ -229,7 +179,9 @@ final class ShippingService
      */
     public function createShippingCall(HTTPRequestBody $input): ShippingCall
     {
-        $call = $this->makeShippingCallFromForm($input);
+        $call = $this->makeShippingCallFromRequest($input);
+
+        $call->validate();
 
         return $this->shippingRepository->createCall($call);
     }
@@ -244,7 +196,9 @@ final class ShippingService
      */
     public function updateShippingCall(int $id, HTTPRequestBody $input): ShippingCall
     {
-        $call = $this->makeShippingCallFromForm($input)->setId($id);
+        $call = $this->makeShippingCallFromRequest($input)->setId($id);
+
+        $call->validate();
 
         return $this->shippingRepository->updateCall($call);
     }
@@ -258,6 +212,86 @@ final class ShippingService
     {
         return $this->shippingRepository->fetchLastVoyageNumber($shipName, $currentCallId);
     }
+
+    // =======
+    // Cargoes
+    // =======
+
+    /**
+     * Creates a ShippingCallCargo object from database data.
+     * 
+     * @param array $rawData Raw data from the database.
+     * 
+     * @phpstan-param ShippingCallCargoArray $rawData
+     * 
+     * @return ShippingCallCargo 
+     */
+    public function makeShippingCallCargoFromDatabase(array $rawData): ShippingCallCargo
+    {
+        $rawDataAH = new ArrayHandler($rawData);
+
+        $cargo = new ShippingCallCargo();
+        $cargo->id = $rawDataAH->getInt('id');
+        $cargo->cargoName = $rawDataAH->getString('marchandise');
+        $cargo->customer = $rawDataAH->getString('client');
+        $cargo->operation = $rawDataAH->getString('operation'); // @phpstan-ignore assign.propertyType
+        $cargo->isApproximate = $rawDataAH->getBool('environ');
+        $cargo->blTonnage = $rawDataAH->getFloat('tonnage_bl', null);
+        $cargo->blVolume = $rawDataAH->getFloat('cubage_bl', null);
+        $cargo->blUnits = $rawDataAH->getInt('nombre_bl', null);
+        $cargo->outturnTonnage = $rawDataAH->getFloat('tonnage_outturn', null);
+        $cargo->outturnVolume = $rawDataAH->getFloat('cubage_outturn', null);
+        $cargo->outturnUnits = $rawDataAH->getInt('nombre_outturn', null);
+
+        return $cargo;
+    }
+
+    /**
+     * Creates a ShippingCallCargo object from form data.
+     * 
+     * @param array $rawData Raw data from the form.
+     * 
+     * @phpstan-param ShippingCallCargoArray $rawData
+     * 
+     * @return ShippingCallCargo 
+     */
+    public function makeShippingCallCargoFromRequest(array $rawData): ShippingCallCargo
+    {
+        $rawDataAH = new ArrayHandler($rawData);
+
+        $cargo = new ShippingCallCargo();
+        $cargo->id = $rawDataAH->getInt('id');
+        $cargo->cargoName = $rawDataAH->getString('cargoName');
+        $cargo->customer = $rawDataAH->getString('customer');
+        $cargo->operation = $rawDataAH->getString('operation'); // @phpstan-ignore assign.propertyType
+        $cargo->isApproximate = $rawDataAH->getBool('isApproximate');
+        $cargo->blTonnage = $rawDataAH->getFloat('blTonnage');
+        $cargo->blVolume = $rawDataAH->getFloat('blVolume');
+        $cargo->blUnits = $rawDataAH->getInt('blUnits');
+        $cargo->outturnTonnage = $rawDataAH->getFloat('outturnTonnage');
+        $cargo->outturnVolume = $rawDataAH->getFloat('outturnVolume');
+        $cargo->outturnUnits = $rawDataAH->getInt('outturnUnits');
+
+        return $cargo;
+    }
+
+    public function cargoEntryExists(int $id): bool
+    {
+        return $this->shippingRepository->cargoEntryExists($id);
+    }
+
+    public function getCargoEntry(?int $id): ?ShippingCallCargo
+    {
+        if ($id === null) {
+            return null;
+        }
+
+        return $this->shippingRepository->fetchCargoEntry($id);
+    }
+
+    // ======
+    // Others
+    // ======
 
     /**
      * @phpstan-return DraftsPerTonnage

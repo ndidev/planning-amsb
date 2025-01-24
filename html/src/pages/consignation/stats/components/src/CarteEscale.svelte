@@ -18,9 +18,9 @@
         escale.etc_date
       ).format().long}
     </div>
-  {/if}
+  {/if}cargoName
 
-  <ul class="mt-2">
+  <ul class="mt-customer
     {#each escale.marchandises as marchandise}
       <li class="ml-4">
         <div>

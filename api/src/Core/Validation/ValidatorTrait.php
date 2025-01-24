@@ -9,6 +9,11 @@ namespace App\Core\Validation;
 use App\Core\Exceptions\Client\ValidationException;
 use App\Core\Validation\Constraints\Constraint;
 
+/**
+ * This trait implements a `validate()` method that validates the object properties.
+ * 
+ * @see \App\Core\Validation\Validation
+ */
 trait ValidatorTrait
 {
     /**
@@ -30,6 +35,14 @@ trait ValidatorTrait
             $propertValidationResult = $this->validateProperty($property);
 
             $validationResult->merge($propertValidationResult);
+
+            if (\is_iterable($property->getValue($this))) {
+                foreach ($property->getValue($this) as $value) {
+                    if ($value instanceof self) {
+                        $validationResult->merge($value->validate(false));
+                    }
+                }
+            }
         }
 
         if ($throw && $validationResult->hasErrors()) {

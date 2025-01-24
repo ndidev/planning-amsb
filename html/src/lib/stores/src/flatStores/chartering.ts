@@ -54,16 +54,6 @@ function satisfiesParams(charter: Charter, searchParams: URLSearchParams) {
   const archiveMatches =
     charter.archive === (filter.archives === "true" ? true : false);
 
-  console.log({
-    startDateMatches,
-    endDateMatches,
-    chartererMatches,
-    shipOwnerMatches,
-    brokerMatches,
-    statusMatches,
-    archiveMatches,
-  });
-
   return (
     startDateMatches &&
     endDateMatches &&

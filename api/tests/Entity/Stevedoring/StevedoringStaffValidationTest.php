@@ -42,7 +42,7 @@ final class StevedoringStaffValidationTest extends TestCase
     {
         // Given
         $stevedoringStaff = self::makeValidStaff();
-        $stevedoringStaff->setFirstname('');
+        $stevedoringStaff->firstname = '';
 
         // Then
         $this->expectException(ValidationException::class);
@@ -55,7 +55,7 @@ final class StevedoringStaffValidationTest extends TestCase
     {
         // Given
         $stevedoringStaff = self::makeValidStaff();
-        $stevedoringStaff->setLastname('');
+        $stevedoringStaff->lastname = '';
 
         // Then
         $this->expectException(ValidationException::class);
@@ -68,7 +68,7 @@ final class StevedoringStaffValidationTest extends TestCase
     {
         // Given
         $stevedoringStaff = self::makeValidStaff();
-        $stevedoringStaff->setType('invalid');
+        $stevedoringStaff->type = 'invalid';
 
         // Then
         $this->expectException(ValidationException::class);
@@ -81,8 +81,8 @@ final class StevedoringStaffValidationTest extends TestCase
     {
         // Given
         $stevedoringStaff = self::makeValidStaff();
-        $stevedoringStaff->setType('interim');
-        $stevedoringStaff->setTempWorkAgency('');
+        $stevedoringStaff->type = 'interim';
+        $stevedoringStaff->tempWorkAgency = '';
 
         // Then
         $this->expectException(ValidationException::class);
@@ -93,10 +93,12 @@ final class StevedoringStaffValidationTest extends TestCase
 
     private static function makeValidStaff(): StevedoringStaff
     {
-        return (new StevedoringStaff())
-            ->setFirstname('John')
-            ->setLastname('Doe')
-            ->setType('mensuel')
-            ->setActive(true);
+        $stevedoringStaff = new StevedoringStaff();
+        $stevedoringStaff->firstname = 'John';
+        $stevedoringStaff->lastname = 'Doe';
+        $stevedoringStaff->type = 'mensuel';
+        $stevedoringStaff->isActive = true;
+
+        return $stevedoringStaff;
     }
 }

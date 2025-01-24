@@ -141,7 +141,7 @@ final class BulkAppointmentController extends Controller
         $appointment = $this->bulkService->createAppointment($input);
 
         /** @var int $id */
-        $id = $appointment->getId();
+        $id = $appointment->id;
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)

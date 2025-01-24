@@ -46,10 +46,7 @@ use App\Service\CharteringService;
  */
 final class CharteringRepository extends Repository
 {
-    public function __construct(private CharteringService $charteringService)
-    {
-        parent::__construct();
-    }
+    public function __construct(private CharteringService $charteringService) {}
 
     /**
      * Vérifie si une entrée existe dans la base de données.
@@ -138,7 +135,7 @@ final class CharteringRepository extends Repository
                 $filteredLegsRaw = array_values(
                     array_filter(
                         $legsRaw,
-                        fn(array $legRaw) => ($legRaw["charter"] ?? null) === $charter->getId()
+                        fn(array $legRaw) => ($legRaw["charter"] ?? null) === $charter->id
                     )
                 );
 
@@ -278,9 +275,9 @@ final class CharteringRepository extends Repository
             // Navire
             "navire" => $charter->getVesselName(),
             // Tiers
-            "affreteur" => $charter->getCharterer()?->getId(),
-            "armateur" => $charter->getShipOperator()?->getId(),
-            "courtier" => $charter->getShipbroker()?->getId(),
+            "affreteur" => $charter->getCharterer()?->id,
+            "armateur" => $charter->getShipOperator()?->id,
+            "courtier" => $charter->getShipbroker()?->id,
             // Montants
             "fret_achat" => $charter->getFreightPayed(),
             "fret_vente" => $charter->getFreightSold(),
@@ -383,9 +380,9 @@ final class CharteringRepository extends Repository
             // Navire
             "navire" => $charter->getVesselName(),
             // Tiers
-            "affreteur" => $charter->getCharterer()?->getId(),
-            "armateur" => $charter->getShipOperator()?->getId(),
-            "courtier" => $charter->getShipbroker()?->getId(),
+            "affreteur" => $charter->getCharterer()?->id,
+            "armateur" => $charter->getShipOperator()?->id,
+            "courtier" => $charter->getShipbroker()?->id,
             // Montants
             "fret_achat" => $charter->getFreightPayed(),
             "fret_vente" => $charter->getFreightSold(),
@@ -394,7 +391,7 @@ final class CharteringRepository extends Repository
             // Divers
             "commentaire" => $charter->getComments(),
             "archive" => (int) $charter->isArchive(),
-            'id' => $charter->getId(),
+            'id' => $charter->id,
         ]);
 
         // DETAILS
@@ -402,10 +399,10 @@ final class CharteringRepository extends Repository
         // !! SUPPRESSION A LAISSER *AVANT* L'AJOUT DE detail POUR EVITER SUPPRESSION IMMEDIATE APRES AJOUT !!
         // Comparaison du tableau transmis par POST avec la liste existante des details pour le produit concerné
         $legsIdsRequest = $this->mysql->prepare("SELECT id FROM chartering_detail WHERE charter = :charterId");
-        $legsIdsRequest->execute(['charterId' => $charter->getId()]);
+        $legsIdsRequest->execute(['charterId' => $charter->id]);
         $existingLegsIds = $legsIdsRequest->fetchAll(\PDO::FETCH_COLUMN, 0);
 
-        $submittedLegsIds = \array_map(fn(CharterLeg $leg) => $leg->getId(), $charter->getLegs()->asArray());
+        $submittedLegsIds = \array_map(fn(CharterLeg $leg) => $leg->id, $charter->getLegs()->asArray());
         $legsIdsToBeDeleted = array_diff($existingLegsIds, $submittedLegsIds);
 
         if (!empty($legsIdsToBeDeleted)) {
@@ -417,7 +414,7 @@ final class CharteringRepository extends Repository
         $insertLegRequest = $this->mysql->prepare($insertLegStatement);
         $updateLegRequest = $this->mysql->prepare($updateLegStatement);
         foreach ($charter->getLegs() as $leg) {
-            if ($leg->getId()) {
+            if ($leg->id) {
                 $updateLegRequest->execute([
                     "bl_date" => $leg->getSqlBlDate(),
                     "pol" => $leg->getPol()?->getLocode(),
@@ -425,11 +422,11 @@ final class CharteringRepository extends Repository
                     "marchandise" => $leg->getCommodity(),
                     "quantite" => $leg->getQuantity(),
                     "commentaire" => $leg->getComments(),
-                    "id" => $leg->getId(),
+                    "id" => $leg->id,
                 ]);
             } else {
                 $insertLegRequest->execute([
-                    "charter" => $charter->getId(),
+                    "charter" => $charter->id,
                     "bl_date" => $leg->getSqlBlDate(),
                     "pol" => $leg->getPol()?->getLocode(),
                     "pod" => $leg->getPod()?->getLocode(),
@@ -441,7 +438,7 @@ final class CharteringRepository extends Repository
         }
 
         /** @var int */
-        $id = $charter->getId();
+        $id = $charter->id;
 
         /** @var Charter */
         $updatedCharter = $this->fetchCharter($id);

@@ -21,10 +21,7 @@ final class CountryRepository extends Repository
 {
     private string $redisNamespace = "countries";
 
-    public function __construct(private CountryService $countryService)
-    {
-        parent::__construct();
-    }
+    public function __construct(private CountryService $countryService) {}
 
     /**
      * Fetches all countries.

@@ -13,11 +13,6 @@ final readonly class StevedoringStaffFilterDTO extends Filter
     private string $contractType;
     private string $agencyFilter;
 
-    /**
-     * TimberFilterDTO constructor.
-     * 
-     * @param HTTPRequestQuery $query
-     */
     public function __construct(HTTPRequestQuery $query)
     {
         $this->contractType = trim($this->splitStringParameters($query->getString('type')), ',');
