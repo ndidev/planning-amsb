@@ -3,7 +3,7 @@ import { env } from "node:process";
 import { connections } from "./stores";
 import type { DBEvent } from "../types";
 
-const UPDATES_PORT = parseInt(env["UPDATES_PORT"] as string);
+const UPDATES_PORT = parseInt(env["SSE_UPDATES_PORT"] as string);
 
 /**
  * Serveur "DBEvent".
