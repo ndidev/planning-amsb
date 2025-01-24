@@ -256,6 +256,39 @@
               <AccordionItem>
                 <span slot="header">{new DateUtils(date).format().long}</span>
 
+                <!-- Grues -->
+                <div class="ms-2">
+                  <div class="font-bold">Grues</div>
+                  <ul class="ms-2">
+                    {#each dateEntries.cranes as entry}
+                      {@const equipment = stevedoringEquipments.get(
+                        entry.equipmentId
+                      )}
+                      <li>
+                        {#await equipment}
+                          <span
+                            class="animate-pulse bg-gray-200 rounded-lg w-1/4 h-6"
+                          ></span>
+                        {:then equipment}
+                          <span
+                            >{equipment.brand}
+                            {equipment.model}
+                            {equipment.internalNumber}</span
+                          >
+                        {/await}
+
+                        <span class="ms-3"
+                          >{NumberUtils.stringifyTime(entry.hoursWorked)}</span
+                        >
+
+                        <span class="ms-3 italic">{entry.comments}</span>
+                      </li>
+                    {:else}
+                      <li class="italic">Aucune grue</li>
+                    {/each}
+                  </ul>
+                </div>
+
                 <!-- Équipements -->
                 <div class="ms-2">
                   <div class="font-bold">Équipements</div>

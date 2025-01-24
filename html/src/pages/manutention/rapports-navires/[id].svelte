@@ -155,6 +155,7 @@
 
     if (!report.entriesByDate[nextDateAsString]) {
       report.entriesByDate[nextDateAsString] = {
+        cranes: [],
         equipments: [],
         permanentStaff: [],
         tempStaff: [],
@@ -771,6 +772,40 @@
                 <Trash2Icon size={14} />
                 <span class="ms-2">Supprimer</span>
               </Button>
+            </div>
+
+            <!-- Grues -->
+            <div class="ms-2 mt-2">
+              <div class="font-bold">Grues</div>
+
+              {#each entries.cranes as entry ((entry.id ||= Math.random()))}
+                {@const equipment = stevedoringEquipments.get(
+                  entry.equipmentId
+                )}
+                <div
+                  class="my-2 ms-2 flex flex-row flex-wrap items-center gap-1 lg:flex-row lg:flex-nowrap lg:gap-4"
+                >
+                  {#await equipment}
+                    <div
+                      class="animate-pulse bg-gray-200 rounded-lg w-1/4 h-6"
+                    ></div>
+                  {:then equipment}
+                    <div class="whitespace-nowrap">
+                      {equipment.brand}
+                      {equipment.model}
+                      {equipment.internalNumber}
+                    </div>
+                  {/await}
+
+                  <div class="ms-auto lg:ms-0">
+                    {DateUtils.stringifyTime(entry.hoursWorked)}
+                  </div>
+
+                  <div class="w-full lg:w-auto">{entry.comments}</div>
+                </div>
+              {:else}
+                <p class="ms-2">Aucune grue</p>
+              {/each}
             </div>
 
             <!-- Équipements -->

@@ -167,6 +167,7 @@ class ShipReport extends AbstractEntity
      * @return array<string, array{
      *                         permanentStaff: ShipReportStaffEntry[],
      *                         tempStaff: ShipReportStaffEntry[],
+     *                         cranes: ShipReportEquipmentEntry[],
      *                         equipments: ShipReportEquipmentEntry[],
      *                         subcontracts: ShipReportSubcontractEntry[]
      *                       }
@@ -192,6 +193,7 @@ class ShipReport extends AbstractEntity
                 $entriesByDate[$date] = [
                     'permanentStaff' => [],
                     'tempStaff' => [],
+                    'cranes' => [],
                     'equipments' => [],
                     'subcontracts' => [],
                 ];
@@ -205,7 +207,12 @@ class ShipReport extends AbstractEntity
                     $entriesByDate[$date]['tempStaff'][] = $entry;
                 }
             } elseif ($entry instanceof ShipReportEquipmentEntry) {
-                $entriesByDate[$date]['equipments'][] = $entry;
+                $typeToLower = \mb_strtolower($entry->equipment->type ?? "");
+                if ($typeToLower === "grue" || \str_contains($typeToLower, "pelle")) {
+                    $entriesByDate[$date]['cranes'][] = $entry;
+                } else {
+                    $entriesByDate[$date]['equipments'][] = $entry;
+                }
             } elseif ($entry instanceof ShipReportSubcontractEntry) {
                 $entriesByDate[$date]['subcontracts'][] = $entry;
             }

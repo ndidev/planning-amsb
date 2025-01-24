@@ -29,7 +29,7 @@
   },
   "config": {
     "platform": {
-      "php": "8.4.2"
+      "php": "8.4.3"
     },
     "allow-plugins": {
       "phpro/grumphp": true

@@ -144,6 +144,7 @@ export type StevedoringShipReport = {
     [date: string]: {
       permanentStaff: StevedoringShipReportStaffEntry[];
       tempStaff: StevedoringShipReportStaffEntry[];
+      cranes: StevedoringShipReportEquipmentEntry[];
       equipments: StevedoringShipReportEquipmentEntry[];
       subcontracts: StevedoringShipReportSubcontractEntry[];
     };

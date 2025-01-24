@@ -490,6 +490,7 @@ final class StevedoringService
          * @phpstan-var array{
          *                 permanentStaff: ShipReportStaffEntryArray[],
          *                 tempStaff: ShipReportStaffEntryArray[],
+         *                 cranes: ShipReportEquipmentEntryArray[],
          *                 equipments: ShipReportEquipmentEntryArray[],
          *                 subcontracts: ShipReportSubcontractEntryArray[],
          *               } $entriesByType
@@ -503,7 +504,7 @@ final class StevedoringService
                         $entry->report = $stevedoringShipReport;
                         $entry->date = $date;
                         $stevedoringShipReport->staffEntries->add($entry);
-                    } elseif ($type === 'equipments') {
+                    } elseif ($type === 'equipments' || $type === 'cranes') {
                         /** @phpstan-var ShipReportEquipmentEntryArray $entryAsArray */
                         $entry = $this->makeShipReportEquipmentEntryFromRequest($entryAsArray);
                         $entry->report = $stevedoringShipReport;

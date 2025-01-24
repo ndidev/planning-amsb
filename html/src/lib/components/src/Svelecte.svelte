@@ -34,6 +34,8 @@
     pays,
   } from "@app/stores";
 
+  import { removeDiacritics } from "@app/utils";
+
   // form and CE
   export let name = "svelecte";
   export let inputId = null;
@@ -101,6 +103,7 @@
     "staff",
     "mensuels",
     "interimaires",
+    "cranes",
     "equipments",
   ] as const;
 
@@ -303,6 +306,37 @@
               search: staff.fullname,
               label: `${staff.fullname} (${staff.tempWorkAgency})`,
               tag: staff.fullname,
+            };
+          });
+      }
+    });
+  }
+
+  if (type === "cranes") {
+    unsubscribe = stevedoringEquipments.subscribe((equipmentList) => {
+      if (equipmentList) {
+        options = [...equipmentList.values()]
+          .filter((equipment) =>
+            ["grue", "pelle"].some((possibelMatch) =>
+              removeDiacritics(equipment.type.toLocaleLowerCase()).includes(
+                possibelMatch
+              )
+            )
+          )
+          .filter((equipment) => value === equipment.id || equipment.isActive)
+          .sort(
+            (a, b) =>
+              a.brand.localeCompare(b.brand) ||
+              a.model.localeCompare(b.model) ||
+              a.internalNumber.localeCompare(b.internalNumber)
+          )
+          .map((equipment): Item => {
+            return {
+              id: equipment.id,
+              search: `${equipment.brand} (${equipment.model})`,
+              label:
+                `${equipment.brand} ${equipment.model} ${equipment.internalNumber}`.trim(),
+              tag: `${equipment.model} ${equipment.internalNumber}`.trim(),
             };
           });
       }

@@ -5,7 +5,7 @@
 
   import { Svelecte, NumericInput, BoutonAction } from "@app/components";
 
-  import { DateUtils, validerFormulaire, fetcher } from "@app/utils";
+  import { DateUtils, validerFormulaire } from "@app/utils";
 
   import type { StevedoringShipReport } from "@app/types";
 
@@ -21,6 +21,19 @@
     names: [],
     types: [],
   };
+
+  function addCrane() {
+    dateEntries.cranes = [
+      ...dateEntries.cranes,
+      {
+        id: null,
+        equipmentId: null,
+        date: null,
+        hoursWorked: 0,
+        comments: "",
+      },
+    ];
+  }
 
   function addEquipment() {
     dateEntries.equipments = [
@@ -120,6 +133,7 @@
     dateEntries = structuredClone(report.entriesByDate[date]) || {
       permanentStaff: [],
       tempStaff: [],
+      cranes: [],
       equipments: [],
       subcontracts: [],
     };
@@ -139,6 +153,79 @@
         name="Date"
         required
       />
+    </div>
+
+    <!-- Grues -->
+    <div>
+      <div class="mb-2">
+        <span class="text-xl font-bold me-2">Grues</span>
+        <Button
+          on:click={addCrane}
+          color="light"
+          class="w-1/2 lg:w-auto"
+          size="xs"
+        >
+          <PlusCircleIcon size={16} />
+          <span class="ms-2">Ajouter une grue</span>
+        </Button>
+      </div>
+
+      <div class="flex flex-col gap-3">
+        {#each dateEntries.cranes as craneEntry, i}
+          <div class="flex flex-col lg:flex-row gap-2 items-center">
+            <div class="w-full lg:w-2/5">
+              <Label for="crane-name-{i}">Grue</Label>
+              <Svelecte
+                type="cranes"
+                inputId="crane-name-{i}"
+                placeholder="Grue"
+                name="Grue {i + 1}"
+                bind:value={craneEntry.equipmentId}
+                required
+              />
+            </div>
+
+            <div class="w-full lg:w-auto">
+              <Label for="crane-hours-worked-{i}">Heures</Label>
+              <NumericInput
+                id="crane-hours-worked-{i}"
+                name="Grue {i + 1} - Heures"
+                format="+2"
+                max={24}
+                bind:value={craneEntry.hoursWorked}
+                placeholder="Heures"
+                required
+              />
+            </div>
+
+            <div class="w-full lg:w-2/5">
+              <Label for="crane-comments-{i}">Commentaires</Label>
+              <Input
+                type="text"
+                id="crane-comments-{i}"
+                bind:value={craneEntry.comments}
+              />
+            </div>
+
+            <div class="flex-auto">
+              <Button
+                on:click={() => {
+                  dateEntries.cranes = dateEntries.cranes.filter(
+                    (entry) => entry !== craneEntry
+                  );
+                }}
+                color="red"
+                size="sm"
+                title="Supprimer"
+              >
+                <Trash2Icon size={16} />
+              </Button>
+            </div>
+          </div>
+        {:else}
+          <p>Aucune grue</p>
+        {/each}
+      </div>
     </div>
 
     <!-- Equipments -->
@@ -175,6 +262,7 @@
               <Label for="equipment-hours-worked-{i}">Heures</Label>
               <NumericInput
                 id="equipment-hours-worked-{i}"
+                name="Équipement {i + 1} - Heures"
                 format="+2"
                 max={24}
                 bind:value={equipmentEntry.hoursWorked}
