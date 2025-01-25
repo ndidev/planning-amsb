@@ -20,6 +20,7 @@ use App\DTO\Filter\StevedoringReportsFilterDTO;
 use App\DTO\Filter\StevedoringStaffFilterDTO;
 use App\DTO\Filter\StevedoringTempWorkHoursFilterDTO;
 use App\DTO\StevedoringDispatchDTO;
+use App\DTO\TempWorkDispatchForDateDTO;
 use App\Entity\Stevedoring\ShipReport;
 use App\Entity\Stevedoring\ShipReportEquipmentEntry;
 use App\Entity\Stevedoring\ShipReportStaffEntry;
@@ -230,12 +231,9 @@ final class StevedoringService
         return $this->stevedoringRepository->fetchDispatch($filter);
     }
 
-    /**
-     * @return array<int>
-     */
-    public function getTempWorkDispatchIdsForDate(\DateTimeImmutable $date): array
+    public function getTempWorkDispatchForDate(\DateTimeImmutable $date): TempWorkDispatchForDateDTO
     {
-        return $this->stevedoringRepository->fetchTempWorkDispatchIdsForDate($date);
+        return $this->stevedoringRepository->fetchTempWorkDispatchForDate($date);
     }
 
     // ===============

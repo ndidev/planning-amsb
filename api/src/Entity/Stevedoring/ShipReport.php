@@ -208,7 +208,7 @@ class ShipReport extends AbstractEntity
                 }
             } elseif ($entry instanceof ShipReportEquipmentEntry) {
                 $typeToLower = \mb_strtolower($entry->equipment->type ?? "");
-                if ($typeToLower === "grue" || \str_contains($typeToLower, "pelle")) {
+                if (\array_any(["pelle", "grue"], fn(string $match) => \str_contains($typeToLower, $match))) {
                     $entriesByDate[$date]['cranes'][] = $entry;
                 } else {
                     $entriesByDate[$date]['equipments'][] = $entry;

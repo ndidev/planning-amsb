@@ -62,9 +62,9 @@ final class TempWorkDispatchForDateController extends Controller
             throw new BadRequestException("La date n'est pas valide.");
         }
 
-        $staffIds = $this->stevedoringService->getTempWorkDispatchIdsForDate($dateTime);
+        $dispatchDto = $this->stevedoringService->getTempWorkDispatchForDate($dateTime);
 
-        $etag = ETag::get($staffIds);
+        $etag = ETag::get($dispatchDto);
 
         if ($this->request->etag === $etag) {
             $this->response->setCode(HTTPResponse::HTTP_NOT_MODIFIED_304);
@@ -73,6 +73,6 @@ final class TempWorkDispatchForDateController extends Controller
 
         $this->response
             ->addHeader("ETag", $etag)
-            ->setJSON($staffIds);
+            ->setJSON($dispatchDto);
     }
 }

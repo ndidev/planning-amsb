@@ -40,6 +40,8 @@
   let addHoursModalOpen = false;
   let reportModalOpen = false;
 
+  const defaultHoursWorked = 8;
+
   $: if ($stevedoringTempWorkHours) {
     tempWorkHoursByDate = [...$stevedoringTempWorkHours.values()]
       .sort((a, b) => a.date.localeCompare(b.date))
@@ -53,7 +55,7 @@
   function addEntryForDate(date: string) {
     const newEntry = stevedoringTempWorkHours.new();
     newEntry.date = date;
-    newEntry.hoursWorked = 8;
+    newEntry.hoursWorked = defaultHoursWorked;
   }
 
   // BUG: when selecting an already existing staff memeber in the list and confirming
@@ -61,7 +63,7 @@
 
   async function preFillForDate(date: string) {
     try {
-      const ids = await fetcher<number[]>(
+      const dispatch = await fetcher<{ [id: string]: number }[]>(
         `manutention/dispatch-interimaire/${date}`
       );
 
@@ -72,7 +74,9 @@
         )
       );
 
-      const newIds = ids.filter((id) => !existingIds.has(id));
+      const newIds = Object.keys(dispatch).filter(
+        (id) => !existingIds.has(Number(id))
+      );
 
       if (newIds.length === 0) {
         Notiflix.Notify.info("Aucun nouvel intérimaire à ajouter");
@@ -82,8 +86,8 @@
       newIds.map((id) => {
         const newEntry = stevedoringTempWorkHours.new();
         newEntry.date = date;
-        newEntry.staffId = id;
-        newEntry.hoursWorked = 8;
+        newEntry.staffId = Number(id);
+        newEntry.hoursWorked = dispatch[id] || defaultHoursWorked;
         return newEntry;
       });
     } catch (error) {

@@ -17,6 +17,7 @@ use App\DTO\Filter\StevedoringStaffFilterDTO;
 use App\DTO\Filter\StevedoringTempWorkHoursFilterDTO;
 use App\DTO\StevedoringDispatchDTO;
 use App\DTO\StevedoringSubcontractDataDTO;
+use App\DTO\TempWorkDispatchForDateDTO;
 use App\DTO\TempWorkHoursReportDataDTO;
 use App\Entity\Shipping\ShippingCallCargo;
 use App\Entity\Stevedoring\ShipReport;
@@ -571,24 +572,31 @@ final class StevedoringRepository extends Repository
         return $dispatchDTO;
     }
 
-    /**
-     * @return array<int>
-     */
-    public function fetchTempWorkDispatchIdsForDate(\DateTimeImmutable $date): array
+    public function fetchTempWorkDispatchForDate(\DateTimeImmutable $date): TempWorkDispatchForDateDTO
     {
-        // Bulk
-
         $statement =
-            "SELECT DISTINCT staff.id
+            "SELECT DISTINCT
+                staff.id,
+                0 as `hoursWorked`
             FROM stevedoring_bulk_dispatch bulkDispatch
             INNER JOIN stevedoring_staff staff ON bulkDispatch.staff_id = staff.id
             WHERE bulkDispatch.date = :date
             AND staff.type = 'interim'
             UNION
-            SELECT DISTINCT staff.id
+            SELECT DISTINCT
+                staff.id,
+                0 as `hoursWorked`
             FROM stevedoring_timber_dispatch timberDispatch
             INNER JOIN stevedoring_staff staff ON timberDispatch.staff_id = staff.id
             WHERE timberDispatch.date = :date
+            AND staff.type = 'interim'
+            UNION
+            SELECT DISTINCT
+                staff.id,
+                shipReportsStaff.hours_worked as `hoursWorked`
+            FROM stevedoring_ship_reports_staff shipReportsStaff
+            INNER JOIN stevedoring_staff staff ON shipReportsStaff.staff_id = staff.id
+            WHERE shipReportsStaff.date = :date
             AND staff.type = 'interim'
             ";
 
@@ -599,11 +607,13 @@ final class StevedoringRepository extends Repository
         ]);
 
         /** 
-         * @var array<int>
+         * @var array{id: string, hoursWorked: string}[]
          */
-        $data = $request->fetchAll(\PDO::FETCH_COLUMN);
+        $data = $request->fetchAll();
 
-        return $data;
+        $dispatchDTO = new TempWorkDispatchForDateDTO($data);
+
+        return $dispatchDTO;
     }
 
     // ===============
