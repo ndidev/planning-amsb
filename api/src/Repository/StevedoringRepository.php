@@ -1494,14 +1494,19 @@ final class StevedoringRepository extends Repository
     {
         $statement =
             "SELECT
-                id,
-                ship_report_id,
-                staff_id,
-                date,
-                hours_worked,
-                comments
-             FROM stevedoring_ship_reports_staff
-             WHERE ship_report_id = :reportId";
+                reportsStaff.id,
+                reportsStaff.ship_report_id,
+                reportsStaff.staff_id,
+                reportsStaff.date,
+                reportsStaff.hours_worked,
+                reportsStaff.comments
+             FROM stevedoring_ship_reports_staff reportsStaff
+             LEFT JOIN stevedoring_staff staff ON staff.id = reportsStaff.staff_id
+             WHERE ship_report_id = :reportId
+             ORDER BY
+                staff.lastname ASC,
+                staff.firstname ASC,
+                date ASC";
 
         try {
             /** @phpstan-var ShipReportStaffEntryArray[] */
