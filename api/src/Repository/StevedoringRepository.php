@@ -16,7 +16,7 @@ use App\DTO\Filter\StevedoringReportsFilterDTO;
 use App\DTO\Filter\StevedoringStaffFilterDTO;
 use App\DTO\Filter\StevedoringTempWorkHoursFilterDTO;
 use App\DTO\StevedoringDispatchDTO;
-use App\DTO\StevedoringSubcontractDataDTO;
+use App\DTO\StevedoringSubcontractorsDataDTO;
 use App\DTO\TempWorkDispatchForDateDTO;
 use App\DTO\TempWorkHoursReportDataDTO;
 use App\Entity\Shipping\ShippingCallCargo;
@@ -2184,13 +2184,24 @@ final class StevedoringRepository extends Repository
         }
     }
 
-    // public function fetchSubcontractData(): StevedoringSubcontractDataDTO
-    // {
-    //     $statement =
-    //         "SELECT DISTINCT
-    //             subcontractor_name,
-    //             type
-    //          FROM stevedoring_ship_reports_subcontracts
-    //          ORDER BY subcontractor_name, type";
-    // }
+    public function fetchSubcontractorsData(): StevedoringSubcontractorsDataDTO
+    {
+        $statement =
+            "SELECT DISTINCT
+                subcontractor_name as `name`,
+                type
+             FROM stevedoring_ship_reports_subcontracts
+             ORDER BY subcontractor_name, type";
+
+        try {
+            /** @var array{name: string, type: string}[] */
+            $subcontractorsData = $this->mysql
+                ->prepareAndExecute($statement)
+                ->fetchAll();
+
+            return new StevedoringSubcontractorsDataDTO($subcontractorsData);
+        } catch (PDOException $e) {
+            throw new DBException("Impossible de récupérer les données des sous-traitants.", previous: $e);
+        }
+    }
 }

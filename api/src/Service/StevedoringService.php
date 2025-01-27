@@ -20,6 +20,7 @@ use App\DTO\Filter\StevedoringReportsFilterDTO;
 use App\DTO\Filter\StevedoringStaffFilterDTO;
 use App\DTO\Filter\StevedoringTempWorkHoursFilterDTO;
 use App\DTO\StevedoringDispatchDTO;
+use App\DTO\StevedoringSubcontractorsDataDTO;
 use App\DTO\TempWorkDispatchForDateDTO;
 use App\Entity\Stevedoring\ShipReport;
 use App\Entity\Stevedoring\ShipReportEquipmentEntry;
@@ -765,5 +766,10 @@ final class StevedoringService
     public function getCallsWithoutReport(): Collection
     {
         return $this->stevedoringRepository->fetchCallsWithoutReport();
+    }
+
+    public function getSubcontractorsData(): StevedoringSubcontractorsDataDTO
+    {
+        return $this->stevedoringRepository->fetchSubcontractorsData();
     }
 }

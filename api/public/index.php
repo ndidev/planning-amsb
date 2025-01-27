@@ -35,6 +35,7 @@ use App\Controller\Stevedoring\EquipmentController;
 use App\Controller\Stevedoring\ShipReportController;
 use App\Controller\Stevedoring\ShipReportsFilterDataController;
 use App\Controller\Stevedoring\StaffController;
+use App\Controller\Stevedoring\SubcontractorsDataController;
 use App\Controller\Stevedoring\TempWorkDispatchForDateController;
 use App\Controller\Stevedoring\TempWorkHoursController;
 use App\Controller\Stevedoring\TempWorkHoursReportController;
@@ -110,6 +111,7 @@ $routes = [
     ["/manutention/rapports-navires/[i:id]?", ShipReportController::class],
     ["/manutention/rapports-navires/filter-data", ShipReportsFilterDataController::class],
     ["/manutention/rapports-navires/calls-without-report", CallsWithoutReportController::class],
+    ["/manutention/rapports-navires/sous-traitants", SubcontractorsDataController::class],
 
     // Utilitaires
     ["/ports/[a:locode]?", PortController::class],

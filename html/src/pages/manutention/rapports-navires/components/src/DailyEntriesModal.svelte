@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { tick } from "svelte";
+  import { onMount, tick } from "svelte";
 
   import { Modal, Input, Label, Button } from "flowbite-svelte";
   import { PlusCircleIcon, Trash2Icon } from "lucide-svelte";
@@ -7,7 +7,7 @@
 
   import { Svelecte, NumericInput, BoutonAction } from "@app/components";
 
-  import { DateUtils, validerFormulaire } from "@app/utils";
+  import { DateUtils, validerFormulaire, fetcher } from "@app/utils";
 
   import type { StevedoringShipReport } from "@app/types";
 
@@ -19,10 +19,26 @@
 
   let dateFromInput: string;
   let dateEntries: StevedoringShipReport["entriesByDate"][string];
-  let subcontractorList: { names: string[]; types: string[] } = {
-    names: [],
-    types: [],
-  };
+  let subcontractorTruckingList: string[] = [];
+  let subcontractorOtherList: string[] = [];
+
+  async function getSubcontractorsData() {
+    type SubcontractorsData = {
+      trucking: string[];
+      other: string[];
+    };
+
+    try {
+      const subcontractorsData: SubcontractorsData = await fetcher(
+        "manutention/rapports-navires/sous-traitants"
+      );
+
+      subcontractorTruckingList = subcontractorsData.trucking;
+      subcontractorOtherList = subcontractorsData.other;
+    } catch (error) {
+      // Silently fail
+    }
+  }
 
   async function addCrane() {
     dateEntries.cranes = [
@@ -184,6 +200,10 @@
   function cancelUpdate() {
     open = false;
   }
+
+  onMount(async () => {
+    getSubcontractorsData();
+  });
 </script>
 
 <Modal
@@ -191,7 +211,7 @@
   bind:open
   dismissable={false}
   size="lg"
-  on:open={async () => {
+  on:open={() => {
     dateFromInput = date;
     dateEntries = structuredClone(report.entriesByDate[date]) || {
       permanentStaff: [],
@@ -201,9 +221,6 @@
       trucking: [],
       otherSubcontracts: [],
     };
-    // subcontractorList = await fetcher(
-    //   "manutention/rapports-navires/sous-traitants"
-    // );
   }}
 >
   <form class="flex flex-col gap-8" bind:this={form}>
@@ -242,8 +259,8 @@
               <Svelecte
                 type="cranes"
                 inputId="cranes-{i}-equipmentId"
-                placeholder="Grue"
                 name="Grue {i + 1}"
+                placeholder="Grue"
                 bind:value={craneEntry.equipmentId}
                 required
               />
@@ -532,26 +549,16 @@
           <div class="flex flex-col lg:flex-row gap-2 items-center">
             <div class="w-full lg:w-2/5">
               <Label for="trucking-{i}-subcontractorName">Prestataire</Label>
-              <!-- TODO: Svelecte avec noms sous-traitants existants -->
-              <!-- <Svelecte
-                   options={subcontractorTruckingList.names}
-                   inputId="subcontractorName-{i}"
-                   name="Sous-traitance {i +1} - Prestataire"
-                   placeholder="Prestataire"
-                   name="Prestataire {i + 1}"
-                   bind:value={subcontractEntry.subcontractorName}
-                   creatable
-                   creatablePrefix=""
-                   keepCreated
-                   allowEditing
-                   required
-                 /> -->
-              <Input
-                type="text"
-                id="trucking-{i}-subcontractorName"
+              <Svelecte
+                options={subcontractorTruckingList}
+                inputId="trucking-{i}-subcontractorName"
                 name="Brouettage {i + 1} - Prestataire"
-                bind:value={subcontractEntry.subcontractorName}
                 placeholder="Prestataire"
+                bind:value={subcontractEntry.subcontractorName}
+                creatable
+                creatablePrefix=""
+                keepCreated
+                allowEditing
                 required
               />
             </div>
@@ -633,22 +640,16 @@
               <Label for="otherSubcontracts-{i}-subcontractorName"
                 >Prestataire</Label
               >
-              <!-- TODO: Svelecte avec noms sous-traitants existants -->
-              <!-- <Svelecte
-                options={subcontractorList.names}
-                inputId="subcontractorName-{i}"
-                name="Sous-traitance {i +1} - Prestataire"
-                placeholder="Prestataire"
-                name="Prestataire {i + 1}"
-                bind:value={subcontractEntry.subcontractorName}
-                required
-              /> -->
-              <Input
-                type="text"
-                id="otherSubcontracts-{i}-subcontractorName"
+              <Svelecte
+                options={subcontractorOtherList}
+                inputId="otherSubcontracts-{i}-subcontractorName"
                 name="Sous-traitance {i + 1} - Prestataire"
-                bind:value={subcontractEntry.subcontractorName}
                 placeholder="Prestataire"
+                bind:value={subcontractEntry.subcontractorName}
+                creatable
+                creatablePrefix=""
+                keepCreated
+                allowEditing
                 required
               />
             </div>
