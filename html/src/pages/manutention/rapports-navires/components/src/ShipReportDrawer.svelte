@@ -318,47 +318,100 @@
     <!-- Stockage -->
     <div>
       <div class="text-lg font-bold">Stockage</div>
-      <ul class="ms-2">
-        {#each report.storageEntries as storageEntry}
-          {@const cargo = report.cargoEntries.find(
-            ({ id }) => id === storageEntry.cargoId
-          )}
-          <li>
-            <span class="font-bold">{cargo.cargoName}</span>
-            <span>({cargo.customer})</span>
+      {#if report.storageEntries.length > 0}
+        <div>
+          <Table>
+            <TableHead>
+              <TableHeadCell>Marchandise (Client)</TableHeadCell>
+              <TableHeadCell>Magasin</TableHeadCell>
+              <TableHeadCell>Tonnage</TableHeadCell>
+              <TableHeadCell>Volume</TableHeadCell>
+              <TableHeadCell>Nombre</TableHeadCell>
+            </TableHead>
 
-            <span class="ms-3">{storageEntry.storageName}</span>
+            <TableBody>
+              {#each Object.keys(storageByCargo) as cargoId}
+                {@const cargo = report.cargoEntries.find(
+                  ({ id }) => id === Number(cargoId)
+                )}
+                {#each storageByCargo[cargoId] as storageEntry, i}
+                  <TableBodyRow>
+                    {#if i === 0}
+                      <TableBodyCell
+                        rowspan={storageByCargo[cargoId].length}
+                        class="align-top"
+                      >
+                        <span class="font-bold">{cargo.cargoName}</span>
+                        <span>({cargo.customer})</span>
+                      </TableBodyCell>
+                    {/if}
 
-            {#if storageEntry.tonnage}
-              <span class="ms-3"
-                >{NumberUtils.formatTonnage(storageEntry.tonnage)}</span
-              >
-            {/if}
+                    <TableBodyCell>{storageEntry.storageName}</TableBodyCell>
 
-            {#if storageEntry.volume}
-              <span class="ms-3 italic"
-                >{NumberUtils.formatVolume(storageEntry.volume)}</span
-              >
-            {/if}
+                    {#if storageEntry.tonnage}
+                      <TableBodyCell>
+                        {NumberUtils.formatTonnage(storageEntry.tonnage)}
+                      </TableBodyCell>
+                    {:else}
+                      <TableBodyCell></TableBodyCell>
+                    {/if}
 
-            {#if storageEntry.units}
-              <span class="ms-3"
-                >{NumberUtils.formatUnits(storageEntry.units)}</span
-              >
-            {/if}
+                    {#if storageEntry.volume}
+                      <TableBodyCell>
+                        {NumberUtils.formatVolume(storageEntry.volume)}
+                      </TableBodyCell>
+                    {:else}
+                      <TableBodyCell></TableBodyCell>
+                    {/if}
 
-            <span class="ms-3 italic">{storageEntry.comments}</span>
-          </li>
-        {:else}
-          <li class="ms-2 italic">Aucun stockage</li>
-        {/each}
-      </ul>
+                    {#if storageEntry.units}
+                      <TableBodyCell>
+                        {NumberUtils.formatUnits(storageEntry.units)}
+                      </TableBodyCell>
+                    {:else}
+                      <TableBodyCell></TableBodyCell>
+                    {/if}
+                  </TableBodyRow>
+                {/each}
+              {/each}
+            </TableBody>
+
+            <tfoot>
+              <tr class="font-semibold text-gray-900 bg-gray-50">
+                <th scope="row" class="py-3 px-6 text-base">Total</th>
+
+                <td class="py-3 px-6"></td>
+
+                <td class="py-3 px-6">
+                  {report.storageTotals.tonnage
+                    ? NumberUtils.formatTonnage(report.storageTotals.tonnage)
+                    : ""}
+                </td>
+
+                <td class="py-3 px-6">
+                  {report.storageTotals.volume
+                    ? NumberUtils.formatVolume(report.storageTotals.volume)
+                    : ""}
+                </td>
+
+                <td class="py-3 px-6">
+                  {report.storageTotals.units
+                    ? NumberUtils.formatUnits(report.storageTotals.units)
+                    : ""}
+                </td>
+              </tr>
+            </tfoot>
+          </Table>
+        </div>
+      {:else}
+        <div class="ms-2 italic">Aucun stockage</div>
+      {/if}
     </div>
 
     <!-- Jours -->
     <div>
       <div class="text-lg font-bold">Jours</div>
-      {#if report.entriesByDate}
+      {#if Object.values(report.entriesByDate).flat().length > 0}
         <div class="ms-2">
           <Accordion multiple flush>
             {#each Object.keys(report.entriesByDate) as date}

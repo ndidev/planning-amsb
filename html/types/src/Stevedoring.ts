@@ -170,6 +170,11 @@ export type StevedoringShipReport = {
     };
   };
   storageEntries: StevedoringShipReportStorageEntry[];
+  storageTotals?: {
+    tonnage: number;
+    volume: number;
+    units: number;
+  };
 };
 
 /**
@@ -200,7 +205,7 @@ export type StevedoringShipReportStaffEntry = {
 export type StevedoringShipReportSubcontractEntry = {
   id: number;
   subcontractorName: string;
-  type: string;
+  type?: string;
   date: string;
   hoursWorked: number | null;
   cost: number | null;

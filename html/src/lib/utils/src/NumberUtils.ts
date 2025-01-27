@@ -39,6 +39,40 @@ export class NumberUtils {
     );
   }
 
+  static formatTonnageRate(tonnage: number, forceSign = false): string {
+    return (
+      (forceSign && tonnage >= 0 ? "+" : "") +
+      tonnage.toLocaleString("fr-FR", {
+        minimumFractionDigits: 3,
+      }) +
+      " MT/h"
+    );
+  }
+
+  static formatVolumeRate(volume: number, forceSign = false): string {
+    return (
+      (forceSign && volume >= 0 ? "+" : "") +
+      volume.toLocaleString("fr-FR", {
+        minimumFractionDigits: 3,
+      }) +
+      " m³/h"
+    );
+  }
+
+  static formatUnitsRate(
+    units: number,
+    forceSign = false,
+    unit: string = "colis"
+  ): string {
+    return (
+      (forceSign && units >= 0 ? "+" : "") +
+      units.toLocaleString("fr-FR", { maximumFractionDigits: 1 }) +
+      " " +
+      unit +
+      "/h"
+    );
+  }
+
   static getQuantityColor(quantity: number): string {
     if (quantity > 0) {
       return "text-success-500";

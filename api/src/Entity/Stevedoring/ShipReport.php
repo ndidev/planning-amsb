@@ -297,6 +297,32 @@ class ShipReport extends AbstractEntity
     }
 
     /**
+     * @return array{tonnage: float, volume: float, units: int}
+     */
+    private function calculateStorageTotals(): array
+    {
+        $totals = [
+            'tonnage' => \array_reduce(
+                $this->storageEntries->asArray(),
+                fn(float $carry, ShipReportStorageEntry $entry) => $carry + $entry->tonnage,
+                0
+            ),
+            'volume' => \array_reduce(
+                $this->storageEntries->asArray(),
+                fn(float $carry, ShipReportStorageEntry $entry) => $carry + $entry->volume,
+                0
+            ),
+            'units' => \array_reduce(
+                $this->storageEntries->asArray(),
+                fn(int $carry, ShipReportStorageEntry $entry) => $carry + $entry->units,
+                0
+            ),
+        ];
+
+        return $totals;
+    }
+
+    /**
      * @return string[]
      */
     private function getCustomers(): array
@@ -330,6 +356,7 @@ class ShipReport extends AbstractEntity
             'cargoEntries' => $this->cargoEntries->toArray(),
             'cargoTotals' => $this->calculateCargoTotals(),
             'storageEntries' => $this->storageEntries->toArray(),
+            'storageTotals' => $this->calculateStorageTotals(),
         ];
     }
 }
