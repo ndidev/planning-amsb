@@ -296,6 +296,23 @@ class ShipReport extends AbstractEntity
         return $totals;
     }
 
+    /**
+     * @return string[]
+     */
+    private function getCustomers(): array
+    {
+        $customers = \array_unique(
+            \array_map(
+                fn(ShippingCallCargo $entry) => $entry->customer,
+                $this->cargoEntries->asArray()
+            )
+        );
+
+        sort($customers);
+
+        return $customers;
+    }
+
     public function toArray(): array
     {
         return [
@@ -306,6 +323,7 @@ class ShipReport extends AbstractEntity
             'port' => $this->port,
             'berth' => $this->berth,
             'comments' => $this->comments,
+            'customers' => $this->getCustomers(),
             'startDate' => $this->startDate?->format('Y-m-d'),
             'endDate' => $this->endDate?->format('Y-m-d'),
             'entriesByDate' => $this->getEntriesByDate(),

@@ -79,13 +79,25 @@
 
     <!-- Commentaires -->
     <div>
-      <div>Commentaires</div>
+      <div class="text-lg font-bold">Commentaires</div>
       {#if report.comments}
         <div class="ms-2">
           {@html report.comments.replace(/\r\n|\r|\n/g, "<br/>")}
         </div>
       {:else}
         <div class="ms-2 italic">Aucun commentaire</div>
+      {/if}
+    </div>
+
+    <!-- Clients -->
+    <div>
+      <div class="text-lg font-bold">Clients</div>
+      {#if report.customers.length > 0}
+        <div class="ms-2">
+          {report.customers.join(", ")}
+        </div>
+      {:else}
+        <div class="ms-2 italic">Aucun client</div>
       {/if}
     </div>
 
