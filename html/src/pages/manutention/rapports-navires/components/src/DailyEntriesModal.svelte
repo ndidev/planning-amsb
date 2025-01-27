@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { Modal, Input, Label, Button, Select } from "flowbite-svelte";
+  import { tick } from "svelte";
+
+  import { Modal, Input, Label, Button } from "flowbite-svelte";
   import { PlusCircleIcon, Trash2Icon } from "lucide-svelte";
   import Notiflix from "notiflix";
 
@@ -22,7 +24,7 @@
     types: [],
   };
 
-  function addCrane() {
+  async function addCrane() {
     dateEntries.cranes = [
       ...dateEntries.cranes,
       {
@@ -33,9 +35,17 @@
         comments: "",
       },
     ];
+
+    await tick();
+
+    form
+      .querySelector<HTMLInputElement>(
+        `#cranes-${dateEntries.cranes.length - 1}-equipmentId`
+      )
+      .focus();
   }
 
-  function addEquipment() {
+  async function addEquipment() {
     dateEntries.equipments = [
       ...dateEntries.equipments,
       {
@@ -46,9 +56,17 @@
         comments: "",
       },
     ];
+
+    await tick();
+
+    form
+      .querySelector<HTMLInputElement>(
+        `#equipments-${dateEntries.equipments.length - 1}-equipmentId`
+      )
+      .focus();
   }
 
-  function addPermanentStaff() {
+  async function addPermanentStaff() {
     dateEntries.permanentStaff = [
       ...dateEntries.permanentStaff,
       {
@@ -59,9 +77,17 @@
         comments: "",
       },
     ];
+
+    await tick();
+
+    form
+      .querySelector<HTMLInputElement>(
+        `#permanentStaff-${dateEntries.permanentStaff.length - 1}-staffId`
+      )
+      .focus();
   }
 
-  function addTempStaff() {
+  async function addTempStaff() {
     dateEntries.tempStaff = [
       ...dateEntries.tempStaff,
       {
@@ -72,9 +98,17 @@
         comments: "",
       },
     ];
+
+    await tick();
+
+    form
+      .querySelector<HTMLInputElement>(
+        `#tempStaff-${dateEntries.tempStaff.length - 1}-staffId`
+      )
+      .focus();
   }
 
-  function addSubcontractTrucking() {
+  async function addSubcontractTrucking() {
     dateEntries.trucking = [
       ...dateEntries.trucking,
       {
@@ -86,9 +120,17 @@
         comments: "",
       },
     ];
+
+    await tick();
+
+    form
+      .querySelector<HTMLInputElement>(
+        `#trucking-${dateEntries.trucking.length - 1}-subcontractorName`
+      )
+      .focus();
   }
 
-  function addSubcontractOther() {
+  async function addSubcontractOther() {
     dateEntries.otherSubcontracts = [
       ...dateEntries.otherSubcontracts,
       {
@@ -100,6 +142,14 @@
         comments: "",
       },
     ];
+
+    await tick();
+
+    form
+      .querySelector<HTMLInputElement>(
+        `#otherSubcontracts-${dateEntries.otherSubcontracts.length - 1}-subcontractorName`
+      )
+      .focus();
   }
 
   async function updateEntries() {
@@ -188,10 +238,10 @@
         {#each dateEntries.cranes as craneEntry, i}
           <div class="flex flex-col lg:flex-row gap-2 items-center">
             <div class="w-full lg:w-2/5">
-              <Label for="crane-name-{i}">Grue</Label>
+              <Label for="cranes-{i}-equipmentId">Grue</Label>
               <Svelecte
                 type="cranes"
-                inputId="crane-name-{i}"
+                inputId="cranes-{i}-equipmentId"
                 placeholder="Grue"
                 name="Grue {i + 1}"
                 bind:value={craneEntry.equipmentId}
@@ -200,9 +250,9 @@
             </div>
 
             <div class="w-full lg:w-auto">
-              <Label for="crane-hours-worked-{i}">Heures</Label>
+              <Label for="cranes-{i}-hoursWorked">Heures</Label>
               <NumericInput
-                id="crane-hours-worked-{i}"
+                id="cranes-{i}-hoursWorked"
                 name="Grue {i + 1} - Heures"
                 format="+2"
                 max={24}
@@ -213,10 +263,10 @@
             </div>
 
             <div class="w-full lg:w-2/5">
-              <Label for="crane-comments-{i}">Commentaires</Label>
+              <Label for="cranes-{i}-comments">Commentaires</Label>
               <Input
                 type="text"
-                id="crane-comments-{i}"
+                id="cranes-{i}-comments"
                 bind:value={craneEntry.comments}
               />
             </div>
@@ -261,10 +311,10 @@
         {#each dateEntries.equipments as equipmentEntry, i}
           <div class="flex flex-col lg:flex-row gap-2 items-center">
             <div class="w-full lg:w-2/5">
-              <Label for="equipment-name-{i}">Équipement</Label>
+              <Label for="equipments-{i}-equipmentId">Équipement</Label>
               <Svelecte
                 type="equipments"
-                inputId="equipment-name-{i}"
+                inputId="equipments-{i}-equipmentId"
                 placeholder="Équipement"
                 name="Équipement {i + 1}"
                 bind:value={equipmentEntry.equipmentId}
@@ -273,9 +323,9 @@
             </div>
 
             <div class="w-full lg:w-auto">
-              <Label for="equipment-hours-worked-{i}">Heures</Label>
+              <Label for="equipments-{i}-hoursWorked">Heures</Label>
               <NumericInput
-                id="equipment-hours-worked-{i}"
+                id="equipments-{i}-hoursWorked"
                 name="Équipement {i + 1} - Heures"
                 format="+2"
                 max={24}
@@ -286,10 +336,10 @@
             </div>
 
             <div class="w-full lg:w-2/5">
-              <Label for="equipment-comments-{i}">Commentaires</Label>
+              <Label for="equipments-{i}-comments">Commentaires</Label>
               <Input
                 type="text"
-                id="equipment-comments-{i}"
+                id="equipments-{i}-comments"
                 bind:value={equipmentEntry.comments}
               />
             </div>
@@ -334,10 +384,10 @@
         {#each dateEntries.permanentStaff as staffEntry, i}
           <div class="flex flex-col lg:flex-row gap-2 items-center">
             <div class="w-full lg:w-2/5">
-              <Label for="permanent-staff-name-{i}">Personnel</Label>
+              <Label for="permanentStaff-{i}-staffId">Personnel</Label>
               <Svelecte
                 type="mensuels"
-                inputId="permanent-staff-name-{i}"
+                inputId="permanentStaff-{i}-staffId"
                 name="Personnel {i + 1} - Nom"
                 placeholder="Personnel"
                 bind:value={staffEntry.staffId}
@@ -346,9 +396,9 @@
             </div>
 
             <div class="w-full lg:w-auto">
-              <Label for="permanent-staf-hours-worked-{i}">Heures</Label>
+              <Label for="permanentStaff-{i}-hoursWorked">Heures</Label>
               <NumericInput
-                id="permanent-staf-hours-worked-{i}"
+                id="permanentStaff-{i}-hoursWorked"
                 name="Personnel {i + 1} - Heures"
                 format="+2"
                 max={24}
@@ -359,10 +409,10 @@
             </div>
 
             <div class="w-full lg:w-2/5">
-              <Label for="permanent-staf-comments-{i}">Commentaires</Label>
+              <Label for="permanentStaff-{i}-comments">Commentaires</Label>
               <Input
                 type="text"
-                id="permanent-staf-comments-{i}"
+                id="permanentStaff.comments.{i}"
                 bind:value={staffEntry.comments}
               />
             </div>
@@ -408,10 +458,10 @@
         {#each dateEntries.tempStaff as staffEntry, i}
           <div class="flex flex-col lg:flex-row gap-2 items-center">
             <div class="w-full lg:w-2/5">
-              <Label for="temp-staff-name-{i}">Intérimaire</Label>
+              <Label for="tempStaff-{i}-staffId">Intérimaire</Label>
               <Svelecte
                 type="interimaires"
-                inputId="temp-staff-name-{i}"
+                inputId="tempStaff-{i}-staffId"
                 name="Intérimaire {i + 1} - Nom"
                 placeholder="Intérimaire"
                 bind:value={staffEntry.staffId}
@@ -420,9 +470,9 @@
             </div>
 
             <div class="w-full lg:w-auto">
-              <Label for="temp-staff-hours-worked-{i}">Heures</Label>
+              <Label for="tempStaff-{i}-hoursWorked">Heures</Label>
               <NumericInput
-                id="temp-staff-hours-worked-{i}"
+                id="tempStaff-{i}-hoursWorked"
                 name="Intérimaire {i + 1} - Heures"
                 format="+2"
                 max={24}
@@ -433,10 +483,10 @@
             </div>
 
             <div class="w-full lg:w-2/5">
-              <Label for="temp-staff-comments-{i}">Commentaires</Label>
+              <Label for="tempStaff-{i}-comments">Commentaires</Label>
               <Input
                 type="text"
-                id="temp-staff-comments-{i}"
+                id="tempStaff-{i}-comments"
                 bind:value={staffEntry.comments}
               />
             </div>
@@ -481,7 +531,7 @@
         {#each dateEntries.trucking as subcontractEntry, i}
           <div class="flex flex-col lg:flex-row gap-2 items-center">
             <div class="w-full lg:w-2/5">
-              <Label for="subcontractorName-{i}">Prestataire</Label>
+              <Label for="trucking-{i}-subcontractorName">Prestataire</Label>
               <!-- TODO: Svelecte avec noms sous-traitants existants -->
               <!-- <Svelecte
                    options={subcontractorTruckingList.names}
@@ -498,8 +548,8 @@
                  /> -->
               <Input
                 type="text"
-                id="subcontractorName-{i}"
-                name="Sous-traitance {i + 1} - Prestataire"
+                id="trucking-{i}-subcontractorName"
+                name="Brouettage {i + 1} - Prestataire"
                 bind:value={subcontractEntry.subcontractorName}
                 placeholder="Prestataire"
                 required
@@ -507,10 +557,10 @@
             </div>
 
             <div class="w-full lg:w-auto">
-              <Label for="hours-worked-{i}">Heures</Label>
+              <Label for="trucking-{i}-hoursWorked">Heures</Label>
               <NumericInput
-                id="hours-worked-{i}"
-                name="Sous-traitance {i + 1} - Heures"
+                id="trucking-{i}-hoursWorked"
+                name="Brouettage {i + 1} - Heures"
                 format="+2"
                 max={24}
                 bind:value={subcontractEntry.hoursWorked}
@@ -520,10 +570,10 @@
             </div>
 
             <div class="w-full lg:w-auto">
-              <Label for="cost-{i}">Coût</Label>
+              <Label for="trucking-{i}-cost">Coût</Label>
               <NumericInput
-                id="cost-{i}"
-                name="Sous-traitance {i + 1} - Coût"
+                id="trucking-{i}-cost"
+                name="Brouettage {i + 1} - Coût"
                 format="2"
                 bind:value={subcontractEntry.cost}
                 placeholder="Coût"
@@ -532,10 +582,10 @@
             </div>
 
             <div class="w-full lg:w-2/5">
-              <Label for="comments-{i}">Commentaires</Label>
+              <Label for="trucking-{i}-comments">Commentaires</Label>
               <Input
                 type="text"
-                id="comments-{i}"
+                id="trucking-{i}-comments"
                 bind:value={subcontractEntry.comments}
               />
             </div>
@@ -580,7 +630,10 @@
         {#each dateEntries.otherSubcontracts as subcontractEntry, i}
           <div class="flex flex-col lg:flex-row gap-2 items-center">
             <div class="w-full lg:w-2/5">
-              <Label for="subcontractorName-{i}">Prestataire</Label>
+              <Label for="otherSubcontracts-{i}-subcontractorName"
+                >Prestataire</Label
+              >
+              <!-- TODO: Svelecte avec noms sous-traitants existants -->
               <!-- <Svelecte
                 options={subcontractorList.names}
                 inputId="subcontractorName-{i}"
@@ -592,7 +645,7 @@
               /> -->
               <Input
                 type="text"
-                id="subcontractorName-{i}"
+                id="otherSubcontracts-{i}-subcontractorName"
                 name="Sous-traitance {i + 1} - Prestataire"
                 bind:value={subcontractEntry.subcontractorName}
                 placeholder="Prestataire"
@@ -601,9 +654,9 @@
             </div>
 
             <div class="w-full lg:w-auto">
-              <Label for="hours-worked-{i}">Heures</Label>
+              <Label for="otherSubcontracts-{i}-hoursWorked">Heures</Label>
               <NumericInput
-                id="hours-worked-{i}"
+                id="otherSubcontracts-{i}-hoursWorked"
                 name="Sous-traitance {i + 1} - Heures"
                 format="+2"
                 max={24}
@@ -614,9 +667,9 @@
             </div>
 
             <div class="w-full lg:w-auto">
-              <Label for="cost-{i}">Coût</Label>
+              <Label for="otherSubcontracts-{i}-cost">Coût</Label>
               <NumericInput
-                id="cost-{i}"
+                id="otherSubcontracts-{i}-cost"
                 name="Sous-traitance {i + 1} - Coût"
                 format="2"
                 bind:value={subcontractEntry.cost}
@@ -626,10 +679,10 @@
             </div>
 
             <div class="w-full lg:w-2/5">
-              <Label for="comments-{i}">Commentaires</Label>
+              <Label for="otherSubcontracts-{i}-comments">Commentaires</Label>
               <Input
                 type="text"
-                id="comments-{i}"
+                id="otherSubcontracts-{i}-comments"
                 bind:value={subcontractEntry.comments}
               />
             </div>
