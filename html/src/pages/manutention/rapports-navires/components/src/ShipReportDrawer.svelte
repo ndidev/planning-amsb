@@ -174,9 +174,9 @@
                   <TableBodyCell>
                     {#if cargo.outturnTonnage && cargo.blTonnage}
                       <div
-                        style="color: {cargo.tonnageDifference < 0
-                          ? 'red'
-                          : 'green'}"
+                        class={NumberUtils.getQuantityColor(
+                          cargo.tonnageDifference
+                        )}
                       >
                         {NumberUtils.formatTonnage(
                           cargo.tonnageDifference,
@@ -187,9 +187,9 @@
 
                     {#if cargo.outturnVolume && cargo.blVolume}
                       <div
-                        style="color: {cargo.volumeDifference < 0
-                          ? 'red'
-                          : 'green'}"
+                        class={NumberUtils.getQuantityColor(
+                          cargo.volumeDifference
+                        )}
                       >
                         {NumberUtils.formatVolume(cargo.volumeDifference, true)}
                       </div>
@@ -197,9 +197,9 @@
 
                     {#if cargo.outturnUnits && cargo.blUnits}
                       <div
-                        style="color: {cargo.unitsDifference < 0
-                          ? 'red'
-                          : 'green'}"
+                        class={NumberUtils.getQuantityColor(
+                          cargo.unitsDifference
+                        )}
                       >
                         {NumberUtils.formatUnits(cargo.unitsDifference, true)}
                       </div>
@@ -268,9 +268,9 @@
                   <td class="py-3 px-6">
                     {#if report.cargoTotals.bl.tonnage}
                       <div
-                        style="color: {report.cargoTotals.difference.tonnage < 0
-                          ? 'red'
-                          : 'green'}"
+                        class={NumberUtils.getQuantityColor(
+                          report.cargoTotals.difference.tonnage
+                        )}
                       >
                         {NumberUtils.formatTonnage(
                           report.cargoTotals.difference.tonnage,
@@ -281,9 +281,9 @@
 
                     {#if report.cargoTotals.bl.volume}
                       <div
-                        style="color: {report.cargoTotals.difference.volume < 0
-                          ? 'red'
-                          : 'green'}"
+                        class={NumberUtils.getQuantityColor(
+                          report.cargoTotals.difference.volume
+                        )}
                       >
                         {NumberUtils.formatVolume(
                           report.cargoTotals.difference.volume,
@@ -294,9 +294,9 @@
 
                     {#if report.cargoTotals.bl.units}
                       <div
-                        style="color: {report.cargoTotals.difference.units < 0
-                          ? 'red'
-                          : 'green'}"
+                        class={NumberUtils.getQuantityColor(
+                          report.cargoTotals.difference.units
+                        )}
                       >
                         {NumberUtils.formatUnits(
                           report.cargoTotals.difference.units,

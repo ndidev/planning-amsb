@@ -38,4 +38,14 @@ export class NumberUtils {
       unit
     );
   }
+
+  static getQuantityColor(quantity: number): string {
+    if (quantity > 0) {
+      return "text-success-500";
+    } else if (quantity < 0) {
+      return "text-error-500";
+    } else {
+      return "text-inherit";
+    }
+  }
 }
