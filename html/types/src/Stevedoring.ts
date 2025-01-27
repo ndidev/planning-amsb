@@ -151,6 +151,23 @@ export type StevedoringShipReport = {
     };
   };
   cargoEntries: ShippingCallCargo[];
+  cargoTotals?: {
+    bl: {
+      tonnage: number;
+      volume: number;
+      units: number;
+    };
+    outturn: {
+      tonnage: number;
+      volume: number;
+      units: number;
+    };
+    difference: {
+      tonnage: number;
+      volume: number;
+      units: number;
+    };
+  };
   storageEntries: StevedoringShipReportStorageEntry[];
 };
 

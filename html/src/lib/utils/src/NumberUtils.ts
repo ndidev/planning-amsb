@@ -6,23 +6,36 @@ export class NumberUtils {
     return `${hours}h${minutes.toString().padStart(2, "0")}`;
   }
 
-  static formatTonnage(tonnage: number): string {
+  static formatTonnage(tonnage: number, forceSign = false): string {
     return (
+      (forceSign && tonnage >= 0 ? "+" : "") +
       tonnage.toLocaleString("fr-FR", {
         minimumFractionDigits: 3,
-      }) + " MT"
+      }) +
+      " MT"
     );
   }
 
-  static formatVolume(volume: number): string {
+  static formatVolume(volume: number, forceSign = false): string {
     return (
+      (forceSign && volume >= 0 ? "+" : "") +
       volume.toLocaleString("fr-FR", {
         minimumFractionDigits: 3,
-      }) + " m³"
+      }) +
+      " m³"
     );
   }
 
-  static formatUnits(units: number, unit: string = "colis"): string {
-    return units.toLocaleString("fr-FR") + " " + unit;
+  static formatUnits(
+    units: number,
+    forceSign = false,
+    unit: string = "colis"
+  ): string {
+    return (
+      (forceSign && units >= 0 ? "+" : "") +
+      units.toLocaleString("fr-FR") +
+      " " +
+      unit
+    );
   }
 }

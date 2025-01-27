@@ -129,7 +129,7 @@
                     {/if}
 
                     {#if cargo.blVolume}
-                      <div class="italic">
+                      <div>
                         {NumberUtils.formatVolume(cargo.blVolume)}
                       </div>
                     {/if}
@@ -148,7 +148,7 @@
                     {/if}
 
                     {#if cargo.outturnVolume}
-                      <div class="italic">
+                      <div>
                         {NumberUtils.formatVolume(cargo.outturnVolume)}
                       </div>
                     {/if}
@@ -161,20 +161,35 @@
                   <!-- Différence -->
                   <TableBodyCell>
                     {#if cargo.outturnTonnage && cargo.blTonnage}
-                      <div>
-                        {NumberUtils.formatTonnage(cargo.tonnageDifference)}
+                      <div
+                        style="color: {cargo.tonnageDifference < 0
+                          ? 'red'
+                          : 'green'}"
+                      >
+                        {NumberUtils.formatTonnage(
+                          cargo.tonnageDifference,
+                          true
+                        )}
                       </div>
                     {/if}
 
                     {#if cargo.outturnVolume && cargo.blVolume}
-                      <div class="italic">
-                        {NumberUtils.formatVolume(cargo.volumeDifference)}
+                      <div
+                        style="color: {cargo.volumeDifference < 0
+                          ? 'red'
+                          : 'green'}"
+                      >
+                        {NumberUtils.formatVolume(cargo.volumeDifference, true)}
                       </div>
                     {/if}
 
                     {#if cargo.outturnUnits && cargo.blUnits}
-                      <div>
-                        {NumberUtils.formatUnits(cargo.unitsDifference)}
+                      <div
+                        style="color: {cargo.unitsDifference < 0
+                          ? 'red'
+                          : 'green'}"
+                      >
+                        {NumberUtils.formatUnits(cargo.unitsDifference, true)}
                       </div>
                     {/if}
                   </TableBodyCell>
@@ -188,13 +203,96 @@
                   <th scope="row" class="py-3 px-6 text-base">Total</th>
 
                   <!-- BL -->
-                  <td class="py-3 px-6"></td>
+                  <td class="py-3 px-6">
+                    {#if report.cargoTotals.bl.tonnage}
+                      <div>
+                        {NumberUtils.formatTonnage(
+                          report.cargoTotals.bl.tonnage
+                        )}
+                      </div>
+                    {/if}
+
+                    {#if report.cargoTotals.bl.volume}
+                      <div>
+                        {NumberUtils.formatVolume(report.cargoTotals.bl.volume)}
+                      </div>
+                    {/if}
+
+                    {#if report.cargoTotals.bl.units}
+                      <div>
+                        {NumberUtils.formatUnits(report.cargoTotals.bl.units)}
+                      </div>
+                    {/if}
+                  </td>
 
                   <!-- Outturn -->
-                  <td class="py-3 px-6"></td>
+                  <td class="py-3 px-6">
+                    {#if report.cargoTotals.bl.tonnage}
+                      <div>
+                        {NumberUtils.formatTonnage(
+                          report.cargoTotals.outturn.tonnage
+                        )}
+                      </div>
+                    {/if}
+
+                    {#if report.cargoTotals.bl.volume}
+                      <div>
+                        {NumberUtils.formatVolume(
+                          report.cargoTotals.outturn.volume
+                        )}
+                      </div>
+                    {/if}
+
+                    {#if report.cargoTotals.bl.units}
+                      <div>
+                        {NumberUtils.formatUnits(
+                          report.cargoTotals.outturn.units
+                        )}
+                      </div>
+                    {/if}
+                  </td>
 
                   <!-- Différence -->
-                  <td class="py-3 px-6"></td>
+                  <td class="py-3 px-6">
+                    {#if report.cargoTotals.bl.tonnage}
+                      <div
+                        style="color: {report.cargoTotals.difference.tonnage < 0
+                          ? 'red'
+                          : 'green'}"
+                      >
+                        {NumberUtils.formatTonnage(
+                          report.cargoTotals.difference.tonnage,
+                          true
+                        )}
+                      </div>
+                    {/if}
+
+                    {#if report.cargoTotals.bl.volume}
+                      <div
+                        style="color: {report.cargoTotals.difference.volume < 0
+                          ? 'red'
+                          : 'green'}"
+                      >
+                        {NumberUtils.formatVolume(
+                          report.cargoTotals.difference.volume,
+                          true
+                        )}
+                      </div>
+                    {/if}
+
+                    {#if report.cargoTotals.bl.units}
+                      <div
+                        style="color: {report.cargoTotals.difference.units < 0
+                          ? 'red'
+                          : 'green'}"
+                      >
+                        {NumberUtils.formatUnits(
+                          report.cargoTotals.difference.units,
+                          true
+                        )}
+                      </div>
+                    {/if}
+                  </td>
                 </tr>
               </tfoot>
             {/if}

@@ -230,6 +230,72 @@ class ShipReport extends AbstractEntity
         return $entriesByDate;
     }
 
+    /**
+     * @return array{
+     *           bl: array{tonnage: float, volume: float, units: int},
+     *           outturn: array{tonnage: float, volume: float, units: int},
+     *           difference: array{tonnage: float, volume: float, units: int},
+     *         }
+     */
+    private function calculateCargoTotals(): array
+    {
+        $totals = [
+            'bl' => [
+                'tonnage' => \array_reduce(
+                    $this->cargoEntries->asArray(),
+                    fn(float $carry, ShippingCallCargo $entry) => $carry + $entry->blTonnage,
+                    0
+                ),
+                'volume' => \array_reduce(
+                    $this->cargoEntries->asArray(),
+                    fn(float $carry, ShippingCallCargo $entry) => $carry + $entry->blVolume,
+                    0
+                ),
+                'units' => \array_reduce(
+                    $this->cargoEntries->asArray(),
+                    fn(int $carry, ShippingCallCargo $entry) => $carry + $entry->blUnits,
+                    0
+                ),
+            ],
+            'outturn' => [
+                'tonnage' => \array_reduce(
+                    $this->cargoEntries->asArray(),
+                    fn(float $carry, ShippingCallCargo $entry) => $carry + $entry->outturnTonnage,
+                    0
+                ),
+                'volume' => \array_reduce(
+                    $this->cargoEntries->asArray(),
+                    fn(float $carry, ShippingCallCargo $entry) => $carry + $entry->outturnVolume,
+                    0
+                ),
+                'units' => \array_reduce(
+                    $this->cargoEntries->asArray(),
+                    fn(int $carry, ShippingCallCargo $entry) => $carry + $entry->outturnUnits,
+                    0
+                ),
+            ],
+            'difference' => [
+                'tonnage' => \array_reduce(
+                    $this->cargoEntries->asArray(),
+                    fn(float $carry, ShippingCallCargo $entry) => $carry + $entry->tonnageDifference,
+                    0
+                ),
+                'volume' => \array_reduce(
+                    $this->cargoEntries->asArray(),
+                    fn(float $carry, ShippingCallCargo $entry) => $carry + $entry->volumeDifference,
+                    0
+                ),
+                'units' => \array_reduce(
+                    $this->cargoEntries->asArray(),
+                    fn(int $carry, ShippingCallCargo $entry) => $carry + $entry->unitsDifference,
+                    0
+                ),
+            ],
+        ];
+
+        return $totals;
+    }
+
     public function toArray(): array
     {
         return [
@@ -244,6 +310,7 @@ class ShipReport extends AbstractEntity
             'endDate' => $this->endDate?->format('Y-m-d'),
             'entriesByDate' => $this->getEntriesByDate(),
             'cargoEntries' => $this->cargoEntries->toArray(),
+            'cargoTotals' => $this->calculateCargoTotals(),
             'storageEntries' => $this->storageEntries->toArray(),
         ];
     }
