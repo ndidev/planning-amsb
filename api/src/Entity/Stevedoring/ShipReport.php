@@ -165,11 +165,12 @@ class ShipReport extends AbstractEntity
 
     /**
      * @return array<string, array{
-     *                         permanentStaff: ShipReportStaffEntry[],
-     *                         tempStaff: ShipReportStaffEntry[],
      *                         cranes: ShipReportEquipmentEntry[],
      *                         equipments: ShipReportEquipmentEntry[],
-     *                         subcontracts: ShipReportSubcontractEntry[]
+     *                         permanentStaff: ShipReportStaffEntry[],
+     *                         tempStaff: ShipReportStaffEntry[],
+     *                         trucking: ShipReportSubcontractEntry[],
+     *                         otherSubcontracts: ShipReportSubcontractEntry[],
      *                       }
      *         >
      */
@@ -191,30 +192,36 @@ class ShipReport extends AbstractEntity
 
             if (!isset($entriesByDate[$date])) {
                 $entriesByDate[$date] = [
-                    'permanentStaff' => [],
-                    'tempStaff' => [],
                     'cranes' => [],
                     'equipments' => [],
-                    'subcontracts' => [],
+                    'permanentStaff' => [],
+                    'tempStaff' => [],
+                    'trucking' => [],
+                    'otherSubcontracts' => [],
                 ];
             }
 
-            if ($entry instanceof ShipReportStaffEntry) {
-                if ($entry->staff?->type === "mensuel") {
-                    $entriesByDate[$date]['permanentStaff'][] = $entry;
-                }
-                if ($entry->staff?->type === "interim") {
-                    $entriesByDate[$date]['tempStaff'][] = $entry;
-                }
-            } elseif ($entry instanceof ShipReportEquipmentEntry) {
+            if ($entry instanceof ShipReportEquipmentEntry) {
                 $typeToLower = \mb_strtolower($entry->equipment->type ?? "");
                 if (\array_any(["pelle", "grue"], fn(string $match) => \str_contains($typeToLower, $match))) {
                     $entriesByDate[$date]['cranes'][] = $entry;
                 } else {
                     $entriesByDate[$date]['equipments'][] = $entry;
                 }
+            } elseif ($entry instanceof ShipReportStaffEntry) {
+                if ($entry->staff?->type === "mensuel") {
+                    $entriesByDate[$date]['permanentStaff'][] = $entry;
+                }
+                if ($entry->staff?->type === "interim") {
+                    $entriesByDate[$date]['tempStaff'][] = $entry;
+                }
             } elseif ($entry instanceof ShipReportSubcontractEntry) {
-                $entriesByDate[$date]['subcontracts'][] = $entry;
+                $typeToLower = \mb_strtolower($entry->type);
+                if ($entry->type === "trucking") {
+                    $entriesByDate[$date]['trucking'][] = $entry;
+                } else {
+                    $entriesByDate[$date]['otherSubcontracts'][] = $entry;
+                }
             }
         }
 

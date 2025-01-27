@@ -486,33 +486,35 @@ final class StevedoringService
         /**
          * @var string $date
          * @phpstan-var array{
-         *                 permanentStaff: ShipReportStaffEntryArray[],
-         *                 tempStaff: ShipReportStaffEntryArray[],
          *                 cranes: ShipReportEquipmentEntryArray[],
          *                 equipments: ShipReportEquipmentEntryArray[],
-         *                 subcontracts: ShipReportSubcontractEntryArray[],
+         *                 permanentStaff: ShipReportStaffEntryArray[],
+         *                 tempStaff: ShipReportStaffEntryArray[],
+         *                 trucking: ShipReportSubcontractEntryArray[],
+         *                 otherSubcontracts: ShipReportSubcontractEntryArray[],
          *               } $entriesByType
          */
         foreach ($entriesByDate as $date => $entriesByType) {
             foreach ($entriesByType as $type => $entries) {
                 foreach ($entries as $entryAsArray) {
-                    if ($type === 'permanentStaff' || $type === 'tempStaff') {
-                        /** @phpstan-var ShipReportStaffEntryArray $entryAsArray */
-                        $entry = $this->makeShipReportStaffEntryFromRequest($entryAsArray);
-                        $entry->report = $stevedoringShipReport;
-                        $entry->date = $date;
-                        $stevedoringShipReport->staffEntries->add($entry);
-                    } elseif ($type === 'equipments' || $type === 'cranes') {
+                    if ($type === 'equipments' || $type === 'cranes') {
                         /** @phpstan-var ShipReportEquipmentEntryArray $entryAsArray */
                         $entry = $this->makeShipReportEquipmentEntryFromRequest($entryAsArray);
                         $entry->report = $stevedoringShipReport;
                         $entry->date = $date;
                         $stevedoringShipReport->equipmentEntries->add($entry);
-                    } elseif ($type === 'subcontracts') {
+                    } elseif ($type === 'permanentStaff' || $type === 'tempStaff') {
+                        /** @phpstan-var ShipReportStaffEntryArray $entryAsArray */
+                        $entry = $this->makeShipReportStaffEntryFromRequest($entryAsArray);
+                        $entry->report = $stevedoringShipReport;
+                        $entry->date = $date;
+                        $stevedoringShipReport->staffEntries->add($entry);
+                    } elseif ($type === 'trucking' || $type === 'otherSubcontracts') {
                         /** @phpstan-var ShipReportSubcontractEntryArray $entryAsArray */
                         $entry = $this->makeShipReportSubcontractEntryFromRequest($entryAsArray);
                         $entry->report = $stevedoringShipReport;
                         $entry->date = $date;
+                        $entry->type = $type;
                         $stevedoringShipReport->subcontractEntries->add($entry);
                     }
                 }

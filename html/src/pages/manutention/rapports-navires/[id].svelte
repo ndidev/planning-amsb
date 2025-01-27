@@ -159,7 +159,8 @@
         equipments: [],
         permanentStaff: [],
         tempStaff: [],
-        subcontracts: [],
+        trucking: [],
+        otherSubcontracts: [],
       };
     }
 
@@ -902,11 +903,11 @@
               {/each}
             </div>
 
-            <!-- Sous-traitance -->
+            <!-- Brouettage -->
             <div class="ms-2 mt-2">
-              <div class="font-bold">Sous-traitance</div>
+              <div class="font-bold">Brouettage</div>
 
-              {#each entries.subcontracts as entry ((entry.id ||= Math.random()))}
+              {#each entries.trucking as entry ((entry.id ||= Math.random()))}
                 <div
                   class="my-2 ms-2 flex flex-row flex-wrap items-center gap-1 lg:flex-row lg:flex-nowrap lg:gap-4"
                 >
@@ -914,8 +915,34 @@
                     {entry.subcontractorName}
                   </div>
 
+                  <div class="ms-auto lg:ms-0">
+                    {DateUtils.stringifyTime(entry.hoursWorked)}
+                  </div>
+
+                  <div class="ms-auto lg:ms-0">
+                    {new Intl.NumberFormat("fr-FR", {
+                      style: "currency",
+                      currency: "EUR",
+                    }).format(entry.cost)}
+                  </div>
+
+                  <div class="w-full lg:w-auto">{entry.comments}</div>
+                </div>
+              {:else}
+                <p class="ms-2">Aucune sous-traitance</p>
+              {/each}
+            </div>
+
+            <!-- Autres sous-traitances -->
+            <div class="ms-2 mt-2">
+              <div class="font-bold">Autres sous-traitances</div>
+
+              {#each entries.otherSubcontracts as entry ((entry.id ||= Math.random()))}
+                <div
+                  class="my-2 ms-2 flex flex-row flex-wrap items-center gap-1 lg:flex-row lg:flex-nowrap lg:gap-4"
+                >
                   <div class="whitespace-nowrap">
-                    {entry.type}
+                    {entry.subcontractorName}
                   </div>
 
                   <div class="ms-auto lg:ms-0">

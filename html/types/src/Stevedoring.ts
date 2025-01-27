@@ -142,11 +142,12 @@ export type StevedoringShipReport = {
   endDate: string | null;
   entriesByDate: {
     [date: string]: {
-      permanentStaff: StevedoringShipReportStaffEntry[];
-      tempStaff: StevedoringShipReportStaffEntry[];
       cranes: StevedoringShipReportEquipmentEntry[];
       equipments: StevedoringShipReportEquipmentEntry[];
-      subcontracts: StevedoringShipReportSubcontractEntry[];
+      permanentStaff: StevedoringShipReportStaffEntry[];
+      tempStaff: StevedoringShipReportStaffEntry[];
+      trucking: StevedoringShipReportSubcontractEntry[];
+      otherSubcontracts: StevedoringShipReportSubcontractEntry[];
     };
   };
   cargoEntries: ShippingCallCargo[];

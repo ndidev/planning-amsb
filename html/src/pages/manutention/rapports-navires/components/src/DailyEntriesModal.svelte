@@ -74,13 +74,26 @@
     ];
   }
 
-  function addSubcontract() {
-    dateEntries.subcontracts = [
-      ...dateEntries.subcontracts,
+  function addSubcontractTrucking() {
+    dateEntries.trucking = [
+      ...dateEntries.trucking,
       {
         id: null,
         subcontractorName: "",
-        type: "Brouettage",
+        date: null,
+        hoursWorked: null,
+        cost: null,
+        comments: "",
+      },
+    ];
+  }
+
+  function addSubcontractOther() {
+    dateEntries.otherSubcontracts = [
+      ...dateEntries.otherSubcontracts,
+      {
+        id: null,
+        subcontractorName: "",
         date: null,
         hoursWorked: null,
         cost: null,
@@ -135,7 +148,8 @@
       tempStaff: [],
       cranes: [],
       equipments: [],
-      subcontracts: [],
+      trucking: [],
+      otherSubcontracts: [],
     };
     // subcontractorList = await fetcher(
     //   "manutention/rapports-navires/sous-traitants"
@@ -448,56 +462,46 @@
       </div>
     </div>
 
-    <!-- Sous-traitance -->
+    <!-- Brouettage -->
     <div>
       <div class="mb-2">
-        <span class="text-xl font-bold me-2">Sous-traitance</span>
+        <span class="text-lg font-bold me-2">Brouettage</span>
         <Button
-          on:click={addSubcontract}
+          on:click={addSubcontractTrucking}
           color="light"
           class="w-1/2 lg:w-auto"
           size="xs"
         >
           <PlusCircleIcon size={16} />
-          <span class="ms-2">Ajouter une sous-traitance</span>
+          <span class="ms-2">Ajouter du brouettage</span>
         </Button>
       </div>
 
       <div class="flex flex-col gap-3">
-        {#each dateEntries.subcontracts as subcontractEntry, i}
+        {#each dateEntries.trucking as subcontractEntry, i}
           <div class="flex flex-col lg:flex-row gap-2 items-center">
             <div class="w-full lg:w-2/5">
               <Label for="subcontractorName-{i}">Prestataire</Label>
+              <!-- TODO: Svelecte avec noms sous-traitants existants -->
               <!-- <Svelecte
-                options={subcontractorList.names}
-                inputId="subcontractorName-{i}"
-                name="Sous-traitance {i +1} - Prestataire"
-                placeholder="Prestataire"
-                name="Prestataire {i + 1}"
-                bind:value={subcontractEntry.subcontractorName}
-                required
-              /> -->
+                   options={subcontractorTruckingList.names}
+                   inputId="subcontractorName-{i}"
+                   name="Sous-traitance {i +1} - Prestataire"
+                   placeholder="Prestataire"
+                   name="Prestataire {i + 1}"
+                   bind:value={subcontractEntry.subcontractorName}
+                   creatable
+                   creatablePrefix=""
+                   keepCreated
+                   allowEditing
+                   required
+                 /> -->
               <Input
                 type="text"
                 id="subcontractorName-{i}"
                 name="Sous-traitance {i + 1} - Prestataire"
                 bind:value={subcontractEntry.subcontractorName}
                 placeholder="Prestataire"
-                required
-              />
-            </div>
-
-            <div class="w-full lg:w-2/5">
-              <Label for="subcontractType-{i}">Prestation</Label>
-              <Select
-                id="subcontractType-{i}"
-                name="Sous-traitance {i + 1} - Prestation"
-                items={[
-                  { value: "Brouettage", name: "Brouettage" },
-                  { value: "Matériel/Autre", name: "Matériel/Autre" },
-                ]}
-                bind:value={subcontractEntry.type}
-                placeholder=""
                 required
               />
             </div>
@@ -539,7 +543,7 @@
             <div class="flex-auto">
               <Button
                 on:click={() => {
-                  dateEntries.subcontracts = dateEntries.subcontracts.filter(
+                  dateEntries.trucking = dateEntries.trucking.filter(
                     (entry) => entry !== subcontractEntry
                   );
                 }}
@@ -552,7 +556,102 @@
             </div>
           </div>
         {:else}
-          <p>Aucun membre du personnel</p>
+          <p>Aucun brouettage</p>
+        {/each}
+      </div>
+    </div>
+
+    <!-- Autres sous-traitances -->
+    <div>
+      <div class="mb-2">
+        <span class="text-lg font-bold me-2">Autres sous-traitances</span>
+        <Button
+          on:click={addSubcontractOther}
+          color="light"
+          class="w-1/2 lg:w-auto"
+          size="xs"
+        >
+          <PlusCircleIcon size={16} />
+          <span class="ms-2">Ajouter une sous-traitance</span>
+        </Button>
+      </div>
+
+      <div class="flex flex-col gap-3">
+        {#each dateEntries.otherSubcontracts as subcontractEntry, i}
+          <div class="flex flex-col lg:flex-row gap-2 items-center">
+            <div class="w-full lg:w-2/5">
+              <Label for="subcontractorName-{i}">Prestataire</Label>
+              <!-- <Svelecte
+                options={subcontractorList.names}
+                inputId="subcontractorName-{i}"
+                name="Sous-traitance {i +1} - Prestataire"
+                placeholder="Prestataire"
+                name="Prestataire {i + 1}"
+                bind:value={subcontractEntry.subcontractorName}
+                required
+              /> -->
+              <Input
+                type="text"
+                id="subcontractorName-{i}"
+                name="Sous-traitance {i + 1} - Prestataire"
+                bind:value={subcontractEntry.subcontractorName}
+                placeholder="Prestataire"
+                required
+              />
+            </div>
+
+            <div class="w-full lg:w-auto">
+              <Label for="hours-worked-{i}">Heures</Label>
+              <NumericInput
+                id="hours-worked-{i}"
+                name="Sous-traitance {i + 1} - Heures"
+                format="+2"
+                max={24}
+                bind:value={subcontractEntry.hoursWorked}
+                placeholder="Heures"
+                required={subcontractEntry.cost === null}
+              />
+            </div>
+
+            <div class="w-full lg:w-auto">
+              <Label for="cost-{i}">Coût</Label>
+              <NumericInput
+                id="cost-{i}"
+                name="Sous-traitance {i + 1} - Coût"
+                format="2"
+                bind:value={subcontractEntry.cost}
+                placeholder="Coût"
+                required={subcontractEntry.hoursWorked === null}
+              />
+            </div>
+
+            <div class="w-full lg:w-2/5">
+              <Label for="comments-{i}">Commentaires</Label>
+              <Input
+                type="text"
+                id="comments-{i}"
+                bind:value={subcontractEntry.comments}
+              />
+            </div>
+
+            <div class="flex-auto">
+              <Button
+                on:click={() => {
+                  dateEntries.otherSubcontracts =
+                    dateEntries.otherSubcontracts.filter(
+                      (entry) => entry !== subcontractEntry
+                    );
+                }}
+                color="red"
+                size="sm"
+                title="Supprimer"
+              >
+                <Trash2Icon size={16} />
+              </Button>
+            </div>
+          </div>
+        {:else}
+          <p>Aucune autre sous-traitance</p>
         {/each}
       </div>
     </div>

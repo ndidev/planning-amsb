@@ -1647,7 +1647,10 @@ final class StevedoringRepository extends Repository
                 cost,
                 comments
              FROM stevedoring_ship_reports_subcontracts
-             WHERE ship_report_id = :reportId";
+             WHERE ship_report_id = :reportId
+             ORDER BY
+                date ASC,
+                subcontractor_name ASC";
 
         try {
             /** @phpstan-var ShipReportSubcontractEntryArray[] */

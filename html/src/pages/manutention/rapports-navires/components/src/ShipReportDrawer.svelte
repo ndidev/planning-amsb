@@ -376,11 +376,44 @@
                   </ul>
                 </div>
 
-                <!-- Sous-traitance -->
+                <!-- Brouettage -->
                 <div class="ms-2">
-                  <div class="font-bold">Sous-traitance</div>
+                  <div class="font-bold">Brouettage</div>
                   <ul class="ms-2">
-                    {#each dateEntries.subcontracts as entry}
+                    {#each dateEntries.trucking as entry}
+                      <li>
+                        <span>{entry.subcontractorName}</span>
+
+                        {#if entry.hoursWorked}
+                          <span class="ms-3"
+                            >{NumberUtils.stringifyTime(
+                              entry.hoursWorked
+                            )}</span
+                          >
+                        {/if}
+
+                        {#if entry.cost}
+                          <span class="ms-3"
+                            >{new Intl.NumberFormat("fr-FR", {
+                              style: "currency",
+                              currency: "EUR",
+                            }).format(entry.cost)}</span
+                          >
+                        {/if}
+
+                        <span class="ms-3 italic">{entry.comments}</span>
+                      </li>
+                    {:else}
+                      <li class="italic">Aucun brouettage</li>
+                    {/each}
+                  </ul>
+                </div>
+
+                <!-- Autres sous-traitances -->
+                <div class="ms-2">
+                  <div class="font-bold">Autres sous-traitances</div>
+                  <ul class="ms-2">
+                    {#each dateEntries.otherSubcontracts as entry}
                       <li>
                         <span>{entry.subcontractorName}</span>
 
