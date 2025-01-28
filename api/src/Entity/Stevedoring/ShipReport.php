@@ -31,6 +31,8 @@ class ShipReport extends AbstractEntity
 
     public string $comments = '';
 
+    public string $invoiceInstructions = '';
+
     public ?\DateTimeImmutable $startDate = null {
         set(\DateTimeImmutable|string|null $value) {
             $this->startDate = DateUtils::makeDateTimeImmutable($value);
@@ -349,6 +351,7 @@ class ShipReport extends AbstractEntity
             'port' => $this->port,
             'berth' => $this->berth,
             'comments' => $this->comments,
+            'invoiceInstructions' => $this->invoiceInstructions,
             'customers' => $this->getCustomers(),
             'startDate' => $this->startDate?->format('Y-m-d'),
             'endDate' => $this->endDate?->format('Y-m-d'),

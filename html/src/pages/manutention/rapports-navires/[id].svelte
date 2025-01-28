@@ -374,6 +374,7 @@
   {#if !report}
     <Chargement />
   {:else}
+    <!-- Link call button -->
     <div class="text-center mb-4">
       {#if !report.linkedShippingCallId}
         {#if !report.id}
@@ -463,6 +464,17 @@
               rows={3}
               cols={30}
               bind:value={report.comments}
+            />
+          </div>
+
+          <!-- Instructions de facturation -->
+          <div>
+            <Label for="invoiceInstructions">Instructions de facturation</Label>
+            <Textarea
+              id="invoiceInstructions"
+              rows={3}
+              cols={30}
+              bind:value={report.invoiceInstructions}
             />
           </div>
 

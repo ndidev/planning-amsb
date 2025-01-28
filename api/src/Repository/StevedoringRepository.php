@@ -934,6 +934,7 @@ final class StevedoringRepository extends Repository
                     r.port,
                     r.berth,
                     r.comments,
+                    r.invoice_instructions,
                     (
                         SELECT MIN(`date`)
                         FROM dates
@@ -1004,7 +1005,8 @@ final class StevedoringRepository extends Repository
                 r.ship,
                 r.port,
                 r.berth,
-                r.comments
+                r.comments,
+                r.invoice_instructions
              FROM stevedoring_ship_reports r
              WHERE r.id = :id";
 
@@ -1045,7 +1047,8 @@ final class StevedoringRepository extends Repository
                     ship = :ship,
                     port = :port,
                     berth = :berth,
-                    comments = :comments";
+                    comments = :comments,
+                    invoice_instructions = :invoiceInstructions";
 
             $this->mysql->prepareAndExecute(
                 $reportStatement,
@@ -1056,6 +1059,7 @@ final class StevedoringRepository extends Repository
                     'port' => $report->port,
                     'berth' => $report->berth,
                     'comments' => $report->comments,
+                    'invoiceInstructions' => $report->invoiceInstructions,
                 ]
             );
 
@@ -1155,7 +1159,8 @@ final class StevedoringRepository extends Repository
                     ship = :ship,
                     port = :port,
                     berth = :berth,
-                    comments = :comments
+                    comments = :comments,
+                    invoice_instructions = :invoiceInstructions
                  WHERE
                     id = :id";
 
@@ -1168,6 +1173,7 @@ final class StevedoringRepository extends Repository
                     'port' => $report->port,
                     'berth' => $report->berth,
                     'comments' => $report->comments,
+                    'invoiceInstructions' => $report->invoiceInstructions,
                     'id' => $report->id,
                 ]
             );

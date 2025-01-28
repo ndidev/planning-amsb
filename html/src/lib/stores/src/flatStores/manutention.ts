@@ -66,6 +66,7 @@ export const stevedoringShipReports = createFlatStore<StevedoringShipReport>(
     port: "",
     berth: "",
     comments: "",
+    invoiceInstructions: "",
     startDate: null,
     endDate: null,
     entriesByDate: {},

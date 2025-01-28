@@ -138,6 +138,7 @@ export type StevedoringShipReport = {
   port: string;
   berth: string;
   comments: string;
+  invoiceInstructions: string;
   customers?: string[];
   startDate: string | null;
   endDate: string | null;

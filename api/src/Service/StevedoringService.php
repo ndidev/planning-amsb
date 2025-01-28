@@ -426,6 +426,7 @@ final class StevedoringService
         $stevedoringShipReport->port = $rawDataAH->getString('port');
         $stevedoringShipReport->berth = $rawDataAH->getString('berth');
         $stevedoringShipReport->comments = $rawDataAH->getString('comments');
+        $stevedoringShipReport->invoiceInstructions = $rawDataAH->getString('invoice_instructions');
         $stevedoringShipReport->startDate = $rawDataAH->getDatetime('start_date');
         $stevedoringShipReport->endDate = $rawDataAH->getDatetime('end_date');
 
@@ -471,6 +472,7 @@ final class StevedoringService
         $stevedoringShipReport->port = $request->getString('port');
         $stevedoringShipReport->berth = $request->getString('berth');
         $stevedoringShipReport->comments = $request->getString('comments');
+        $stevedoringShipReport->invoiceInstructions = $request->getString('invoiceInstructions');
 
         $linkedShippingCallId = $request->getInt('linkedShippingCallId');
 

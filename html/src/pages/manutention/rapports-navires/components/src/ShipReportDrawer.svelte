@@ -113,13 +113,25 @@
 
     <!-- Commentaires -->
     <div>
-      <div class="text-lg font-bold">Commentaires</div>
+      <div class="text-lg font-bold">Constats & Commentaires</div>
       {#if report.comments}
         <div class="ms-2">
           {@html report.comments.replace(/\r\n|\r|\n/g, "<br/>")}
         </div>
       {:else}
         <div class="ms-2 italic">Aucun commentaire</div>
+      {/if}
+    </div>
+
+    <!-- Instructions de facturation -->
+    <div>
+      <div class="text-lg font-bold">Instructions de facturation</div>
+      {#if report.invoiceInstructions}
+        <div class="ms-2">
+          {@html report.invoiceInstructions.replace(/\r\n|\r|\n/g, "<br/>")}
+        </div>
+      {:else}
+        <div class="ms-2 italic">Aucune instruction de facturation</div>
       {/if}
     </div>
 
