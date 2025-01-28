@@ -47,7 +47,8 @@
         id: null,
         equipmentId: null,
         date: null,
-        hoursWorked: 0,
+        hoursWorked:
+          dateEntries.cranes[dateEntries.cranes.length - 1]?.hoursWorked || 0,
         comments: "",
       },
     ];
@@ -68,7 +69,14 @@
         id: null,
         equipmentId: null,
         date: null,
-        hoursWorked: 0,
+        hoursWorked:
+          dateEntries.equipments[dateEntries.equipments.length - 1]
+            ?.hoursWorked ||
+          Math.max(
+            ...dateEntries.cranes.map(({ hoursWorked }) => hoursWorked),
+            0
+          ) ||
+          0,
         comments: "",
       },
     ];
@@ -89,7 +97,14 @@
         id: null,
         staffId: null,
         date: null,
-        hoursWorked: 0,
+        hoursWorked:
+          dateEntries.permanentStaff[dateEntries.permanentStaff.length - 1]
+            ?.hoursWorked ||
+          Math.max(
+            ...dateEntries.cranes.map(({ hoursWorked }) => hoursWorked),
+            0
+          ) ||
+          0,
         comments: "",
       },
     ];
@@ -110,7 +125,14 @@
         id: null,
         staffId: null,
         date: null,
-        hoursWorked: 0,
+        hoursWorked:
+          dateEntries.tempStaff[dateEntries.tempStaff.length - 1]
+            ?.hoursWorked ||
+          Math.max(
+            ...dateEntries.cranes.map(({ hoursWorked }) => hoursWorked),
+            0
+          ) ||
+          0,
         comments: "",
       },
     ];
