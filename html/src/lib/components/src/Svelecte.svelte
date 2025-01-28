@@ -25,6 +25,7 @@
   import { onDestroy } from "svelte";
   import type { Unsubscriber } from "svelte/store";
   import type { SearchProps } from "svelecte/dist/utils/list";
+  import type { Settings } from "svelecte/dist/settings";
 
   import {
     tiers,
@@ -64,7 +65,7 @@
   let className = "svelecte-control";
   export { className as class };
   // i18n override
-  export let i18n = null;
+  export let i18n: Partial<Settings["i18n"]> = null;
   export let value = null;
 
   export let highlightFirstItem = true;
@@ -90,6 +91,7 @@
         minQuery > 1 ? `au moins ${minQuery} charactères ` : ""
       }pour rechercher`,
     fetchEmpty: "Aucune donnée ne correspond à votre recherche",
+    emptyCreatable: "Entrez une valeur",
     createRowLabel: (value) => `Créer '${value}'`,
   };
 
