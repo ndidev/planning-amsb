@@ -634,7 +634,52 @@
                 class="my-1 flex flex-col items-end gap-2 rounded-lg border-[1px] border-gray-300 p-2 lg:flex-row"
               >
                 <div class="w-full lg:w-2/6">
-                  <Label for="cargo-{i}">Marchandise</Label>
+                  <Label for="cargo-{i}">
+                    Marchandise
+                    {#if storage.cargoId}
+                      <LucideButton
+                        preset="copy"
+                        title="Copier les données outturn vers stockage"
+                        size="1em"
+                        on:click={() => {
+                          const cargo = report.cargoEntries.find(
+                            (cargo) => cargo.id === storage.cargoId
+                          );
+                          storage.tonnage =
+                            cargo.outturnTonnage -
+                            report.storageEntries
+                              .filter(
+                                ({ id, cargoId }) =>
+                                  cargoId === storage.cargoId &&
+                                  id !== storage.id
+                              )
+                              .flatMap(({ tonnage }) => tonnage)
+                              .reduce((a, b) => a + b, 0);
+                          storage.volume =
+                            cargo.outturnVolume -
+                            report.storageEntries
+                              .filter(
+                                ({ id, cargoId }) =>
+                                  cargoId === storage.cargoId &&
+                                  id !== storage.id
+                              )
+                              .flatMap(({ volume }) => volume)
+                              .reduce((a, b) => a + b, 0);
+                          storage.units =
+                            cargo.outturnUnits -
+                            report.storageEntries
+                              .filter(
+                                ({ id, cargoId }) =>
+                                  cargoId === storage.cargoId &&
+                                  id !== storage.id
+                              )
+                              .flatMap(({ units }) => units)
+                              .reduce((a, b) => a + b, 0);
+                          checkStorageQuantities();
+                        }}
+                      />
+                    {/if}
+                  </Label>
                   <Svelecte
                     inputId="cargo-{i}"
                     name="Marchandise {i + 1}"
