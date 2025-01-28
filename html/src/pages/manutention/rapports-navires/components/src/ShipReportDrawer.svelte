@@ -13,6 +13,7 @@
     TableBody,
     TableBodyRow,
     TableBodyCell,
+    Tooltip,
   } from "flowbite-svelte";
   import { PencilIcon, ArrowUpIcon, ArrowDownIcon } from "lucide-svelte";
 
@@ -70,6 +71,70 @@
 
     return acc;
   }, {});
+
+  let costs = {
+    // Standard costs
+    permanentStaffHours: Object.values(report.entriesByDate)
+      .flatMap(({ permanentStaff }) => permanentStaff)
+      .reduce((acc, curr) => acc + curr.hoursWorked, 0),
+    craneHours: totalCraneHours,
+    equipmentHours: Object.values(report.entriesByDate)
+      .flatMap(({ equipments }) => equipments)
+      .reduce((acc, curr) => acc + curr.hoursWorked, 0),
+
+    // Subcontracts
+    tempStaffHours: Object.values(report.entriesByDate)
+      .flatMap(({ tempStaff }) => tempStaff)
+      .reduce((acc, curr) => acc + curr.hoursWorked, 0),
+    truckingHours: Object.values(report.entriesByDate)
+      .flatMap(({ trucking }) => trucking)
+      .reduce((acc, curr) => acc + curr.hoursWorked, 0),
+    truckingCost: Object.values(report.entriesByDate)
+      .flatMap(({ trucking }) => trucking)
+      .reduce((acc, curr) => acc + curr.cost, 0),
+    truckingDetails: Object.values(report.entriesByDate)
+      .flatMap(({ trucking }) => trucking)
+      .reduce(
+        (acc: { [name: string]: { hours: number; cost: number } }, curr) => {
+          if (!acc[curr.subcontractorName]) {
+            acc[curr.subcontractorName] = {
+              hours: 0,
+              cost: 0,
+            };
+          }
+
+          acc[curr.subcontractorName].hours += curr.hoursWorked;
+          acc[curr.subcontractorName].cost += curr.cost;
+
+          return acc;
+        },
+        {}
+      ),
+    otherSubcontractsHours: Object.values(report.entriesByDate)
+      .flatMap(({ otherSubcontracts }) => otherSubcontracts)
+      .reduce((acc, curr) => acc + curr.hoursWorked, 0),
+    otherSubcontractsCost: Object.values(report.entriesByDate)
+      .flatMap(({ otherSubcontracts }) => otherSubcontracts)
+      .reduce((acc, curr) => acc + curr.cost, 0),
+    otherSubcontractsDetails: Object.values(report.entriesByDate)
+      .flatMap(({ otherSubcontracts }) => otherSubcontracts)
+      .reduce(
+        (acc: { [name: string]: { hours: number; cost: number } }, curr) => {
+          if (!acc[curr.subcontractorName]) {
+            acc[curr.subcontractorName] = {
+              hours: 0,
+              cost: 0,
+            };
+          }
+
+          acc[curr.subcontractorName].hours += curr.hoursWorked;
+          acc[curr.subcontractorName].cost += curr.cost;
+
+          return acc;
+        },
+        {}
+      ),
+  };
 </script>
 
 <Drawer
@@ -145,6 +210,79 @@
       {:else}
         <div class="ms-2 italic">Aucun client</div>
       {/if}
+    </div>
+
+    <!-- Coûts -->
+    <div>
+      <div class="text-lg font-bold">Coûts</div>
+      <div class="ms-2 flex flex-col lg:flex-row gap-2 lg:gap-6">
+        <div>
+          <div class="font-bold">Coûts standards</div>
+          <div>Personnel : <span>{costs.permanentStaffHours}h</span></div>
+          <div>Grues : <span>{costs.craneHours}</span>h</div>
+          <div>Engins : <span>{costs.equipmentHours}h</span></div>
+        </div>
+        <div>
+          <div class="font-bold">Sous-traitance</div>
+          <div>Intérim : <span>{costs.permanentStaffHours}h</span></div>
+          <div>
+            <span
+              class:underline={costs.truckingHours || costs.truckingCost}
+              class:cursor-help={costs.truckingHours || costs.truckingCost}
+              id="trucking-costs"
+              title="Afficher le détail">Brouettage</span
+            >
+            : <span>{costs.truckingHours}h</span> /
+            <span>{NumberUtils.formatCost(costs.truckingCost)}</span>
+            {#if costs.truckingHours || costs.truckingCost}
+              <Tooltip
+                type="light"
+                triggeredBy="#trucking-costs"
+                trigger="click"
+              >
+                <div class="flex flex-col gap-2">
+                  {#each Object.entries(costs.truckingDetails).sort() as [subcontractorName, { hours, cost }]}
+                    <div>
+                      <span>{subcontractorName} : </span>
+                      <span>{hours}h</span> /
+                      <span>{NumberUtils.formatCost(cost)}</span>
+                    </div>
+                  {/each}
+                </div>
+              </Tooltip>
+            {/if}
+          </div>
+          <div>
+            <span
+              class:underline={costs.otherSubcontractsHours ||
+                costs.otherSubcontractsCost}
+              class:cursor-help={costs.otherSubcontractsHours ||
+                costs.otherSubcontractsCost}
+              id="otherSubcontracts-costs"
+              title="Afficher le détail">Autres</span
+            >
+            : <span>{costs.otherSubcontractsHours}h</span> /
+            <span>{NumberUtils.formatCost(costs.otherSubcontractsCost)}</span>
+            {#if costs.otherSubcontractsHours || costs.otherSubcontractsCost}
+              <Tooltip
+                type="light"
+                triggeredBy="#otherSubcontracts-costs"
+                trigger="click"
+              >
+                <div class="flex flex-col gap-2">
+                  {#each Object.entries(costs.otherSubcontractsDetails).sort() as [subcontractorName, { hours, cost }]}
+                    <div>
+                      <span>{subcontractorName} : </span>
+                      <span>{hours}h</span> /
+                      <span>{NumberUtils.formatCost(cost)}</span>
+                    </div>
+                  {/each}
+                </div>
+              </Tooltip>
+            {/if}
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Cadence -->
@@ -632,10 +770,7 @@
 
                         {#if entry.cost}
                           <span class="ms-3"
-                            >{new Intl.NumberFormat("fr-FR", {
-                              style: "currency",
-                              currency: "EUR",
-                            }).format(entry.cost)}</span
+                            >{NumberUtils.formatCost(entry.cost)}</span
                           >
                         {/if}
 
@@ -665,10 +800,7 @@
 
                         {#if entry.cost}
                           <span class="ms-3"
-                            >{new Intl.NumberFormat("fr-FR", {
-                              style: "currency",
-                              currency: "EUR",
-                            }).format(entry.cost)}</span
+                            >{NumberUtils.formatCost(entry.cost)}</span
                           >
                         {/if}
 

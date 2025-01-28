@@ -73,6 +73,13 @@ export class NumberUtils {
     );
   }
 
+  static formatCost(cost: number, currency: string = "EUR"): string {
+    return cost.toLocaleString("fr-FR", {
+      style: "currency",
+      currency: currency,
+    });
+  }
+
   static getQuantityColor(quantity: number): string {
     if (quantity > 0) {
       return "text-success-500";

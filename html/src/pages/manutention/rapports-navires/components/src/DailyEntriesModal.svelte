@@ -577,7 +577,7 @@
             </div>
 
             <div class="w-full lg:w-auto">
-              <Label for="trucking-{i}-cost">Coût</Label>
+              <Label for="trucking-{i}-cost">Coût (€)</Label>
               <NumericInput
                 id="trucking-{i}-cost"
                 name="Brouettage {i + 1} - Coût"
@@ -668,7 +668,7 @@
             </div>
 
             <div class="w-full lg:w-auto">
-              <Label for="otherSubcontracts-{i}-cost">Coût</Label>
+              <Label for="otherSubcontracts-{i}-cost">Coût (€)</Label>
               <NumericInput
                 id="otherSubcontracts-{i}-cost"
                 name="Sous-traitance {i + 1} - Coût"
