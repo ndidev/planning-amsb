@@ -1088,7 +1088,7 @@ final class StevedoringRepository extends Repository
             } else {
                 // Delete entries that are not in the new list
                 $existingIds = \array_filter(
-                    $report->cargoEntries->map(fn(ShippingCallCargo $entry) => $entry->id),
+                    $report->cargoEntries->map(fn($entry) => $entry->id),
                     fn($id) => $id !== null
                 );
                 $this->mysql->prepareAndExecute(
@@ -1181,7 +1181,7 @@ final class StevedoringRepository extends Repository
             // Equipment entries
             // Delete entries that are not in the new list
             $existingIds = \array_filter(
-                $report->equipmentEntries->map(fn(ShipReportEquipmentEntry $entry) => $entry->id),
+                $report->equipmentEntries->map(fn($entry) => $entry->id),
                 fn($id) => $id !== null
             );
             $this->mysql->prepareAndExecute(
@@ -1205,7 +1205,7 @@ final class StevedoringRepository extends Repository
             // Staff entries
             // Delete entries that are not in the new list
             $existingIds = \array_filter(
-                $report->staffEntries->map(fn(ShipReportStaffEntry $entry) => $entry->id),
+                $report->staffEntries->map(fn($entry) => $entry->id),
                 fn($id) => $id !== null
             );
             $this->mysql->prepareAndExecute(
@@ -1229,7 +1229,7 @@ final class StevedoringRepository extends Repository
             // Subcontract entries
             // Delete entries that are not in the new list
             $existingIds = \array_filter(
-                $report->subcontractEntries->map(fn(ShipReportSubcontractEntry $entry) => $entry->id),
+                $report->subcontractEntries->map(fn($entry) => $entry->id),
                 fn($id) => $id !== null
             );
             $this->mysql->prepareAndExecute(
@@ -1253,7 +1253,7 @@ final class StevedoringRepository extends Repository
             // Cargo entries
             // Delete entries that are not in the new list
             $existingIds = \array_filter(
-                $report->cargoEntries->map(fn(ShippingCallCargo $entry) => $entry->id),
+                $report->cargoEntries->map(fn($entry) => $entry->id),
                 fn($id) => $id !== null
             );
             $this->mysql->prepareAndExecute(
@@ -1277,7 +1277,7 @@ final class StevedoringRepository extends Repository
             // Storage entries
             // Delete entries that are not in the new list
             $existingIds = \array_filter(
-                $report->storageEntries->map(fn(ShipReportStorageEntry $entry) => $entry->id),
+                $report->storageEntries->map(fn($entry) => $entry->id),
                 fn($id) => $id !== null
             );
             $this->mysql->prepareAndExecute(

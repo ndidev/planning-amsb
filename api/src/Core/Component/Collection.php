@@ -82,9 +82,10 @@ class Collection implements \IteratorAggregate, \Countable, Arrayable, \JsonSeri
     /**
      * Apply a callback to every item of the collection.
      * 
-     * @param callable $callback 
+     * @template U
+     * @param callable(T):U $callback 
      * 
-     * @return array<mixed>
+     * @return array<U>
      */
     public function map(callable $callback): array
     {
