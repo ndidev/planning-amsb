@@ -83,13 +83,25 @@ class Collection implements \IteratorAggregate, \Countable, Arrayable, \JsonSeri
      * Apply a callback to every item of the collection.
      * 
      * @template U
-     * @param callable(T):U $callback 
+     * @param callable(T): U|null $callback 
      * 
      * @return array<U>
      */
-    public function map(callable $callback): array
+    public function map(?callable $callback): array
     {
         return \array_map($callback, $this->items);
+    }
+
+    /**
+     * Filter the collection using a callback.
+     * 
+     * @param callable(T): bool|null $callback 
+     * 
+     * @return self<T> 
+     */
+    public function filter(?callable $callback): self
+    {
+        return new self(\array_filter($this->items, $callback));
     }
 
     /**
