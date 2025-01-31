@@ -20,13 +20,23 @@
   <BandeauInfo module="consignation" tv />
 
   <main class="divide-y">
-    {#each [] as escale (escale.id)}
-      <LigneEscale {escale} />
-    {:else}
+    {#await consignationEscales.getReadyState()}
       <div class="grid w-full h-[90svh] place-items-center">
-        <div class="text-3xl">Aucun navire à l'horizon...</div>
+        <div class="text-3xl">Chargement...</div>
       </div>
-    {/each}
+    {:then}
+      {#each [...$consignationEscales.values()] as call (call.id)}
+        <LigneEscale escale={call} />
+      {:else}
+        <div class="grid w-full h-[90svh] place-items-center">
+          <div class="text-3xl">Aucun navire à l'horizon...</div>
+        </div>
+      {/each}
+    {:catch error}
+      <div class="grid w-full h-[90svh] place-items-center">
+        <div class="text-3xl text-red-500">Erreur de chargement</div>
+      </div>
+    {/await}
   </main>
 {/if}
 

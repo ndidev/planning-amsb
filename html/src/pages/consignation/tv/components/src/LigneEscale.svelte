@@ -1,7 +1,7 @@
 <script lang="ts">
   import { ArrowDownIcon, ArrowUpIcon } from "lucide-svelte";
 
-  import { locale, luminance } from "@app/utils";
+  import { locale, luminance, NumberUtils } from "@app/utils";
 
   import { ports } from "@app/stores";
 
@@ -9,16 +9,16 @@
 
   export let escale: EscaleConsignation;
 
-  $: tonnageTotal = escale.marchandises.reduce(
-    (sum, { tonnage_bl }) => sum + tonnage_bl,
+  $: totalTonnage = escale.marchandises.reduce(
+    (sum, { blTonnage }) => sum + blTonnage,
     0
   );
-  $: cubageTotal = escale.marchandises.reduce(
-    (sum, { cubage_bl }) => sum + cubage_bl,
+  $: totalVolume = escale.marchandises.reduce(
+    (sum, { blVolume }) => sum + blVolume,
     0
   );
-  $: nombreTotal = escale.marchandises.reduce(
-    (sum, { nombre_bl }) => sum + nombre_bl,
+  $: totalUnits = escale.marchandises.reduce(
+    (sum, { blUnits }) => sum + blUnits,
     0
   );
 
@@ -240,64 +240,56 @@
                 {:else if cargo.operation === "export"}
                   <ArrowUpIcon size="1em" />
                 {/if}
-              </span>{cargo.marchandise}</td
+              </span>{cargo.cargoName}</td
             >
-            <td class="environ">
-              {#if cargo.tonnage_bl || cargo.cubage_bl || cargo.nombre_bl}
-                {cargo.environ ? "~" : ""}
+            <td>
+              {#if cargo.blTonnage || cargo.blVolume || cargo.blUnits}
+                {cargo.isApproximate ? "~" : ""}
               {/if}
             </td>
 
             <td class="text-right">
-              {#if cargo.tonnage_bl}
-                {cargo.tonnage_bl.toLocaleString("fr-FR", {
-                  minimumFractionDigits: 3,
-                }) + " MT"}
+              {#if cargo.blTonnage}
+                {NumberUtils.formatTonnage(cargo.blTonnage)}
               {/if}
             </td>
 
             <td class="text-right italic">
-              {#if cargo.cubage_bl}
-                {cargo.cubage_bl.toLocaleString("fr-FR", {
-                  minimumFractionDigits: 3,
-                }) + " m3"}
+              {#if cargo.blVolume}
+                {NumberUtils.formatVolume(cargo.blVolume)}
               {/if}
             </td>
 
             <td class="text-right">
-              {#if cargo.nombre_bl}
-                {cargo.nombre_bl.toLocaleString("fr-FR") + " colis"}
+              {#if cargo.blUnits}
+                {NumberUtils.formatUnits(cargo.blUnits)}
               {/if}
             </td>
           </tr>
         {/each}
       </tbody>
 
-      {#if escale.marchandises.length > 1 && (tonnageTotal || cubageTotal || nombreTotal)}
+      {#if escale.marchandises.length > 1 && (totalTonnage || totalVolume || totalUnits)}
         <tfoot>
           <tr>
             <td class="total mt-1">Total</td>
             <td></td>
 
             <td class="text-right">
-              {#if tonnageTotal}
-                {tonnageTotal.toLocaleString("fr-FR", {
-                  minimumFractionDigits: 3,
-                }) + " MT"}
+              {#if totalTonnage}
+                {NumberUtils.formatTonnage(totalTonnage)}
               {/if}
             </td>
 
             <td class="text-right italic">
-              {#if cubageTotal}
-                {cubageTotal.toLocaleString("fr-FR", {
-                  minimumFractionDigits: 3,
-                }) + " m3"}
+              {#if totalVolume}
+                {NumberUtils.formatVolume(totalVolume)}
               {/if}
             </td>
 
             <td class="text-right">
-              {#if nombreTotal}
-                {nombreTotal.toLocaleString("fr-FR") + " colis"}
+              {#if totalUnits}
+                {NumberUtils.formatUnits(totalUnits)}
               {/if}
             </td>
           </tr>

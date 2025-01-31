@@ -8,6 +8,8 @@ namespace App\Entity\Stevedoring;
 
 use App\Core\Component\DateUtils;
 use App\Core\Traits\IdentifierTrait;
+use App\Core\Validation\Constraints\Maximum;
+use App\Core\Validation\Constraints\Minimum;
 use App\Core\Validation\Constraints\Required;
 use App\Entity\AbstractEntity;
 
@@ -15,73 +17,31 @@ class TempWorkHoursEntry extends AbstractEntity
 {
     use IdentifierTrait;
 
-    #[Required('Le personnel intérimaire est obligaoire.')]
-    private ?StevedoringStaff $staff = null;
+    #[Required('Le personnel intérimaire est obligatoire.')]
+    public ?StevedoringStaff $staff = null;
 
     #[Required('La date est obligatoire.')]
-    private ?\DateTimeImmutable $date = null;
-
-    private float $hoursWorked = 0;
-
-    private string $comments = '';
-
-    public function setStaff(?StevedoringStaff $staff): static
-    {
-        $this->staff = $staff;
-
-        return $this;
+    public ?\DateTimeImmutable $date = null {
+        set(\DateTimeImmutable|string|null $date) {
+            $this->date = DateUtils::makeDateTimeImmutable($date);
+        }
     }
 
-    public function getStaff(): ?StevedoringStaff
-    {
-        return $this->staff;
-    }
+    #[Minimum(0, message: "Les heures travaillées ne peuvent pas être négatives.")]
+    #[Maximum(24, message: "Les heures travaillées ne peuvent pas dépasser 24 heures.")]
+    public float $hoursWorked = 0;
 
-    public function setDate(\DateTimeImmutable|string|null $date): static
-    {
-        $this->date = DateUtils::makeDateTimeImmutable($date);
-
-        return $this;
-    }
-
-    public function getDate(): ?\DateTimeImmutable
-    {
-        return $this->date;
-    }
-
-    public function setHoursWorked(float $hoursWorked): static
-    {
-        $this->hoursWorked = $hoursWorked;
-
-        return $this;
-    }
-
-    public function getHoursWorked(): float
-    {
-        return $this->hoursWorked;
-    }
-
-    public function setComments(string $comments): static
-    {
-        $this->comments = $comments;
-
-        return $this;
-    }
-
-    public function getComments(): string
-    {
-        return $this->comments;
-    }
+    public string $comments = '';
 
     #[\Override]
     public function toArray(): array
     {
         return [
-            'id' => $this->getId(),
-            'staffId' => $this->getStaff()?->getId(),
-            'date' => $this->getDate()?->format('Y-m-d'),
-            'hoursWorked' => $this->getHoursWorked(),
-            'comments' => $this->getComments(),
+            'id' => $this->id,
+            'staffId' => $this->staff?->id,
+            'date' => $this->date?->format('Y-m-d'),
+            'hoursWorked' => $this->hoursWorked,
+            'comments' => $this->comments,
         ];
     }
 }

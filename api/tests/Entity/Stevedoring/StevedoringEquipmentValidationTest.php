@@ -42,7 +42,7 @@ final class StevedoringEquipmentValidationTest extends TestCase
     {
         // Given
         $stevedoringEquipment = self::makeValidEquipment();
-        $stevedoringEquipment->setType('');
+        $stevedoringEquipment->type = '';
 
         // Then
         $this->expectException(ValidationException::class);
@@ -55,7 +55,7 @@ final class StevedoringEquipmentValidationTest extends TestCase
     {
         // Given
         $stevedoringEquipment = self::makeValidEquipment();
-        $stevedoringEquipment->setBrand('');
+        $stevedoringEquipment->brand = '';
 
         // Then
         $this->expectException(ValidationException::class);
@@ -68,7 +68,7 @@ final class StevedoringEquipmentValidationTest extends TestCase
     {
         // Given
         $stevedoringEquipment = self::makeValidEquipment();
-        $stevedoringEquipment->setModel('');
+        $stevedoringEquipment->model = '';
 
         // Then
         $this->expectException(ValidationException::class);
@@ -79,9 +79,11 @@ final class StevedoringEquipmentValidationTest extends TestCase
 
     private static function makeValidEquipment(): StevedoringEquipment
     {
-        return (new StevedoringEquipment())
-            ->setType('Grue')
-            ->setBrand('Liebherr')
-            ->setModel('LTM 11200-9.1');
+        $stevedoringEquipment = new StevedoringEquipment();
+        $stevedoringEquipment->type = 'Grue';
+        $stevedoringEquipment->brand = 'Liebherr';
+        $stevedoringEquipment->model = 'LTM 11200-9.1';
+
+        return $stevedoringEquipment;
     }
 }

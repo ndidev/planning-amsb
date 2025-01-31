@@ -1,3 +1,5 @@
+import { NumberUtils } from "../";
+
 /**
  * Bibliothèque de fonctions permettant de :
  *  - vérifier les jours ouvrés
@@ -17,12 +19,12 @@ export class DateUtils {
   /**
    * Renvoie la date de Pâques pour une année.
    *
-   * @param annee Année désirée (4 chiffres)
+   * @param year Année désirée (4 chiffres)
    *
    * @returns Objet `Date` avec la date de Pâques
    */
-  static calculerPaques(annee: number) {
-    const Y = annee;
+  static getEasterSunday(year: number) {
+    const Y = year;
     const C = Math.floor(Y / 100);
     const N = Y % 19;
     const K = Math.floor((C - 17) / 25);
@@ -46,7 +48,7 @@ export class DateUtils {
   /**
    * Construit la liste des jours fériés français pour une année.
    *
-   * @see calculerPaques
+   * @see getEasterSunday
    *
    * @param annee Année pour laquelle calculer les jours fériés
    *
@@ -54,7 +56,7 @@ export class DateUtils {
    */
   static construireListeJoursFeries(annee: number) {
     const nouvelAn = new Date(annee, 0, 1);
-    const paques = this.calculerPaques(annee);
+    const paques = this.getEasterSunday(annee);
     const lundiPaques = new Date(
       paques.getFullYear(),
       paques.getMonth(),
@@ -107,7 +109,7 @@ export class DateUtils {
    *
    * @returns `true` si jour férié, `false` sinon
    */
-  verifierJourFerie() {
+  isBankHoliday() {
     const annee = this.date.getFullYear();
 
     const feries = DateUtils.construireListeJoursFeries(annee);
@@ -125,12 +127,12 @@ export class DateUtils {
   /**
    * Vérifie si la date passée en paramètre est un jour ouvré.
    *
-   * @see verifierJourFerie
+   * @see isBankHoliday
    *
    * @returns `true` si jour ouvré, `false` si jour chômé.
    */
-  verifierJourOuvre() {
-    if (this.verifierJourFerie()) {
+  isWorkingDay() {
+    if (this.isBankHoliday()) {
       return false;
     }
 
@@ -148,16 +150,16 @@ export class DateUtils {
   /**
    * Retourne le ènième jour avant/après la date entrée en paramètre.
 
-   * @param decalage Nombre de jours de déclage (+/-).
+   * @param offset Nombre de jours de déclage (+/-).
    *
    * @returns Date
    */
-  decaler(decalage = 0) {
+  offset(offset = 0) {
     return new DateUtils(
       new Date(
         this.date.getFullYear(),
         this.date.getMonth(),
-        this.date.getDate() + decalage
+        this.date.getDate() + offset
       )
     );
   }
@@ -177,16 +179,16 @@ export class DateUtils {
    *
    * @returns Date
    */
-  jourOuvrePrecedent(nombreJours = 1) {
-    let jourOuvrePrecedent = new Date(this.date);
+  getPreviousWorkingDay(nombreJours = 1) {
+    let previousWorkingDay = new Date(this.date);
 
     for (let i = 0; i < nombreJours; i++) {
       do {
-        jourOuvrePrecedent = new DateUtils(jourOuvrePrecedent).decaler(-1).date;
-      } while (!new DateUtils(jourOuvrePrecedent).verifierJourOuvre());
+        previousWorkingDay = new DateUtils(previousWorkingDay).offset(-1).date;
+      } while (!new DateUtils(previousWorkingDay).isWorkingDay());
     }
 
-    return new DateUtils(jourOuvrePrecedent);
+    return new DateUtils(previousWorkingDay);
   }
 
   /**
@@ -205,16 +207,16 @@ export class DateUtils {
    *
    * @returns Date
    */
-  jourOuvreSuivant(nombreJours = 1) {
-    let jourOuvreSuivant = new Date(this.date);
+  getNextWorkingDay(nombreJours = 1) {
+    let nextWorkingDay = new Date(this.date);
 
     for (let i = 0; i < nombreJours; i++) {
       do {
-        jourOuvreSuivant = new DateUtils(jourOuvreSuivant).decaler(+1).date;
-      } while (!new DateUtils(jourOuvreSuivant).verifierJourOuvre());
+        nextWorkingDay = new DateUtils(nextWorkingDay).offset(+1).date;
+      } while (!new DateUtils(nextWorkingDay).isWorkingDay());
     }
 
-    return new DateUtils(jourOuvreSuivant);
+    return new DateUtils(nextWorkingDay);
   }
 
   /**
@@ -245,5 +247,27 @@ export class DateUtils {
       short: new Date(this.date).toLocaleDateString(locale),
       long: this.toLongLocaleDateString(locale),
     };
+  }
+
+  static getMondayOfPreviousWeek() {
+    const today = new Date();
+    const previousWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const day = previousWeek.getDay();
+    const diffToMonday = previousWeek.getDate() - day + (day == 0 ? -6 : 1);
+
+    return new Date(previousWeek.setDate(diffToMonday));
+  }
+
+  static getSundayOfPreviousWeek() {
+    const today = new Date();
+    const previousWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    let day = previousWeek.getDay();
+    let diffToMonday = previousWeek.getDate() - day + (day == 0 ? -6 : 1);
+
+    return new Date(previousWeek.setDate(diffToMonday + 6));
+  }
+
+  static stringifyTime(time: number): string {
+    return NumberUtils.stringifyTime(time);
   }
 }

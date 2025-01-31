@@ -10,6 +10,7 @@ use App\Core\Component\Collection;
 use App\Entity\Port;
 use App\Entity\Shipping\ShippingCall;
 use App\Entity\Shipping\ShippingCallCargo;
+use App\Entity\Stevedoring\ShipReport;
 use App\Entity\ThirdParty;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\TestDox;
@@ -394,36 +395,42 @@ final class ShippingCallTest extends TestCase
     {
         // Given
         $shippingCall = new ShippingCall();
-        $shippingCall->setId(1);
-        $shippingCall->setShipName('Ship name');
-        $shippingCall->setVoyage('Voyage 1');
-        $shippingCall->setShipOperator((new ThirdParty())->setId(10));
-        $shippingCall->setEtaDate(new \DateTimeImmutable('2021-01-01'));
-        $shippingCall->setEtaTime('12:00');
-        $shippingCall->setNorDate(new \DateTimeImmutable('2021-01-02'));
-        $shippingCall->setNorTime('13:00');
-        $shippingCall->setPobDate(new \DateTimeImmutable('2021-01-03'));
-        $shippingCall->setPobTime('14:00');
-        $shippingCall->setEtbDate(new \DateTimeImmutable('2021-01-04'));
-        $shippingCall->setEtbTime('15:00');
-        $shippingCall->setOpsDate(new \DateTimeImmutable('2021-01-05'));
-        $shippingCall->setOpsTime('16:00');
-        $shippingCall->setEtcDate(new \DateTimeImmutable('2021-01-06'));
-        $shippingCall->setEtcTime('17:00');
-        $shippingCall->setEtdDate(new \DateTimeImmutable('2021-01-07'));
-        $shippingCall->setEtdTime('18:00');
-        $shippingCall->setArrivalDraft(1.0);
-        $shippingCall->setDepartureDraft(2.0);
-        $shippingCall->setLastPort((new Port())->setLocode('Last port'));
-        $shippingCall->setNextPort((new Port())->setLocode('Next port'));
-        $shippingCall->setCallPort('Port');
-        $shippingCall->setQuay('Quay');
-        $shippingCall->setComment('Comment');
+
+        $shipReport = new ShipReport();
+        $shipReport->id = 20;
+
+        $shippingCall->id = 1;
+        $shippingCall->shipReport = $shipReport;
+        $shippingCall->shipName = 'Ship name';
+        $shippingCall->voyageNumber = 'Voyage 1';
+        $shippingCall->shipOperator = (new ThirdParty())->setId(10);
+        $shippingCall->etaDate = new \DateTimeImmutable('2021-01-01');
+        $shippingCall->etaTime = '12:00';
+        $shippingCall->norDate = new \DateTimeImmutable('2021-01-02');
+        $shippingCall->norTime = '13:00';
+        $shippingCall->pobDate = new \DateTimeImmutable('2021-01-03');
+        $shippingCall->pobTime = '14:00';
+        $shippingCall->etbDate = new \DateTimeImmutable('2021-01-04');
+        $shippingCall->etbTime = '15:00';
+        $shippingCall->opsDate = new \DateTimeImmutable('2021-01-05');
+        $shippingCall->opsTime = '16:00';
+        $shippingCall->etcDate = new \DateTimeImmutable('2021-01-06');
+        $shippingCall->etcTime = '17:00';
+        $shippingCall->etdDate = new \DateTimeImmutable('2021-01-07');
+        $shippingCall->etdTime = '18:00';
+        $shippingCall->arrivalDraft = 1.0;
+        $shippingCall->departureDraft = 2.0;
+        $shippingCall->lastPort = new Port()->setLocode('Last port');
+        $shippingCall->nextPort = new Port()->setLocode('Next port');
+        $shippingCall->callPort = 'Port';
+        $shippingCall->quay = 'Quay';
+        $shippingCall->comment = 'Comment';
         $cargoes = array_fill(0, 3, new ShippingCallCargo());
         $shippingCall->setCargoes($cargoes);
 
         $expected = [
             'id' => 1,
+            'shipReportId' => 20,
             'navire' => 'Ship name',
             'voyage' => 'Voyage 1',
             'armateur' => 10,

@@ -125,7 +125,7 @@ final class EquipmentController extends Controller
         $equipment = $this->stevedoringService->createEquipment($requestBody);
 
         /** @var int $id */
-        $id = $equipment->getId();
+        $id = $equipment->id;
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)

@@ -3,6 +3,7 @@ import type {
   StevedoringStaff,
   StevedoringEquipment,
   TempWorkHours,
+  StevedoringShipReport,
 } from "@app/types";
 
 /**
@@ -52,5 +53,27 @@ export const stevedoringTempWorkHours = createFlatStore<TempWorkHours>(
     date: null,
     hoursWorked: 0,
     comments: "",
+  }
+);
+
+export const stevedoringShipReports = createFlatStore<StevedoringShipReport>(
+  "manutention/rapports-navires",
+  {
+    id: null,
+    isArchive: false,
+    linkedShippingCallId: null,
+    ship: "",
+    port: "",
+    berth: "",
+    comments: "",
+    invoiceInstructions: "",
+    startDate: null,
+    endDate: null,
+    entriesByDate: {},
+    cargoEntries: [],
+    storageEntries: [],
+  },
+  {
+    additionalEvents: ["consignation/planning"],
   }
 );

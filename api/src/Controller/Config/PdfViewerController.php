@@ -10,16 +10,16 @@ use App\Controller\Controller;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
-use App\Service\PdfService;
+use App\Service\PdfConfigService;
 
 final class PdfViewerController extends Controller
 {
-    private PdfService $pdfService;
+    private PdfConfigService $pdfService;
 
     public function __construct()
     {
         parent::__construct("OPTIONS, HEAD, GET, POST");
-        $this->pdfService = new PdfService();
+        $this->pdfService = new PdfConfigService();
         $this->processRequest();
     }
 

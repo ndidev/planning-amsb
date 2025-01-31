@@ -6,7 +6,7 @@ import md5 from "md5";
 
 const REDIS_HOST = env["REDIS_HOST"] as string;
 const REDIS_PORT = parseInt(env["REDIS_PORT"] as string);
-const COOKIE_NAME = env["COOKIE_NAME"] as string;
+const COOKIE_NAME = env["SESSION_COOKIE_NAME"] as string;
 
 const redis = createClient({
   url: `redis://${REDIS_HOST}:${REDIS_PORT}`,

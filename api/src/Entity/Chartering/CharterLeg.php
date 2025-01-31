@@ -125,8 +125,8 @@ class CharterLeg extends AbstractEntity
     public function toArray(): array
     {
         return [
-            'id' => $this->getId(),
-            'charter' => $this->getCharter()?->getId(),
+            'id' => $this->id,
+            'charter' => $this->getCharter()?->id,
             'bl_date' => $this->getBlDate()?->format('Y-m-d'),
             'pol' => $this->getPol()?->getLocode(),
             'pod' => $this->getPod()?->getLocode(),

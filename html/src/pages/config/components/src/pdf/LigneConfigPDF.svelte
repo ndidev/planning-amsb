@@ -51,10 +51,10 @@
   let showModal = false;
   let modalAction: "view" | "send";
   let startDate = new DateUtils(new Date())
-    .jourOuvrePrecedent(config.jours_avant)
+    .getPreviousWorkingDay(config.jours_avant)
     .toLocaleISODateString();
   let endDate = new DateUtils(new Date())
-    .jourOuvreSuivant(config.jours_apres)
+    .getNextWorkingDay(config.jours_apres)
     .toLocaleISODateString();
 
   /**

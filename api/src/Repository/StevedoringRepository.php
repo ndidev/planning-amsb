@@ -7,23 +7,89 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Core\Component\Collection;
-use App\Core\Exceptions\Client\ClientException;
+use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Server\DB\DBException;
+use App\DTO\CallWithoutReportDTO;
 use App\DTO\Filter\StevedoringDispatchFilterDTO;
+use App\DTO\Filter\StevedoringReportsFilterDataDTO;
+use App\DTO\Filter\StevedoringReportsFilterDTO;
 use App\DTO\Filter\StevedoringStaffFilterDTO;
 use App\DTO\Filter\StevedoringTempWorkHoursFilterDTO;
 use App\DTO\StevedoringDispatchDTO;
+use App\DTO\StevedoringSubcontractorsDataDTO;
+use App\DTO\TempWorkDispatchForDateDTO;
+use App\DTO\TempWorkHoursReportDataDTO;
+use App\Entity\Shipping\ShippingCallCargo;
+use App\Entity\Stevedoring\ShipReport;
+use App\Entity\Stevedoring\ShipReportEquipmentEntry;
+use App\Entity\Stevedoring\ShipReportStaffEntry;
+use App\Entity\Stevedoring\ShipReportStorageEntry;
+use App\Entity\Stevedoring\ShipReportSubcontractEntry;
 use App\Entity\Stevedoring\StevedoringEquipment;
 use App\Entity\Stevedoring\StevedoringStaff;
 use App\Entity\Stevedoring\TempWorkHoursEntry;
+use App\Service\ShippingService;
 use App\Service\StevedoringService;
+use PDOException;
+use RuntimeException;
 
+/**
+ * @phpstan-type ShipReportArray array{
+ *                                 id: int,
+ *                                 is_archive: bool,
+ *                                 linked_shipping_call_id: int,
+ *                                 ship: string,
+ *                                 port: string,
+ *                                 berth: string,
+ *                                 comments: string,
+ *                               }
+ * 
+ * @phpstan-type ShipReportEquipmentEntryArray array{
+ *                                               id: int,
+ *                                               ship_report_id: int,
+ *                                               equipment_id: int,
+ *                                               date: string,
+ *                                               hours_worked: float,
+ *                                               comments: string,
+ *                                             }
+ * 
+ * @phpstan-type ShipReportStaffEntryArray array{
+ *                                           id: int,
+ *                                           ship_report_id: int,
+ *                                           staff_id: int,
+ *                                           date: string,
+ *                                           hours_worked: float,
+ *                                           comments: string,
+ *                                         }
+ * 
+ * @phpstan-type ShipReportSubcontractEntryArray array{
+ *                                                 id: int,
+ *                                                 ship_report_id: int,
+ *                                                 subcontractor_name: string,
+ *                                                 date: string,
+ *                                                 hours_worked: float|null,
+ *                                                 cost: float|null,
+ *                                                 comments: string,
+ *                                               }
+ * 
+ * @phpstan-import-type ShippingCallCargoArray from \App\Repository\ShippingRepository
+ * 
+ * @phpstan-type ShipReportStorageEntryArray array{
+ *                                             id: int,
+ *                                             ship_report_id: int,
+ *                                             cargo_id: int,
+ *                                             storage_name: string,
+ *                                             tonnage: float,
+ *                                             volume: float,
+ *                                             units: int,
+ *                                             comments: string,
+ *                                           }
+ * 
+ * @phpstan-import-type CallWithoutReport from \App\DTO\CallWithoutReportDTO
+ */
 final class StevedoringRepository extends Repository
 {
-    public function __construct(private StevedoringService $stevedoringService)
-    {
-        parent::__construct();
-    }
+    public function __construct(private StevedoringService $stevedoringService) {}
 
     // =====
     // Staff
@@ -72,7 +138,7 @@ final class StevedoringRepository extends Repository
         /** @var array<array<mixed>> */
         $staffRaw = $staffRequest->fetchAll();
 
-        $allStaff = array_map(
+        $allStaff = \array_map(
             fn($staff) => $this->stevedoringService->makeStevedoringStaffFromDatabase($staff),
             $staffRaw
         );
@@ -82,6 +148,15 @@ final class StevedoringRepository extends Repository
 
     public function fetchStaff(int $id): ?StevedoringStaff
     {
+        /**
+         * @var StevedoringStaff[]
+         */
+        static $cache = [];
+
+        if (isset($cache[$id])) {
+            return $cache[$id];
+        }
+
         $staffStatement = "SELECT * FROM stevedoring_staff WHERE id = :id";
 
         $staffRequest = $this->mysql->prepare($staffStatement);
@@ -99,6 +174,8 @@ final class StevedoringRepository extends Repository
         }
 
         $staff = $this->stevedoringService->makeStevedoringStaffFromDatabase($staffRaw);
+
+        $cache[$id] = $staff;
 
         return $staff;
     }
@@ -126,19 +203,19 @@ final class StevedoringRepository extends Repository
             $this->mysql->beginTransaction();
 
             $request->execute([
-                'firstname' => $staff->getFirstname(),
-                'lastname' => $staff->getLastname(),
-                'phone' => $staff->getPhone(),
-                'type' => $staff->getType(),
-                'tempWorkAgency' => $staff->getTempWorkAgency(),
-                'isActive' => (int) $staff->isActive(),
-                'comments' => $staff->getComments(),
+                'firstname' => $staff->firstname,
+                'lastname' => $staff->lastname,
+                'phone' => $staff->phone,
+                'type' => $staff->type,
+                'tempWorkAgency' => $staff->tempWorkAgency,
+                'isActive' => (int) $staff->isActive,
+                'comments' => $staff->comments,
             ]);
 
             $lastInsertId = (int) $this->mysql->lastInsertId();
 
             $this->mysql->commit();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->mysql->rollBack();
             throw new DBException("Impossible de créer le personnel de manutention.", previous: $e);
         }
@@ -172,16 +249,16 @@ final class StevedoringRepository extends Repository
             }
 
             $request->execute([
-                'firstname' => $staff->getFirstname(),
-                'lastname' => $staff->getLastname(),
-                'phone' => $staff->getPhone(),
-                'type' => $staff->getType(),
-                'tempWorkAgency' => $staff->getTempWorkAgency(),
-                'isActive' => (int) $staff->isActive(),
-                'comments' => $staff->getComments(),
-                'id' => $staff->getId(),
+                'firstname' => $staff->firstname,
+                'lastname' => $staff->lastname,
+                'phone' => $staff->phone,
+                'type' => $staff->type,
+                'tempWorkAgency' => $staff->tempWorkAgency,
+                'isActive' => (int) $staff->isActive,
+                'comments' => $staff->comments,
+                'id' => $staff->id,
             ]);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             throw new DBException("Impossible de mettre à jour le personnel de manutention.", previous: $e);
         }
 
@@ -210,7 +287,7 @@ final class StevedoringRepository extends Repository
 
         try {
             $request->execute(['id' => $id]);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             throw new DBException("Impossible de supprimer le personnel de manutention.", previous: $e);
         }
     }
@@ -245,7 +322,7 @@ final class StevedoringRepository extends Repository
         /** @var array<array<mixed>> */
         $equipmentRaw = $equipmentRequest->fetchAll();
 
-        $allEquipment = array_map(
+        $allEquipment = \array_map(
             fn($equipment) => $this->stevedoringService->makeStevedoringEquipmentFromDatabase($equipment),
             $equipmentRaw
         );
@@ -255,6 +332,15 @@ final class StevedoringRepository extends Repository
 
     public function fetchEquipment(int $id): ?StevedoringEquipment
     {
+        /**
+         * @var StevedoringEquipment[]
+         */
+        static $cache = [];
+
+        if (isset($cache[$id])) {
+            return $cache[$id];
+        }
+
         $equipmentStatement =
             "SELECT *
              FROM stevedoring_equipments
@@ -275,6 +361,8 @@ final class StevedoringRepository extends Repository
         }
 
         $equipment = $this->stevedoringService->makeStevedoringEquipmentFromDatabase($equipmentRaw);
+
+        $cache[$id] = $equipment;
 
         return $equipment;
     }
@@ -302,19 +390,19 @@ final class StevedoringRepository extends Repository
             $this->mysql->beginTransaction();
 
             $request->execute([
-                'type' => $equipment->getType(),
-                'brand' => $equipment->getBrand(),
-                'model' => $equipment->getModel(),
-                'internalNumber' => $equipment->getInternalNumber(),
-                'serialNumber' => $equipment->getSerialNumber(),
-                'comments' => $equipment->getComments(),
-                'isActive' => (int) $equipment->isActive(),
+                'type' => $equipment->type,
+                'brand' => $equipment->brand,
+                'model' => $equipment->model,
+                'internalNumber' => $equipment->internalNumber,
+                'serialNumber' => $equipment->serialNumber,
+                'comments' => $equipment->comments,
+                'isActive' => (int) $equipment->isActive,
             ]);
 
             $lastInsertId = (int) $this->mysql->lastInsertId();
 
             $this->mysql->commit();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->mysql->rollBack();
             throw new DBException("Impossible de créer l'équipement de manutention.", previous: $e);
         }
@@ -348,16 +436,16 @@ final class StevedoringRepository extends Repository
 
         try {
             $request->execute([
-                'type' => $equipment->getType(),
-                'brand' => $equipment->getBrand(),
-                'model' => $equipment->getModel(),
-                'internalNumber' => $equipment->getInternalNumber(),
-                'serialNumber' => $equipment->getSerialNumber(),
-                'comments' => $equipment->getComments(),
-                'isActive' => (int) $equipment->isActive(),
-                'id' => $equipment->getId(),
+                'type' => $equipment->type,
+                'brand' => $equipment->brand,
+                'model' => $equipment->model,
+                'internalNumber' => $equipment->internalNumber,
+                'serialNumber' => $equipment->serialNumber,
+                'comments' => $equipment->comments,
+                'isActive' => (int) $equipment->isActive,
+                'id' => $equipment->id,
             ]);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             throw new DBException("Impossible de mettre à jour l'équipement de manutention.", previous: $e);
         }
 
@@ -366,17 +454,42 @@ final class StevedoringRepository extends Repository
 
     public function deleteEquipment(int $id): void
     {
-        $tasksCount = $this->fetchTasksCountForEquipment($id);
+        $tasksCount = $this->fetchReportsCountForEquipment($id);
         if ($tasksCount > 0) {
-            throw new DBException("Impossible de supprimer l'équipement de manutention car il est utilisé dans des tâches.");
+            throw new DBException("Impossible de supprimer l'équipement de manutention car il est utilisé dans des rapports navires.");
         }
 
         try {
             $deleteStatement = "DELETE FROM stevedoring_equipments WHERE id = :id";
             $deleteRequest = $this->mysql->prepare($deleteStatement);
             $deleteRequest->execute(['id' => $id]);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             throw new DBException("Erreur lors de la suppression.", previous: $e);
+        }
+    }
+
+    private function fetchReportsCountForEquipment(int $id): int
+    {
+
+        $statement =
+            "SELECT COUNT(*)
+             FROM stevedoring_ship_reports_equipment
+             WHERE equipment_id = :id";
+
+        try {
+            $request = $this->mysql->prepare($statement);
+
+            if (!$request) {
+                throw new DBException("Impossible de récupérer l'historique de cet équipement.");
+            }
+
+            $request->execute(['id' => $id]);
+
+            $count = $request->fetchColumn();
+
+            return (int) $count;
+        } catch (PDOException $e) {
+            throw new DBException("Impossible de récupérer l'historique de cet équipement.", previous: $e);
         }
     }
 
@@ -481,24 +594,31 @@ final class StevedoringRepository extends Repository
         return $dispatchDTO;
     }
 
-    /**
-     * @return array<int>
-     */
-    public function fetchTempWorkDispatchNamesForDate(\DateTimeImmutable $date): array
+    public function fetchTempWorkDispatchForDate(\DateTimeImmutable $date): TempWorkDispatchForDateDTO
     {
-        // Bulk
-
         $statement =
-            "SELECT DISTINCT staff.id
+            "SELECT DISTINCT
+                staff.id,
+                0 as `hoursWorked`
             FROM stevedoring_bulk_dispatch bulkDispatch
             INNER JOIN stevedoring_staff staff ON bulkDispatch.staff_id = staff.id
             WHERE bulkDispatch.date = :date
             AND staff.type = 'interim'
             UNION
-            SELECT DISTINCT staff.id
+            SELECT DISTINCT
+                staff.id,
+                0 as `hoursWorked`
             FROM stevedoring_timber_dispatch timberDispatch
             INNER JOIN stevedoring_staff staff ON timberDispatch.staff_id = staff.id
             WHERE timberDispatch.date = :date
+            AND staff.type = 'interim'
+            UNION
+            SELECT DISTINCT
+                staff.id,
+                shipReportsStaff.hours_worked as `hoursWorked`
+            FROM stevedoring_ship_reports_staff shipReportsStaff
+            INNER JOIN stevedoring_staff staff ON shipReportsStaff.staff_id = staff.id
+            WHERE shipReportsStaff.date = :date
             AND staff.type = 'interim'
             ";
 
@@ -509,11 +629,13 @@ final class StevedoringRepository extends Repository
         ]);
 
         /** 
-         * @var array<int>
+         * @var array{id: string, hoursWorked: string}[]
          */
-        $data = $request->fetchAll(\PDO::FETCH_COLUMN);
+        $data = $request->fetchAll();
 
-        return $data;
+        $dispatchDTO = new TempWorkDispatchForDateDTO($data);
+
+        return $dispatchDTO;
     }
 
     // ===============
@@ -563,20 +685,28 @@ final class StevedoringRepository extends Repository
             /** @var array<array<mixed>> */
             $rawData = $request->fetchAll();
 
-            $tempWorkHours = array_map(
+            $tempWorkHours = \array_map(
                 fn(array $data) => $this->stevedoringService->makeTempWorkHoursEntryFromDatabase($data),
                 $rawData
             );
 
             return new Collection($tempWorkHours);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             throw new DBException("Impossible de récupérer les heures des intérimaires.", previous: $e);
         }
     }
 
     public function fetchTempWorkHoursEntry(int $id): ?TempWorkHoursEntry
     {
-        $statement = "SELECT * FROM stevedoring_temp_work_hours WHERE id = :id";
+        $statement =
+            "SELECT
+                hours.id,
+                hours.date,
+                hours.staff_id,
+                hours.hours_worked,
+                hours.comments
+            FROM stevedoring_temp_work_hours hours
+            WHERE id = :id";
 
         try {
             $request = $this->mysql->prepare($statement);
@@ -596,7 +726,7 @@ final class StevedoringRepository extends Repository
             $tempWorkHoursEntry = $this->stevedoringService->makeTempWorkHoursEntryFromDatabase($rawData);
 
             return $tempWorkHoursEntry;
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             throw new DBException("Impossible de récupérer les heures de l'intérimaire.", previous: $e);
         }
     }
@@ -639,18 +769,18 @@ final class StevedoringRepository extends Repository
             /** @var array<array<mixed>> */
             $rawData = $request->fetchAll();
 
-            $tempWorkHours = array_map(
+            $tempWorkHours = \array_map(
                 fn(array $data) => $this->stevedoringService->makeTempWorkHoursEntryFromDatabase($data),
                 $rawData
             );
 
             return new Collection($tempWorkHours);
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             throw new DBException("Impossible de récupérer les heures de l'intérimaire.", previous: $e);
         }
     }
 
-    public function createTempWorkHours(TempWorkHoursEntry $tempWorkHoursEntry): TempWorkHoursEntry
+    public function createTempWorkHours(TempWorkHoursEntry $entry): TempWorkHoursEntry
     {
         $statement =
             "INSERT INTO stevedoring_temp_work_hours
@@ -661,39 +791,41 @@ final class StevedoringRepository extends Repository
                 comments = :comments";
 
         try {
-            $request = $this->mysql->prepare($statement);
-
-            if (!$request) {
-                throw new DBException("Impossible de créer les heures de l'intérimaire.");
-            }
-
             $this->mysql->beginTransaction();
 
-            $request->execute([
-                'date' => $tempWorkHoursEntry->getDate()?->format('Y-m-d'),
-                'staffId' => $tempWorkHoursEntry->getStaff()?->getId(),
-                'hoursWorked' => $tempWorkHoursEntry->getHoursWorked(),
-                'comments' => $tempWorkHoursEntry->getComments(),
-            ]);
+            $this->mysql->prepareAndExecute(
+                $statement,
+                [
+                    'date' => $entry->date?->format('Y-m-d'),
+                    'staffId' => $entry->staff?->id,
+                    'hoursWorked' => $entry->hoursWorked,
+                    'comments' => $entry->comments,
+                ]
+            );
 
-            $lastInsertId = (int) $this->mysql->lastInsertId();
+            $entry->id = (int) $this->mysql->lastInsertId();
 
             $this->mysql->commit();
 
-            /** @var TempWorkHoursEntry */
-            $createdTempWorkHoursEntry = $this->fetchTempWorkHoursEntry($lastInsertId);
+            return $entry;
+        } catch (PDOException $e) {
+            if ($this->mysql->inTransaction()) {
+                $this->mysql->rollBack();
+            }
 
-            return $createdTempWorkHoursEntry;
-        } catch (\PDOException $e) {
             if ($e->getCode() == 23000) {
-                throw new ClientException("Impossible de créer les heures de l'intérimaire. Les heures pour cette date existent déjà.", previous: $e);
+                $message = \sprintf(
+                    "Impossible de créer les heures.\nLes heures de %s pour cette date existent déjà.",
+                    $entry->staff?->fullname
+                );
+                throw new BadRequestException($message);
             }
 
             throw new DBException("Impossible de créer les heures de l'intérimaire.", previous: $e);
         }
     }
 
-    public function updateTempWorkHours(TempWorkHoursEntry $tempWorkHoursEntry): TempWorkHoursEntry
+    public function updateTempWorkHours(TempWorkHoursEntry $entry): TempWorkHoursEntry
     {
         $statement =
             "UPDATE stevedoring_temp_work_hours
@@ -706,22 +838,31 @@ final class StevedoringRepository extends Repository
                 id = :id";
 
         try {
-            $request = $this->mysql->prepare($statement);
+            $this->mysql->prepareAndExecute(
+                $statement,
+                [
+                    'date' => $entry->date?->format('Y-m-d'),
+                    'staffId' => $entry->staff?->id,
+                    'hoursWorked' => $entry->hoursWorked,
+                    'comments' => $entry->comments,
+                    'id' => $entry->id,
+                ]
+            );
 
-            if (!$request) {
-                throw new DBException("Impossible de mettre à jour les heures de l'intérimaire.");
+            return $entry;
+        } catch (PDOException $e) {
+            if ($this->mysql->inTransaction()) {
+                $this->mysql->rollBack();
             }
 
-            $request->execute([
-                'date' => $tempWorkHoursEntry->getDate()?->format('Y-m-d'),
-                'staffId' => $tempWorkHoursEntry->getStaff()?->getId(),
-                'hoursWorked' => $tempWorkHoursEntry->getHoursWorked(),
-                'comments' => $tempWorkHoursEntry->getComments(),
-                'id' => $tempWorkHoursEntry->getId(),
-            ]);
+            if ($e->getCode() == 23000) {
+                $message = \sprintf(
+                    "Impossible de mettre à jour les heures.\nLes heures de %s pour cette date existent déjà.",
+                    $entry->staff?->fullname
+                );
+                throw new BadRequestException($message);
+            }
 
-            return $tempWorkHoursEntry;
-        } catch (\PDOException $e) {
             throw new DBException("Impossible de mettre à jour les heures de l'intérimaire.", previous: $e);
         }
     }
@@ -729,27 +870,1366 @@ final class StevedoringRepository extends Repository
     public function deleteTempWorkHours(int $id): void
     {
         try {
-            $deleteStatement = "DELETE FROM stevedoring_temp_work_hours WHERE id = :id";
-            $deleteRequest = $this->mysql->prepare($deleteStatement);
-            $deleteRequest->execute(['id' => $id]);
-        } catch (\PDOException $e) {
+            $this->mysql->prepareAndExecute(
+                "DELETE FROM stevedoring_temp_work_hours WHERE id = :id",
+                ['id' => $id]
+            );
+        } catch (PDOException $e) {
             throw new DBException("Erreur lors de la suppression.", previous: $e);
         }
     }
 
-    // =====
-    // Tasks
-    // =====
+    public function fetchTempWorkHoursReportData(
+        \DateTimeImmutable $startDate,
+        \DateTimeImmutable $endDate
+    ): TempWorkHoursReportDataDTO {
+        $statement =
+            "SELECT
+                hours.date,
+                CONCAT(staff.firstname, ' ', staff.lastname) as `staffName`,
+                staff.temp_work_agency as `agency`,
+                hours.hours_worked as `hoursWorked`
+            FROM stevedoring_temp_work_hours hours
+            INNER JOIN stevedoring_staff staff ON hours.staff_id = staff.id
+            WHERE hours.date BETWEEN :startDate AND :endDate
+            ORDER BY
+                hours.date ASC,
+                staff.lastname ASC,
+                staff.firstname ASC";
 
-    public function taskExists(int $id): bool
-    {
-        return $this->mysql->exists("stevedoring_tasks", $id);
+        try {
+            /** @var array<array<mixed>> */
+            $rawData = $this->mysql
+                ->prepareAndExecute(
+                    $statement,
+                    [
+                        'startDate' => $startDate->format('Y-m-d'),
+                        'endDate' => $endDate->format('Y-m-d'),
+                    ]
+                )
+                ->fetchAll();
+
+            $tempWorkHoursReportDataDto = new TempWorkHoursReportDataDTO($rawData);
+
+            return $tempWorkHoursReportDataDto;
+        } catch (PDOException $e) {
+            throw new DBException("Impossible de récupérer les heures de travail.", previous: $e);
+        }
     }
 
-    public function fetchTasksCountForEquipment(int $id): int
-    {
-        // TODO: implement
+    // ============
+    // Ship reports
+    // ============
 
-        return 0;
+    public function shipReportExists(int $id): bool
+    {
+        return $this->mysql->exists("stevedoring_ship_reports", $id);
+    }
+
+    /**
+     * 
+     * @param StevedoringReportsFilterDTO $filter 
+     * 
+     * @return Collection<ShipReport>
+     */
+    public function fetchAllShipReports(StevedoringReportsFilterDTO $filter): Collection
+    {
+        $sqlFilter = $filter->getSqlFilter();
+
+        $archiveFilter = (int) $filter->isArchive();
+
+        $statement =
+            "WITH dates AS (
+                SELECT `date`, ship_report_id FROM stevedoring_ship_reports_equipments
+                UNION
+                SELECT `date`, ship_report_id FROM stevedoring_ship_reports_staff
+                UNION
+                SELECT `date`, ship_report_id FROM stevedoring_ship_reports_subcontracts
+            )
+            SELECT *
+            FROM (
+                SELECT
+                    r.id,
+                    r.is_archive,
+                    r.linked_shipping_call_id,
+                    r.ship,
+                    r.port,
+                    r.berth,
+                    r.comments,
+                    r.invoice_instructions,
+                    (
+                        SELECT MIN(`date`)
+                        FROM dates
+                        WHERE ship_report_id = r.id
+                    ) as `start_date`,
+                    (
+                        SELECT MAX(`date`)
+                        FROM dates
+                        WHERE ship_report_id = r.id
+                    ) as `end_date`
+                FROM stevedoring_ship_reports r
+                LEFT JOIN consignation_escales_marchandises cem ON cem.ship_report_id = r.id
+                LEFT JOIN stevedoring_ship_reports_storage storage ON storage.ship_report_id = r.id
+                WHERE
+                    is_archive = $archiveFilter
+                    $sqlFilter
+                GROUP BY
+                    r.id -- Group by to avoid duplicates
+            ) as main_query
+            WHERE
+                (`start_date` <= :endDate OR `start_date` IS NULL)
+                AND
+                (`end_date` >= :startDate OR `end_date` IS NULL)";
+
+        try {
+            /** @phpstan-var ShipReportArray[] */
+            $reportsRaw = $this->mysql
+                ->prepareAndExecute(
+                    $statement,
+                    [
+                        'startDate' => $filter->getSqlStartDate(),
+                        'endDate' => $filter->getSqlEndDate(),
+                    ]
+                )
+                ->fetchAll();
+
+            $shipReports = \array_map(
+                fn(array $reportRaw) => $this->stevedoringService->makeShipReportFromDatabase($reportRaw),
+                $reportsRaw
+            );
+
+            foreach ($shipReports as $report) {
+                /** @var int */
+                $reportId = $report->id;
+
+                $report
+                    ->setEquipmentEntries($this->fetchShipReportEquipmentEntriesForReport($reportId))
+                    ->setStaffEntries($this->fetchShipReportStaffEntriesForReport($reportId))
+                    ->setSubcontractEntries($this->fetchShipReportSubcontractEntriesForReport($reportId))
+                    ->setCargoEntries($this->fetchCargoEntriesForReport($reportId))
+                    ->setStorageEntries($this->fetchShipReportStorageEntriesForReport($reportId));
+            }
+
+
+            return new Collection($shipReports);
+        } catch (PDOException $e) {
+            throw new DBException("Impossible de récupérer les rapports navires.", previous: $e);
+        }
+    }
+
+    public function fetchShipReport(int $id): ?ShipReport
+    {
+        $reportStatement =
+            "SELECT
+                r.id,
+                r.is_archive,
+                r.linked_shipping_call_id,
+                r.ship,
+                r.port,
+                r.berth,
+                r.comments,
+                r.invoice_instructions
+             FROM stevedoring_ship_reports r
+             WHERE r.id = :id";
+
+        try {
+            /** @phpstan-var ?ShipReportArray */
+            $reportRaw = $this->mysql
+                ->prepareAndExecute($reportStatement, ['id' => $id])
+                ->fetch();
+
+            if (!\is_array($reportRaw)) {
+                return null;
+            }
+
+            $shipReport = $this->stevedoringService
+                ->makeShipReportFromDatabase($reportRaw)
+                ->setEquipmentEntries($this->fetchShipReportEquipmentEntriesForReport($id))
+                ->setStaffEntries($this->fetchShipReportStaffEntriesForReport($id))
+                ->setSubcontractEntries($this->fetchShipReportSubcontractEntriesForReport($id))
+                ->setCargoEntries($this->fetchCargoEntriesForReport($id))
+                ->setStorageEntries($this->fetchShipReportStorageEntriesForReport($id));
+
+            return $shipReport;
+        } catch (PDOException $e) {
+            throw new DBException("Impossible de récupérer le rapport navire.", previous: $e);
+        }
+    }
+
+    public function createShipReport(ShipReport $report): ShipReport
+    {
+        try {
+            $this->mysql->beginTransaction();
+
+            $reportStatement =
+                "INSERT INTO stevedoring_ship_reports
+                 SET
+                    is_archive = :isArchive,
+                    linked_shipping_call_id = :linkedShippingCallId,
+                    ship = :ship,
+                    port = :port,
+                    berth = :berth,
+                    comments = :comments,
+                    invoice_instructions = :invoiceInstructions";
+
+            $this->mysql->prepareAndExecute(
+                $reportStatement,
+                [
+                    'isArchive' => (int) $report->isArchive,
+                    'linkedShippingCallId' => $report->linkedShippingCall?->id,
+                    'ship' => $report->ship,
+                    'port' => $report->port,
+                    'berth' => $report->berth,
+                    'comments' => $report->comments,
+                    'invoiceInstructions' => $report->invoiceInstructions,
+                ]
+            );
+
+            $report->id = (int) $this->mysql->lastInsertId();
+
+            // Equipment entries
+            foreach ($report->equipmentEntries as $equipmentEntry) {
+                $equipmentEntry->id = $this->createShipReportEquipmentEntry($equipmentEntry)->id;
+            }
+
+            // Staff entries
+            foreach ($report->staffEntries as $staffEntry) {
+                $staffEntry->id = $this->createShipReportStaffEntry($staffEntry)->id;
+            }
+
+            // Subcontract entries
+            foreach ($report->subcontractEntries as $subcontractEntry) {
+                $subcontractEntry->id = $this->createShipReportSubcontractEntry($subcontractEntry)->id;
+            }
+
+            // Cargo entries
+            if (null === $report->linkedShippingCall) {
+                foreach ($report->cargoEntries as $cargoEntry) {
+                    $cargoEntry->id = $this->createCargoEntry($cargoEntry)->id;
+                }
+            } else {
+                // Delete entries that are not in the new list
+                $existingIds = \array_filter(
+                    $report->cargoEntries->map(fn($entry) => $entry->id),
+                    fn($id) => $id !== null
+                );
+                $this->mysql->prepareAndExecute(
+                    \count($existingIds) > 0
+                        ? \sprintf(
+                            "DELETE FROM consignation_escales_marchandises WHERE escale_id = :callId AND NOT id IN (%s)",
+                            join(",", $existingIds)
+                        )
+                        : "DELETE FROM consignation_escales_marchandises WHERE escale_id = :callId",
+                    ['callId' => $report->linkedShippingCall->id]
+                );
+
+                foreach ($report->cargoEntries as $cargoEntry) {
+                    if (!$cargoEntry->id) {
+                        $cargoEntry->id = $this->createCargoEntry($cargoEntry)->id;
+                    } else {
+                        $this->updateCargoEntry($cargoEntry);
+                    }
+                }
+            }
+
+            // Storage entries
+            // Check if there is a corresponding cargo in the cargo entries
+            $cargoIds = \array_map(
+                fn(ShippingCallCargo $cargo) => $cargo->id,
+                $report->cargoEntries->asArray()
+            );
+            foreach ($report->storageEntries as $storageEntry) {
+                if (!\in_array($storageEntry->cargo?->id, $cargoIds)) {
+                    $message = \sprintf(
+                        "Impossible de créer un stockage pour une marchandise qui n'est pas dans la liste des marchandises.\nMarchandise: %s (%s)",
+                        $storageEntry->cargo?->cargoName,
+                        $storageEntry->cargo?->customer
+                    );
+                    throw new BadRequestException($message);
+                }
+
+                $storageEntry->id = $this->createShipReportStorageEntry($storageEntry)->id;
+            }
+
+            $this->mysql->commit();
+
+            /** @var ShipReport */
+            // $createdReport = $this->fetchShipReport($report->id);
+
+            // return $createdReport;
+            return $report;
+        } catch (PDOException $e) {
+            $this->mysql->rollbackIfNeeded();
+
+            throw new DBException("Impossible de créer le rapport navire.", previous: $e);
+        } catch (\Throwable $th) {
+            $this->mysql->rollbackIfNeeded();
+            throw $th;
+        }
+    }
+
+    public function updateShipReport(ShipReport $report): ShipReport
+    {
+        try {
+            $this->mysql->beginTransaction();
+
+            $statement =
+                "UPDATE stevedoring_ship_reports
+                 SET
+                    is_archive = :isArchive,
+                    linked_shipping_call_id = :linkedShippingCallId,
+                    ship = :ship,
+                    port = :port,
+                    berth = :berth,
+                    comments = :comments,
+                    invoice_instructions = :invoiceInstructions
+                 WHERE
+                    id = :id";
+
+            $this->mysql->prepareAndExecute(
+                $statement,
+                [
+                    'isArchive' => (int) $report->isArchive,
+                    'linkedShippingCallId' => $report->linkedShippingCall?->id,
+                    'ship' => $report->ship,
+                    'port' => $report->port,
+                    'berth' => $report->berth,
+                    'comments' => $report->comments,
+                    'invoiceInstructions' => $report->invoiceInstructions,
+                    'id' => $report->id,
+                ]
+            );
+
+            // Equipment entries
+            // Delete entries that are not in the new list
+            $existingIds = \array_filter(
+                $report->equipmentEntries->map(fn($entry) => $entry->id),
+                fn($id) => $id !== null
+            );
+            $this->mysql->prepareAndExecute(
+                \count($existingIds) > 0
+                    ? \sprintf(
+                        "DELETE FROM stevedoring_ship_reports_equipments WHERE ship_report_id = :reportId AND NOT id IN (%s)",
+                        join(",", $existingIds)
+                    )
+                    : "DELETE FROM stevedoring_ship_reports_equipments WHERE ship_report_id = :reportId",
+                ['reportId' => $report->id]
+            );
+
+            foreach ($report->equipmentEntries as $equipmentEntry) {
+                if (!$equipmentEntry->id) {
+                    $equipmentEntry->id = $this->createShipReportEquipmentEntry($equipmentEntry)->id;
+                } else {
+                    $this->updateShipReportEquipmentEntry($equipmentEntry);
+                }
+            }
+
+            // Staff entries
+            // Delete entries that are not in the new list
+            $existingIds = \array_filter(
+                $report->staffEntries->map(fn($entry) => $entry->id),
+                fn($id) => $id !== null
+            );
+            $this->mysql->prepareAndExecute(
+                \count($existingIds) > 0
+                    ? \sprintf(
+                        "DELETE FROM stevedoring_ship_reports_staff WHERE ship_report_id = :reportId AND NOT id IN (%s)",
+                        join(",", $existingIds)
+                    )
+                    : "DELETE FROM stevedoring_ship_reports_staff WHERE ship_report_id = :reportId",
+                ['reportId' => $report->id]
+            );
+
+            foreach ($report->staffEntries as $staffEntry) {
+                if (!$staffEntry->id) {
+                    $staffEntry->id = $this->createShipReportStaffEntry($staffEntry)->id;
+                } else {
+                    $this->updateShipReportStaffEntry($staffEntry);
+                }
+            }
+
+            // Subcontract entries
+            // Delete entries that are not in the new list
+            $existingIds = \array_filter(
+                $report->subcontractEntries->map(fn($entry) => $entry->id),
+                fn($id) => $id !== null
+            );
+            $this->mysql->prepareAndExecute(
+                \count($existingIds) > 0
+                    ? \sprintf(
+                        "DELETE FROM stevedoring_ship_reports_subcontracts WHERE ship_report_id = :reportId AND NOT id IN (%s)",
+                        join(",", $existingIds)
+                    )
+                    : "DELETE FROM stevedoring_ship_reports_subcontracts WHERE ship_report_id = :reportId",
+                ['reportId' => $report->id]
+            );
+
+            foreach ($report->subcontractEntries as $subcontractEntry) {
+                if (!$subcontractEntry->id) {
+                    $subcontractEntry->id = $this->createShipReportSubcontractEntry($subcontractEntry)->id;
+                } else {
+                    $this->updateShipReportSubcontractEntry($subcontractEntry);
+                }
+            }
+
+            // Cargo entries
+            // Delete entries that are not in the new list
+            $existingIds = \array_filter(
+                $report->cargoEntries->map(fn($entry) => $entry->id),
+                fn($id) => $id !== null
+            );
+            $this->mysql->prepareAndExecute(
+                \count($existingIds) > 0
+                    ? \sprintf(
+                        "DELETE FROM consignation_escales_marchandises WHERE ship_report_id = :reportId AND NOT id IN (%s)",
+                        join(",", $existingIds)
+                    )
+                    : "DELETE FROM consignation_escales_marchandises WHERE ship_report_id = :reportId",
+                ['reportId' => $report->id]
+            );
+
+            foreach ($report->cargoEntries as $cargoEntry) {
+                if (!$cargoEntry->id) {
+                    $cargoEntry->id = $this->createCargoEntry($cargoEntry)->id;
+                } else {
+                    $this->updateCargoEntry($cargoEntry);
+                }
+            }
+
+            // Storage entries
+            // Delete entries that are not in the new list
+            $existingIds = \array_filter(
+                $report->storageEntries->map(fn($entry) => $entry->id),
+                fn($id) => $id !== null
+            );
+            $this->mysql->prepareAndExecute(
+                \count($existingIds) > 0
+                    ? \sprintf(
+                        "DELETE FROM stevedoring_ship_reports_storage WHERE ship_report_id = :reportId AND NOT id IN (%s)",
+                        join(",", $existingIds)
+                    )
+                    : "DELETE FROM stevedoring_ship_reports_storage WHERE ship_report_id = :reportId",
+                ['reportId' => $report->id]
+            );
+
+            // Check if there is a corresponding cargo in the cargo entries
+            $cargoIds = \array_map(
+                fn(ShippingCallCargo $cargo) => $cargo->id,
+                $report->cargoEntries->asArray()
+            );
+            foreach ($report->storageEntries as $storageEntry) {
+                if (!\in_array($storageEntry->cargo?->id, $cargoIds)) {
+                    $message = \sprintf(
+                        "Impossible de créer un stockage pour une marchandise qui n'est pas dans la liste des marchandises.\nMarchandise: %s (%s)",
+                        $storageEntry->cargo?->cargoName,
+                        $storageEntry->cargo?->customer
+                    );
+                    throw new BadRequestException($message);
+                }
+
+                if (!$storageEntry->id) {
+                    $storageEntry->id = $this->createShipReportStorageEntry($storageEntry)->id;
+                } else {
+                    $this->updateShipReportStorageEntry($storageEntry);
+                }
+            }
+
+            $this->mysql->commit();
+
+            return $report;
+        } catch (PDOException $e) {
+            $this->mysql->rollbackIfNeeded();
+
+            throw new DBException("Impossible de mettre à jour le rapport navire.", previous: $e);
+        } catch (\Throwable $th) {
+            $this->mysql->rollbackIfNeeded();
+            throw $th;
+        }
+    }
+
+    /**
+     * 
+     * @param int $id 
+     * 
+     * @throws DBException 
+     */
+    public function deleteShipReport(int $id): void
+    {
+        try {
+            $this->mysql->prepareAndExecute(
+                "DELETE FROM stevedoring_ship_reports WHERE id = :id",
+                ['id' => $id]
+            );
+        } catch (PDOException $e) {
+            throw new DBException("Erreur lors de la suppression.", previous: $e);
+        }
+    }
+
+    /**
+     * 
+     * @param int $reportId 
+     * 
+     * @return ShipReportEquipmentEntry[]  
+     * 
+     * @throws DBException 
+     * @throws RuntimeException 
+     */
+    private function fetchShipReportEquipmentEntriesForReport(int $reportId): array
+    {
+        $statement =
+            "SELECT
+                id,
+                ship_report_id,
+                equipment_id,
+                date,
+                hours_worked,
+                comments
+             FROM stevedoring_ship_reports_equipments
+             WHERE ship_report_id = :reportId";
+
+        try {
+            /** @phpstan-var ShipReportEquipmentEntryArray[] */
+            $rawData = $this->mysql
+                ->prepareAndExecute($statement, ['reportId' => $reportId])
+                ->fetchAll();
+
+            $entries = \array_map(
+                fn(array $data) => $this->stevedoringService->makeShipReportEquipmentEntryFromDatabase($data),
+                $rawData
+            );
+
+            return $entries;
+        } catch (PDOException $e) {
+            throw new DBException("Impossible de récupérer les entrées d'équipement.", previous: $e);
+        }
+    }
+
+    /**
+     * 
+     * @param ShipReportEquipmentEntry $entry 
+     * 
+     * @return ShipReportEquipmentEntry 
+     * 
+     * @throws PDOException 
+     * @throws BadRequestException 
+     * @throws DBException 
+     */
+    private function createShipReportEquipmentEntry(ShipReportEquipmentEntry $entry): ShipReportEquipmentEntry
+    {
+        $statement =
+            "INSERT INTO stevedoring_ship_reports_equipments
+             SET
+                ship_report_id = :reportId,
+                equipment_id = :equipmentId,
+                date = :date,
+                hours_worked = :hoursWorked,
+                comments = :comments";
+
+        try {
+            $this->mysql->prepareAndExecute(
+                $statement,
+                [
+                    'reportId' => $entry->report?->id,
+                    'equipmentId' => $entry->equipment?->id,
+                    'date' => $entry->date?->format('Y-m-d'),
+                    'hoursWorked' => $entry->hoursWorked,
+                    'comments' => $entry->comments,
+                ]
+            );
+
+            $entry->id = (int) $this->mysql->lastInsertId();
+
+            return $entry;
+        } catch (PDOException $e) {
+            $this->mysql->rollbackIfNeeded();
+
+            if ($e->getCode() == 23000) {
+                $message = \sprintf(
+                    "L'équipement %s est déjà enregistré pour la date %s.",
+                    $entry->equipment?->displayName,
+                    $entry->date?->format('d/m/Y')
+                );
+                throw new BadRequestException($message, previous: $e);
+            }
+
+            throw new DBException("Impossible de créer l'entrée d'équipement.", previous: $e);
+        }
+    }
+
+    /**
+     * 
+     * @param ShipReportEquipmentEntry $entry 
+     * 
+     * @return ShipReportEquipmentEntry 
+     * 
+     * @throws PDOException 
+     * @throws BadRequestException 
+     * @throws DBException 
+     */
+    private function updateShipReportEquipmentEntry(ShipReportEquipmentEntry $entry): ShipReportEquipmentEntry
+    {
+        $statement =
+            "UPDATE stevedoring_ship_reports_equipments
+             SET
+                ship_report_id = :reportId,
+                equipment_id = :equipmentId,
+                date = :date,
+                hours_worked = :hoursWorked,
+                comments = :comments
+             WHERE
+                id = :id";
+
+        try {
+            $this->mysql->prepareAndExecute(
+                $statement,
+                [
+                    'id' => $entry->id,
+                    'reportId' => $entry->report?->id,
+                    'equipmentId' => $entry->equipment?->id,
+                    'date' => $entry->date?->format('Y-m-d'),
+                    'hoursWorked' => $entry->hoursWorked,
+                    'comments' => $entry->comments,
+                ]
+            );
+
+            return $entry;
+        } catch (PDOException $e) {
+            $this->mysql->rollbackIfNeeded();
+
+            if ($e->getCode() == 23000) {
+                $message = \sprintf(
+                    "L'équipement %s est déjà enregistré pour la date %s.",
+                    $entry->equipment?->displayName,
+                    $entry->date?->format('d/m/Y')
+                );
+                throw new BadRequestException($message, previous: $e);
+            }
+
+            throw new DBException("Impossible de modifier l'entrée d'équipement.", previous: $e);
+        }
+    }
+
+    /**
+     * 
+     * @param int $reportId 
+     * 
+     * @return ShipReportStaffEntry[]  
+     * 
+     * @throws DBException 
+     * @throws RuntimeException 
+     */
+    private function fetchShipReportStaffEntriesForReport(int $reportId): array
+    {
+        $statement =
+            "SELECT
+                reportsStaff.id,
+                reportsStaff.ship_report_id,
+                reportsStaff.staff_id,
+                reportsStaff.date,
+                reportsStaff.hours_worked,
+                reportsStaff.comments
+             FROM stevedoring_ship_reports_staff reportsStaff
+             LEFT JOIN stevedoring_staff staff ON staff.id = reportsStaff.staff_id
+             WHERE ship_report_id = :reportId
+             ORDER BY
+                staff.lastname ASC,
+                staff.firstname ASC,
+                date ASC";
+
+        try {
+            /** @phpstan-var ShipReportStaffEntryArray[] */
+            $rawData = $this->mysql
+                ->prepareAndExecute($statement, ['reportId' => $reportId])
+                ->fetchAll();
+
+            $entries = \array_map(
+                fn(array $data) => $this->stevedoringService->makeShipReportStaffEntryFromDatabase($data),
+                $rawData
+            );
+
+            return $entries;
+        } catch (PDOException $e) {
+            throw new DBException("Impossible de récupérer les entrées de personnel.", previous: $e);
+        }
+    }
+
+    /**
+     * 
+     * @param ShipReportStaffEntry $entry 
+     * 
+     * @return ShipReportStaffEntry 
+     * 
+     * @throws PDOException 
+     * @throws BadRequestException 
+     * @throws DBException 
+     */
+    private function createShipReportStaffEntry(ShipReportStaffEntry $entry): ShipReportStaffEntry
+    {
+        $statement =
+            "INSERT INTO stevedoring_ship_reports_staff
+             SET
+                ship_report_id = :reportId,
+                staff_id = :staffId,
+                date = :date,
+                hours_worked = :hoursWorked,
+                comments = :comments";
+
+        try {
+            $this->mysql->prepareAndExecute(
+                $statement,
+                [
+                    'reportId' => $entry->report?->id,
+                    'staffId' => $entry->staff?->id,
+                    'date' => $entry->date?->format('Y-m-d'),
+                    'hoursWorked' => $entry->hoursWorked,
+                    'comments' => $entry->comments,
+                ]
+            );
+
+            $entry->id = (int) $this->mysql->lastInsertId();
+
+            return $entry;
+        } catch (PDOException $e) {
+            $this->mysql->rollbackIfNeeded();
+
+            if ($e->getCode() == 23000) {
+                $message = \sprintf(
+                    "%s est déjà enregistré pour la date %s.",
+                    $entry->staff?->fullname,
+                    $entry->date?->format('d/m/Y')
+                );
+                throw new BadRequestException($message, previous: $e);
+            }
+
+            throw new DBException("Impossible de créer l'entrée de personnel.", previous: $e);
+        }
+    }
+
+    /**
+     * 
+     * @param ShipReportStaffEntry $entry 
+     * 
+     * @return ShipReportStaffEntry 
+     * 
+     * @throws PDOException 
+     * @throws BadRequestException 
+     * @throws DBException 
+     */
+    private function updateShipReportStaffEntry(ShipReportStaffEntry $entry): ShipReportStaffEntry
+    {
+        $statement =
+            "UPDATE stevedoring_ship_reports_staff
+             SET
+                ship_report_id = :reportId,
+                staff_id = :staffId,
+                date = :date,
+                hours_worked = :hoursWorked,
+                comments = :comments
+             WHERE
+                id = :id";
+
+        try {
+            $this->mysql->prepareAndExecute(
+                $statement,
+                [
+                    'id' => $entry->id,
+                    'reportId' => $entry->report?->id,
+                    'staffId' => $entry->staff?->id,
+                    'date' => $entry->date?->format('Y-m-d'),
+                    'hoursWorked' => $entry->hoursWorked,
+                    'comments' => $entry->comments,
+                ]
+            );
+
+            return $entry;
+        } catch (PDOException $e) {
+            $this->mysql->rollbackIfNeeded();
+
+            if ($e->getCode() == 23000) {
+                $message = \sprintf(
+                    "%s est déjà enregistré pour la date %s.",
+                    $entry->staff?->fullname,
+                    $entry->date?->format('d/m/Y')
+                );
+                throw new BadRequestException($message, previous: $e);
+            }
+
+            throw new DBException("Impossible de modifier l'entrée de personnel.", previous: $e);
+        }
+    }
+
+    /**
+     * 
+     * @param int $reportId 
+     * 
+     * @return ShipReportSubcontractEntry[] 
+     *  
+     * @throws DBException 
+     * @throws RuntimeException 
+     */
+    private function fetchShipReportSubcontractEntriesForReport(int $reportId): array
+    {
+        $statement =
+            "SELECT
+                id,
+                ship_report_id,
+                subcontractor_name,
+                type,
+                date,
+                hours_worked,
+                cost,
+                comments
+             FROM stevedoring_ship_reports_subcontracts
+             WHERE ship_report_id = :reportId
+             ORDER BY
+                date ASC,
+                subcontractor_name ASC";
+
+        try {
+            /** @phpstan-var ShipReportSubcontractEntryArray[] */
+            $rawData = $this->mysql
+                ->prepareAndExecute($statement, ['reportId' => $reportId])
+                ->fetchAll();
+
+            $entries = \array_map(
+                fn(array $data) => $this->stevedoringService->makeShipReportSubcontractEntryFromDatabase($data),
+                $rawData
+            );
+
+            return $entries;
+        } catch (PDOException $e) {
+            throw new DBException("Impossible de récupérer les entrées de personnel.", previous: $e);
+        }
+    }
+
+    /**
+     * 
+     * @param ShipReportSubcontractEntry $entry 
+     * 
+     * @return ShipReportSubcontractEntry 
+     * 
+     * @throws PDOException 
+     * @throws BadRequestException 
+     * @throws DBException 
+     */
+    private function createShipReportSubcontractEntry(ShipReportSubcontractEntry $entry): ShipReportSubcontractEntry
+    {
+        $statement =
+            "INSERT INTO stevedoring_ship_reports_subcontracts
+             SET
+                ship_report_id = :reportId,
+                subcontractor_name = :subcontractorName,
+                type = :type,
+                date = :date,
+                hours_worked = :hoursWorked,
+                cost = :cost,
+                comments = :comments";
+
+        try {
+            $this->mysql->prepareAndExecute(
+                $statement,
+                [
+                    'reportId' => $entry->report?->id,
+                    'subcontractorName' => $entry->subcontractorName,
+                    'type' => $entry->type,
+                    'date' => $entry->date?->format('Y-m-d'),
+                    'hoursWorked' => $entry->hoursWorked,
+                    'cost' => $entry->cost,
+                    'comments' => $entry->comments,
+                ]
+            );
+
+            $entry->id = (int) $this->mysql->lastInsertId();
+
+            return $entry;
+        } catch (PDOException $e) {
+            $this->mysql->rollbackIfNeeded();
+
+            if ($e->getCode() == 23000) {
+                $message = \sprintf(
+                    "%s est déjà enregistré pour la date %s.",
+                    $entry->subcontractorName,
+                    $entry->date?->format('d/m/Y')
+                );
+                throw new BadRequestException($message, previous: $e);
+            }
+
+            throw new DBException("Impossible de créer l'entrée de personnel.", previous: $e);
+        }
+    }
+
+    /**
+     * 
+     * @param ShipReportSubcontractEntry $entry 
+     * 
+     * @return ShipReportSubcontractEntry 
+     * 
+     * @throws PDOException 
+     * @throws BadRequestException 
+     * @throws DBException 
+     */
+    private function updateShipReportSubcontractEntry(ShipReportSubcontractEntry $entry): ShipReportSubcontractEntry
+    {
+        $statement =
+            "UPDATE stevedoring_ship_reports_subcontracts
+             SET
+                ship_report_id = :reportId,
+                subcontractor_name = :subcontractorName,
+                type = :type,
+                date = :date,
+                hours_worked = :hoursWorked,
+                cost = :cost,
+                comments = :comments
+             WHERE
+                id = :id";
+
+        try {
+            $this->mysql->prepareAndExecute(
+                $statement,
+                [
+                    'id' => $entry->id,
+                    'reportId' => $entry->report?->id,
+                    'subcontractorName' => $entry->subcontractorName,
+                    'type' => $entry->type,
+                    'date' => $entry->date?->format('Y-m-d'),
+                    'hoursWorked' => $entry->hoursWorked,
+                    'cost' => $entry->cost,
+                    'comments' => $entry->comments,
+                ]
+            );
+
+            return $entry;
+        } catch (PDOException $e) {
+            $this->mysql->rollbackIfNeeded();
+
+            if ($e->getCode() == 23000) {
+                $message = \sprintf(
+                    "%s est déjà enregistré pour la date %s.",
+                    $entry->subcontractorName,
+                    $entry->date?->format('d/m/Y')
+                );
+                throw new BadRequestException($message, previous: $e);
+            }
+
+            throw new DBException("Impossible de modifier l'entrée de personnel.", previous: $e);
+        }
+    }
+
+    /**
+     * 
+     * @param int $reportId 
+     * 
+     * @return ShippingCallCargo[]  
+     * 
+     * @throws DBException 
+     * @throws RuntimeException 
+     */
+    private function fetchCargoEntriesForReport(int $reportId): array
+    {
+        $statement =
+            "SELECT *
+             FROM consignation_escales_marchandises
+             WHERE ship_report_id = :reportId";
+
+        try {
+            /** @phpstan-var ShippingCallCargoArray[] */
+            $rawData = $this->mysql
+                ->prepareAndExecute($statement, ['reportId' => $reportId])
+                ->fetchAll();
+
+            $entries = \array_map(
+                fn(array $data) => new ShippingService()->makeShippingCallCargoFromDatabase($data),
+                $rawData
+            );
+
+            return $entries;
+        } catch (PDOException $e) {
+            throw new DBException("Impossible de récupérer les marchandises.", previous: $e);
+        }
+    }
+
+    /**
+     * 
+     * @param ShippingCallCargo $entry 
+     * 
+     * @return ShippingCallCargo 
+     * 
+     * @throws PDOException 
+     * @throws DBException 
+     */
+    private function createCargoEntry(ShippingCallCargo $entry): ShippingCallCargo
+    {
+        $statement =
+            "INSERT INTO consignation_escales_marchandises
+             SET
+                escale_id = :shippingCallId,
+                ship_report_id = :reportId,
+                marchandise = :cargoName,
+                client = :customer,
+                operation = :operation,
+                tonnage_bl = :blTonnage,
+                cubage_bl = :blVolume,
+                nombre_bl = :blUnits,
+                tonnage_outturn = :outturnTonnage,
+                cubage_outturn = :outturnVolume,
+                nombre_outturn = :outturnUnits";
+
+        try {
+            $this->mysql->prepareAndExecute(
+                $statement,
+                [
+                    'shippingCallId' => $entry->shippingCall?->id,
+                    'reportId' => $entry->shipReport?->id,
+                    'cargoName' => $entry->cargoName,
+                    'customer' => $entry->customer,
+                    'operation' => $entry->operation,
+                    'blTonnage' => $entry->blTonnage,
+                    'blVolume' => $entry->blVolume,
+                    'blUnits' => $entry->blUnits,
+                    'outturnTonnage' => $entry->outturnTonnage,
+                    'outturnVolume' => $entry->outturnVolume,
+                    'outturnUnits' => $entry->outturnUnits,
+                ]
+            );
+
+            $entry->id = (int) $this->mysql->lastInsertId();
+
+            return $entry;
+        } catch (PDOException $e) {
+            $this->mysql->rollbackIfNeeded();
+
+            throw new DBException("Impossible de créer la marchandise {$entry->cargoName}.", previous: $e);
+        }
+    }
+
+    /**
+     * 
+     * @param ShippingCallCargo $entry 
+     * 
+     * @return ShippingCallCargo 
+     * 
+     * @throws PDOException 
+     * @throws DBException 
+     */
+    private function updateCargoEntry(ShippingCallCargo $entry): ShippingCallCargo
+    {
+        $statement =
+            "UPDATE consignation_escales_marchandises
+             SET
+                escale_id = :shippingCallId,
+                ship_report_id = :reportId,
+                marchandise = :cargoName,
+                client = :customer,
+                operation = :operation,
+                tonnage_bl = :blTonnage,
+                cubage_bl = :blVolume,
+                nombre_bl = :blUnits,
+                tonnage_outturn = :outturnTonnage,
+                cubage_outturn = :outturnVolume,
+                nombre_outturn = :outturnUnits
+             WHERE
+                id = :id";
+
+        try {
+            $this->mysql->prepareAndExecute(
+                $statement,
+                [
+                    'shippingCallId' => $entry->shippingCall?->id,
+                    'reportId' => $entry->shipReport?->id,
+                    'cargoName' => $entry->cargoName,
+                    'customer' => $entry->customer,
+                    'operation' => $entry->operation,
+                    'blTonnage' => $entry->blTonnage,
+                    'blVolume' => $entry->blVolume,
+                    'blUnits' => $entry->blUnits,
+                    'outturnTonnage' => $entry->outturnTonnage,
+                    'outturnVolume' => $entry->outturnVolume,
+                    'outturnUnits' => $entry->outturnUnits,
+                    'id' => $entry->id,
+                ]
+            );
+
+            return $entry;
+        } catch (PDOException $e) {
+            $this->mysql->rollbackIfNeeded();
+
+            throw new DBException("Impossible de modifier la marchandise {$entry->cargoName}.", previous: $e);
+        }
+    }
+
+    /**
+     * 
+     * @param int $reportId 
+     * 
+     * @return ShipReportStorageEntry[]
+     *  
+     * @throws DBException 
+     * @throws RuntimeException 
+     */
+    private function fetchShipReportStorageEntriesForReport(int $reportId): array
+    {
+        $statement =
+            "SELECT
+                id,
+                ship_report_id,
+                cargo_id,
+                storage_name,
+                tonnage,
+                volume,
+                units,
+                comments
+             FROM stevedoring_ship_reports_storage
+             WHERE ship_report_id = :reportId";
+
+        try {
+            /** @phpstan-var ShipReportStorageEntryArray[] */
+            $rawData = $this->mysql
+                ->prepareAndExecute($statement, ['reportId' => $reportId])
+                ->fetchAll();
+
+            $entries = \array_map(
+                fn(array $data) => $this->stevedoringService->makeShipReportStorageEntryFromDatabase($data),
+                $rawData
+            );
+
+            return $entries;
+        } catch (PDOException $e) {
+            throw new DBException("Impossible de récupérer les entrées de personnel.", previous: $e);
+        }
+    }
+
+    /**
+     * 
+     * @param ShipReportStorageEntry $entry 
+     * 
+     * @return ShipReportStorageEntry 
+     * 
+     * @throws PDOException 
+     * @throws BadRequestException 
+     * @throws DBException 
+     */
+    private function createShipReportStorageEntry(ShipReportStorageEntry $entry): ShipReportStorageEntry
+    {
+        $statement =
+            "INSERT INTO stevedoring_ship_reports_storage
+             SET
+                ship_report_id = :reportId,
+                cargo_id = :cargoId,
+                storage_name = :storageName,
+                tonnage = :tonnage,
+                volume = :volume,
+                units = :units,
+                comments = :comments";
+
+        try {
+            $this->mysql->prepareAndExecute(
+                $statement,
+                [
+                    'reportId' => $entry->report?->id,
+                    'cargoId' => $entry->cargo?->id,
+                    'storageName' => $entry->storageName,
+                    'tonnage' => $entry->tonnage,
+                    'volume' => $entry->volume,
+                    'units' => $entry->units,
+                    'comments' => $entry->comments,
+                ]
+            );
+
+            $entry->id = (int) $this->mysql->lastInsertId();
+
+            return $entry;
+        } catch (PDOException $e) {
+            $this->mysql->rollbackIfNeeded();
+
+            if ($e->getCode() == 23000) {
+                $message = \sprintf(
+                    "La combinaison %s (%s) - %s est enregistrée plusieurs fois.",
+                    $entry->cargo?->cargoName,
+                    $entry->cargo?->customer,
+                    $entry->storageName
+                );
+                throw new BadRequestException($message, previous: $e);
+            }
+
+            throw new DBException("Impossible de créer l'entrée de stockage.", previous: $e);
+        }
+    }
+
+    /**
+     * 
+     * @param ShipReportStorageEntry $entry 
+     * 
+     * @return ShipReportStorageEntry 
+     * 
+     * @throws PDOException 
+     * @throws BadRequestException 
+     * @throws DBException 
+     */
+    private function updateShipReportStorageEntry(ShipReportStorageEntry $entry): ShipReportStorageEntry
+    {
+        $statement =
+            "UPDATE stevedoring_ship_reports_storage
+             SET
+                ship_report_id = :reportId,
+                cargo_id = :cargoId,
+                storage_name = :storageName,
+                tonnage = :tonnage,
+                volume = :volume,
+                units = :units,
+                comments = :comments
+             WHERE
+                id = :id";
+
+        try {
+            $this->mysql->prepareAndExecute(
+                $statement,
+                [
+                    'reportId' => $entry->report?->id,
+                    'cargoId' => $entry->cargo?->id,
+                    'storageName' => $entry->storageName,
+                    'tonnage' => $entry->tonnage,
+                    'volume' => $entry->volume,
+                    'units' => $entry->units,
+                    'comments' => $entry->comments,
+                    'id' => $entry->id,
+                ]
+            );
+
+            return $entry;
+        } catch (PDOException $e) {
+            $this->mysql->rollbackIfNeeded();
+
+            if ($e->getCode() == 23000) {
+                $message = \sprintf(
+                    "La combinaison %s (%s) - %s est enregistrée plusieurs fois.",
+                    $entry->cargo?->cargoName,
+                    $entry->cargo?->customer,
+                    $entry->storageName
+                );
+                throw new BadRequestException($message, previous: $e);
+            }
+
+            throw new DBException("Impossible de modifier l'entrée de stockage.", previous: $e);
+        }
+    }
+
+    // ======
+    // Others
+    // ======
+
+    public function fetchShipReportsFilterData(): StevedoringReportsFilterDataDTO
+    {
+        try {
+            // Ships
+            $shipsStatement = "SELECT DISTINCT ship FROM stevedoring_ship_reports ORDER BY ship";
+            /** @var string[] */
+            $ships = $this->mysql
+                ->prepareAndExecute($shipsStatement)
+                ->fetchAll(\PDO::FETCH_COLUMN);
+
+            // Ports
+            $portsStatement = "SELECT DISTINCT port FROM stevedoring_ship_reports ORDER BY port";
+            /** @var string[] */
+            $ports = $this->mysql
+                ->prepareAndExecute($portsStatement)
+                ->fetchAll(\PDO::FETCH_COLUMN);
+
+            // Berths
+            $berthsStatement = "SELECT DISTINCT berth FROM stevedoring_ship_reports ORDER BY port";
+            /** @var string[] */
+            $berths = $this->mysql
+                ->prepareAndExecute($berthsStatement)
+                ->fetchAll(\PDO::FETCH_COLUMN);
+
+            // Cargoes
+            $cargoesStatement = "SELECT DISTINCT marchandise FROM consignation_escales_marchandises ORDER BY marchandise";
+            /** @var string[] */
+            $cargoes = $this->mysql
+                ->prepareAndExecute($cargoesStatement)
+                ->fetchAll(\PDO::FETCH_COLUMN);
+
+            // Customers
+            $customersStatement = "SELECT DISTINCT client FROM consignation_escales_marchandises ORDER BY client";
+            /** @var string[] */
+            $customers = $this->mysql
+                ->prepareAndExecute($customersStatement)
+                ->fetchAll(\PDO::FETCH_COLUMN);
+
+            // Storage names
+            $storageNamesStatement = "SELECT DISTINCT storage_name FROM stevedoring_ship_reports_storage ORDER BY storage_name";
+            /** @var string[] */
+            $storageNames = $this->mysql
+                ->prepareAndExecute($storageNamesStatement)
+                ->fetchAll();
+
+            $filterDataDto = new StevedoringReportsFilterDataDTO(
+                ships: $ships,
+                ports: $ports,
+                berths: $berths,
+                cargoes: $cargoes,
+                customers: $customers,
+                storageNames: $storageNames,
+            );
+
+            return $filterDataDto;
+        } catch (PDOException $e) {
+            throw new DBException("Impossible de récupérer les données de filtre.", previous: $e);
+        }
+    }
+
+    /**
+     * @return Collection<CallWithoutReportDTO>
+     */
+    public function fetchCallsWithoutReport(): Collection
+    {
+        try {
+            $statement =
+                "SELECT
+                    call.id,
+                    call.navire as shipName
+                FROM
+                    consignation_planning `call`
+                LEFT JOIN
+                    stevedoring_ship_reports `report` ON call.id = report.linked_shipping_call_id
+                WHERE
+                    report.id IS NULL
+                    AND NOT call.navire = 'TBN'
+                ORDER BY call.eta_date DESC";
+
+            /** @phpstan-var CallWithoutReport[] */
+            $callSummariesRaw = $this->mysql
+                ->prepareAndExecute($statement)
+                ->fetchAll();
+
+            $callDTOs = \array_map(
+                fn($callSummaryRaw) => new CallWithoutReportDTO($callSummaryRaw),
+                $callSummariesRaw
+            );
+
+            return new Collection($callDTOs);
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer la liste des escales consignation sans rapport.", previous: $e);
+        }
+    }
+
+    public function fetchSubcontractorsData(): StevedoringSubcontractorsDataDTO
+    {
+        $statement =
+            "SELECT DISTINCT
+                subcontractor_name as `name`,
+                type
+             FROM stevedoring_ship_reports_subcontracts
+             ORDER BY subcontractor_name, type";
+
+        try {
+            /** @var array{name: string, type: string}[] */
+            $subcontractorsData = $this->mysql
+                ->prepareAndExecute($statement)
+                ->fetchAll();
+
+            return new StevedoringSubcontractorsDataDTO($subcontractorsData);
+        } catch (PDOException $e) {
+            throw new DBException("Impossible de récupérer les données des sous-traitants.", previous: $e);
+        }
     }
 }

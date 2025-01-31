@@ -59,19 +59,11 @@
     try {
       updateButton.$set({ disabled: true });
 
-      const savedDispatch = dispatch.filter((item) => !item.deleted);
-
-      await vracRdvs.patch(appointment.id, {
-        dispatch: savedDispatch,
+      appointment = await vracRdvs.patch(appointment.id, {
+        dispatch: dispatch.filter((item) => !item.deleted),
       });
 
       Notiflix.Notify.success("Le dispatch a été mis à jour.");
-
-      savedDispatch.forEach((item) => {
-        delete item.new;
-      });
-
-      appointment.dispatch = savedDispatch;
 
       open = false;
 
@@ -92,16 +84,8 @@
   }
 
   function cancelUpdate() {
-    appointment.dispatch = dispatch
-      .filter((item) => !item.new)
-      .map((item) => {
-        delete item.deleted;
-        return item;
-      });
-
     awaitingDispatchBeforeOrderReady = false;
     awaitingDispatchBeforeArchive = false;
-
     open = false;
   }
 </script>

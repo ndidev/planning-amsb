@@ -29,12 +29,6 @@
     staff = $stevedoringStaff.get(tempWorkHours.staffId);
   }
 
-  function stringifyTime(time: number): string {
-    const hours = Math.floor(time);
-    const minutes = Math.round((time - hours) * 60);
-    return `${hours}h${minutes.toString().padStart(2, "0")}`;
-  }
-
   async function createTempWorkHours() {
     try {
       Notiflix.Block.dots([line], notiflixOptions.texts.ajout);
@@ -115,7 +109,7 @@
     </div>
 
     <div class="ms-auto lg:ms-0">
-      {stringifyTime(tempWorkHours.hoursWorked)}
+      {DateUtils.stringifyTime(tempWorkHours.hoursWorked)}
     </div>
 
     <div class="w-full lg:w-auto">{tempWorkHours.comments}</div>
@@ -146,6 +140,7 @@
       <NumericInput
         id="hoursWorked"
         format="+2"
+        max={24}
         bind:value={tempWorkHours.hoursWorked}
         placeholder="Heures"
         required

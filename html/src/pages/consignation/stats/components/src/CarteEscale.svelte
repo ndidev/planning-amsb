@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { DateUtils } from "@app/utils";
+  import { DateUtils, NumberUtils } from "@app/utils";
   import type { EscaleConsignation } from "@app/types";
 
   export let escale: EscaleConsignation;
@@ -18,34 +18,30 @@
         escale.etc_date
       ).format().long}
     </div>
-  {/if}
+  {/if}cargoName
 
   <ul class="mt-2">
-    {#each escale.marchandises as marchandise}
+    {#each escale.marchandises as cargo}
       <li class="ml-4">
         <div>
-          <span>{marchandise.marchandise}</span>
-          <span class="ml-2">{marchandise.client}</span>
+          <span>{cargo.cargoName}</span>
+          <span class="ml-2">{cargo.customer}</span>
 
-          {#if marchandise.tonnage_outturn}
+          {#if cargo.outturnTonnage}
             <span class="ml-4">
-              {marchandise.tonnage_outturn.toLocaleString("fr-FR", {
-                minimumFractionDigits: 3,
-              }) + " MT"}
+              {NumberUtils.formatTonnage(cargo.outturnTonnage)}
             </span>
           {/if}
 
-          {#if marchandise.cubage_outturn}
+          {#if cargo.outturnVolume}
             <span class="ml-4 italic">
-              {marchandise.cubage_outturn.toLocaleString("fr-FR", {
-                minimumFractionDigits: 3,
-              }) + " m3"}
+              {NumberUtils.formatVolume(cargo.outturnVolume)}
             </span>
           {/if}
 
-          {#if marchandise.nombre_outturn}
+          {#if cargo.outturnUnits}
             <span class="ml-4">
-              {marchandise.nombre_outturn.toLocaleString("fr-FR") + " colis"}
+              {NumberUtils.formatUnits(cargo.outturnUnits)}
             </span>
           {/if}
         </div>

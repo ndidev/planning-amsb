@@ -30,10 +30,7 @@ use App\Service\BulkService;
  */
 final class BulkProductRepository extends Repository
 {
-    public function __construct(private BulkService $bulkService)
-    {
-        parent::__construct();
-    }
+    public function __construct(private BulkService $bulkService) {}
 
     /**
      * @var BulkProduct[]
@@ -127,7 +124,7 @@ final class BulkProductRepository extends Repository
     {
         $cachedProducts = array_values(array_filter(
             static::$productsCache,
-            fn(BulkProduct $cachedProduct) => $cachedProduct->getId() === $id
+            fn(BulkProduct $cachedProduct) => $cachedProduct->id === $id
         ));
 
         $product = $cachedProducts[0] ?? null;
@@ -211,7 +208,7 @@ final class BulkProductRepository extends Repository
     {
         $cachedQualities = array_values(array_filter(
             static::$qualitiesCache,
-            fn(BulkQuality $cachedQuality) => $cachedQuality->getId() === $id
+            fn(BulkQuality $cachedQuality) => $cachedQuality->id === $id
         ));
 
         $quality = $cachedQualities[0] ?? null;
@@ -336,7 +333,7 @@ final class BulkProductRepository extends Repository
             'name' => $product->getName(),
             'color' => $product->getColor(),
             'unit' => $product->getUnit(),
-            'id' => $product->getId(),
+            'id' => $product->id,
         ]);
 
         // QUALITIES
@@ -344,10 +341,10 @@ final class BulkProductRepository extends Repository
         // !! DELETION TO BE PLACED *BEFORE* ADDING QUALITIES TO AVOID IMMEDIATE DELETION AFTER ADDITION !!
         // Compare the array passed by POST with the existing list of qualities for the relevant product
         $qualitiesRequest = $this->mysql->prepare("SELECT id FROM vrac_qualites WHERE produit = :productId");
-        $qualitiesRequest->execute(['productId' => $product->getId()]);
+        $qualitiesRequest->execute(['productId' => $product->id]);
         $existingQualitiesIds = $qualitiesRequest->fetchAll(\PDO::FETCH_COLUMN, 0);
 
-        $submittedQualitiesIds = \array_map(fn(BulkQuality $quality) => $quality->getId(), $product->getQualities());
+        $submittedQualitiesIds = \array_map(fn(BulkQuality $quality) => $quality->id, $product->getQualities());
         $qualitiesIdsToBeDeleted = array_diff($existingQualitiesIds, $submittedQualitiesIds);
 
         if (!empty($qualitiesIdsToBeDeleted)) {
@@ -360,15 +357,15 @@ final class BulkProductRepository extends Repository
         $updateQualityRequest = $this->mysql->prepare($updateQualityStatement);
 
         foreach ($product->getQualities() as $quality) {
-            if ($quality->getId()) {
+            if ($quality->id) {
                 $updateQualityRequest->execute([
                     'name' => $quality->getName(),
                     'color' => $quality->getColor(),
-                    'id' => $quality->getId(),
+                    'id' => $quality->id,
                 ]);
             } else {
                 $insertQualityRequest->execute([
-                    'productId' => $product->getId(),
+                    'productId' => $product->id,
                     'name' => $quality->getName(),
                     'color' => $quality->getColor(),
                 ]);
@@ -376,7 +373,7 @@ final class BulkProductRepository extends Repository
         }
 
         /** @var int */
-        $id = $product->getId();
+        $id = $product->id;
 
         /** @var BulkProduct */
         $updatedProduct = $this->fetchProduct($id);

@@ -45,6 +45,16 @@ class Collection implements \IteratorAggregate, \Countable, Arrayable, \JsonSeri
     }
 
     /**
+     * Clear the collection.
+     */
+    public function clear(): static
+    {
+        $this->items = [];
+
+        return $this;
+    }
+
+    /**
      * @return \ArrayIterator<int, T>
      */
     public function getIterator(): \ArrayIterator
@@ -72,13 +82,26 @@ class Collection implements \IteratorAggregate, \Countable, Arrayable, \JsonSeri
     /**
      * Apply a callback to every item of the collection.
      * 
-     * @param callable $callback 
+     * @template U
+     * @param callable(T): U|null $callback 
      * 
-     * @return array<mixed>
+     * @return array<U>
      */
-    public function map(callable $callback): array
+    public function map(?callable $callback): array
     {
         return \array_map($callback, $this->items);
+    }
+
+    /**
+     * Filter the collection using a callback.
+     * 
+     * @param callable(T): bool|null $callback 
+     * 
+     * @return self<T> 
+     */
+    public function filter(?callable $callback): self
+    {
+        return new self(\array_filter($this->items, $callback));
     }
 
     /**

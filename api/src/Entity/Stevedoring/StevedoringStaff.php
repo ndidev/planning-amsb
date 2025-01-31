@@ -13,145 +13,58 @@ use App\Core\Validation\Constraints\Required;
 use App\Core\Validation\ValidationResult;
 use App\Entity\AbstractEntity;
 
-class StevedoringStaff extends AbstractEntity
+class StevedoringStaff extends AbstractEntity implements \Stringable
 {
     use IdentifierTrait;
 
     #[Required(message: "Le prénom du personnel est requis.")]
-    private string $firstname = '';
+    public string $firstname = '';
 
     #[Required(message: "Le nom de famille du personnel est requis.")]
-    private string $lastname = '';
+    public string $lastname = '';
 
-    private string $phone = '';
+    /**
+     * Virtual property.
+     */
+    public string $fullname {
+        get => \trim($this->firstname . ' ' . $this->lastname) ?: '(Personnel supprimé)';
+    }
+
+    public string $phone = '';
 
     #[InArray(values: ['mensuel', 'interim'], message: "Le type de contrat n'est pas valide.")]
-    private string $type = '';
-
-    private ?string $tempWorkAgency = null;
-
-    private bool $isActive = true;
-
-    private string $comments = '';
-
-    private ?\DateTimeImmutable $deletedAt = null;
-
-    public function setFirstname(string $firstname): static
-    {
-        $this->firstname = $firstname;
-
-        return $this;
+    public string $type = '' {
+        set => \mb_strtolower($value);
     }
 
-    public function getFirstname(): string
-    {
-        return $this->firstname;
-    }
+    public ?string $tempWorkAgency = null;
 
-    public function setLastname(string $lastname): static
-    {
-        $this->lastname = $lastname;
+    public bool $isActive = true;
 
-        return $this;
-    }
+    public string $comments = '';
 
-    public function getLastname(): string
-    {
-        return $this->lastname;
-    }
-
-    public function getFullname(): string
-    {
-        return trim($this->firstname . ' ' . $this->lastname) ?: '(Personnel supprimé)';
-    }
-
-    public function setPhone(string $phone): static
-    {
-        $this->phone = $phone;
-
-        return $this;
-    }
-
-    public function getPhone(): string
-    {
-        return $this->phone;
-    }
-
-    public function setType(string $type): static
-    {
-        $this->type = mb_strtolower($type);
-
-        return $this;
-    }
-
-    public function getType(): string
-    {
-        return $this->type;
-    }
-
-    public function setTempWorkAgency(?string $tempWorkAgency): static
-    {
-        $this->tempWorkAgency = $tempWorkAgency ?: null;
-
-        return $this;
-    }
-
-    public function getTempWorkAgency(): ?string
-    {
-        return $this->tempWorkAgency ?: null;
-    }
-
-    public function setActive(bool $isActive): static
-    {
-        $this->isActive = $isActive;
-
-        return $this;
-    }
-
-    public function isActive(): bool
-    {
-        return $this->isActive;
-    }
-
-    public function setComments(string $comments): static
-    {
-        $this->comments = $comments;
-
-        return $this;
-    }
-
-    public function getComments(): string
-    {
-        return $this->comments;
-    }
-
-    public function setDeletedAt(?\DateTimeImmutable $deletedAt): static
-    {
-        $this->deletedAt = $deletedAt;
-
-        return $this;
-    }
-
-    public function getDeletedAt(): ?\DateTimeImmutable
-    {
-        return $this->deletedAt;
-    }
+    public ?\DateTimeImmutable $deletedAt = null;
 
     #[\Override]
     public function toArray(): array
     {
         return [
-            'id' => $this->getId(),
-            'firstname' => $this->getFirstname(),
-            'lastname' => $this->getLastname(),
-            'fullname' => $this->getFullname(),
-            'phone' => $this->getPhone(),
-            'type' => $this->getType(),
-            'tempWorkAgency' => $this->getTempWorkAgency(),
-            'isActive' => $this->isActive(),
-            'comments' => $this->getComments(),
-            'deletedAt' => $this->getDeletedAt()?->format('Y-m-d H:i:s'),
+            'id' => $this->id,
+            'firstname' => $this->firstname,
+            'lastname' => $this->lastname,
+            'fullname' => $this->fullname,
+            'phone' => $this->phone,
+            'type' => $this->type,
+            'tempWorkAgency' => $this->tempWorkAgency,
+            'isActive' => $this->isActive,
+            'comments' => $this->comments,
+            'deletedAt' => $this->deletedAt?->format('Y-m-d H:i:s'),
         ];
+    }
+
+    public function __toString(): string
+    {
+        return $this->fullname;
     }
 
     #[\Override]
@@ -159,7 +72,7 @@ class StevedoringStaff extends AbstractEntity
     {
         $validationResult = parent::validate(false);
 
-        if ($this->type === "interim" && $this->tempWorkAgency === null) {
+        if ($this->type === "interim" && !$this->tempWorkAgency) {
             $validationResult->addError("L'agence d'intérim est requise pour un personnel intérimaire.");
         }
 

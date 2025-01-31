@@ -1,6 +1,6 @@
 <?php
 
-// Path: api/src/Service/PdfService.php
+// Path: api/src/Service/PdfConfigService.php
 
 declare(strict_types=1);
 
@@ -26,7 +26,7 @@ use PHPMailer\PHPMailer\Exception as PHPMailerException;
 /**
  * @phpstan-import-type PdfConfigArray from \App\Repository\PdfConfigRepository
  */
-final class PdfService
+final class PdfConfigService
 {
     private PdfConfigRepository $pdfConfigRepository;
 
@@ -252,7 +252,7 @@ final class PdfService
                 throw new NotFoundException("Configuration PDF non trouvée");
             }
 
-            $supplierId = $config->getSupplier()?->getId();
+            $supplierId = $config->getSupplier()?->id;
 
             if (!$supplierId) {
                 throw new NotFoundException("Fournisseur non trouvé");

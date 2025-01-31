@@ -45,10 +45,7 @@ use App\Service\BulkService;
  */
 final class BulkAppointmentRepository extends Repository
 {
-    public function __construct(private BulkService $bulkService)
-    {
-        parent::__construct();
-    }
+    public function __construct(private BulkService $bulkService) {}
 
     /**
      * Vérifie si une entrée existe dans la base de données.
@@ -99,19 +96,16 @@ final class BulkAppointmentRepository extends Repository
             ORDER BY date_rdv";
 
         try {
-            $request = $this->mysql->prepare($statement);
-
-            if (!$request) {
-                throw new DBException("Impossible de récupérer les RDV vrac.");
-            }
-
-            $request->execute([
-                'startDate' => $filter->getSqlStartDate(),
-                'endDate' => $filter->getSqlEndDate(),
-            ]);
-
             /** @phpstan-var BulkAppointmentArray[] $appointmentsRaw */
-            $appointmentsRaw = $request->fetchAll();
+            $appointmentsRaw = $this->mysql
+                ->prepareAndExecute(
+                    $statement,
+                    [
+                        'startDate' => $filter->getSqlStartDate(),
+                        'endDate' => $filter->getSqlEndDate(),
+                    ]
+                )
+                ->fetchAll();
 
             $appointments = \array_map(
                 fn(array $appointmentRaw) => $this->bulkService->makeBulkAppointmentFromDatabase($appointmentRaw),
@@ -121,7 +115,7 @@ final class BulkAppointmentRepository extends Repository
             // Get all dispatch
             foreach ($appointments as $appointment) {
                 /** @var int $id */
-                $id = $appointment->getId();
+                $id = $appointment->id;
                 $dispatch = $this->fetchDispatchForAppointment($id);
                 $appointment->setDispatch($dispatch);
             }
@@ -228,14 +222,14 @@ final class BulkAppointmentRepository extends Repository
             $request->execute([
                 'date' => $appointment->getSqlDate(),
                 'time' => $appointment->getSqlTime(),
-                'productId' => $appointment->getProduct()?->getId(),
-                'qualityId' => $appointment->getQuality()?->getId(),
+                'productId' => $appointment->getProduct()?->id,
+                'qualityId' => $appointment->getQuality()?->id,
                 'quantity' => $appointment->getQuantityValue(),
                 'max' => (int) $appointment->getQuantityIsMax(),
                 'orderIsReady' => (int) $appointment->isReady(),
-                'supplierId' => $appointment->getSupplier()?->getId(),
-                'customerId' => $appointment->getCustomer()?->getId(),
-                'carrierId' => $appointment->getCarrier()?->getId(),
+                'supplierId' => $appointment->getSupplier()?->id,
+                'customerId' => $appointment->getCustomer()?->id,
+                'carrierId' => $appointment->getCarrier()?->id,
                 'orderNumber' => $appointment->getOrderNumber(),
                 'publicComments' => $appointment->getPublicComments(),
                 'privateComments' => $appointment->getPrivateComments(),
@@ -297,25 +291,25 @@ final class BulkAppointmentRepository extends Repository
             $request->execute([
                 'date' => $appointment->getSqlDate(),
                 'time' => $appointment->getSqlTime(),
-                'productId' => $appointment->getProduct()?->getId(),
-                'qualityId' => $appointment->getQuality()?->getId(),
+                'productId' => $appointment->getProduct()?->id,
+                'qualityId' => $appointment->getQuality()?->id,
                 'quantity' => $appointment->getQuantityValue(),
                 'max' => (int) $appointment->getQuantityIsMax(),
                 'orderIsReady' => (int) $appointment->isReady(),
-                'supplierId' => $appointment->getSupplier()?->getId(),
-                'customerId' => $appointment->getCustomer()?->getId(),
-                'carrierId' => $appointment->getCarrier()?->getId(),
+                'supplierId' => $appointment->getSupplier()?->id,
+                'customerId' => $appointment->getCustomer()?->id,
+                'carrierId' => $appointment->getCarrier()?->id,
                 'orderNumber' => $appointment->getOrderNumber(),
                 'publicComments' => $appointment->getPublicComments(),
                 'privateComments' => $appointment->getPrivateComments(),
                 'showOnTv' => (int) $appointment->isOnTv(),
                 'archive' => (int) $appointment->isArchive(),
-                'id' => $appointment->getId(),
+                'id' => $appointment->id,
             ]);
 
 
             /** @var int */
-            $id = $appointment->getId();
+            $id = $appointment->id;
 
             $this->deleteDispatchForAppointment($id);
             $this->insertDispatchForAppointment($id, $appointment->getDispatch());
@@ -392,11 +386,24 @@ final class BulkAppointmentRepository extends Repository
      */
     public function deleteAppointment(int $id): void
     {
-        $request = $this->mysql->prepare("DELETE FROM vrac_planning WHERE id = :id");
-        $isDeleted = $request->execute(["id" => $id]);
+        static $request;
 
-        if (!$isDeleted) {
-            throw new DBException("Erreur lors de la suppression");
+        try {
+            if (!$request instanceof \PDOStatement) {
+                $request = $this->mysql->prepare("DELETE FROM vrac_planning WHERE id = :id");
+            }
+
+            if (!$request) {
+                throw new DBException("Impossible de supprimer le RDV vrac.");
+            }
+
+            $isDeleted = $request->execute(["id" => $id]);
+
+            if (!$isDeleted) {
+                throw new DBException("Impossible de supprimer le RDV vrac.");
+            }
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de supprimer le RDV vrac.", previous: $e);
         }
     }
 
@@ -435,22 +442,35 @@ final class BulkAppointmentRepository extends Repository
                 q.nom,
                 c.nom_court";
 
-        $request = $this->mysql->prepare($statement);
-        $request->execute([
-            "supplierId" => $supplier->getId(),
-            "startDate" => $startDate->format('Y-m-d'),
-            "endDate" => $endDate->format('Y-m-d'),
-        ]);
+        static $request;
 
-        /** @phpstan-var BulkAppointmentArray[] $appointmentsRaw */
-        $appointmentsRaw = $request->fetchAll();
+        try {
+            if (!$request instanceof \PDOStatement) {
+                $request = $this->mysql->prepare($statement);
+            }
 
-        $appointments = \array_map(
-            fn(array $appointmentRaw) => $this->bulkService->makeBulkAppointmentFromDatabase($appointmentRaw),
-            $appointmentsRaw
-        );
+            if (!$request) {
+                throw new DBException("Impossible de récupérer les RDV vrac à exporter.");
+            }
 
-        return new Collection($appointments);
+            $request->execute([
+                "supplierId" => $supplier->id,
+                "startDate" => $startDate->format('Y-m-d'),
+                "endDate" => $endDate->format('Y-m-d'),
+            ]);
+
+            /** @phpstan-var BulkAppointmentArray[] $appointmentsRaw */
+            $appointmentsRaw = $request->fetchAll();
+
+            $appointments = \array_map(
+                fn(array $appointmentRaw) => $this->bulkService->makeBulkAppointmentFromDatabase($appointmentRaw),
+                $appointmentsRaw
+            );
+
+            return new Collection($appointments);
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer les RDV vrac à exporter.", previous: $e);
+        }
     }
 
     // ========
@@ -477,11 +497,10 @@ final class BulkAppointmentRepository extends Repository
             WHERE appointment_id = :id";
 
         try {
-            $request = $this->mysql->prepare($statement);
-            $request->execute(["id" => $id]);
-
             /** @phpstan-var BulkDispatchArray[] */
-            $dispatchesRaw = $request->fetchAll();
+            $dispatchesRaw = $this->mysql
+                ->prepareAndExecute($statement, ["id" => $id])
+                ->fetchAll();
 
             $dispatches = \array_map(
                 fn(array $dispatchRaw) => $this->bulkService->makeBulkDispatchItemFromDatabase($dispatchRaw),
@@ -506,6 +525,8 @@ final class BulkAppointmentRepository extends Repository
      */
     public function insertDispatchForAppointment(int $id, array $dispatch): void
     {
+        if (\count($dispatch) === 0) return;
+
         $statement =
             "INSERT INTO stevedoring_bulk_dispatch
              SET
@@ -515,16 +536,18 @@ final class BulkAppointmentRepository extends Repository
                 remarks = :remarks";
 
         try {
-            $request = $this->mysql->prepare($statement);
-
-            foreach ($dispatch as $dispatchItem) {
-                $request->execute([
-                    'id' => $id,
-                    'staffId' => $dispatchItem->getStaff()?->getId(),
-                    'date' => $dispatchItem->getDate()?->format('Y-m-d'),
-                    'remarks' => $dispatchItem->getRemarks(),
-                ]);
-            }
+            $this->mysql->prepareAndExecute(
+                $statement,
+                \array_map(
+                    fn(BulkDispatchItem $dispatchItem) => [
+                        'id' => $id,
+                        'staffId' => $dispatchItem->getStaff()?->id,
+                        'date' => $dispatchItem->getDate()?->format('Y-m-d'),
+                        'remarks' => $dispatchItem->getRemarks(),
+                    ],
+                    $dispatch
+                )
+            );
         } catch (\PDOException $e) {
             throw new DBException("Impossible d'enregistrer le dispatch", previous: $e);
         }
@@ -541,11 +564,11 @@ final class BulkAppointmentRepository extends Repository
      */
     public function deleteDispatchForAppointment(int $id): void
     {
-        $statement = "DELETE FROM stevedoring_bulk_dispatch WHERE appointment_id = :id";
-
         try {
-            $request = $this->mysql->prepare($statement);
-            $request->execute(["id" => $id]);
+            $this->mysql->prepareAndExecute(
+                "DELETE FROM stevedoring_bulk_dispatch WHERE appointment_id = :id",
+                ["id" => $id]
+            );
         } catch (\PDOException $e) {
             throw new DBException("Impossible de supprimer le dispatch du RDV {$id}", previous: $e);
         }
@@ -599,8 +622,16 @@ final class BulkAppointmentRepository extends Repository
                 staff.firstname ASC
             ";
 
+        static $dispatchRequest;
+
         try {
-            $dispatchRequest = $this->mysql->prepare($dispatchStatement);
+            if (!$dispatchRequest instanceof \PDOStatement) {
+                $dispatchRequest = $this->mysql->prepare($dispatchStatement);
+            }
+
+            if (!$dispatchRequest) {
+                throw new DBException("Impossible de récupérer les statistiques de dispatch");
+            }
 
             $dispatchRequest->execute([
                 "startDate" => $filter->getSqlStartDate(),

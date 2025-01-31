@@ -16,11 +16,6 @@ final readonly class BulkDispatchStatsFilterDTO extends Filter
 
     public const DEFAULT_END_DATE = '9999-12-31';
 
-    /**
-     * TimberFilterDTO constructor.
-     * 
-     * @param HTTPRequestQuery $query
-     */
     public function __construct(HTTPRequestQuery $query)
     {
         $defaultStartDate = (new \DateTime())->sub(new \DateInterval('P1Y'));

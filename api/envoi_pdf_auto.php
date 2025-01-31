@@ -9,7 +9,7 @@ require_once __DIR__ . '/bootstrap.php';
 use App\Core\Component\DateUtils;
 use App\Core\Exceptions\Server\ServerException;
 use App\Core\Logger\ErrorLogger;
-use App\Service\PdfService;
+use App\Service\PdfConfigService;
 
 const TODAY = new \DateTime();
 
@@ -22,7 +22,7 @@ if (empty($_POST) && !DateUtils::isWorkingDay(TODAY)) {
     return false;
 }
 
-$pdfService = new PdfService();
+$pdfService = new PdfConfigService();
 
 // Récupération des configurations PDF
 $configs = $pdfService->getAllConfigs();
@@ -56,7 +56,7 @@ foreach ($configs as $config) {
         $formattedStartDate = DateUtils::format(DateUtils::DATE_FULL, $startDate);
         $formattedEndDate = DateUtils::format(DateUtils::DATE_FULL, $endDate);
 
-        $configId = $config->getId();
+        $configId = $config->id;
 
         if (!$configId) {
             throw new ServerException("Erreur : l'identifiant de la configuration n'a pas été trouvé");
@@ -70,7 +70,7 @@ foreach ($configs as $config) {
         );
 
         // Mise à jour du rapport
-        $rapport .= "• {$config->getModule()}/{$config->getSupplier()?->getId()} ({$config->getSupplier()?->getShortName()}) : succès" . PHP_EOL;
+        $rapport .= "• {$config->getModule()}/{$config->getSupplier()?->id} ({$config->getSupplier()?->getShortName()}) : succès" . PHP_EOL;
         $rapport .= "  Dates : du {$formattedStartDate} au {$formattedEndDate}" . PHP_EOL;
         $rapport .= "  Adresses : " . PHP_EOL;
         $rapport .= "    From : " . $resultat["adresses"]["from"] . PHP_EOL;
@@ -87,7 +87,7 @@ foreach ($configs as $config) {
             $rapport .= "      $address" . PHP_EOL;
         }
     } catch (\Exception $e) {
-        $rapport .= "• {$config->getModule()}/{$config->getSupplier()?->getId()} ({$config->getSupplier()?->getShortName()}) : échec" . PHP_EOL;
+        $rapport .= "• {$config->getModule()}/{$config->getSupplier()?->id} ({$config->getSupplier()?->getShortName()}) : échec" . PHP_EOL;
         $rapport .= "  Erreur : {$e->getMessage()}" . PHP_EOL;
         ErrorLogger::log($e);
     } finally {

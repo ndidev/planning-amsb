@@ -32,9 +32,10 @@ abstract class StaticArrayHandler
         string $key,
         ?string $default = '',
         bool $allowEmpty = true,
+        bool $trim = true,
         bool $throwException = false,
     ): ?string {
-        return static::getInstance()->getString($key, $default, $allowEmpty, $throwException);
+        return static::getInstance()->getString($key, $default, $allowEmpty, $trim, $throwException);
     }
 
     /**

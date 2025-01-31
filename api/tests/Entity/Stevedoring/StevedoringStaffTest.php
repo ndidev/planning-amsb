@@ -13,43 +13,15 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(StevedoringStaff::class)]
 final class StevedoringStaffTest extends TestCase
 {
-    public function testSetAndGetFirstname(): void
-    {
-        // Given
-        $stevedoringStaff = new StevedoringStaff();
-        $firstname = 'John';
-
-        // When
-        $stevedoringStaff->setFirstname($firstname);
-        $actualName = $stevedoringStaff->getFirstname();
-
-        // Then
-        $this->assertSame($firstname, $actualName);
-    }
-
-    public function testSetAndGetLastname(): void
-    {
-        // Given
-        $stevedoringStaff = new StevedoringStaff();
-        $lastname = 'Doe';
-
-        // When
-        $stevedoringStaff->setLastname($lastname);
-        $actualName = $stevedoringStaff->getLastname();
-
-        // Then
-        $this->assertSame($lastname, $actualName);
-    }
-
     public function testGetFullname(): void
     {
         // Given
         $stevedoringStaff = new StevedoringStaff();
-        $stevedoringStaff->setFirstname('John');
-        $stevedoringStaff->setLastname('Doe');
+        $stevedoringStaff->firstname = 'John';
+        $stevedoringStaff->lastname = 'Doe';
 
         // When
-        $fullname = $stevedoringStaff->getFullname();
+        $fullname = $stevedoringStaff->fullname;
 
         // Then
         $this->assertSame('John Doe', $fullname);
@@ -59,116 +31,31 @@ final class StevedoringStaffTest extends TestCase
     {
         // Given
         $stevedoringStaff = new StevedoringStaff();
-        $stevedoringStaff->setFirstname('');
-        $stevedoringStaff->setLastname('');
+        $stevedoringStaff->firstname = '';
+        $stevedoringStaff->lastname = '';
         $expected = '(Personnel supprimé)';
 
         // When
-        $fullname = $stevedoringStaff->getFullname();
+        $fullname = $stevedoringStaff->fullname;
 
         // Then
         $this->assertSame($expected, $fullname);
-    }
-
-    public function testSetAndGetPhone(): void
-    {
-        // Given
-        $stevedoringStaff = new StevedoringStaff();
-        $phone = '0123456789';
-
-        // When
-        $stevedoringStaff->setPhone($phone);
-        $actualPhone = $stevedoringStaff->getPhone();
-
-        // Then
-        $this->assertSame($phone, $actualPhone);
-    }
-
-    public function testSetAndGetType(): void
-    {
-        // Given
-        $stevedoringStaff = new StevedoringStaff();
-        $type = 'cdi';
-
-        // When
-        $stevedoringStaff->setType($type);
-        $actualType = $stevedoringStaff->getType();
-
-        // Then
-        $this->assertSame($type, $actualType);
-    }
-
-    public function testSetAndGetTempWorkAgency(): void
-    {
-        // Given
-        $stevedoringStaff = new StevedoringStaff();
-        $tempWorkAgency = 'Some agency';
-
-        // When
-        $stevedoringStaff->setTempWorkAgency($tempWorkAgency);
-        $actualTempWorkAgency = $stevedoringStaff->getTempWorkAgency();
-
-        // Then
-        $this->assertSame($tempWorkAgency, $actualTempWorkAgency);
-    }
-
-    public function testSetAndIsActive(): void
-    {
-        // Given
-        $stevedoringStaff = new StevedoringStaff();
-        $isActive = false;
-
-        // When
-        $stevedoringStaff->setActive($isActive);
-        $actualIsActive = $stevedoringStaff->isActive();
-
-        // Then
-        $this->assertSame($isActive, $actualIsActive);
-    }
-
-    public function testSetAndGetComments(): void
-    {
-        // Given
-        $stevedoringStaff = new StevedoringStaff();
-        $comments = 'Some comments';
-
-        // When
-        $stevedoringStaff->setComments($comments);
-        $actualComments = $stevedoringStaff->getComments();
-
-        // Then
-        $this->assertSame($comments, $actualComments);
-    }
-
-    public function testSetAndGetDeletedAt(): void
-    {
-        // Given
-        $stevedoringStaff = new StevedoringStaff();
-        $deletionDate = new \DateTimeImmutable('2021-01-01 01:23:45');
-
-        // When
-        $stevedoringStaff->setDeletedAt($deletionDate);
-        $actualDeletionDate = $stevedoringStaff->getDeletedAt();
-
-        // Then
-        $this->assertSame($deletionDate, $actualDeletionDate);
     }
 
     public function testToArray(): void
     {
         // Given
         $deletionDate = new \DateTimeImmutable('2021-01-01 01:23:45');
-        $stevedoringStaff =
-            (new StevedoringStaff())
-            ->setId(1)
-            ->setFirstname('John')
-            ->setLastname('Doe')
-            ->setPhone('0123456789')
-            ->setType('interim')
-            ->setTempWorkAgency('Some agency')
-            ->setActive(true)
-            ->setComments('Some comments')
-            ->setDeletedAt($deletionDate);
+        $stevedoringStaff = new StevedoringStaff();
+        $stevedoringStaff->id = 1;
+        $stevedoringStaff->firstname = 'John';
+        $stevedoringStaff->lastname = 'Doe';
+        $stevedoringStaff->phone = '0123456789';
+        $stevedoringStaff->type = 'interim';
+        $stevedoringStaff->tempWorkAgency = 'Some agency';
+        $stevedoringStaff->isActive = true;
+        $stevedoringStaff->comments = 'Some comments';
+        $stevedoringStaff->deletedAt = $deletionDate;
 
         $expectedArray = [
             'id' => 1,
@@ -188,5 +75,21 @@ final class StevedoringStaffTest extends TestCase
 
         // Then
         $this->assertSame($expectedArray, $actualArray);
+    }
+
+    public function testStringable(): void
+    {
+        // Given
+        $stevedoringStaff = new StevedoringStaff();
+        $stevedoringStaff->firstname = 'John';
+        $stevedoringStaff->lastname = 'Doe';
+
+        $expectedString = 'John Doe';
+
+        // When
+        $actualString = (string) $stevedoringStaff;
+
+        // Then
+        $this->assertSame($expectedString, $actualString);
     }
 }

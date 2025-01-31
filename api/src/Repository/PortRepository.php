@@ -22,10 +22,7 @@ final class PortRepository extends Repository
 {
     private string $redisNamespace = "ports";
 
-    public function __construct(private PortService $portService)
-    {
-        parent::__construct();
-    }
+    public function __construct(private PortService $portService) {}
 
     /**
      * Récupère tous les ports.

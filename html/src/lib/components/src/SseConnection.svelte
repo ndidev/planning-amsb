@@ -56,7 +56,6 @@
 
     source.onopen = (event) => {
       if (isReconnect) {
-        // console.debug("SSE : Connexion rétablie");
         document.dispatchEvent(new CustomEvent(`planning:sse-reconnect`));
         isReconnect = false;
       }
@@ -97,7 +96,6 @@
     // Envoi des événements en attente lorsque la page redevient visible
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") {
-        // console.debug("SSE : Page visible, envoi des événements en attente");
         applyPendingUpdates(pendingUpdates);
       }
     });

@@ -131,7 +131,7 @@ final class ThirdPartyController extends Controller
         $thirdParty = $this->thirdPartyService->createThirdParty($input);
 
         /** @var int $id */
-        $id = $thirdParty->getId();
+        $id = $thirdParty->id;
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)

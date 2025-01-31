@@ -94,7 +94,7 @@ final class TempWorkHoursController extends Controller
         $tempWorkHours = $this->stevedoringService->getTempWorkHoursEntry($id);
 
         if (!$tempWorkHours) {
-            throw new NotFoundException("Cette entrée n'xiste pas.");
+            throw new NotFoundException("Cette entrée n'existe pas.");
         }
 
         $etag = ETag::get($tempWorkHours);
@@ -120,7 +120,7 @@ final class TempWorkHoursController extends Controller
         $newTempWorkHours = $this->stevedoringService->createTempWorkHours($requestBody);
 
         /** @var int $id */
-        $id = $newTempWorkHours->getId();
+        $id = $newTempWorkHours->id;
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)
@@ -137,11 +137,11 @@ final class TempWorkHoursController extends Controller
         }
 
         if (!$id) {
-            throw new BadRequestException("L'identifiant de l'intérimaire est obligatoire.");
+            throw new BadRequestException("L'identifiant de l'entrée est obligatoire.");
         }
 
         if (!$this->stevedoringService->tempWorkHoursEntryExists($id)) {
-            throw new NotFoundException("L'intérimaire n'existe pas.");
+            throw new NotFoundException("Cette entrée n'existe pas.");
         }
 
         $requestBody = $this->request->getBody();
@@ -162,11 +162,11 @@ final class TempWorkHoursController extends Controller
         }
 
         if (!$id) {
-            throw new BadRequestException("L'identifiant de l'intérimaire est obligatoire.");
+            throw new BadRequestException("L'identifiant de l'entrée est obligatoire.");
         }
 
         if (!$this->stevedoringService->tempWorkHoursEntryExists($id)) {
-            throw new NotFoundException("L'intérimaire n'existe pas.");
+            throw new NotFoundException("Cette entrée n'existe pas.");
         }
 
         $this->stevedoringService->deleteTempWorkHours($id);

@@ -27,12 +27,15 @@ export const vracRdvs = createFlatStore<RdvVrac>(
     dispatch: [],
   },
   {
-    satisfiesParams,
+    satisfiesParams: satisfiesAppointmentParams,
     additionalEvents: ["vrac/produits"],
   }
 );
 
-function satisfiesParams(appointment: RdvVrac, searchParams: URLSearchParams) {
+function satisfiesAppointmentParams(
+  appointment: RdvVrac,
+  searchParams: URLSearchParams
+) {
   const filter: { [P in keyof BulkPlanningFilter]: string } =
     Object.fromEntries(searchParams);
 

@@ -41,6 +41,10 @@
       "chartering",
       { title: "Nouvel affrètement", href: "/chartering/charters/new" },
     ],
+    [
+      "manutention",
+      { title: "Nouveau rapport", href: "/manutention/rapports-navires/new" },
+    ],
   ]);
 
   // const ajoutsRapides: { [P in keyof typeof $configAjoutsRapides]: any } = {

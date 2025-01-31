@@ -10,6 +10,7 @@ export const consignationEscales = createFlatStore<EscaleConsignation>(
   {
     id: null,
     navire: "TBN",
+    shipReportId: null,
     voyage: null,
     armateur: null,
     eta_date: null,
@@ -36,11 +37,12 @@ export const consignationEscales = createFlatStore<EscaleConsignation>(
     commentaire: "",
   },
   {
-    satisfiesParams,
+    satisfiesParams: satisfiesCallParams,
+    additionalEvents: ["manutention/rapports-navires"],
   }
 );
 
-function satisfiesParams(
+function satisfiesCallParams(
   call: EscaleConsignation,
   searchParams: URLSearchParams
 ) {
@@ -63,7 +65,7 @@ function satisfiesParams(
       ?.split(",")
       .some((customersFilterItems) =>
         call.marchandises
-          .flatMap((marchandise) => marchandise.client)
+          .flatMap((marchandise) => marchandise.customer)
           .includes(customersFilterItems)
       ) ?? true;
 
@@ -73,14 +75,14 @@ function satisfiesParams(
           ?.split(",")
           .some((cargoFilterItems) =>
             call.marchandises
-              .flatMap((cargo) => cargo.marchandise)
+              .flatMap((cargo) => cargo.cargoName)
               .includes(cargoFilterItems)
           ) ?? true
       : filter.cargoes
           ?.split(",")
           .some((cargoFilterItem) =>
             call.marchandises
-              .flatMap((cargo) => cargo.marchandise)
+              .flatMap((cargo) => cargo.cargoName)
               .some((cargoName) =>
                 removeDiacritics(cargoName).includes(
                   removeDiacritics(cargoFilterItem)

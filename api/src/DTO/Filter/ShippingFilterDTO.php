@@ -23,11 +23,6 @@ final readonly class ShippingFilterDTO extends Filter
     public const DEFAULT_START_DATE = 'now';
     public const DEFAULT_END_DATE = '9999-12-31';
 
-    /**
-     * ShippingFilterDTO constructor.
-     * 
-     * @param HTTPRequestQuery $query
-     */
     public function __construct(HTTPRequestQuery $query)
     {
         $this->startDate = $query->getDatetime('startDate', self::DEFAULT_START_DATE);

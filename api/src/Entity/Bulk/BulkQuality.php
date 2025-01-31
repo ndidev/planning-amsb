@@ -64,7 +64,7 @@ class BulkQuality extends AbstractEntity
     public function toArray(): array
     {
         return [
-            "id" => $this->getId(),
+            "id" => $this->id,
             "nom" => $this->getName(),
             "couleur" => $this->getColor(),
         ];

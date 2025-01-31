@@ -9,7 +9,7 @@ namespace App\Repository;
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\Config\PdfConfig;
-use App\Service\PdfService;
+use App\Service\PdfConfigService;
 
 /**
  * @phpstan-type PdfConfigArray array{
@@ -24,10 +24,7 @@ use App\Service\PdfService;
  */
 final class PdfConfigRepository extends Repository
 {
-    public function __construct(private PdfService $pdfService)
-    {
-        parent::__construct();
-    }
+    public function __construct(private PdfConfigService $pdfService) {}
 
     public function configExists(int $id): bool
     {
@@ -129,7 +126,7 @@ final class PdfConfigRepository extends Repository
         $this->mysql->beginTransaction();
         $request->execute([
             "module" => $config->getModule(),
-            "supplierId" => $config->getSupplier()?->getId(),
+            "supplierId" => $config->getSupplier()?->id,
             "autoSend" => (int) $config->isAutoSend(),
             "emails" => $config->getEmailsAsString(),
             "daysBefore" => $config->getDaysBefore(),
@@ -168,16 +165,16 @@ final class PdfConfigRepository extends Repository
         $request = $this->mysql->prepare($statement);
         $request->execute([
             "module" => $config->getModule(),
-            "supplierId" => $config->getSupplier()?->getId(),
+            "supplierId" => $config->getSupplier()?->id,
             "autoSend" => (int) $config->isAutoSend(),
             "emails" => $config->getEmailsAsString(),
             "daysBefore" => $config->getDaysBefore(),
             "daysAfter" => $config->getDaysAfter(),
-            "id" => $config->getId(),
+            "id" => $config->id,
         ]);
 
         /** @var int */
-        $id = $config->getId();
+        $id = $config->id;
 
         /** @var PdfConfig */
         $updatedConfig = $this->fetchConfig($id);

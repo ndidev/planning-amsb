@@ -54,6 +54,7 @@
           .filter((staff) => staff.type === "interim")
           .map((staff) => staff.tempWorkAgency)
           .filter((agency) => agency)
+          .sort()
       )
     : [];
 
@@ -148,8 +149,10 @@
         <Input
           type="text"
           id="firstname"
+          name="Prénom"
           bind:value={staff.firstname}
           placeholder="Prénom"
+          required
         />
       </div>
 
@@ -159,8 +162,10 @@
         <Input
           type="text"
           id="lastname"
+          name="Nom de famille"
           bind:value={staff.lastname}
           placeholder="Nom de famille"
+          required
         />
       </div>
 
@@ -190,6 +195,7 @@
           <Label for="tempWorkAgency">Agence d'intérim</Label>
           <Svelecte
             inputId="tempWorkAgency"
+            name="Agence d'intérim"
             bind:value={staff.tempWorkAgency}
             options={[...tempWorkAgencies.values()]}
             placeholder="Agence d'intérim"

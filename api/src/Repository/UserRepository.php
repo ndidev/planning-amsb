@@ -29,10 +29,7 @@ use App\Service\UserService;
  */
 final class UserRepository extends Repository
 {
-    public function __construct(private UserService $userService)
-    {
-        parent::__construct();
-    }
+    public function __construct(private UserService $userService) {}
 
     public function userExists(string $uid): bool
     {

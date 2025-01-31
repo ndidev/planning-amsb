@@ -141,6 +141,13 @@
 
   export let align: string = "middle";
 
+  export let disabled: boolean = false;
+
+  /**
+   * Référence vers le bouton.
+   */
+  export let button: HTMLButtonElement = null;
+
   function colorIsCode(color: string): boolean {
     return (
       color.startsWith("#") ||
@@ -152,6 +159,7 @@
 
 <button
   type="button"
+  bind:this={button}
   style:--color={colorIsCode(color) ? color : `var(--${color}-color)`}
   style:--hover-color={colorIsCode(hoverColor)
     ? hoverColor
@@ -161,6 +169,8 @@
   style:vertical-align={align}
   {title}
   on:click
+  {disabled}
+  class:disabled
 >
   <slot>
     <svelte:component this={icon} {size} />
@@ -217,5 +227,14 @@
 
   button:is(:hover)::before {
     opacity: 0.15;
+  }
+
+  button.disabled {
+    cursor: not-allowed;
+    color: var(--default-color);
+
+    &:is(:hover, :focus) {
+      color: var(--default-color);
+    }
   }
 </style>

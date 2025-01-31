@@ -108,7 +108,7 @@ final class InfoBannerController extends Controller
         $newLine = $this->infoBannerService->createLine($input);
 
         /** @var int $id */
-        $id = $newLine->getId();
+        $id = $newLine->id;
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)

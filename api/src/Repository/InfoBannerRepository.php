@@ -23,10 +23,7 @@ use App\Service\InfoBannerService;
  */
 final class InfoBannerRepository extends Repository
 {
-    public function __construct(private InfoBannerService $infoBannerService)
-    {
-        parent::__construct();
-    }
+    public function __construct(private InfoBannerService $infoBannerService) {}
 
     public function lineExists(int $id): bool
     {
@@ -145,11 +142,11 @@ final class InfoBannerRepository extends Repository
             'tv' => (int) $line->isTv(),
             'color' => $line->getColor(),
             'message' => \mb_substr($line->getMessage(), 0, 255),
-            'id' => $line->getId(),
+            'id' => $line->id,
         ]);
 
         /** @var int */
-        $id = $line->getId();
+        $id = $line->id;
 
         /** @var InfoBannerLine */
         $updatedLine = $this->fetchLine($id);

@@ -92,7 +92,7 @@ class BulkProduct extends AbstractEntity
     public function toArray(): array
     {
         return [
-            "id" => $this->getId(),
+            "id" => $this->id,
             "nom" => $this->getName(),
             "couleur" => $this->getColor(),
             "unite" => $this->getUnit(),

@@ -14,11 +14,11 @@ use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Array\Environment;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
-use App\Service\PdfService;
+use App\Service\PdfConfigService;
 
 final class PdfConfigController extends Controller
 {
-    private PdfService $pdfService;
+    private PdfConfigService $pdfService;
     private string $module = Module::CONFIG;
     private string $sseEventName = "config/pdf";
 
@@ -26,7 +26,7 @@ final class PdfConfigController extends Controller
         private ?int $id = null,
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
-        $this->pdfService = new PdfService();
+        $this->pdfService = new PdfConfigService();
         $this->processRequest();
     }
 
@@ -141,7 +141,7 @@ final class PdfConfigController extends Controller
         $newPdfConfig = $this->pdfService->createConfig($input);
 
         /** @var int $id */
-        $id = $newPdfConfig->getId();
+        $id = $newPdfConfig->id;
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)

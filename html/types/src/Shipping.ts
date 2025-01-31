@@ -13,6 +13,11 @@ export type EscaleConsignation = {
   navire: string;
 
   /**
+   * Identifiant du rapport de manutention.
+   */
+  shipReportId: number | null;
+
+  /**
    * Numéro de voyage.
    */
   voyage: string | null;
@@ -125,20 +130,7 @@ export type EscaleConsignation = {
   /**
    * Liste des marchandises.
    */
-  marchandises: {
-    id: number;
-    escale_id: number;
-    operation: "import" | "export";
-    marchandise: string;
-    client: string;
-    environ: boolean;
-    tonnage_bl: number;
-    cubage_bl: number;
-    nombre_bl: number;
-    tonnage_outturn: number;
-    cubage_outturn: number;
-    nombre_outturn: number;
-  }[];
+  marchandises: ShippingCallCargo[];
 
   /**
    * Commentaire.
@@ -146,14 +138,33 @@ export type EscaleConsignation = {
   commentaire: string;
 };
 
+export type ShippingCallCargo = {
+  id: number;
+  escale_id: number | null;
+  shipReportId: number | null;
+  operation: "import" | "export";
+  cargoName: string;
+  customer: string;
+  isApproximate: boolean;
+  blTonnage: number | null;
+  blVolume: number | null;
+  blUnits: number | null;
+  outturnTonnage: number | null;
+  outturnVolume: number | null;
+  outturnUnits: number | null;
+  tonnageDifference?: number | null;
+  volumeDifference?: number | null;
+  unitsDifference?: number | null;
+};
+
 export type ShippingFilter = Partial<{
   startDate: string;
   endDate: string;
   ships: EscaleConsignation["navire"][];
   shipOwners: EscaleConsignation["armateur"][];
-  cargoes: EscaleConsignation["marchandises"][number]["marchandise"][];
+  cargoes: EscaleConsignation["marchandises"][number]["cargoName"][];
   strictCargoes: boolean;
-  customers: EscaleConsignation["marchandises"][number]["client"][];
+  customers: EscaleConsignation["marchandises"][number]["customer"][];
   lastPorts: EscaleConsignation["last_port"][];
   nextPorts: EscaleConsignation["next_port"][];
 }>;

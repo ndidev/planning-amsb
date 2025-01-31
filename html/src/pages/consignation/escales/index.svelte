@@ -16,9 +16,13 @@
 
   let escales: EscaleConsignation[];
 
+  let callsReady = consignationEscales.getReadyState();
+
   const unsubscribeFilter = filter.subscribe((value) => {
     const params = value.toSearchParams();
     consignationEscales.setSearchParams(params);
+
+    callsReady = consignationEscales.getReadyState();
   });
 
   const unsubscribeEscales = consignationEscales.subscribe((value) => {
@@ -40,7 +44,6 @@
   });
 </script>
 
-<!-- routify:options query-params-is-page -->
 <!-- routify:options guard="consignation" -->
 
 <SseConnection
@@ -60,7 +63,9 @@
 <FilterModal />
 
 <main class="w-full flex-auto">
-  {#if escales}
+  {#await callsReady}
+    <Chargement />
+  {:then}
     <div class="divide-y">
       {#each escales as escale (escale.id)}
         <LigneEscale {escale} />
@@ -68,7 +73,7 @@
         <div class="p-4 text-center">Aucune escale trouvée.</div>
       {/each}
     </div>
-  {:else}
-    <Chargement />
-  {/if}
+  {:catch error}
+    <div class="p-4 text-center text-red-500">Erreur de chargement</div>
+  {/await}
 </main>

@@ -20,10 +20,7 @@ use App\Service\ChartDatumService;
  */
 final class ChartDatumRepository extends Repository
 {
-    public function __construct(private ChartDatumService $chartDatumService)
-    {
-        parent::__construct();
-    }
+    public function __construct(private ChartDatumService $chartDatumService) {}
 
     public function datumExists(string $name): bool
     {

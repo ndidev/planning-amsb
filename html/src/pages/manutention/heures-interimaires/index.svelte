@@ -3,14 +3,19 @@
   import { onDestroy } from "svelte";
 
   import { Button, Input, ButtonGroup } from "flowbite-svelte";
-  import { PlusCircleIcon, RectangleEllipsisIcon } from "lucide-svelte";
+  import {
+    PlusCircleIcon,
+    RectangleEllipsisIcon,
+    DownloadIcon,
+  } from "lucide-svelte";
   import Notiflix from "notiflix";
 
   import {
     FilterBanner,
     filter,
     TempWorkHoursLine,
-    FormModal,
+    AddHoursModal,
+    ReportModal,
   } from "./components";
   import { PageHeading, Chargement, SseConnection } from "@app/components";
 
@@ -32,7 +37,10 @@
 
   let prefillDate = new Date().toISOString().split("T")[0];
 
-  let newModalOpen = false;
+  let addHoursModalOpen = false;
+  let reportModalOpen = false;
+
+  const defaultHoursWorked = 8;
 
   $: if ($stevedoringTempWorkHours) {
     tempWorkHoursByDate = [...$stevedoringTempWorkHours.values()]
@@ -47,12 +55,15 @@
   function addEntryForDate(date: string) {
     const newEntry = stevedoringTempWorkHours.new();
     newEntry.date = date;
-    newEntry.hoursWorked = 8;
+    newEntry.hoursWorked = defaultHoursWorked;
   }
+
+  // BUG: when selecting an already existing staff memeber in the list and confirming
+  // (we get a response 400), when clicking cancel and then "add hours", the staff member is reset to the already existing one.
 
   async function preFillForDate(date: string) {
     try {
-      const ids = await fetcher<number[]>(
+      const dispatch = await fetcher<{ [id: string]: number }[]>(
         `manutention/dispatch-interimaire/${date}`
       );
 
@@ -63,7 +74,9 @@
         )
       );
 
-      const newIds = ids.filter((id) => !existingIds.has(id));
+      const newIds = Object.keys(dispatch).filter(
+        (id) => !existingIds.has(Number(id))
+      );
 
       if (newIds.length === 0) {
         Notiflix.Notify.info("Aucun nouvel intérimaire à ajouter");
@@ -73,8 +86,8 @@
       newIds.map((id) => {
         const newEntry = stevedoringTempWorkHours.new();
         newEntry.date = date;
-        newEntry.staffId = id;
-        newEntry.hoursWorked = 8;
+        newEntry.staffId = Number(id);
+        newEntry.hoursWorked = dispatch[id] || defaultHoursWorked;
         return newEntry;
       });
     } catch (error) {
@@ -95,17 +108,19 @@
 />
 
 {#if $currentUser.canEdit("manutention")}
-  <FormModal bind:open={newModalOpen} />
+  <AddHoursModal bind:open={addHoursModalOpen} />
 {/if}
+
+<ReportModal bind:open={reportModalOpen} />
 
 <main class="mx-auto w-10/12 lg:w-2/3">
   <PageHeading>Heures intérimaires</PageHeading>
 
   <FilterBanner />
 
-  {#if $currentUser.canEdit("manutention")}
-    <div class="mt-6 flex flex-col lg:flex-row gap-2 lg:gap-4 justify-center">
-      <Button on:click={() => (newModalOpen = true)}>
+  <div class="mt-6 flex flex-col lg:flex-row gap-2 lg:gap-4 justify-center">
+    {#if $currentUser.canEdit("manutention")}
+      <Button on:click={() => (addHoursModalOpen = true)}>
         <PlusCircleIcon size={20} />
         <span class="ms-2">Ajouter des heures</span>
       </Button>
@@ -121,8 +136,13 @@
           <span class="ms-2">Pré-remplir </span>
         </Button>
       </ButtonGroup>
-    </div>
-  {/if}
+    {/if}
+
+    <Button on:click={() => (reportModalOpen = true)}>
+      <DownloadIcon size={20} />
+      <span class="ms-2">Télécharger les heures</span>
+    </Button>
+  </div>
 
   <div class="mt-12">
     {#if tempWorkHoursByDate}

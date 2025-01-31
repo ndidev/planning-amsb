@@ -41,6 +41,7 @@ final class ErrorLogger
 
         $arrayError = [
             "type" => \get_class($e),
+            "php version" => \PHP_VERSION,
             "code" => $e->getCode(),
             "message" => $e->getMessage(),
             "file" => $e->getFile(),

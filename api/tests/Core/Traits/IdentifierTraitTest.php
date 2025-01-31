@@ -19,7 +19,7 @@ class IdentifierTraitTest extends TestCase
         };
 
         // Then
-        $this->assertNull($standardClass->getId());
+        $this->assertNull($standardClass->id);
     }
 
     public function testSetAndGetId(): void
@@ -33,6 +33,6 @@ class IdentifierTraitTest extends TestCase
         $standardClass->setId(1);
 
         // Then
-        $this->assertEquals(1, $standardClass->getId());
+        $this->assertEquals(1, $standardClass->id);
     }
 }
