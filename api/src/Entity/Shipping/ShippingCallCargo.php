@@ -13,7 +13,7 @@ use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
 use App\Entity\Stevedoring\ShipReport;
 
-final class ShippingCallCargo extends AbstractEntity
+final class ShippingCallCargo extends AbstractEntity implements \Stringable
 {
     use IdentifierTrait;
 
@@ -105,5 +105,10 @@ final class ShippingCallCargo extends AbstractEntity
             'volumeDifference' => $this->volumeDifference,
             'unitsDifference' => $this->unitsDifference,
         ];
+    }
+
+    public function __toString(): string
+    {
+        return $this->cargoName;
     }
 }

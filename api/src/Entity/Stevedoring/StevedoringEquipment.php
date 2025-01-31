@@ -31,6 +31,10 @@ class StevedoringEquipment extends AbstractEntity implements \Stringable
 
     public string $serialNumber = '';
 
+    public bool $isCrane {
+        get => \array_any(["pelle", "grue"], fn(string $match) => \str_contains(\mb_strtolower($this->type), $match));
+    }
+
     public string $comments = '';
 
     public bool $isActive = true;
@@ -46,6 +50,7 @@ class StevedoringEquipment extends AbstractEntity implements \Stringable
             'serialNumber' => $this->serialNumber,
             'displayName' => $this->displayName,
             'comments' => $this->comments,
+            'isCrane' => $this->isCrane,
             'isActive' => $this->isActive,
         ];
     }

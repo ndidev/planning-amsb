@@ -2,34 +2,28 @@
   import { sineIn } from "svelte/easing";
   import { goto } from "@roxi/routify";
 
-  import {
-    Drawer,
-    CloseButton,
-    Accordion,
-    AccordionItem,
-    Table,
-    TableHead,
-    TableHeadCell,
-    TableBody,
-    TableBodyRow,
-    TableBodyCell,
-    Tooltip,
-  } from "flowbite-svelte";
-  import { PencilIcon, ArrowUpIcon, ArrowDownIcon } from "lucide-svelte";
+  import { Drawer, CloseButton } from "flowbite-svelte";
+  import { PencilIcon, PrinterIcon } from "lucide-svelte";
+  import Notiflix from "notiflix";
 
+  import {
+    DailyEntries,
+    Cargoes,
+    Costs,
+    Rate,
+    Storage,
+  } from "./reportComponents";
   import { LucideButton } from "@app/components";
-  import { DateUtils, NumberUtils } from "@app/utils";
 
-  import {
-    currentUser,
-    stevedoringEquipments,
-    stevedoringStaff,
-  } from "@app/stores";
+  import { fetcher } from "@app/utils";
+
+  import { currentUser } from "@app/stores";
 
   import type { StevedoringShipReport } from "@app/types";
 
-  export let report: StevedoringShipReport;
+  let printButton: HTMLButtonElement;
 
+  export let report: StevedoringShipReport;
   export let hidden = true;
 
   let transitionParams = {
@@ -38,103 +32,29 @@
     easing: sineIn,
   };
 
-  let totalCraneHours = Object.values(report.entriesByDate)
-    .flatMap(({ cranes }) => cranes)
-    .reduce((acc, curr) => acc + curr.hoursWorked, 0);
+  async function printReport() {
+    try {
+      Notiflix.Block.merge({ svgSize: "24px" });
+      Notiflix.Block.circle([printButton]);
+      printButton.style.minHeight = "initial";
 
-  let rate = {
-    tonnage: report.cargoTotals.outturn.tonnage
-      ? report.cargoTotals.outturn.tonnage / totalCraneHours
-      : null,
-    volume: report.cargoTotals.outturn.volume
-      ? report.cargoTotals.outturn.volume / totalCraneHours
-      : null,
-    units: report.cargoTotals.outturn.units
-      ? report.cargoTotals.outturn.units / totalCraneHours
-      : null,
-  };
+      const blob: Blob = await fetcher(
+        `manutention/rapports-navires/${report.id}/pdf`,
+        { accept: "blob" }
+      );
 
-  let storageByCargo = report.storageEntries.reduce((acc, curr) => {
-    if (!acc[curr.cargoId]) {
-      acc[curr.cargoId] = [];
+      const file = URL.createObjectURL(blob);
+      const filename = "Rapport navire " + report.ship + ".pdf";
+      const link = document.createElement("a");
+      link.href = file;
+      link.download = filename;
+      link.click();
+    } catch (error) {
+      Notiflix.Notify.failure(error.message);
+    } finally {
+      Notiflix.Block.remove([printButton]);
     }
-
-    acc[curr.cargoId] = [
-      ...acc[curr.cargoId],
-      {
-        storageName: curr.storageName,
-        tonnage: curr.tonnage,
-        volume: curr.volume,
-        units: curr.units,
-      },
-    ];
-
-    return acc;
-  }, {});
-
-  let costs = {
-    // Standard costs
-    permanentStaffHours: Object.values(report.entriesByDate)
-      .flatMap(({ permanentStaff }) => permanentStaff)
-      .reduce((acc, curr) => acc + curr.hoursWorked, 0),
-    craneHours: totalCraneHours,
-    equipmentHours: Object.values(report.entriesByDate)
-      .flatMap(({ equipments }) => equipments)
-      .reduce((acc, curr) => acc + curr.hoursWorked, 0),
-
-    // Subcontracts
-    tempStaffHours: Object.values(report.entriesByDate)
-      .flatMap(({ tempStaff }) => tempStaff)
-      .reduce((acc, curr) => acc + curr.hoursWorked, 0),
-    truckingHours: Object.values(report.entriesByDate)
-      .flatMap(({ trucking }) => trucking)
-      .reduce((acc, curr) => acc + curr.hoursWorked, 0),
-    truckingCost: Object.values(report.entriesByDate)
-      .flatMap(({ trucking }) => trucking)
-      .reduce((acc, curr) => acc + curr.cost, 0),
-    truckingDetails: Object.values(report.entriesByDate)
-      .flatMap(({ trucking }) => trucking)
-      .reduce(
-        (acc: { [name: string]: { hours: number; cost: number } }, curr) => {
-          if (!acc[curr.subcontractorName]) {
-            acc[curr.subcontractorName] = {
-              hours: 0,
-              cost: 0,
-            };
-          }
-
-          acc[curr.subcontractorName].hours += curr.hoursWorked;
-          acc[curr.subcontractorName].cost += curr.cost;
-
-          return acc;
-        },
-        {}
-      ),
-    otherSubcontractsHours: Object.values(report.entriesByDate)
-      .flatMap(({ otherSubcontracts }) => otherSubcontracts)
-      .reduce((acc, curr) => acc + curr.hoursWorked, 0),
-    otherSubcontractsCost: Object.values(report.entriesByDate)
-      .flatMap(({ otherSubcontracts }) => otherSubcontracts)
-      .reduce((acc, curr) => acc + curr.cost, 0),
-    otherSubcontractsDetails: Object.values(report.entriesByDate)
-      .flatMap(({ otherSubcontracts }) => otherSubcontracts)
-      .reduce(
-        (acc: { [name: string]: { hours: number; cost: number } }, curr) => {
-          if (!acc[curr.subcontractorName]) {
-            acc[curr.subcontractorName] = {
-              hours: 0,
-              cost: 0,
-            };
-          }
-
-          acc[curr.subcontractorName].hours += curr.hoursWorked;
-          acc[curr.subcontractorName].cost += curr.cost;
-
-          return acc;
-        },
-        {}
-      ),
-  };
+  }
 </script>
 
 <Drawer
@@ -162,6 +82,15 @@
           align="baseline"
         />
       {/if}
+
+      <LucideButton
+        preset="copy"
+        icon={PrinterIcon}
+        on:click={printReport}
+        title="Imprimer le rapport"
+        align="baseline"
+        bind:button={printButton}
+      />
     </div>
 
     <!-- Port et quai -->
@@ -212,612 +141,14 @@
       {/if}
     </div>
 
-    <!-- Coûts -->
-    <div>
-      <div class="text-lg font-bold">Coûts</div>
-      <div class="ms-2 flex flex-col lg:flex-row gap-2 lg:gap-6">
-        <div>
-          <div class="font-bold">Coûts standards</div>
-          <div>Personnel : <span>{costs.permanentStaffHours}h</span></div>
-          <div>Grues : <span>{costs.craneHours}</span>h</div>
-          <div>Engins : <span>{costs.equipmentHours}h</span></div>
-        </div>
-        <div>
-          <div class="font-bold">Sous-traitance</div>
-          <div>Intérim : <span>{costs.permanentStaffHours}h</span></div>
-          <div>
-            <span
-              class:underline={costs.truckingHours || costs.truckingCost}
-              class:cursor-help={costs.truckingHours || costs.truckingCost}
-              id="trucking-costs"
-              title="Afficher le détail">Brouettage</span
-            >
-            : <span>{costs.truckingHours}h</span> /
-            <span>{NumberUtils.formatCost(costs.truckingCost)}</span>
-            {#if costs.truckingHours || costs.truckingCost}
-              <Tooltip
-                type="light"
-                triggeredBy="#trucking-costs"
-                trigger="click"
-              >
-                <div class="flex flex-col gap-2">
-                  {#each Object.entries(costs.truckingDetails).sort() as [subcontractorName, { hours, cost }]}
-                    <div>
-                      <span>{subcontractorName} : </span>
-                      <span>{hours}h</span> /
-                      <span>{NumberUtils.formatCost(cost)}</span>
-                    </div>
-                  {/each}
-                </div>
-              </Tooltip>
-            {/if}
-          </div>
-          <div>
-            <span
-              class:underline={costs.otherSubcontractsHours ||
-                costs.otherSubcontractsCost}
-              class:cursor-help={costs.otherSubcontractsHours ||
-                costs.otherSubcontractsCost}
-              id="otherSubcontracts-costs"
-              title="Afficher le détail">Autres</span
-            >
-            : <span>{costs.otherSubcontractsHours}h</span> /
-            <span>{NumberUtils.formatCost(costs.otherSubcontractsCost)}</span>
-            {#if costs.otherSubcontractsHours || costs.otherSubcontractsCost}
-              <Tooltip
-                type="light"
-                triggeredBy="#otherSubcontracts-costs"
-                trigger="click"
-              >
-                <div class="flex flex-col gap-2">
-                  {#each Object.entries(costs.otherSubcontractsDetails).sort() as [subcontractorName, { hours, cost }]}
-                    <div>
-                      <span>{subcontractorName} : </span>
-                      <span>{hours}h</span> /
-                      <span>{NumberUtils.formatCost(cost)}</span>
-                    </div>
-                  {/each}
-                </div>
-              </Tooltip>
-            {/if}
-          </div>
-        </div>
-      </div>
-    </div>
+    <Costs {report} />
 
-    <!-- Cadence -->
-    <div>
-      <div class="text-lg font-bold">Cadence</div>
-      {#if Object.values(rate).some((value) => value)}
-        <!-- Tonnage -->
-        {#if rate.tonnage}
-          <div class="ms-2">
-            {NumberUtils.formatTonnageRate(rate.tonnage)}
-          </div>
-        {/if}
+    <Rate {report} />
 
-        <!-- Volume -->
-        {#if rate.volume}
-          <div class="ms-2">
-            {NumberUtils.formatVolumeRate(rate.volume)}
-          </div>
-        {/if}
+    <Cargoes {report} />
 
-        <!-- Unités -->
-        {#if rate.units}
-          <div class="ms-2">
-            {NumberUtils.formatUnitsRate(rate.units)}
-          </div>
-        {/if}
-      {:else}
-        <div class="ms-2 italic">Cadence non disponible</div>
-      {/if}
-    </div>
+    <Storage {report} />
 
-    <!-- Marchandises -->
-    <div>
-      <div class="text-lg font-bold">Marchandises</div>
-      {#if report.cargoEntries.length > 0}
-        <div>
-          <Table>
-            <TableHead>
-              <TableHeadCell>Marchandise (Client)</TableHeadCell>
-              <TableHeadCell>BL</TableHeadCell>
-              <TableHeadCell>Outturn</TableHeadCell>
-              <TableHeadCell>Différence</TableHeadCell>
-            </TableHead>
-
-            <TableBody>
-              {#each report.cargoEntries as cargo}
-                <TableBodyRow>
-                  <!-- Marchandise + Client -->
-                  <TableBodyCell>
-                    <span
-                      title={cargo.operation.charAt(0).toLocaleUpperCase() +
-                        cargo.operation.slice(1)}
-                      class="*:align-text-top"
-                    >
-                      {#if cargo.operation === "import"}
-                        <ArrowDownIcon size="1em" />
-                      {:else if cargo.operation === "export"}
-                        <ArrowUpIcon size="1em" />
-                      {/if}
-                    </span>
-                    <span class="font-bold">{cargo.cargoName}</span>
-                    <span>({cargo.customer})</span>
-                  </TableBodyCell>
-
-                  <!-- BL -->
-                  <TableBodyCell>
-                    {#if cargo.blTonnage}
-                      <div>{NumberUtils.formatTonnage(cargo.blTonnage)}</div>
-                    {/if}
-
-                    {#if cargo.blVolume}
-                      <div>
-                        {NumberUtils.formatVolume(cargo.blVolume)}
-                      </div>
-                    {/if}
-
-                    {#if cargo.blUnits}
-                      <div>{NumberUtils.formatUnits(cargo.blUnits)}</div>
-                    {/if}
-                  </TableBodyCell>
-
-                  <!-- Outturn -->
-                  <TableBodyCell>
-                    {#if cargo.outturnTonnage}
-                      <div>
-                        {NumberUtils.formatTonnage(cargo.outturnTonnage)}
-                      </div>
-                    {/if}
-
-                    {#if cargo.outturnVolume}
-                      <div>
-                        {NumberUtils.formatVolume(cargo.outturnVolume)}
-                      </div>
-                    {/if}
-
-                    {#if cargo.outturnUnits}
-                      <div>{NumberUtils.formatUnits(cargo.outturnUnits)}</div>
-                    {/if}
-                  </TableBodyCell>
-
-                  <!-- Différence -->
-                  <TableBodyCell>
-                    {#if cargo.outturnTonnage && cargo.blTonnage}
-                      <div
-                        class={NumberUtils.getQuantityColor(
-                          cargo.tonnageDifference
-                        )}
-                      >
-                        {NumberUtils.formatTonnage(
-                          cargo.tonnageDifference,
-                          true
-                        )}
-                      </div>
-                    {/if}
-
-                    {#if cargo.outturnVolume && cargo.blVolume}
-                      <div
-                        class={NumberUtils.getQuantityColor(
-                          cargo.volumeDifference
-                        )}
-                      >
-                        {NumberUtils.formatVolume(cargo.volumeDifference, true)}
-                      </div>
-                    {/if}
-
-                    {#if cargo.outturnUnits && cargo.blUnits}
-                      <div
-                        class={NumberUtils.getQuantityColor(
-                          cargo.unitsDifference
-                        )}
-                      >
-                        {NumberUtils.formatUnits(cargo.unitsDifference, true)}
-                      </div>
-                    {/if}
-                  </TableBodyCell>
-                </TableBodyRow>
-              {/each}
-            </TableBody>
-
-            {#if report.cargoEntries.length > 1}
-              <tfoot>
-                <tr class="font-semibold text-gray-900 bg-gray-50">
-                  <th scope="row" class="py-3 px-6 text-base">Total</th>
-
-                  <!-- BL -->
-                  <td class="py-3 px-6">
-                    {#if report.cargoTotals.bl.tonnage}
-                      <div>
-                        {NumberUtils.formatTonnage(
-                          report.cargoTotals.bl.tonnage
-                        )}
-                      </div>
-                    {/if}
-
-                    {#if report.cargoTotals.bl.volume}
-                      <div>
-                        {NumberUtils.formatVolume(report.cargoTotals.bl.volume)}
-                      </div>
-                    {/if}
-
-                    {#if report.cargoTotals.bl.units}
-                      <div>
-                        {NumberUtils.formatUnits(report.cargoTotals.bl.units)}
-                      </div>
-                    {/if}
-                  </td>
-
-                  <!-- Outturn -->
-                  <td class="py-3 px-6">
-                    {#if report.cargoTotals.bl.tonnage}
-                      <div>
-                        {NumberUtils.formatTonnage(
-                          report.cargoTotals.outturn.tonnage
-                        )}
-                      </div>
-                    {/if}
-
-                    {#if report.cargoTotals.bl.volume}
-                      <div>
-                        {NumberUtils.formatVolume(
-                          report.cargoTotals.outturn.volume
-                        )}
-                      </div>
-                    {/if}
-
-                    {#if report.cargoTotals.bl.units}
-                      <div>
-                        {NumberUtils.formatUnits(
-                          report.cargoTotals.outturn.units
-                        )}
-                      </div>
-                    {/if}
-                  </td>
-
-                  <!-- Différence -->
-                  <td class="py-3 px-6">
-                    {#if report.cargoTotals.bl.tonnage}
-                      <div
-                        class={NumberUtils.getQuantityColor(
-                          report.cargoTotals.difference.tonnage
-                        )}
-                      >
-                        {NumberUtils.formatTonnage(
-                          report.cargoTotals.difference.tonnage,
-                          true
-                        )}
-                      </div>
-                    {/if}
-
-                    {#if report.cargoTotals.bl.volume}
-                      <div
-                        class={NumberUtils.getQuantityColor(
-                          report.cargoTotals.difference.volume
-                        )}
-                      >
-                        {NumberUtils.formatVolume(
-                          report.cargoTotals.difference.volume,
-                          true
-                        )}
-                      </div>
-                    {/if}
-
-                    {#if report.cargoTotals.bl.units}
-                      <div
-                        class={NumberUtils.getQuantityColor(
-                          report.cargoTotals.difference.units
-                        )}
-                      >
-                        {NumberUtils.formatUnits(
-                          report.cargoTotals.difference.units,
-                          true
-                        )}
-                      </div>
-                    {/if}
-                  </td>
-                </tr>
-              </tfoot>
-            {/if}
-          </Table>
-        </div>
-      {:else}
-        <div class="ms-2 italic">Aucune marchandise</div>
-      {/if}
-    </div>
-
-    <!-- Stockage -->
-    <div>
-      <div class="text-lg font-bold">Stockage</div>
-      {#if report.storageEntries.length > 0}
-        <div>
-          <Table>
-            <TableHead>
-              <TableHeadCell>Marchandise (Client)</TableHeadCell>
-              <TableHeadCell>Magasin</TableHeadCell>
-              <TableHeadCell>Tonnage</TableHeadCell>
-              <TableHeadCell>Volume</TableHeadCell>
-              <TableHeadCell>Nombre</TableHeadCell>
-            </TableHead>
-
-            <TableBody>
-              {#each Object.keys(storageByCargo) as cargoId}
-                {@const cargo = report.cargoEntries.find(
-                  ({ id }) => id === Number(cargoId)
-                )}
-                {#each storageByCargo[cargoId] as storageEntry, i}
-                  <TableBodyRow>
-                    {#if i === 0}
-                      <TableBodyCell
-                        rowspan={storageByCargo[cargoId].length}
-                        class="align-top"
-                      >
-                        <span class="font-bold">{cargo.cargoName}</span>
-                        <span>({cargo.customer})</span>
-                      </TableBodyCell>
-                    {/if}
-
-                    <TableBodyCell>{storageEntry.storageName}</TableBodyCell>
-
-                    {#if storageEntry.tonnage}
-                      <TableBodyCell>
-                        {NumberUtils.formatTonnage(storageEntry.tonnage)}
-                      </TableBodyCell>
-                    {:else}
-                      <TableBodyCell></TableBodyCell>
-                    {/if}
-
-                    {#if storageEntry.volume}
-                      <TableBodyCell>
-                        {NumberUtils.formatVolume(storageEntry.volume)}
-                      </TableBodyCell>
-                    {:else}
-                      <TableBodyCell></TableBodyCell>
-                    {/if}
-
-                    {#if storageEntry.units}
-                      <TableBodyCell>
-                        {NumberUtils.formatUnits(storageEntry.units)}
-                      </TableBodyCell>
-                    {:else}
-                      <TableBodyCell></TableBodyCell>
-                    {/if}
-                  </TableBodyRow>
-                {/each}
-              {/each}
-            </TableBody>
-
-            <tfoot>
-              <tr class="font-semibold text-gray-900 bg-gray-50">
-                <th scope="row" class="py-3 px-6 text-base">Total</th>
-
-                <td class="py-3 px-6"></td>
-
-                <td class="py-3 px-6">
-                  {report.storageTotals.tonnage
-                    ? NumberUtils.formatTonnage(report.storageTotals.tonnage)
-                    : ""}
-                </td>
-
-                <td class="py-3 px-6">
-                  {report.storageTotals.volume
-                    ? NumberUtils.formatVolume(report.storageTotals.volume)
-                    : ""}
-                </td>
-
-                <td class="py-3 px-6">
-                  {report.storageTotals.units
-                    ? NumberUtils.formatUnits(report.storageTotals.units)
-                    : ""}
-                </td>
-              </tr>
-            </tfoot>
-          </Table>
-        </div>
-      {:else}
-        <div class="ms-2 italic">Aucun stockage</div>
-      {/if}
-    </div>
-
-    <!-- Jours -->
-    <div>
-      <div class="text-lg font-bold">Jours</div>
-      {#if Object.values(report.entriesByDate).flat().length > 0}
-        <div class="ms-2">
-          <Accordion multiple flush>
-            {#each Object.keys(report.entriesByDate) as date}
-              {@const dateEntries = report.entriesByDate[date]}
-              <AccordionItem>
-                <span slot="header">{new DateUtils(date).format().long}</span>
-
-                <!-- Grues -->
-                <div class="ms-2">
-                  <div class="font-bold">Grues</div>
-                  <ul class="ms-2">
-                    {#each dateEntries.cranes as entry}
-                      {@const equipment = stevedoringEquipments.get(
-                        entry.equipmentId
-                      )}
-                      <li>
-                        {#await equipment}
-                          <span
-                            class="animate-pulse bg-gray-200 rounded-lg w-1/4 h-6"
-                          ></span>
-                        {:then equipment}
-                          <span
-                            >{equipment.brand}
-                            {equipment.model}
-                            {equipment.internalNumber}</span
-                          >
-                        {/await}
-
-                        <span class="ms-3"
-                          >{NumberUtils.stringifyTime(entry.hoursWorked)}</span
-                        >
-
-                        <span class="ms-3 italic">{entry.comments}</span>
-                      </li>
-                    {:else}
-                      <li class="italic">Aucune grue</li>
-                    {/each}
-                  </ul>
-                </div>
-
-                <!-- Équipements -->
-                <div class="ms-2">
-                  <div class="font-bold">Équipements</div>
-                  <ul class="ms-2">
-                    {#each dateEntries.equipments as entry}
-                      {@const equipment = stevedoringEquipments.get(
-                        entry.equipmentId
-                      )}
-                      <li>
-                        {#await equipment}
-                          <span
-                            class="animate-pulse bg-gray-200 rounded-lg w-1/4 h-6"
-                          ></span>
-                        {:then equipment}
-                          <span
-                            >{equipment.brand}
-                            {equipment.model}
-                            {equipment.internalNumber}</span
-                          >
-                        {/await}
-
-                        <span class="ms-3"
-                          >{NumberUtils.stringifyTime(entry.hoursWorked)}</span
-                        >
-
-                        <span class="ms-3 italic">{entry.comments}</span>
-                      </li>
-                    {:else}
-                      <li class="italic">Aucun équipement</li>
-                    {/each}
-                  </ul>
-                </div>
-
-                <!-- Personnel -->
-                <div class="ms-2">
-                  <div class="font-bold">Personnel</div>
-                  <ul class="ms-2">
-                    {#each dateEntries.permanentStaff as entry}
-                      {@const staff = stevedoringStaff.get(entry.staffId)}
-                      <li>
-                        {#await staff}
-                          <span
-                            class="animate-pulse bg-gray-200 rounded-lg w-1/4 h-6"
-                          ></span>
-                        {:then staff}
-                          <span>{staff.fullname}</span>
-                        {/await}
-
-                        <span class="ms-3"
-                          >{NumberUtils.stringifyTime(entry.hoursWorked)}</span
-                        >
-
-                        <span class="ms-3 italic">{entry.comments}</span>
-                      </li>
-                    {:else}
-                      <li class="italic">Aucun membre du personnel</li>
-                    {/each}
-                  </ul>
-                </div>
-
-                <!-- Intérimaires -->
-                <div class="ms-2">
-                  <div class="font-bold">Intérimaires</div>
-                  <ul class="ms-2">
-                    {#each dateEntries.tempStaff as entry}
-                      {@const staff = stevedoringStaff.get(entry.staffId)}
-                      <li>
-                        {#await staff}
-                          <span
-                            class="animate-pulse bg-gray-200 rounded-lg w-1/4 h-6"
-                          ></span>
-                        {:then staff}
-                          <span>{staff.fullname}</span>
-                        {/await}
-
-                        <span class="ms-3"
-                          >{NumberUtils.stringifyTime(entry.hoursWorked)}</span
-                        >
-
-                        <span class="ms-3 italic">{entry.comments}</span>
-                      </li>
-                    {:else}
-                      <li class="italic">Aucun intérimaire</li>
-                    {/each}
-                  </ul>
-                </div>
-
-                <!-- Brouettage -->
-                <div class="ms-2">
-                  <div class="font-bold">Brouettage</div>
-                  <ul class="ms-2">
-                    {#each dateEntries.trucking as entry}
-                      <li>
-                        <span>{entry.subcontractorName}</span>
-
-                        {#if entry.hoursWorked}
-                          <span class="ms-3"
-                            >{NumberUtils.stringifyTime(
-                              entry.hoursWorked
-                            )}</span
-                          >
-                        {/if}
-
-                        {#if entry.cost}
-                          <span class="ms-3"
-                            >{NumberUtils.formatCost(entry.cost)}</span
-                          >
-                        {/if}
-
-                        <span class="ms-3 italic">{entry.comments}</span>
-                      </li>
-                    {:else}
-                      <li class="italic">Aucun brouettage</li>
-                    {/each}
-                  </ul>
-                </div>
-
-                <!-- Autres sous-traitances -->
-                <div class="ms-2">
-                  <div class="font-bold">Autres sous-traitances</div>
-                  <ul class="ms-2">
-                    {#each dateEntries.otherSubcontracts as entry}
-                      <li>
-                        <span>{entry.subcontractorName}</span>
-
-                        {#if entry.hoursWorked}
-                          <span class="ms-3"
-                            >{NumberUtils.stringifyTime(
-                              entry.hoursWorked
-                            )}</span
-                          >
-                        {/if}
-
-                        {#if entry.cost}
-                          <span class="ms-3"
-                            >{NumberUtils.formatCost(entry.cost)}</span
-                          >
-                        {/if}
-
-                        <span class="ms-3 italic">{entry.comments}</span>
-                      </li>
-                    {:else}
-                      <li class="italic">Aucune sous-traitance</li>
-                    {/each}
-                  </ul>
-                </div>
-              </AccordionItem>
-            {/each}
-          </Accordion>
-        </div>
-      {:else}
-        <div class="ms-2 italic">Aucune opération enregistrée</div>
-      {/if}
-    </div>
+    <DailyEntries {report} />
   </div>
 </Drawer>

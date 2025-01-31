@@ -100,6 +100,11 @@ export type StevedoringEquipment = {
   comments: string;
 
   /**
+   * `true` si l'équipement est une grue.
+   */
+  isCrane: boolean;
+
+  /**
    * Actif.
    */
   isActive: boolean;

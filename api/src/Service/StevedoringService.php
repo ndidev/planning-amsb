@@ -10,6 +10,7 @@ use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\ClientException;
+use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\Core\Exceptions\Server\ServerException;
 use App\Core\HTTP\HTTPRequestBody;
@@ -32,6 +33,7 @@ use App\Entity\Stevedoring\StevedoringEquipment;
 use App\Entity\Stevedoring\StevedoringStaff;
 use App\Entity\Stevedoring\TempWorkHoursEntry;
 use App\Repository\StevedoringRepository;
+use Ds\Map;
 use Mpdf\Mpdf;
 
 /**
@@ -772,5 +774,160 @@ final class StevedoringService
     public function getSubcontractorsData(): StevedoringSubcontractorsDataDTO
     {
         return $this->stevedoringRepository->fetchSubcontractorsData();
+    }
+
+    // ===
+    // PDF
+    // ===
+
+    public function getShipReportPdf(int $id): string
+    {
+        $report = $this->getShipReport($id);
+
+        if (!$report) {
+            throw new NotFoundException("Le rapport navire {$id} n'existe pas.");
+        }
+
+        $days = \array_keys($report->getEntriesByDate());
+
+        /**
+         * @var array{
+         *        entries: Map<StevedoringEquipment, array<string, ShipReportEquipmentEntry>>,
+         *        totals: array{
+         *                  byDay: array<string, array{hoursWorked: float}>,
+         *                  total: array{hoursWorked: float},
+         *                }
+         *      }
+         */
+        $craneEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0]]];
+        /**
+         * @var array{
+         *        entries: Map<StevedoringEquipment, array<string, ShipReportEquipmentEntry>>,
+         *        totals: array{
+         *                  byDay: array<string, array{hoursWorked: float}>,
+         *                  total: array{hoursWorked: float},
+         *                }
+         *      }
+         */
+        $equipmentEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0]]];
+        foreach ($report->equipmentEntries as $entry) {
+            if (!$entry->equipment || !$entry->date) continue;
+            $entry->equipment->isCrane
+                ? $map = &$craneEntries
+                : $map = &$equipmentEntries;
+            $map['entries'][$entry->equipment] ??= [];
+            $date = $entry->date->format('Y-m-d');
+            $map['entries'][$entry->equipment][$date] = $entry;
+            $map['totals']['byDay'][$date] ??= ['hoursWorked' => 0];
+            $map['totals']['byDay'][$date]['hoursWorked'] += $entry->hoursWorked;
+            $map['totals']['total']['hoursWorked'] += $entry->hoursWorked;
+            unset($map);
+        }
+
+        /**
+         * @var array{
+         *        entries: Map<StevedoringStaff, array<string, ShipReportStaffEntry>>,
+         *        totals: array{
+         *                  byDay: array<string, array{hoursWorked: float}>,
+         *                  total: array{hoursWorked: float},
+         *                }
+         *      }
+         */
+        $permanentStaffEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0]]];
+        /**
+         * @var array{
+         *        entries: Map<StevedoringStaff, array<string, ShipReportStaffEntry>>,
+         *        totals: array{
+         *                  byDay: array<string, array{hoursWorked: float}>,
+         *                  total: array{hoursWorked: float},
+         *                }
+         *      }
+         */
+        $tempStaffEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0]]];
+        foreach ($report->staffEntries as $entry) {
+            if (!$entry->staff || !$entry->date) continue;
+            $entry->staff->type === 'mensuel'
+                ? $map = &$permanentStaffEntries
+                : $map =  &$tempStaffEntries;
+            $map['entries'][$entry->staff] ??= [];
+            $date = $entry->date->format('Y-m-d');
+            $map['entries'][$entry->staff][$date] = $entry;
+            $map['totals']['byDay'][$date] ??= ['hoursWorked' => 0];
+            $map['totals']['byDay'][$date]['hoursWorked'] += $entry->hoursWorked;
+            $map['totals']['total']['hoursWorked'] += $entry->hoursWorked;
+            unset($map);
+        }
+
+        /**
+         * @var array{
+         *        entries: Map<string, array<string, ShipReportSubcontractEntry>>,
+         *        totals: array{
+         *                  byDay: array<string, array{hoursWorked: float, cost: float}>,
+         *                  total: array{hoursWorked: float, cost: float},
+         *                }
+         *      }
+         */
+        $truckingEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0, 'cost' => 0.0]]];
+        /**
+         * @var array{
+         *        entries: Map<string, array<string, ShipReportSubcontractEntry>>,
+         *        totals: array{
+         *                  byDay: array<string, array{hoursWorked: float, cost: float}>,
+         *                  total: array{hoursWorked: float, cost: float},
+         *                }
+         *      }
+         */
+        $otherSubcontractsEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0, 'cost' => 0.0]]];
+        foreach ($report->subcontractEntries as $entry) {
+            if (!$entry->date) continue;
+            $entry->type === 'trucking'
+                ? $map = &$truckingEntries
+                : $map = &$otherSubcontractsEntries;
+            $map['entries'][$entry->subcontractorName] ??= [];
+            $date = $entry->date->format('Y-m-d');
+            $map['entries'][$entry->subcontractorName][$date] = $entry;
+            $map['totals']['byDay'][$date] ??= ['hoursWorked' => 0, 'cost' => 0];
+            $map['totals']['byDay'][$date]['hoursWorked'] += $entry->hoursWorked;
+            $map['totals']['byDay'][$date]['cost'] += $entry->cost;
+            $map['totals']['total']['hoursWorked'] += $entry->hoursWorked;
+            $map['totals']['total']['cost'] += $entry->cost;
+            unset($map);
+        }
+
+        $html = new Twig()->render('ship-report/ship-report.html.twig', [
+            'shipName' => $report->ship,
+            'customers' => \join(', ', $report->getCustomers()),
+            'cargoNames' => \join(', ', $report->getCargoNames()),
+            'comments' => $report->comments,
+            'invoiceInstructions' => $report->invoiceInstructions,
+            'port' => $report->port,
+            'berth' => $report->berth,
+            'cargoEntries' => $report->cargoEntries,
+            'cargoTotals' => $report->calculateCargoTotals(),
+            'storageEntries' => $report->storageEntries,
+            'storageTotals' => $report->calculateStorageTotals(),
+            'days' => $days,
+            'craneEntries' => $craneEntries,
+            'equipmentEntries' => $equipmentEntries,
+            'permanentStaffEntries' => $permanentStaffEntries,
+            'tempStaffEntries' => $tempStaffEntries,
+            'truckingEntries' => $truckingEntries,
+            'otherSubcontractsEntries' => $otherSubcontractsEntries,
+        ]);
+
+        $pdfReport = new Mpdf([
+            'format' => 'A4',
+            'orientation' => 'P',
+            'tempDir' => sys_get_temp_dir(),
+        ]);
+        $pdfReport->SetTitle("Rapport navire - " . $report->ship);
+        // @phpstan-ignore-next-line
+        $pdfReport->imageVars['logo'] = \file_get_contents(API . '/images/logo_agence_combi_moyen.png');
+        $pdfReport->WriteHTML($html);
+        /** @var string */
+        $pdfAsString = $pdfReport->Output('', 'S');
+
+        // return $html;
+        return $pdfAsString;
     }
 }

@@ -176,7 +176,7 @@ class ShipReport extends AbstractEntity
      *                       }
      *         >
      */
-    private function getEntriesByDate(): array
+    public function getEntriesByDate(): array
     {
         /** @var array<ShipReportStaffEntry|ShipReportEquipmentEntry|ShipReportSubcontractEntry> */
         $allEntries = \array_merge(
@@ -188,12 +188,12 @@ class ShipReport extends AbstractEntity
         $entriesByDate = [];
 
         foreach ($allEntries as $entry) {
-            $date = $entry->date?->format('Y-m-d');
+            if (!$entry->date) continue;
 
-            if (!$date) continue;
+            $dateString = $entry->date->format('Y-m-d');
 
-            if (!isset($entriesByDate[$date])) {
-                $entriesByDate[$date] = [
+            if (!isset($entriesByDate[$dateString])) {
+                $entriesByDate[$dateString] = [
                     'cranes' => [],
                     'equipments' => [],
                     'permanentStaff' => [],
@@ -204,25 +204,23 @@ class ShipReport extends AbstractEntity
             }
 
             if ($entry instanceof ShipReportEquipmentEntry) {
-                $typeToLower = \mb_strtolower($entry->equipment->type ?? "");
-                if (\array_any(["pelle", "grue"], fn(string $match) => \str_contains($typeToLower, $match))) {
-                    $entriesByDate[$date]['cranes'][] = $entry;
+                if ($entry->equipment?->isCrane) {
+                    $entriesByDate[$dateString]['cranes'][] = $entry;
                 } else {
-                    $entriesByDate[$date]['equipments'][] = $entry;
+                    $entriesByDate[$dateString]['equipments'][] = $entry;
                 }
             } elseif ($entry instanceof ShipReportStaffEntry) {
                 if ($entry->staff?->type === "mensuel") {
-                    $entriesByDate[$date]['permanentStaff'][] = $entry;
+                    $entriesByDate[$dateString]['permanentStaff'][] = $entry;
                 }
                 if ($entry->staff?->type === "interim") {
-                    $entriesByDate[$date]['tempStaff'][] = $entry;
+                    $entriesByDate[$dateString]['tempStaff'][] = $entry;
                 }
             } elseif ($entry instanceof ShipReportSubcontractEntry) {
-                $typeToLower = \mb_strtolower($entry->type);
                 if ($entry->type === "trucking") {
-                    $entriesByDate[$date]['trucking'][] = $entry;
+                    $entriesByDate[$dateString]['trucking'][] = $entry;
                 } else {
-                    $entriesByDate[$date]['otherSubcontracts'][] = $entry;
+                    $entriesByDate[$dateString]['otherSubcontracts'][] = $entry;
                 }
             }
         }
@@ -239,7 +237,7 @@ class ShipReport extends AbstractEntity
      *           difference: array{tonnage: float, volume: float, units: int},
      *         }
      */
-    private function calculateCargoTotals(): array
+    public function calculateCargoTotals(): array
     {
         $totals = [
             'bl' => [
@@ -301,7 +299,7 @@ class ShipReport extends AbstractEntity
     /**
      * @return array{tonnage: float, volume: float, units: int}
      */
-    private function calculateStorageTotals(): array
+    public function calculateStorageTotals(): array
     {
         $totals = [
             'tonnage' => \array_reduce(
@@ -327,7 +325,7 @@ class ShipReport extends AbstractEntity
     /**
      * @return string[]
      */
-    private function getCustomers(): array
+    public function getCustomers(): array
     {
         $customers = \array_unique(
             \array_map(
@@ -339,6 +337,16 @@ class ShipReport extends AbstractEntity
         sort($customers);
 
         return $customers;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getCargoNames(): array
+    {
+        $cargoList = $this->cargoEntries->map(fn($entry) => $entry->cargoName);
+
+        return $cargoList;
     }
 
     public function toArray(): array

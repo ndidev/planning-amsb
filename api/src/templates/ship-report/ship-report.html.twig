@@ -1,0 +1,622 @@
+{% macro format_with_sign(value, decimals = 0) %}
+  {{ (value > 0 ? '+' : '') ~ value|format_number({fraction_digit: decimals}) }}	
+{% endmacro %}
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rapport PDF</title>
+  <style>
+      @page {
+        size: auto;
+        margin: 10mm;
+      }
+  
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .header {
+        margin-bottom: 10px;
+        font-size: 14px;
+      }
+
+      .summary-section {
+        margin-bottom: 20px;
+      }
+
+      .summary-title {
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      .cargoes {
+        font-size: 10px;
+      }
+
+      .cargoes th, .cargoes td {
+        border: 1px solid #000;
+        padding: 4px;
+        text-align: center;
+      }
+
+      .cargoes thead th, .cargoes tfoot td {
+        background-color: #f2f2f2;
+        font-weight: bold;
+      }
+
+      .details {
+        page-break-inside: avoid;
+      }
+
+      .table-title {
+        font-size: 14px;
+        font-weight: bold;
+        text-decoration: underline;
+        margin-bottom: 8px;
+      }
+
+      .entries-table {
+        font-size: 10px;
+        margin-bottom: 10px;
+      }
+
+      .entries-table th, .entries-table td {
+        border: 1px solid #000;
+        padding: 4px;
+        text-align: center;
+      }
+
+      .entries-table .first-column {
+        width: 200px;
+      }
+
+      .entries-table thead th, .entries-table tfoot td {
+        background-color: #f2f2f2;
+        font-weight: bold;
+      }
+
+      .textbox {
+        height: 80px;
+      }
+  </style>
+</head>
+
+<body>
+  <div style="position: fixed; top: 0mm; right: 0mm; width: 60mm;">
+    <img src="var:logo">
+  </div>
+
+  <div class="header">
+    <p><strong>N° :</strong> ____________________________________</p>
+    <p><strong>MV :</strong> {{ shipName }}</p>
+    <p><strong>Clients :</strong> {{ customers }}</p>
+    <p><strong>Marchandises :</strong> {{ cargoNames }}</p>
+  </div>
+
+  {# Port and berth #}
+  <div class="summary-section">
+    <span class="summary-title">Quai :</span>
+    {{ port ~ ' ' ~ berth }}
+  </div>
+
+  {# Dates #}
+  <div class="summary-section">
+    <span class="summary-title">Dates :</span>
+    {% if days|length > 0 %}
+      {{ min(days)|format_date('full') }} - {{ max(days)|format_date('full') }}
+    {% endif %}
+  </div>
+
+  {# Cargoes #}
+  <div class="summary-section">
+    <div class="summary-title">Marchandises</div>
+
+    {% if cargoEntries|length > 0 %}
+      <table class="cargoes">
+        <thead>
+          <tr>
+            <th>Marchandise (Client)</th>
+            <th>BL</th>
+            <th>Outturn</th>
+            <th>Différence</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cargo in cargoEntries %}
+            <tr>
+              <td>
+                {{ cargo.operation == 'import' ? '↓' : '↑' }}
+                {{ cargo }}
+                ({{ cargo.customer }})
+              </td>
+              <td>
+                {% if cargo.blTonnage %}
+                  <p>{{ cargo.blTonnage|format_number({fraction_digit: 3}) }} T</p>
+                {% endif %}
+                {% if cargo.blVolume %}
+                  <p>{{ cargo.blVolume|format_number({fraction_digit: 3}) }} m3</p>
+                {% endif %}
+                {% if cargo.blUnits %}
+                  <p>{{ cargo.blUnits|format_number }} colis</p>
+                {% endif %}
+              </td>
+              <td>
+                {% if cargo.outturnTonnage %}
+                  <p>{{ cargo.outturnTonnage|format_number({fraction_digit: 3}) }} T</p>
+                {% endif %}
+                {% if cargo.outturnVolume %}
+                  <p>{{ cargo.outturnVolume|format_number({fraction_digit: 3}) }} m3</p>
+                {% endif %}
+                {% if cargo.outturnUnits %}
+                  <p>{{ cargo.outturnUnits|format_number }} colis</p>
+                {% endif %}
+              </td>
+              <td>
+                {% if cargo.outturnTonnage %}
+                  <p>{{ _self.format_with_sign(cargo.tonnageDifference, 3) }} T</p>
+                {% endif %}
+                {% if cargo.outturnVolume %}
+                  <p>{{ _self.format_with_sign(cargo.volumeDifference, 3) }} m3</p>
+                {% endif %}
+                {% if cargo.outturnUnits %}
+                  <p>{{ _self.format_with_sign(cargo.unitsDifference) }} colis</p>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>Total</td>
+            <td>
+              {% if cargoTotals.bl.tonnage > 0 %}
+                <p>{{ cargoTotals.bl.tonnage|format_number({fraction_digit: 3}) }} T</p>
+              {% endif %}
+              {% if cargoTotals.bl.volume > 0 %}
+                <p>{{ cargoTotals.bl.volume|format_number({fraction_digit: 3}) }} m3</p>
+              {% endif %}
+              {% if cargoTotals.bl.units > 0 %}
+                <p>{{ cargoTotals.bl.units|format_number }} colis</p>
+              {% endif %}
+            </td>
+            <td>
+              {% if cargoTotals.outturn.tonnage > 0 %}
+                <p>{{ cargoTotals.outturn.tonnage|format_number({fraction_digit: 3}) }} T</p>
+              {% endif %}
+              {% if cargoTotals.outturn.volume > 0 %}
+                <p>{{ cargoTotals.outturn.volume|format_number({fraction_digit: 3}) }} m3</p>
+              {% endif %}
+              {% if cargoTotals.outturn.units > 0 %}
+                <p>{{ cargoTotals.outturn.units|format_number }} colis</p>
+              {% endif %}
+            </td>
+            <td>
+              {% if cargoTotals.outturn.tonnage > 0 %}
+                <p>{{ _self.format_with_sign(cargoTotals.difference.tonnage, 3) }} T</p>
+              {% endif %}
+              {% if cargoTotals.outturn.volume > 0 %}
+                <p>{{ _self.format_with_sign(cargoTotals.difference.volume, 3) }} m3</p>
+              {% endif %}
+              {% if cargoTotals.outturn.units > 0 %}
+                <p>{{ _self.format_with_sign(cargoTotals.difference.tonnage) }} colis</p>
+              {% endif %}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    {% else %}
+      <div><em>Aucune marchandise</em></div>
+    {% endif %}
+  </div>
+
+  {# Storage #}
+  <div class="summary-section">
+    <div class="summary-title">Stockage</div>
+
+    {% if storageEntries|length > 0 %}
+      <table class="cargoes">
+        <thead>
+          <tr>
+            <th>Marchandise (Client)</th>
+            <th>Magasin</th>
+            <th>Tonnage</th>
+            <th>Volume</th>
+            <th>Nombre</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in storageEntries %}
+            <tr>
+              <td>{{ entry.cargo }} ({{ entry.cargo.customer }})</td>
+              <td>{{ entry.storageName }}</td>
+              <td>
+                {% if entry.tonnage %}
+                  {{ entry.tonnage|format_number({fraction_digit: 3}) }} T
+                {% endif %}
+              </td>
+              <td>
+                {% if entry.volume %}
+                  {{ entry.volume|format_number({fraction_digit: 3}) }} m3
+                {% endif %}
+              </td>
+              <td>
+                {% if entry.units %}
+                  {{ entry.units|format_number }} colis
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>Total</td>
+            <td></td>
+            <td>
+              {% if storageTotals.tonnage %}
+                {{ storageTotals.tonnage|format_number({fraction_digit: 3}) }} T
+              {% endif %}
+            </td>
+            <td>
+              {% if storageTotals.volume %}
+                {{ storageTotals.volume|format_number({fraction_digit: 3}) }} m3
+              {% endif %}
+            </td>
+            <td>
+              {% if storageTotals.units %}
+                {{ storageTotals.units|format_number }} colis
+              {% endif %}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    {% else %}
+      <div><em>Aucun stockage</em></div>
+    {% endif %}
+  </div>
+
+  {# Costs #}
+  <div class="summary-section">
+    <div class="summary-title">Coûts</div>
+    <table style="margin-left: 10px;">
+      <tr>
+        <td>
+          <div><strong>Coûts standards :</strong></div>
+          <div>Personnel CDI : {{ permanentStaffEntries.totals.total.hoursWorked }}h</div>
+          <div>Grues : {{ craneEntries.totals.total.hoursWorked }}h</div>
+          <div>Engins : {{ equipmentEntries.totals.total.hoursWorked }}h</div>
+        </td>
+        <td>
+          <div><strong>Sous-traitance :</strong></div>
+          <div>Intérim : {{ tempStaffEntries.totals.total.hoursWorked }}h</div>
+          <div>Matériel : {{ otherSubcontractsEntries.totals.total.hoursWorked }}h / {{ otherSubcontractsEntries.totals.total.cost|format_currency('EUR') }}</div>
+          <div>Brouettage : {{ truckingEntries.totals.total.hoursWorked }}h / {{ truckingEntries.totals.total.cost|format_currency('EUR') }}</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  {# Rate #}
+  <div class="summary-section">
+    <span class="summary-title">Cadence :</span>
+    {% set totalCraneHours = craneEntries.totals.total.hoursWorked %}
+    {% if totalCraneHours > 0 %}
+      {% if cargoTotals.outturn.tonnage and totalCraneHours > 0 %}
+        {% set tonnageRate = cargoTotals.outturn.tonnage / totalCraneHours %}
+        <span>{{ tonnageRate|format_number({fraction_digit: 1}) }} T/h</span>&nbsp;&nbsp;&nbsp;
+      {% endif %}
+      {% if cargoTotals.outturn.volume and totalCraneHours > 0 %}
+        {% set volumeRate = cargoTotals.outturn.volume / totalCraneHours %}
+        <span>{{ volumeRate|format_number({fraction_digit: 1}) }} m3/h</span>&nbsp;&nbsp;&nbsp;
+      {% endif %}
+      {% if cargoTotals.outturn.units and totalCraneHours > 0 %}
+        {% set unitsRate = cargoTotals.outturn.units / totalCraneHours %}
+        <span>{{ unitsRate|format_number({fraction_digit: 1}) }} colis/h</span>&nbsp;&nbsp;&nbsp;
+      {% endif %}
+    {% else %}
+      <em>cadence non calculable</em>
+    {% endif %}
+  </div>
+
+  {# Comments #}
+  <div class="summary-section">
+    <div class="summary-title">Constats & Commentaires :</div>
+    <div class="textbox">{{ comments|nl2br }}</div>
+  </div>
+
+  {# Invoice instructions #}
+  <div class="summary-section">
+    <div class="summary-title">A Facturer en Sus :</div>
+    <div class="textbox">{{ invoiceInstructions|nl2br }}</div>
+  </div>
+
+  {# Signature #}
+  <div class="summary-section">
+    <div class="summary-title">Signature :</div>
+  </div>
+
+  <pagebreak />
+
+  <table class="details">
+    <tr><td class="table-title">Grues</td></tr>
+    <tr><td class="entries-table">
+      {% if craneEntries.entries|length > 0 %}
+        <table>
+          <thead>
+            <tr>
+              <th rowspan="2" class="first-column">Grue</th>
+              {% for day in days %}
+                <th colspan="2">{{ day|date('d/m/Y') }}</th>
+              {% endfor %}
+            </tr>
+            <tr>
+              {% for day in days %}
+                <th>Heures</th>
+                <th>Durée</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for crane, entriesByDate in craneEntries.entries %}
+              <tr>
+                <td>{{ crane }}</td>
+                {% for day in days %}
+                  {% set entry = entriesByDate[day] %}
+                  <td></td>
+                  <td>{{ entry.hoursWorked }}</td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Total</td>
+              {% for day in days %}
+                <td></td>
+                <td>{{ craneEntries.totals.byDay[day].hoursWorked }}</td>
+              {% endfor %}
+            </tr>
+          </tfoot>
+        </table>
+      {% else %}
+        <em>Aucune grue</em>
+      {% endif %}
+    </td></tr>
+
+    <tr><td class="table-title">Engins</td></tr>
+    <tr><td class="entries-table">
+      {% if equipmentEntries.entries|length > 0 %}
+        <table>
+          <thead>
+            <tr>
+              <th rowspan="2" class="first-column">Engin</th>
+              {% for day in days %}
+                <th colspan="2">{{ day|date('d/m/Y') }}</th>
+              {% endfor %}
+            </tr>
+            <tr>
+              {% for day in days %}
+                <th>Heures</th>
+                <th>Durée</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for equipment, entriesByDate in equipmentEntries.entries %}
+              <tr>
+                <td>{{ equipment }}</td>
+                {% for day in days %}
+                  {% set entry = entriesByDate[day] %}
+                  <td></td>
+                  <td>{{ entry.hoursWorked }}</td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Total</td>
+              {% for day in days %}
+                <td></td>
+                <td>{{ equipmentEntries.totals.byDay[day].hoursWorked }}</td>
+              {% endfor %}
+            </tr>
+          </tfoot>
+        </table>
+      {% else %}
+        <p><em>Aucun engin</em></p>
+      {% endif %}
+    </td></tr>
+
+    <tr><td class="table-title">Personnel CDI</td></tr>
+    <tr><td class="entries-table">
+      {% if permanentStaffEntries.entries|length > 0 %}
+        <table>
+          <thead>
+            <tr>
+              <th rowspan="2" class="first-column">Nom</th>
+              {% for day in days %}
+                <th colspan="2">{{ day|date('d/m/Y') }}</th>
+              {% endfor %}
+            </tr>
+            <tr>
+              {% for day in days %}
+                <th>Heures</th>
+                <th>Durée</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for staff, entriesByDate in permanentStaffEntries.entries %}
+              <tr>
+                <td>{{ staff }}</td>
+                {% for day in days %}
+                  {% set entry = entriesByDate[day] %}
+                  <td></td>
+                  <td>{{ entry.hoursWorked }}</td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Total</td>
+              {% for day in days %}
+                <td></td>
+                <td>{{ permanentStaffEntries.totals.byDay[day].hoursWorked }}</td>
+              {% endfor %}
+            </tr>
+          </tfoot>
+        </table>
+      {% else %}
+        <p><em>Aucun personnel CDI</em></p>
+      {% endif %}
+    </td></tr>
+
+    <tr><td class="table-title">S/T Grues / Engins</td></tr>
+    <tr><td class="entries-table">
+      {% if otherSubcontractsEntries.entries|length > 0 %}
+        <table>
+          <thead>
+            <tr>
+              <th rowspan="2" class="first-column">Prestataire</th>
+              {% for day in days %}
+                <th colspan="2">{{ day|date('d/m/Y') }}</th>
+              {% endfor %}
+            </tr>
+            <tr>
+              {% for day in days %}
+                <th>Heures</th>
+                <th>Coût</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for subcontractorName, entriesByDate in otherSubcontractsEntries.entries %}
+              <tr>
+                <td>{{ subcontractorName }}</td>
+                {% for day in days %}
+                  {% set entry = entriesByDate[day] %}
+                  <td>{{ entry.hoursWorked ?: '' }}</td>
+                  <td>{{ entry.cost ? entry.cost|format_currency('EUR') : '' }}</td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Total</td>
+              {% for day in days %}
+                {% set cost = otherSubcontractsEntries.totals.byDay[day].cost %}
+                <td>{{ otherSubcontractsEntries.totals.byDay[day].hoursWorked ?: '' }}</td>
+                <td>{{ cost ? cost|format_currency('EUR') : '' }}</td>
+              {% endfor %}
+            </tr>
+          </tfoot>
+        </table>
+      {% else %}
+        <p><em>Aucune sous-traitance</em></p>
+      {% endif %}
+    </td></tr>
+
+    <tr><td class="table-title">Brouettage</td></tr>
+    <tr><td class="entries-table">
+      {% if truckingEntries.entries|length > 0 %}
+        <table>
+          <thead>
+            <tr>
+              <th rowspan="2" class="first-column">Prestataire</th>
+              {% for day in days %}
+                <th colspan="2">{{ day|date('d/m/Y') }}</th>
+              {% endfor %}
+            </tr>
+            <tr>
+              {% for day in days %}
+                <th>Heures</th>
+                <th>Coût</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for subcontractorName, entriesByDate in truckingEntries.entries %}
+              <tr>
+                <td>{{ subcontractorName }}</td>
+                {% for day in days %}
+                  {% set entry = entriesByDate[day] %}
+                  <td>{{ entry.hoursWorked ?: '' }}</td>
+                  <td>{{ entry.cost ? entry.cost|format_currency('EUR') : '' }}</td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Total</td>
+              {% for day in days %}
+                {% set cost = truckingEntries.totals.byDay[day].cost %}
+                <td>{{ truckingEntries.totals.byDay[day].hoursWorked ?: '' }}</td>
+                <td>{{ cost ? cost|format_currency('EUR') : '' }}</td>
+              {% endfor %}
+            </tr>
+          </tfoot>
+        </table>
+      {% else %}
+        <p><em>Aucun brouettage</em></p>
+      {% endif %}
+    </td></tr>
+
+    <tr><td class="table-title">Personnel Intérimaire</td></tr>
+    <tr><td class="entries-table">
+      {% if tempStaffEntries.entries|length > 0 %}
+        <table>
+          <thead>
+            <tr>
+              <th rowspan="2" class="first-column">Nom</th>
+              {% for day in days %}
+                <th colspan="2">{{ day|date('d/m/Y') }}</th>
+              {% endfor %}
+            </tr>
+            <tr>
+              {% for day in days %}
+                <th>Heures</th>
+                <th>Durée</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for staff, entriesByDate in tempStaffEntries.entries %}
+              <tr>
+                <td class="first-column">{{ staff }}</td>
+                {% for day in days %}
+                  {% set entry = entriesByDate[day] %}
+                  <td></td>
+                  <td>{{ entry.hoursWorked }}</td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td class="first-column">Total</td>
+              {% for day in days %}
+                <td></td>
+                <td>{{ tempStaffEntries.totals.byDay[day].hoursWorked }}</td>
+              {% endfor %}
+            </tr>
+          </tfoot>
+        </table>
+      {% else %}
+        <p><em>Aucun personnel intérimaire</em></p>
+      {% endif %}
+    </td></tr>
+  </table>
+</body>
+</html>

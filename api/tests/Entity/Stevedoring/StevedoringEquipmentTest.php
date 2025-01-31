@@ -35,6 +35,7 @@ final class StevedoringEquipmentTest extends TestCase
             'serialNumber' => '987654',
             'displayName' => 'Liebherr LTM 11200-9.1 123456',
             'comments' => 'Commentaires',
+            'isCrane' => true,
             'isActive' => true,
         ];
 
