@@ -13,6 +13,7 @@ use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\Core\Exceptions\Server\ServerException;
 use App\Core\HTTP\HTTPRequestBody;
+use App\Core\Twig\Twig;
 use App\DTO\CallWithoutReportDTO;
 use App\DTO\Filter\StevedoringDispatchFilterDTO;
 use App\DTO\Filter\StevedoringReportsFilterDataDTO;
@@ -335,10 +336,6 @@ final class StevedoringService
 
         $agencyInfo = (new AgencyService())->getDepartment('general');
 
-        $twigLoader = new \Twig\Loader\FilesystemLoader(API . '/src/templates');
-        $twig = new \Twig\Environment($twigLoader);
-        $twig->addExtension(new \Twig\Extra\Intl\IntlExtension());
-
         if (!\extension_loaded('zip')) {
             throw new ServerException(
                 "Impossible de générer le fichier ZIP.",
@@ -363,6 +360,8 @@ final class StevedoringService
                 previous: new \Exception("Unable to open ZIP archive.")
             );
         }
+
+        $twig = new Twig();
 
         foreach ($reportDataDto->getData() as $tempWorkAgency => $agencyData) {
             $htmlReport = $twig->render('temp-work-report/report.html.twig', [
