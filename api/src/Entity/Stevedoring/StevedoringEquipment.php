@@ -10,7 +10,7 @@ use App\Core\Traits\IdentifierTrait;
 use App\Core\Validation\Constraints\Required;
 use App\Entity\AbstractEntity;
 
-class StevedoringEquipment extends AbstractEntity
+class StevedoringEquipment extends AbstractEntity implements \Stringable
 {
     use IdentifierTrait;
 
@@ -44,8 +44,14 @@ class StevedoringEquipment extends AbstractEntity
             'model' => $this->model,
             'internalNumber' => $this->internalNumber,
             'serialNumber' => $this->serialNumber,
+            'displayName' => $this->displayName,
             'comments' => $this->comments,
             'isActive' => $this->isActive,
         ];
+    }
+
+    public function __toString(): string
+    {
+        return $this->displayName;
     }
 }

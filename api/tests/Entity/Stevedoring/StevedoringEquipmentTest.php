@@ -33,6 +33,7 @@ final class StevedoringEquipmentTest extends TestCase
             'model' => 'LTM 11200-9.1',
             'internalNumber' => '123456',
             'serialNumber' => '987654',
+            'displayName' => 'Liebherr LTM 11200-9.1 123456',
             'comments' => 'Commentaires',
             'isActive' => true,
         ];
@@ -42,5 +43,22 @@ final class StevedoringEquipmentTest extends TestCase
 
         // Then
         $this->assertSame($expectedArray, $actualArray);
+    }
+
+    public function testStringable(): void
+    {
+        // Given
+        $stevedoringEquipment = new StevedoringEquipment();
+        $stevedoringEquipment->brand = 'Liebherr';
+        $stevedoringEquipment->model = 'LTM 11200-9.1';
+        $stevedoringEquipment->internalNumber = '123456';
+
+        $expectedString = 'Liebherr LTM 11200-9.1 123456';
+
+        // When
+        $actualString = (string) $stevedoringEquipment;
+
+        // Then
+        $this->assertSame($expectedString, $actualString);
     }
 }

@@ -13,7 +13,7 @@ use App\Core\Validation\Constraints\Required;
 use App\Core\Validation\ValidationResult;
 use App\Entity\AbstractEntity;
 
-class StevedoringStaff extends AbstractEntity
+class StevedoringStaff extends AbstractEntity implements \Stringable
 {
     use IdentifierTrait;
 
@@ -60,6 +60,11 @@ class StevedoringStaff extends AbstractEntity
             'comments' => $this->comments,
             'deletedAt' => $this->deletedAt?->format('Y-m-d H:i:s'),
         ];
+    }
+
+    public function __toString(): string
+    {
+        return $this->fullname;
     }
 
     #[\Override]

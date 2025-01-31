@@ -90,6 +90,11 @@ export type StevedoringEquipment = {
   serialNumber: string;
 
   /**
+   * Nom d'affichage.
+   */
+  displayName: string;
+
+  /**
    * Commentaires.
    */
   comments: string;

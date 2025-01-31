@@ -76,4 +76,20 @@ final class StevedoringStaffTest extends TestCase
         // Then
         $this->assertSame($expectedArray, $actualArray);
     }
+
+    public function testStringable(): void
+    {
+        // Given
+        $stevedoringStaff = new StevedoringStaff();
+        $stevedoringStaff->firstname = 'John';
+        $stevedoringStaff->lastname = 'Doe';
+
+        $expectedString = 'John Doe';
+
+        // When
+        $actualString = (string) $stevedoringStaff;
+
+        // Then
+        $this->assertSame($expectedString, $actualString);
+    }
 }
