@@ -148,6 +148,15 @@ final class StevedoringRepository extends Repository
 
     public function fetchStaff(int $id): ?StevedoringStaff
     {
+        /**
+         * @var StevedoringStaff[]
+         */
+        static $cache = [];
+
+        if (isset($cache[$id])) {
+            return $cache[$id];
+        }
+
         $staffStatement = "SELECT * FROM stevedoring_staff WHERE id = :id";
 
         $staffRequest = $this->mysql->prepare($staffStatement);
@@ -165,6 +174,8 @@ final class StevedoringRepository extends Repository
         }
 
         $staff = $this->stevedoringService->makeStevedoringStaffFromDatabase($staffRaw);
+
+        $cache[$id] = $staff;
 
         return $staff;
     }
@@ -321,6 +332,15 @@ final class StevedoringRepository extends Repository
 
     public function fetchEquipment(int $id): ?StevedoringEquipment
     {
+        /**
+         * @var StevedoringEquipment[]
+         */
+        static $cache = [];
+
+        if (isset($cache[$id])) {
+            return $cache[$id];
+        }
+
         $equipmentStatement =
             "SELECT *
              FROM stevedoring_equipments
@@ -341,6 +361,8 @@ final class StevedoringRepository extends Repository
         }
 
         $equipment = $this->stevedoringService->makeStevedoringEquipmentFromDatabase($equipmentRaw);
+
+        $cache[$id] = $equipment;
 
         return $equipment;
     }
