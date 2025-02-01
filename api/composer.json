@@ -1,5 +1,12 @@
 {
   "require": {
+    "ext-calendar": "*",
+    "ext-ds": "*",
+    "ext-gd": "*",
+    "ext-intl": "*",
+    "ext-pdo_mysql": "*",
+    "ext-redis": "*",
+    "ext-zip": "*",
     "phpmailer/phpmailer": "^6.2",
     "setasign/tfpdf": "^1.32",
     "vlucas/phpdotenv": "^5.3",
