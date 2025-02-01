@@ -613,13 +613,14 @@ final class StevedoringRepository extends Repository
             WHERE timberDispatch.date = :date
             AND staff.type = 'interim'
             UNION
-            SELECT DISTINCT
+            SELECT
                 staff.id,
-                shipReportsStaff.hours_worked as `hoursWorked`
+                SUM(shipReportsStaff.hours_worked) as `hoursWorked`
             FROM stevedoring_ship_reports_staff shipReportsStaff
             INNER JOIN stevedoring_staff staff ON shipReportsStaff.staff_id = staff.id
             WHERE shipReportsStaff.date = :date
             AND staff.type = 'interim'
+            GROUP BY staff.id
             ";
 
         $request = $this->mysql->prepare($statement);
