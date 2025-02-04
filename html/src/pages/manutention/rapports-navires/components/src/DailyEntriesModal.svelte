@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
 
-  import { Modal, Input, Label, Button } from "flowbite-svelte";
+  import { Modal, Input, Label, Button, Checkbox } from "flowbite-svelte";
   import { PlusCircleIcon, Trash2Icon } from "lucide-svelte";
   import Notiflix from "notiflix";
 
@@ -22,6 +22,56 @@
   let subcontractorTruckingList: string[] = [];
   let subcontractorOtherList: string[] = [];
 
+  type EntriesKey = keyof StevedoringShipReport["entriesByDate"][string];
+  type EntryType<T extends EntriesKey> =
+    StevedoringShipReport["entriesByDate"][string][T][number];
+  type Entry = EntryType<EntriesKey>;
+
+  let selectedItems: {
+    categories: Partial<typeof dateEntries>;
+    allSelected: boolean;
+    someSelected: boolean;
+  } = {
+    categories: {},
+    get allSelected() {
+      return (
+        Object.values(this.categories).flatMap((items) => items).length ===
+          Object.values(dateEntries).flatMap((items) => items as Entry[])
+            .length &&
+        Object.values(dateEntries).flatMap((items) => items as Entry[]).length >
+          0
+      );
+    },
+    get someSelected() {
+      return (
+        Object.values(this.categories).flatMap((items) => items).length > 0 &&
+        Object.values(this.categories).flatMap((items) => items).length <
+          Object.values(dateEntries).flatMap((items) => items as Entry[]).length
+      );
+    },
+  };
+
+  const flowbiteCheckboxStyle =
+    "w-4 h-4 bg-gray-100 border-gray-300 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-600 dark:border-gray-500 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600";
+
+  const checkboxes = {
+    toggleAll(e: Event) {
+      const checkbox = e.target as HTMLInputElement;
+      Object.keys(selectedItems.categories).forEach((key) => {
+        selectedItems.categories[key] = checkbox.checked
+          ? [...dateEntries[key]]
+          : [];
+      });
+    },
+
+    toggleCategory(e: Event, category: EntriesKey) {
+      const checkbox = e.target as HTMLInputElement;
+      selectedItems.categories[category as string] = checkbox.checked
+        ? [...dateEntries[category]]
+        : [];
+    },
+  };
+
   async function getSubcontractorsData() {
     type SubcontractorsData = {
       trucking: string[];
@@ -41,17 +91,23 @@
   }
 
   async function addCrane() {
-    dateEntries.cranes = [
-      ...dateEntries.cranes,
-      {
-        id: null,
-        equipmentId: null,
-        date: null,
-        hoursWorked:
-          dateEntries.cranes[dateEntries.cranes.length - 1]?.hoursWorked || 0,
-        comments: "",
-      },
-    ];
+    const newEntry = {
+      id: null,
+      equipmentId: null,
+      date: null,
+      hoursWorked:
+        dateEntries.cranes[dateEntries.cranes.length - 1]?.hoursWorked || 0,
+      comments: "",
+    };
+
+    dateEntries.cranes = [...dateEntries.cranes, newEntry];
+
+    if (document.querySelector<HTMLInputElement>("#cranes-toggleAll").checked) {
+      selectedItems.categories.cranes = [
+        ...selectedItems.categories.cranes,
+        newEntry,
+      ];
+    }
 
     await tick();
 
@@ -63,23 +119,31 @@
   }
 
   async function addEquipment() {
-    dateEntries.equipments = [
-      ...dateEntries.equipments,
-      {
-        id: null,
-        equipmentId: null,
-        date: null,
-        hoursWorked:
-          dateEntries.equipments[dateEntries.equipments.length - 1]
-            ?.hoursWorked ||
-          Math.max(
-            ...dateEntries.cranes.map(({ hoursWorked }) => hoursWorked),
-            0
-          ) ||
-          0,
-        comments: "",
-      },
-    ];
+    const newEntry = {
+      id: null,
+      equipmentId: null,
+      date: null,
+      hoursWorked:
+        dateEntries.equipments[dateEntries.equipments.length - 1]
+          ?.hoursWorked ||
+        Math.max(
+          ...dateEntries.cranes.map(({ hoursWorked }) => hoursWorked),
+          0
+        ) ||
+        0,
+      comments: "",
+    };
+
+    dateEntries.equipments = [...dateEntries.equipments, newEntry];
+
+    if (
+      document.querySelector<HTMLInputElement>("#equipments-toggleAll").checked
+    ) {
+      selectedItems.categories.equipments = [
+        ...selectedItems.categories.equipments,
+        newEntry,
+      ];
+    }
 
     await tick();
 
@@ -91,23 +155,32 @@
   }
 
   async function addPermanentStaff() {
-    dateEntries.permanentStaff = [
-      ...dateEntries.permanentStaff,
-      {
-        id: null,
-        staffId: null,
-        date: null,
-        hoursWorked:
-          dateEntries.permanentStaff[dateEntries.permanentStaff.length - 1]
-            ?.hoursWorked ||
-          Math.max(
-            ...dateEntries.cranes.map(({ hoursWorked }) => hoursWorked),
-            0
-          ) ||
-          0,
-        comments: "",
-      },
-    ];
+    const newEntry = {
+      id: null,
+      staffId: null,
+      date: null,
+      hoursWorked:
+        dateEntries.permanentStaff[dateEntries.permanentStaff.length - 1]
+          ?.hoursWorked ||
+        Math.max(
+          ...dateEntries.cranes.map(({ hoursWorked }) => hoursWorked),
+          0
+        ) ||
+        0,
+      comments: "",
+    };
+
+    dateEntries.permanentStaff = [...dateEntries.permanentStaff, newEntry];
+
+    if (
+      document.querySelector<HTMLInputElement>("#permanentStaff-toggleAll")
+        .checked
+    ) {
+      selectedItems.categories.permanentStaff = [
+        ...selectedItems.categories.permanentStaff,
+        newEntry,
+      ];
+    }
 
     await tick();
 
@@ -119,23 +192,30 @@
   }
 
   async function addTempStaff() {
-    dateEntries.tempStaff = [
-      ...dateEntries.tempStaff,
-      {
-        id: null,
-        staffId: null,
-        date: null,
-        hoursWorked:
-          dateEntries.tempStaff[dateEntries.tempStaff.length - 1]
-            ?.hoursWorked ||
-          Math.max(
-            ...dateEntries.cranes.map(({ hoursWorked }) => hoursWorked),
-            0
-          ) ||
-          0,
-        comments: "",
-      },
-    ];
+    const newEntry = {
+      id: null,
+      staffId: null,
+      date: null,
+      hoursWorked:
+        dateEntries.tempStaff[dateEntries.tempStaff.length - 1]?.hoursWorked ||
+        Math.max(
+          ...dateEntries.cranes.map(({ hoursWorked }) => hoursWorked),
+          0
+        ) ||
+        0,
+      comments: "",
+    };
+
+    dateEntries.tempStaff = [...dateEntries.tempStaff, newEntry];
+
+    if (
+      document.querySelector<HTMLInputElement>("#tempStaff-toggleAll").checked
+    ) {
+      selectedItems.categories.tempStaff = [
+        ...selectedItems.categories.tempStaff,
+        newEntry,
+      ];
+    }
 
     await tick();
 
@@ -147,17 +227,25 @@
   }
 
   async function addSubcontractTrucking() {
-    dateEntries.trucking = [
-      ...dateEntries.trucking,
-      {
-        id: null,
-        subcontractorName: "",
-        date: null,
-        hoursWorked: null,
-        cost: null,
-        comments: "",
-      },
-    ];
+    const newEntry = {
+      id: null,
+      subcontractorName: "",
+      date: null,
+      hoursWorked: null,
+      cost: null,
+      comments: "",
+    };
+
+    dateEntries.trucking = [...dateEntries.trucking, newEntry];
+
+    if (
+      document.querySelector<HTMLInputElement>("#trucking-toggleAll").checked
+    ) {
+      selectedItems.categories.trucking = [
+        ...selectedItems.categories.trucking,
+        newEntry,
+      ];
+    }
 
     await tick();
 
@@ -169,17 +257,29 @@
   }
 
   async function addSubcontractOther() {
+    const newEntry = {
+      id: null,
+      subcontractorName: "",
+      date: null,
+      hoursWorked: null,
+      cost: null,
+      comments: "",
+    };
+
     dateEntries.otherSubcontracts = [
       ...dateEntries.otherSubcontracts,
-      {
-        id: null,
-        subcontractorName: "",
-        date: null,
-        hoursWorked: null,
-        cost: null,
-        comments: "",
-      },
+      newEntry,
     ];
+
+    if (
+      document.querySelector<HTMLInputElement>("#otherSubcontracts-toggleAll")
+        .checked
+    ) {
+      selectedItems.categories.otherSubcontracts = [
+        ...selectedItems.categories.otherSubcontracts,
+        newEntry,
+      ];
+    }
 
     await tick();
 
@@ -188,6 +288,28 @@
         `#otherSubcontracts-${dateEntries.otherSubcontracts.length - 1}-subcontractorName`
       )
       .focus();
+  }
+
+  function deleteEntry<T extends EntriesKey>(key: T, entry: EntryType<T>) {
+    dateEntries[key] = dateEntries[key].filter(
+      (item: EntryType<T>) => item !== entry
+    ) as (typeof dateEntries)[T];
+
+    selectedItems.categories[key] = selectedItems.categories[key].filter(
+      (item: EntryType<T>) => item !== entry
+    ) as (typeof dateEntries)[T];
+  }
+
+  function updateMultipleValues(property: string, source: Entry, value: any) {
+    Object.values(selectedItems.categories).forEach((items) => {
+      items.forEach((entry: Entry) => {
+        if (entry !== source && entry[property] !== undefined) {
+          entry[property] = value;
+        }
+      });
+    });
+
+    dateEntries = dateEntries;
   }
 
   async function updateEntries() {
@@ -236,10 +358,18 @@
   on:open={() => {
     dateFromInput = date;
     dateEntries = structuredClone(report.entriesByDate[date]) || {
-      permanentStaff: [],
-      tempStaff: [],
       cranes: [],
       equipments: [],
+      permanentStaff: [],
+      tempStaff: [],
+      trucking: [],
+      otherSubcontracts: [],
+    };
+    selectedItems.categories = {
+      cranes: [],
+      equipments: [],
+      permanentStaff: [],
+      tempStaff: [],
       trucking: [],
       otherSubcontracts: [],
     };
@@ -258,9 +388,29 @@
       />
     </div>
 
+    <div>
+      <div class="mb-2 flex gap-3 items-center">
+        <Checkbox
+          on:change={checkboxes.toggleAll}
+          checked={selectedItems.allSelected}
+          indeterminate={selectedItems.someSelected}
+        />
+        <span class="text-xl font-bold me-2">Tout sélectionner</span>
+      </div>
+    </div>
+
     <!-- Grues -->
     <div>
-      <div class="mb-2">
+      <div class="mb-2 flex gap-3 items-center">
+        <Checkbox
+          on:change={(e) => checkboxes.toggleCategory(e, "cranes")}
+          checked={dateEntries.cranes.length > 0 &&
+            selectedItems.categories.cranes.length ===
+              dateEntries.cranes.length}
+          indeterminate={selectedItems.categories.cranes.length > 0 &&
+            selectedItems.categories.cranes.length < dateEntries.cranes.length}
+          id="cranes-toggleAll"
+        />
         <span class="text-xl font-bold me-2">Grues</span>
         <Button
           on:click={addCrane}
@@ -274,8 +424,22 @@
       </div>
 
       <div class="flex flex-col gap-3">
-        {#each dateEntries.cranes as craneEntry, i}
-          <div class="flex flex-col lg:flex-row gap-2 items-center">
+        {#each dateEntries.cranes as entry, i}
+          <div
+            class="flex flex-col lg:flex-row gap-2 items-center p-2 rounded-lg"
+            class:bg-violet-100={selectedItems.categories.cranes.includes(
+              entry
+            )}
+          >
+            <div>
+              <input
+                type="checkbox"
+                bind:group={selectedItems.categories.cranes}
+                value={entry}
+                class={flowbiteCheckboxStyle}
+              />
+            </div>
+
             <div class="w-full lg:w-2/5">
               <Label for="cranes-{i}-equipmentId">Grue</Label>
               <Svelecte
@@ -283,7 +447,7 @@
                 inputId="cranes-{i}-equipmentId"
                 name="Grue {i + 1}"
                 placeholder="Grue"
-                bind:value={craneEntry.equipmentId}
+                bind:value={entry.equipmentId}
                 required
               />
             </div>
@@ -295,7 +459,9 @@
                 name="Grue {i + 1} - Heures"
                 format="+2"
                 max={24}
-                bind:value={craneEntry.hoursWorked}
+                bind:value={entry.hoursWorked}
+                on:new-value={(event) =>
+                  updateMultipleValues("hoursWorked", entry, event.detail)}
                 placeholder="Heures"
                 required
               />
@@ -306,17 +472,15 @@
               <Input
                 type="text"
                 id="cranes-{i}-comments"
-                bind:value={craneEntry.comments}
+                bind:value={entry.comments}
+                on:input={(event) =>
+                  updateMultipleValues("comments", entry, entry.comments)}
               />
             </div>
 
             <div class="flex-auto">
               <Button
-                on:click={() => {
-                  dateEntries.cranes = dateEntries.cranes.filter(
-                    (entry) => entry !== craneEntry
-                  );
-                }}
+                on:click={() => deleteEntry("cranes", entry)}
                 color="red"
                 size="sm"
                 title="Supprimer"
@@ -333,7 +497,17 @@
 
     <!-- Equipments -->
     <div>
-      <div class="mb-2">
+      <div class="mb-2 flex gap-3 items-center">
+        <Checkbox
+          on:change={(e) => checkboxes.toggleCategory(e, "equipments")}
+          checked={dateEntries.equipments.length > 0 &&
+            selectedItems.categories.equipments.length ===
+              dateEntries.equipments.length}
+          indeterminate={selectedItems.categories.equipments.length > 0 &&
+            selectedItems.categories.equipments.length <
+              dateEntries.equipments.length}
+          id="equipments-toggleAll"
+        />
         <span class="text-xl font-bold me-2">Équipements</span>
         <Button
           on:click={addEquipment}
@@ -347,8 +521,22 @@
       </div>
 
       <div class="flex flex-col gap-3">
-        {#each dateEntries.equipments as equipmentEntry, i}
-          <div class="flex flex-col lg:flex-row gap-2 items-center">
+        {#each dateEntries.equipments as entry, i}
+          <div
+            class="flex flex-col lg:flex-row gap-2 items-center p-2 rounded-lg"
+            class:bg-violet-100={selectedItems.categories.equipments.includes(
+              entry
+            )}
+          >
+            <div>
+              <input
+                type="checkbox"
+                bind:group={selectedItems.categories.equipments}
+                value={entry}
+                class={flowbiteCheckboxStyle}
+              />
+            </div>
+
             <div class="w-full lg:w-2/5">
               <Label for="equipments-{i}-equipmentId">Équipement</Label>
               <Svelecte
@@ -356,7 +544,7 @@
                 inputId="equipments-{i}-equipmentId"
                 placeholder="Équipement"
                 name="Équipement {i + 1}"
-                bind:value={equipmentEntry.equipmentId}
+                bind:value={entry.equipmentId}
                 required
               />
             </div>
@@ -368,7 +556,9 @@
                 name="Équipement {i + 1} - Heures"
                 format="+2"
                 max={24}
-                bind:value={equipmentEntry.hoursWorked}
+                bind:value={entry.hoursWorked}
+                on:new-value={(event) =>
+                  updateMultipleValues("hoursWorked", entry, event.detail)}
                 placeholder="Heures"
                 required
               />
@@ -379,17 +569,15 @@
               <Input
                 type="text"
                 id="equipments-{i}-comments"
-                bind:value={equipmentEntry.comments}
+                bind:value={entry.comments}
+                on:input={(event) =>
+                  updateMultipleValues("comments", entry, entry.comments)}
               />
             </div>
 
             <div class="flex-auto">
               <Button
-                on:click={() => {
-                  dateEntries.equipments = dateEntries.equipments.filter(
-                    (entry) => entry !== equipmentEntry
-                  );
-                }}
+                on:click={() => deleteEntry("equipments", entry)}
                 color="red"
                 size="sm"
                 title="Supprimer"
@@ -406,7 +594,17 @@
 
     <!-- Mensuels -->
     <div>
-      <div class="mb-2">
+      <div class="mb-2 flex gap-3 items-center">
+        <Checkbox
+          on:change={(e) => checkboxes.toggleCategory(e, "permanentStaff")}
+          checked={dateEntries.permanentStaff.length > 0 &&
+            selectedItems.categories.permanentStaff.length ===
+              dateEntries.permanentStaff.length}
+          indeterminate={selectedItems.categories.permanentStaff.length > 0 &&
+            selectedItems.categories.permanentStaff.length <
+              dateEntries.permanentStaff.length}
+          id="permanentStaff-toggleAll"
+        />
         <span class="text-xl font-bold me-2">Mensuels</span>
         <Button
           on:click={addPermanentStaff}
@@ -420,8 +618,22 @@
       </div>
 
       <div class="flex flex-col gap-3">
-        {#each dateEntries.permanentStaff as staffEntry, i}
-          <div class="flex flex-col lg:flex-row gap-2 items-center">
+        {#each dateEntries.permanentStaff as entry, i}
+          <div
+            class="flex flex-col lg:flex-row gap-2 items-center p-2 rounded-lg"
+            class:bg-violet-100={selectedItems.categories.permanentStaff.includes(
+              entry
+            )}
+          >
+            <div>
+              <input
+                type="checkbox"
+                bind:group={selectedItems.categories.permanentStaff}
+                value={entry}
+                class={flowbiteCheckboxStyle}
+              />
+            </div>
+
             <div class="w-full lg:w-2/5">
               <Label for="permanentStaff-{i}-staffId">Personnel</Label>
               <Svelecte
@@ -429,7 +641,7 @@
                 inputId="permanentStaff-{i}-staffId"
                 name="Personnel {i + 1} - Nom"
                 placeholder="Personnel"
-                bind:value={staffEntry.staffId}
+                bind:value={entry.staffId}
                 required
               />
             </div>
@@ -441,7 +653,9 @@
                 name="Personnel {i + 1} - Heures"
                 format="+2"
                 max={24}
-                bind:value={staffEntry.hoursWorked}
+                bind:value={entry.hoursWorked}
+                on:new-value={(event) =>
+                  updateMultipleValues("hoursWorked", entry, event.detail)}
                 placeholder="Heures"
                 required
               />
@@ -452,18 +666,15 @@
               <Input
                 type="text"
                 id="permanentStaff.comments.{i}"
-                bind:value={staffEntry.comments}
+                bind:value={entry.comments}
+                on:input={(event) =>
+                  updateMultipleValues("comments", entry, entry.comments)}
               />
             </div>
 
             <div class="flex-auto">
               <Button
-                on:click={() => {
-                  dateEntries.permanentStaff =
-                    dateEntries.permanentStaff.filter(
-                      (entry) => entry !== staffEntry
-                    );
-                }}
+                on:click={() => deleteEntry("permanentStaff", entry)}
                 color="red"
                 size="sm"
                 title="Supprimer"
@@ -480,7 +691,17 @@
 
     <!-- Intérimaires -->
     <div>
-      <div class="mb-2">
+      <div class="mb-2 flex gap-3 items-center">
+        <Checkbox
+          on:change={(e) => checkboxes.toggleCategory(e, "tempStaff")}
+          checked={dateEntries.tempStaff.length > 0 &&
+            selectedItems.categories.tempStaff.length ===
+              dateEntries.tempStaff.length}
+          indeterminate={selectedItems.categories.tempStaff.length > 0 &&
+            selectedItems.categories.tempStaff.length <
+              dateEntries.tempStaff.length}
+          id="tempStaff-toggleAll"
+        />
         <span class="text-xl font-bold me-2">Intérimaires</span>
         <Button
           on:click={addTempStaff}
@@ -494,8 +715,22 @@
       </div>
 
       <div class="flex flex-col gap-3">
-        {#each dateEntries.tempStaff as staffEntry, i}
-          <div class="flex flex-col lg:flex-row gap-2 items-center">
+        {#each dateEntries.tempStaff as entry, i}
+          <div
+            class="flex flex-col lg:flex-row gap-2 items-center p-2 rounded-lg"
+            class:bg-violet-100={selectedItems.categories.tempStaff.includes(
+              entry
+            )}
+          >
+            <div>
+              <input
+                type="checkbox"
+                bind:group={selectedItems.categories.tempStaff}
+                value={entry}
+                class={flowbiteCheckboxStyle}
+              />
+            </div>
+
             <div class="w-full lg:w-2/5">
               <Label for="tempStaff-{i}-staffId">Intérimaire</Label>
               <Svelecte
@@ -503,7 +738,7 @@
                 inputId="tempStaff-{i}-staffId"
                 name="Intérimaire {i + 1} - Nom"
                 placeholder="Intérimaire"
-                bind:value={staffEntry.staffId}
+                bind:value={entry.staffId}
                 required
               />
             </div>
@@ -515,7 +750,9 @@
                 name="Intérimaire {i + 1} - Heures"
                 format="+2"
                 max={24}
-                bind:value={staffEntry.hoursWorked}
+                bind:value={entry.hoursWorked}
+                on:new-value={(event) =>
+                  updateMultipleValues("hoursWorked", entry, event.detail)}
                 placeholder="Heures"
                 required
               />
@@ -526,17 +763,15 @@
               <Input
                 type="text"
                 id="tempStaff-{i}-comments"
-                bind:value={staffEntry.comments}
+                bind:value={entry.comments}
+                on:input={(event) =>
+                  updateMultipleValues("comments", entry, entry.comments)}
               />
             </div>
 
             <div class="flex-auto">
               <Button
-                on:click={() => {
-                  dateEntries.tempStaff = dateEntries.tempStaff.filter(
-                    (entry) => entry !== staffEntry
-                  );
-                }}
+                on:click={() => deleteEntry("tempStaff", entry)}
                 color="red"
                 size="sm"
                 title="Supprimer"
@@ -553,7 +788,17 @@
 
     <!-- Brouettage -->
     <div>
-      <div class="mb-2">
+      <div class="mb-2 flex gap-3 items-center">
+        <Checkbox
+          on:change={(e) => checkboxes.toggleCategory(e, "trucking")}
+          checked={dateEntries.trucking.length > 0 &&
+            selectedItems.categories.trucking.length ===
+              dateEntries.trucking.length}
+          indeterminate={selectedItems.categories.trucking.length > 0 &&
+            selectedItems.categories.trucking.length <
+              dateEntries.trucking.length}
+          id="trucking-toggleAll"
+        />
         <span class="text-lg font-bold me-2">Brouettage</span>
         <Button
           on:click={addSubcontractTrucking}
@@ -567,8 +812,22 @@
       </div>
 
       <div class="flex flex-col gap-3">
-        {#each dateEntries.trucking as subcontractEntry, i}
-          <div class="flex flex-col lg:flex-row gap-2 items-center">
+        {#each dateEntries.trucking as entry, i}
+          <div
+            class="flex flex-col lg:flex-row gap-2 items-center p-2 rounded-lg"
+            class:bg-violet-100={selectedItems.categories.trucking.includes(
+              entry
+            )}
+          >
+            <div>
+              <input
+                type="checkbox"
+                bind:group={selectedItems.categories.trucking}
+                value={entry}
+                class={flowbiteCheckboxStyle}
+              />
+            </div>
+
             <div class="w-full lg:w-2/5">
               <Label for="trucking-{i}-subcontractorName">Prestataire</Label>
               <Svelecte
@@ -576,7 +835,7 @@
                 inputId="trucking-{i}-subcontractorName"
                 name="Brouettage {i + 1} - Prestataire"
                 placeholder="Prestataire"
-                bind:value={subcontractEntry.subcontractorName}
+                bind:value={entry.subcontractorName}
                 creatable
                 creatablePrefix=""
                 keepCreated
@@ -592,9 +851,11 @@
                 name="Brouettage {i + 1} - Heures"
                 format="+2"
                 max={24}
-                bind:value={subcontractEntry.hoursWorked}
+                bind:value={entry.hoursWorked}
+                on:new-value={(event) =>
+                  updateMultipleValues("hoursWorked", entry, event.detail)}
                 placeholder="Heures"
-                required={subcontractEntry.cost === null}
+                required={entry.cost === null}
               />
             </div>
 
@@ -604,9 +865,9 @@
                 id="trucking-{i}-cost"
                 name="Brouettage {i + 1} - Coût"
                 format="2"
-                bind:value={subcontractEntry.cost}
+                bind:value={entry.cost}
                 placeholder="Coût"
-                required={subcontractEntry.hoursWorked === null}
+                required={entry.hoursWorked === null}
               />
             </div>
 
@@ -615,17 +876,15 @@
               <Input
                 type="text"
                 id="trucking-{i}-comments"
-                bind:value={subcontractEntry.comments}
+                bind:value={entry.comments}
+                on:input={(event) =>
+                  updateMultipleValues("comments", entry, entry.comments)}
               />
             </div>
 
             <div class="flex-auto">
               <Button
-                on:click={() => {
-                  dateEntries.trucking = dateEntries.trucking.filter(
-                    (entry) => entry !== subcontractEntry
-                  );
-                }}
+                on:click={() => deleteEntry("trucking", entry)}
                 color="red"
                 size="sm"
                 title="Supprimer"
@@ -642,7 +901,18 @@
 
     <!-- Autres sous-traitances -->
     <div>
-      <div class="mb-2">
+      <div class="mb-2 flex gap-3 items-center">
+        <Checkbox
+          on:change={(e) => checkboxes.toggleCategory(e, "otherSubcontracts")}
+          checked={dateEntries.otherSubcontracts.length > 0 &&
+            selectedItems.categories.otherSubcontracts.length ===
+              dateEntries.otherSubcontracts.length}
+          indeterminate={selectedItems.categories.otherSubcontracts.length >
+            0 &&
+            selectedItems.categories.otherSubcontracts.length <
+              dateEntries.otherSubcontracts.length}
+          id="otherSubcontracts-toggleAll"
+        />
         <span class="text-lg font-bold me-2">Autres sous-traitances</span>
         <Button
           on:click={addSubcontractOther}
@@ -656,8 +926,22 @@
       </div>
 
       <div class="flex flex-col gap-3">
-        {#each dateEntries.otherSubcontracts as subcontractEntry, i}
-          <div class="flex flex-col lg:flex-row gap-2 items-center">
+        {#each dateEntries.otherSubcontracts as entry, i}
+          <div
+            class="flex flex-col lg:flex-row gap-2 items-center p-2 rounded-lg"
+            class:bg-violet-100={selectedItems.categories.otherSubcontracts.includes(
+              entry
+            )}
+          >
+            <div>
+              <input
+                type="checkbox"
+                bind:group={selectedItems.categories.otherSubcontracts}
+                value={entry}
+                class={flowbiteCheckboxStyle}
+              />
+            </div>
+
             <div class="w-full lg:w-2/5">
               <Label for="otherSubcontracts-{i}-subcontractorName"
                 >Prestataire</Label
@@ -667,7 +951,7 @@
                 inputId="otherSubcontracts-{i}-subcontractorName"
                 name="Sous-traitance {i + 1} - Prestataire"
                 placeholder="Prestataire"
-                bind:value={subcontractEntry.subcontractorName}
+                bind:value={entry.subcontractorName}
                 creatable
                 creatablePrefix=""
                 keepCreated
@@ -683,9 +967,11 @@
                 name="Sous-traitance {i + 1} - Heures"
                 format="+2"
                 max={24}
-                bind:value={subcontractEntry.hoursWorked}
+                bind:value={entry.hoursWorked}
+                on:new-value={(event) =>
+                  updateMultipleValues("hoursWorked", entry, event.detail)}
                 placeholder="Heures"
-                required={subcontractEntry.cost === null}
+                required={entry.cost === null}
               />
             </div>
 
@@ -695,9 +981,9 @@
                 id="otherSubcontracts-{i}-cost"
                 name="Sous-traitance {i + 1} - Coût"
                 format="2"
-                bind:value={subcontractEntry.cost}
+                bind:value={entry.cost}
                 placeholder="Coût"
-                required={subcontractEntry.hoursWorked === null}
+                required={entry.hoursWorked === null}
               />
             </div>
 
@@ -706,18 +992,15 @@
               <Input
                 type="text"
                 id="otherSubcontracts-{i}-comments"
-                bind:value={subcontractEntry.comments}
+                bind:value={entry.comments}
+                on:input={(event) =>
+                  updateMultipleValues("comments", entry, entry.comments)}
               />
             </div>
 
             <div class="flex-auto">
               <Button
-                on:click={() => {
-                  dateEntries.otherSubcontracts =
-                    dateEntries.otherSubcontracts.filter(
-                      (entry) => entry !== subcontractEntry
-                    );
-                }}
+                on:click={() => deleteEntry("otherSubcontracts", entry)}
                 color="red"
                 size="sm"
                 title="Supprimer"
