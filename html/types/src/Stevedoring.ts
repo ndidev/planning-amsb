@@ -200,6 +200,7 @@ export type StevedoringShipReportEquipmentEntry = {
   id: number;
   equipmentId: StevedoringEquipment["id"];
   date: string;
+  hoursHint: string;
   hoursWorked: number;
   comments: string;
 };
@@ -211,6 +212,7 @@ export type StevedoringShipReportStaffEntry = {
   id: number;
   staffId: StevedoringStaff["id"];
   date: string;
+  hoursHint: string;
   hoursWorked: number;
   comments: string;
 };

@@ -9,7 +9,11 @@
 
   import { DateUtils, validerFormulaire, fetcher } from "@app/utils";
 
-  import type { StevedoringShipReport } from "@app/types";
+  import type {
+    StevedoringShipReport,
+    StevedoringShipReportEquipmentEntry,
+    StevedoringShipReportStaffEntry,
+  } from "@app/types";
 
   let form: HTMLFormElement;
 
@@ -95,6 +99,8 @@
       id: null,
       equipmentId: null,
       date: null,
+      hoursHint:
+        dateEntries.cranes[dateEntries.cranes.length - 1]?.hoursHint || "",
       hoursWorked:
         dateEntries.cranes[dateEntries.cranes.length - 1]?.hoursWorked || 0,
       comments: "",
@@ -123,6 +129,10 @@
       id: null,
       equipmentId: null,
       date: null,
+      hoursHint:
+        dateEntries.equipments[dateEntries.equipments.length - 1]?.hoursHint ||
+        dateEntries.cranes[dateEntries.cranes.length - 1]?.hoursHint ||
+        "",
       hoursWorked:
         dateEntries.equipments[dateEntries.equipments.length - 1]
           ?.hoursWorked ||
@@ -159,6 +169,11 @@
       id: null,
       staffId: null,
       date: null,
+      hoursHint:
+        dateEntries.permanentStaff[dateEntries.permanentStaff.length - 1]
+          ?.hoursHint ||
+        dateEntries.cranes[dateEntries.cranes.length - 1]?.hoursHint ||
+        "",
       hoursWorked:
         dateEntries.permanentStaff[dateEntries.permanentStaff.length - 1]
           ?.hoursWorked ||
@@ -196,6 +211,10 @@
       id: null,
       staffId: null,
       date: null,
+      hoursHint:
+        dateEntries.tempStaff[dateEntries.tempStaff.length - 1]?.hoursHint ||
+        dateEntries.cranes[dateEntries.cranes.length - 1]?.hoursHint ||
+        "",
       hoursWorked:
         dateEntries.tempStaff[dateEntries.tempStaff.length - 1]?.hoursWorked ||
         Math.max(
@@ -290,6 +309,56 @@
       .focus();
   }
 
+  function inferHoursWorked(
+    entry: StevedoringShipReportStaffEntry | StevedoringShipReportEquipmentEntry
+  ) {
+    if (entry.hoursHint === "") return;
+
+    const regexp = new RegExp(
+      /(?<start>\d{1,2}[h:]?\d{0,2})\s*-\s*(?<end>\d{1,2}[h:]?\d{0,2})/,
+      "gi"
+    );
+
+    const match = regexp.exec(entry.hoursHint);
+
+    if (!match) return;
+
+    const start = _parseHours(match.groups.start);
+    const end = _parseHours(match.groups.end);
+
+    const formattedValue =
+      String(Math.floor(start)).padStart(2, "0") +
+      "h" +
+      String((start % 1) * 60).padStart(2, "0") +
+      "-" +
+      String(Math.floor(end)).padStart(2, "0") +
+      "h" +
+      String((end % 1) * 60).padStart(2, "0");
+
+    entry.hoursHint = formattedValue;
+
+    // Do not overwrite the hours worked if it has already been set
+    if (entry.hoursWorked) return;
+
+    let hoursWorked = end - start;
+
+    if (hoursWorked < 0) return;
+
+    // Remove the lunch break if the hours worked are more than 5
+    if (hoursWorked > 5) {
+      const lunchBreak = 1.5;
+      hoursWorked -= lunchBreak;
+    }
+
+    return hoursWorked;
+
+    function _parseHours(hours: string): number {
+      const [hoursPart, minutesPart] = hours.split(/[h:]/i).map(Number);
+
+      return hoursPart + (minutesPart || 0) / 60;
+    }
+  }
+
   function deleteEntry<T extends EntriesKey>(key: T, entry: EntryType<T>) {
     dateEntries[key] = dateEntries[key].filter(
       (item: EntryType<T>) => item !== entry
@@ -300,11 +369,28 @@
     ) as (typeof dateEntries)[T];
   }
 
-  function updateMultipleValues(property: string, source: Entry, value: any) {
+  function updateMultipleValues(
+    property: string,
+    source: Entry,
+    force: boolean = true
+  ) {
+    // If the source isn't selected, return
+    if (
+      !Object.values(selectedItems.categories)
+        .flatMap((items) => items as Entry[])
+        .includes(source)
+    ) {
+      return;
+    }
+
     Object.values(selectedItems.categories).forEach((items) => {
       items.forEach((entry: Entry) => {
-        if (entry !== source && entry[property] !== undefined) {
-          entry[property] = value;
+        if (
+          entry !== source &&
+          entry[property] !== undefined &&
+          (force || !entry[property])
+        ) {
+          entry[property] = source[property];
         }
       });
     });
@@ -453,15 +539,30 @@
             </div>
 
             <div class="w-full lg:w-auto">
-              <Label for="cranes-{i}-hoursWorked">Heures</Label>
+              <Label for="cranes-{i}-hoursHint">Heures</Label>
+              <Input
+                type="text"
+                maxlength={20}
+                id="cranes-{i}-hoursHint"
+                bind:value={entry.hoursHint}
+                on:input={() => updateMultipleValues("hoursHint", entry)}
+                on:change={() => {
+                  entry.hoursWorked = inferHoursWorked(entry);
+                  updateMultipleValues("hoursHint", entry);
+                  updateMultipleValues("hoursWorked", entry, false);
+                }}
+              />
+            </div>
+
+            <div class="w-full lg:w-auto">
+              <Label for="cranes-{i}-hoursWorked">Durée</Label>
               <NumericInput
                 id="cranes-{i}-hoursWorked"
                 name="Grue {i + 1} - Heures"
                 format="+2"
                 max={24}
                 bind:value={entry.hoursWorked}
-                on:new-value={(event) =>
-                  updateMultipleValues("hoursWorked", entry, event.detail)}
+                on:new-value={() => updateMultipleValues("hoursWorked", entry)}
                 placeholder="Heures"
                 required
               />
@@ -473,8 +574,7 @@
                 type="text"
                 id="cranes-{i}-comments"
                 bind:value={entry.comments}
-                on:input={(event) =>
-                  updateMultipleValues("comments", entry, entry.comments)}
+                on:input={() => updateMultipleValues("comments", entry)}
               />
             </div>
 
@@ -550,15 +650,30 @@
             </div>
 
             <div class="w-full lg:w-auto">
-              <Label for="equipments-{i}-hoursWorked">Heures</Label>
+              <Label for="equipments-{i}-hoursHint">Heures</Label>
+              <Input
+                type="text"
+                maxlength={20}
+                id="equipments-{i}-hoursHint"
+                bind:value={entry.hoursHint}
+                on:input={() => updateMultipleValues("hoursHint", entry)}
+                on:change={() => {
+                  inferHoursWorked(entry);
+                  updateMultipleValues("hoursHint", entry);
+                  updateMultipleValues("hoursWorked", entry, false);
+                }}
+              />
+            </div>
+
+            <div class="w-full lg:w-auto">
+              <Label for="equipments-{i}-hoursWorked">Durée</Label>
               <NumericInput
                 id="equipments-{i}-hoursWorked"
                 name="Équipement {i + 1} - Heures"
                 format="+2"
                 max={24}
                 bind:value={entry.hoursWorked}
-                on:new-value={(event) =>
-                  updateMultipleValues("hoursWorked", entry, event.detail)}
+                on:new-value={() => updateMultipleValues("hoursWorked", entry)}
                 placeholder="Heures"
                 required
               />
@@ -570,8 +685,7 @@
                 type="text"
                 id="equipments-{i}-comments"
                 bind:value={entry.comments}
-                on:input={(event) =>
-                  updateMultipleValues("comments", entry, entry.comments)}
+                on:input={() => updateMultipleValues("comments", entry)}
               />
             </div>
 
@@ -647,15 +761,30 @@
             </div>
 
             <div class="w-full lg:w-auto">
-              <Label for="permanentStaff-{i}-hoursWorked">Heures</Label>
+              <Label for="permanentStaff-{i}-hoursHint">Heures</Label>
+              <Input
+                type="text"
+                maxlength={20}
+                id="permanentStaff-{i}-hoursHint"
+                bind:value={entry.hoursHint}
+                on:input={() => updateMultipleValues("hoursHint", entry)}
+                on:change={() => {
+                  inferHoursWorked(entry);
+                  updateMultipleValues("hoursHint", entry);
+                  updateMultipleValues("hoursWorked", entry, false);
+                }}
+              />
+            </div>
+
+            <div class="w-full lg:w-auto">
+              <Label for="permanentStaff-{i}-hoursWorked">Durée</Label>
               <NumericInput
                 id="permanentStaff-{i}-hoursWorked"
                 name="Personnel {i + 1} - Heures"
                 format="+2"
                 max={24}
                 bind:value={entry.hoursWorked}
-                on:new-value={(event) =>
-                  updateMultipleValues("hoursWorked", entry, event.detail)}
+                on:new-value={() => updateMultipleValues("hoursWorked", entry)}
                 placeholder="Heures"
                 required
               />
@@ -667,8 +796,7 @@
                 type="text"
                 id="permanentStaff.comments.{i}"
                 bind:value={entry.comments}
-                on:input={(event) =>
-                  updateMultipleValues("comments", entry, entry.comments)}
+                on:input={() => updateMultipleValues("comments", entry)}
               />
             </div>
 
@@ -744,15 +872,30 @@
             </div>
 
             <div class="w-full lg:w-auto">
-              <Label for="tempStaff-{i}-hoursWorked">Heures</Label>
+              <Label for="tempStaff-{i}-hoursHint">Heures</Label>
+              <Input
+                type="text"
+                maxlength={20}
+                id="tempStaff-{i}-hoursHint"
+                bind:value={entry.hoursHint}
+                on:input={() => updateMultipleValues("hoursHint", entry)}
+                on:change={() => {
+                  inferHoursWorked(entry);
+                  updateMultipleValues("hoursHint", entry);
+                  updateMultipleValues("hoursWorked", entry, false);
+                }}
+              />
+            </div>
+
+            <div class="w-full lg:w-auto">
+              <Label for="tempStaff-{i}-hoursWorked">Durée</Label>
               <NumericInput
                 id="tempStaff-{i}-hoursWorked"
                 name="Intérimaire {i + 1} - Heures"
                 format="+2"
                 max={24}
                 bind:value={entry.hoursWorked}
-                on:new-value={(event) =>
-                  updateMultipleValues("hoursWorked", entry, event.detail)}
+                on:new-value={() => updateMultipleValues("hoursWorked", entry)}
                 placeholder="Heures"
                 required
               />
@@ -764,8 +907,7 @@
                 type="text"
                 id="tempStaff-{i}-comments"
                 bind:value={entry.comments}
-                on:input={(event) =>
-                  updateMultipleValues("comments", entry, entry.comments)}
+                on:input={() => updateMultipleValues("comments", entry)}
               />
             </div>
 
@@ -845,15 +987,14 @@
             </div>
 
             <div class="w-full lg:w-auto">
-              <Label for="trucking-{i}-hoursWorked">Heures</Label>
+              <Label for="trucking-{i}-hoursWorked">Durée</Label>
               <NumericInput
                 id="trucking-{i}-hoursWorked"
                 name="Brouettage {i + 1} - Heures"
                 format="+2"
                 max={24}
                 bind:value={entry.hoursWorked}
-                on:new-value={(event) =>
-                  updateMultipleValues("hoursWorked", entry, event.detail)}
+                on:new-value={() => updateMultipleValues("hoursWorked", entry)}
                 placeholder="Heures"
                 required={entry.cost === null}
               />
@@ -877,8 +1018,7 @@
                 type="text"
                 id="trucking-{i}-comments"
                 bind:value={entry.comments}
-                on:input={(event) =>
-                  updateMultipleValues("comments", entry, entry.comments)}
+                on:input={() => updateMultipleValues("comments", entry)}
               />
             </div>
 
@@ -961,15 +1101,14 @@
             </div>
 
             <div class="w-full lg:w-auto">
-              <Label for="otherSubcontracts-{i}-hoursWorked">Heures</Label>
+              <Label for="otherSubcontracts-{i}-hoursWorked">Durée</Label>
               <NumericInput
                 id="otherSubcontracts-{i}-hoursWorked"
                 name="Sous-traitance {i + 1} - Heures"
                 format="+2"
                 max={24}
                 bind:value={entry.hoursWorked}
-                on:new-value={(event) =>
-                  updateMultipleValues("hoursWorked", entry, event.detail)}
+                on:new-value={() => updateMultipleValues("hoursWorked", entry)}
                 placeholder="Heures"
                 required={entry.cost === null}
               />
@@ -993,8 +1132,7 @@
                 type="text"
                 id="otherSubcontracts-{i}-comments"
                 bind:value={entry.comments}
-                on:input={(event) =>
-                  updateMultipleValues("comments", entry, entry.comments)}
+                on:input={() => updateMultipleValues("comments", entry)}
               />
             </div>
 

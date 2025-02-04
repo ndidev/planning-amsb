@@ -116,18 +116,14 @@
     input.value = targetValue;
     input.setSelectionRange(caretStart + 1, caretStart + 1); // Replaces the cursor at the right position
     input.dispatchEvent(new InputEvent("input", { data: key }));
-    dispatch("new-value", parseFloat(targetValue));
   }
 
   function saveValue() {
+    value = input.value ? parseFloat(input.value) : null;
+
     valueJustSaved = true;
 
-    if (input.value === "") {
-      value = null;
-      return;
-    }
-
-    value = parseFloat(input.value);
+    dispatch("new-value", value);
   }
 
   /**

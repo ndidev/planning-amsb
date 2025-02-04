@@ -855,6 +855,12 @@
                     </div>
                   {/await}
 
+                  {#if entry.hoursHint}
+                    <div class="ms-auto lg:ms-0">
+                      {entry.hoursHint}
+                    </div>
+                  {/if}
+
                   <div class="ms-auto lg:ms-0">
                     {DateUtils.stringifyTime(entry.hoursWorked)}
                   </div>
@@ -889,6 +895,12 @@
                     </div>
                   {/await}
 
+                  {#if entry.hoursHint}
+                    <div class="ms-auto lg:ms-0">
+                      {entry.hoursHint}
+                    </div>
+                  {/if}
+
                   <div class="ms-auto lg:ms-0">
                     {DateUtils.stringifyTime(entry.hoursWorked)}
                   </div>
@@ -919,6 +931,12 @@
                     </div>
                   {/await}
 
+                  {#if entry.hoursHint}
+                    <div class="ms-auto lg:ms-0">
+                      {entry.hoursHint}
+                    </div>
+                  {/if}
+
                   <div class="ms-auto lg:ms-0">
                     {DateUtils.stringifyTime(entry.hoursWorked)}
                   </div>
@@ -948,6 +966,12 @@
                       {staff.fullname} ({staff.tempWorkAgency})
                     </div>
                   {/await}
+
+                  {#if entry.hoursHint}
+                    <div class="ms-auto lg:ms-0">
+                      {entry.hoursHint}
+                    </div>
+                  {/if}
 
                   <div class="ms-auto lg:ms-0">
                     {DateUtils.stringifyTime(entry.hoursWorked)}

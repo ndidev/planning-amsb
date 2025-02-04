@@ -754,8 +754,9 @@ final class StevedoringRepository extends Repository
         $shipReportsDetailsStatement =
             "SELECT
                 reports.ship as `ship`,
-                dispatch.comments as `comments`,
-                dispatch.hours_worked as `hoursWorked`
+                dispatch.hours_hint as `hoursHint`,
+                dispatch.hours_worked as `hoursWorked`,
+                dispatch.comments as `comments`
             FROM stevedoring_ship_reports_staff dispatch
             LEFT JOIN stevedoring_ship_reports reports ON reports.id = dispatch.ship_report_id
             WHERE dispatch.date = :date
@@ -781,7 +782,7 @@ final class StevedoringRepository extends Repository
                 ]
             )->fetchAll();
 
-            /** @var array{ship: string, comments: string, hoursWorked: float}[] */
+            /** @var array{ship: string, hoursHint: string, hoursWorked: float, comments: string}[] */
             $shipReportsDetailsArray = $this->mysql->prepareAndExecute(
                 $shipReportsDetailsStatement,
                 [
@@ -809,8 +810,9 @@ final class StevedoringRepository extends Repository
                     $formattedHoursWorked = DateUtils::stringifyTime($row['hoursWorked']);
 
                     return $row['ship']
-                        . ($row['comments'] ? " : {$row['comments']}" : '')
-                        . " ({$formattedHoursWorked})";
+                        . ($row['hoursHint'] ? " : {$row['hoursHint']}" : '')
+                        . " ({$formattedHoursWorked})"
+                        . ($row['comments'] ? " - {$row['comments']}" : '');
                 },
                 $shipReportsDetailsArray
             );
@@ -1479,6 +1481,7 @@ final class StevedoringRepository extends Repository
                 ship_report_id,
                 equipment_id,
                 date,
+                hours_hint,
                 hours_worked,
                 comments
              FROM stevedoring_ship_reports_equipments
@@ -1519,6 +1522,7 @@ final class StevedoringRepository extends Repository
                 ship_report_id = :reportId,
                 equipment_id = :equipmentId,
                 date = :date,
+                hours_hint = :hoursHint,
                 hours_worked = :hoursWorked,
                 comments = :comments";
 
@@ -1529,6 +1533,7 @@ final class StevedoringRepository extends Repository
                     'reportId' => $entry->report?->id,
                     'equipmentId' => $entry->equipment?->id,
                     'date' => $entry->date?->format('Y-m-d'),
+                    'hoursHint' => $entry->hoursHint,
                     'hoursWorked' => $entry->hoursWorked,
                     'comments' => $entry->comments,
                 ]
@@ -1571,6 +1576,7 @@ final class StevedoringRepository extends Repository
                 ship_report_id = :reportId,
                 equipment_id = :equipmentId,
                 date = :date,
+                hours_hint = :hoursHint,
                 hours_worked = :hoursWorked,
                 comments = :comments
              WHERE
@@ -1584,6 +1590,7 @@ final class StevedoringRepository extends Repository
                     'reportId' => $entry->report?->id,
                     'equipmentId' => $entry->equipment?->id,
                     'date' => $entry->date?->format('Y-m-d'),
+                    'hoursHint' => $entry->hoursHint,
                     'hoursWorked' => $entry->hoursWorked,
                     'comments' => $entry->comments,
                 ]
@@ -1623,6 +1630,7 @@ final class StevedoringRepository extends Repository
                 reportsStaff.ship_report_id,
                 reportsStaff.staff_id,
                 reportsStaff.date,
+                reportsStaff.hours_hint,
                 reportsStaff.hours_worked,
                 reportsStaff.comments
              FROM stevedoring_ship_reports_staff reportsStaff
@@ -1668,6 +1676,7 @@ final class StevedoringRepository extends Repository
                 ship_report_id = :reportId,
                 staff_id = :staffId,
                 date = :date,
+                hours_hint = :hoursHint,
                 hours_worked = :hoursWorked,
                 comments = :comments";
 
@@ -1678,6 +1687,7 @@ final class StevedoringRepository extends Repository
                     'reportId' => $entry->report?->id,
                     'staffId' => $entry->staff?->id,
                     'date' => $entry->date?->format('Y-m-d'),
+                    'hoursHint' => $entry->hoursHint,
                     'hoursWorked' => $entry->hoursWorked,
                     'comments' => $entry->comments,
                 ]
@@ -1720,6 +1730,7 @@ final class StevedoringRepository extends Repository
                 ship_report_id = :reportId,
                 staff_id = :staffId,
                 date = :date,
+                hours_hint = :hoursHint,
                 hours_worked = :hoursWorked,
                 comments = :comments
              WHERE
@@ -1733,6 +1744,7 @@ final class StevedoringRepository extends Repository
                     'reportId' => $entry->report?->id,
                     'staffId' => $entry->staff?->id,
                     'date' => $entry->date?->format('Y-m-d'),
+                    'hoursHint' => $entry->hoursHint,
                     'hoursWorked' => $entry->hoursWorked,
                     'comments' => $entry->comments,
                 ]

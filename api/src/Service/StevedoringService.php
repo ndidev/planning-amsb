@@ -609,6 +609,7 @@ final class StevedoringService
         $entry->id = $rawDataAH->getInt('id');
         $entry->equipment = $this->getEquipment($rawDataAH->getInt('equipment_id'));
         $entry->date = $rawDataAH->getDatetime('date');
+        $entry->hoursHint = $rawDataAH->getString('hours_hint');
         $entry->hoursWorked = $rawDataAH->getFloat('hours_worked', 0);
         $entry->comments = $rawDataAH->getString('comments');
 
@@ -626,6 +627,7 @@ final class StevedoringService
         $entry->id = $rawDataAH->getInt('id');
         $entry->equipment = $this->getEquipment($rawDataAH->getInt('equipmentId'));
         $entry->date = $rawDataAH->getDatetime('date');
+        $entry->hoursHint = $rawDataAH->getString('hoursHint');
         $entry->hoursWorked = $rawDataAH->getFloat('hoursWorked', 0);
         $entry->comments = $rawDataAH->getString('comments');
 
@@ -647,6 +649,7 @@ final class StevedoringService
         $entry->id = $rawDataAH->getInt('id');
         $entry->staff = $this->getStaff($rawDataAH->getInt('staff_id'));
         $entry->date = $rawDataAH->getDatetime('date');
+        $entry->hoursHint = $rawDataAH->getString('hours_hint');
         $entry->hoursWorked = $rawDataAH->getFloat('hours_worked', 0);
         $entry->comments = $rawDataAH->getString('comments');
 
@@ -664,6 +667,7 @@ final class StevedoringService
         $entry->id = $rawDataAH->getInt('id');
         $entry->staff = $this->getStaff($rawDataAH->getInt('staffId'));
         $entry->date = $rawDataAH->getDatetime('date');
+        $entry->hoursHint = $rawDataAH->getString('hoursHint');
         $entry->hoursWorked = $rawDataAH->getFloat('hoursWorked', 0);
         $entry->comments = $rawDataAH->getString('comments');
 

@@ -80,7 +80,7 @@
   <SectionTitle>Coûts</SectionTitle>
 
   <div
-    class="ms-2 flex flex-col gap-2 lg:flex-row lg:gap-6 print:flex-row print:gap-12 print:text-sm"
+    class="ms-2 flex flex-col gap-2 lg:flex-row lg:gap-6 print:flex-row print:gap-12"
   >
     <div>
       <div class="font-bold">Coûts standards</div>
