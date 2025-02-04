@@ -27,7 +27,7 @@
 <div>
   <SectionTitle>Cadence</SectionTitle>
 
-  <div class="print:text-sm">
+  <div>
     {#if Object.values(rate).some((value) => value)}
       <!-- Tonnage -->
       {#if rate.tonnage}

@@ -96,8 +96,8 @@
         </TableBody>
 
         <tfoot>
-          <tr class="font-semibold text-gray-900 bg-gray-50">
-            <th scope="row" class="py-3 px-6 text-base">Total</th>
+          <tr class="font-semibold text-gray-900 bg-gray-50 text-sm">
+            <th scope="row" class="py-3 px-6">Total</th>
 
             <td class="py-3 px-6"></td>
 

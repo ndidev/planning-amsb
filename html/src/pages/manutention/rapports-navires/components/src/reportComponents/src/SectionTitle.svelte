@@ -1,1 +1,1 @@
-<div class="text-lg font-bold print:text-base"><slot /></div>
+<div class="text-lg font-bold"><slot /></div>

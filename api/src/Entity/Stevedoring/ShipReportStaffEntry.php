@@ -30,6 +30,8 @@ class ShipReportStaffEntry extends AbstractEntity
         }
     }
 
+    public string $hoursHint = '';
+
     #[Minimum(0, message: "Les heures travaillées ne peuvent pas être négatives.")]
     #[Maximum(24, message: "Les heures travaillées ne peuvent pas dépasser 24 heures.")]
     public float $hoursWorked = 0.0;
@@ -43,6 +45,7 @@ class ShipReportStaffEntry extends AbstractEntity
             'id' => $this->id,
             'staffId' => $this->staff?->id,
             'date' => $this->date?->format('Y-m-d'),
+            'hoursHint' => $this->hoursHint,
             'hoursWorked' => $this->hoursWorked,
             'comments' => $this->comments,
         ];

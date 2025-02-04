@@ -370,7 +370,7 @@
                 <td>{{ crane }}</td>
                 {% for day in days %}
                   {% set entry = entriesByDate[day] %}
-                  <td></td>
+                  <td>{{ entry.hoursHint }}</td>
                   <td>{{ entry.hoursWorked }}</td>
                 {% endfor %}
               </tr>
@@ -415,7 +415,7 @@
                 <td>{{ equipment }}</td>
                 {% for day in days %}
                   {% set entry = entriesByDate[day] %}
-                  <td></td>
+                  <td>{{ entry.hoursHint }}</td>
                   <td>{{ entry.hoursWorked }}</td>
                 {% endfor %}
               </tr>
@@ -460,7 +460,7 @@
                 <td>{{ staff }}</td>
                 {% for day in days %}
                   {% set entry = entriesByDate[day] %}
-                  <td></td>
+                  <td>{{ entry.hoursHint }}</td>
                   <td>{{ entry.hoursWorked }}</td>
                 {% endfor %}
               </tr>
@@ -494,7 +494,7 @@
             </tr>
             <tr>
               {% for day in days %}
-                <th>Heures</th>
+                <th>Durée</th>
                 <th>Coût</th>
               {% endfor %}
             </tr>
@@ -540,7 +540,7 @@
             </tr>
             <tr>
               {% for day in days %}
-                <th>Heures</th>
+                <th>Durée</th>
                 <th>Coût</th>
               {% endfor %}
             </tr>
@@ -597,7 +597,7 @@
                 <td class="first-column">{{ staff }}</td>
                 {% for day in days %}
                   {% set entry = entriesByDate[day] %}
-                  <td></td>
+                  <td>{{ entry.hoursHint }}</td>
                   <td>{{ entry.hoursWorked }}</td>
                 {% endfor %}
               </tr>
