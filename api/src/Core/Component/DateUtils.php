@@ -289,4 +289,17 @@ abstract class DateUtils
 
         return $date > $now;
     }
+
+    public static function stringifyTime(\DateTimeInterface|string|float $time): string
+    {
+        if (\is_float($time)) {
+            $hours = (int) $time;
+            $minutes = ($time - $hours) * 60;
+            return sprintf("%02d:%02d", $hours, $minutes);
+        }
+
+        $time = self::convertDate($time);
+
+        return $time->format("h\hi");
+    }
 }

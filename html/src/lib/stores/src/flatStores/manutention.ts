@@ -36,9 +36,11 @@ export const stevedoringEquipments = createFlatStore<StevedoringEquipment>(
     model: "",
     type: "",
     internalNumber: "",
+    displayName: "",
     serialNumber: "",
     isActive: true,
     comments: "",
+    isCrane: false,
   }
 );
 

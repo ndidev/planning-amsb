@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Label, Input } from "flowbite-svelte";
+  import { Label, Input, Tooltip } from "flowbite-svelte";
   import Notiflix from "notiflix";
 
   import { LucideButton, Svelecte, NumericInput } from "@app/components";
@@ -12,6 +12,7 @@
     stevedoringTempWorkHours,
     currentUser,
   } from "@app/stores";
+  import { Underline } from "lucide-svelte";
 
   export let tempWorkHours: TempWorkHours;
 
@@ -104,9 +105,18 @@
   bind:this={line}
 >
   {#if !editing}
-    <div class="whitespace-nowrap">
+    <div
+      class="whitespace-nowrap decoration-dashed decoration-1 underline-offset-4"
+      class:underline={tempWorkHours.details}
+      class:hover:decoration-solid={tempWorkHours.details}
+    >
       {`${staff?.fullname} (${staff?.tempWorkAgency})`}
     </div>
+    {#if tempWorkHours.details}
+      <Tooltip type="auto">
+        {@html tempWorkHours.details.replaceAll(/\n|\r\n/g, "<br />")}
+      </Tooltip>
+    {/if}
 
     <div class="ms-auto lg:ms-0">
       {DateUtils.stringifyTime(tempWorkHours.hoursWorked)}

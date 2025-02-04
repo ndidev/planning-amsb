@@ -33,6 +33,8 @@ class TempWorkHoursEntry extends AbstractEntity
 
     public string $comments = '';
 
+    public string $details = '';
+
     #[\Override]
     public function toArray(): array
     {
@@ -42,6 +44,7 @@ class TempWorkHoursEntry extends AbstractEntity
             'date' => $this->date?->format('Y-m-d'),
             'hoursWorked' => $this->hoursWorked,
             'comments' => $this->comments,
+            'details' => $this->details,
         ];
     }
 }
