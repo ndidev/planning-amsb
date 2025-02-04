@@ -28,7 +28,7 @@
 
  -->
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, createEventDispatcher } from "svelte";
 
   import { Input } from "flowbite-svelte";
 
@@ -45,7 +45,10 @@
   let className = "w-full lg:min-w-min lg:max-w-max";
   export { className as class };
 
+  const dispatch = createEventDispatcher();
+
   let isUserInput = false;
+  let valueJustSaved = false;
 
   /** Decimal separator used by the browser. */
   const separator = parseFloat("1.1").toFixed(1).substring(1, 2);
@@ -84,6 +87,8 @@
    * @param event Keyboard event
    */
   function checkInput(event: KeyboardEvent) {
+    isUserInput = true;
+
     // Allow non-printable keystrokes and ctrl combinations
     if (event.key.length > 1 || event.ctrlKey) return;
 
@@ -108,13 +113,15 @@
     if (min !== null && parseFloat(targetValue) < min) return;
     if (max !== null && parseFloat(targetValue) > max) return;
 
-    isUserInput = true;
     input.value = targetValue;
     input.setSelectionRange(caretStart + 1, caretStart + 1); // Replaces the cursor at the right position
     input.dispatchEvent(new InputEvent("input", { data: key }));
+    dispatch("new-value", parseFloat(targetValue));
   }
 
   function saveValue() {
+    valueJustSaved = true;
+
     if (input.value === "") {
       value = null;
       return;
@@ -145,11 +152,12 @@
 
   // Update the input value whenever the value prop changes
   $: {
-    if (input && !isUserInput) {
+    if (input && !isUserInput && !valueJustSaved) {
       input.value = String(value || "");
       setDecimals();
     }
     isUserInput = false;
+    valueJustSaved = false;
   }
 
   onMount(() => {
