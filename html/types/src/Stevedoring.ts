@@ -135,6 +135,11 @@ export type TempWorkHours = {
    * Commentaires.
    */
   comments: string;
+
+  /**
+   * Détails des heures travaillées.
+   */
+  details?: string;
 };
 
 /**

@@ -75,7 +75,7 @@ final class TempWorkHoursController extends Controller
     {
         $filter = new StevedoringTempWorkHoursFilterDTO($this->request->getQuery());
 
-        $allTempWorkHours = $this->stevedoringService->getAllTempWorkHours($filter);
+        $allTempWorkHours = $this->stevedoringService->getAllTempWorkHoursEntries($filter);
 
         $etag = ETag::get($allTempWorkHours);
 

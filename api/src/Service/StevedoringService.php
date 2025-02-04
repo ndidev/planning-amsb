@@ -283,7 +283,7 @@ final class StevedoringService
     /**
      * @return Collection<TempWorkHoursEntry>
      */
-    public function getAllTempWorkHours(StevedoringTempWorkHoursFilterDTO $filter): Collection
+    public function getAllTempWorkHoursEntries(StevedoringTempWorkHoursFilterDTO $filter): Collection
     {
         return $this->stevedoringRepository->fetchAllTempWorkHours($filter);
     }

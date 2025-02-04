@@ -7,8 +7,10 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Core\Component\Collection;
+use App\Core\Component\DateUtils;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Server\DB\DBException;
+use App\Core\Logger\ErrorLogger;
 use App\DTO\CallWithoutReportDTO;
 use App\DTO\Filter\StevedoringDispatchFilterDTO;
 use App\DTO\Filter\StevedoringReportsFilterDataDTO;
@@ -672,22 +674,20 @@ final class StevedoringRepository extends Repository
                 staff.firstname ASC";
 
         try {
-            $request = $this->mysql->prepare($statement);
-
-            if (!$request) {
-                throw new DBException("Impossible de récupérer les heures des intérimaires.");
-            }
-
-            $request->execute([
-                'startDate' => $filter->getSqlStartDate(),
-                'endDate' => $filter->getSqlEndDate(),
-            ]);
-
             /** @var array<array<mixed>> */
-            $rawData = $request->fetchAll();
+            $rawData = $this->mysql
+                ->prepareAndExecute($statement, [
+                    'startDate' => $filter->getSqlStartDate(),
+                    'endDate' => $filter->getSqlEndDate(),
+                ])
+                ->fetchAll();
 
             $tempWorkHours = \array_map(
-                fn(array $data) => $this->stevedoringService->makeTempWorkHoursEntryFromDatabase($data),
+                function ($data) {
+                    $entry = $this->stevedoringService->makeTempWorkHoursEntryFromDatabase($data);
+                    $entry->details = $this->fetchDetailsForTempWorkHoursEntry($entry);
+                    return $entry;
+                },
                 $rawData
             );
 
@@ -710,15 +710,9 @@ final class StevedoringRepository extends Repository
             WHERE id = :id";
 
         try {
-            $request = $this->mysql->prepare($statement);
-
-            if (!$request) {
-                throw new DBException("Impossible de récupérer les heures de l'intérimaire.");
-            }
-
-            $request->execute(['id' => $id]);
-
-            $rawData = $request->fetch();
+            $rawData = $this->mysql
+                ->prepareAndExecute($statement, ['id' => $id])
+                ->fetch();
 
             if (!\is_array($rawData)) {
                 return null;
@@ -726,9 +720,107 @@ final class StevedoringRepository extends Repository
 
             $tempWorkHoursEntry = $this->stevedoringService->makeTempWorkHoursEntryFromDatabase($rawData);
 
+            $tempWorkHoursEntry->details = \trim($this->fetchDetailsForTempWorkHoursEntry($tempWorkHoursEntry));
+
             return $tempWorkHoursEntry;
         } catch (PDOException $e) {
             throw new DBException("Impossible de récupérer les heures de l'intérimaire.", previous: $e);
+        }
+    }
+
+    private function fetchDetailsForTempWorkHoursEntry(TempWorkHoursEntry $entry): string
+    {
+        $bulkDetailsStatement =
+            "SELECT
+                product.nom as `product`,
+                quality.nom as `quality`,
+                dispatch.remarks as `remarks`
+            FROM stevedoring_bulk_dispatch dispatch
+            LEFT JOIN vrac_planning pl ON pl.id = dispatch.appointment_id
+            LEFT JOIN vrac_produits product ON pl.produit = product.id
+            LEFT JOIN vrac_qualites quality ON pl.qualite = quality.id
+            WHERE dispatch.date = :date
+            AND dispatch.staff_id = :staffId
+            ";
+
+        $timberDetailsStatement =
+            "SELECT
+                dispatch.remarks as `remarks`
+            FROM stevedoring_timber_dispatch dispatch
+            WHERE dispatch.date = :date
+            AND dispatch.staff_id = :staffId
+            ";
+
+        $shipReportsDetailsStatement =
+            "SELECT
+                reports.ship as `ship`,
+                dispatch.comments as `comments`,
+                dispatch.hours_worked as `hoursWorked`
+            FROM stevedoring_ship_reports_staff dispatch
+            LEFT JOIN stevedoring_ship_reports reports ON reports.id = dispatch.ship_report_id
+            WHERE dispatch.date = :date
+            AND dispatch.staff_id = :staffId
+            ";
+
+        try {
+            /** @var array{product: string, quality: ?string, remarks: string}[] */
+            $bulkDetailsArray = $this->mysql->prepareAndExecute(
+                $bulkDetailsStatement,
+                [
+                    'date' => $entry->date?->format('Y-m-d'),
+                    'staffId' => $entry->staff?->id,
+                ]
+            )->fetchAll();
+
+            /** @var array{remarks: string}[] */
+            $timberDetailsArray = $this->mysql->prepareAndExecute(
+                $timberDetailsStatement,
+                [
+                    'date' => $entry->date?->format('Y-m-d'),
+                    'staffId' => $entry->staff?->id,
+                ]
+            )->fetchAll();
+
+            /** @var array{ship: string, comments: string, hoursWorked: float}[] */
+            $shipReportsDetailsArray = $this->mysql->prepareAndExecute(
+                $shipReportsDetailsStatement,
+                [
+                    'date' => $entry->date?->format('Y-m-d'),
+                    'staffId' => $entry->staff?->id,
+                ]
+            )->fetchAll();
+
+            $bulkDetails = \array_map(
+                function ($row) {
+                    return $row['product']
+                        . ($row['quality'] ? " {$row['quality']}" : '')
+                        . ($row['remarks'] ? " : {$row['remarks']}" : '');
+                },
+                $bulkDetailsArray
+            );
+
+            $timberDetails = \array_map(
+                fn($row) => 'Bois' . ($row['remarks'] ? " : {$row['remarks']}" : ''),
+                $timberDetailsArray
+            );
+
+            $shipReportsDetails = \array_map(
+                function ($row) {
+                    $formattedHoursWorked = DateUtils::stringifyTime($row['hoursWorked']);
+
+                    return $row['ship']
+                        . ($row['comments'] ? " : {$row['comments']}" : '')
+                        . " ({$formattedHoursWorked})";
+                },
+                $shipReportsDetailsArray
+            );
+
+            $details = \implode("\n", \array_merge($bulkDetails, $timberDetails, $shipReportsDetails));
+
+            return $details;
+        } catch (\Throwable $th) {
+            ErrorLogger::log($th);
+            return '';
         }
     }
 
@@ -808,6 +900,8 @@ final class StevedoringRepository extends Repository
 
             $this->mysql->commit();
 
+            $entry->details = $this->fetchDetailsForTempWorkHoursEntry($entry);
+
             return $entry;
         } catch (PDOException $e) {
             if ($this->mysql->inTransaction()) {
@@ -849,6 +943,8 @@ final class StevedoringRepository extends Repository
                     'id' => $entry->id,
                 ]
             );
+
+            $entry->details = $this->fetchDetailsForTempWorkHoursEntry($entry);
 
             return $entry;
         } catch (PDOException $e) {
