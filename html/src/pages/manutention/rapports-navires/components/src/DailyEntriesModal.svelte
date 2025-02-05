@@ -315,7 +315,7 @@
     if (entry.hoursHint === "") return;
 
     const regexp = new RegExp(
-      /(?<start>\d{1,2}[h:]?\d{0,2})\s*-\s*(?<end>\d{1,2}[h:]?\d{0,2})/,
+      /(?<start>\d{1,2}[h:]?\d{0,2})\s*-?\s*(?<end>\d{1,2}[h:]?\d{0,2})/,
       "gi"
     );
 
@@ -325,6 +325,8 @@
 
     const start = _parseHours(match.groups.start);
     const end = _parseHours(match.groups.end);
+
+    if (!start || !end) return;
 
     const formattedValue =
       String(Math.floor(start)).padStart(2, "0") +
@@ -353,7 +355,19 @@
     return hoursWorked;
 
     function _parseHours(hours: string): number {
-      const [hoursPart, minutesPart] = hours.split(/[h:]/i).map(Number);
+      let hoursPart = 0;
+      let minutesPart = 0;
+
+      if (/[h:]/i.test(hours)) {
+        [hoursPart, minutesPart] = hours.split(/[h:]/i).map(Number);
+      } else if (hours.length <= 2) {
+        hoursPart = Number(hours);
+      } else {
+        hoursPart = Number(hours.substring(0, hours.length - 2));
+        minutesPart = Number(hours.substring(hours.length - 2));
+      }
+
+      if (hoursPart > 23 || minutesPart > 59) return;
 
       return hoursPart + (minutesPart || 0) / 60;
     }
