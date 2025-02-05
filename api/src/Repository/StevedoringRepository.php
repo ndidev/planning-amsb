@@ -2301,26 +2301,30 @@ final class StevedoringRepository extends Repository
     {
         try {
             $statement =
-                "SELECT * FROM
-                (SELECT
-                    call.id,
-                    call.navire as shipName
+                "SELECT
+                    filtered_calls.id, shipName
                 FROM
-                    consignation_planning `call`
-                LEFT JOIN
-                    stevedoring_ship_reports `report` ON call.id = report.linked_shipping_call_id
-                WHERE
-                    report.id IS NULL
-                    AND NOT call.navire = 'TBN'
-                    AND eta_date <= CURDATE()
-                ORDER BY call.eta_date DESC) as calls
-                EXCEPT
-                SELECT
-                    shipping_call_id as id,
-                    cp.navire as shipName
-                FROM
-                    stevedoring_ignored_shipping_calls sigs
-                LEFT JOIN consignation_planning cp ON cp.id = sigs.shipping_call_id
+                (
+                    SELECT
+                        call.id,
+                        call.navire as shipName
+                    FROM consignation_planning `call`
+                    LEFT JOIN stevedoring_ship_reports `report` ON call.id = report.linked_shipping_call_id
+                    WHERE
+                        report.id IS NULL
+                        AND NOT call.navire = 'TBN'
+                        AND eta_date <= CURDATE()
+                    EXCEPT
+                    SELECT
+                        shipping_call_id as id,
+                        call.navire as shipName
+                    FROM stevedoring_ignored_shipping_calls sigs
+                    LEFT JOIN consignation_planning `call` ON call.id = sigs.shipping_call_id
+                ) filtered_calls
+                LEFT JOIN consignation_planning cp ON cp.id = filtered_calls.id
+                ORDER BY
+                    cp.eta_date ASC,
+                    cp.eta_heure ASC
                 ";
 
             /** @phpstan-var CallWithoutReport[] */
