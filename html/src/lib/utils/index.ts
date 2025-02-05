@@ -10,6 +10,7 @@ export { locale } from "./src/locale";
 export { luminance } from "./src/luminance";
 export { notiflixOptions } from "./src/notiflixOptions";
 export { online } from "./src/online";
+export { parseJSON } from "./src/parseJSON";
 export { preventFormSubmitOnEnterKeydown } from "./src/preventFormSubmitOnEnterKeydown";
 export { ReadyPromise } from "./src/ReadyPromise";
 export { removeDiacritics } from "./src/removeDiacritics";

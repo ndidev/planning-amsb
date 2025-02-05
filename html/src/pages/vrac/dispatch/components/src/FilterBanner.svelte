@@ -11,7 +11,7 @@
 <script lang="ts" context="module">
   import { writable } from "svelte/store";
 
-  import { Filter } from "@app/utils";
+  import { Filter, parseJSON } from "@app/utils";
 
   import type { StevedoringStaff } from "@app/types";
 
@@ -31,7 +31,7 @@
 
   export const filter = writable(
     new Filter<BulkDispatchFilter>(
-      JSON.parse(sessionStorage.getItem(filterName)) ||
+      parseJSON(sessionStorage.getItem(filterName)) ||
         structuredClone(emptyFilter)
     )
   );

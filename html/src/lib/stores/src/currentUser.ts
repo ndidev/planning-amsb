@@ -1,14 +1,13 @@
 import { writable } from "svelte/store";
 
-import { fetcher } from "@app/utils";
+import { fetcher, parseJSON } from "@app/utils";
 import { User, type UserInfo } from "@app/auth";
 import { HTTP } from "@app/errors";
 import type { DBEventData } from "@app/types";
 
 const endpoint = "user";
 
-const initial =
-  JSON.parse(localStorage.getItem(endpoint) || "null") || undefined;
+const initial = parseJSON(localStorage.getItem(endpoint)) || undefined;
 
 // Utilisateur courant
 export const currentUser = writable<User>(new User(initial), () => {
