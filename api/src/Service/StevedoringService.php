@@ -21,6 +21,7 @@ use App\DTO\Filter\StevedoringReportsFilterDataDTO;
 use App\DTO\Filter\StevedoringReportsFilterDTO;
 use App\DTO\Filter\StevedoringStaffFilterDTO;
 use App\DTO\Filter\StevedoringTempWorkHoursFilterDTO;
+use App\DTO\IgnoredCallDTO;
 use App\DTO\StevedoringDispatchDTO;
 use App\DTO\StevedoringSubcontractorsDataDTO;
 use App\DTO\TempWorkDispatchForDateDTO;
@@ -773,6 +774,24 @@ final class StevedoringService
     public function getCallsWithoutReport(): Collection
     {
         return $this->stevedoringRepository->fetchCallsWithoutReport();
+    }
+
+    /**
+     * @return Collection<IgnoredCallDTO>
+     */
+    public function getIgnoredShippingCalls(): Collection
+    {
+        return $this->stevedoringRepository->fetchIgnoredShippingCalls();
+    }
+
+    public function ignoreShippingCall(int $id): void
+    {
+        $this->stevedoringRepository->ignoreShippingCall($id);
+    }
+
+    public function unignoreShippingCall(int $id): void
+    {
+        $this->stevedoringRepository->unignoreShippingCall($id);
     }
 
     public function getSubcontractorsData(): StevedoringSubcontractorsDataDTO

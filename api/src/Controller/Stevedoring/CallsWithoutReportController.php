@@ -51,7 +51,7 @@ final class CallsWithoutReportController extends Controller
     }
 
     /**
-     * Renvoie le dernier numéro de voyage du navire.
+     * Renvoie la liste des escales consignation sans rapport manutention.
      */
     public function read(): void
     {

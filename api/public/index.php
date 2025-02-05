@@ -32,6 +32,7 @@ use App\Controller\Shipping\VoyageNumberController;
 use App\Controller\Stevedoring\CallsWithoutReportController;
 use App\Controller\Stevedoring\DispatchController;
 use App\Controller\Stevedoring\EquipmentController;
+use App\Controller\Stevedoring\IgnoredShippingCallsContoller;
 use App\Controller\Stevedoring\ShipReportController;
 use App\Controller\Stevedoring\ShipReportPdfController;
 use App\Controller\Stevedoring\ShipReportsFilterDataController;
@@ -113,6 +114,7 @@ $routes = [
     ["/manutention/rapports-navires/[i:id]/pdf", ShipReportPdfController::class],
     ["/manutention/rapports-navires/filter-data", ShipReportsFilterDataController::class],
     ["/manutention/rapports-navires/calls-without-report", CallsWithoutReportController::class],
+    ["/manutention/rapports-navires/ignored-shipping-calls/[i:id]?", IgnoredShippingCallsContoller::class],
     ["/manutention/rapports-navires/sous-traitants", SubcontractorsDataController::class],
 
     // Utilitaires

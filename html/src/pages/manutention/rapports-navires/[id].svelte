@@ -624,6 +624,8 @@
                     />
                   </div>
                 </li>
+              {:else}
+                <li class="ms-4 italic">Pas de marchandise</li>
               {/each}
             </ul>
           </div>
@@ -768,7 +770,7 @@
                 </div>
               </li>
             {:else}
-              <p class="text-center">Pas de stockage</p>
+              <p class="ms-4 italic">Pas de stockage</p>
             {/each}
           </ul>
         </div>
@@ -787,6 +789,7 @@
             on:click={addDay}
             color="light"
             class="w-1/2 lg:w-auto"
+            size="sm"
             bind:this={addDayButton}
           >
             <PlusCircleIcon size={16} />
@@ -1045,7 +1048,7 @@
             </div>
           </div>
         {:else}
-          <p class="text-center">Aucune donnée à afficher</p>
+          <p class="ms-4 italic">Aucune donnée à afficher</p>
         {/each}
       </div>
     </form>

@@ -17,6 +17,7 @@ use App\DTO\Filter\StevedoringReportsFilterDataDTO;
 use App\DTO\Filter\StevedoringReportsFilterDTO;
 use App\DTO\Filter\StevedoringStaffFilterDTO;
 use App\DTO\Filter\StevedoringTempWorkHoursFilterDTO;
+use App\DTO\IgnoredCallDTO;
 use App\DTO\StevedoringDispatchDTO;
 use App\DTO\StevedoringSubcontractorsDataDTO;
 use App\DTO\TempWorkDispatchForDateDTO;
@@ -1056,19 +1057,26 @@ final class StevedoringRepository extends Repository
                     r.berth,
                     r.comments,
                     r.invoice_instructions,
-                    (
-                        SELECT MIN(`date`)
+                    COALESCE(
+                        (SELECT MIN(`date`)
                         FROM dates
-                        WHERE ship_report_id = r.id
+                        WHERE ship_report_id = r.id),
+                        (SELECT ops_date
+                        FROM consignation_planning
+                        WHERE id = r.linked_shipping_call_id)
                     ) as `start_date`,
-                    (
-                        SELECT MAX(`date`)
+                    COALESCE(
+                        (SELECT MAX(`date`)
                         FROM dates
-                        WHERE ship_report_id = r.id
+                        WHERE ship_report_id = r.id),
+                        (SELECT etc_date
+                        FROM consignation_planning
+                        WHERE id = r.linked_shipping_call_id)
                     ) as `end_date`
                 FROM stevedoring_ship_reports r
                 LEFT JOIN consignation_escales_marchandises cem ON cem.ship_report_id = r.id
                 LEFT JOIN stevedoring_ship_reports_storage storage ON storage.ship_report_id = r.id
+                LEFT JOIN consignation_planning cp ON cp.id = r.linked_shipping_call_id
                 WHERE
                     is_archive = $archiveFilter
                     $sqlFilter
@@ -2293,7 +2301,8 @@ final class StevedoringRepository extends Repository
     {
         try {
             $statement =
-                "SELECT
+                "SELECT * FROM
+                (SELECT
                     call.id,
                     call.navire as shipName
                 FROM
@@ -2303,7 +2312,16 @@ final class StevedoringRepository extends Repository
                 WHERE
                     report.id IS NULL
                     AND NOT call.navire = 'TBN'
-                ORDER BY call.eta_date DESC";
+                    AND eta_date <= CURDATE()
+                ORDER BY call.eta_date DESC) as calls
+                EXCEPT
+                SELECT
+                    shipping_call_id as id,
+                    cp.navire as shipName
+                FROM
+                    stevedoring_ignored_shipping_calls sigs
+                LEFT JOIN consignation_planning cp ON cp.id = sigs.shipping_call_id
+                ";
 
             /** @phpstan-var CallWithoutReport[] */
             $callSummariesRaw = $this->mysql
@@ -2318,6 +2336,55 @@ final class StevedoringRepository extends Repository
             return new Collection($callDTOs);
         } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer la liste des escales consignation sans rapport.", previous: $e);
+        }
+    }
+
+    /**
+     * @return Collection<IgnoredCallDTO>
+     */
+    public function fetchIgnoredShippingCalls(): Collection
+    {
+        $statement =
+            "SELECT cp.id, cp.navire as shipName
+            FROM consignation_planning cp
+            RIGHT JOIN stevedoring_ignored_shipping_calls sigs ON cp.id = sigs.shipping_call_id";
+
+        try {
+            /** @var array{id: int, shipName: string}[] */
+            $ignoredCallsRaw = $this->mysql
+                ->prepareAndExecute($statement)
+                ->fetchAll();
+
+            $ignoredCallsDTOs = \array_map(
+                fn(array $ignoredCallRaw) => new IgnoredCallDTO($ignoredCallRaw),
+                $ignoredCallsRaw
+            );
+
+            return new Collection($ignoredCallsDTOs);
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer la liste des escales ignorées.", previous: $e);
+        }
+    }
+
+    public function ignoreShippingCall(int $shippingCallId): void
+    {
+        $statement = "INSERT INTO stevedoring_ignored_shipping_calls SET shipping_call_id = :shippingCallId";
+
+        try {
+            $this->mysql->prepareAndExecute($statement, ['shippingCallId' => $shippingCallId]);
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible d'ignorer l'escale.", previous: $e);
+        }
+    }
+
+    public function unignoreShippingCall(int $shippingCallId): void
+    {
+        $statement = "DELETE FROM stevedoring_ignored_shipping_calls WHERE shipping_call_id = :shippingCallId";
+
+        try {
+            $this->mysql->prepareAndExecute($statement, ['shippingCallId' => $shippingCallId]);
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de rétablir l'escale.", previous: $e);
         }
     }
 
