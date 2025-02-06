@@ -1,7 +1,9 @@
 <script lang="ts">
+  import { Tooltip } from "flowbite-svelte";
+
   import { SectionTitle } from "../";
 
-  import { NumberUtils } from "@app/utils";
+  import { DateUtils, NumberUtils } from "@app/utils";
 
   import type { StevedoringShipReport } from "@app/types";
 
@@ -82,15 +84,28 @@
   <div
     class="ms-2 flex flex-col gap-2 lg:flex-row lg:gap-6 print:flex-row print:gap-12"
   >
+    <!-- Coûts standards -->
     <div>
       <div class="font-bold">Coûts standards</div>
-      <div>Personnel : <span>{costs.permanentStaffHours}h</span></div>
-      <div>Grues : <span>{costs.craneHours}</span>h</div>
-      <div>Engins : <span>{costs.equipmentHours}h</span></div>
+      <div>
+        Personnel : <span
+          >{DateUtils.stringifyTime(costs.permanentStaffHours)}</span
+        >
+      </div>
+      <div>
+        Grues : <span>{DateUtils.stringifyTime(costs.craneHours)}</span>
+      </div>
+      <div>
+        Engins : <span>{DateUtils.stringifyTime(costs.equipmentHours)}</span>
+      </div>
     </div>
+
+    <!-- Sous-traitance -->
     <div>
       <div class="font-bold">Sous-traitance</div>
-      <div>Intérim : <span>{costs.permanentStaffHours}h</span></div>
+      <div>
+        Intérim : <span>{DateUtils.stringifyTime(costs.tempStaffHours)}</span>
+      </div>
       <div>
         <span
           class:underline={costs.truckingHours || costs.truckingCost}
@@ -98,8 +113,20 @@
           id="trucking-costs"
           title="Afficher le détail">Brouettage</span
         >
-        : <span>{costs.truckingHours}h</span> /
+        : <span>{DateUtils.stringifyTime(costs.truckingHours)}</span> /
         <span>{NumberUtils.formatCost(costs.truckingCost)}</span>
+        {#if costs.truckingHours || costs.truckingCost}
+          <Tooltip type="auto" triggeredBy="#trucking-costs" trigger="click">
+            {#each Object.entries(costs.truckingDetails) as [name, { hours, cost }]}
+              <div>
+                <span>{name}</span> :
+                <span>{DateUtils.stringifyTime(hours)}</span>
+                /{" "}
+                <span>{NumberUtils.formatCost(cost)}</span>
+              </div>
+            {/each}
+          </Tooltip>
+        {/if}
       </div>
       <div>
         <span
@@ -110,8 +137,24 @@
           id="otherSubcontracts-costs"
           title="Afficher le détail">Autres</span
         >
-        : <span>{costs.otherSubcontractsHours}h</span> /
+        : <span>{DateUtils.stringifyTime(costs.otherSubcontractsHours)}</span> /
         <span>{NumberUtils.formatCost(costs.otherSubcontractsCost)}</span>
+        {#if costs.otherSubcontractsHours || costs.otherSubcontractsCost}
+          <Tooltip
+            type="auto"
+            triggeredBy="#otherSubcontracts-costs"
+            trigger="click"
+          >
+            {#each Object.entries(costs.otherSubcontractsDetails) as [name, { hours, cost }]}
+              <div>
+                <span>{name}</span> :
+                <span>{DateUtils.stringifyTime(hours)}</span>
+                /{" "}
+                <span>{NumberUtils.formatCost(cost)}</span>
+              </div>
+            {/each}
+          </Tooltip>
+        {/if}
       </div>
     </div>
   </div>
