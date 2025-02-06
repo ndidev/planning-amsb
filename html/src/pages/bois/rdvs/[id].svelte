@@ -42,7 +42,7 @@
   let id: RdvBois["id"] = parseInt($params.id);
 
   let isNew = $params.id === "new";
-  const copie = parseInt($params.copie);
+  const copy = parseInt($params.copie);
 
   let appointment = boisRdvs.getTemplate();
   let numero_bl = appointment?.numero_bl;
@@ -51,9 +51,20 @@
 
   (async () => {
     try {
-      if (id || copie) {
-        appointment = structuredClone(await boisRdvs.get(id || copie));
+      if (id || copy) {
+        appointment = structuredClone(await boisRdvs.get(id || copy));
         if (!appointment) throw new Error();
+
+        if (copy) {
+          appointment.id = null;
+          appointment.heure_arrivee = null;
+          appointment.heure_depart = null;
+          appointment.commande_prete = false;
+          appointment.confirmation_affretement = false;
+          appointment.numero_bl = null;
+          appointment.dispatch = [];
+        }
+
         numero_bl = appointment.numero_bl;
         heure_arrivee = appointment.heure_arrivee?.substring(0, 5) ?? "";
         heure_depart = appointment.heure_depart?.substring(0, 5) ?? "";

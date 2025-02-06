@@ -35,17 +35,26 @@
   let id: RdvVrac["id"] = parseInt($params.id);
 
   const isNew = $params.id === "new";
-  const copie = parseInt($params.copie);
+  const copy = parseInt($params.copie);
   const archives = "archives" in $params;
 
   let appointment: RdvVrac =
-    isNew && !copie ? { ...vracRdvs.getTemplate() } : null;
+    isNew && !copy ? { ...vracRdvs.getTemplate() } : null;
 
   (async () => {
     try {
-      if (id || copie) {
-        appointment = structuredClone(await vracRdvs.get(id || copie));
+      if (id || copy) {
+        appointment = structuredClone(await vracRdvs.get(id || copy));
         if (!appointment) throw new Error();
+
+        if (copy) {
+          appointment.id = null;
+          appointment.archive = false;
+          appointment.date_rdv = null;
+          appointment.heure = null;
+          appointment.commande_prete = false;
+          appointment.dispatch = [];
+        }
       }
     } catch (error) {
       $redirect("./new");
