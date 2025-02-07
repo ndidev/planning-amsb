@@ -9,7 +9,10 @@ namespace App\DTO;
 /**
  * Shipping stats summary DTO.
  * 
- * @phpstan-import-type ShippingStatsSummaryArray from \App\Repository\ShippingRepository
+ * @phpstan-type ShippingStatsSummaryArray list<array{
+ *                                                id: int,
+ *                                                date: string
+ *                                              }>
  */
 final class ShippingStatsSummaryDTO implements \JsonSerializable
 {

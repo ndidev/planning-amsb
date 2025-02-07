@@ -9,6 +9,21 @@ namespace App\Entity\Config;
 use App\Core\Validation\Constraints\Required;
 use App\Entity\AbstractEntity;
 
+/**
+ * @phpstan-type AgencyDepartmentArray array{
+ *                                       service: string,
+ *                                       affichage: string,
+ *                                       nom: string,
+ *                                       adresse_ligne_1: string,
+ *                                       adresse_ligne_2: string,
+ *                                       cp: string,
+ *                                       ville: string,
+ *                                       pays: string,
+ *                                       telephone: string,
+ *                                       mobile: string,
+ *                                       email: string
+ *                                     }
+ */
 class AgencyDepartment extends AbstractEntity
 {
     private string $service = '';

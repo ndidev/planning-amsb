@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Entity\Stevedoring;
 
+use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
 use App\Core\Component\DateUtils;
 use App\Core\Traits\IdentifierTrait;
@@ -14,6 +15,20 @@ use App\Entity\AbstractEntity;
 use App\Entity\Shipping\ShippingCall;
 use App\Entity\Shipping\ShippingCallCargo;
 
+/**
+ * @phpstan-type ShipReportArray array{
+ *                                 id: int,
+ *                                 isArchive: bool,
+ *                                 linkedShippingCallId: int|null,
+ *                                 ship: string,
+ *                                 port: string,
+ *                                 berth: string,
+ *                                 comments: string,
+ *                                 invoiceInstructions: string,
+ *                                 startDate?: string,
+ *                                 endDate?: string,
+ *                               }
+ */
 class ShipReport extends AbstractEntity
 {
     use IdentifierTrait;
@@ -60,8 +75,27 @@ class ShipReport extends AbstractEntity
     /** @var Collection<ShipReportStorageEntry> */
     public private(set) Collection $storageEntries;
 
-    public function __construct()
+    /** 
+     * @param ArrayHandler|ShipReportArray|null $data 
+     */
+    public function __construct(ArrayHandler|array|null $data = null)
     {
+        if (null === $data) {
+            return;
+        }
+
+        $dataAH = $data instanceof ArrayHandler ? $data : new ArrayHandler($data);
+
+        $this->id = $dataAH->getInt('id');
+        $this->isArchive = $dataAH->getBool('isArchive');
+        $this->ship = $dataAH->getString('ship');
+        $this->port = $dataAH->getString('port');
+        $this->berth = $dataAH->getString('berth');
+        $this->comments = $dataAH->getString('comments');
+        $this->invoiceInstructions = $dataAH->getString('invoiceInstructions');
+        $this->startDate = $dataAH->getDatetime('startDate');
+        $this->endDate = $dataAH->getDatetime('endDate');
+
         $this->equipmentEntries = new Collection();
         $this->staffEntries = new Collection();
         $this->subcontractEntries = new Collection();

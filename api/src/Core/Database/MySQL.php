@@ -54,12 +54,11 @@ class MySQL extends \Pdo\Mysql
     {
         $statement = "SELECT EXISTS (SELECT * FROM `$table` WHERE `$idColumn` = :id)";
 
-        $request = $this->prepare($statement);
-        $request->execute(["id" => $id]);
+        $exists = $this
+            ->prepareAndExecute($statement, ["id" => $id])
+            ->fetch(\PDO::FETCH_COLUMN);
 
-        $exists = (bool) $request->fetch(\PDO::FETCH_COLUMN);
-
-        return $exists;
+        return (bool) $exists;
     }
 
     /**

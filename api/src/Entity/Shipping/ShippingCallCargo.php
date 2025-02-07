@@ -13,6 +13,23 @@ use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
 use App\Entity\Stevedoring\ShipReport;
 
+/**
+ * @phpstan-type ShippingCallCargoArray array{
+ *                                        id: int,
+ *                                        escale_id: int|null,
+ *                                        ship_report_id: int|null,
+ *                                        marchandise: string,
+ *                                        client: string,
+ *                                        operation: string,
+ *                                        environ: bool,
+ *                                        tonnage_bl: float|null,
+ *                                        cubage_bl: float|null,
+ *                                        nombre_bl: int|null,
+ *                                        tonnage_outturn: float|null,
+ *                                        cubage_outturn: float|null,
+ *                                        nombre_outturn: int|null,
+ *                                      }
+ */
 final class ShippingCallCargo extends AbstractEntity implements \Stringable
 {
     use IdentifierTrait;

@@ -12,7 +12,7 @@ use App\Entity\Country;
 use App\Repository\CountryRepository;
 
 /**
- * @phpstan-import-type CountryArray from \App\Repository\CountryRepository
+ * @phpstan-import-type CountryArray from \App\Entity\Country
  */
 final class CountryService
 {
@@ -26,19 +26,13 @@ final class CountryService
     /**
      * Creates a Country object from database data.
      * 
-     * @param array $rawData 
-     * 
-     * @phpstan-param CountryArray $rawData
+     * @param CountryArray $rawData 
      * 
      * @return Country 
      */
     public function makeCountryFromDatabase(array $rawData): Country
     {
-        $rawDataAH = new ArrayHandler($rawData);
-
-        return (new Country())
-            ->setISO($rawDataAH->getString('iso'))
-            ->setName($rawDataAH->getString('nom'));
+        return new Country($rawData);
     }
 
     /**
@@ -53,6 +47,10 @@ final class CountryService
 
     public function getCountry(string $iso): ?Country
     {
+        if (!$iso) {
+            return null;
+        }
+
         return $this->countryRepository->fetchByIso($iso);
     }
 }

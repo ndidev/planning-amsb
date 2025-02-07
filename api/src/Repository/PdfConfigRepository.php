@@ -12,15 +12,7 @@ use App\Entity\Config\PdfConfig;
 use App\Service\PdfConfigService;
 
 /**
- * @phpstan-type PdfConfigArray array{
- *                                id?: int,
- *                                module?: string,
- *                                fournisseur?: int,
- *                                envoi_auto?: bool|int,
- *                                liste_emails?: string|string[],
- *                                jours_avant?: int,
- *                                jours_apres?: int,
- *                              }
+ * @phpstan-import-type PdfConfigArray from \App\Entity\Config\PdfConfig
  */
 final class PdfConfigRepository extends Repository
 {

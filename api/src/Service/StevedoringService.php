@@ -38,11 +38,14 @@ use Ds\Map;
 use Mpdf\Mpdf;
 
 /**
- * @phpstan-import-type ShipReportEquipmentEntryArray from \App\Repository\StevedoringRepository
- * @phpstan-import-type ShipReportStaffEntryArray from \App\Repository\StevedoringRepository
- * @phpstan-import-type ShipReportSubcontractEntryArray from \App\Repository\StevedoringRepository
- * @phpstan-import-type ShippingCallCargoArray from \App\Repository\ShippingRepository
- * @phpstan-import-type ShipReportStorageEntryArray from \App\Repository\StevedoringRepository
+ * @phpstan-import-type StevedoringStaffArray from \App\Entity\Stevedoring\StevedoringStaff
+ * @phpstan-import-type StevedoringEquipmentArray from \App\Entity\Stevedoring\StevedoringEquipment
+ * @phpstan-import-type ShipReportArray from \App\Entity\Stevedoring\ShipReport
+ * @phpstan-import-type ShipReportEquipmentEntryArray from \App\Entity\Stevedoring\ShipReportEquipmentEntry
+ * @phpstan-import-type ShipReportStaffEntryArray from \App\Entity\Stevedoring\ShipReportStaffEntry
+ * @phpstan-import-type ShipReportSubcontractEntryArray from \App\Entity\Stevedoring\ShipReportSubcontractEntry
+ * @phpstan-import-type ShipReportStorageEntryArray from \App\Entity\Stevedoring\ShipReportStorageEntry
+ * @phpstan-import-type ShippingCallCargoArray from \App\Entity\Shipping\ShippingCallCargo
  */
 final class StevedoringService
 {
@@ -58,48 +61,26 @@ final class StevedoringService
     // =====
 
     /**
-     * @param array<mixed> $rawData 
+     * @phpstan-param StevedoringStaffArray $rawData 
      */
     public function makeStevedoringStaffFromDatabase(array $rawData): StevedoringStaff
     {
-        $rawDataAH = new ArrayHandler($rawData);
-
-        $stevedoringStaff = new StevedoringStaff();
-        $stevedoringStaff->id = $rawDataAH->getInt('id');
-        $stevedoringStaff->firstname = $rawDataAH->getString('firstname');
-        $stevedoringStaff->lastname = $rawDataAH->getString('lastname');
-        $stevedoringStaff->phone = $rawDataAH->getString('phone');
-        $stevedoringStaff->type = $rawDataAH->getString('type');
-        $stevedoringStaff->tempWorkAgency = $rawDataAH->getString('temp_work_agency', null);
-        $stevedoringStaff->isActive = $rawDataAH->getBool('is_active');
-        $stevedoringStaff->comments = $rawDataAH->getString('comments');
-        $stevedoringStaff->deletedAt = $rawDataAH->getDatetime('deleted_at');
-
-        return $stevedoringStaff;
+        return new StevedoringStaff($rawData);
     }
 
     public function makeStevedoringStaffFromRequest(HTTPRequestBody $requestBody): StevedoringStaff
     {
-        $stevedoringStaff = new StevedoringStaff();
-        $stevedoringStaff->id = $requestBody->getInt('id');
-        $stevedoringStaff->firstname = $requestBody->getString('firstname');
-        $stevedoringStaff->lastname = $requestBody->getString('lastname');
-        $stevedoringStaff->phone = $requestBody->getString('phone');
-        $stevedoringStaff->type = $requestBody->getString('type');
-        $stevedoringStaff->tempWorkAgency = $requestBody->getString('tempWorkAgency', null);
-        $stevedoringStaff->isActive = $requestBody->getBool('isActive');
-        $stevedoringStaff->comments = $requestBody->getString('comments');
-
-        if ($stevedoringStaff->type === "cdi") {
-            $stevedoringStaff->tempWorkAgency = null;
-        }
-
-        return $stevedoringStaff;
+        return new StevedoringStaff($requestBody);
     }
 
     public function staffExists(int $id): bool
     {
         return $this->stevedoringRepository->staffExists($id);
+    }
+
+    public function staffIsDeleted(int $id): bool
+    {
+        return $this->stevedoringRepository->staffIsDeleted($id);
     }
 
     /**
@@ -112,7 +93,7 @@ final class StevedoringService
 
     public function getStaff(?int $id): ?StevedoringStaff
     {
-        if ($id === null) {
+        if (null === $id) {
             return null;
         }
 
@@ -148,38 +129,16 @@ final class StevedoringService
     // =========
 
     /**
-     * @param array<mixed> $rawData
+     * @param StevedoringEquipmentArray $rawData
      */
     public function makeStevedoringEquipmentFromDatabase(array $rawData): StevedoringEquipment
     {
-        $rawDataAH = new ArrayHandler($rawData);
-
-        $stevedoringEquipment = new StevedoringEquipment();
-        $stevedoringEquipment->id = $rawDataAH->getInt('id');
-        $stevedoringEquipment->type = $rawDataAH->getString('type');
-        $stevedoringEquipment->brand = $rawDataAH->getString('brand');
-        $stevedoringEquipment->model = $rawDataAH->getString('model');
-        $stevedoringEquipment->internalNumber = $rawDataAH->getString('internal_number');
-        $stevedoringEquipment->serialNumber = $rawDataAH->getString('serial_number');
-        $stevedoringEquipment->comments = $rawDataAH->getString('comments');
-        $stevedoringEquipment->isActive = $rawDataAH->getBool('is_active');
-
-        return $stevedoringEquipment;
+        return new StevedoringEquipment($rawData);
     }
 
     public function makeStevedoringEquipmentFromRequest(HTTPRequestBody $requestBody): StevedoringEquipment
     {
-        $stevedoringEquipment = new StevedoringEquipment();
-        $stevedoringEquipment->id = $requestBody->getInt('id');
-        $stevedoringEquipment->type = $requestBody->getString('type');
-        $stevedoringEquipment->brand = $requestBody->getString('brand');
-        $stevedoringEquipment->model = $requestBody->getString('model');
-        $stevedoringEquipment->internalNumber = $requestBody->getString('internalNumber');
-        $stevedoringEquipment->serialNumber = $requestBody->getString('serialNumber');
-        $stevedoringEquipment->comments = $requestBody->getString('comments');
-        $stevedoringEquipment->isActive = $requestBody->getBool('isActive');
-
-        return $stevedoringEquipment;
+        return new StevedoringEquipment($requestBody);
     }
 
     public function equipmentExists(int $id): bool
@@ -197,7 +156,7 @@ final class StevedoringService
 
     public function getEquipment(?int $id): ?StevedoringEquipment
     {
-        if ($id === null) {
+        if (null === $id) {
             return null;
         }
 
@@ -414,72 +373,29 @@ final class StevedoringService
     // ============
 
     /**
-     * @param array<mixed> $rawData 
+     * @param ShipReportArray $rawData 
      */
     public function makeShipReportFromDatabase(array $rawData): ShipReport
     {
         $rawDataAH = new ArrayHandler($rawData);
 
-        $stevedoringShipReport = new ShipReport();
-        $stevedoringShipReport->id = $rawDataAH->getInt('id');
-        $stevedoringShipReport->isArchive = $rawDataAH->getBool('is_archive');
-        $stevedoringShipReport->linkedShippingCall = new ShippingService()->getShippingCall($rawDataAH->getInt('linked_shipping_call_id'));
-        $stevedoringShipReport->ship = $rawDataAH->getString('ship');
-        $stevedoringShipReport->port = $rawDataAH->getString('port');
-        $stevedoringShipReport->berth = $rawDataAH->getString('berth');
-        $stevedoringShipReport->comments = $rawDataAH->getString('comments');
-        $stevedoringShipReport->invoiceInstructions = $rawDataAH->getString('invoice_instructions');
-        $stevedoringShipReport->startDate = $rawDataAH->getDatetime('start_date');
-        $stevedoringShipReport->endDate = $rawDataAH->getDatetime('end_date');
+        $stevedoringShipReport = new ShipReport($rawDataAH);
 
-        /** @phpstan-var ShipReportEquipmentEntryArray[] */
-        $equipmentEntries = $rawDataAH->getArray('equipment_entries');
-
-        $stevedoringShipReport->setEquipmentEntries(
-            \array_map(
-                fn(array $entry) => $this->makeShipReportEquipmentEntryFromDatabase($entry),
-                $equipmentEntries
-            )
-        );
-
-        /** @phpstan-var ShipReportStaffEntryArray[] */
-        $staffEntries = $rawDataAH->getArray('staff_entries');
-
-        $stevedoringShipReport->setStaffEntries(
-            \array_map(
-                fn(array $entry) => $this->makeShipReportStaffEntryFromDatabase($entry),
-                $staffEntries
-            )
-        );
-
-        /** @phpstan-var ShipReportSubcontractEntryArray[] */
-        $subcontractEntries = $rawDataAH->getArray('subcontract_entries');
-
-        $stevedoringShipReport->setSubcontractEntries(
-            \array_map(
-                fn(array $entry) => $this->makeShipReportSubcontractEntryFromDatabase($entry),
-                $subcontractEntries
-            )
-        );
+        $stevedoringShipReport->linkedShippingCall =
+            new ShippingService()->getShippingCall($rawDataAH->getInt('linkedShippingCallId'));
 
         return $stevedoringShipReport;
     }
 
     public function makeShipReportFromRequest(HTTPRequestBody $request): ShipReport
     {
-        $stevedoringShipReport = new ShipReport();
-        $stevedoringShipReport->id = $request->getInt('id');
-        $stevedoringShipReport->isArchive = $request->getBool('isArchive');
-        $stevedoringShipReport->ship = $request->getString('ship');
-        $stevedoringShipReport->port = $request->getString('port');
-        $stevedoringShipReport->berth = $request->getString('berth');
-        $stevedoringShipReport->comments = $request->getString('comments');
-        $stevedoringShipReport->invoiceInstructions = $request->getString('invoiceInstructions');
+        $stevedoringShipReport = new ShipReport($request);
 
         $linkedShippingCallId = $request->getInt('linkedShippingCallId');
 
         if ($linkedShippingCallId !== null) {
-            $stevedoringShipReport->linkedShippingCall = new ShippingService()->getShippingCall($linkedShippingCallId);
+            $stevedoringShipReport->linkedShippingCall =
+                new ShippingService()->getShippingCall($linkedShippingCallId);
 
             if (!$stevedoringShipReport->linkedShippingCall) {
                 throw new BadRequestException("L'escale consignation {$linkedShippingCallId} n'existe pas.");

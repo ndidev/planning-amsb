@@ -21,7 +21,7 @@ use App\Entity\UserAccount;
 use App\Repository\UserRepository;
 
 /**
- * @phpstan-import-type UserAccountArray from \App\Repository\UserRepository
+ * @phpstan-import-type UserAccountArray from \App\Entity\UserAccount
  */
 final class UserService
 {

@@ -10,6 +10,13 @@ use App\Entity\AbstractEntity;
 use App\Entity\Stevedoring\StevedoringStaff;
 use App\Entity\Timber\TimberAppointment;
 
+/**
+ * @phpstan-type TimberDispatchArray array{
+ *                                     appointment_id: int,
+ *                                     staff_id: int,
+ *                                     remarks: string,
+ *                                   }
+ */
 class TimberDispatchItem extends AbstractEntity
 {
     private ?TimberAppointment $appointment = null;

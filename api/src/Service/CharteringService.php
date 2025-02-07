@@ -17,8 +17,8 @@ use App\Entity\Chartering\CharterLeg;
 use App\Repository\CharteringRepository;
 
 /**
- * @phpstan-import-type CharterArray from \App\Repository\CharteringRepository
- * @phpstan-import-type CharterLegArray from \App\Repository\CharteringRepository
+ * @phpstan-import-type CharterArray from \App\Entity\Chartering\Charter
+ * @phpstan-import-type CharterLegArray from \App\Entity\Chartering\CharterLeg
  */
 final class CharteringService
 {

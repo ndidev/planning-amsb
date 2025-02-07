@@ -8,6 +8,21 @@ namespace App\DTO;
 
 use App\Core\Component\DateUtils;
 
+/**
+ * @phpstan-type TimberRegistryEntryArray array{
+ *                                          date_rdv: string,
+ *                                          fournisseur: string|null,
+ *                                          chargement_nom: string|null,
+ *                                          chargement_ville: string|null,
+ *                                          chargement_pays: string|null,
+ *                                          livraison_nom: string|null,
+ *                                          livraison_cp: string|null,
+ *                                          livraison_ville: string|null,
+ *                                          livraison_pays: string|null,
+ *                                          numero_bl: string,
+ *                                          transporteur: string|null,
+ *                                        }
+ */
 class TimberRegistryEntryDTO
 {
     private string $date;

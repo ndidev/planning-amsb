@@ -9,6 +9,7 @@ namespace App\Repository;
 use App\Core\Component\Collection;
 use App\Core\Component\DateUtils;
 use App\Core\Exceptions\Client\BadRequestException;
+use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\Core\Logger\ErrorLogger;
 use App\DTO\CallWithoutReportDTO;
@@ -33,66 +34,36 @@ use App\Entity\Stevedoring\StevedoringStaff;
 use App\Entity\Stevedoring\TempWorkHoursEntry;
 use App\Service\ShippingService;
 use App\Service\StevedoringService;
-use PDOException;
-use RuntimeException;
+use ReflectionClass;
 
 /**
- * @phpstan-type ShipReportArray array{
- *                                 id: int,
- *                                 is_archive: bool,
- *                                 linked_shipping_call_id: int,
- *                                 ship: string,
- *                                 port: string,
- *                                 berth: string,
- *                                 comments: string,
- *                               }
- * 
- * @phpstan-type ShipReportEquipmentEntryArray array{
- *                                               id: int,
- *                                               ship_report_id: int,
- *                                               equipment_id: int,
- *                                               date: string,
- *                                               hours_worked: float,
- *                                               comments: string,
- *                                             }
- * 
- * @phpstan-type ShipReportStaffEntryArray array{
- *                                           id: int,
- *                                           ship_report_id: int,
- *                                           staff_id: int,
- *                                           date: string,
- *                                           hours_worked: float,
- *                                           comments: string,
- *                                         }
- * 
- * @phpstan-type ShipReportSubcontractEntryArray array{
- *                                                 id: int,
- *                                                 ship_report_id: int,
- *                                                 subcontractor_name: string,
- *                                                 date: string,
- *                                                 hours_worked: float|null,
- *                                                 cost: float|null,
- *                                                 comments: string,
- *                                               }
- * 
- * @phpstan-import-type ShippingCallCargoArray from \App\Repository\ShippingRepository
- * 
- * @phpstan-type ShipReportStorageEntryArray array{
- *                                             id: int,
- *                                             ship_report_id: int,
- *                                             cargo_id: int,
- *                                             storage_name: string,
- *                                             tonnage: float,
- *                                             volume: float,
- *                                             units: int,
- *                                             comments: string,
- *                                           }
- * 
+ * @phpstan-import-type StevedoringStaffArray from \App\Entity\Stevedoring\StevedoringStaff
+ * @phpstan-import-type StevedoringEquipmentArray from \App\Entity\Stevedoring\StevedoringEquipment
+ * @phpstan-import-type ShipReportArray from \App\Entity\Stevedoring\ShipReport
+ * @phpstan-import-type ShipReportEquipmentEntryArray from \App\Entity\Stevedoring\ShipReportEquipmentEntry
+ * @phpstan-import-type ShipReportStaffEntryArray from \App\Entity\Stevedoring\ShipReportStaffEntry
+ * @phpstan-import-type ShipReportSubcontractEntryArray from \App\Entity\Stevedoring\ShipReportSubcontractEntry
+ * @phpstan-import-type ShipReportStorageEntryArray from \App\Entity\Stevedoring\ShipReportStorageEntry
+ * @phpstan-import-type ShippingCallCargoArray from \App\Entity\Shipping\ShippingCallCargo
  * @phpstan-import-type CallWithoutReport from \App\DTO\CallWithoutReportDTO
  */
 final class StevedoringRepository extends Repository
 {
-    public function __construct(private StevedoringService $stevedoringService) {}
+    /** @var ReflectionClass<StevedoringStaff> */
+    private ReflectionClass $staffReflector;
+
+    /** @var ReflectionClass<StevedoringEquipment> */
+    private ReflectionClass $equipmentReflector;
+
+    /** @var ReflectionClass<ShipReport> */
+    private ReflectionClass $shipReportReflector;
+
+    public function __construct(private StevedoringService $stevedoringService)
+    {
+        $this->staffReflector = new ReflectionClass(StevedoringStaff::class);
+        $this->equipmentReflector = new ReflectionClass(StevedoringEquipment::class);
+        $this->shipReportReflector = new ReflectionClass(ShipReport::class);
+    }
 
     // =====
     // Staff
@@ -100,22 +71,24 @@ final class StevedoringRepository extends Repository
 
     public function staffExists(int $id): bool
     {
+        return $this->mysql->exists("stevedoring_staff", $id);
+    }
+
+    public function staffIsDeleted(int $id): bool
+    {
         $statement = "SELECT deleted_at FROM stevedoring_staff WHERE id = :id";
 
-        $request = $this->mysql->prepare($statement);
-        $request->execute(['id' => $id]);
+        $response = $this->mysql
+            ->prepareAndExecute($statement, ['id' => $id])
+            ->fetch(\PDO::FETCH_NUM);
 
-        $response = $request->fetch(\PDO::FETCH_NUM);
-
-        if (!is_array($response)) {
-            return false;
+        if (!\is_array($response)) {
+            throw new NotFoundException("Le personnel de manutention n'existe pas.");
         }
 
-        if (null !== $response[0]) {
-            return false;
-        }
+        $staffIsDeleted = null !== $response[0];
 
-        return true;
+        return $staffIsDeleted;
     }
 
     /**
@@ -126,57 +99,79 @@ final class StevedoringRepository extends Repository
         $sqlFilter = $filter->getSqlFilter();
 
         $staffStatement =
-            "SELECT *
+            "SELECT
+                id,
+                firstname,
+                lastname,
+                phone,
+                type,
+                temp_work_agency as `tempWorkAgency`,
+                is_active as `isActive`,
+                comments,
+                deleted_at as `deletedAt`
             FROM stevedoring_staff
             WHERE 1
                 $sqlFilter
             ORDER BY lastname ASC, firstname ASC";
 
-        $staffRequest = $this->mysql->query($staffStatement);
+        try {
+            /** @var StevedoringStaffArray[] */
+            $allStaffRaw = $this->mysql->prepareAndExecute($staffStatement)->fetchAll();
 
-        if (!$staffRequest) {
-            throw new DBException("Impossible de récupérer le personnel de manutention.");
+            $allStaff = \array_map(
+                fn($staff) => $this->stevedoringService->makeStevedoringStaffFromDatabase($staff),
+                $allStaffRaw
+            );
+
+            return new Collection($allStaff);
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer le personnel de manutention.", previous: $e);
         }
-
-        /** @var array<array<mixed>> */
-        $staffRaw = $staffRequest->fetchAll();
-
-        $allStaff = \array_map(
-            fn($staff) => $this->stevedoringService->makeStevedoringStaffFromDatabase($staff),
-            $staffRaw
-        );
-
-        return new Collection($allStaff);
     }
 
     public function fetchStaff(int $id): ?StevedoringStaff
     {
-        /**
-         * @var StevedoringStaff[]
-         */
+        /** @var array<int, StevedoringStaff> */
         static $cache = [];
 
         if (isset($cache[$id])) {
             return $cache[$id];
         }
 
-        $staffStatement = "SELECT * FROM stevedoring_staff WHERE id = :id";
-
-        $staffRequest = $this->mysql->prepare($staffStatement);
-
-        if (!$staffRequest) {
-            throw new DBException("Impossible de récupérer le personnel de manutention.");
-        }
-
-        $staffRequest->execute(['id' => $id]);
-
-        $staffRaw = $staffRequest->fetch();
-
-        if (!\is_array($staffRaw)) {
+        if (!$this->staffExists($id)) {
             return null;
         }
 
-        $staff = $this->stevedoringService->makeStevedoringStaffFromDatabase($staffRaw);
+        /** @var StevedoringStaff */
+        $staff = $this->staffReflector->newLazyProxy(
+            function () use ($id) {
+                try {
+                    $staffStatement =
+                        "SELECT
+                            id,
+                            firstname,
+                            lastname,
+                            phone,
+                            type,
+                            temp_work_agency as `tempWorkAgency`,
+                            is_active as `isActive`,
+                            comments,
+                            deleted_at as `deletedAt`
+                        FROM stevedoring_staff WHERE id = :id";
+
+                    /** @var StevedoringStaffArray */
+                    $staffRaw = $this->mysql
+                        ->prepareAndExecute($staffStatement, ['id' => $id])
+                        ->fetch();
+
+                    return $this->stevedoringService->makeStevedoringStaffFromDatabase($staffRaw);
+                } catch (\PDOException $e) {
+                    throw new DBException("Impossible de récupérer le personnel de manutention.", previous: $e);
+                }
+            }
+        );
+
+        $this->staffReflector->getProperty('id')->setRawValueWithoutLazyInitialization($staff, $id);
 
         $cache[$id] = $staff;
 
@@ -197,15 +192,9 @@ final class StevedoringRepository extends Repository
                 comments = :comments";
 
         try {
-            $request = $this->mysql->prepare($statement);
-
-            if (!$request) {
-                throw new DBException("Impossible de créer le personnel de manutention.");
-            }
-
             $this->mysql->beginTransaction();
 
-            $request->execute([
+            $this->mysql->prepareAndExecute($statement, [
                 'firstname' => $staff->firstname,
                 'lastname' => $staff->lastname,
                 'phone' => $staff->phone,
@@ -218,15 +207,14 @@ final class StevedoringRepository extends Repository
             $lastInsertId = (int) $this->mysql->lastInsertId();
 
             $this->mysql->commit();
-        } catch (PDOException $e) {
+
+            $staff->id = $lastInsertId;
+
+            return $staff;
+        } catch (\PDOException $e) {
             $this->mysql->rollBack();
             throw new DBException("Impossible de créer le personnel de manutention.", previous: $e);
         }
-
-        /** @var StevedoringStaff */
-        $createdStaff = $this->fetchStaff($lastInsertId);
-
-        return $createdStaff;
     }
 
     public function updateStaff(StevedoringStaff $staff): StevedoringStaff
@@ -245,13 +233,7 @@ final class StevedoringRepository extends Repository
                 id = :id";
 
         try {
-            $request = $this->mysql->prepare($statement);
-
-            if (!$request) {
-                throw new DBException("Impossible de mettre à jour le personnel de manutention.");
-            }
-
-            $request->execute([
+            $this->mysql->prepareAndExecute($statement, [
                 'firstname' => $staff->firstname,
                 'lastname' => $staff->lastname,
                 'phone' => $staff->phone,
@@ -261,11 +243,11 @@ final class StevedoringRepository extends Repository
                 'comments' => $staff->comments,
                 'id' => $staff->id,
             ]);
-        } catch (PDOException $e) {
+
+            return $staff;
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de mettre à jour le personnel de manutention.", previous: $e);
         }
-
-        return $staff;
     }
 
     public function deleteStaff(int $id): void
@@ -282,15 +264,9 @@ final class StevedoringRepository extends Repository
             WHERE
                 id = :id";
 
-        $request = $this->mysql->prepare($statement);
-
-        if (!$request) {
-            throw new DBException("Impossible de supprimer le personnel de manutention.");
-        }
-
         try {
-            $request->execute(['id' => $id]);
-        } catch (PDOException $e) {
+            $this->mysql->prepareAndExecute($statement, ['id' => $id]);
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de supprimer le personnel de manutention.", previous: $e);
         }
     }
@@ -312,58 +288,80 @@ final class StevedoringRepository extends Repository
     public function fetchAllEquipments(): Collection
     {
         $equipmentStatement =
-            "SELECT *
+            "SELECT
+                id,
+                type,
+                brand,
+                model,
+                internal_number as `internalNumber`,
+                serial_number as `serialNumber`,
+                comments,
+                is_active as `isActive`
              FROM stevedoring_equipments
-             ORDER BY brand ASC, model ASC, internal_number ASC";
+             ORDER BY
+                brand ASC,
+                model ASC,
+                internal_number ASC";
 
-        $equipmentRequest = $this->mysql->query($equipmentStatement);
+        try {
+            /** @var StevedoringEquipmentArray[] */
+            $allEquipmentsRaw = $this->mysql
+                ->prepareAndExecute($equipmentStatement)
+                ->fetchAll();
 
-        if (!$equipmentRequest) {
-            throw new DBException("Impossible de récupérer les équipements de manutention.");
+            $allEquipment = \array_map(
+                fn($equipment) => $this->stevedoringService->makeStevedoringEquipmentFromDatabase($equipment),
+                $allEquipmentsRaw
+            );
+
+            return new Collection($allEquipment);
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer les équipements de manutention.", previous: $e);
         }
-
-        /** @var array<array<mixed>> */
-        $equipmentRaw = $equipmentRequest->fetchAll();
-
-        $allEquipment = \array_map(
-            fn($equipment) => $this->stevedoringService->makeStevedoringEquipmentFromDatabase($equipment),
-            $equipmentRaw
-        );
-
-        return new Collection($allEquipment);
     }
 
     public function fetchEquipment(int $id): ?StevedoringEquipment
     {
-        /**
-         * @var StevedoringEquipment[]
-         */
+        /** @var array<int, StevedoringEquipment> */
         static $cache = [];
 
         if (isset($cache[$id])) {
             return $cache[$id];
         }
-
-        $equipmentStatement =
-            "SELECT *
-             FROM stevedoring_equipments
-             WHERE id = :id";
-
-        $equipmentRequest = $this->mysql->prepare($equipmentStatement);
-
-        if (!$equipmentRequest) {
-            throw new DBException("Impossible de récupérer l'équipement de manutention.");
-        }
-
-        $equipmentRequest->execute(['id' => $id]);
-
-        $equipmentRaw = $equipmentRequest->fetch();
-
-        if (!\is_array($equipmentRaw)) {
+        if (!$this->equipmentExists($id)) {
             return null;
         }
 
-        $equipment = $this->stevedoringService->makeStevedoringEquipmentFromDatabase($equipmentRaw);
+        /** @var StevedoringEquipment */
+        $equipment = $this->equipmentReflector->newLazyProxy(
+            function () use ($id) {
+                try {
+                    $equipmentStatement =
+                        "SELECT
+                        id,
+                        type,
+                        brand,
+                        model,
+                        internal_number as `internalNumber`,
+                        serial_number as `serialNumber`,
+                        comments,
+                        is_active as `isActive`
+                     FROM stevedoring_equipments
+                     WHERE id = :id";
+
+                    /** @var StevedoringEquipmentArray */
+                    $equipmentRaw = $this->mysql
+                        ->prepareAndExecute($equipmentStatement, ['id' => $id])
+                        ->fetch();
+
+                    return $this->stevedoringService->makeStevedoringEquipmentFromDatabase($equipmentRaw);
+                } catch (\PDOException $e) {
+                    throw new DBException("Impossible de récupérer l'équipement de manutention.", previous: $e);
+                }
+            }
+        );
+
+        $this->equipmentReflector->getProperty('id')->setRawValueWithoutLazyInitialization($equipment, $id);
 
         $cache[$id] = $equipment;
 
@@ -383,16 +381,10 @@ final class StevedoringRepository extends Repository
                 comments = :comments,
                 is_active = :isActive";
 
-        $request = $this->mysql->prepare($statement);
-
-        if (!$request) {
-            throw new DBException("Impossible de créer l'équipement de manutention.");
-        }
-
         try {
             $this->mysql->beginTransaction();
 
-            $request->execute([
+            $this->mysql->prepareAndExecute($statement, [
                 'type' => $equipment->type,
                 'brand' => $equipment->brand,
                 'model' => $equipment->model,
@@ -404,16 +396,15 @@ final class StevedoringRepository extends Repository
 
             $lastInsertId = (int) $this->mysql->lastInsertId();
 
+            $equipment->id = $lastInsertId;
+
             $this->mysql->commit();
-        } catch (PDOException $e) {
+
+            return $equipment;
+        } catch (\PDOException $e) {
             $this->mysql->rollBack();
             throw new DBException("Impossible de créer l'équipement de manutention.", previous: $e);
         }
-
-        /** @var StevedoringEquipment */
-        $createdEquipment = $this->fetchEquipment($lastInsertId);
-
-        return $createdEquipment;
     }
 
     public function updateEquipment(StevedoringEquipment $equipment): StevedoringEquipment
@@ -431,14 +422,8 @@ final class StevedoringRepository extends Repository
             WHERE
                 id = :id";
 
-        $request = $this->mysql->prepare($statement);
-
-        if (!$request) {
-            throw new DBException("Impossible de mettre à jour l'équipement de manutention.");
-        }
-
         try {
-            $request->execute([
+            $this->mysql->prepareAndExecute($statement, [
                 'type' => $equipment->type,
                 'brand' => $equipment->brand,
                 'model' => $equipment->model,
@@ -448,11 +433,11 @@ final class StevedoringRepository extends Repository
                 'isActive' => (int) $equipment->isActive,
                 'id' => $equipment->id,
             ]);
-        } catch (PDOException $e) {
+
+            return $equipment;
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de mettre à jour l'équipement de manutention.", previous: $e);
         }
-
-        return $equipment;
     }
 
     public function deleteEquipment(int $id): void
@@ -464,9 +449,8 @@ final class StevedoringRepository extends Repository
 
         try {
             $deleteStatement = "DELETE FROM stevedoring_equipments WHERE id = :id";
-            $deleteRequest = $this->mysql->prepare($deleteStatement);
-            $deleteRequest->execute(['id' => $id]);
-        } catch (PDOException $e) {
+            $this->mysql->prepareAndExecute($deleteStatement, ['id' => $id]);
+        } catch (\PDOException $e) {
             throw new DBException("Erreur lors de la suppression.", previous: $e);
         }
     }
@@ -476,7 +460,7 @@ final class StevedoringRepository extends Repository
 
         $statement =
             "SELECT COUNT(*)
-             FROM stevedoring_ship_reports_equipment
+             FROM stevedoring_ship_reports_equipments
              WHERE equipment_id = :id";
 
         try {
@@ -491,7 +475,7 @@ final class StevedoringRepository extends Repository
             $count = $request->fetchColumn();
 
             return (int) $count;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer l'historique de cet équipement.", previous: $e);
         }
     }
@@ -693,7 +677,7 @@ final class StevedoringRepository extends Repository
             );
 
             return new Collection($tempWorkHours);
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les heures des intérimaires.", previous: $e);
         }
     }
@@ -724,7 +708,7 @@ final class StevedoringRepository extends Repository
             $tempWorkHoursEntry->details = \trim($this->fetchDetailsForTempWorkHoursEntry($tempWorkHoursEntry));
 
             return $tempWorkHoursEntry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les heures de l'intérimaire.", previous: $e);
         }
     }
@@ -871,7 +855,7 @@ final class StevedoringRepository extends Repository
             );
 
             return new Collection($tempWorkHours);
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les heures de l'intérimaire.", previous: $e);
         }
     }
@@ -906,7 +890,7 @@ final class StevedoringRepository extends Repository
             $entry->details = $this->fetchDetailsForTempWorkHoursEntry($entry);
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             if ($this->mysql->inTransaction()) {
                 $this->mysql->rollBack();
             }
@@ -950,7 +934,7 @@ final class StevedoringRepository extends Repository
             $entry->details = $this->fetchDetailsForTempWorkHoursEntry($entry);
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             if ($this->mysql->inTransaction()) {
                 $this->mysql->rollBack();
             }
@@ -974,7 +958,7 @@ final class StevedoringRepository extends Repository
                 "DELETE FROM stevedoring_temp_work_hours WHERE id = :id",
                 ['id' => $id]
             );
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Erreur lors de la suppression.", previous: $e);
         }
     }
@@ -1012,7 +996,7 @@ final class StevedoringRepository extends Repository
             $tempWorkHoursReportDataDto = new TempWorkHoursReportDataDTO($rawData);
 
             return $tempWorkHoursReportDataDto;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les heures de travail.", previous: $e);
         }
     }
@@ -1050,13 +1034,13 @@ final class StevedoringRepository extends Repository
             FROM (
                 SELECT
                     r.id,
-                    r.is_archive,
-                    r.linked_shipping_call_id,
+                    r.is_archive as `isArchive`,
+                    r.linked_shipping_call_id as `linkedShippingCallId`,
                     r.ship,
                     r.port,
                     r.berth,
                     r.comments,
-                    r.invoice_instructions,
+                    r.invoice_instructions as `invoiceInstructions`,
                     COALESCE(
                         (SELECT MIN(`date`)
                         FROM dates
@@ -1064,7 +1048,7 @@ final class StevedoringRepository extends Repository
                         (SELECT ops_date
                         FROM consignation_planning
                         WHERE id = r.linked_shipping_call_id)
-                    ) as `start_date`,
+                    ) as `startDate`,
                     COALESCE(
                         (SELECT MAX(`date`)
                         FROM dates
@@ -1072,7 +1056,7 @@ final class StevedoringRepository extends Repository
                         (SELECT etc_date
                         FROM consignation_planning
                         WHERE id = r.linked_shipping_call_id)
-                    ) as `end_date`
+                    ) as `endDate`
                 FROM stevedoring_ship_reports r
                 LEFT JOIN consignation_escales_marchandises cem ON cem.ship_report_id = r.id
                 LEFT JOIN stevedoring_ship_reports_storage storage ON storage.ship_report_id = r.id
@@ -1084,12 +1068,12 @@ final class StevedoringRepository extends Repository
                     r.id -- Group by to avoid duplicates
             ) as main_query
             WHERE
-                (`start_date` <= :endDate OR `start_date` IS NULL)
+                (`startDate` <= :endDate OR `startDate` IS NULL)
                 AND
-                (`end_date` >= :startDate OR `end_date` IS NULL)";
+                (`endDate` >= :startDate OR `endDate` IS NULL)";
 
         try {
-            /** @phpstan-var ShipReportArray[] */
+            /** @var ShipReportArray[] */
             $reportsRaw = $this->mysql
                 ->prepareAndExecute(
                     $statement,
@@ -1101,7 +1085,7 @@ final class StevedoringRepository extends Repository
                 ->fetchAll();
 
             $shipReports = \array_map(
-                fn(array $reportRaw) => $this->stevedoringService->makeShipReportFromDatabase($reportRaw),
+                fn($reportRaw) => $this->stevedoringService->makeShipReportFromDatabase($reportRaw),
                 $reportsRaw
             );
 
@@ -1119,48 +1103,62 @@ final class StevedoringRepository extends Repository
 
 
             return new Collection($shipReports);
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les rapports navires.", previous: $e);
         }
     }
 
     public function fetchShipReport(int $id): ?ShipReport
     {
-        $reportStatement =
-            "SELECT
-                r.id,
-                r.is_archive,
-                r.linked_shipping_call_id,
-                r.ship,
-                r.port,
-                r.berth,
-                r.comments,
-                r.invoice_instructions
-             FROM stevedoring_ship_reports r
-             WHERE r.id = :id";
+        /** @var array<int, ShipReport> */
+        static $cache = [];
 
-        try {
-            /** @phpstan-var ?ShipReportArray */
-            $reportRaw = $this->mysql
-                ->prepareAndExecute($reportStatement, ['id' => $id])
-                ->fetch();
-
-            if (!\is_array($reportRaw)) {
-                return null;
-            }
-
-            $shipReport = $this->stevedoringService
-                ->makeShipReportFromDatabase($reportRaw)
-                ->setEquipmentEntries($this->fetchShipReportEquipmentEntriesForReport($id))
-                ->setStaffEntries($this->fetchShipReportStaffEntriesForReport($id))
-                ->setSubcontractEntries($this->fetchShipReportSubcontractEntriesForReport($id))
-                ->setCargoEntries($this->fetchCargoEntriesForReport($id))
-                ->setStorageEntries($this->fetchShipReportStorageEntriesForReport($id));
-
-            return $shipReport;
-        } catch (PDOException $e) {
-            throw new DBException("Impossible de récupérer le rapport navire.", previous: $e);
+        if (isset($cache[$id])) {
+            return $cache[$id];
         }
+
+        if (!$this->shipReportExists($id)) {
+            return null;
+        }
+
+        /** @var ShipReport */
+        $shipReport = $this->shipReportReflector->newLazyProxy(
+            function () use ($id) {
+                $reportStatement =
+                    "SELECT
+                    r.id,
+                    r.is_archive as `isArchive`,
+                    r.linked_shipping_call_id as `linkedShippingCallId`,
+                    r.ship,
+                    r.port,
+                    r.berth,
+                    r.comments,
+                    r.invoice_instructions as `invoiceInstructions`
+                 FROM stevedoring_ship_reports r
+                 WHERE r.id = :id";
+
+                try {
+                    /** @var ShipReportArray */
+                    $reportRaw = $this->mysql
+                        ->prepareAndExecute($reportStatement, ['id' => $id])
+                        ->fetch();
+
+                    return $this->stevedoringService
+                        ->makeShipReportFromDatabase($reportRaw)
+                        ->setEquipmentEntries($this->fetchShipReportEquipmentEntriesForReport($id))
+                        ->setStaffEntries($this->fetchShipReportStaffEntriesForReport($id))
+                        ->setSubcontractEntries($this->fetchShipReportSubcontractEntriesForReport($id))
+                        ->setCargoEntries($this->fetchCargoEntriesForReport($id))
+                        ->setStorageEntries($this->fetchShipReportStorageEntriesForReport($id));
+                } catch (\PDOException $e) {
+                    throw new DBException("Impossible de récupérer le rapport navire.", previous: $e);
+                }
+            }
+        );
+
+        $cache[$id] = $shipReport;
+
+        return $shipReport;
     }
 
     public function createShipReport(ShipReport $report): ShipReport
@@ -1193,6 +1191,20 @@ final class StevedoringRepository extends Repository
             );
 
             $report->id = (int) $this->mysql->lastInsertId();
+
+            if ($report->linkedShippingCall) {
+                $this->mysql->prepareAndExecute(
+                    "UPDATE consignation_planning
+                     SET
+                        stevedoring_ship_report_id = :reportId
+                     WHERE
+                        id = :callId",
+                    [
+                        'reportId' => $report->id,
+                        'callId' => $report->linkedShippingCall->id,
+                    ]
+                );
+            }
 
             // Equipment entries
             foreach ($report->equipmentEntries as $equipmentEntry) {
@@ -1260,12 +1272,8 @@ final class StevedoringRepository extends Repository
 
             $this->mysql->commit();
 
-            /** @var ShipReport */
-            // $createdReport = $this->fetchShipReport($report->id);
-
-            // return $createdReport;
             return $report;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             throw new DBException("Impossible de créer le rapport navire.", previous: $e);
@@ -1306,6 +1314,20 @@ final class StevedoringRepository extends Repository
                     'id' => $report->id,
                 ]
             );
+
+            if ($report->linkedShippingCall) {
+                $this->mysql->prepareAndExecute(
+                    "UPDATE consignation_planning
+                     SET
+                        stevedoring_ship_report_id = :reportId
+                     WHERE
+                        id = :callId",
+                    [
+                        'reportId' => $report->id,
+                        'callId' => $report->linkedShippingCall->id,
+                    ]
+                );
+            }
 
             // Equipment entries
             // Delete entries that are not in the new list
@@ -1444,7 +1466,7 @@ final class StevedoringRepository extends Repository
             $this->mysql->commit();
 
             return $report;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             throw new DBException("Impossible de mettre à jour le rapport navire.", previous: $e);
@@ -1467,7 +1489,7 @@ final class StevedoringRepository extends Repository
                 "DELETE FROM stevedoring_ship_reports WHERE id = :id",
                 ['id' => $id]
             );
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Erreur lors de la suppression.", previous: $e);
         }
     }
@@ -1479,7 +1501,7 @@ final class StevedoringRepository extends Repository
      * @return ShipReportEquipmentEntry[]  
      * 
      * @throws DBException 
-     * @throws RuntimeException 
+     * @throws \RuntimeException 
      */
     private function fetchShipReportEquipmentEntriesForReport(int $reportId): array
     {
@@ -1507,7 +1529,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $entries;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les entrées d'équipement.", previous: $e);
         }
     }
@@ -1518,7 +1540,7 @@ final class StevedoringRepository extends Repository
      * 
      * @return ShipReportEquipmentEntry 
      * 
-     * @throws PDOException 
+     * @throws \PDOException 
      * @throws BadRequestException 
      * @throws DBException 
      */
@@ -1550,7 +1572,7 @@ final class StevedoringRepository extends Repository
             $entry->id = (int) $this->mysql->lastInsertId();
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
@@ -1572,7 +1594,7 @@ final class StevedoringRepository extends Repository
      * 
      * @return ShipReportEquipmentEntry 
      * 
-     * @throws PDOException 
+     * @throws \PDOException 
      * @throws BadRequestException 
      * @throws DBException 
      */
@@ -1605,7 +1627,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
@@ -1628,7 +1650,7 @@ final class StevedoringRepository extends Repository
      * @return ShipReportStaffEntry[]  
      * 
      * @throws DBException 
-     * @throws RuntimeException 
+     * @throws \RuntimeException 
      */
     private function fetchShipReportStaffEntriesForReport(int $reportId): array
     {
@@ -1661,7 +1683,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $entries;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les entrées de personnel.", previous: $e);
         }
     }
@@ -1672,7 +1694,7 @@ final class StevedoringRepository extends Repository
      * 
      * @return ShipReportStaffEntry 
      * 
-     * @throws PDOException 
+     * @throws \PDOException 
      * @throws BadRequestException 
      * @throws DBException 
      */
@@ -1704,7 +1726,7 @@ final class StevedoringRepository extends Repository
             $entry->id = (int) $this->mysql->lastInsertId();
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
@@ -1726,7 +1748,7 @@ final class StevedoringRepository extends Repository
      * 
      * @return ShipReportStaffEntry 
      * 
-     * @throws PDOException 
+     * @throws \PDOException 
      * @throws BadRequestException 
      * @throws DBException 
      */
@@ -1759,7 +1781,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
@@ -1782,7 +1804,7 @@ final class StevedoringRepository extends Repository
      * @return ShipReportSubcontractEntry[] 
      *  
      * @throws DBException 
-     * @throws RuntimeException 
+     * @throws \RuntimeException 
      */
     private function fetchShipReportSubcontractEntriesForReport(int $reportId): array
     {
@@ -1814,7 +1836,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $entries;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les entrées de personnel.", previous: $e);
         }
     }
@@ -1825,7 +1847,7 @@ final class StevedoringRepository extends Repository
      * 
      * @return ShipReportSubcontractEntry 
      * 
-     * @throws PDOException 
+     * @throws \PDOException 
      * @throws BadRequestException 
      * @throws DBException 
      */
@@ -1859,7 +1881,7 @@ final class StevedoringRepository extends Repository
             $entry->id = (int) $this->mysql->lastInsertId();
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
@@ -1881,7 +1903,7 @@ final class StevedoringRepository extends Repository
      * 
      * @return ShipReportSubcontractEntry 
      * 
-     * @throws PDOException 
+     * @throws \PDOException 
      * @throws BadRequestException 
      * @throws DBException 
      */
@@ -1916,7 +1938,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
@@ -1939,7 +1961,7 @@ final class StevedoringRepository extends Repository
      * @return ShippingCallCargo[]  
      * 
      * @throws DBException 
-     * @throws RuntimeException 
+     * @throws \RuntimeException 
      */
     private function fetchCargoEntriesForReport(int $reportId): array
     {
@@ -1960,7 +1982,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $entries;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les marchandises.", previous: $e);
         }
     }
@@ -1971,7 +1993,7 @@ final class StevedoringRepository extends Repository
      * 
      * @return ShippingCallCargo 
      * 
-     * @throws PDOException 
+     * @throws \PDOException 
      * @throws DBException 
      */
     private function createCargoEntry(ShippingCallCargo $entry): ShippingCallCargo
@@ -2012,7 +2034,7 @@ final class StevedoringRepository extends Repository
             $entry->id = (int) $this->mysql->lastInsertId();
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             throw new DBException("Impossible de créer la marchandise {$entry->cargoName}.", previous: $e);
@@ -2025,7 +2047,7 @@ final class StevedoringRepository extends Repository
      * 
      * @return ShippingCallCargo 
      * 
-     * @throws PDOException 
+     * @throws \PDOException 
      * @throws DBException 
      */
     private function updateCargoEntry(ShippingCallCargo $entry): ShippingCallCargo
@@ -2067,7 +2089,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             throw new DBException("Impossible de modifier la marchandise {$entry->cargoName}.", previous: $e);
@@ -2081,7 +2103,7 @@ final class StevedoringRepository extends Repository
      * @return ShipReportStorageEntry[]
      *  
      * @throws DBException 
-     * @throws RuntimeException 
+     * @throws \RuntimeException 
      */
     private function fetchShipReportStorageEntriesForReport(int $reportId): array
     {
@@ -2110,7 +2132,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $entries;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les entrées de personnel.", previous: $e);
         }
     }
@@ -2121,7 +2143,7 @@ final class StevedoringRepository extends Repository
      * 
      * @return ShipReportStorageEntry 
      * 
-     * @throws PDOException 
+     * @throws \PDOException 
      * @throws BadRequestException 
      * @throws DBException 
      */
@@ -2155,7 +2177,7 @@ final class StevedoringRepository extends Repository
             $entry->id = (int) $this->mysql->lastInsertId();
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
@@ -2178,7 +2200,7 @@ final class StevedoringRepository extends Repository
      * 
      * @return ShipReportStorageEntry 
      * 
-     * @throws PDOException 
+     * @throws \PDOException 
      * @throws BadRequestException 
      * @throws DBException 
      */
@@ -2213,7 +2235,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
@@ -2289,7 +2311,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $filterDataDto;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les données de filtre.", previous: $e);
         }
     }
@@ -2408,7 +2430,7 @@ final class StevedoringRepository extends Repository
                 ->fetchAll();
 
             return new StevedoringSubcontractorsDataDTO($subcontractorsData);
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les données des sous-traitants.", previous: $e);
         }
     }

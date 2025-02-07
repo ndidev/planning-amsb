@@ -10,6 +10,14 @@ use App\Entity\AbstractEntity;
 use App\Entity\Bulk\BulkAppointment;
 use App\Entity\Stevedoring\StevedoringStaff;
 
+/**
+ * @phpstan-type BulkDispatchArray array{
+ *                                   appointment_id: int,
+ *                                   staff_id: int,
+ *                                   date: string,
+ *                                   remarks: string,
+ *                                 }
+ */
 class BulkDispatchItem extends AbstractEntity
 {
     private ?BulkAppointment $appointment = null;

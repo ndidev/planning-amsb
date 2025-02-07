@@ -8,7 +8,6 @@ namespace App\Repository;
 
 use App\Core\Component\Collection;
 use App\Core\Component\ETAConverter;
-use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\DTO\Filter\ShippingFilterDTO;
@@ -17,55 +16,9 @@ use App\DTO\ShippingStatsSummaryDTO;
 use App\Entity\Shipping\ShippingCall;
 use App\Entity\Shipping\ShippingCallCargo;
 use App\Service\ShippingService;
-use RuntimeException;
+use ReflectionClass;
 
 /**
- * @phpstan-type ShippingCallArray array{
- *                                   id: int,
- *                                   stevedoring_ship_report_id: int|null,
- *                                   navire: string,
- *                                   voyage: string,
- *                                   armateur: int|null,
- *                                   eta_date: string|null,
- *                                   eta_heure: string,
- *                                   nor_date: string|null,
- *                                   nor_heure: string,
- *                                   pob_date: string|null,
- *                                   pob_heure: string,
- *                                   etb_date: string|null,
- *                                   etb_heure: string,
- *                                   ops_date: string|null,
- *                                   ops_heure: string,
- *                                   etc_date: string|null,
- *                                   etc_heure: string,
- *                                   etd_date: string|null,
- *                                   etd_heure: string,
- *                                   te_arrivee: float|null,
- *                                   te_depart: float|null,
- *                                   last_port: string,
- *                                   next_port: string,
- *                                   call_port: string,
- *                                   quai: string,
- *                                   commentaire: string,
- *                                   marchandises?: ShippingCallCargoArray[],
- *                                 }
- * 
- * @phpstan-type ShippingCallCargoArray array{
- *                                        id: int,
- *                                        escale_id: int|null,
- *                                        ship_report_id: int|null,
- *                                        marchandise: string,
- *                                        client: string,
- *                                        operation: string,
- *                                        environ: bool,
- *                                        tonnage_bl: float|null,
- *                                        cubage_bl: float|null,
- *                                        nombre_bl: int|null,
- *                                        tonnage_outturn: float|null,
- *                                        cubage_outturn: float|null,
- *                                        nombre_outturn: int|null,
- *                                      }
- * 
  * @phpstan-type DraftsPerTonnage list<array{
  *                                       navire: string,
  *                                       date: string,
@@ -79,29 +32,20 @@ use RuntimeException;
  *                                 fin: string
  *                               }>
  * 
- * @phpstan-type ShippingStatsSummaryArray list<array{
- *                                                id: int,
- *                                                date: string
- *                                              }>
- * 
- * @phpstan-type ShippingStatsDetailsArray list<array{
- *                                           id: int,
- *                                           navire: string,
- *                                           ops_date: ?string,
- *                                           etc_date: ?string,
- *                                           marchandise: string,
- *                                           client: string,
- *                                           tonnage_bl: ?float,
- *                                           tonnage_outturn: ?float,
- *                                           cubage_bl: ?float,
- *                                           cubage_outturn: ?float,
- *                                           nombre_bl: ?float,
- *                                           nombre_outturn: ?float,
- *                                         }> 
+ * @phpstan-import-type ShippingCallArray from \App\Entity\Shipping\ShippingCall
+ * @phpstan-import-type ShippingCallCargoArray from \App\Entity\Shipping\ShippingCallCargo
+ * @phpstan-import-type ShippingStatsSummaryArray from \App\DTO\ShippingStatsSummaryDTO
+ * @phpstan-import-type ShippingStatsDetailsArray from \App\DTO\ShippingStatsDetailsDTO
  */
 final class ShippingRepository extends Repository
 {
-    public function __construct(private ShippingService $shippingService) {}
+    /** @var ReflectionClass<ShippingCall> */
+    private ReflectionClass $callReflector;
+
+    public function __construct(private ShippingService $shippingService)
+    {
+        $this->callReflector = new ReflectionClass(ShippingCall::class);
+    }
 
     // =====
     // Calls
@@ -247,72 +191,88 @@ final class ShippingRepository extends Repository
      */
     public function fetchCall($id): ?ShippingCall
     {
-        $callStatement =
-            "SELECT
-                id,
-                stevedoring_ship_report_id,
-                navire,
-                voyage,
-                armateur,
-                eta_date,
-                eta_heure,
-                nor_date,
-                nor_heure,
-                pob_date,
-                pob_heure,
-                etb_date,
-                etb_heure,
-                ops_date,
-                ops_heure,
-                etc_date,
-                etc_heure,
-                etd_date,
-                etd_heure,
-                te_arrivee,
-                te_depart,
-                last_port,
-                next_port,
-                call_port,
-                quai,
-                commentaire
-            FROM consignation_planning 
-            WHERE id = :id";
+        /** @var array<int, ShippingCall> */
+        static $cache = [];
 
-        $cargoesStatement =
-            "SELECT
-                id,
-                IFNULL(marchandise, '') as marchandise,
-                IFNULL(client, '') as client,
-                operation,
-                environ,
-                tonnage_bl,
-                cubage_bl,
-                nombre_bl,
-                tonnage_outturn,
-                cubage_outturn,
-                nombre_outturn
-            FROM consignation_escales_marchandises
-            WHERE escale_id = :id";
+        if (isset($cache[$id])) {
+            return $cache[$id];
+        }
 
-        // Escales
-        $callRequest = $this->mysql->prepare($callStatement);
-        $callRequest->execute(["id" => $id]);
-        $callRaw = $callRequest->fetch();
+        if (!$this->callExists($id)) {
+            return null;
+        }
 
-        if (!\is_array($callRaw)) return null;
+        /** @var ShippingCall */
+        $call = $this->callReflector->newLazyProxy(
+            function () use ($id) {
+                $callStatement =
+                    "SELECT
+                        id,
+                        stevedoring_ship_report_id,
+                        navire,
+                        voyage,
+                        armateur,
+                        eta_date,
+                        eta_heure,
+                        nor_date,
+                        nor_heure,
+                        pob_date,
+                        pob_heure,
+                        etb_date,
+                        etb_heure,
+                        ops_date,
+                        ops_heure,
+                        etc_date,
+                        etc_heure,
+                        etd_date,
+                        etd_heure,
+                        te_arrivee,
+                        te_depart,
+                        last_port,
+                        next_port,
+                        call_port,
+                        quai,
+                        commentaire
+                    FROM consignation_planning 
+                    WHERE id = :id";
 
-        /** @phpstan-var ShippingCallArray $callRaw */
+                $cargoesStatement =
+                    "SELECT
+                        id,
+                        IFNULL(marchandise, '') as marchandise,
+                        IFNULL(client, '') as client,
+                        operation,
+                        environ,
+                        tonnage_bl,
+                        cubage_bl,
+                        nombre_bl,
+                        tonnage_outturn,
+                        cubage_outturn,
+                        nombre_outturn
+                    FROM consignation_escales_marchandises
+                    WHERE escale_id = :id";
 
+                // Escales
+                /** @var ShippingCallArray */
+                $callRaw = $this->mysql
+                    ->prepareAndExecute($callStatement, ["id" => $id])
+                    ->fetch();
 
-        // Marchandises
-        $cargoesRequest = $this->mysql->prepare($cargoesStatement);
-        $cargoesRequest->execute(["id" => $id]);
-        /** @phpstan-var ShippingCallCargoArray[] $cargoesRaw */
-        $cargoesRaw = $cargoesRequest->fetchAll();
+                // Marchandises
+                /** @var ShippingCallCargoArray[] */
+                $cargoesRaw = $this->mysql
+                    ->prepareAndExecute($cargoesStatement, ["id" => $id])
+                    ->fetchAll();
 
-        $callRaw["marchandises"] = $cargoesRaw;
+                $callRaw["marchandises"] = $cargoesRaw;
 
-        $call = $this->shippingService->makeShippingCallFromDatabase($callRaw);
+                return $this->shippingService->makeShippingCallFromDatabase($callRaw);
+            }
+        );
+
+        $this->callReflector->getProperty('id')->setRawValueWithoutLazyInitialization($call, $id);
+
+        $cache[$id] = $call;
 
         return $call;
     }
@@ -446,7 +406,6 @@ final class ShippingRepository extends Repository
             "UPDATE consignation_planning
             SET
                 navire = :navire,
-                stevedoring_ship_report_id = :shipReportId,
                 voyage = :voyage,
                 armateur = :armateur,
                 eta_date = :eta_date,
@@ -503,7 +462,6 @@ final class ShippingRepository extends Repository
         $callRequest = $this->mysql->prepare($callStatement);
         $callRequest->execute([
             'navire' => $call->shipName,
-            'shipReportId' => $call->shipReport?->id,
             'voyage' => $call->getVoyage(),
             'armateur' => $call->getShipOperator()?->id,
             'eta_date' => $call->getEtaDate()?->format('Y-m-d'),
@@ -733,24 +691,22 @@ final class ShippingRepository extends Repository
     /**
      * Récupère tous les tirants d'eau du planning consignation.
      * 
-     * @return array Tous les tirants d'eau récupérés
-     * 
-     * @phpstan-return DraftsPerTonnage
+     * @return DraftsPerTonnage Tous les tirants d'eau récupérés
      */
     public function fetchDraftsPerTonnage(): array
     {
-        $statement = "SELECT * FROM drafts_par_tonnage";
+        try {
+            $statement = "SELECT * FROM drafts_par_tonnage";
 
-        $draftsPerTonnageRequest = $this->mysql->query($statement);
+            /** @var DraftsPerTonnage */
+            $draftsPerTonnage = $this->mysql
+                ->prepareAndExecute($statement)
+                ->fetchAll();
 
-        if (!$draftsPerTonnageRequest) {
-            throw new DBException("Impossible de récupérer les tirants d'eau.");
+            return $draftsPerTonnage;
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer les tirants d'eau.", previous: $e);
         }
-
-        /** @phpstan-var DraftsPerTonnage $draftsPerTonnage */
-        $draftsPerTonnage = $draftsPerTonnageRequest->fetchAll();
-
-        return $draftsPerTonnage;
     }
 
     /**

@@ -14,35 +14,8 @@ use App\Entity\Chartering\CharterLeg;
 use App\Service\CharteringService;
 
 /**
- * @phpstan-type CharterArray array{
- *                              id?: int,
- *                              statut?: int,
- *                              lc_debut?: string,
- *                              lc_fin?: string,
- *                              cp_date?: string,
- *                              navire?: string,
- *                              affreteur?: int,
- *                              armateur?: int,
- *                              courtier?: int,
- *                              fret_achat?: float,
- *                              fret_vente?: float,
- *                              surestaries_achat?: float,
- *                              surestaries_vente?: float,
- *                              commentaire?: string,
- *                              archive?: bool,
- *                              legs?: CharterLegArray[]
- *                            }
- * 
- * @phpstan-type CharterLegArray array{
- *                                 id?: int,
- *                                 charter?: int,
- *                                 bl_date?: string,
- *                                 pol?: string,
- *                                 pod?: string,
- *                                 marchandise?: string,
- *                                 quantite?: string,
- *                                 commentaire?: string,
- *                               }
+ * @phpstan-import-type CharterArray from \App\Entity\Chartering\Charter
+ * @phpstan-import-type CharterLegArray from \App\Entity\Chartering\CharterLeg
  */
 final class CharteringRepository extends Repository
 {
@@ -55,7 +28,7 @@ final class CharteringRepository extends Repository
      */
     public function charterExists(int $id): bool
     {
-        return $this->mysql->exists("chartering_registre", $id);
+        return $this->mysql->exists('chartering_registre', $id);
     }
 
     /**

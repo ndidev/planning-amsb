@@ -10,19 +10,27 @@ use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\Port;
 use App\Service\PortService;
+use ReflectionClass;
 
 /**
- * @phpstan-type PortArray array{
- *                           locode: string,
- *                           nom: string,
- *                           nom_affichage: string,
- *                         }
+ * @phpstan-import-type PortArray from \App\Entity\Port
  */
 final class PortRepository extends Repository
 {
+    /** @var ReflectionClass<Port> */
+    private ReflectionClass $reflector;
+
     private string $redisNamespace = "ports";
 
-    public function __construct(private PortService $portService) {}
+    public function __construct(private PortService $portService)
+    {
+        $this->reflector = new ReflectionClass(Port::class);
+    }
+
+    public function portExists(string $locode): bool
+    {
+        return $this->mysql->exists('utils_ports', $locode, 'locode');
+    }
 
     /**
      * Récupère tous les ports.
@@ -68,17 +76,38 @@ final class PortRepository extends Repository
      */
     public function fetchPortByLocode(string $locode): ?Port
     {
-        $statement = "SELECT * FROM utils_ports WHERE locode = :locode";
+        /** @var array<string, Port> */
+        static $cache = [];
 
-        $request = $this->mysql->prepare($statement);
-        $request->execute(["locode" => $locode]);
-        $portRaw = $request->fetch();
+        if (isset($cache[$locode])) {
+            return $cache[$locode];
+        }
 
-        if (!\is_array($portRaw)) return null;
+        if (!$this->portExists($locode)) {
+            return null;
+        }
 
-        /** @phpstan-var PortArray $portRaw */
+        /** @var Port */
+        $port = $this->reflector->newLazyProxy(
+            function () use ($locode) {
+                try {
+                    $statement = "SELECT * FROM utils_ports WHERE locode = :locode";
 
-        $port = $this->portService->makePortFromDatabase($portRaw);
+                    /** @var PortArray */
+                    $portRaw = $this->mysql
+                        ->prepareAndExecute($statement, ["locode" => $locode])
+                        ->fetch();
+
+                    return $this->portService->makePortFromDatabase($portRaw);
+                } catch (\PDOException $e) {
+                    throw new DBException("Impossible de récupérer le port.", previous: $e);
+                }
+            }
+        );
+
+        $this->reflector->getProperty('locode')->setRawValueWithoutLazyInitialization($port, $locode);
+
+        $cache[$locode] = $port;
 
         return $port;
     }

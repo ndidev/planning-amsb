@@ -15,6 +15,26 @@ use App\Core\Validation\ValidationResult;
 use App\Entity\AbstractEntity;
 use App\Entity\ThirdParty;
 
+/**
+ * @phpstan-type BulkAppointmentArray array{
+ *                                      id: int,
+ *                                      date_rdv: string,
+ *                                      heure: ?string,
+ *                                      produit: int,
+ *                                      qualite: ?int,
+ *                                      quantite: int,
+ *                                      max: int,
+ *                                      commande_prete: int,
+ *                                      fournisseur: int,
+ *                                      client: int,
+ *                                      transporteur: ?int,
+ *                                      num_commande: string,
+ *                                      commentaire_public: string,
+ *                                      commentaire_prive: string,
+ *                                      show_on_tv: int,
+ *                                      archive: int,
+ *                                    }
+ */
 class BulkAppointment extends AbstractEntity
 {
     use IdentifierTrait;

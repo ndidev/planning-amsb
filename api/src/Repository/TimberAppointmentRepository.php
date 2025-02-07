@@ -19,49 +19,10 @@ use App\Entity\Timber\TimberDispatchItem;
 use App\Service\TimberService;
 
 /**
- *  @phpstan-type TimberAppointmentArray array{
- *                                        id: int,
- *                                        attente: bool,
- *                                        date_rdv: string|null,
- *                                        heure_arrivee: string|null,
- *                                        heure_depart: string|null,
- *                                        fournisseur: int|null,
- *                                        chargement: int|null,
- *                                        livraison: int|null,
- *                                        client: int|null,
- *                                        transporteur: int|null,
- *                                        affreteur: int|null,
- *                                        commande_prete: bool,
- *                                        confirmation_affretement: bool,
- *                                        numero_bl: string,
- *                                        commentaire_public: string,
- *                                        commentaire_cache: string,
- *                                      }
- * 
- * @phpstan-type TimberRegistryEntryArray array{
- *                                          date_rdv: string,
- *                                          fournisseur: string|null,
- *                                          chargement_nom: string|null,
- *                                          chargement_ville: string|null,
- *                                          chargement_pays: string|null,
- *                                          livraison_nom: string|null,
- *                                          livraison_cp: string|null,
- *                                          livraison_ville: string|null,
- *                                          livraison_pays: string|null,
- *                                          numero_bl: string,
- *                                          transporteur: string|null,
- *                                        }
- * 
- * @phpstan-type TimberPdfAppointments array{
- *                                       attente: Collection<TimberAppointment>,
- *                                       non_attente: Collection<TimberAppointment>
- *                                     }
- * 
- * @phpstan-type TimberDispatchArray array{
- *                                     appointment_id: int,
- *                                     staff_id: int,
- *                                     remarks: string,
- *                                   }
+ * @phpstan-import-type TimberAppointmentArray from \App\Entity\Timber\TimberAppointment
+ * @phpstan-import-type TimberRegistryEntryArray from \App\DTO\TimberRegistryEntryDTO
+ * @phpstan-import-type TimberDispatchArray from \App\Entity\Timber\TimberDispatchItem
+ * @phpstan-import-type TimberPdfAppointments from \App\DTO\PDF\TimberPDF
  */
 final class TimberAppointmentRepository extends Repository
 {
@@ -783,10 +744,7 @@ final class TimberAppointmentRepository extends Repository
      * @param \DateTimeInterface $startDate Date de début des RDVs.
      * @param \DateTimeInterface $endDate   Date de fin des RDVs.
      * 
-     * @return array{
-     *           attente: Collection<TimberAppointment>,
-     *           non_attente: Collection<TimberAppointment>
-     *         } RDVs bois à exporter.
+     * @return TimberPdfAppointments RDVs bois à exporter.
      */
     public function getPdfAppointments(
         ThirdParty $supplier,
@@ -835,12 +793,12 @@ final class TimberAppointmentRepository extends Repository
             "startDate" => $startDate->format('Y-m-d'),
             "endDate" => $endDate->format('Y-m-d'),
         ]);
-        /** @phpstan-var TimberAppointmentArray[] */
+        /** @var TimberAppointmentArray[] */
         $scheduledAppointmentsRaw = $scheduledRequest->fetchAll();
 
         $onHoldRequest = $this->mysql->prepare($onHoldStatement);
         $onHoldRequest->execute(["supplierId" => $supplier->id]);
-        /** @phpstan-var TimberAppointmentArray[] */
+        /** @var TimberAppointmentArray[] */
         $onHoldAppointmentsRaw = $onHoldRequest->fetchAll();
 
         $timberService = new TimberService();

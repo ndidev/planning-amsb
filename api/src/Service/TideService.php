@@ -7,7 +7,6 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Core\Exceptions\Server\ServerException;
-use App\DTO\NewTidesDTO;
 use App\DTO\TidesDTO;
 use App\Repository\TideRepository;
 

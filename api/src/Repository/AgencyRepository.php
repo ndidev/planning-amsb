@@ -12,19 +12,7 @@ use App\Entity\Config\AgencyDepartment;
 use App\Service\AgencyService;
 
 /**
- * @phpstan-type AgencyDepartmentArray array{
- *                                       service: string,
- *                                       affichage: string,
- *                                       nom: string,
- *                                       adresse_ligne_1: string,
- *                                       adresse_ligne_2: string,
- *                                       cp: string,
- *                                       ville: string,
- *                                       pays: string,
- *                                       telephone: string,
- *                                       mobile: string,
- *                                       email: string
- *                                     }
+ * @phpstan-import-type AgencyDepartmentArray from \App\Entity\Config\AgencyDepartment
  */
 final class AgencyRepository extends Repository
 {
@@ -37,7 +25,7 @@ final class AgencyRepository extends Repository
      */
     public function departmentExists(string $departmentName): bool
     {
-        return $this->mysql->exists("config_agence", $departmentName, "service");
+        return $this->mysql->exists('config_agence', $departmentName, 'service');
     }
 
     /**

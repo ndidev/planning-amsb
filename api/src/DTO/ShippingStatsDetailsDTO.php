@@ -7,7 +7,20 @@ declare(strict_types=1);
 namespace App\DTO;
 
 /**
- * @phpstan-import-type ShippingStatsDetailsArray from \App\Repository\ShippingRepository
+ * @phpstan-type ShippingStatsDetailsArray list<array{
+ *                                           id: int,
+ *                                           navire: string,
+ *                                           ops_date: ?string,
+ *                                           etc_date: ?string,
+ *                                           marchandise: string,
+ *                                           client: string,
+ *                                           tonnage_bl: ?float,
+ *                                           tonnage_outturn: ?float,
+ *                                           cubage_bl: ?float,
+ *                                           cubage_outturn: ?float,
+ *                                           nombre_bl: ?float,
+ *                                           nombre_outturn: ?float,
+ *                                         }> 
  */
 final class ShippingStatsDetailsDTO implements \JsonSerializable
 {

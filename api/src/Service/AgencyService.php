@@ -13,7 +13,7 @@ use App\Entity\Config\AgencyDepartment;
 use App\Repository\AgencyRepository;
 
 /**
- * @phpstan-import-type AgencyDepartmentArray from \App\Repository\AgencyRepository
+ * @phpstan-import-type AgencyDepartmentArray from \App\Entity\Config\AgencyDepartment
  */
 final class AgencyService
 {
@@ -25,11 +25,7 @@ final class AgencyService
     }
 
     /**
-     * @param array $rawData
-     * 
-     * @phpstan-param AgencyDepartmentArray $rawData
-     * 
-     * @return AgencyDepartment
+     * @param AgencyDepartmentArray $rawData
      */
     public function makeDepartmentFromDatabase(array $rawData): AgencyDepartment
     {

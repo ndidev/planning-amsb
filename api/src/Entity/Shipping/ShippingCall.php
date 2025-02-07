@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Entity\Shipping;
 
+use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
 use App\Core\Component\DateUtils;
 use App\Core\Traits\IdentifierTrait;
@@ -14,6 +15,39 @@ use App\Entity\Port;
 use App\Entity\Stevedoring\ShipReport;
 use App\Entity\ThirdParty;
 
+/**
+ * @phpstan-import-type ShippingCallCargoArray from ShippingCallCargo
+ * 
+ * @phpstan-type ShippingCallArray array{
+ *                                   id: int,
+ *                                   stevedoringShipReportId: int|null,
+ *                                   navire: string,
+ *                                   voyage: string,
+ *                                   armateur: int|null,
+ *                                   eta_date: string|null,
+ *                                   eta_heure: string,
+ *                                   nor_date: string|null,
+ *                                   nor_heure: string,
+ *                                   pob_date: string|null,
+ *                                   pob_heure: string,
+ *                                   etb_date: string|null,
+ *                                   etb_heure: string,
+ *                                   ops_date: string|null,
+ *                                   ops_heure: string,
+ *                                   etc_date: string|null,
+ *                                   etc_heure: string,
+ *                                   etd_date: string|null,
+ *                                   etd_heure: string,
+ *                                   te_arrivee: float|null,
+ *                                   te_depart: float|null,
+ *                                   last_port: string,
+ *                                   next_port: string,
+ *                                   call_port: string,
+ *                                   quai: string,
+ *                                   commentaire: string,
+ *                                   marchandises?: ShippingCallCargoArray[],
+ *                                 }
+ */
 class ShippingCall extends AbstractEntity
 {
     use IdentifierTrait;
@@ -76,8 +110,40 @@ class ShippingCall extends AbstractEntity
      */
     public Collection $cargoes;
 
-    public function __construct()
+    /** 
+     * @param ArrayHandler|ShippingCallArray|null $data 
+     */
+    public function __construct(ArrayHandler|array|null $data = null)
     {
+        if (null === $data) {
+            return;
+        }
+
+        $dataAH = $data instanceof ArrayHandler ? $data : new ArrayHandler($data);
+
+        $this->id = $dataAH->getInt('id');
+        $this->shipName = $dataAH->getString('navire', 'TBN');
+        $this->voyageNumber = $dataAH->getString('voyage');
+        $this->etaDate = $dataAH->getDatetime('eta_date');
+        $this->etaTime = $dataAH->getString('eta_heure');
+        $this->norDate = $dataAH->getDatetime('nor_date');
+        $this->norTime = $dataAH->getString('nor_heure');
+        $this->pobDate = $dataAH->getDatetime('pob_date');
+        $this->pobTime = $dataAH->getString('pob_heure');
+        $this->etbDate = $dataAH->getDatetime('etb_date');
+        $this->etbTime = $dataAH->getString('etb_heure');
+        $this->opsDate = $dataAH->getDatetime('ops_date');
+        $this->opsTime = $dataAH->getString('ops_heure');
+        $this->etcDate = $dataAH->getDatetime('etc_date');
+        $this->etcTime = $dataAH->getString('etc_heure');
+        $this->etdDate = $dataAH->getDatetime('etd_date');
+        $this->etdTime = $dataAH->getString('etd_heure');
+        $this->arrivalDraft = $dataAH->getFloat('te_arrivee');
+        $this->departureDraft = $dataAH->getFloat('te_depart');
+        $this->callPort = $dataAH->getString('call_port');
+        $this->quay = $dataAH->getString('quai');
+        $this->comment = $dataAH->getString('commentaire');
+
         $this->cargoes = new Collection();
     }
 

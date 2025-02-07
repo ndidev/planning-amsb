@@ -12,11 +12,7 @@ use App\Entity\ChartDatum;
 use App\Service\ChartDatumService;
 
 /**
- * @phpstan-type ChartDatumArray array{
- *                                 cote?: string,
- *                                 affichage?: string,
- *                                 valeur?: float,
- *                               }
+ * @phpstan-import-type ChartDatumArray from \App\Entity\ChartDatum
  */
 final class ChartDatumRepository extends Repository
 {

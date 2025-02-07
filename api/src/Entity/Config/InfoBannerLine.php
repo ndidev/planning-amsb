@@ -11,6 +11,16 @@ use App\Core\Traits\IdentifierTrait;
 use App\Core\Traits\ModuleTrait;
 use App\Entity\AbstractEntity;
 
+/**
+ * @phpstan-type InfoBannerLineArray array{
+ *                                     id: int,
+ *                                     module: string,
+ *                                     pc: bool,
+ *                                     tv: bool,
+ *                                     message: string,
+ *                                     couleur: string,
+ *                                   }
+ */
 class InfoBannerLine extends AbstractEntity
 {
     use IdentifierTrait;

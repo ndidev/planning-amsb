@@ -24,9 +24,9 @@ use App\Entity\Timber\TimberDispatchItem;
 use App\Repository\TimberAppointmentRepository;
 
 /**
- * @phpstan-import-type TimberAppointmentArray from \App\Repository\TimberAppointmentRepository
- * @phpstan-import-type TimberRegistryEntryArray from \App\Repository\TimberAppointmentRepository
- * @phpstan-import-type TimberDispatchArray from \App\Repository\TimberAppointmentRepository
+ * @phpstan-import-type TimberAppointmentArray from \App\Entity\Timber\TimberAppointment
+ * @phpstan-import-type TimberRegistryEntryArray from \App\DTO\TimberRegistryEntryDTO
+ * @phpstan-import-type TimberDispatchArray from \App\Entity\Timber\TimberDispatchItem
  */
 final class TimberService
 {

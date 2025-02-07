@@ -11,35 +11,30 @@ use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\Bulk\BulkProduct;
 use App\Entity\Bulk\BulkQuality;
 use App\Service\BulkService;
+use ReflectionClass;
 
 /**
- * @phpstan-type BulkProductArray array{
- *                                  id: int,
- *                                  nom: string,
- *                                  couleur: string,
- *                                  unite: string,
- *                                  qualites?: BulkQualityArray[],
- *                                }
- * 
- * @phpstan-type BulkQualityArray array{
- *                                  id: int,
- *                                  produit: int,
- *                                  nom: string,
- *                                  couleur: string,
- *                                }
+ * @phpstan-import-type BulkProductArray from \App\Entity\Bulk\BulkProduct
+ * @phpstan-import-type BulkQualityArray from \App\Entity\Bulk\BulkQuality
  */
 final class BulkProductRepository extends Repository
 {
-    public function __construct(private BulkService $bulkService) {}
+    /** @var ReflectionClass<BulkProduct> */
+    private ReflectionClass $productReflector;
 
-    /**
-     * @var BulkProduct[]
-     */
+    /** @var ReflectionClass<BulkQuality> */
+    private ReflectionClass $qualityReflector;
+
+    public function __construct(private BulkService $bulkService)
+    {
+        $this->productReflector = new ReflectionClass(BulkProduct::class);
+        $this->qualityReflector = new ReflectionClass(BulkQuality::class);
+    }
+
+    /** @var array<int, BulkProduct> */
     static private array $productsCache = [];
 
-    /**
-     * @var BulkQuality[]
-     */
+    /** @var array<int, BulkQuality> */
     static private array $qualitiesCache = [];
 
     /**
@@ -49,7 +44,7 @@ final class BulkProductRepository extends Repository
      */
     public function productExists(int $id): bool
     {
-        return $this->mysql->exists("vrac_produits", $id);
+        return $this->mysql->exists('vrac_produits', $id);
     }
 
     /**
@@ -59,7 +54,7 @@ final class BulkProductRepository extends Repository
      */
     public function qualityExists(int $id): bool
     {
-        return $this->mysql->exists("vrac_qualites", $id);
+        return $this->mysql->exists('vrac_qualites', $id);
     }
 
     /**
@@ -79,7 +74,7 @@ final class BulkProductRepository extends Repository
             throw new DBException("Impossible de récupérer les produits vrac.");
         }
 
-        /** @phpstan-var BulkProductArray[] */
+        /** @var BulkProductArray[] */
         $productsRaw = $productsRequest->fetchAll();
 
         // Qualities
@@ -89,7 +84,7 @@ final class BulkProductRepository extends Repository
             throw new DBException("Impossible de récupérer les qualités vrac.");
         }
 
-        /** @phpstan-var BulkQualityArray[] */
+        /** @var BulkQualityArray[] */
         $qualitiesRaw = $qualitiesRequest->fetchAll();
 
         $products = \array_map(
@@ -97,7 +92,7 @@ final class BulkProductRepository extends Repository
                 $productRaw["qualites"] = array_values(
                     array_filter(
                         $qualitiesRaw,
-                        fn(array $qualityRaw) => $qualityRaw["produit"] === $productRaw["id"]
+                        fn($qualityRaw) => $qualityRaw["produit"] === $productRaw["id"]
                     )
                 );
 
@@ -108,7 +103,11 @@ final class BulkProductRepository extends Repository
             $productsRaw
         );
 
-        static::$productsCache = $products;
+        foreach ($products as $product) {
+            /** @var int */
+            $id = $product->id;
+            static::$productsCache[$id] = $product;
+        }
 
         return new Collection($products);
     }
@@ -122,43 +121,44 @@ final class BulkProductRepository extends Repository
      */
     public function fetchProduct(int $id): ?BulkProduct
     {
-        $cachedProducts = array_values(array_filter(
-            static::$productsCache,
-            fn(BulkProduct $cachedProduct) => $cachedProduct->id === $id
-        ));
-
-        $product = $cachedProducts[0] ?? null;
-
-        if ($product) {
-            return $product;
+        if (isset(static::$productsCache[$id])) {
+            return static::$productsCache[$id];
         }
 
-        // Product
-        $productStatement =
-            "SELECT
-                id,
-                nom,
-                couleur,
-                unite
-            FROM vrac_produits
-            WHERE id = :id";
+        if (!$this->productExists($id)) {
+            return null;
+        }
 
-        $productRequest = $this->mysql->prepare($productStatement);
-        $productRequest->execute(["id" => $id]);
-        $productRaw = $productRequest->fetch();
+        /** @var BulkProduct */
+        $product = $this->productReflector->newLazyProxy(
+            function () use ($id) {
+                $productStatement =
+                    "SELECT
+                        id,
+                        nom,
+                        couleur,
+                        unite
+                    FROM vrac_produits
+                    WHERE id = :id";
 
-        if (!\is_array($productRaw)) return null;
+                /** @var BulkProductArray */
+                $productRaw = $this->mysql
+                    ->prepareAndExecute($productStatement, ["id" => $id])
+                    ->fetch();
 
-        /** @phpstan-var BulkProductArray $productRaw */
+                $product = $this->bulkService->makeProductFromDatabase($productRaw);
 
-        $product = $this->bulkService->makeProductFromDatabase($productRaw);
+                $qualities = $this->fetchProductQualities($id);
 
-        // Qualities
-        $qualities = $this->fetchProductQualities($id);
+                $product->setQualities($qualities);
 
-        $product->setQualities($qualities);
+                return $product;
+            }
+        );
 
-        array_push(static::$productsCache, $product);
+        $this->productReflector->getProperty('id')->setRawValueWithoutLazyInitialization($product, $id);
+
+        static::$productsCache[$id] = $product;
 
         return $product;
     }
@@ -180,19 +180,23 @@ final class BulkProductRepository extends Repository
             FROM vrac_qualites
             WHERE produit = :productId";
 
-        $qualitiesRequest = $this->mysql->prepare($qualitiesStatement);
-        $qualitiesRequest->execute(["productId" => $productId]);
 
-        /** @phpstan-var BulkQualityArray[] */
-        $qualitiesRaw = $qualitiesRequest->fetchAll();
+        /** @var BulkQualityArray[] */
+        $qualitiesRaw = $this->mysql
+            ->prepareAndExecute($qualitiesStatement, ["productId" => $productId])
+            ->fetchAll();
 
         $qualities = \array_map(
-            fn(array $qualityRaw) => $this->bulkService->makeQualityFromDatabase($qualityRaw),
+            fn($qualityRaw) => $this->bulkService->makeQualityFromDatabase($qualityRaw),
             $qualitiesRaw
         );
 
         // Add qualities to cache
-        static::$qualitiesCache = \array_merge(static::$qualitiesCache, $qualities);
+        foreach ($qualities as $quality) {
+            /** @var int */
+            $id = $quality->id;
+            static::$qualitiesCache[$id] = $quality;
+        }
 
         return $qualities;
     }
@@ -206,37 +210,41 @@ final class BulkProductRepository extends Repository
      */
     public function fetchQuality(int $id): ?BulkQuality
     {
-        $cachedQualities = array_values(array_filter(
-            static::$qualitiesCache,
-            fn(BulkQuality $cachedQuality) => $cachedQuality->id === $id
-        ));
-
-        $quality = $cachedQualities[0] ?? null;
-
-        if ($quality) {
-            return $quality;
+        if (isset(static::$qualitiesCache[$id])) {
+            return static::$qualitiesCache[$id];
         }
 
-        $qualityStatement =
-            "SELECT
-                id,
-                nom,
-                couleur
-            FROM vrac_qualites
-            WHERE id = :id";
+        if (!$this->qualityExists($id)) {
+            return null;
+        }
 
-        // Product
-        $qualityRequest = $this->mysql->prepare($qualityStatement);
-        $qualityRequest->execute(["id" => $id]);
-        $qualityRaw = $qualityRequest->fetch();
+        /** @var BulkQuality */
+        $quality = $this->qualityReflector->newLazyProxy(
+            function () use ($id) {
+                $qualityStatement =
+                    "SELECT
+                        id,
+                        nom,
+                        couleur
+                    FROM vrac_qualites
+                    WHERE id = :id";
 
-        if (!\is_array($qualityRaw)) return null;
+                try {
+                    /** @var BulkQualityArray */
+                    $qualityRaw = $this->mysql
+                        ->prepareAndExecute($qualityStatement, ["id" => $id])
+                        ->fetch();
 
-        /** @phpstan-var BulkQualityArray $qualityRaw */
+                    return $this->bulkService->makeQualityFromDatabase($qualityRaw);
+                } catch (\PDOException $e) {
+                    throw new DBException("Erreur lors de la récupération de la qualité vrac.");
+                }
+            }
+        );
 
-        $quality = $this->bulkService->makeQualityFromDatabase($qualityRaw);
+        $this->qualityReflector->getProperty('id')->setRawValueWithoutLazyInitialization($quality, $id);
 
-        array_push(static::$qualitiesCache, $quality);
+        static::$qualitiesCache[$id] = $quality;
 
         return $quality;
     }

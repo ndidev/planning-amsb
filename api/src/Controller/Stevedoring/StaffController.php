@@ -144,6 +144,10 @@ final class StaffController extends Controller
             throw new NotFoundException("Le personnel de manutention n'existe pas.");
         }
 
+        if ($this->stevedoringService->staffIsDeleted($id)) {
+            throw new NotFoundException("Le personnel de manutention a été supprimé.");
+        }
+
         $requestBody = $this->request->getBody();
 
         $staff = $this->stevedoringService->updateStaff($id, $requestBody);
@@ -167,6 +171,10 @@ final class StaffController extends Controller
 
         if (!$this->stevedoringService->staffExists($id)) {
             throw new NotFoundException("Le personnel de manutention n'existe pas.");
+        }
+
+        if ($this->stevedoringService->staffIsDeleted($id)) {
+            throw new NotFoundException("Le personnel de manutention a déjà été supprimé.");
         }
 
         $this->stevedoringService->deleteStaff($id);
