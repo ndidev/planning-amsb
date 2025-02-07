@@ -12,17 +12,18 @@ use App\Entity\Port;
 use App\Service\PortService;
 
 /**
- * @phpstan-type PortArray array{
- *                           locode: string,
- *                           nom: string,
- *                           nom_affichage: string,
- *                         }
+ * @phpstan-import-type PortArray from \App\Entity\Port
  */
 final class PortRepository extends Repository
 {
     private string $redisNamespace = "ports";
 
     public function __construct(private PortService $portService) {}
+
+    public function portExists(string $locode): bool
+    {
+        return $this->mysql->exists('utils_ports', $locode, 'locode');
+    }
 
     /**
      * Récupère tous les ports.
@@ -64,21 +65,35 @@ final class PortRepository extends Repository
      * 
      * @param string $locode UNLOCODE du port à récupérer
      * 
-     * @return ?Port Port récupéré
+     * @return Port|PortArray|null Port récupéré
+     * 
+     * @phpstan-return ($returnRawData is false ? Port : PortArray)|null
      */
-    public function fetchPortByLocode(string $locode): ?Port
+    public function fetchPortByLocode(string $locode, bool $returnRawData = false): Port|array|null
     {
+        /** @var array<string, Port> */
+        static $cache = [];
+
+        if (isset($cache[$locode]) && !$returnRawData) {
+            return $cache[$locode];
+        }
+
         $statement = "SELECT * FROM utils_ports WHERE locode = :locode";
 
-        $request = $this->mysql->prepare($statement);
-        $request->execute(["locode" => $locode]);
-        $portRaw = $request->fetch();
+        /** @phpstan-var ?PortArray $portRaw */
+        $portRaw = $this->mysql
+            ->prepareAndExecute($statement, ["locode" => $locode])
+            ->fetch();
 
         if (!\is_array($portRaw)) return null;
 
-        /** @phpstan-var PortArray $portRaw */
+        if ($returnRawData) {
+            return $portRaw;
+        }
 
         $port = $this->portService->makePortFromDatabase($portRaw);
+
+        $cache[$locode] = $port;
 
         return $port;
     }

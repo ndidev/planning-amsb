@@ -12,7 +12,7 @@ use App\Entity\Port;
 use App\Repository\PortRepository;
 
 /**
- * @phpstan-import-type PortArray from \App\Repository\PortRepository
+ * @phpstan-import-type PortArray from \App\Entity\Port
  */
 final class PortService
 {
@@ -26,20 +26,18 @@ final class PortService
     /**
      * Creates a Port object from database data.
      * 
-     * @param array $rawData 
-     * 
-     * @phpstan-param PortArray $rawData
+     * @param PortArray $rawData 
      * 
      * @return Port 
      */
     public function makePortFromDatabase(array $rawData): Port
     {
-        $rawDataAH = new ArrayHandler($rawData);
+        return new Port($rawData);
+    }
 
-        return (new Port())
-            ->setLocode($rawDataAH->getString('locode'))
-            ->setName($rawDataAH->getString('nom'))
-            ->setDisplayName($rawDataAH->getString('nom_affichage'));
+    public function portExists(string $locode): bool
+    {
+        return $this->portRepository->portExists($locode);
     }
 
     /**
@@ -54,10 +52,31 @@ final class PortService
 
     public function getPort(?string $locode): ?Port
     {
+        /** @var array<string, Port> */
+        static $cache = [];
+
         if ($locode === null) {
             return null;
         }
 
-        return $this->portRepository->fetchPortByLocode($locode);
+        if (!$this->portExists($locode)) {
+            return null;
+        }
+
+        $reflector = new \ReflectionClass(Port::class);
+        $portRepository = $this->portRepository;
+        /** @var Port */
+        $port = $reflector->newLazyGhost(
+            function (Port $port) use ($locode, $portRepository) {
+                $data = $portRepository->fetchPortByLocode($locode, true);
+                $port->__construct($data);
+            }
+        );
+
+        $reflector->getProperty('locode')->setRawValueWithoutLazyInitialization($port, $locode);
+
+        $cache[$locode] = $port;
+
+        return $port;
     }
 }
