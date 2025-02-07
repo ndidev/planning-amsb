@@ -156,33 +156,11 @@ final class StevedoringService
 
     public function getEquipment(?int $id): ?StevedoringEquipment
     {
-        /** @var StevedoringEquipment[] */
-        static $cache = [];
-
         if (null === $id) {
             return null;
         }
 
-        if (isset($cache[$id])) {
-            return $cache[$id];
-        }
-
-        $reflector = new \ReflectionClass(StevedoringEquipment::class);
-        $stevedoringRepository = $this->stevedoringRepository;
-        /** @var StevedoringEquipment $equipment */
-        $equipment = $reflector->newLazyGhost(
-            function (StevedoringEquipment $equipment) use ($id, $stevedoringRepository) {
-                /** @var StevedoringEquipmentArray $data */
-                $data = $stevedoringRepository->fetchEquipment($id, true);
-                $equipment->__construct($data);
-            }
-        );
-
-        $reflector->getProperty('id')->setRawValueWithoutLazyInitialization($equipment, $id);
-
-        $cache[$id] = $equipment;
-
-        return $equipment;
+        return $this->stevedoringRepository->fetchEquipment($id);
     }
 
     public function createEquipment(HTTPRequestBody $requestBody): StevedoringEquipment

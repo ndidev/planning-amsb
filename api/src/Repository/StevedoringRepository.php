@@ -88,9 +88,13 @@ final class StevedoringRepository extends Repository
     /** @var ReflectionClass<StevedoringStaff> */
     private ReflectionClass $staffReflector;
 
+    /** @var ReflectionClass<StevedoringEquipment> */
+    private ReflectionClass $equipmentReflector;
+
     public function __construct(private StevedoringService $stevedoringService)
     {
         $this->staffReflector = new ReflectionClass(StevedoringStaff::class);
+        $this->equipmentReflector = new ReflectionClass(StevedoringEquipment::class);
     }
 
     // =====
@@ -348,55 +352,52 @@ final class StevedoringRepository extends Repository
         }
     }
 
-    /**
-     * @phpstan-return ($returnRawData is true ? StevedoringEquipmentArray|null : StevedoringEquipment|null)
-     */
-    public function fetchEquipment(int $id, bool $returnRawData = false): StevedoringEquipment|array|null
+    public function fetchEquipment(int $id): ?StevedoringEquipment
     {
-        /**
-         * @var StevedoringEquipment[]
-         */
+        /** @var array<int, StevedoringEquipment> */
         static $cache = [];
 
-        if (isset($cache[$id]) && !$returnRawData) {
+        if (isset($cache[$id])) {
             return $cache[$id];
         }
-
-        try {
-            $equipmentStatement =
-                "SELECT
-                id,
-                type,
-                brand,
-                model,
-                internal_number as `internalNumber`,
-                serial_number as `serialNumber`,
-                comments,
-                is_active as `isActive`
-             FROM stevedoring_equipments
-             WHERE id = :id";
-
-            /** @var ?StevedoringEquipmentArray */
-            $equipmentRaw = $this->mysql
-                ->prepareAndExecute($equipmentStatement, ['id' => $id])
-                ->fetch();
-
-            if (!\is_array($equipmentRaw)) {
-                return null;
-            }
-
-            if ($returnRawData) {
-                return $equipmentRaw;
-            }
-
-            $equipment = $this->stevedoringService->makeStevedoringEquipmentFromDatabase($equipmentRaw);
-
-            $cache[$id] = $equipment;
-
-            return $equipment;
-        } catch (\PDOException $e) {
-            throw new DBException("Impossible de récupérer l'équipement de manutention.", previous: $e);
+        if (!$this->equipmentExists($id)) {
+            return null;
         }
+
+        /** @var StevedoringEquipment */
+        $equipment = $this->equipmentReflector->newLazyProxy(
+            function () use ($id) {
+                try {
+                    $equipmentStatement =
+                        "SELECT
+                        id,
+                        type,
+                        brand,
+                        model,
+                        internal_number as `internalNumber`,
+                        serial_number as `serialNumber`,
+                        comments,
+                        is_active as `isActive`
+                     FROM stevedoring_equipments
+                     WHERE id = :id";
+
+                    /** @var StevedoringEquipmentArray */
+                    $equipmentRaw = $this->mysql
+                        ->prepareAndExecute($equipmentStatement, ['id' => $id])
+                        ->fetch();
+
+                    return $this->stevedoringService->makeStevedoringEquipmentFromDatabase($equipmentRaw);
+                } catch (\PDOException $e) {
+                    throw new DBException("Impossible de récupérer l'équipement de manutention.", previous: $e);
+                }
+            }
+        );
+
+        $this->equipmentReflector->getProperty('id')->setRawValueWithoutLazyInitialization($equipment, $id);
+
+        $cache[$id] = $equipment;
+
+        return $equipment;
     }
 
     public function createEquipment(StevedoringEquipment $equipment): StevedoringEquipment
