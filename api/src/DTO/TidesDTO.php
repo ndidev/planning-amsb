@@ -7,12 +7,17 @@ declare(strict_types=1);
 namespace App\DTO;
 
 /**
- * @phpstan-import-type TideArray from \App\Repository\TideRepository
+ * @phpstan-type TideArray array{
+ *                           date: string,
+ *                           heure: string,
+ *                           te_cesson: float,
+ *                           te_bassin: float
+ *                         }
  */
 final class TidesDTO implements \JsonSerializable
 {
     /**
-     * @phpstan-var list<TideArray>
+     * @var list<TideArray>
      */
     private array $tides = [];
 

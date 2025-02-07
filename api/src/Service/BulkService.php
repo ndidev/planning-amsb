@@ -23,10 +23,10 @@ use App\Repository\BulkAppointmentRepository;
 use App\Repository\BulkProductRepository;
 
 /**
- * @phpstan-import-type BulkAppointmentArray from \App\Repository\BulkAppointmentRepository
- * @phpstan-import-type BulkProductArray from \App\Repository\BulkProductRepository
- * @phpstan-import-type BulkQualityArray from \App\Repository\BulkProductRepository
- * @phpstan-import-type BulkDispatchArray from \App\Repository\BulkAppointmentRepository
+ * @phpstan-import-type BulkAppointmentArray from \App\Entity\Bulk\BulkAppointment
+ * @phpstan-import-type BulkProductArray from \App\Entity\Bulk\BulkProduct
+ * @phpstan-import-type BulkQualityArray from \App\Entity\Bulk\BulkQuality
+ * @phpstan-import-type BulkDispatchArray from \App\Entity\Bulk\BulkDispatchItem
  */
 final class BulkService
 {

@@ -12,6 +12,18 @@ use App\Core\Traits\ModuleTrait;
 use App\Entity\AbstractEntity;
 use App\Entity\ThirdParty;
 
+/**
+ * /**
+ * @phpstan-type PdfConfigArray array{
+ *                                id?: int,
+ *                                module?: string,
+ *                                fournisseur?: int,
+ *                                envoi_auto?: bool|int,
+ *                                liste_emails?: string|string[],
+ *                                jours_avant?: int,
+ *                                jours_apres?: int,
+ *                              }
+ */
 class PdfConfig extends AbstractEntity
 {
     use IdentifierTrait;

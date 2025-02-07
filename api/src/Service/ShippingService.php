@@ -254,7 +254,7 @@ final class ShippingService
     // ======
 
     /**
-     * @phpstan-return DraftsPerTonnage
+     * @return DraftsPerTonnage
      */
     public function getDraftsPerTonnage(): array
     {
@@ -296,9 +296,7 @@ final class ShippingService
     }
 
     /**
-     * @return array
-     * 
-     * @phpstan-return ShipsInOps
+     * @return ShipsInOps
      */
     public function getShipsInOps(
         \DateTimeInterface $startDate,

@@ -71,8 +71,7 @@ if (Security::checkIfRequestCanBeDone() === false) {
 
 /**
  * Routes de l'API.
- * @var list<array{0: string, 1: string}> $routes
- * @phpstan-var list<array{0: string, 1: class-string}> $routes
+ * @var list<array{0: string, 1: class-string}> $routes
  */
 $routes = [
     // Affichage général

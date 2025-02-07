@@ -14,7 +14,7 @@ use App\Core\Component\DateUtils;
 class ArrayHandler
 {
     /**
-     * @param array<mixed> $store 
+     * @param array<int|string, mixed> $store 
      */
     public function __construct(protected array &$store) {}
 

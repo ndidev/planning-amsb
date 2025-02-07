@@ -10,6 +10,17 @@ use App\Core\Validation\Constraints\Required;
 use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
 
+/**
+ * @phpstan-type BulkProductArray array{
+ *                                  id: int,
+ *                                  nom: string,
+ *                                  couleur: string,
+ *                                  unite: string,
+ *                                  qualites?: BulkQualityArray[],
+ *                                }
+ * 
+ * @phpstan-import-type BulkQualityArray from BulkQuality
+ */
 class BulkProduct extends AbstractEntity
 {
     use IdentifierTrait;

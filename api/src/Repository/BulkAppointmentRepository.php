@@ -17,31 +17,8 @@ use App\Entity\ThirdParty;
 use App\Service\BulkService;
 
 /**
- * @phpstan-type BulkAppointmentArray array{
- *                                      id: int,
- *                                      date_rdv: string,
- *                                      heure: ?string,
- *                                      produit: int,
- *                                      qualite: ?int,
- *                                      quantite: int,
- *                                      max: int,
- *                                      commande_prete: int,
- *                                      fournisseur: int,
- *                                      client: int,
- *                                      transporteur: ?int,
- *                                      num_commande: string,
- *                                      commentaire_public: string,
- *                                      commentaire_prive: string,
- *                                      show_on_tv: int,
- *                                      archive: int,
- *                                    }
- * 
- * @phpstan-type BulkDispatchArray array{
- *                                   appointment_id: int,
- *                                   staff_id: int,
- *                                   date: string,
- *                                   remarks: string,
- *                                 }
+ * @phpstan-import-type BulkAppointmentArray from \App\Entity\Bulk\BulkAppointment
+ * @phpstan-import-type BulkDispatchArray from \App\Entity\Bulk\BulkDispatchItem
  */
 final class BulkAppointmentRepository extends Repository
 {
@@ -54,7 +31,7 @@ final class BulkAppointmentRepository extends Repository
      */
     public function appointmentExists(int $id): bool
     {
-        return $this->mysql->exists("vrac_planning", $id);
+        return $this->mysql->exists('vrac_planning', $id);
     }
 
     /**

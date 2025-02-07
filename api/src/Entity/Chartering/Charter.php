@@ -14,11 +14,33 @@ use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
 use App\Entity\ThirdParty;
 
+/**
+ * @phpstan-type CharterArray array{
+ *                              id?: int,
+ *                              statut?: int,
+ *                              lc_debut?: string,
+ *                              lc_fin?: string,
+ *                              cp_date?: string,
+ *                              navire?: string,
+ *                              affreteur?: int,
+ *                              armateur?: int,
+ *                              courtier?: int,
+ *                              fret_achat?: float,
+ *                              fret_vente?: float,
+ *                              surestaries_achat?: float,
+ *                              surestaries_vente?: float,
+ *                              commentaire?: string,
+ *                              archive?: bool,
+ *                              legs?: CharterLegArray[]
+ *                            }
+ * 
+ * @phpstan-import-type CharterLegArray from CharterLeg
+ */
 class Charter extends AbstractEntity
 {
     use IdentifierTrait;
 
-    /** @phpstan-var CharterStatus::* $status */
+    /** @var CharterStatus::* $status */
     private int $status = CharterStatus::PENDING;
 
     private ?\DateTimeImmutable $laycanStart = null;

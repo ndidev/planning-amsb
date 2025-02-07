@@ -13,7 +13,7 @@ use App\Entity\ChartDatum;
 use App\Repository\ChartDatumRepository;
 
 /**
- * @phpstan-import-type ChartDatumArray from \App\Repository\ChartDatumRepository
+ * @phpstan-import-type ChartDatumArray from \App\Entity\ChartDatum
  */
 final class ChartDatumService
 {

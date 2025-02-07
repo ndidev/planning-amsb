@@ -14,6 +14,17 @@ use App\Core\Validation\Constraints\Required;
 use App\Core\Validation\ValidationResult;
 use App\Entity\AbstractEntity;
 
+/**
+ * @phpstan-type ShipReportSubcontractEntryArray array{
+ *                                                 id: int,
+ *                                                 ship_report_id: int,
+ *                                                 subcontractor_name: string,
+ *                                                 date: string,
+ *                                                 hours_worked: float|null,
+ *                                                 cost: float|null,
+ *                                                 comments: string,
+ *                                               }
+ */
 class ShipReportSubcontractEntry extends AbstractEntity
 {
     use IdentifierTrait;

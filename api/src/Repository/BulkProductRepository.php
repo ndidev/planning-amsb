@@ -13,20 +13,8 @@ use App\Entity\Bulk\BulkQuality;
 use App\Service\BulkService;
 
 /**
- * @phpstan-type BulkProductArray array{
- *                                  id: int,
- *                                  nom: string,
- *                                  couleur: string,
- *                                  unite: string,
- *                                  qualites?: BulkQualityArray[],
- *                                }
- * 
- * @phpstan-type BulkQualityArray array{
- *                                  id: int,
- *                                  produit: int,
- *                                  nom: string,
- *                                  couleur: string,
- *                                }
+ * @phpstan-import-type BulkProductArray from \App\Entity\Bulk\BulkProduct
+ * @phpstan-import-type BulkQualityArray from \App\Entity\Bulk\BulkQuality
  */
 final class BulkProductRepository extends Repository
 {

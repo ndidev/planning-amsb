@@ -8,6 +8,13 @@ namespace App\Entity;
 
 use App\Core\Validation\Constraints\PositiveNumber;
 
+/**
+ * @phpstan-type ChartDatumArray array{
+ *                                 cote?: string,
+ *                                 affichage?: string,
+ *                                 valeur?: float,
+ *                               }
+ */
 class ChartDatum extends AbstractEntity
 {
     private string $name = '';

@@ -10,6 +10,19 @@ use App\Core\Auth\AccountStatus;
 use App\Core\Auth\UserRoles;
 use App\Core\Component\DateUtils;
 
+/**
+ * @phpstan-type UserAccountArray array{
+ *                                  uid: string,
+ *                                  login: string,
+ *                                  nom: string,
+ *                                  can_login: int,
+ *                                  roles: string,
+ *                                  statut: string,
+ *                                  last_connection: ?string,
+ *                                  commentaire: string,
+ *                                  historique: string,
+ *                                }
+ */
 class UserAccount extends AbstractEntity
 {
     /**

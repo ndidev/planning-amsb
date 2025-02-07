@@ -14,6 +14,16 @@ use App\Core\Validation\Constraints\Required;
 use App\Entity\AbstractEntity;
 use App\Entity\Stevedoring\StevedoringEquipment;
 
+/**
+ * @phpstan-type ShipReportEquipmentEntryArray array{
+ *                                               id: int,
+ *                                               ship_report_id: int,
+ *                                               equipment_id: int,
+ *                                               date: string,
+ *                                               hours_worked: float,
+ *                                               comments: string,
+ *                                             }
+ */
 class ShipReportEquipmentEntry extends AbstractEntity
 {
     use IdentifierTrait;

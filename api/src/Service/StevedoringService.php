@@ -38,14 +38,14 @@ use Ds\Map;
 use Mpdf\Mpdf;
 
 /**
- * @phpstan-import-type ShipReportEquipmentEntryArray from \App\Repository\StevedoringRepository
- * @phpstan-import-type ShipReportStaffEntryArray from \App\Repository\StevedoringRepository
- * @phpstan-import-type ShipReportSubcontractEntryArray from \App\Repository\StevedoringRepository
- * @phpstan-import-type ShippingCallCargoArray from \App\Entity\Shipping\ShippingCallCargo
- * @phpstan-import-type ShipReportStorageEntryArray from \App\Repository\StevedoringRepository
  * @phpstan-import-type StevedoringStaffArray from \App\Entity\Stevedoring\StevedoringStaff
  * @phpstan-import-type StevedoringEquipmentArray from \App\Entity\Stevedoring\StevedoringEquipment
  * @phpstan-import-type ShipReportArray from \App\Entity\Stevedoring\ShipReport
+ * @phpstan-import-type ShipReportEquipmentEntryArray from \App\Entity\Stevedoring\ShipReportEquipmentEntry
+ * @phpstan-import-type ShipReportStaffEntryArray from \App\Entity\Stevedoring\ShipReportStaffEntry
+ * @phpstan-import-type ShipReportSubcontractEntryArray from \App\Entity\Stevedoring\ShipReportSubcontractEntry
+ * @phpstan-import-type ShipReportStorageEntryArray from \App\Entity\Stevedoring\ShipReportStorageEntry
+ * @phpstan-import-type ShippingCallCargoArray from \App\Entity\Shipping\ShippingCallCargo
  */
 final class StevedoringService
 {

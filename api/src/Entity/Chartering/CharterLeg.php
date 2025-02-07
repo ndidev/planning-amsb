@@ -12,6 +12,18 @@ use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
 use App\Entity\Port;
 
+/**
+ * @phpstan-type CharterLegArray array{
+ *                                 id?: int,
+ *                                 charter?: int,
+ *                                 bl_date?: string,
+ *                                 pol?: string,
+ *                                 pod?: string,
+ *                                 marchandise?: string,
+ *                                 quantite?: string,
+ *                                 commentaire?: string,
+ *                               }
+ */
 class CharterLeg extends AbstractEntity
 {
     use IdentifierTrait;

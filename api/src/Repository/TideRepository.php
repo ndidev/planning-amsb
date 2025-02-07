@@ -11,14 +11,7 @@ use App\DTO\TidesDTO;
 use const App\Core\Component\Constants\ONE_WEEK;
 
 /**
- * Repository for the tide data.
- * 
- * @phpstan-type TideArray array{
- *                           date: string,
- *                           heure: string,
- *                           te_cesson: float,
- *                           te_bassin: float
- *                         }
+ * @phpstan-import-type TideArray from \App\DTO\TidesDTO
  */
 final class TideRepository extends Repository
 {
@@ -62,7 +55,7 @@ final class TideRepository extends Repository
             }
         }
 
-        /** @phpstan-var list<TideArray> $tidesArray */
+        /** @var list<TideArray> $tidesArray */
 
         $tidesDTO = new TidesDTO($tidesArray);
 
@@ -93,7 +86,7 @@ final class TideRepository extends Repository
             }
         }
 
-        /** @phpstan-var list<TideArray> $tides */
+        /** @var list<TideArray> $tides */
 
         $tidesDTO = new TidesDTO($tides);
 

@@ -37,48 +37,13 @@ use App\Service\StevedoringService;
 use ReflectionClass;
 
 /**
- * @phpstan-type ShipReportEquipmentEntryArray array{
- *                                               id: int,
- *                                               ship_report_id: int,
- *                                               equipment_id: int,
- *                                               date: string,
- *                                               hours_worked: float,
- *                                               comments: string,
- *                                             }
- * 
- * @phpstan-type ShipReportStaffEntryArray array{
- *                                           id: int,
- *                                           ship_report_id: int,
- *                                           staff_id: int,
- *                                           date: string,
- *                                           hours_worked: float,
- *                                           comments: string,
- *                                         }
- * 
- * @phpstan-type ShipReportSubcontractEntryArray array{
- *                                                 id: int,
- *                                                 ship_report_id: int,
- *                                                 subcontractor_name: string,
- *                                                 date: string,
- *                                                 hours_worked: float|null,
- *                                                 cost: float|null,
- *                                                 comments: string,
- *                                               }
- * 
- * @phpstan-type ShipReportStorageEntryArray array{
- *                                             id: int,
- *                                             ship_report_id: int,
- *                                             cargo_id: int,
- *                                             storage_name: string,
- *                                             tonnage: float,
- *                                             volume: float,
- *                                             units: int,
- *                                             comments: string,
- *                                           }
- * 
  * @phpstan-import-type StevedoringStaffArray from \App\Entity\Stevedoring\StevedoringStaff
  * @phpstan-import-type StevedoringEquipmentArray from \App\Entity\Stevedoring\StevedoringEquipment
  * @phpstan-import-type ShipReportArray from \App\Entity\Stevedoring\ShipReport
+ * @phpstan-import-type ShipReportEquipmentEntryArray from \App\Entity\Stevedoring\ShipReportEquipmentEntry
+ * @phpstan-import-type ShipReportStaffEntryArray from \App\Entity\Stevedoring\ShipReportStaffEntry
+ * @phpstan-import-type ShipReportSubcontractEntryArray from \App\Entity\Stevedoring\ShipReportSubcontractEntry
+ * @phpstan-import-type ShipReportStorageEntryArray from \App\Entity\Stevedoring\ShipReportStorageEntry
  * @phpstan-import-type ShippingCallCargoArray from \App\Entity\Shipping\ShippingCallCargo
  * @phpstan-import-type CallWithoutReport from \App\DTO\CallWithoutReportDTO
  */

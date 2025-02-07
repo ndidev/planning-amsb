@@ -13,15 +13,7 @@ use App\Entity\Config\TimberQuickAppointmentAdd;
 use App\Service\QuickAppointmentAddService;
 
 /**
- * @phpstan-type TimberQuickAppointmentAddArray array{
- *                                                id: int|null,
- *                                                fournisseur: int,
- *                                                transporteur: int,
- *                                                affreteur: int,
- *                                                chargement: int,
- *                                                client: int,
- *                                                livraison: int,
- *                                              }
+ * @phpstan-import-type TimberQuickAppointmentAddArray from \App\Entity\Config\TimberQuickAppointmentAdd
  */
 final class QuickAppointmentAddRepository extends Repository
 {

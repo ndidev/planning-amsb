@@ -81,10 +81,10 @@ final class ThirdPartyRepository extends Repository
             return null;
         }
 
-        try {
-            /** @var ThirdParty */
-            $thirdParty = $this->reflector->newLazyProxy(
-                function () use ($id) {
+        /** @var ThirdParty */
+        $thirdParty = $this->reflector->newLazyProxy(
+            function () use ($id) {
+                try {
                     $statement = "SELECT * FROM tiers WHERE id = :id";
 
                     /** @var ThirdPartyArray */
@@ -93,17 +93,17 @@ final class ThirdPartyRepository extends Repository
                         ->fetch();
 
                     return $this->thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw);
+                } catch (\PDOException $e) {
+                    throw new DBException("Erreur lors de la récupération du tiers.", previous: $e);
                 }
-            );
+            }
+        );
 
-            $this->reflector->getProperty('id')->setRawValueWithoutLazyInitialization($thirdParty, $id);
+        $this->reflector->getProperty('id')->setRawValueWithoutLazyInitialization($thirdParty, $id);
 
-            $cache[$id] = $thirdParty;
+        $cache[$id] = $thirdParty;
 
-            return $thirdParty;
-        } catch (\PDOException $e) {
-            throw new DBException("Erreur lors de la récupération du tiers.", previous: $e);
-        }
+        return $thirdParty;
     }
 
     /**

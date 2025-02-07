@@ -14,6 +14,26 @@ use App\Core\Validation\ValidationResult;
 use App\Entity\AbstractEntity;
 use App\Entity\ThirdParty;
 
+/**
+ * @phpstan-type TimberAppointmentArray array{
+ *                                        id: int,
+ *                                        attente: bool,
+ *                                        date_rdv: string|null,
+ *                                        heure_arrivee: string|null,
+ *                                        heure_depart: string|null,
+ *                                        fournisseur: int|null,
+ *                                        chargement: int|null,
+ *                                        livraison: int|null,
+ *                                        client: int|null,
+ *                                        transporteur: int|null,
+ *                                        affreteur: int|null,
+ *                                        commande_prete: bool,
+ *                                        confirmation_affretement: bool,
+ *                                        numero_bl: string,
+ *                                        commentaire_public: string,
+ *                                        commentaire_cache: string,
+ *                                      }
+ */
 class TimberAppointment extends AbstractEntity
 {
     use IdentifierTrait;

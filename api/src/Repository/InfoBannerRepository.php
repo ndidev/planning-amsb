@@ -12,14 +12,7 @@ use App\Entity\Config\InfoBannerLine;
 use App\Service\InfoBannerService;
 
 /**
- * @phpstan-type InfoBannerLineArray array{
- *                                     id: int,
- *                                     module: string,
- *                                     pc: bool,
- *                                     tv: bool,
- *                                     message: string,
- *                                     couleur: string,
- *                                   }
+ * @phpstan-import-type InfoBannerLineArray from \App\Entity\Config\InfoBannerLine
  */
 final class InfoBannerRepository extends Repository
 {

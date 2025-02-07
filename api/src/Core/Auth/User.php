@@ -33,51 +33,33 @@ use const App\Core\Component\Constants\ONE_WEEK;
 /**
  * Classe contenant toutes les propriétés d'un compte utilisateur.
  * 
- * @package App\Core
+ * @property ?string $uid           UID de l'utilisateur.
+ * @property ?string $login         Identifiant de l'utilisateur.
+ * @property ?string $password      Hash du mot de passe.
+ * @property bool    $canLogin      `true` si le compte peut être utilisé pour se connecter (utilisateur normal).
+ *                                  `false` si le compte ne peut pas être utilisé pour se connecter (ex: compte "kiosque" type Raspberry Pi).
+ * @property string  $name          Nom de l'utilisateur.
+ * @property int     $loginAttempts Nombre de tentatives de connexion échouées.
+ * @property string  $status        Statut du compte de l'utilisateur.
+ * @property-read UserRoles $roles  Rôles de l'utilisateur.
  */
 class User
 {
-    /**
-     * UID de l'utilisateur.
-     */
     public ?string $uid = null;
 
-    /**
-     * Identifiant de l'utilisateur.
-     */
     public ?string $login = null;
 
-    /**
-     * Hash du mot de passe.
-     */
     public ?string $password;
 
-    /**
-     * `true` si le compte peut être utilisé pour se connecter (utilisateur normal).  
-     * `false` si le compte ne peut pas être utilisé pour se connecter (ex: compte "kiosque" type Raspberry Pi). 
-     */
     public bool $canLogin;
 
-    /**
-     * Nom de l'utilisateur.
-     */
     public string $name;
 
-    /**
-     * Nombre de tentatives de connexion échouées.
-     */
     public int $loginAttempts;
 
-    /**
-     * Statut du compte de l'utilisateur.
-     * 
-     * @phpstan-var AccountStatus::* $status
-     */
+    /** @phpstan-var AccountStatus::* $status */
     public string $status;
 
-    /**
-     * Rôles de l'utilisateur.
-     */
     public readonly UserRoles $roles;
 
     private Redis $redis;

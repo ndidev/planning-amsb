@@ -15,7 +15,7 @@ use App\Entity\Config\TimberQuickAppointmentAdd;
 use App\Repository\QuickAppointmentAddRepository;
 
 /**
- * @phpstan-import-type TimberQuickAppointmentAddArray from \App\Repository\QuickAppointmentAddRepository
+ * @phpstan-import-type TimberQuickAppointmentAddArray from \App\Entity\Config\TimberQuickAppointmentAdd
  */
 final class QuickAppointmentAddService
 {

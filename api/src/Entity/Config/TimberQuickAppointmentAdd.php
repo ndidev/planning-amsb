@@ -10,6 +10,17 @@ use App\Core\Validation\Constraints\Required;
 use App\Core\Component\Module;
 use App\Entity\ThirdParty;
 
+/**
+ * @phpstan-type TimberQuickAppointmentAddArray array{
+ *                                                id: int|null,
+ *                                                fournisseur: int,
+ *                                                transporteur: int,
+ *                                                affreteur: int,
+ *                                                chargement: int,
+ *                                                client: int,
+ *                                                livraison: int,
+ *                                              }
+ */
 class TimberQuickAppointmentAdd extends QuickAppointmentAdd
 {
     #[Required("Le fournisseur est obligatoire.")]

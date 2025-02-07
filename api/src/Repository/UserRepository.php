@@ -15,17 +15,7 @@ use App\Entity\UserAccount;
 use App\Service\UserService;
 
 /**
- * @phpstan-type UserAccountArray array{
- *                                  uid: string,
- *                                  login: string,
- *                                  nom: string,
- *                                  can_login: int,
- *                                  roles: string,
- *                                  statut: string,
- *                                  last_connection: ?string,
- *                                  commentaire: string,
- *                                  historique: string,
- *                                }
+ * @phpstan-import-type UserAccountArray from \App\Entity\UserAccount
  */
 final class UserRepository extends Repository
 {
@@ -33,7 +23,7 @@ final class UserRepository extends Repository
 
     public function userExists(string $uid): bool
     {
-        return $this->mysql->exists("admin_users", $uid, "uid");
+        return $this->mysql->exists('admin_users', $uid, 'uid');
     }
 
     /**

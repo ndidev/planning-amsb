@@ -12,6 +12,18 @@ use App\Core\Validation\Constraints\Required;
 use App\Entity\AbstractEntity;
 use App\Entity\Shipping\ShippingCallCargo;
 
+/**
+ * @phpstan-type ShipReportStorageEntryArray array{
+ *                                             id: int,
+ *                                             ship_report_id: int,
+ *                                             cargo_id: int,
+ *                                             storage_name: string,
+ *                                             tonnage: float,
+ *                                             volume: float,
+ *                                             units: int,
+ *                                             comments: string,
+ *                                           }
+ */
 class ShipReportStorageEntry extends AbstractEntity
 {
     use IdentifierTrait;

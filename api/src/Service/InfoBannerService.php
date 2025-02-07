@@ -15,7 +15,7 @@ use App\Entity\Config\InfoBannerLine;
 use App\Repository\InfoBannerRepository;
 
 /**
- * @phpstan-import-type InfoBannerLineArray from \App\Repository\InfoBannerRepository
+ * @phpstan-import-type InfoBannerLineArray from \App\Entity\Config\InfoBannerLine
  */
 final class InfoBannerService
 {

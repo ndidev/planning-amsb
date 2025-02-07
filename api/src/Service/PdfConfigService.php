@@ -24,7 +24,7 @@ use App\Repository\PdfConfigRepository;
 use PHPMailer\PHPMailer\Exception as PHPMailerException;
 
 /**
- * @phpstan-import-type PdfConfigArray from \App\Repository\PdfConfigRepository
+ * @phpstan-import-type PdfConfigArray from \App\Entity\Config\PdfConfig
  */
 final class PdfConfigService
 {

@@ -19,9 +19,6 @@ use App\Service\ShippingService;
 use ReflectionClass;
 
 /**
- * @phpstan-import-type ShippingCallArray from \App\Entity\Shipping\ShippingCall
- * @phpstan-import-type ShippingCallCargoArray from \App\Entity\Shipping\ShippingCallCargo
- * 
  * @phpstan-type DraftsPerTonnage list<array{
  *                                       navire: string,
  *                                       date: string,
@@ -35,25 +32,10 @@ use ReflectionClass;
  *                                 fin: string
  *                               }>
  * 
- * @phpstan-type ShippingStatsSummaryArray list<array{
- *                                                id: int,
- *                                                date: string
- *                                              }>
- * 
- * @phpstan-type ShippingStatsDetailsArray list<array{
- *                                           id: int,
- *                                           navire: string,
- *                                           ops_date: ?string,
- *                                           etc_date: ?string,
- *                                           marchandise: string,
- *                                           client: string,
- *                                           tonnage_bl: ?float,
- *                                           tonnage_outturn: ?float,
- *                                           cubage_bl: ?float,
- *                                           cubage_outturn: ?float,
- *                                           nombre_bl: ?float,
- *                                           nombre_outturn: ?float,
- *                                         }> 
+ * @phpstan-import-type ShippingCallArray from \App\Entity\Shipping\ShippingCall
+ * @phpstan-import-type ShippingCallCargoArray from \App\Entity\Shipping\ShippingCallCargo
+ * @phpstan-import-type ShippingStatsSummaryArray from \App\DTO\ShippingStatsSummaryDTO
+ * @phpstan-import-type ShippingStatsDetailsArray from \App\DTO\ShippingStatsDetailsDTO
  */
 final class ShippingRepository extends Repository
 {
@@ -709,24 +691,22 @@ final class ShippingRepository extends Repository
     /**
      * Récupère tous les tirants d'eau du planning consignation.
      * 
-     * @return array Tous les tirants d'eau récupérés
-     * 
-     * @phpstan-return DraftsPerTonnage
+     * @return DraftsPerTonnage Tous les tirants d'eau récupérés
      */
     public function fetchDraftsPerTonnage(): array
     {
-        $statement = "SELECT * FROM drafts_par_tonnage";
+        try {
+            $statement = "SELECT * FROM drafts_par_tonnage";
 
-        $draftsPerTonnageRequest = $this->mysql->query($statement);
+            /** @var DraftsPerTonnage */
+            $draftsPerTonnage = $this->mysql
+                ->prepareAndExecute($statement)
+                ->fetchAll();
 
-        if (!$draftsPerTonnageRequest) {
-            throw new DBException("Impossible de récupérer les tirants d'eau.");
+            return $draftsPerTonnage;
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer les tirants d'eau.", previous: $e);
         }
-
-        /** @phpstan-var DraftsPerTonnage $draftsPerTonnage */
-        $draftsPerTonnage = $draftsPerTonnageRequest->fetchAll();
-
-        return $draftsPerTonnage;
     }
 
     /**
