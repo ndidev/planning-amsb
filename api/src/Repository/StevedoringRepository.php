@@ -91,10 +91,14 @@ final class StevedoringRepository extends Repository
     /** @var ReflectionClass<StevedoringEquipment> */
     private ReflectionClass $equipmentReflector;
 
+    /** @var ReflectionClass<ShipReport> */
+    private ReflectionClass $shipReportReflector;
+
     public function __construct(private StevedoringService $stevedoringService)
     {
         $this->staffReflector = new ReflectionClass(StevedoringStaff::class);
         $this->equipmentReflector = new ReflectionClass(StevedoringEquipment::class);
+        $this->shipReportReflector = new ReflectionClass(ShipReport::class);
     }
 
     // =====
@@ -1105,7 +1109,7 @@ final class StevedoringRepository extends Repository
                 (`endDate` >= :startDate OR `endDate` IS NULL)";
 
         try {
-            /** @phpstan-var ShipReportArray[] */
+            /** @var ShipReportArray[] */
             $reportsRaw = $this->mysql
                 ->prepareAndExecute(
                     $statement,
@@ -1149,43 +1153,48 @@ final class StevedoringRepository extends Repository
             return $cache[$id];
         }
 
-        $reportStatement =
-            "SELECT
-                r.id,
-                r.is_archive as `isArchive`,
-                r.linked_shipping_call_id as `linkedShippingCallId`,
-                r.ship,
-                r.port,
-                r.berth,
-                r.comments,
-                r.invoice_instructions as `invoiceInstructions`
-             FROM stevedoring_ship_reports r
-             WHERE r.id = :id";
-
-        try {
-            /** @phpstan-var ?ShipReportArray */
-            $reportRaw = $this->mysql
-                ->prepareAndExecute($reportStatement, ['id' => $id])
-                ->fetch();
-
-            if (!\is_array($reportRaw)) {
-                return null;
-            }
-
-            $shipReport = $this->stevedoringService
-                ->makeShipReportFromDatabase($reportRaw)
-                ->setEquipmentEntries($this->fetchShipReportEquipmentEntriesForReport($id))
-                ->setStaffEntries($this->fetchShipReportStaffEntriesForReport($id))
-                ->setSubcontractEntries($this->fetchShipReportSubcontractEntriesForReport($id))
-                ->setCargoEntries($this->fetchCargoEntriesForReport($id))
-                ->setStorageEntries($this->fetchShipReportStorageEntriesForReport($id));
-
-            $cache[$id] = $shipReport;
-
-            return $shipReport;
-        } catch (\PDOException $e) {
-            throw new DBException("Impossible de récupérer le rapport navire.", previous: $e);
+        if (!$this->shipReportExists($id)) {
+            return null;
         }
+
+        /** @var ShipReport */
+        $shipReport = $this->shipReportReflector->newLazyProxy(
+            function () use ($id) {
+                $reportStatement =
+                    "SELECT
+                    r.id,
+                    r.is_archive as `isArchive`,
+                    r.linked_shipping_call_id as `linkedShippingCallId`,
+                    r.ship,
+                    r.port,
+                    r.berth,
+                    r.comments,
+                    r.invoice_instructions as `invoiceInstructions`
+                 FROM stevedoring_ship_reports r
+                 WHERE r.id = :id";
+
+                try {
+                    /** @var ShipReportArray */
+                    $reportRaw = $this->mysql
+                        ->prepareAndExecute($reportStatement, ['id' => $id])
+                        ->fetch();
+
+                    return $this->stevedoringService
+                        ->makeShipReportFromDatabase($reportRaw)
+                        ->setEquipmentEntries($this->fetchShipReportEquipmentEntriesForReport($id))
+                        ->setStaffEntries($this->fetchShipReportStaffEntriesForReport($id))
+                        ->setSubcontractEntries($this->fetchShipReportSubcontractEntriesForReport($id))
+                        ->setCargoEntries($this->fetchCargoEntriesForReport($id))
+                        ->setStorageEntries($this->fetchShipReportStorageEntriesForReport($id));
+                } catch (\PDOException $e) {
+                    throw new DBException("Impossible de récupérer le rapport navire.", previous: $e);
+                }
+            }
+        );
+
+        $cache[$id] = $shipReport;
+
+        return $shipReport;
     }
 
     public function createShipReport(ShipReport $report): ShipReport

@@ -477,29 +477,10 @@ final class StevedoringService
         return $this->stevedoringRepository->fetchAllShipReports($filter);
     }
 
-    public function getShipReport(?int $id, bool $lazy = false): ?ShipReport
+    public function getShipReport(?int $id): ?ShipReport
     {
         if ($id === null) {
             return null;
-        }
-
-        if ($lazy) {
-            if (!$this->shipReportExists($id)) {
-                return null;
-            }
-
-            $reflector = new \ReflectionClass(ShipReport::class);
-            $stevedoringRepository = $this->stevedoringRepository;
-            /** @var ShipReport $report */
-            $report = $reflector->newLazyGhost(
-                function (ShipReport $report) use ($id, $stevedoringRepository) {
-                    $report = $stevedoringRepository->fetchShipReport($id);
-                }
-            );
-
-            $reflector->getProperty('id')->setRawValueWithoutLazyInitialization($report, $id);
-
-            return $report;
         }
 
         return $this->stevedoringRepository->fetchShipReport($id);
