@@ -52,31 +52,10 @@ final class PortService
 
     public function getPort(?string $locode): ?Port
     {
-        /** @var array<string, Port> */
-        static $cache = [];
-
         if ($locode === null) {
             return null;
         }
 
-        if (!$this->portExists($locode)) {
-            return null;
-        }
-
-        $reflector = new \ReflectionClass(Port::class);
-        $portRepository = $this->portRepository;
-        /** @var Port */
-        $port = $reflector->newLazyGhost(
-            function (Port $port) use ($locode, $portRepository) {
-                $data = $portRepository->fetchPortByLocode($locode, true);
-                $port->__construct($data);
-            }
-        );
-
-        $reflector->getProperty('locode')->setRawValueWithoutLazyInitialization($port, $locode);
-
-        $cache[$locode] = $port;
-
-        return $port;
+        return $this->portRepository->fetchPortByLocode($locode);
     }
 }
