@@ -35,16 +35,6 @@ use App\Service\ShippingService;
 use App\Service\StevedoringService;
 
 /**
- * @phpstan-type ShipReportArray array{
- *                                 id: int,
- *                                 is_archive: bool,
- *                                 linked_shipping_call_id: int,
- *                                 ship: string,
- *                                 port: string,
- *                                 berth: string,
- *                                 comments: string,
- *                               }
- * 
  * @phpstan-type ShipReportEquipmentEntryArray array{
  *                                               id: int,
  *                                               ship_report_id: int,
@@ -88,6 +78,7 @@ use App\Service\StevedoringService;
  * 
  * @phpstan-import-type StevedoringStaffArray from \App\Entity\Stevedoring\StevedoringStaff
  * @phpstan-import-type StevedoringEquipmentArray from \App\Entity\Stevedoring\StevedoringEquipment
+ * @phpstan-import-type ShipReportArray from \App\Entity\Stevedoring\ShipReport
  * @phpstan-import-type CallWithoutReport from \App\DTO\CallWithoutReportDTO
  */
 final class StevedoringRepository extends Repository
@@ -1065,13 +1056,13 @@ final class StevedoringRepository extends Repository
             FROM (
                 SELECT
                     r.id,
-                    r.is_archive,
-                    r.linked_shipping_call_id,
+                    r.is_archive as `isArchive`,
+                    r.linked_shipping_call_id as `linkedShippingCallId`,
                     r.ship,
                     r.port,
                     r.berth,
                     r.comments,
-                    r.invoice_instructions,
+                    r.invoice_instructions as `invoiceInstructions`,
                     COALESCE(
                         (SELECT MIN(`date`)
                         FROM dates
@@ -1079,7 +1070,7 @@ final class StevedoringRepository extends Repository
                         (SELECT ops_date
                         FROM consignation_planning
                         WHERE id = r.linked_shipping_call_id)
-                    ) as `start_date`,
+                    ) as `startDate`,
                     COALESCE(
                         (SELECT MAX(`date`)
                         FROM dates
@@ -1087,7 +1078,7 @@ final class StevedoringRepository extends Repository
                         (SELECT etc_date
                         FROM consignation_planning
                         WHERE id = r.linked_shipping_call_id)
-                    ) as `end_date`
+                    ) as `endDate`
                 FROM stevedoring_ship_reports r
                 LEFT JOIN consignation_escales_marchandises cem ON cem.ship_report_id = r.id
                 LEFT JOIN stevedoring_ship_reports_storage storage ON storage.ship_report_id = r.id
@@ -1099,9 +1090,9 @@ final class StevedoringRepository extends Repository
                     r.id -- Group by to avoid duplicates
             ) as main_query
             WHERE
-                (`start_date` <= :endDate OR `start_date` IS NULL)
+                (`startDate` <= :endDate OR `startDate` IS NULL)
                 AND
-                (`end_date` >= :startDate OR `end_date` IS NULL)";
+                (`endDate` >= :startDate OR `endDate` IS NULL)";
 
         try {
             /** @phpstan-var ShipReportArray[] */
@@ -1116,7 +1107,7 @@ final class StevedoringRepository extends Repository
                 ->fetchAll();
 
             $shipReports = \array_map(
-                fn(array $reportRaw) => $this->stevedoringService->makeShipReportFromDatabase($reportRaw),
+                fn($reportRaw) => $this->stevedoringService->makeShipReportFromDatabase($reportRaw),
                 $reportsRaw
             );
 
@@ -1141,16 +1132,23 @@ final class StevedoringRepository extends Repository
 
     public function fetchShipReport(int $id): ?ShipReport
     {
+        /** @var array<int, ShipReport> */
+        static $cache = [];
+
+        if (isset($cache[$id])) {
+            return $cache[$id];
+        }
+
         $reportStatement =
             "SELECT
                 r.id,
-                r.is_archive,
-                r.linked_shipping_call_id,
+                r.is_archive as `isArchive`,
+                r.linked_shipping_call_id as `linkedShippingCallId`,
                 r.ship,
                 r.port,
                 r.berth,
                 r.comments,
-                r.invoice_instructions
+                r.invoice_instructions as `invoiceInstructions`
              FROM stevedoring_ship_reports r
              WHERE r.id = :id";
 
@@ -1171,6 +1169,8 @@ final class StevedoringRepository extends Repository
                 ->setSubcontractEntries($this->fetchShipReportSubcontractEntriesForReport($id))
                 ->setCargoEntries($this->fetchCargoEntriesForReport($id))
                 ->setStorageEntries($this->fetchShipReportStorageEntriesForReport($id));
+
+            $cache[$id] = $shipReport;
 
             return $shipReport;
         } catch (\PDOException $e) {

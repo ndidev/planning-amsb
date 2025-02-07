@@ -45,6 +45,7 @@ use Mpdf\Mpdf;
  * @phpstan-import-type ShipReportStorageEntryArray from \App\Repository\StevedoringRepository
  * @phpstan-import-type StevedoringStaffArray from \App\Entity\Stevedoring\StevedoringStaff
  * @phpstan-import-type StevedoringEquipmentArray from \App\Entity\Stevedoring\StevedoringEquipment
+ * @phpstan-import-type ShipReportArray from \App\Entity\Stevedoring\ShipReport
  */
 final class StevedoringService
 {
@@ -411,67 +412,23 @@ final class StevedoringService
     // ============
 
     /**
-     * @param array<mixed> $rawData 
+     * @param ShipReportArray $rawData 
      */
     public function makeShipReportFromDatabase(array $rawData): ShipReport
     {
         $rawDataAH = new ArrayHandler($rawData);
 
-        $stevedoringShipReport = new ShipReport();
-        $stevedoringShipReport->id = $rawDataAH->getInt('id');
-        $stevedoringShipReport->isArchive = $rawDataAH->getBool('is_archive');
-        $stevedoringShipReport->linkedShippingCall = new ShippingService()->getShippingCall($rawDataAH->getInt('linked_shipping_call_id'));
-        $stevedoringShipReport->ship = $rawDataAH->getString('ship');
-        $stevedoringShipReport->port = $rawDataAH->getString('port');
-        $stevedoringShipReport->berth = $rawDataAH->getString('berth');
-        $stevedoringShipReport->comments = $rawDataAH->getString('comments');
-        $stevedoringShipReport->invoiceInstructions = $rawDataAH->getString('invoice_instructions');
-        $stevedoringShipReport->startDate = $rawDataAH->getDatetime('start_date');
-        $stevedoringShipReport->endDate = $rawDataAH->getDatetime('end_date');
+        $stevedoringShipReport = new ShipReport($rawDataAH);
 
-        /** @phpstan-var ShipReportEquipmentEntryArray[] */
-        $equipmentEntries = $rawDataAH->getArray('equipment_entries');
-
-        $stevedoringShipReport->setEquipmentEntries(
-            \array_map(
-                fn(array $entry) => $this->makeShipReportEquipmentEntryFromDatabase($entry),
-                $equipmentEntries
-            )
-        );
-
-        /** @phpstan-var ShipReportStaffEntryArray[] */
-        $staffEntries = $rawDataAH->getArray('staff_entries');
-
-        $stevedoringShipReport->setStaffEntries(
-            \array_map(
-                fn(array $entry) => $this->makeShipReportStaffEntryFromDatabase($entry),
-                $staffEntries
-            )
-        );
-
-        /** @phpstan-var ShipReportSubcontractEntryArray[] */
-        $subcontractEntries = $rawDataAH->getArray('subcontract_entries');
-
-        $stevedoringShipReport->setSubcontractEntries(
-            \array_map(
-                fn(array $entry) => $this->makeShipReportSubcontractEntryFromDatabase($entry),
-                $subcontractEntries
-            )
-        );
+        $stevedoringShipReport->linkedShippingCall =
+            new ShippingService()->getShippingCall($rawDataAH->getInt('linkedShippingCallId'), true);
 
         return $stevedoringShipReport;
     }
 
     public function makeShipReportFromRequest(HTTPRequestBody $request): ShipReport
     {
-        $stevedoringShipReport = new ShipReport();
-        $stevedoringShipReport->id = $request->getInt('id');
-        $stevedoringShipReport->isArchive = $request->getBool('isArchive');
-        $stevedoringShipReport->ship = $request->getString('ship');
-        $stevedoringShipReport->port = $request->getString('port');
-        $stevedoringShipReport->berth = $request->getString('berth');
-        $stevedoringShipReport->comments = $request->getString('comments');
-        $stevedoringShipReport->invoiceInstructions = $request->getString('invoiceInstructions');
+        $stevedoringShipReport = new ShipReport($request);
 
         $linkedShippingCallId = $request->getInt('linkedShippingCallId');
 
@@ -559,10 +516,29 @@ final class StevedoringService
         return $this->stevedoringRepository->fetchAllShipReports($filter);
     }
 
-    public function getShipReport(?int $id): ?ShipReport
+    public function getShipReport(?int $id, bool $lazy = false): ?ShipReport
     {
         if ($id === null) {
             return null;
+        }
+
+        if ($lazy) {
+            if (!$this->shipReportExists($id)) {
+                return null;
+            }
+
+            $reflector = new \ReflectionClass(ShipReport::class);
+            $stevedoringRepository = $this->stevedoringRepository;
+            /** @var ShipReport $report */
+            $report = $reflector->newLazyGhost(
+                function (ShipReport $report) use ($id, $stevedoringRepository) {
+                    $report = $stevedoringRepository->fetchShipReport($id);
+                }
+            );
+
+            $reflector->getProperty('id')->setRawValueWithoutLazyInitialization($report, $id);
+
+            return $report;
         }
 
         return $this->stevedoringRepository->fetchShipReport($id);
