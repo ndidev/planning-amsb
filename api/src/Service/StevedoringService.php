@@ -43,6 +43,7 @@ use Mpdf\Mpdf;
  * @phpstan-import-type ShipReportSubcontractEntryArray from \App\Repository\StevedoringRepository
  * @phpstan-import-type ShippingCallCargoArray from \App\Repository\ShippingRepository
  * @phpstan-import-type ShipReportStorageEntryArray from \App\Repository\StevedoringRepository
+ * @phpstan-import-type StevedoringStaffArray from \App\Entity\Stevedoring\StevedoringStaff
  */
 final class StevedoringService
 {
@@ -58,43 +59,16 @@ final class StevedoringService
     // =====
 
     /**
-     * @param array<mixed> $rawData 
+     * @phpstan-param StevedoringStaffArray $rawData 
      */
     public function makeStevedoringStaffFromDatabase(array $rawData): StevedoringStaff
     {
-        $rawDataAH = new ArrayHandler($rawData);
-
-        $stevedoringStaff = new StevedoringStaff();
-        $stevedoringStaff->id = $rawDataAH->getInt('id');
-        $stevedoringStaff->firstname = $rawDataAH->getString('firstname');
-        $stevedoringStaff->lastname = $rawDataAH->getString('lastname');
-        $stevedoringStaff->phone = $rawDataAH->getString('phone');
-        $stevedoringStaff->type = $rawDataAH->getString('type');
-        $stevedoringStaff->tempWorkAgency = $rawDataAH->getString('temp_work_agency', null);
-        $stevedoringStaff->isActive = $rawDataAH->getBool('is_active');
-        $stevedoringStaff->comments = $rawDataAH->getString('comments');
-        $stevedoringStaff->deletedAt = $rawDataAH->getDatetime('deleted_at');
-
-        return $stevedoringStaff;
+        return new StevedoringStaff($rawData);
     }
 
     public function makeStevedoringStaffFromRequest(HTTPRequestBody $requestBody): StevedoringStaff
     {
-        $stevedoringStaff = new StevedoringStaff();
-        $stevedoringStaff->id = $requestBody->getInt('id');
-        $stevedoringStaff->firstname = $requestBody->getString('firstname');
-        $stevedoringStaff->lastname = $requestBody->getString('lastname');
-        $stevedoringStaff->phone = $requestBody->getString('phone');
-        $stevedoringStaff->type = $requestBody->getString('type');
-        $stevedoringStaff->tempWorkAgency = $requestBody->getString('tempWorkAgency', null);
-        $stevedoringStaff->isActive = $requestBody->getBool('isActive');
-        $stevedoringStaff->comments = $requestBody->getString('comments');
-
-        if ($stevedoringStaff->type === "cdi") {
-            $stevedoringStaff->tempWorkAgency = null;
-        }
-
-        return $stevedoringStaff;
+        return new StevedoringStaff($requestBody);
     }
 
     public function staffExists(int $id): bool
@@ -112,11 +86,33 @@ final class StevedoringService
 
     public function getStaff(?int $id): ?StevedoringStaff
     {
-        if ($id === null) {
+        /** @var StevedoringStaff[] */
+        static $cache = [];
+
+        if (null === $id) {
             return null;
         }
 
-        return $this->stevedoringRepository->fetchStaff($id);
+        if (isset($cache[$id])) {
+            return $cache[$id];
+        }
+
+        $reflector = new \ReflectionClass(StevedoringStaff::class);
+        $stevedoringRepository = $this->stevedoringRepository;
+        /** @var StevedoringStaff $staff */
+        $staff = $reflector->newLazyGhost(
+            function (StevedoringStaff $staff) use ($id, $stevedoringRepository) {
+                /** @var StevedoringStaffArray $data */
+                $data = $stevedoringRepository->fetchStaff($id, true);
+                $staff->__construct($data);
+            }
+        );
+
+        $reflector->getProperty('id')->setRawValueWithoutLazyInitialization($staff, $id);
+
+        $cache[$id] = $staff;
+
+        return $staff;
     }
 
     public function createStaff(HTTPRequestBody $requestBody): StevedoringStaff

@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Entity\Stevedoring;
 
+use App\Core\Array\ArrayHandler;
 use App\Core\Exceptions\Client\ValidationException;
 use App\Core\Traits\IdentifierTrait;
 use App\Core\Validation\Constraints\InArray;
@@ -13,6 +14,19 @@ use App\Core\Validation\Constraints\Required;
 use App\Core\Validation\ValidationResult;
 use App\Entity\AbstractEntity;
 
+/**
+ * @phpstan-type StevedoringStaffArray array{
+ *                                       id: ?int,
+ *                                       firstname: string,
+ *                                       lastname: string,
+ *                                       phone: string,
+ *                                       type: string,
+ *                                       tempWorkAgency: ?string,
+ *                                       isActive: bool,
+ *                                       comments: string,
+ *                                       deletedAt?: ?string
+ *                                     }
+ */
 class StevedoringStaff extends AbstractEntity implements \Stringable
 {
     use IdentifierTrait;
@@ -44,6 +58,31 @@ class StevedoringStaff extends AbstractEntity implements \Stringable
     public string $comments = '';
 
     public ?\DateTimeImmutable $deletedAt = null;
+
+    /**
+     * @param ArrayHandler|StevedoringStaffArray|null $data
+     */
+    public function __construct(ArrayHandler|array|null $data = null)
+    {
+        if (null === $data) {
+            return;
+        }
+
+        $dataAH = $data instanceof ArrayHandler ? $data : new ArrayHandler($data);
+
+        $this->id = $dataAH->getInt('id');
+        $this->firstname = $dataAH->getString('firstname');
+        $this->lastname = $dataAH->getString('lastname');
+        $this->phone = $dataAH->getString('phone');
+        $this->type = $dataAH->getString('type');
+        $this->tempWorkAgency = $dataAH->getString('tempWorkAgency', null);
+        $this->isActive = $dataAH->getBool('isActive');
+        $this->comments = $dataAH->getString('comments');
+
+        if ($this->type === "cdi") {
+            $this->tempWorkAgency = null;
+        }
+    }
 
     #[\Override]
     public function toArray(): array

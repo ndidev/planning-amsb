@@ -88,6 +88,7 @@ use RuntimeException;
  *                                             comments: string,
  *                                           }
  * 
+ * @phpstan-import-type StevedoringStaffArray from \App\Entity\Stevedoring\StevedoringStaff
  * @phpstan-import-type CallWithoutReport from \App\DTO\CallWithoutReportDTO
  */
 final class StevedoringRepository extends Repository
@@ -102,10 +103,9 @@ final class StevedoringRepository extends Repository
     {
         $statement = "SELECT deleted_at FROM stevedoring_staff WHERE id = :id";
 
-        $request = $this->mysql->prepare($statement);
-        $request->execute(['id' => $id]);
-
-        $response = $request->fetch(\PDO::FETCH_NUM);
+        $response = $this->mysql
+            ->prepareAndExecute($statement, ['id' => $id])
+            ->fetch(\PDO::FETCH_NUM);
 
         if (!is_array($response)) {
             return false;
@@ -126,61 +126,85 @@ final class StevedoringRepository extends Repository
         $sqlFilter = $filter->getSqlFilter();
 
         $staffStatement =
-            "SELECT *
+            "SELECT
+                id,
+                firstname,
+                lastname,
+                phone,
+                type,
+                temp_work_agency as `tempWorkAgency`,
+                is_active as `isActive`,
+                comments,
+                deleted_at as `deletedAt`
             FROM stevedoring_staff
             WHERE 1
                 $sqlFilter
             ORDER BY lastname ASC, firstname ASC";
 
-        $staffRequest = $this->mysql->query($staffStatement);
+        try {
+            /** @var StevedoringStaffArray[] */
+            $allStaffRaw = $this->mysql->prepareAndExecute($staffStatement)->fetchAll();
 
-        if (!$staffRequest) {
-            throw new DBException("Impossible de récupérer le personnel de manutention.");
+            $allStaff = \array_map(
+                fn($staff) => $this->stevedoringService->makeStevedoringStaffFromDatabase($staff),
+                $allStaffRaw
+            );
+
+            return new Collection($allStaff);
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer le personnel de manutention.", previous: $e);
         }
-
-        /** @var array<array<mixed>> */
-        $staffRaw = $staffRequest->fetchAll();
-
-        $allStaff = \array_map(
-            fn($staff) => $this->stevedoringService->makeStevedoringStaffFromDatabase($staff),
-            $staffRaw
-        );
-
-        return new Collection($allStaff);
     }
 
-    public function fetchStaff(int $id): ?StevedoringStaff
+    /**
+     * @phpstan-return ($returnRawData is true ? StevedoringStaffArray|null : StevedoringStaff|null)
+     */
+    public function fetchStaff(int $id, bool $returnRawData = false): StevedoringStaff|array|null
     {
         /**
          * @var StevedoringStaff[]
          */
         static $cache = [];
 
-        if (isset($cache[$id])) {
+        if (isset($cache[$id]) && !$returnRawData) {
             return $cache[$id];
         }
 
-        $staffStatement = "SELECT * FROM stevedoring_staff WHERE id = :id";
+        try {
+            $staffStatement =
+                "SELECT
+                    id,
+                    firstname,
+                    lastname,
+                    phone,
+                    type,
+                    temp_work_agency as `tempWorkAgency`,
+                    is_active as `isActive`,
+                    comments,
+                    deleted_at as `deletedAt`
+                FROM stevedoring_staff WHERE id = :id";
 
-        $staffRequest = $this->mysql->prepare($staffStatement);
+            /** @var ?StevedoringStaffArray */
+            $staffRaw = $this->mysql
+                ->prepareAndExecute($staffStatement, ['id' => $id])
+                ->fetch();
 
-        if (!$staffRequest) {
-            throw new DBException("Impossible de récupérer le personnel de manutention.");
+            if (!\is_array($staffRaw)) {
+                return null;
+            }
+
+            if ($returnRawData) {
+                return $staffRaw;
+            }
+
+            $staff = $this->stevedoringService->makeStevedoringStaffFromDatabase($staffRaw);
+
+            $cache[$id] = $staff;
+
+            return $staff;
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer le personnel de manutention.", previous: $e);
         }
-
-        $staffRequest->execute(['id' => $id]);
-
-        $staffRaw = $staffRequest->fetch();
-
-        if (!\is_array($staffRaw)) {
-            return null;
-        }
-
-        $staff = $this->stevedoringService->makeStevedoringStaffFromDatabase($staffRaw);
-
-        $cache[$id] = $staff;
-
-        return $staff;
     }
 
     public function createStaff(StevedoringStaff $staff): StevedoringStaff
@@ -197,15 +221,9 @@ final class StevedoringRepository extends Repository
                 comments = :comments";
 
         try {
-            $request = $this->mysql->prepare($statement);
-
-            if (!$request) {
-                throw new DBException("Impossible de créer le personnel de manutention.");
-            }
-
             $this->mysql->beginTransaction();
 
-            $request->execute([
+            $this->mysql->prepareAndExecute($statement, [
                 'firstname' => $staff->firstname,
                 'lastname' => $staff->lastname,
                 'phone' => $staff->phone,
@@ -218,15 +236,14 @@ final class StevedoringRepository extends Repository
             $lastInsertId = (int) $this->mysql->lastInsertId();
 
             $this->mysql->commit();
-        } catch (PDOException $e) {
+
+            $staff->id = $lastInsertId;
+
+            return $staff;
+        } catch (\PDOException $e) {
             $this->mysql->rollBack();
             throw new DBException("Impossible de créer le personnel de manutention.", previous: $e);
         }
-
-        /** @var StevedoringStaff */
-        $createdStaff = $this->fetchStaff($lastInsertId);
-
-        return $createdStaff;
     }
 
     public function updateStaff(StevedoringStaff $staff): StevedoringStaff
@@ -245,13 +262,7 @@ final class StevedoringRepository extends Repository
                 id = :id";
 
         try {
-            $request = $this->mysql->prepare($statement);
-
-            if (!$request) {
-                throw new DBException("Impossible de mettre à jour le personnel de manutention.");
-            }
-
-            $request->execute([
+            $this->mysql->prepareAndExecute($statement, [
                 'firstname' => $staff->firstname,
                 'lastname' => $staff->lastname,
                 'phone' => $staff->phone,
@@ -261,11 +272,11 @@ final class StevedoringRepository extends Repository
                 'comments' => $staff->comments,
                 'id' => $staff->id,
             ]);
-        } catch (PDOException $e) {
+
+            return $staff;
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de mettre à jour le personnel de manutention.", previous: $e);
         }
-
-        return $staff;
     }
 
     public function deleteStaff(int $id): void
@@ -282,15 +293,9 @@ final class StevedoringRepository extends Repository
             WHERE
                 id = :id";
 
-        $request = $this->mysql->prepare($statement);
-
-        if (!$request) {
-            throw new DBException("Impossible de supprimer le personnel de manutention.");
-        }
-
         try {
-            $request->execute(['id' => $id]);
-        } catch (PDOException $e) {
+            $this->mysql->prepareAndExecute($statement, ['id' => $id]);
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de supprimer le personnel de manutention.", previous: $e);
         }
     }
