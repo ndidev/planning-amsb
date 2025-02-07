@@ -89,6 +89,7 @@ use RuntimeException;
  *                                           }
  * 
  * @phpstan-import-type StevedoringStaffArray from \App\Entity\Stevedoring\StevedoringStaff
+ * @phpstan-import-type StevedoringEquipmentArray from \App\Entity\Stevedoring\StevedoringEquipment
  * @phpstan-import-type CallWithoutReport from \App\DTO\CallWithoutReportDTO
  */
 final class StevedoringRepository extends Repository
@@ -317,62 +318,87 @@ final class StevedoringRepository extends Repository
     public function fetchAllEquipments(): Collection
     {
         $equipmentStatement =
-            "SELECT *
+            "SELECT
+                id,
+                type,
+                brand,
+                model,
+                internal_number as `internalNumber`,
+                serial_number as `serialNumber`,
+                comments,
+                is_active as `isActive`
              FROM stevedoring_equipments
-             ORDER BY brand ASC, model ASC, internal_number ASC";
+             ORDER BY
+                brand ASC,
+                model ASC,
+                internal_number ASC";
 
-        $equipmentRequest = $this->mysql->query($equipmentStatement);
+        try {
+            /** @var StevedoringEquipmentArray[] */
+            $allEquipmentsRaw = $this->mysql
+                ->prepareAndExecute($equipmentStatement)
+                ->fetchAll();
 
-        if (!$equipmentRequest) {
-            throw new DBException("Impossible de récupérer les équipements de manutention.");
+            $allEquipment = \array_map(
+                fn($equipment) => $this->stevedoringService->makeStevedoringEquipmentFromDatabase($equipment),
+                $allEquipmentsRaw
+            );
+
+            return new Collection($allEquipment);
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer les équipements de manutention.", previous: $e);
         }
-
-        /** @var array<array<mixed>> */
-        $equipmentRaw = $equipmentRequest->fetchAll();
-
-        $allEquipment = \array_map(
-            fn($equipment) => $this->stevedoringService->makeStevedoringEquipmentFromDatabase($equipment),
-            $equipmentRaw
-        );
-
-        return new Collection($allEquipment);
     }
 
-    public function fetchEquipment(int $id): ?StevedoringEquipment
+    /**
+     * @phpstan-return ($returnRawData is true ? StevedoringEquipmentArray|null : StevedoringEquipment|null)
+     */
+    public function fetchEquipment(int $id, bool $returnRawData = false): StevedoringEquipment|array|null
     {
         /**
          * @var StevedoringEquipment[]
          */
         static $cache = [];
 
-        if (isset($cache[$id])) {
+        if (isset($cache[$id]) && !$returnRawData) {
             return $cache[$id];
         }
 
-        $equipmentStatement =
-            "SELECT *
+        try {
+            $equipmentStatement =
+                "SELECT
+                id,
+                type,
+                brand,
+                model,
+                internal_number as `internalNumber`,
+                serial_number as `serialNumber`,
+                comments,
+                is_active as `isActive`
              FROM stevedoring_equipments
              WHERE id = :id";
 
-        $equipmentRequest = $this->mysql->prepare($equipmentStatement);
+            /** @var ?StevedoringEquipmentArray */
+            $equipmentRaw = $this->mysql
+                ->prepareAndExecute($equipmentStatement, ['id' => $id])
+                ->fetch();
 
-        if (!$equipmentRequest) {
-            throw new DBException("Impossible de récupérer l'équipement de manutention.");
+            if (!\is_array($equipmentRaw)) {
+                return null;
+            }
+
+            if ($returnRawData) {
+                return $equipmentRaw;
+            }
+
+            $equipment = $this->stevedoringService->makeStevedoringEquipmentFromDatabase($equipmentRaw);
+
+            $cache[$id] = $equipment;
+
+            return $equipment;
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer l'équipement de manutention.", previous: $e);
         }
-
-        $equipmentRequest->execute(['id' => $id]);
-
-        $equipmentRaw = $equipmentRequest->fetch();
-
-        if (!\is_array($equipmentRaw)) {
-            return null;
-        }
-
-        $equipment = $this->stevedoringService->makeStevedoringEquipmentFromDatabase($equipmentRaw);
-
-        $cache[$id] = $equipment;
-
-        return $equipment;
     }
 
     public function createEquipment(StevedoringEquipment $equipment): StevedoringEquipment
@@ -388,16 +414,10 @@ final class StevedoringRepository extends Repository
                 comments = :comments,
                 is_active = :isActive";
 
-        $request = $this->mysql->prepare($statement);
-
-        if (!$request) {
-            throw new DBException("Impossible de créer l'équipement de manutention.");
-        }
-
         try {
             $this->mysql->beginTransaction();
 
-            $request->execute([
+            $this->mysql->prepareAndExecute($statement, [
                 'type' => $equipment->type,
                 'brand' => $equipment->brand,
                 'model' => $equipment->model,
@@ -409,16 +429,15 @@ final class StevedoringRepository extends Repository
 
             $lastInsertId = (int) $this->mysql->lastInsertId();
 
+            $equipment->id = $lastInsertId;
+
             $this->mysql->commit();
-        } catch (PDOException $e) {
+
+            return $equipment;
+        } catch (\PDOException $e) {
             $this->mysql->rollBack();
             throw new DBException("Impossible de créer l'équipement de manutention.", previous: $e);
         }
-
-        /** @var StevedoringEquipment */
-        $createdEquipment = $this->fetchEquipment($lastInsertId);
-
-        return $createdEquipment;
     }
 
     public function updateEquipment(StevedoringEquipment $equipment): StevedoringEquipment
@@ -436,14 +455,8 @@ final class StevedoringRepository extends Repository
             WHERE
                 id = :id";
 
-        $request = $this->mysql->prepare($statement);
-
-        if (!$request) {
-            throw new DBException("Impossible de mettre à jour l'équipement de manutention.");
-        }
-
         try {
-            $request->execute([
+            $this->mysql->prepareAndExecute($statement, [
                 'type' => $equipment->type,
                 'brand' => $equipment->brand,
                 'model' => $equipment->model,
@@ -453,11 +466,11 @@ final class StevedoringRepository extends Repository
                 'isActive' => (int) $equipment->isActive,
                 'id' => $equipment->id,
             ]);
-        } catch (PDOException $e) {
+
+            return $equipment;
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de mettre à jour l'équipement de manutention.", previous: $e);
         }
-
-        return $equipment;
     }
 
     public function deleteEquipment(int $id): void
@@ -469,9 +482,8 @@ final class StevedoringRepository extends Repository
 
         try {
             $deleteStatement = "DELETE FROM stevedoring_equipments WHERE id = :id";
-            $deleteRequest = $this->mysql->prepare($deleteStatement);
-            $deleteRequest->execute(['id' => $id]);
-        } catch (PDOException $e) {
+            $this->mysql->prepareAndExecute($deleteStatement, ['id' => $id]);
+        } catch (\PDOException $e) {
             throw new DBException("Erreur lors de la suppression.", previous: $e);
         }
     }
@@ -481,7 +493,7 @@ final class StevedoringRepository extends Repository
 
         $statement =
             "SELECT COUNT(*)
-             FROM stevedoring_ship_reports_equipment
+             FROM stevedoring_ship_reports_equipments
              WHERE equipment_id = :id";
 
         try {

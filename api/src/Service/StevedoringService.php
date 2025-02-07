@@ -44,6 +44,7 @@ use Mpdf\Mpdf;
  * @phpstan-import-type ShippingCallCargoArray from \App\Repository\ShippingRepository
  * @phpstan-import-type ShipReportStorageEntryArray from \App\Repository\StevedoringRepository
  * @phpstan-import-type StevedoringStaffArray from \App\Entity\Stevedoring\StevedoringStaff
+ * @phpstan-import-type StevedoringEquipmentArray from \App\Entity\Stevedoring\StevedoringEquipment
  */
 final class StevedoringService
 {
@@ -144,38 +145,16 @@ final class StevedoringService
     // =========
 
     /**
-     * @param array<mixed> $rawData
+     * @param StevedoringEquipmentArray $rawData
      */
     public function makeStevedoringEquipmentFromDatabase(array $rawData): StevedoringEquipment
     {
-        $rawDataAH = new ArrayHandler($rawData);
-
-        $stevedoringEquipment = new StevedoringEquipment();
-        $stevedoringEquipment->id = $rawDataAH->getInt('id');
-        $stevedoringEquipment->type = $rawDataAH->getString('type');
-        $stevedoringEquipment->brand = $rawDataAH->getString('brand');
-        $stevedoringEquipment->model = $rawDataAH->getString('model');
-        $stevedoringEquipment->internalNumber = $rawDataAH->getString('internal_number');
-        $stevedoringEquipment->serialNumber = $rawDataAH->getString('serial_number');
-        $stevedoringEquipment->comments = $rawDataAH->getString('comments');
-        $stevedoringEquipment->isActive = $rawDataAH->getBool('is_active');
-
-        return $stevedoringEquipment;
+        return new StevedoringEquipment($rawData);
     }
 
     public function makeStevedoringEquipmentFromRequest(HTTPRequestBody $requestBody): StevedoringEquipment
     {
-        $stevedoringEquipment = new StevedoringEquipment();
-        $stevedoringEquipment->id = $requestBody->getInt('id');
-        $stevedoringEquipment->type = $requestBody->getString('type');
-        $stevedoringEquipment->brand = $requestBody->getString('brand');
-        $stevedoringEquipment->model = $requestBody->getString('model');
-        $stevedoringEquipment->internalNumber = $requestBody->getString('internalNumber');
-        $stevedoringEquipment->serialNumber = $requestBody->getString('serialNumber');
-        $stevedoringEquipment->comments = $requestBody->getString('comments');
-        $stevedoringEquipment->isActive = $requestBody->getBool('isActive');
-
-        return $stevedoringEquipment;
+        return new StevedoringEquipment($requestBody);
     }
 
     public function equipmentExists(int $id): bool
@@ -193,11 +172,33 @@ final class StevedoringService
 
     public function getEquipment(?int $id): ?StevedoringEquipment
     {
-        if ($id === null) {
+        /** @var StevedoringEquipment[] */
+        static $cache = [];
+
+        if (null === $id) {
             return null;
         }
 
-        return $this->stevedoringRepository->fetchEquipment($id);
+        if (isset($cache[$id])) {
+            return $cache[$id];
+        }
+
+        $reflector = new \ReflectionClass(StevedoringEquipment::class);
+        $stevedoringRepository = $this->stevedoringRepository;
+        /** @var StevedoringEquipment $equipment */
+        $equipment = $reflector->newLazyGhost(
+            function (StevedoringEquipment $equipment) use ($id, $stevedoringRepository) {
+                /** @var StevedoringEquipmentArray $data */
+                $data = $stevedoringRepository->fetchEquipment($id, true);
+                $equipment->__construct($data);
+            }
+        );
+
+        $reflector->getProperty('id')->setRawValueWithoutLazyInitialization($equipment, $id);
+
+        $cache[$id] = $equipment;
+
+        return $equipment;
     }
 
     public function createEquipment(HTTPRequestBody $requestBody): StevedoringEquipment
