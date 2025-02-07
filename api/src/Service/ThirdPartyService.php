@@ -15,7 +15,7 @@ use App\Entity\ThirdParty;
 use App\Repository\ThirdPartyRepository;
 
 /**
- * @phpstan-import-type ThirdPartyArray from \App\Repository\ThirdPartyRepository
+ * @phpstan-import-type ThirdPartyArray from \App\Entity\ThirdParty
  */
 final class ThirdPartyService
 {
@@ -31,9 +31,7 @@ final class ThirdPartyService
     /**
      * Creates a ThirdParty object from raw data.
      * 
-     * @param array $rawData 
-     * 
-     * @phpstan-param ThirdPartyArray $rawData
+     * @param ThirdPartyArray $rawData 
      * 
      * @return ThirdParty 
      */
@@ -41,39 +39,14 @@ final class ThirdPartyService
     {
         $rawDataAH = new ArrayHandler($rawData);
 
-        $thirdParty = (new ThirdParty())
-            ->setId($rawDataAH->getInt('id'))
-            ->setShortName($rawDataAH->getString('nom_court'))
-            ->setFullName($rawDataAH->getString('nom_complet'))
-            ->setAddressLine1($rawDataAH->getString('adresse_ligne_1'))
-            ->setAddressLine2($rawDataAH->getString('adresse_ligne_2'))
-            ->setPostCode($rawDataAH->getString('cp'))
-            ->setCity($rawDataAH->getString('ville'))
-            ->setCountry($this->countryService->getCountry($rawDataAH->getString('pays')))
-            ->setPhone($rawDataAH->getString('telephone'))
-            ->setComments($rawDataAH->getString('commentaire'))
-            ->setNonEditable($rawDataAH->getBool('non_modifiable', false))
-            ->setIsAgency($rawDataAH->getBool('lie_agence', false))
-            ->setActive($rawDataAH->getBool('actif', true));
+        $thirdParty = new ThirdParty($rawDataAH);
+
+        $thirdParty->setCountry($this->countryService->getCountry($rawDataAH->getString('pays')));
 
         // Logo
         $logoData = $rawDataAH->get('logo');
         if (\is_string($logoData) || null === $logoData) {
             $thirdParty->setLogo($logoData);
-        }
-
-        // Roles
-        $rolesString = $rawDataAH->getString('roles', '{}', false);
-        $roles = \json_decode($rolesString, true);
-
-        if (!\is_array($roles)) {
-            $roles = [];
-        }
-
-        $rolesAH = new ArrayHandler($roles);
-
-        foreach ($thirdParty->getRoles() as $role => $default) {
-            $thirdParty->setRole($role, $rolesAH->getBool($role, $default));
         }
 
         return $thirdParty;
@@ -88,20 +61,9 @@ final class ThirdPartyService
      */
     public function makeThirdPartyFromForm(HTTPRequestBody $requestBody): ThirdParty
     {
-        $thirdParty = (new ThirdParty())
-            ->setId($requestBody->getInt('id'))
-            ->setShortName($requestBody->getString('nom_court'))
-            ->setFullName($requestBody->getString('nom_complet'))
-            ->setAddressLine1($requestBody->getString('adresse_ligne_1'))
-            ->setAddressLine2($requestBody->getString('adresse_ligne_2'))
-            ->setPostCode($requestBody->getString('cp'))
-            ->setCity($requestBody->getString('ville'))
-            ->setCountry($this->countryService->getCountry($requestBody->getString('pays')))
-            ->setPhone($requestBody->getString('telephone'))
-            ->setComments($requestBody->getString('commentaire'))
-            ->setNonEditable($requestBody->getBool('non_modifiable'))
-            ->setIsAgency($requestBody->getBool('lie_agence'))
-            ->setActive($requestBody->getBool('actif', true));
+        $thirdParty = new ThirdParty($requestBody);
+
+        $thirdParty->setCountry($this->countryService->getCountry($requestBody->getString('pays')));
 
         // Logo
         $logoData = $requestBody->get('logo');
@@ -109,16 +71,6 @@ final class ThirdPartyService
             $thirdParty->setLogo($this->saveLogo($logoData));
         } else {
             $thirdParty->setLogo(false);
-        }
-
-        // Roles
-        $rolesInRequest = $requestBody->getArray('roles');
-        $rolesAH = new ArrayHandler($rolesInRequest);
-
-        foreach (array_keys($thirdParty->getRoles()) as $role) {
-            if ($rolesAH->isSet($role)) {
-                $thirdParty->setRole($role, $rolesAH->getBool($role));
-            }
         }
 
         return $thirdParty;

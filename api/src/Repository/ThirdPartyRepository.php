@@ -13,28 +13,17 @@ use App\Entity\ThirdParty;
 use App\Service\ThirdPartyService;
 
 /**
- * @phpstan-type ThirdPartyArray array{
- *                                id: int,
- *                                nom_court: string,
- *                                nom_complet: string,
- *                                adresse_ligne_1: string,
- *                                adresse_ligne_2: string,
- *                                cp: string,
- *                                ville: string,
- *                                pays: string,
- *                                telephone: string,
- *                                commentaire: string,
- *                                non_modifiable: bool,
- *                                lie_agence: bool,
- *                                roles: string,
- *                                logo: string,
- *                                actif: bool,
- *                                nombre_rdv?: int
- *                              }
+ * @phpstan-import-type ThirdPartyArray from \App\Entity\ThirdParty
  */
 final class ThirdPartyRepository extends Repository
 {
-    public function __construct(private ThirdPartyService $thirdPartyService) {}
+    /** @var \ReflectionClass<ThirdParty> */
+    private \ReflectionClass $reflector;
+
+    public function __construct(private ThirdPartyService $thirdPartyService)
+    {
+        $this->reflector = new \ReflectionClass(ThirdParty::class);
+    }
 
     /**
      * Vérifie si une entrée existe dans la base de données.
@@ -61,11 +50,11 @@ final class ThirdPartyRepository extends Repository
             throw new DBException("Impossible de récupérer les tiers.");
         }
 
-        /** @phpstan-var ThirdPartyArray[] $thirdPartiesRaw */
+        /** @var ThirdPartyArray[] */
         $thirdPartiesRaw = $thirdPartiesRequest->fetchAll();
 
         $thirdParties = \array_map(
-            fn(array $thirdPartyRaw) => $this->thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw),
+            fn($thirdPartyRaw) => $this->thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw),
             $thirdPartiesRaw
         );
 
@@ -81,19 +70,40 @@ final class ThirdPartyRepository extends Repository
      */
     public function fetchThirdParty(int $id): ?ThirdParty
     {
-        $statement = "SELECT * FROM tiers WHERE id = :id";
+        /** @var array<int, ThirdParty> */
+        static $cache = [];
 
-        $request = $this->mysql->prepare($statement);
-        $request->execute(["id" => $id]);
-        $thirdPartyRaw = $request->fetch();
+        if (isset($cache[$id])) {
+            return $cache[$id];
+        }
 
-        if (!\is_array($thirdPartyRaw)) return null;
+        if (!$this->thirdPartyExists($id)) {
+            return null;
+        }
 
-        /** @phpstan-var ThirdPartyArray $thirdPartyRaw */
+        try {
+            /** @var ThirdParty */
+            $thirdParty = $this->reflector->newLazyProxy(
+                function () use ($id) {
+                    $statement = "SELECT * FROM tiers WHERE id = :id";
 
-        $thirdParty = $this->thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw);
+                    /** @var ThirdPartyArray */
+                    $thirdPartyRaw = $this->mysql
+                        ->prepareAndExecute($statement, ["id" => $id])
+                        ->fetch();
 
-        return $thirdParty;
+                    return $this->thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw);
+                }
+            );
+
+            $this->reflector->getProperty('id')->setRawValueWithoutLazyInitialization($thirdParty, $id);
+
+            $cache[$id] = $thirdParty;
+
+            return $thirdParty;
+        } catch (\PDOException $e) {
+            throw new DBException("Erreur lors de la récupération du tiers.", previous: $e);
+        }
     }
 
     /**
