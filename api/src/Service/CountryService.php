@@ -47,31 +47,10 @@ final class CountryService
 
     public function getCountry(string $iso): ?Country
     {
-        /** @var array<string, Country> */
-        static $cache = [];
-
         if (!$iso) {
             return null;
         }
 
-        if (isset($cache[$iso])) {
-            return $cache[$iso];
-        }
-
-        $reflector = new \ReflectionClass(Country::class);
-        $countryRepository = $this->countryRepository;
-        /** @var Country */
-        $country = $reflector->newLazyGhost(
-            function (Country $country) use ($iso, $countryRepository) {
-                $data = $countryRepository->fetchByIso($iso, true);
-                $country->__construct($data);
-            }
-        );
-
-        $reflector->getProperty('iso')->setRawValueWithoutLazyInitialization($country, $iso);
-
-        $cache[$iso] = $country;
-
-        return $country;
+        return $this->countryRepository->fetchByIso($iso);
     }
 }

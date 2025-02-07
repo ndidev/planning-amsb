@@ -16,9 +16,20 @@ use App\Service\CountryService;
  */
 final class CountryRepository extends Repository
 {
+    /** @var \ReflectionClass<Country> */
+    private \ReflectionClass $reflector;
+
     private string $redisNamespace = "countries";
 
-    public function __construct(private CountryService $countryService) {}
+    public function __construct(private CountryService $countryService)
+    {
+        $this->reflector = new \ReflectionClass(Country::class);
+    }
+
+    public function countryExists(string $iso): bool
+    {
+        return $this->mysql->exists('utils_pays', $iso, 'iso');
+    }
 
     /**
      * Fetches all countries.
@@ -65,47 +76,49 @@ final class CountryRepository extends Repository
      * 
      * @param string $iso ISO code of the country to fetch.
      * 
-     * @return Country|CountryArray|null Fetched country.
-     * 
-     * @phpstan-return ($returnRawData is false ? Country : CountryArray)|null
+     * @return ?Country Fetched country.
      */
-    public function fetchByIso(string $iso, bool $returnRawData = false): Country|array|null
+    public function fetchByIso(string $iso): ?Country
     {
         /** @var array<string, Country> */
         static $cache = [];
 
-        if (isset($cache[$iso]) && !$returnRawData) {
+        if (isset($cache[$iso])) {
             return $cache[$iso];
         }
 
-        // Redis
-        $redisValue = $this->redis->get("{$this->redisNamespace}:{$iso}");
-        $countryRaw = \is_string($redisValue) ? \json_decode($redisValue, true) : null;
+        if (!$this->countryExists($iso)) {
+            return null;
+        }
 
-        if (!\is_array($countryRaw)) {
-            $statement = "SELECT * FROM utils_pays  WHERE iso = :iso";
+        /** @var Country */
+        $country = $this->reflector->newLazyProxy(
+            function () use ($iso) {
+                try {
+                    // Redis
+                    $redisValue = $this->redis->get("{$this->redisNamespace}:{$iso}");
+                    $countryRaw = \is_string($redisValue) ? \json_decode($redisValue, true) : null;
 
-            $countryRequest = $this->mysql->prepare($statement);
+                    if (!\is_array($countryRaw)) {
+                        $statement = "SELECT * FROM utils_pays  WHERE iso = :iso";
 
-            if (!$countryRequest) {
-                throw new DBException("Impossible de récupérer le pays.");
+                        $countryRaw = $this->mysql
+                            ->prepareAndExecute($statement, ["iso" => $iso])
+                            ->fetch();
+
+                        $this->redis->set("{$this->redisNamespace}:{$iso}", \json_encode($countryRaw));
+                    }
+
+                    /** @var CountryArray $countryRaw */
+
+                    return $this->countryService->makeCountryFromDatabase($countryRaw);
+                } catch (\Throwable $th) {
+                    throw new DBException("Impossible de récupérer le pays.", previous: $th);
+                }
             }
+        );
 
-            $countryRequest->execute(["iso" => $iso]);
-            $countryRaw = $countryRequest->fetch();
-
-            if (!\is_array($countryRaw)) return null;
-
-            $this->redis->set("{$this->redisNamespace}:{$iso}", \json_encode($countryRaw));
-        }
-
-        /** @phpstan-var CountryArray $countryRaw */
-
-        if ($returnRawData) {
-            return $countryRaw;
-        }
-
-        $country = $this->countryService->makeCountryFromDatabase($countryRaw);
+        $this->reflector->getProperty('iso')->setRawValueWithoutLazyInitialization($country, $iso);
 
         $cache[$iso] = $country;
 
