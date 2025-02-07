@@ -16,12 +16,6 @@ use App\Entity\Shipping\ShippingCall;
 use App\Entity\Shipping\ShippingCallCargo;
 
 /**
- * @phpstan-import-type ShipReportEquipmentEntryArray from \App\Repository\StevedoringRepository
- * @phpstan-import-type ShipReportStaffEntryArray from \App\Repository\StevedoringRepository
- * @phpstan-import-type ShipReportSubcontractEntryArray from \App\Repository\StevedoringRepository
- * @phpstan-import-type ShippingCallCargoArray from \App\Repository\ShippingRepository
- * @phpstan-import-type ShipReportStorageEntryArray from \App\Repository\StevedoringRepository
- * 
  * @phpstan-type ShipReportArray array{
  *                                 id: int,
  *                                 isArchive: bool,

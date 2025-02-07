@@ -65,8 +65,6 @@ use ReflectionClass;
  *                                                 comments: string,
  *                                               }
  * 
- * @phpstan-import-type ShippingCallCargoArray from \App\Repository\ShippingRepository
- * 
  * @phpstan-type ShipReportStorageEntryArray array{
  *                                             id: int,
  *                                             ship_report_id: int,
@@ -81,6 +79,7 @@ use ReflectionClass;
  * @phpstan-import-type StevedoringStaffArray from \App\Entity\Stevedoring\StevedoringStaff
  * @phpstan-import-type StevedoringEquipmentArray from \App\Entity\Stevedoring\StevedoringEquipment
  * @phpstan-import-type ShipReportArray from \App\Entity\Stevedoring\ShipReport
+ * @phpstan-import-type ShippingCallCargoArray from \App\Entity\Shipping\ShippingCallCargo
  * @phpstan-import-type CallWithoutReport from \App\DTO\CallWithoutReportDTO
  */
 final class StevedoringRepository extends Repository
@@ -1228,6 +1227,20 @@ final class StevedoringRepository extends Repository
 
             $report->id = (int) $this->mysql->lastInsertId();
 
+            if ($report->linkedShippingCall) {
+                $this->mysql->prepareAndExecute(
+                    "UPDATE consignation_planning
+                     SET
+                        stevedoring_ship_report_id = :reportId
+                     WHERE
+                        id = :callId",
+                    [
+                        'reportId' => $report->id,
+                        'callId' => $report->linkedShippingCall->id,
+                    ]
+                );
+            }
+
             // Equipment entries
             foreach ($report->equipmentEntries as $equipmentEntry) {
                 $equipmentEntry->id = $this->createShipReportEquipmentEntry($equipmentEntry)->id;
@@ -1336,6 +1349,20 @@ final class StevedoringRepository extends Repository
                     'id' => $report->id,
                 ]
             );
+
+            if ($report->linkedShippingCall) {
+                $this->mysql->prepareAndExecute(
+                    "UPDATE consignation_planning
+                     SET
+                        stevedoring_ship_report_id = :reportId
+                     WHERE
+                        id = :callId",
+                    [
+                        'reportId' => $report->id,
+                        'callId' => $report->linkedShippingCall->id,
+                    ]
+                );
+            }
 
             // Equipment entries
             // Delete entries that are not in the new list

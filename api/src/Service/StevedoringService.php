@@ -41,7 +41,7 @@ use Mpdf\Mpdf;
  * @phpstan-import-type ShipReportEquipmentEntryArray from \App\Repository\StevedoringRepository
  * @phpstan-import-type ShipReportStaffEntryArray from \App\Repository\StevedoringRepository
  * @phpstan-import-type ShipReportSubcontractEntryArray from \App\Repository\StevedoringRepository
- * @phpstan-import-type ShippingCallCargoArray from \App\Repository\ShippingRepository
+ * @phpstan-import-type ShippingCallCargoArray from \App\Entity\Shipping\ShippingCallCargo
  * @phpstan-import-type ShipReportStorageEntryArray from \App\Repository\StevedoringRepository
  * @phpstan-import-type StevedoringStaffArray from \App\Entity\Stevedoring\StevedoringStaff
  * @phpstan-import-type StevedoringEquipmentArray from \App\Entity\Stevedoring\StevedoringEquipment
@@ -382,7 +382,7 @@ final class StevedoringService
         $stevedoringShipReport = new ShipReport($rawDataAH);
 
         $stevedoringShipReport->linkedShippingCall =
-            new ShippingService()->getShippingCall($rawDataAH->getInt('linkedShippingCallId'), true);
+            new ShippingService()->getShippingCall($rawDataAH->getInt('linkedShippingCallId'));
 
         return $stevedoringShipReport;
     }
@@ -394,7 +394,8 @@ final class StevedoringService
         $linkedShippingCallId = $request->getInt('linkedShippingCallId');
 
         if ($linkedShippingCallId !== null) {
-            $stevedoringShipReport->linkedShippingCall = new ShippingService()->getShippingCall($linkedShippingCallId);
+            $stevedoringShipReport->linkedShippingCall =
+                new ShippingService()->getShippingCall($linkedShippingCallId);
 
             if (!$stevedoringShipReport->linkedShippingCall) {
                 throw new BadRequestException("L'escale consignation {$linkedShippingCallId} n'existe pas.");

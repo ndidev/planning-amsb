@@ -17,20 +17,22 @@ use App\Entity\Shipping\ShippingCallCargo;
 use App\Repository\ShippingRepository;
 
 /**
- * @phpstan-import-type ShippingCallArray from \App\Repository\ShippingRepository
- * @phpstan-import-type ShippingCallCargoArray from \App\Repository\ShippingRepository
+ * @phpstan-import-type ShippingCallArray from \App\Entity\Shipping\ShippingCall
+ * @phpstan-import-type ShippingCallCargoArray from \App\Entity\Shipping\ShippingCallCargo
  * @phpstan-import-type DraftsPerTonnage from \App\Repository\ShippingRepository
  * @phpstan-import-type ShipsInOps from \App\Repository\ShippingRepository
  */
 final class ShippingService
 {
     private ShippingRepository $shippingRepository;
+    private StevedoringService $stevedoringService;
     private ThirdPartyService $thirdPartyService;
     private PortService $portService;
 
     public function __construct()
     {
         $this->shippingRepository = new ShippingRepository($this);
+        $this->stevedoringService = new StevedoringService();
         $this->thirdPartyService = new ThirdPartyService();
         $this->portService = new PortService();
     }
@@ -42,9 +44,7 @@ final class ShippingService
     /**
      * Creates a ShippingCall object from database data.
      * 
-     * @param array $rawData Raw data from the database.
-     * 
-     * @phpstan-param ShippingCallArray $rawData
+     * @param ShippingCallArray $rawData Raw data from the database.
      * 
      * @return ShippingCall
      */
@@ -52,34 +52,14 @@ final class ShippingService
     {
         $rawDataAH = new ArrayHandler($rawData);
 
-        $shippingCall = (new ShippingCall())
-            ->setId($rawDataAH->getInt('id'))
-            ->setShipName($rawDataAH->getString('navire'))
-            ->setVoyage($rawDataAH->getString('voyage'))
+        $shippingCall = new ShippingCall($rawDataAH)
             ->setShipOperator($this->thirdPartyService->getThirdParty($rawDataAH->getInt('armateur')))
-            ->setEtaDate($rawDataAH->getDatetime('eta_date'))
-            ->setEtaTime($rawDataAH->getString('eta_heure'))
-            ->setNorDate($rawDataAH->getDatetime('nor_date'))
-            ->setNorTime($rawDataAH->getString('nor_heure'))
-            ->setPobDate($rawDataAH->getDatetime('pob_date'))
-            ->setPobTime($rawDataAH->getString('pob_heure'))
-            ->setEtbDate($rawDataAH->getDatetime('etb_date'))
-            ->setEtbTime($rawDataAH->getString('etb_heure'))
-            ->setOpsDate($rawDataAH->getDatetime('ops_date'))
-            ->setOpsTime($rawDataAH->getString('ops_heure'))
-            ->setEtcDate($rawDataAH->getDatetime('etc_date'))
-            ->setEtcTime($rawDataAH->getString('etc_heure'))
-            ->setEtdDate($rawDataAH->getDatetime('etd_date'))
-            ->setEtdTime($rawDataAH->getString('etd_heure'))
-            ->setArrivalDraft($rawDataAH->getFloat('te_arrivee'))
-            ->setDepartureDraft($rawDataAH->getFloat('te_depart'))
             ->setLastPort($this->portService->getPort($rawDataAH->getString('last_port', null)))
-            ->setNextPort($this->portService->getPort($rawDataAH->getString('next_port', null)))
-            ->setCallPort($rawDataAH->getString('call_port'))
-            ->setQuay($rawDataAH->getString('quai'))
-            ->setComment($rawDataAH->getString('commentaire'));
+            ->setNextPort($this->portService->getPort($rawDataAH->getString('next_port', null)));
 
-        /** @phpstan-var ShippingCallCargoArray[] */
+        $shippingCall->shipReport = $this->stevedoringService->getShipReport($rawDataAH->getInt('stevedoringShipReportId'));
+
+        /** @var ShippingCallCargoArray[] */
         $cargoesRaw = $rawDataAH->getArray('marchandises');
 
         $shippingCall->setCargoes(
@@ -101,34 +81,14 @@ final class ShippingService
      */
     public function makeShippingCallFromRequest(HTTPRequestBody $requestBody): ShippingCall
     {
-        $shippingCall = (new ShippingCall())
-            ->setId($requestBody->getInt('id'))
-            ->setShipName($requestBody->getString('navire', 'TBN'))
-            ->setVoyage($requestBody->getString('voyage'))
+        $shippingCall = new ShippingCall($requestBody)
             ->setShipOperator($this->thirdPartyService->getThirdParty($requestBody->getInt('armateur')))
-            ->setEtaDate($requestBody->getDatetime('eta_date'))
-            ->setEtaTime($requestBody->getString('eta_heure'))
-            ->setNorDate($requestBody->getDatetime('nor_date'))
-            ->setNorTime($requestBody->getString('nor_heure'))
-            ->setPobDate($requestBody->getDatetime('pob_date'))
-            ->setPobTime($requestBody->getString('pob_heure'))
-            ->setEtbDate($requestBody->getDatetime('etb_date'))
-            ->setEtbTime($requestBody->getString('etb_heure'))
-            ->setOpsDate($requestBody->getDatetime('ops_date'))
-            ->setOpsTime($requestBody->getString('ops_heure'))
-            ->setEtcDate($requestBody->getDatetime('etc_date'))
-            ->setEtcTime($requestBody->getString('etc_heure'))
-            ->setEtdDate($requestBody->getDatetime('etd_date'))
-            ->setEtdTime($requestBody->getString('etd_heure'))
-            ->setArrivalDraft($requestBody->getFloat('te_arrivee'))
-            ->setDepartureDraft($requestBody->getFloat('te_depart'))
             ->setLastPort($this->portService->getPort($requestBody->getString('last_port', null)))
-            ->setNextPort($this->portService->getPort($requestBody->getString('next_port', null)))
-            ->setCallPort($requestBody->getString('call_port'))
-            ->setQuay($requestBody->getString('quai'))
-            ->setComment($requestBody->getString('commentaire'));
+            ->setNextPort($this->portService->getPort($requestBody->getString('next_port', null)));
 
-        /** @phpstan-var ShippingCallCargoArray[] $cargoes */
+        $shippingCall->shipReport = $this->stevedoringService->getShipReport($requestBody->getInt('shipReportId'));
+
+        /** @var ShippingCallCargoArray[] $cargoes */
         $cargoes = $requestBody->getArray('marchandises');
 
         $shippingCall->setCargoes(
