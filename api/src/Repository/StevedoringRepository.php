@@ -33,8 +33,6 @@ use App\Entity\Stevedoring\StevedoringStaff;
 use App\Entity\Stevedoring\TempWorkHoursEntry;
 use App\Service\ShippingService;
 use App\Service\StevedoringService;
-use PDOException;
-use RuntimeException;
 
 /**
  * @phpstan-type ShipReportArray array{
@@ -508,7 +506,7 @@ final class StevedoringRepository extends Repository
             $count = $request->fetchColumn();
 
             return (int) $count;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer l'historique de cet équipement.", previous: $e);
         }
     }
@@ -710,7 +708,7 @@ final class StevedoringRepository extends Repository
             );
 
             return new Collection($tempWorkHours);
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les heures des intérimaires.", previous: $e);
         }
     }
@@ -741,7 +739,7 @@ final class StevedoringRepository extends Repository
             $tempWorkHoursEntry->details = \trim($this->fetchDetailsForTempWorkHoursEntry($tempWorkHoursEntry));
 
             return $tempWorkHoursEntry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les heures de l'intérimaire.", previous: $e);
         }
     }
@@ -888,7 +886,7 @@ final class StevedoringRepository extends Repository
             );
 
             return new Collection($tempWorkHours);
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les heures de l'intérimaire.", previous: $e);
         }
     }
@@ -923,7 +921,7 @@ final class StevedoringRepository extends Repository
             $entry->details = $this->fetchDetailsForTempWorkHoursEntry($entry);
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             if ($this->mysql->inTransaction()) {
                 $this->mysql->rollBack();
             }
@@ -967,7 +965,7 @@ final class StevedoringRepository extends Repository
             $entry->details = $this->fetchDetailsForTempWorkHoursEntry($entry);
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             if ($this->mysql->inTransaction()) {
                 $this->mysql->rollBack();
             }
@@ -991,7 +989,7 @@ final class StevedoringRepository extends Repository
                 "DELETE FROM stevedoring_temp_work_hours WHERE id = :id",
                 ['id' => $id]
             );
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Erreur lors de la suppression.", previous: $e);
         }
     }
@@ -1029,7 +1027,7 @@ final class StevedoringRepository extends Repository
             $tempWorkHoursReportDataDto = new TempWorkHoursReportDataDTO($rawData);
 
             return $tempWorkHoursReportDataDto;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les heures de travail.", previous: $e);
         }
     }
@@ -1136,7 +1134,7 @@ final class StevedoringRepository extends Repository
 
 
             return new Collection($shipReports);
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les rapports navires.", previous: $e);
         }
     }
@@ -1175,7 +1173,7 @@ final class StevedoringRepository extends Repository
                 ->setStorageEntries($this->fetchShipReportStorageEntriesForReport($id));
 
             return $shipReport;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer le rapport navire.", previous: $e);
         }
     }
@@ -1277,12 +1275,8 @@ final class StevedoringRepository extends Repository
 
             $this->mysql->commit();
 
-            /** @var ShipReport */
-            // $createdReport = $this->fetchShipReport($report->id);
-
-            // return $createdReport;
             return $report;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             throw new DBException("Impossible de créer le rapport navire.", previous: $e);
@@ -1461,7 +1455,7 @@ final class StevedoringRepository extends Repository
             $this->mysql->commit();
 
             return $report;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             throw new DBException("Impossible de mettre à jour le rapport navire.", previous: $e);
@@ -1484,7 +1478,7 @@ final class StevedoringRepository extends Repository
                 "DELETE FROM stevedoring_ship_reports WHERE id = :id",
                 ['id' => $id]
             );
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Erreur lors de la suppression.", previous: $e);
         }
     }
@@ -1496,7 +1490,7 @@ final class StevedoringRepository extends Repository
      * @return ShipReportEquipmentEntry[]  
      * 
      * @throws DBException 
-     * @throws RuntimeException 
+     * @throws \RuntimeException 
      */
     private function fetchShipReportEquipmentEntriesForReport(int $reportId): array
     {
@@ -1524,7 +1518,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $entries;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les entrées d'équipement.", previous: $e);
         }
     }
@@ -1535,7 +1529,7 @@ final class StevedoringRepository extends Repository
      * 
      * @return ShipReportEquipmentEntry 
      * 
-     * @throws PDOException 
+     * @throws \PDOException 
      * @throws BadRequestException 
      * @throws DBException 
      */
@@ -1567,7 +1561,7 @@ final class StevedoringRepository extends Repository
             $entry->id = (int) $this->mysql->lastInsertId();
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
@@ -1589,7 +1583,7 @@ final class StevedoringRepository extends Repository
      * 
      * @return ShipReportEquipmentEntry 
      * 
-     * @throws PDOException 
+     * @throws \PDOException 
      * @throws BadRequestException 
      * @throws DBException 
      */
@@ -1622,7 +1616,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
@@ -1645,7 +1639,7 @@ final class StevedoringRepository extends Repository
      * @return ShipReportStaffEntry[]  
      * 
      * @throws DBException 
-     * @throws RuntimeException 
+     * @throws \RuntimeException 
      */
     private function fetchShipReportStaffEntriesForReport(int $reportId): array
     {
@@ -1678,7 +1672,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $entries;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les entrées de personnel.", previous: $e);
         }
     }
@@ -1689,7 +1683,7 @@ final class StevedoringRepository extends Repository
      * 
      * @return ShipReportStaffEntry 
      * 
-     * @throws PDOException 
+     * @throws \PDOException 
      * @throws BadRequestException 
      * @throws DBException 
      */
@@ -1721,7 +1715,7 @@ final class StevedoringRepository extends Repository
             $entry->id = (int) $this->mysql->lastInsertId();
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
@@ -1743,7 +1737,7 @@ final class StevedoringRepository extends Repository
      * 
      * @return ShipReportStaffEntry 
      * 
-     * @throws PDOException 
+     * @throws \PDOException 
      * @throws BadRequestException 
      * @throws DBException 
      */
@@ -1776,7 +1770,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
@@ -1799,7 +1793,7 @@ final class StevedoringRepository extends Repository
      * @return ShipReportSubcontractEntry[] 
      *  
      * @throws DBException 
-     * @throws RuntimeException 
+     * @throws \RuntimeException 
      */
     private function fetchShipReportSubcontractEntriesForReport(int $reportId): array
     {
@@ -1831,7 +1825,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $entries;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les entrées de personnel.", previous: $e);
         }
     }
@@ -1842,7 +1836,7 @@ final class StevedoringRepository extends Repository
      * 
      * @return ShipReportSubcontractEntry 
      * 
-     * @throws PDOException 
+     * @throws \PDOException 
      * @throws BadRequestException 
      * @throws DBException 
      */
@@ -1876,7 +1870,7 @@ final class StevedoringRepository extends Repository
             $entry->id = (int) $this->mysql->lastInsertId();
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
@@ -1898,7 +1892,7 @@ final class StevedoringRepository extends Repository
      * 
      * @return ShipReportSubcontractEntry 
      * 
-     * @throws PDOException 
+     * @throws \PDOException 
      * @throws BadRequestException 
      * @throws DBException 
      */
@@ -1933,7 +1927,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
@@ -1956,7 +1950,7 @@ final class StevedoringRepository extends Repository
      * @return ShippingCallCargo[]  
      * 
      * @throws DBException 
-     * @throws RuntimeException 
+     * @throws \RuntimeException 
      */
     private function fetchCargoEntriesForReport(int $reportId): array
     {
@@ -1977,7 +1971,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $entries;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les marchandises.", previous: $e);
         }
     }
@@ -1988,7 +1982,7 @@ final class StevedoringRepository extends Repository
      * 
      * @return ShippingCallCargo 
      * 
-     * @throws PDOException 
+     * @throws \PDOException 
      * @throws DBException 
      */
     private function createCargoEntry(ShippingCallCargo $entry): ShippingCallCargo
@@ -2029,7 +2023,7 @@ final class StevedoringRepository extends Repository
             $entry->id = (int) $this->mysql->lastInsertId();
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             throw new DBException("Impossible de créer la marchandise {$entry->cargoName}.", previous: $e);
@@ -2042,7 +2036,7 @@ final class StevedoringRepository extends Repository
      * 
      * @return ShippingCallCargo 
      * 
-     * @throws PDOException 
+     * @throws \PDOException 
      * @throws DBException 
      */
     private function updateCargoEntry(ShippingCallCargo $entry): ShippingCallCargo
@@ -2084,7 +2078,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             throw new DBException("Impossible de modifier la marchandise {$entry->cargoName}.", previous: $e);
@@ -2098,7 +2092,7 @@ final class StevedoringRepository extends Repository
      * @return ShipReportStorageEntry[]
      *  
      * @throws DBException 
-     * @throws RuntimeException 
+     * @throws \RuntimeException 
      */
     private function fetchShipReportStorageEntriesForReport(int $reportId): array
     {
@@ -2127,7 +2121,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $entries;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les entrées de personnel.", previous: $e);
         }
     }
@@ -2138,7 +2132,7 @@ final class StevedoringRepository extends Repository
      * 
      * @return ShipReportStorageEntry 
      * 
-     * @throws PDOException 
+     * @throws \PDOException 
      * @throws BadRequestException 
      * @throws DBException 
      */
@@ -2172,7 +2166,7 @@ final class StevedoringRepository extends Repository
             $entry->id = (int) $this->mysql->lastInsertId();
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
@@ -2195,7 +2189,7 @@ final class StevedoringRepository extends Repository
      * 
      * @return ShipReportStorageEntry 
      * 
-     * @throws PDOException 
+     * @throws \PDOException 
      * @throws BadRequestException 
      * @throws DBException 
      */
@@ -2230,7 +2224,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $entry;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
@@ -2306,7 +2300,7 @@ final class StevedoringRepository extends Repository
             );
 
             return $filterDataDto;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les données de filtre.", previous: $e);
         }
     }
@@ -2425,7 +2419,7 @@ final class StevedoringRepository extends Repository
                 ->fetchAll();
 
             return new StevedoringSubcontractorsDataDTO($subcontractorsData);
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les données des sous-traitants.", previous: $e);
         }
     }
