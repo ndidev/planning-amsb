@@ -78,6 +78,11 @@ final class StevedoringService
         return $this->stevedoringRepository->staffExists($id);
     }
 
+    public function staffIsDeleted(int $id): bool
+    {
+        return $this->stevedoringRepository->staffIsDeleted($id);
+    }
+
     /**
      * @return Collection<StevedoringStaff>
      */
@@ -88,33 +93,11 @@ final class StevedoringService
 
     public function getStaff(?int $id): ?StevedoringStaff
     {
-        /** @var StevedoringStaff[] */
-        static $cache = [];
-
         if (null === $id) {
             return null;
         }
 
-        if (isset($cache[$id])) {
-            return $cache[$id];
-        }
-
-        $reflector = new \ReflectionClass(StevedoringStaff::class);
-        $stevedoringRepository = $this->stevedoringRepository;
-        /** @var StevedoringStaff $staff */
-        $staff = $reflector->newLazyGhost(
-            function (StevedoringStaff $staff) use ($id, $stevedoringRepository) {
-                /** @var StevedoringStaffArray $data */
-                $data = $stevedoringRepository->fetchStaff($id, true);
-                $staff->__construct($data);
-            }
-        );
-
-        $reflector->getProperty('id')->setRawValueWithoutLazyInitialization($staff, $id);
-
-        $cache[$id] = $staff;
-
-        return $staff;
+        return $this->stevedoringRepository->fetchStaff($id);
     }
 
     public function createStaff(HTTPRequestBody $requestBody): StevedoringStaff

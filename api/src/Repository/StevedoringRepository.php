@@ -9,6 +9,7 @@ namespace App\Repository;
 use App\Core\Component\Collection;
 use App\Core\Component\DateUtils;
 use App\Core\Exceptions\Client\BadRequestException;
+use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\Core\Logger\ErrorLogger;
 use App\DTO\CallWithoutReportDTO;
@@ -33,6 +34,7 @@ use App\Entity\Stevedoring\StevedoringStaff;
 use App\Entity\Stevedoring\TempWorkHoursEntry;
 use App\Service\ShippingService;
 use App\Service\StevedoringService;
+use ReflectionClass;
 
 /**
  * @phpstan-type ShipReportEquipmentEntryArray array{
@@ -83,7 +85,13 @@ use App\Service\StevedoringService;
  */
 final class StevedoringRepository extends Repository
 {
-    public function __construct(private StevedoringService $stevedoringService) {}
+    /** @var ReflectionClass<StevedoringStaff> */
+    private ReflectionClass $staffReflector;
+
+    public function __construct(private StevedoringService $stevedoringService)
+    {
+        $this->staffReflector = new ReflectionClass(StevedoringStaff::class);
+    }
 
     // =====
     // Staff
@@ -91,21 +99,24 @@ final class StevedoringRepository extends Repository
 
     public function staffExists(int $id): bool
     {
+        return $this->mysql->exists("stevedoring_staff", $id);
+    }
+
+    public function staffIsDeleted(int $id): bool
+    {
         $statement = "SELECT deleted_at FROM stevedoring_staff WHERE id = :id";
 
         $response = $this->mysql
             ->prepareAndExecute($statement, ['id' => $id])
             ->fetch(\PDO::FETCH_NUM);
 
-        if (!is_array($response)) {
-            return false;
+        if (!\is_array($response)) {
+            throw new NotFoundException("Le personnel de manutention n'existe pas.");
         }
 
-        if (null !== $response[0]) {
-            return false;
-        }
+        $staffIsDeleted = null !== $response[0];
 
-        return true;
+        return $staffIsDeleted;
     }
 
     /**
@@ -146,55 +157,53 @@ final class StevedoringRepository extends Repository
         }
     }
 
-    /**
-     * @phpstan-return ($returnRawData is true ? StevedoringStaffArray|null : StevedoringStaff|null)
-     */
-    public function fetchStaff(int $id, bool $returnRawData = false): StevedoringStaff|array|null
+    public function fetchStaff(int $id): ?StevedoringStaff
     {
-        /**
-         * @var StevedoringStaff[]
-         */
+        /** @var array<int, StevedoringStaff> */
         static $cache = [];
 
-        if (isset($cache[$id]) && !$returnRawData) {
+        if (isset($cache[$id])) {
             return $cache[$id];
         }
 
-        try {
-            $staffStatement =
-                "SELECT
-                    id,
-                    firstname,
-                    lastname,
-                    phone,
-                    type,
-                    temp_work_agency as `tempWorkAgency`,
-                    is_active as `isActive`,
-                    comments,
-                    deleted_at as `deletedAt`
-                FROM stevedoring_staff WHERE id = :id";
-
-            /** @var ?StevedoringStaffArray */
-            $staffRaw = $this->mysql
-                ->prepareAndExecute($staffStatement, ['id' => $id])
-                ->fetch();
-
-            if (!\is_array($staffRaw)) {
-                return null;
-            }
-
-            if ($returnRawData) {
-                return $staffRaw;
-            }
-
-            $staff = $this->stevedoringService->makeStevedoringStaffFromDatabase($staffRaw);
-
-            $cache[$id] = $staff;
-
-            return $staff;
-        } catch (\PDOException $e) {
-            throw new DBException("Impossible de récupérer le personnel de manutention.", previous: $e);
+        if (!$this->staffExists($id)) {
+            return null;
         }
+
+        /** @var StevedoringStaff */
+        $staff = $this->staffReflector->newLazyProxy(
+            function () use ($id) {
+                try {
+                    $staffStatement =
+                        "SELECT
+                            id,
+                            firstname,
+                            lastname,
+                            phone,
+                            type,
+                            temp_work_agency as `tempWorkAgency`,
+                            is_active as `isActive`,
+                            comments,
+                            deleted_at as `deletedAt`
+                        FROM stevedoring_staff WHERE id = :id";
+
+                    /** @var StevedoringStaffArray */
+                    $staffRaw = $this->mysql
+                        ->prepareAndExecute($staffStatement, ['id' => $id])
+                        ->fetch();
+
+                    return $this->stevedoringService->makeStevedoringStaffFromDatabase($staffRaw);
+                } catch (\PDOException $e) {
+                    throw new DBException("Impossible de récupérer le personnel de manutention.", previous: $e);
+                }
+            }
+        );
+
+        $this->staffReflector->getProperty('id')->setRawValueWithoutLazyInitialization($staff, $id);
+
+        $cache[$id] = $staff;
+
+        return $staff;
     }
 
     public function createStaff(StevedoringStaff $staff): StevedoringStaff
