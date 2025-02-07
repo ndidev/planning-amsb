@@ -12,10 +12,7 @@ use App\Entity\Country;
 use App\Service\CountryService;
 
 /**
- * @phpstan-type CountryArray array{
- *                              iso: string,
- *                              nom: string,
- *                            }
+ * @phpstan-import-type CountryArray from \App\Entity\Country
  */
 final class CountryRepository extends Repository
 {
@@ -68,10 +65,19 @@ final class CountryRepository extends Repository
      * 
      * @param string $iso ISO code of the country to fetch.
      * 
-     * @return ?Country Fetched country.
+     * @return Country|CountryArray|null Fetched country.
+     * 
+     * @phpstan-return ($returnRawData is false ? Country : CountryArray)|null
      */
-    public function fetchByIso(string $iso): ?Country
+    public function fetchByIso(string $iso, bool $returnRawData = false): Country|array|null
     {
+        /** @var array<string, Country> */
+        static $cache = [];
+
+        if (isset($cache[$iso]) && !$returnRawData) {
+            return $cache[$iso];
+        }
+
         // Redis
         $redisValue = $this->redis->get("{$this->redisNamespace}:{$iso}");
         $countryRaw = \is_string($redisValue) ? \json_decode($redisValue, true) : null;
@@ -95,7 +101,13 @@ final class CountryRepository extends Repository
 
         /** @phpstan-var CountryArray $countryRaw */
 
+        if ($returnRawData) {
+            return $countryRaw;
+        }
+
         $country = $this->countryService->makeCountryFromDatabase($countryRaw);
+
+        $cache[$iso] = $country;
 
         return $country;
     }

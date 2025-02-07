@@ -12,7 +12,7 @@ use App\Entity\Country;
 use App\Repository\CountryRepository;
 
 /**
- * @phpstan-import-type CountryArray from \App\Repository\CountryRepository
+ * @phpstan-import-type CountryArray from \App\Entity\Country
  */
 final class CountryService
 {
@@ -26,19 +26,13 @@ final class CountryService
     /**
      * Creates a Country object from database data.
      * 
-     * @param array $rawData 
-     * 
-     * @phpstan-param CountryArray $rawData
+     * @param CountryArray $rawData 
      * 
      * @return Country 
      */
     public function makeCountryFromDatabase(array $rawData): Country
     {
-        $rawDataAH = new ArrayHandler($rawData);
-
-        return (new Country())
-            ->setISO($rawDataAH->getString('iso'))
-            ->setName($rawDataAH->getString('nom'));
+        return new Country($rawData);
     }
 
     /**
@@ -53,6 +47,31 @@ final class CountryService
 
     public function getCountry(string $iso): ?Country
     {
-        return $this->countryRepository->fetchByIso($iso);
+        /** @var array<string, Country> */
+        static $cache = [];
+
+        if (!$iso) {
+            return null;
+        }
+
+        if (isset($cache[$iso])) {
+            return $cache[$iso];
+        }
+
+        $reflector = new \ReflectionClass(Country::class);
+        $countryRepository = $this->countryRepository;
+        /** @var Country */
+        $country = $reflector->newLazyGhost(
+            function (Country $country) use ($iso, $countryRepository) {
+                $data = $countryRepository->fetchByIso($iso, true);
+                $country->__construct($data);
+            }
+        );
+
+        $reflector->getProperty('iso')->setRawValueWithoutLazyInitialization($country, $iso);
+
+        $cache[$iso] = $country;
+
+        return $country;
     }
 }
