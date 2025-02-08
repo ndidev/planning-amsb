@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "build:dev": "routify -b && vite build --mode development --sourcemap true --minify false",
     "build:staging": "routify -b && vite build --mode staging --sourcemap true",
-    "build:prod": "routify -b && vite build --outDir dist/prod",
+    "build:prod": "routify -b && vite build",
     "refresh": "routify -b && vite build --mode development"
   },
   "devDependencies": {
