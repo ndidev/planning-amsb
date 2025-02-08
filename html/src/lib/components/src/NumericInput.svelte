@@ -110,8 +110,6 @@
 
     // Keystroke validation
     if (!regex.test(targetValue)) return;
-    if (min !== null && parseFloat(targetValue) < min) return;
-    if (max !== null && parseFloat(targetValue) > max) return;
 
     input.value = targetValue;
     input.setSelectionRange(caretStart + 1, caretStart + 1); // Replaces the cursor at the right position
@@ -146,6 +144,16 @@
     }
   }
 
+  function checkValidity() {
+    if (min !== null && value < min) {
+      input.setCustomValidity(`La valeur doit être supérieure à ${min}.`);
+    } else if (max !== null && value > max) {
+      input.setCustomValidity(`La valeur doit être inférieure à ${max}.`);
+    } else {
+      input.setCustomValidity("");
+    }
+  }
+
   // Update the input value whenever the value prop changes
   $: {
     if (input && !isUserInput && !valueJustSaved) {
@@ -161,12 +169,14 @@
     setDecimals();
     input.addEventListener("keydown", checkInput);
     input.addEventListener("input", saveValue);
+    input.addEventListener("blur", checkValidity);
     input.addEventListener("blur", setDecimals);
   });
 
   onDestroy(() => {
     input.removeEventListener("keydown", checkInput);
     input.removeEventListener("input", saveValue);
+    input.removeEventListener("blur", checkValidity);
     input.removeEventListener("blur", setDecimals);
   });
 </script>
