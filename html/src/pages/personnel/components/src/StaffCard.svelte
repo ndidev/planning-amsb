@@ -23,13 +23,16 @@
   let drawerHidden = true;
 </script>
 
-<Card size="xs">
-  <div>
-    <button
-      on:click={() => (drawerHidden = false)}
-      class="hover:underline"
-      class:opacity-50={!staff.isActive}>{staff.fullname}</button
-    >
+<Card
+  size="xs"
+  class="hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+  on:click={() => (drawerHidden = false)}
+>
+  <div
+    class:opacity-50={!staff.isActive}
+    class="text-gray-700 dark:text-gray-400"
+  >
+    {staff.fullname}
   </div>
 
   {#if staff.tempWorkAgency}

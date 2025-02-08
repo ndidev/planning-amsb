@@ -95,6 +95,11 @@ export type StevedoringEquipment = {
   displayName: string;
 
   /**
+   * Année de fabrication.
+   */
+  year: number | null;
+
+  /**
    * Commentaires.
    */
   comments: string;

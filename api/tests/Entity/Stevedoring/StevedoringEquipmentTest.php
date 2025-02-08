@@ -23,6 +23,7 @@ final class StevedoringEquipmentTest extends TestCase
         $stevedoringEquipment->model = 'LTM 11200-9.1';
         $stevedoringEquipment->internalNumber = '123456';
         $stevedoringEquipment->serialNumber = '987654';
+        $stevedoringEquipment->year = 2021;
         $stevedoringEquipment->comments = 'Commentaires';
         $stevedoringEquipment->isActive = true;
 
@@ -34,6 +35,7 @@ final class StevedoringEquipmentTest extends TestCase
             'internalNumber' => '123456',
             'serialNumber' => '987654',
             'displayName' => 'Liebherr LTM 11200-9.1 123456',
+            'year' => 2021,
             'comments' => 'Commentaires',
             'isCrane' => true,
             'isActive' => true,
