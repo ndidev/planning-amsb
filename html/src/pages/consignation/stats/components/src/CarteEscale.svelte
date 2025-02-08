@@ -1,46 +1,47 @@
 <script lang="ts">
-  import { DateUtils } from "@app/utils";
+  import { DateUtils, NumberUtils } from "@app/utils";
   import type { EscaleConsignation } from "@app/types";
 
   export let escale: EscaleConsignation;
 </script>
 
-<li class="card">
-  <div class="navire">
-    <a href="/consignation/escales/{escale.id}">{escale.navire}</a>
-  </div>
-  <div>
-    {new DateUtils(escale.ops_date).format().long} &gt; {new DateUtils(
-      escale.etc_date
-    ).format().long}
+<li class="my-4 rounded-lg border-2 border-gray-300 p-4">
+  <div class="mb-1 font-bold">
+    <a class="hover:underline" href="/consignation/escales/{escale.id}"
+      >{escale.navire}</a
+    >
   </div>
 
-  <ul class="marchandises">
-    {#each escale.marchandises as marchandise}
-      <li>
-        <div class="marchandise-client pure-u-1">
-          <span class="marchandise_nom">{marchandise.marchandise}</span>
-          <span class="client">{marchandise.client}</span>
+  {#if escale.ops_date && escale.etc_date}
+    <div>
+      {new DateUtils(escale.ops_date).format().long} &gt; {new DateUtils(
+        escale.etc_date
+      ).format().long}
+    </div>
+  {/if}cargoName
 
-          {#if marchandise.tonnage_outturn}
-            <span class="quantite tonnage">
-              {marchandise.tonnage_outturn.toLocaleString("fr-FR", {
-                minimumFractionDigits: 3,
-              }) + " MT"}
+  <ul class="mt-2">
+    {#each escale.marchandises as cargo}
+      <li class="ml-4">
+        <div>
+          <span>{cargo.cargoName}</span>
+          <span class="ml-2">{cargo.customer}</span>
+
+          {#if cargo.outturnTonnage}
+            <span class="ml-4">
+              {NumberUtils.formatTonnage(cargo.outturnTonnage)}
             </span>
           {/if}
 
-          {#if marchandise.cubage_outturn}
-            <span class="quantite cubage">
-              {marchandise.cubage_outturn.toLocaleString("fr-FR", {
-                minimumFractionDigits: 3,
-              }) + " m3"}
+          {#if cargo.outturnVolume}
+            <span class="ml-4 italic">
+              {NumberUtils.formatVolume(cargo.outturnVolume)}
             </span>
           {/if}
 
-          {#if marchandise.nombre_outturn}
-            <span class="quantite nombre">
-              {marchandise.nombre_outturn.toLocaleString("fr-FR") + " colis"}
+          {#if cargo.outturnUnits}
+            <span class="ml-4">
+              {NumberUtils.formatUnits(cargo.outturnUnits)}
             </span>
           {/if}
         </div>
@@ -50,44 +51,3 @@
     {/each}
   </ul>
 </li>
-
-<style>
-  .card {
-    border: 2px solid lightgray;
-    border-radius: 4px;
-    padding: 1rem;
-    margin-block: 1rem;
-  }
-
-  .navire {
-    font-weight: bold;
-    margin-bottom: 0.3rem;
-  }
-
-  .navire a,
-  .navire a:visited {
-    color: black;
-    text-decoration: none;
-  }
-
-  .navire a:hover {
-    text-decoration: underline;
-  }
-
-  .marchandises {
-    margin-top: 0.5rem;
-  }
-
-  .marchandises > li {
-    list-style-type: none;
-    margin-left: 1rem;
-  }
-
-  .client {
-    margin-left: 0.5rem;
-  }
-
-  .quantite {
-    margin-left: 1rem;
-  }
-</style>

@@ -1,7 +1,14 @@
 <?php
 
+// Path: api/src/Core/Component/SSEHandler.php
+
+declare(strict_types=1);
+
 namespace App\Core\Component;
 
+use App\Core\Array\Environment;
+use App\Core\Array\Server;
+use App\Core\Interfaces\Arrayable;
 use App\Core\Logger\ErrorLogger;
 
 /**
@@ -10,6 +17,18 @@ use App\Core\Logger\ErrorLogger;
  */
 class SSEHandler
 {
+    /**
+     * Events to be sent to the SSE server.
+     * @var list<
+     *        array{
+     *          name: string,
+     *          type: string,
+     *          id: int|string,
+     *          data: mixed,
+     *          origin: string|null,
+     *        }
+     *      >
+     */
     private array $events = [];
 
     /**
@@ -25,8 +44,8 @@ class SSEHandler
             "name" => $name,
             "type" => $type,
             "id" => $id,
-            "data" => $data,
-            "origin" => $_SERVER["HTTP_X_SSE_CONNECTION"] ?? NULL,
+            "data" => $data instanceof Arrayable ? $data->toArray() : $data,
+            "origin" => Server::getString('HTTP_X_SSE_CONNECTION', null),
         ];
     }
 
@@ -35,19 +54,28 @@ class SSEHandler
      */
     public function notify(): void
     {
-        $url = "http://{$_ENV["SSE_HOST"]}:{$_ENV["SSE_UPDATES_PORT"]}";
+        $host = Environment::getString('SSE_HOST');
+        $port = Environment::getInt('SSE_UPDATES_PORT');
+
+        if (!$host || !$port) {
+            ErrorLogger::log(new \Exception("L'hôte et le port du serveur SSE ne sont pas définis"));
+            return;
+        }
+
+        $url = "http://{$host}:{$port}";
 
         foreach ($this->events as $key => $event) {
             $options = [
                 "http" => [
                     "header" => "Content-type: application/json\r\n",
                     "method" => "POST",
-                    "content" => json_encode($event)
+                    "content" => \json_encode($event),
+                    "timeout" => 0.5,
                 ]
             ];
 
             $context = stream_context_create($options);
-            $result = file_get_contents($url, false, $context);
+            $result = \file_get_contents($url, false, $context);
 
             if ($result === false) {
                 ErrorLogger::log(new \Exception("Erreur de notification SSE"));

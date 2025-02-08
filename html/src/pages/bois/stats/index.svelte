@@ -1,44 +1,35 @@
 <!-- routify:options title="Planning AMSB - Statistiques bois" -->
 <script lang="ts">
-  import { onDestroy, setContext } from "svelte";
-  import { writable } from "svelte/store";
+  import { onDestroy } from "svelte";
 
-  import { Filtre as BandeauFiltre } from "./components";
-
-  import { fetcher, Filtre } from "@app/utils";
-
-  import type { FiltreBois } from "@app/types";
   import Notiflix from "notiflix";
 
-  let filtre = new Filtre<FiltreBois>(
-    JSON.parse(sessionStorage.getItem("filtre-stats-bois")) || {}
-  );
+  import { FilterModal, filter } from "./components";
+  import { PageHeading } from "@app/components";
 
-  const storeFiltre = writable(filtre);
+  import { fetcher } from "@app/utils";
 
-  const unsubscribeFiltre = storeFiltre.subscribe((value) => {
-    filtre = value;
-    recupererStats();
+  const unsubscribeFiltre = filter.subscribe((value) => {
+    fetchStats();
   });
-
-  setContext("filtre", storeFiltre);
 
   type Stats = {
     Total: number;
-    "Par année": {
-      [annee: string]: {
-        "1": number;
-        "2": number;
-        "3": number;
-        "4": number;
-        "5": number;
-        "6": number;
-        "7": number;
-        "8": number;
-        "9": number;
-        "10": number;
-        "11": number;
-        "12": number;
+    ByYear: {
+      [year: string]: {
+        [month in
+          | "1"
+          | "2"
+          | "3"
+          | "4"
+          | "5"
+          | "6"
+          | "7"
+          | "8"
+          | "9"
+          | "10"
+          | "11"
+          | "12"]: number;
       };
     };
   };
@@ -50,9 +41,11 @@
    *
    * @returns Statistiques au format JSON
    */
-  async function recupererStats() {
+  async function fetchStats() {
     try {
-      stats = await fetcher("bois/stats", { params: filtre.toParams() });
+      stats = await fetcher("bois/stats", {
+        searchParams: $filter.toSearchParams(),
+      });
     } catch (error) {
       Notiflix.Notify.failure(error.message);
       console.error(error);
@@ -66,11 +59,10 @@
 
 <!-- routify:options guard="bois" -->
 
-<main class="formulaire">
-  <h1>Statistiques</h1>
+<main>
+  <PageHeading>Statistiques</PageHeading>
 
-  <!-- Filtre par date/client -->
-  <BandeauFiltre />
+  <FilterModal />
 
   <div id="statistiques">
     {#if stats}
@@ -96,16 +88,16 @@
         </thead>
 
         <tbody>
-          {#each Object.entries(stats["Par année"]) as [annee, statsAnnee]}
+          {#each Object.entries(stats.ByYear) as [year, yearStats]}
             <tr>
-              <th scope="row">{annee}</th>
-              {#each Object.entries(statsAnnee) as [mois, camions]}
-                <td>{camions.toLocaleString("fr-FR")}</td>
+              <th scope="row">{year}</th>
+              {#each Object.entries(yearStats) as [monthNumber, numberOfTrucks]}
+                <td>{numberOfTrucks.toLocaleString("fr-FR")}</td>
               {/each}
 
               <!-- Total par année -->
               <td class="total">
-                {Object.values(statsAnnee)
+                {Object.values(yearStats)
                   .reduce((sum, current) => sum + current, 0)
                   .toLocaleString("fr-FR")}
               </td>
@@ -117,17 +109,20 @@
         <tfoot>
           <tr>
             <th>Moyenne</th>
-            {#each [...Array(12).keys()] as mois}
+            {#each [...Array(12).keys()] as monthIndex}
               <td>
                 {Math.round(
                   // Total des camions par mois
-                  Object.values(stats["Par année"])
-                    .map((statsAnnee) => statsAnnee[mois + 1])
-                    .reduce((total, valeur) => total + valeur, 0) /
+                  Object.values(stats.ByYear)
+                    .map((yearStats) => yearStats[monthIndex + 1])
+                    .reduce(
+                      (total, numberOfTrucks) => total + numberOfTrucks,
+                      0
+                    ) /
                     // Nombre d'années (ignorer les années à zéro camion)
-                    (Object.values(stats["Par année"])
-                      .map((statsAnnee) => statsAnnee[mois + 1])
-                      .filter((valeur) => valeur).length || 1)
+                    (Object.values(stats.ByYear)
+                      .map((yearStats) => yearStats[monthIndex + 1])
+                      .filter((value) => value).length || 1)
                 ).toLocaleString("fr-FR")}
               </td>
             {/each}
@@ -141,13 +136,8 @@
 
 <style>
   main {
-    width: calc(95% - 200px); /* 200px = largeur du menu */
-    margin-left: 200px;
-  }
-
-  h1 {
-    margin: 20px 0;
-    text-align: center;
+    width: calc(95%);
+    margin: auto;
   }
 
   /* STATS */
@@ -202,10 +192,12 @@
     background-color: #eee;
   }
 
-  @media screen and (max-width: 480px) {
+  @media screen and (min-width: 768px) {
     main {
-      width: calc(95%);
-      margin: auto;
+      /* Largeur du menu = 256px */
+      --margin-left: 280px;
+      width: calc(95% - var(--margin-left));
+      margin-left: var(--margin-left);
     }
   }
 </style>

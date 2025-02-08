@@ -2,33 +2,53 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
 
-  import { LigneDate, LigneRdv, Placeholder } from "./components";
-  import { BandeauInfo, ConnexionSSE } from "@app/components";
+  import {
+    LigneDate,
+    LigneRdv,
+    Placeholder,
+    FilterModal,
+    filter,
+  } from "./components";
+  import { BandeauInfo, SseConnection } from "@app/components";
 
   import { fetcher } from "@app/utils";
 
-  import { vracRdvs, vracProduits, marees as mareesStore } from "@app/stores";
+  import {
+    vracRdvs,
+    vracProduits,
+    consignationEscales,
+    tiers,
+    configBandeauInfo,
+    marees,
+  } from "@app/stores";
 
   import type { RdvVrac } from "@app/types";
 
   type DateString = string;
   type GroupesRdv = Map<DateString, RdvVrac[]>;
 
+  let appointments: RdvVrac[];
+  let groupedAppointments: GroupesRdv;
   let dates: Set<DateString>;
-  let rdvsGroupes: GroupesRdv;
-  let datesMareesSup4m = new Set<string>();
-  let marees: ReturnType<typeof mareesStore>;
+  let datesMareesSup4m = new Set<DateString>();
 
-  $: if ($vracRdvs && $vracProduits) {
-    dates = new Set(
-      [...$vracRdvs.values()].map(({ date_rdv }) => date_rdv).sort()
-    );
+  const unsubscribeFilter = filter.subscribe((value) => {
+    appointments = null;
 
-    rdvsGroupes = grouperRdvs([...$vracRdvs.values()]);
+    const params = value.toSearchParams();
+    vracRdvs.setSearchParams(params);
+  });
+
+  const unsubscribeAppointments = vracRdvs.subscribe((value) => {
+    if (!value) return;
+
+    appointments = [...value.values()];
+    dates = makeDatesSet(appointments);
+    groupedAppointments = groupAppointments(appointments, dates);
 
     updateNaviresParDate();
-    updateMarees();
-  }
+    updateTides();
+  });
 
   $: datesMareesSup4m = new Set(
     ($marees || [])
@@ -36,20 +56,28 @@
       .map((maree) => maree.date)
   );
 
+  function makeDatesSet(appointments: RdvVrac[]) {
+    return new Set(
+      [...appointments.values()].map(({ date_rdv }) => date_rdv).sort()
+    );
+  }
+
   /**
    * Grouper et trier les RDVs.
    */
-  function grouperRdvs(rdvs: RdvVrac[]) {
-    const rdvsParDate: GroupesRdv = new Map<DateString, RdvVrac[]>();
+  function groupAppointments(appointments: RdvVrac[], dates: Set<DateString>) {
+    const appointmentsByDate: GroupesRdv = new Map<DateString, RdvVrac[]>();
 
     dates.forEach((date) => {
-      rdvsParDate.set(
+      appointmentsByDate.set(
         date,
-        rdvs.filter(({ date_rdv }) => date_rdv === date).sort(triPlanning)
+        [...appointments.values()]
+          .filter(({ date_rdv }) => date_rdv === date)
+          .sort(sortAppointments)
       );
     });
 
-    return rdvsParDate;
+    return appointmentsByDate;
   }
 
   /**
@@ -60,31 +88,34 @@
    * - nom de produit, croissant
    * - nom de qualite, croissant
    */
-  function triPlanning(a: RdvVrac, b: RdvVrac): number {
-    return (
-      comparerHeure(a, b) || comparerProduit(a, b) || comparerQualite(a, b)
-    );
+  function sortAppointments(a: RdvVrac, b: RdvVrac): number {
+    // Vracs agro et Divers en premier
+    if ([1, 2].includes(a.produit) || [1, 2].includes(b.produit)) {
+      return a.produit - b.produit;
+    }
 
-    function comparerHeure(a: RdvVrac, b: RdvVrac): number {
+    return compareTime(a, b) || compareProduct(a, b) || compareQuality(a, b);
+
+    function compareTime(a: RdvVrac, b: RdvVrac): number {
       if (a.heure < b.heure || (a.heure && !b.heure)) return -1;
       if (a.heure > b.heure || (!a.heure && b.heure)) return 1;
       return 0;
     }
 
-    function comparerProduit(a: RdvVrac, b: RdvVrac): number {
-      return ($vracProduits.get(a.produit)?.nom || "").localeCompare(
-        $vracProduits.get(b.produit)?.nom || ""
+    function compareProduct(a: RdvVrac, b: RdvVrac): number {
+      return ($vracProduits?.get(a.produit)?.nom || "").localeCompare(
+        $vracProduits?.get(b.produit)?.nom || ""
       );
     }
 
-    function comparerQualite(a: RdvVrac, b: RdvVrac): number {
+    function compareQuality(a: RdvVrac, b: RdvVrac): number {
       return (
         $vracProduits
-          .get(a.produit)
+          ?.get(a.produit)
           ?.qualites.find((qualite) => qualite.id === a.qualite)?.nom || ""
       ).localeCompare(
         $vracProduits
-          .get(b.produit)
+          ?.get(b.produit)
           ?.qualites.find((qualite) => qualite.id === b.qualite)?.nom || ""
       );
     }
@@ -104,7 +135,7 @@
     const listeNavires: NaviresEnActivite = await fetcher(
       `consignation/navires-en-activite`,
       {
-        params: {
+        searchParams: {
           date_debut: debut,
           date_fin: fin,
         },
@@ -135,80 +166,80 @@
     ];
   }
 
-  const updateNaviresParDate = async () => {
+  async function updateNaviresParDate() {
     naviresParDate = await getNaviresParDate(
       [...dates][0],
       [...dates][dates.size - 1]
     );
-  };
+  }
 
-  const updateMarees = async () => {
-    const params: Parameters<typeof mareesStore>[0] = {
+  function updateTides() {
+    const params = {
       debut: [...dates][0],
       fin: [...dates][dates.size - 1],
     };
 
-    if (!marees) {
-      marees = mareesStore(params);
-    } else {
-      marees.setParams(params);
-    }
-  };
+    marees.setSearchParams(params);
+  }
 
   onMount(() => {
     document.addEventListener(
-      "planning:consignation/escales",
+      `planning:${consignationEscales.endpoint}`,
       updateNaviresParDate
     );
   });
 
   onDestroy(() => {
     document.removeEventListener(
-      "planning:consignation/escales",
+      `planning:${consignationEscales.endpoint}`,
       updateNaviresParDate
     );
+
+    unsubscribeAppointments();
+    unsubscribeFilter();
   });
 </script>
 
+<!-- routify:options query-params-is-page -->
 <!-- routify:options guard="vrac" -->
 
-<ConnexionSSE
+<SseConnection
   subscriptions={[
-    "vrac/rdvs",
-    "vrac/produits",
-    "consignation/escales",
-    "tiers",
-    "config/bandeau-info",
-    "marees",
+    vracRdvs.endpoint,
+    vracProduits.endpoint,
+    consignationEscales.endpoint,
+    tiers.endpoint,
+    configBandeauInfo.endpoint,
+    marees.endpoint,
   ]}
 />
 
-<BandeauInfo module="vrac" pc />
+<div class="sticky top-0 z-[1] ml-16 lg:ml-24">
+  <BandeauInfo module="vrac" pc />
 
-<main>
-  {#if $vracRdvs && $vracProduits}
-    {#each [...rdvsGroupes] as [date, rdvs] (date)}
+  <!-- <FilterBanner /> -->
+  <FilterModal />
+</div>
+
+<main class="w-11/12 mx-auto mb-8">
+  {#if appointments && $vracProduits}
+    {#each groupedAppointments as [date, appointments] (date)}
       <LigneDate
         {date}
         maree={datesMareesSup4m.has(date)}
         navires={naviresParDate.get(date) || []}
       />
-      <div>
-        {#each rdvs as rdv (rdv.id)}
-          <LigneRdv {rdv} />
+
+      <div class="divide-y">
+        {#each appointments as appointment (appointment.id)}
+          <LigneRdv {appointment} />
         {/each}
       </div>
+    {:else}
+      <p class="mt-5 text-2xl text-center">Aucun rendez-vous.</p>
     {/each}
   {:else}
     <!-- Chargement des données -->
     <Placeholder />
   {/if}
 </main>
-
-<style>
-  main {
-    width: 90vw;
-    margin: auto;
-    margin-bottom: 2rem;
-  }
-</style>

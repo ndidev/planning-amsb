@@ -1,48 +1,51 @@
 <!-- routify:options title="Planning AMSB - Consignation" -->
 <script lang="ts">
-  import { getContext } from "svelte";
-
-  import { BandeauInfo, CoteCesson, ConnexionSSE } from "@app/components";
+  import { BandeauInfo, CoteCesson, SseConnection } from "@app/components";
   import { LigneEscale } from "./components";
 
-  import type { Stores } from "@app/types";
-
-  const { currentUser, consignationEscales } = getContext<Stores>("stores");
+  import {
+    currentUser,
+    consignationEscales,
+    tiers,
+    configBandeauInfo,
+  } from "@app/stores";
 </script>
 
 {#if $currentUser.canUseApp && $currentUser.canAccess("consignation")}
-  <ConnexionSSE
+  <SseConnection
     subscriptions={[
-      "consignation/escales",
-      "tiers",
-      "config/bandeau-info",
+      consignationEscales.endpoint,
+      tiers.endpoint,
+      configBandeauInfo.endpoint,
       "config/cotes",
     ]}
   />
 
-  <CoteCesson tv />
+  <CoteCesson />
   <BandeauInfo module="consignation" tv />
 
-  <main>
-    {#each [...($consignationEscales?.values() || [])] as escale (escale.id)}
-      <LigneEscale {escale} />
-    {/each}
+  <main class="divide-y">
+    {#await consignationEscales.getReadyState()}
+      <div class="grid w-full h-[90svh] place-items-center">
+        <div class="text-3xl">Chargement...</div>
+      </div>
+    {:then}
+      {#each [...$consignationEscales.values()] as call (call.id)}
+        <LigneEscale escale={call} />
+      {:else}
+        <div class="grid w-full h-[90svh] place-items-center">
+          <div class="text-3xl">Aucun navire à l'horizon...</div>
+        </div>
+      {/each}
+    {:catch error}
+      <div class="grid w-full h-[90svh] place-items-center">
+        <div class="text-3xl text-red-500">Erreur de chargement</div>
+      </div>
+    {/await}
   </main>
 {/if}
 
 <style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  /* body {
-    width: 100vw;
-    overflow-x: hidden;
-    font-family: sans-serif;
-  } */
-
   ::-webkit-scrollbar {
     display: none;
   }

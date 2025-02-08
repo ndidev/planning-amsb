@@ -20,7 +20,7 @@
 
   import Notiflix from "notiflix";
 
-  import { online } from "@app/utils";
+  import { online, luminance } from "@app/utils";
 
   type Preset = {
     name:
@@ -97,7 +97,7 @@
     presets.get(preset) || presets.get("default");
 
   export let color = params.color;
-  export let title = params.text;
+  export let text = params.text;
   export let disabled = false;
   export let type: "button" | "reset" | "submit" = "button";
   export let needsOnline = params.needsOnline;
@@ -106,6 +106,14 @@
    * Contrôle l'état Notiflix "Block" du bouton.
    */
   export let block = false;
+
+  function colorIsCode(color: string): boolean {
+    return (
+      color.startsWith("#") ||
+      color.startsWith("rgb") ||
+      color.startsWith("hsl")
+    );
+  }
 
   afterUpdate(() => {
     if (block) {
@@ -122,14 +130,16 @@
 <button
   bind:this={button}
   {type}
-  style:--bg-color="var(--{color}-bg-color)"
-  style:--color="var(--{color}-color)"
-  style:--hover-color="var(--{color}-hover-color)"
-  {title}
+  style:--bg-color={colorIsCode(color) ? color : `var(--${color}-bg-color`}
+  style:--color={colorIsCode(color) ? color : `var(--${color}-color`}
+  style:--hover-color={colorIsCode(color)
+    ? luminance.getTextColor(color)
+    : `var(--${color}-hover-color`}
+  title={text}
   disabled={(needsOnline && !$online) || disabled}
   on:click|preventDefault
 >
-  <slot>{params.text}</slot>
+  <slot>{text}</slot>
 </button>
 
 <style>

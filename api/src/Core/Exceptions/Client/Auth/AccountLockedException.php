@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Core/Exceptions/Client/Auth/AccountLockedException.php
+
+declare(strict_types=1);
+
 namespace App\Core\Exceptions\Client\Auth;
 
 use App\Core\Auth\AccountStatus;
@@ -13,11 +17,12 @@ class AccountLockedException extends AccountStatusException
 
     public function __construct(string $message = self::DEFAULT_MESSAGE)
     {
-        parent::__construct($this->getStatut(), $message);
+        parent::__construct($this->getStatus(), $message);
     }
 
-    public function getStatut()
+    #[\Override]
+    public function getStatus(): string
     {
-        return AccountStatus::LOCKED->value;
+        return AccountStatus::LOCKED;
     }
 }

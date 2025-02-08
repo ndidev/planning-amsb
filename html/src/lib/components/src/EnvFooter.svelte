@@ -8,20 +8,24 @@
   <EnvFooter />
   ```
  -->
+<script context="module">
+  const showFooter = import.meta.env.MODE !== "production";
+
+  export const FOOTER_HEIGHT = showFooter ? 50 : 0;
+</script>
+
 <script lang="ts">
   import { onMount } from "svelte";
-
-  const afficherFooter = import.meta.env.MODE !== "production";
 
   onMount(() => {
     document.documentElement.style.setProperty(
       "--footer-height",
-      afficherFooter ? "50px" : "0px"
+      FOOTER_HEIGHT + "px"
     );
   });
 </script>
 
-{#if afficherFooter}
+{#if showFooter}
   <footer>
     Mode <strong>{import.meta.env.MODE}</strong>
   </footer>

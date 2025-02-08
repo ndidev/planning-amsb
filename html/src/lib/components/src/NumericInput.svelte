@@ -28,18 +28,27 @@
 
  -->
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, createEventDispatcher } from "svelte";
+
+  import { Input } from "flowbite-svelte";
 
   let input: HTMLInputElement;
 
   export let value: number;
   export let format = "";
+  export let min: number = null;
+  export let max: number = null;
   export let placeholder = "";
   export let id = "";
   export let name = "";
   export let required = false;
-  let className = "";
+  let className = "w-full lg:min-w-min lg:max-w-max";
   export { className as class };
+
+  const dispatch = createEventDispatcher();
+
+  let isUserInput = false;
+  let valueJustSaved = false;
 
   /** Decimal separator used by the browser. */
   const separator = parseFloat("1.1").toFixed(1).substring(1, 2);
@@ -78,6 +87,8 @@
    * @param event Keyboard event
    */
   function checkInput(event: KeyboardEvent) {
+    isUserInput = true;
+
     // Allow non-printable keystrokes and ctrl combinations
     if (event.key.length > 1 || event.ctrlKey) return;
 
@@ -85,34 +96,39 @@
     event.preventDefault();
 
     // Saving current cursor/selection position
-    const caret_start = input.selectionStart!;
-    const caret_end = input.selectionEnd!;
+    const caretStart = input.selectionStart!;
+    const caretEnd = input.selectionEnd!;
 
     // If period/coma is input, replacement by browser decimal separator
     const key = [",", "."].includes(event.key) ? separator : event.key;
 
     // Target value to be checked
-    const target_value =
-      input.value.substring(0, caret_start) +
+    const targetValue =
+      input.value.substring(0, caretStart) +
       key +
-      input.value.substring(caret_end);
+      input.value.substring(caretEnd);
 
     // Keystroke validation
-    if (regex.test(target_value)) {
-      input.value = target_value;
-      input.setSelectionRange(caret_start + 1, caret_start + 1); // Replaces the cursor at the right position
-      input.dispatchEvent(new InputEvent("input", { data: key }));
-    }
+    if (!regex.test(targetValue)) return;
+
+    input.value = targetValue;
+    input.setSelectionRange(caretStart + 1, caretStart + 1); // Replaces the cursor at the right position
+    input.dispatchEvent(new InputEvent("input", { data: key }));
+  }
+
+  function saveValue() {
+    value = input.value ? parseFloat(input.value) : null;
+
+    valueJustSaved = true;
+
+    dispatch("new-value", value);
   }
 
   /**
    * Decimals after the separator.
    */
   function setDecimals() {
-    if (input.value === "") {
-      value = null;
-      return;
-    }
+    if (input.value === "") return;
 
     // Check for decimal separators (in case of pasted value)
     input.value = input.value.replace(/,|\./, separator);
@@ -128,35 +144,59 @@
     }
   }
 
+  function checkValidity() {
+    if (min !== null && value < min) {
+      input.setCustomValidity(`La valeur doit être supérieure à ${min}.`);
+    } else if (max !== null && value > max) {
+      input.setCustomValidity(`La valeur doit être inférieure à ${max}.`);
+    } else {
+      input.setCustomValidity("");
+    }
+  }
+
+  // Update the input value whenever the value prop changes
+  $: {
+    if (input && !isUserInput && !valueJustSaved) {
+      input.value = String(value || "");
+      setDecimals();
+    }
+    isUserInput = false;
+    valueJustSaved = false;
+  }
+
   onMount(() => {
+    input.value = String(value || "");
     setDecimals();
     input.addEventListener("keydown", checkInput);
+    input.addEventListener("input", saveValue);
+    input.addEventListener("blur", checkValidity);
     input.addEventListener("blur", setDecimals);
   });
 
   onDestroy(() => {
     input.removeEventListener("keydown", checkInput);
+    input.removeEventListener("input", saveValue);
+    input.removeEventListener("blur", checkValidity);
     input.removeEventListener("blur", setDecimals);
   });
 </script>
 
-<input
-  type="text"
-  autocomplete="off"
-  bind:this={input}
-  bind:value
-  class={className}
-  {placeholder}
-  {id}
-  {name}
-  {required}
-  on:input
-  on:change
-  on:focus
-  on:blur
-  on:keydown
-  on:keyup
-  on:keypress
-/>
-
-<style></style>
+<Input let:props class={className}>
+  <input
+    type="text"
+    autocomplete="off"
+    bind:this={input}
+    {placeholder}
+    {id}
+    {name}
+    {required}
+    on:input
+    on:change
+    on:focus
+    on:blur
+    on:keydown
+    on:keyup
+    on:keypress
+    {...props}
+  />
+</Input>

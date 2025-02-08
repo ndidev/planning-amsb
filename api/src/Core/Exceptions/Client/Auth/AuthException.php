@@ -1,8 +1,13 @@
 <?php
 
+// Path: api/src/Core/Exceptions/Client/Auth/AuthException.php
+
+declare(strict_types=1);
+
 namespace App\Core\Exceptions\Client\Auth;
 
 use App\Core\Exceptions\Client\ClientException;
+use App\Core\HTTP\HTTPResponse;
 
 /**
  * Exception générique d'authentification de l'utilisateur.
@@ -10,13 +15,13 @@ use App\Core\Exceptions\Client\ClientException;
 class AuthException extends ClientException
 {
     private const DEFAULT_MESSAGE = "Erreur d'authentification";
-    private const HTTP_STATUS = 401;
+    private const HTTP_STATUS = HTTPResponse::HTTP_UNAUTHORIZED_401;
 
     public function __construct(
         string $message = self::DEFAULT_MESSAGE,
-        public int $http_status = self::HTTP_STATUS,
+        public int $httpStatus = self::HTTP_STATUS,
         \Throwable|null $previous = null
     ) {
-        parent::__construct($message, $http_status, $previous);
+        parent::__construct($message, $httpStatus, $previous);
     }
 }

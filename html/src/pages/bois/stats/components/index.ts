@@ -1,1 +1,1 @@
-export { default as Filtre } from "./src/Filtre.svelte";
+export { default as FilterModal, filter } from "./src/FilterModal.svelte";

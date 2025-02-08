@@ -9,204 +9,200 @@
   ```
  -->
 <script lang="ts">
-  import { onMount, onDestroy, getContext } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { goto } from "@roxi/routify";
 
   import Notiflix from "notiflix";
   import Hammer from "hammerjs";
-
+  import { Modal } from "flowbite-svelte";
   import {
-    MaterialButton,
+    ArrowRightFromLineIcon,
+    ArrowRightToLineIcon,
+    ClockIcon,
+    MessageSquareOffIcon,
+    MessageSquareTextIcon,
+    ReceiptTextIcon,
+    TruckIcon,
+    UserIcon,
+  } from "lucide-svelte";
+
+  import { ThirdPartyAddress, DispatchModal } from "../";
+  import {
+    LucideButton,
     BoutonAction,
-    Modal,
     IconText,
+    DispatchButton,
+    OrderReadyButton,
   } from "@app/components";
 
-  import { notiflixOptions, device } from "@app/utils";
+  import {
+    notiflixOptions,
+    device,
+    removeDiacritics,
+    DateUtils,
+  } from "@app/utils";
   import { HTTP } from "@app/errors";
-  import type { Stores, RdvBois, Tiers } from "@app/types";
 
-  const { currentUser, boisRdvs, tiers, pays } = getContext<Stores>("stores");
+  import { currentUser, boisRdvs, tiers, pays } from "@app/stores";
 
-  export let rdv: RdvBois;
+  import type { RdvBois, Tiers } from "@app/types";
+
+  export let appointment: RdvBois;
   let ligne: HTMLDivElement;
 
   let inputNumeroBL: HTMLDivElement;
 
   let mc: HammerManager;
-  let afficherModal = false;
+  let showMenuModal = false;
 
-  const tiersVierge: Partial<Tiers> = {
-    nom_complet: "",
-    nom_court: "",
-    adresse_ligne_1: "",
-    adresse_ligne_2: "",
-    cp: "",
-    ville: "",
-    pays: "",
-    telephone: "",
-    commentaire: "",
-    lie_agence: false,
-  };
+  let showDispatchModal = false;
 
-  $: client = $tiers?.get(rdv.client) || tiersVierge;
-  $: livraison = $tiers?.get(rdv.livraison) || tiersVierge;
-  $: chargement = $tiers?.get(rdv.chargement) || tiersVierge;
-  $: transporteur = $tiers?.get(rdv.transporteur) || tiersVierge;
-  $: fournisseur = $tiers?.get(rdv.fournisseur) || tiersVierge;
-  $: affreteur = $tiers?.get(rdv.affreteur) || tiersVierge;
+  let awaitingDispatchBeforeOrderReady = false;
+  let awaitingDispatchBeforeSettingDepartureTime = false;
 
-  $: adresses = {
-    client: [
-      client.nom_court,
-      client.pays.toLowerCase() === "fr" ? client.cp.substring(0, 2) : "",
-      client.ville,
-      ["fr", "zz"].includes(client.pays.toLowerCase())
-        ? ""
-        : `(${
-            $pays?.find(({ iso }) => client.pays === iso)?.nom || client.pays
-          })`,
-    ]
-      .filter((champ) => champ)
-      .join(" "),
+  $: client = $tiers?.get(appointment.client);
+  $: livraison = $tiers?.get(appointment.livraison);
+  $: chargement = $tiers?.get(appointment.chargement);
+  $: transporteur = $tiers?.get(appointment.transporteur);
+  $: fournisseur = $tiers?.get(appointment.fournisseur);
+  $: affreteur = $tiers?.get(appointment.affreteur);
 
-    tootipClient: !client.id
-      ? "Pas de client renseigné"
-      : [
-          "Client :",
-          client.nom_complet,
-          client.adresse_ligne_1,
-          client.adresse_ligne_2,
-          [client.cp || "", client.ville || ""]
-            .filter((champ) => champ)
-            .join(" "),
-          $pays?.find(({ iso }) => client.pays === iso)?.nom || client.pays,
-          client.telephone,
-          client.commentaire ? " " : "",
-          client.commentaire,
-        ]
-          .filter((champ) => champ)
-          .join("\n"),
-
-    chargement: [
-      chargement.nom_court,
-      chargement.pays?.toLowerCase() === "fr"
-        ? chargement.cp?.substring(0, 2)
-        : "",
-      chargement.ville,
-      ["fr", "zz"].includes(chargement.pays?.toLowerCase())
-        ? ""
-        : `(${
-            $pays?.find(({ iso }) => chargement.pays === iso)?.nom ||
-            chargement.pays
-          })`,
-    ]
-      .filter((champ) => champ)
-      .join(" "),
-
-    tooltipChargement: !chargement.id
-      ? "Pas de lieu de chargement renseigné"
-      : [
-          "Chargement :",
-          chargement.nom_complet,
-          chargement.adresse_ligne_1,
-          chargement.adresse_ligne_2,
-          [chargement.cp || "", chargement.ville || ""]
-            .filter((champ) => champ)
-            .join(" "),
-          chargement.pays.toLowerCase() === "zz"
-            ? ""
-            : $pays?.find(({ iso }) => chargement.pays === iso)?.nom ||
-              chargement.pays,
-          chargement.telephone,
-          chargement.commentaire ? " " : "",
-          chargement.commentaire,
-        ]
-          .filter((champ) => champ)
-          .join("\n"),
-
-    livraison: [
-      livraison.nom_court,
-      livraison.pays.toLowerCase() === "fr" ? livraison.cp.substring(0, 2) : "",
-      livraison.ville,
-      ["fr", "zz"].includes(livraison.pays.toLowerCase())
-        ? ""
-        : `(${
-            $pays?.find(({ iso }) => livraison.pays === iso)?.nom ||
-            livraison.pays
-          })`,
-    ]
-      .filter((champ) => champ)
-      .join(" "),
-
-    tooltipLivraison: !livraison.id
-      ? "Pas de lieu de livraison renseigné"
-      : [
-          "Livraison :",
-          livraison.nom_complet,
-          livraison.adresse_ligne_1,
-          livraison.adresse_ligne_2,
-          [livraison.cp || "", livraison.ville || ""]
-            .filter((champ) => champ)
-            .join(" "),
-          livraison.pays.toLowerCase() === "zz"
-            ? ""
-            : $pays?.find(({ iso }) => livraison.pays === iso)?.nom ||
-              livraison.pays,
-          livraison.telephone,
-          livraison.commentaire ? " " : "",
-          livraison.commentaire,
-        ]
-          .filter((champ) => champ)
-          .join("\n"),
-  };
-
-  $: chargementAffiche = rdv.chargement && rdv.chargement !== 1;
-  $: livraisonAffiche = rdv.livraison && rdv.client !== rdv.livraison;
+  $: loadingPlaceIsDisplayed =
+    appointment.chargement && appointment.chargement !== 1;
+  $: deliveryPlaceIsDisplayed =
+    appointment.livraison && appointment.client !== appointment.livraison;
 
   $: statut = (() => {
-    if (rdv.heure_arrivee && !rdv.heure_depart) return "arrive";
-    if (rdv.heure_arrivee && rdv.heure_depart) return "parti";
+    if (appointment.heure_arrivee && !appointment.heure_depart) return "arrive";
+    if (appointment.heure_arrivee && appointment.heure_depart) return "parti";
     return "";
   })();
 
-  let numero_bl = rdv.numero_bl;
+  let numero_bl = appointment.numero_bl;
 
   const unsubscribe = boisRdvs.subscribe((rdvs) => {
     if (rdvs) {
-      numero_bl = rdvs.get(rdv.id)?.numero_bl;
+      numero_bl = rdvs.get(appointment.id)?.numero_bl;
     }
   });
+
+  function makeThirdPartyTooltip(
+    thirdParty: Tiers,
+    role: "chargement" | "client" | "livraison"
+  ) {
+    return thirdParty
+      ? [
+          role.charAt(0).toUpperCase() + role.slice(1) + " :",
+          thirdParty.nom_complet,
+          thirdParty.adresse_ligne_1,
+          thirdParty.adresse_ligne_2,
+          [thirdParty.cp || "", thirdParty.ville || ""]
+            .filter((champ) => champ)
+            .join(" "),
+          thirdParty.pays.toLowerCase() === "zz"
+            ? ""
+            : $pays?.find(({ iso }) => thirdParty.pays === iso)?.nom ||
+              thirdParty.pays,
+          thirdParty.telephone,
+          thirdParty.commentaire ? " " : "",
+          thirdParty.commentaire,
+        ]
+          .filter((champ) => champ)
+          .join("\n")
+      : "";
+  }
+
+  function showDispatchIfNecessary(
+    type: "beforeOrderReady" | "beforeSettingDepartureTime"
+  ) {
+    const normalizedRemarks = removeDiacritics(
+      appointment.dispatch.map(({ remarks }) => remarks).join()
+    );
+
+    const w2w = 219;
+    const yv = 13;
+
+    switch (type) {
+      case "beforeOrderReady":
+        if (
+          !appointment.commande_prete &&
+          !normalizedRemarks.includes("prepa")
+        ) {
+          appointment.dispatch = [
+            ...appointment.dispatch,
+            {
+              staffId: appointment.fournisseur === w2w ? yv : null,
+              date: new DateUtils().toLocaleISODateString(),
+              remarks: "Préparation",
+              new: true,
+            },
+          ];
+
+          awaitingDispatchBeforeOrderReady = true;
+          showDispatchModal = true;
+        }
+        break;
+
+      case "beforeSettingDepartureTime":
+        if (
+          !appointment.heure_depart &&
+          !normalizedRemarks.includes("charge")
+        ) {
+          appointment.dispatch = [
+            ...appointment.dispatch,
+            {
+              staffId: appointment.fournisseur === w2w ? yv : null,
+              date: new DateUtils().toLocaleISODateString(),
+              remarks:
+                appointment.chargement === 1 ? "Chargement" : "Déchargement",
+              new: true,
+            },
+          ];
+
+          awaitingDispatchBeforeSettingDepartureTime = true;
+          showDispatchModal = true;
+        }
+
+        break;
+
+      default:
+        break;
+    }
+  }
 
   /**
    * Renseigner l'heure d'arrivée en cliquant sur l'horloge.
    *
    * \+ Numéro BL automatique (Stora Enso).
    */
-  async function renseignerHeureArrivee() {
+  async function setArrivalTime() {
     try {
-      await boisRdvs.patch(rdv.id, {
+      await boisRdvs.patch(appointment.id, {
         heure_arrivee: new Date().toLocaleTimeString(),
       });
     } catch (err) {
       Notiflix.Notify.failure(err.message);
     } finally {
-      afficherModal = false;
+      showMenuModal = false;
     }
   }
 
   /**
    * Renseigner l'heure de départ en cliquant sur l'horloge.
    */
-  async function renseignerHeureDepart() {
+  async function setDepartureTime() {
+    showDispatchIfNecessary("beforeSettingDepartureTime");
+
+    if (awaitingDispatchBeforeSettingDepartureTime) return;
+
     try {
-      await boisRdvs.patch(rdv.id, {
+      await boisRdvs.patch(appointment.id, {
         heure_depart: new Date().toLocaleTimeString(),
       });
     } catch (err) {
       Notiflix.Notify.failure(err.message);
     } finally {
-      afficherModal = false;
+      showMenuModal = false;
     }
   }
 
@@ -215,8 +211,8 @@
    */
   async function toggleConfirmationAffretement() {
     try {
-      await boisRdvs.patch(rdv.id, {
-        confirmation_affretement: !rdv.confirmation_affretement,
+      await boisRdvs.patch(appointment.id, {
+        confirmation_affretement: !appointment.confirmation_affretement,
       });
     } catch (err) {
       Notiflix.Notify.failure(err.message);
@@ -226,15 +222,27 @@
   /**
    * Renseigner commande prête en cliquant sur l'icône paquet.
    */
-  async function renseignerCommandePrete() {
+  async function toggleOrderReady() {
+    showDispatchIfNecessary("beforeOrderReady");
+
+    if (awaitingDispatchBeforeOrderReady) return;
+
     try {
-      await boisRdvs.patch(rdv.id, {
-        commande_prete: !rdv.commande_prete,
+      const newState = !appointment.commande_prete;
+
+      await boisRdvs.patch(appointment.id, {
+        commande_prete: newState,
       });
+
+      Notiflix.Notify.success(
+        newState
+          ? "Commande marquée comme prête"
+          : "Commande marquée comme non prête"
+      );
     } catch (err) {
       Notiflix.Notify.failure(err.message);
     } finally {
-      afficherModal = false;
+      showMenuModal = false;
     }
   }
 
@@ -244,10 +252,10 @@
   async function changerNumeroBL() {
     numero_bl = numero_bl.trim();
 
-    if (numero_bl === rdv.numero_bl) return;
+    if (numero_bl === appointment.numero_bl) return;
 
     try {
-      await boisRdvs.patch(rdv.id, { numero_bl });
+      await boisRdvs.patch(appointment.id, { numero_bl });
     } catch (err: unknown) {
       const error = err as HTTP.Error | Error;
       if (error instanceof HTTP.BadRequest) {
@@ -255,7 +263,7 @@
       } else {
         Notiflix.Notify.failure(error.message);
       }
-      numero_bl = rdv.numero_bl;
+      numero_bl = appointment.numero_bl;
     }
   }
 
@@ -273,7 +281,7 @@
           Notiflix.Block.dots([ligne], notiflixOptions.texts.suppression);
           ligne.style.minHeight = "initial";
 
-          boisRdvs.delete(rdv.id);
+          boisRdvs.delete(appointment.id);
 
           Notiflix.Notify.success("Le RDV a été supprimé");
         } catch (erreur) {
@@ -285,14 +293,14 @@
       notiflixOptions.themes.red
     );
 
-    afficherModal = false;
+    showMenuModal = false;
   }
 
   onMount(() => {
     mc = new Hammer(ligne);
     mc.on("press", (event) => {
       if ($device.is("mobile")) {
-        afficherModal = true;
+        showMenuModal = true;
       }
     });
   });
@@ -303,313 +311,295 @@
   });
 </script>
 
-{#if afficherModal}
-  <Modal on:outclick={() => (afficherModal = false)}>
-    <div
-      style:background="white"
-      style:padding="20px"
-      style:border-radius="20px"
+<Modal bind:open={showMenuModal} outsideclose dismissable={false}>
+  {#if !appointment.heure_arrivee}
+    <BoutonAction on:click={setArrivalTime}
+      >Renseigner heure d'arrivée</BoutonAction
     >
-      {#if !rdv.heure_arrivee}
-        <BoutonAction on:click={renseignerHeureArrivee}
-          >Renseigner heure d'arrivée</BoutonAction
-        >
-      {/if}
-      {#if rdv.heure_arrivee && !rdv.heure_depart}
-        <BoutonAction on:click={renseignerHeureDepart}
-          >Renseigner heure de départ</BoutonAction
-        >
-      {/if}
-      <BoutonAction preset="modifier" on:click={$goto(`./${rdv.id}`)} />
-      <BoutonAction preset="copier" on:click={$goto(`./new?copie=${rdv.id}`)} />
-      <BoutonAction preset="supprimer" on:click={supprimerRdv} />
-      <BoutonAction preset="annuler" on:click={() => (afficherModal = false)} />
-    </div>
-  </Modal>
-{/if}
+  {/if}
+  {#if appointment.heure_arrivee && !appointment.heure_depart}
+    <BoutonAction on:click={setDepartureTime}
+      >Renseigner heure de départ</BoutonAction
+    >
+  {/if}
+  <BoutonAction on:click={toggleOrderReady}
+    >{appointment.commande_prete ? "Annuler" : "Renseigner"} commande prête</BoutonAction
+  >
+  <BoutonAction preset="modifier" on:click={$goto(`./${appointment.id}`)} />
+  <BoutonAction
+    preset="copier"
+    on:click={$goto(`./new?copie=${appointment.id}`)}
+  />
+  <BoutonAction preset="supprimer" on:click={supprimerRdv} />
+  <BoutonAction preset="annuler" on:click={() => (showMenuModal = false)} />
+</Modal>
 
 <div
   bind:this={ligne}
-  class="rdv pure-g"
+  class="group grid grid-cols-[50px_1fr] gap-2 lg:grid-cols-[4%_4%_19%_8%_3%_8%_8%_2%_2%_8%_20%_auto] py-2 lg:min-h-11"
+  style:--bg-arrive="hsl(44, 100%, 79%)"
+  style:--bg-parti="hsl(104, 100%, 89%)"
   style:background-color={`var(--bg-${statut}, none)`}
 >
-  <div class="heures pure-u-3-24 pure-u-lg-2-24">
-    {#if rdv.heure_arrivee}
-      <div class="heure heure-arrivee pure-u-1 pure-u-lg-11-24">
-        {rdv.heure_arrivee.substring(0, 5)}
+  <!-- Heure d'arrivée -->
+  <div class="[grid-area:1/1/6/2] lg:col-auto lg:row-auto">
+    {#if appointment.heure_arrivee}
+      <div class="font-bold text-[#d91ffa] text-center">
+        {appointment.heure_arrivee.substring(0, 5)}
       </div>
     {/if}
 
-    {#if !rdv.heure_arrivee && $currentUser.canEdit("bois")}
-      <div class="horloge horloge-arrivee pure-u-1 pure-u-lg-11-24">
-        <MaterialButton
-          icon="schedule"
+    {#if !appointment.heure_arrivee && $currentUser.canEdit("bois")}
+      <div class="invisible group-hover:visible text-center">
+        <LucideButton
+          icon={ClockIcon}
           title="Renseigner l'heure d'arrvée"
-          on:click={renseignerHeureArrivee}
+          on:click={setArrivalTime}
         />
       </div>
     {/if}
+  </div>
 
-    {#if rdv.heure_depart}
-      <div class="heure heure-depart pure-u-1 pure-u-lg-11-24">
-        {rdv.heure_depart.substring(0, 5)}
+  <!-- Heure de départ -->
+  <div class="col-start-1 row-start-2 lg:col-auto lg:row-auto">
+    {#if appointment.heure_depart}
+      <div class="font-bold text-[#d91ffa] text-center">
+        {appointment.heure_depart.substring(0, 5)}
       </div>
     {/if}
 
-    {#if rdv.heure_arrivee && !rdv.heure_depart && $currentUser.canEdit("bois")}
-      <div class="horloge horloge-depart pure-u-1 pure-u-lg-11-24">
-        <MaterialButton
-          icon="schedule"
+    {#if appointment.heure_arrivee && !appointment.heure_depart && $currentUser.canEdit("bois")}
+      <div class="invisible group-hover:visible text-center">
+        <LucideButton
+          icon={ClockIcon}
           title="Renseigner l'heure de départ"
-          on:click={renseignerHeureDepart}
+          on:click={setDepartureTime}
         />
       </div>
     {/if}
   </div>
 
-  <div class="pure-u-21-24 pure-u-lg-20-24">
-    <div class="adresses-tiers pure-u-1 pure-u-lg-6-24">
-      {#if chargementAffiche}
-        <div class="chargement">
-          <IconText>
-            <span slot="icon" title="Chargement">line_start_diamond</span>
-            <span slot="text">{adresses.chargement}</span>
-            <span slot="tooltip">{adresses.tooltipChargement}</span>
-          </IconText>
-        </div>
-      {/if}
-
-      <div class="client">
+  <!-- Adresses -->
+  <div>
+    <!-- Chargement -->
+    {#if loadingPlaceIsDisplayed}
+      <div>
         <IconText>
-          <span slot="icon" title="Client">
-            {#if chargementAffiche || livraisonAffiche}
-              person
-            {/if}
-          </span>
-          <span slot="text">{adresses.client}</span>
-          <span slot="tooltip">{adresses.tootipClient}</span>
-        </IconText>
-      </div>
-
-      {#if livraisonAffiche}
-        <div class="livraison">
-          <IconText>
-            <span slot="icon" title="Livraison">line_end_circle</span>
-            <span slot="text">{adresses.livraison}</span>
-            <span slot="tooltip">{adresses.tooltipLivraison}</span>
-          </IconText>
-        </div>
-      {/if}
-    </div>
-
-    <div class="transporteur pure-u-1 pure-u-lg-2-24">
-      {#if rdv.transporteur}
-        <IconText hideIcon={["desktop"]}>
-          <span slot="icon" title="Transporteur">local_shipping</span>
-          <span slot="text" style:font-weight="bold"
-            >{transporteur.nom_court}</span
-          >
+          <span slot="icon" title="Chargement"><ArrowRightFromLineIcon /></span>
+          <span slot="text"><ThirdPartyAddress thirdParty={chargement} /></span>
           <span slot="tooltip">
-            {#if rdv.transporteur >= 11}
-              <!-- Transporteur non "spécial" -->
-              {transporteur.telephone || "Téléphone non renseigné"}
-            {/if}
+            {makeThirdPartyTooltip(chargement, "chargement")}
           </span>
         </IconText>
-      {/if}
-    </div>
-
-    {#if $currentUser.canEdit("bois")}
-      <div
-        class="confirmation_affretement pure-u-lg-1-24"
-        style:visibility={$tiers?.get(rdv.affreteur)?.lie_agence
-          ? "visible"
-          : "hidden"}
-        data-confirme={rdv.confirmation_affretement ? "1" : "0"}
-      >
-        <MaterialButton
-          icon="receipt"
-          title="Confirmation d'affrètement"
-          color="#000000"
-          on:click={toggleConfirmationAffretement}
-        />
       </div>
     {/if}
 
-    <div class="affreteur pure-u-1 pure-u-lg-2-24">
-      <IconText iconType="text" hideIcon={["desktop"]}>
-        <span slot="icon" title="Affréteur">A</span>
-        <span
-          slot="text"
-          style:color={affreteur.lie_agence ? "blue" : "inherit"}
-          >{affreteur.nom_court}</span
-        >
+    <!-- Client -->
+    <div>
+      <IconText>
+        <span slot="icon" title="Client">
+          {#if loadingPlaceIsDisplayed || deliveryPlaceIsDisplayed || $device.is("mobile")}
+            <UserIcon />
+          {/if}
+        </span>
+        <span slot="text"><ThirdPartyAddress thirdParty={client} /></span>
+        <span slot="tooltip">
+          {makeThirdPartyTooltip(client, "client")}
+        </span>
       </IconText>
     </div>
 
-    <div class="fournisseur pure-u-1 pure-u-lg-2-24">
-      <IconText iconType="text" hideIcon={["desktop"]}>
-        <span slot="icon" title="Fournisseur">F</span>
-        <span slot="text">{fournisseur.nom_court}</span>
-      </IconText>
-    </div>
-
-    <div class="commande_prete pure-u-1 pure-u-lg-1-24">
-      {#if rdv.commande_prete && !$currentUser.canEdit("bois")}
-        <IconText hideText={["desktop"]}>
-          <span slot="icon" title="Commande prête">package_2</span>
-          <span slot="text">Commande prête</span>
+    <!-- Livraison -->
+    {#if deliveryPlaceIsDisplayed}
+      <div>
+        <IconText>
+          <span slot="icon" title="Livraison"><ArrowRightToLineIcon /></span>
+          <span slot="text"><ThirdPartyAddress thirdParty={livraison} /></span>
+          <span slot="tooltip">
+            {makeThirdPartyTooltip(livraison, "livraison")}
+          </span>
         </IconText>
-      {/if}
-
-      {#if rdv.commande_prete && $currentUser.canEdit("bois")}
-        <div class="commande_prete-bouton-annuler">
-          <MaterialButton
-            icon="package_2"
-            title="Annuler la préparation de commande"
-            invert
-            on:click={renseignerCommandePrete}
-          />
-        </div>
-      {/if}
-
-      {#if !rdv.commande_prete && $currentUser.canEdit("bois")}
-        <div class="commande_prete-bouton-confirmer">
-          <MaterialButton
-            icon="package_2"
-            title="Renseigner commande prête"
-            on:click={renseignerCommandePrete}
-          />
-        </div>
-      {/if}
-    </div>
-
-    {#if $currentUser.canEdit("bois")}
-      <div
-        class="numero_bl pure-u-lg-2-24"
-        contenteditable
-        bind:this={inputNumeroBL}
-        bind:textContent={numero_bl}
-        on:blur={changerNumeroBL}
-        on:keydown={(e) => {
-          if (e.key === "Enter") {
-            inputNumeroBL.blur();
-          }
-          if (e.key === "Escape") {
-            numero_bl = rdv.numero_bl;
-            inputNumeroBL.blur();
-          }
-        }}
-        role="textbox"
-        aria-label="Numéro de BL"
-        tabindex="0"
-      />
-    {:else}
-      <div class="numero_bl pure-u-lg-2-24">
-        {rdv.numero_bl}
       </div>
     {/if}
-
-    <div class="commentaires pure-u-1 pure-u-lg-5-24">
-      {#if rdv.commentaire_public}
-        <div class="commentaire_public">
-          <IconText hideIcon={["desktop"]}>
-            <span slot="icon" title="Commentaire public">comment</span>
-            <span slot="text"
-              >{@html rdv.commentaire_public.replace(
-                /(?:\r\n|\r|\n)/g,
-                "<br>"
-              )}</span
-            >
-          </IconText>
-        </div>
-      {/if}
-
-      {#if rdv.commentaire_public && rdv.commentaire_cache}
-        <div class="separateur" />
-      {/if}
-
-      {#if rdv.commentaire_cache}
-        <div class="commentaire_cache">
-          <IconText hideIcon={["desktop"]}>
-            <span slot="icon" title="Commentaire caché">comments_disabled</span>
-            <span slot="text"
-              >{@html rdv.commentaire_cache.replace(
-                /(?:\r\n|\r|\n)/g,
-                "<br>"
-              )}</span
-            >
-          </IconText>
-        </div>
-      {/if}
-    </div>
   </div>
 
+  <!-- Transporteur -->
+  <div>
+    {#if appointment.transporteur}
+      <IconText
+        hideIcon={["desktop"]}
+        showTooltip={appointment.transporteur >= 11}
+      >
+        <span slot="icon" title="Transporteur"><TruckIcon /></span>
+        <span slot="text" style:font-weight="bold"
+          >{transporteur?.nom_court || ""}</span
+        >
+        <span slot="tooltip">
+          <!-- Transporteur non "spécial" -->
+          {transporteur?.telephone || "Téléphone non renseigné"}
+        </span>
+      </IconText>
+    {/if}
+  </div>
+
+  <!-- Confirmation d'affrètement -->
+  <div
+    class="confirmation_affretement col-start-1 row-start-5 lg:col-auto lg:row-auto text-center"
+    style:visibility={$tiers?.get(appointment.affreteur)?.lie_agence
+      ? "visible"
+      : "hidden"}
+    data-confirme={appointment.confirmation_affretement ? "1" : "0"}
+  >
+    {#if $currentUser.canEdit("bois")}
+      <LucideButton
+        icon={ReceiptTextIcon}
+        title="Confirmation d'affrètement"
+        color="#000000"
+        staticallyColored
+        on:click={toggleConfirmationAffretement}
+      />
+    {/if}
+  </div>
+
+  <!-- Affréteur -->
+  <div>
+    <IconText hideIcon={["desktop"]}>
+      <span slot="icon" title="Affréteur">A</span>
+      <span slot="text" style:color={affreteur?.lie_agence ? "blue" : "inherit"}
+        >{affreteur?.nom_court || ""}</span
+      >
+    </IconText>
+  </div>
+
+  <!-- Fournisseur -->
+  <div>
+    <IconText hideIcon={["desktop"]}>
+      <span slot="icon" title="Fournisseur">F</span>
+      <span slot="text">{fournisseur?.nom_court || ""}</span>
+    </IconText>
+  </div>
+
+  <!-- Commande prête -->
+  <div class="col-start-1 row-start-3 lg:col-auto lg:row-auto">
+    <OrderReadyButton
+      bind:orderReady={appointment.commande_prete}
+      module="bois"
+      {toggleOrderReady}
+    />
+  </div>
+
+  <!-- Dispatch -->
+  <div class="col-start-1 row-start-4 lg:col-auto lg:row-auto">
+    <DispatchButton
+      bind:dispatch={appointment.dispatch}
+      bind:showDispatchModal
+      module="bois"
+    />
+
+    <DispatchModal
+      bind:appointment
+      bind:open={showDispatchModal}
+      bind:awaitingDispatchBeforeOrderReady
+      {toggleOrderReady}
+      bind:awaitingDispatchBeforeSettingDepartureTime
+      {setDepartureTime}
+    />
+  </div>
+
+  <!-- Numéro B/L -->
   {#if $currentUser.canEdit("bois")}
-    <div class="copie-modif-suppr">
-      <MaterialButton
-        preset="copier"
+    <div
+      class="no-mobile numero_bl"
+      contenteditable
+      bind:this={inputNumeroBL}
+      bind:textContent={numero_bl}
+      on:blur={changerNumeroBL}
+      on:keydown={(e) => {
+        if (e.key === "Enter") {
+          inputNumeroBL.blur();
+        }
+        if (e.key === "Escape") {
+          numero_bl = appointment.numero_bl;
+          inputNumeroBL.blur();
+        }
+      }}
+      role="textbox"
+      aria-label="Numéro de BL"
+      tabindex="0"
+    />
+  {:else}
+    <div class="no-mobile">
+      {appointment.numero_bl}
+    </div>
+  {/if}
+
+  <!-- Commentaires -->
+  <div>
+    <!-- Commentaire public -->
+    {#if appointment.commentaire_public}
+      <div class="lg:pl-1">
+        <IconText hideIcon={["desktop"]}>
+          <span slot="icon" title="Commentaire public"
+            ><MessageSquareTextIcon /></span
+          >
+          <span slot="text"
+            >{@html appointment.commentaire_public.replace(
+              /\r\n|\r|\n/g,
+              "<br/>"
+            )}</span
+          >
+        </IconText>
+      </div>
+    {/if}
+
+    {#if appointment.commentaire_public && appointment.commentaire_cache}
+      <div class="h-3" />
+    {/if}
+
+    <!-- Commentaire caché -->
+    {#if appointment.commentaire_cache}
+      <div
+        class="text-gray-400 lg:border-l-[1px] lg:border-dotted lg:border-l-gray-400 lg:pl-1"
+      >
+        <IconText hideIcon={["desktop"]}>
+          <span slot="icon" title="Commentaire caché"
+            ><MessageSquareOffIcon /></span
+          >
+          <span slot="text"
+            >{@html appointment.commentaire_cache.replace(
+              /\r\n|\r|\n/g,
+              "<br/>"
+            )}</span
+          >
+        </IconText>
+      </div>
+    {/if}
+  </div>
+
+  <!-- Boutons -->
+  {#if $currentUser.canEdit("bois")}
+    <div class="no-mobile invisible ms-auto me-2 group-hover:visible">
+      <LucideButton
+        preset="copy"
         on:click={() => {
-          $goto(`./new?copie=${rdv.id}`);
+          $goto(`./new?copie=${appointment.id}`);
         }}
       />
-      <MaterialButton
-        preset="modifier"
+      <LucideButton
+        preset="edit"
         on:click={() => {
-          $goto(`./${rdv.id}`);
+          $goto(`./${appointment.id}`);
         }}
       />
-      <MaterialButton preset="supprimer" on:click={supprimerRdv} />
+      <LucideButton preset="delete" on:click={supprimerRdv} />
     </div>
   {/if}
 </div>
 
 <style>
-  .rdv {
-    --bg-arrive: hsl(44, 100%, 79%);
-    --bg-parti: hsl(104, 100%, 89%);
-    padding: 8px 0 8px 5px;
-    border-bottom: 1px solid hsl(0, 0%, 60%);
-    align-items: baseline;
-  }
-
-  .rdv:last-child {
-    border-bottom: none;
-  }
-
-  .adresses-tiers,
-  .transporteur,
-  .affreteur,
-  .fournisseur,
-  .numero_bl,
-  .commentaires,
-  .commande_prete {
-    margin-left: 5px;
-  }
-
-  .heure {
-    font-weight: bold;
-    color: #d91ffa;
-    text-align: center;
-  }
-
-  .horloge {
-    display: none;
-    text-align: center;
-  }
-
   .numero_bl[contenteditable]:hover {
     border: 1px solid hsl(0, 0%, 33%);
     background-color: hsla(0, 0%, 0%, 0.1);
-  }
-
-  .commentaires .separateur {
-    height: 10px;
-  }
-
-  .commentaire_cache {
-    --commentaire-cache-color: hsl(0, 0%, 50%);
-    color: var(--commentaire-cache-color);
   }
 
   /* Confirmation d'affrètement */
@@ -617,12 +607,9 @@
     position: relative;
   }
 
-  .confirmation_affretement :global(button):hover {
-    font-variation-settings: "FILL" 1;
-  }
-
   .confirmation_affretement :global(button::after) {
     position: absolute;
+    font-size: 1.5rem;
     left: 0.6em;
   }
 
@@ -634,56 +621,5 @@
   .confirmation_affretement[data-confirme="1"] :global(button::after) {
     content: "✔︎";
     color: green;
-  }
-
-  .commande_prete-bouton-confirmer {
-    display: none;
-  }
-
-  /* Mobile */
-  @media screen and (max-width: 767px) {
-    .numero_bl,
-    .confirmation_affretement {
-      display: none;
-    }
-
-    .transporteur,
-    .commentaires {
-      margin-top: 10px;
-    }
-  }
-
-  /* Desktop */
-  @media screen and (min-width: 768px) {
-    .rdv {
-      min-height: 2.75rem; /* Pour éviter saut de contenu lors de hover avec icônes Material */
-    }
-
-    .rdv:hover .copie-modif-suppr {
-      visibility: visible;
-      margin-right: 10px;
-    }
-
-    .rdv:hover .horloge {
-      display: inline-block;
-    }
-
-    .numero_bl,
-    .confirmation_affretement {
-      display: inline-block;
-    }
-
-    .commentaire_cache {
-      border-left: 1px dotted var(--commentaire-cache-color);
-    }
-
-    .commentaire_public,
-    .commentaire_cache {
-      padding-left: 5px;
-    }
-
-    .rdv:hover .commande_prete-bouton-confirmer {
-      display: inline-block;
-    }
   }
 </style>

@@ -15,102 +15,247 @@
 
   import Notiflix from "notiflix";
   import Hammer from "hammerjs";
+  import { Modal } from "flowbite-svelte";
+  import {
+    ArchiveIcon,
+    ArchiveRestoreIcon,
+    MessageSquareOffIcon,
+    MessageSquareTextIcon,
+  } from "lucide-svelte";
 
-  import { MaterialButton, BoutonAction, Modal } from "@app/components";
+  import { DispatchModal } from "../";
+  import {
+    LucideButton,
+    BoutonAction,
+    IconText,
+    DispatchButton,
+    OrderReadyButton,
+  } from "@app/components";
 
-  import { notiflixOptions, device } from "@app/utils";
-  import type {
-    Stores,
-    RdvVrac,
-    ProduitVrac,
-    QualiteVrac,
-    Tiers,
-  } from "@app/types";
+  import { notiflixOptions, device, removeDiacritics } from "@app/utils";
+  import type { RdvVrac } from "@app/types";
 
-  // Stores
-  const { currentUser, vracProduits, vracRdvs, tiers } =
-    getContext<Stores>("stores");
+  import { currentUser, vracProduits, vracRdvs, tiers } from "@app/stores";
 
-  export let rdv: RdvVrac;
+  export let appointment: RdvVrac;
   let ligne: HTMLDivElement;
 
   let mc: HammerManager;
-  let afficherModal = false;
+  let showMenuModal = false;
 
-  const tiersVierge: Partial<Tiers> = {
-    nom_court: "",
+  let showDispatchModal = false;
+
+  let awaitingDispatchBeforeOrderReady = false;
+  let awaitingDispatchBeforeArchive = false;
+
+  const archives: boolean = getContext("archives");
+
+  $: produit = $vracProduits?.get(appointment.produit) || {
+    ...vracProduits.getTemplate(),
   };
-
-  const produitVierge: Partial<ProduitVrac> = {
-    nom: "",
-    couleur: "#000000",
-    qualites: [],
-  };
-
-  const qualiteVierge: Partial<QualiteVrac> = {
-    nom: "",
-    couleur: "#000000",
-  };
-
-  $: client = $tiers?.get(rdv.client) || { ...tiersVierge };
-
-  $: transporteur = $tiers?.get(rdv.transporteur) || { ...tiersVierge };
-
-  $: produit = $vracProduits?.get(rdv.produit) || { ...produitVierge };
 
   $: qualite = produit.qualites.find(
-    (qualite) => qualite.id === rdv.qualite
-  ) || { ...qualiteVierge };
+    (qualite) => qualite.id === appointment.qualite
+  );
 
-  /**
-   * Renseigner commande prête en cliquant sur l'icône paquet.
-   */
-  async function renseignerCommandePrete() {
-    try {
-      await vracRdvs.patch(rdv.id, {
-        commande_prete: !rdv.commande_prete,
-      });
-    } catch (err) {
-      Notiflix.Notify.failure(err.message);
-    } finally {
-      afficherModal = false;
+  function showDispatchIfNecessary(type: "beforeOrderReady" | "beforeArchive") {
+    const normalizedRemarks = removeDiacritics(
+      appointment.dispatch.map(({ remarks }) => remarks).join()
+    );
+
+    switch (type) {
+      case "beforeOrderReady":
+        if (
+          !appointment.commande_prete &&
+          !normalizedRemarks.includes("prepa")
+        ) {
+          appointment.dispatch = [
+            ...appointment.dispatch,
+            {
+              staffId: null,
+              date: new Date().toISOString().split("T")[0],
+              remarks: "Préparation",
+              new: true,
+            },
+          ];
+
+          awaitingDispatchBeforeOrderReady = true;
+          showDispatchModal = true;
+        }
+        break;
+
+      case "beforeArchive":
+        // Big bags
+        if (!appointment.archive && produit.unite === "BB") {
+          if (!normalizedRemarks.includes("jcb")) {
+            appointment.dispatch = [
+              ...appointment.dispatch,
+              {
+                staffId: null,
+                date: new Date().toISOString().split("T")[0],
+                remarks: "JCB",
+                new: true,
+              },
+            ];
+
+            if (
+              !normalizedRemarks.includes("tremi") &&
+              !appointment.commentaire_public
+                .toLocaleLowerCase()
+                .includes("taut") &&
+              !appointment.commentaire_prive
+                .toLocaleLowerCase()
+                .includes("taut")
+            ) {
+              appointment.dispatch = [
+                ...appointment.dispatch,
+                {
+                  staffId: null,
+                  date: new Date().toISOString().split("T")[0],
+                  remarks: "Trémie",
+                  new: true,
+                },
+              ];
+            }
+
+            awaitingDispatchBeforeArchive = true;
+            showDispatchModal = true;
+          }
+        }
+
+        // Bulk
+        if (
+          !appointment.archive &&
+          produit.unite === "T" &&
+          !normalizedRemarks.includes("charge")
+        ) {
+          appointment.dispatch = [
+            ...appointment.dispatch,
+            {
+              staffId: null,
+              date: new Date().toISOString().split("T")[0],
+              remarks: "Chargeuse",
+              new: true,
+            },
+          ];
+
+          awaitingDispatchBeforeArchive = true;
+          showDispatchModal = true;
+        }
+
+        // Animal feed
+        if (
+          !appointment.archive &&
+          appointment.produit === 1 &&
+          appointment.dispatch.length === 0
+        ) {
+          appointment.dispatch = [
+            ...appointment.dispatch,
+            {
+              staffId: null,
+              date: new Date().toISOString().split("T")[0],
+              remarks: "x" + appointment.quantite,
+              new: true,
+            },
+          ];
+
+          awaitingDispatchBeforeArchive = true;
+          showDispatchModal = true;
+        }
+
+        if (!appointment.archive && appointment.dispatch.length === 0) {
+          appointment.dispatch = [
+            ...appointment.dispatch,
+            {
+              staffId: null,
+              date: new Date().toISOString().split("T")[0],
+              remarks: "",
+              new: true,
+            },
+          ];
+
+          awaitingDispatchBeforeArchive = true;
+          showDispatchModal = true;
+        }
+
+        break;
+
+      default:
+        break;
     }
   }
 
   /**
-   * Supprimer le RDV.
+   * Renseigner commande prête en cliquant sur l'icône paquet.
    */
-  function supprimerRdv() {
+  async function toggleOrderReady() {
+    showDispatchIfNecessary("beforeOrderReady");
+
+    if (awaitingDispatchBeforeOrderReady) return;
+
+    try {
+      const newState = !appointment.commande_prete;
+
+      await vracRdvs.patch(appointment.id, {
+        commande_prete: newState,
+      });
+
+      Notiflix.Notify.success(
+        newState
+          ? "Commande marquée comme prête"
+          : "Commande marquée comme non prête"
+      );
+    } catch (err) {
+      Notiflix.Notify.failure(err.message);
+    } finally {
+      showMenuModal = false;
+    }
+  }
+
+  function toggleArchive() {
+    showDispatchIfNecessary("beforeArchive");
+
+    if (awaitingDispatchBeforeArchive) return;
+
     Notiflix.Confirm.show(
-      "Suppression RDV",
-      "Voulez-vous vraiment supprimer le RDV ?",
-      "Supprimer",
+      appointment.archive ? "Restauration RDV" : "Archivage RDV",
+      appointment.archive
+        ? "Voulez-vous vraiment restaurer le RDV ?"
+        : "Voulez-vous vraiment archiver le RDV ?",
+      appointment.archive ? "Restaurer" : "Archiver",
       "Annuler",
       async function () {
         try {
-          Notiflix.Block.dots([ligne], notiflixOptions.texts.suppression);
+          Notiflix.Block.dots(
+            [ligne],
+            `${appointment.archive ? "Restauration" : "Archivage"} en cours...`
+          );
           ligne.style.minHeight = "initial";
 
-          vracRdvs.delete(rdv.id);
+          await vracRdvs.patch(appointment.id, {
+            archive: !appointment.archive,
+          });
 
-          Notiflix.Notify.success("Le RDV a été supprimé");
+          Notiflix.Notify.success(
+            `Le RDV a été ${appointment.archive ? "restauré" : "archivé"}`
+          );
         } catch (erreur) {
           Notiflix.Notify.failure(erreur.message);
           Notiflix.Block.remove([ligne]);
         }
       },
       null,
-      notiflixOptions.themes.red
+      notiflixOptions.themes.orange
     );
 
-    afficherModal = false;
+    showMenuModal = false;
   }
 
   onMount(() => {
     mc = new Hammer(ligne);
     mc.on("press", () => {
       if ($device.is("mobile")) {
-        afficherModal = true;
+        showMenuModal = true;
       }
     });
   });
@@ -120,211 +265,157 @@
   });
 </script>
 
-{#if afficherModal}
-  <Modal on:outclick={() => (afficherModal = false)}>
-    <div
-      style:background="white"
-      style:padding="20px"
-      style:border-radius="20px"
-    >
-      <BoutonAction preset="modifier" on:click={$goto(`./${rdv.id}`)} />
-      <BoutonAction preset="copier" on:click={$goto(`./new?copie=${rdv.id}`)} />
-      <BoutonAction preset="supprimer" on:click={supprimerRdv} />
-      <BoutonAction preset="annuler" on:click={() => (afficherModal = false)} />
-    </div>
-  </Modal>
-{/if}
-
-<div class="rdv pure-g" bind:this={ligne}>
-  <div class="heure pure-u-lg-1-24 pure-u-4-24">{rdv.heure ?? ""}</div>
-
-  <div class="produit-qualite pure-u-lg-4-24 pure-u-12-24">
-    <span class="produit" style:color={produit.couleur}>{produit.nom}</span>
-    {#if rdv.qualite}
-      <span class="qualite" style:color={qualite.couleur}>{qualite.nom}</span>
-    {/if}
-    {#if rdv.commande_prete}
-      <span class="material-symbols-outlined no-desktop" title="Commande prête"
-        >package_2</span
-      >
-    {/if}
-  </div>
-
-  <div class="commande_prete pure-u-1 pure-u-lg-1-24 no-mobile">
-    {#if rdv.commande_prete && !$currentUser.canEdit("vrac")}
-      <span class="material-symbols-outlined" title="Commande prête"
-        >package_2</span
-      >
-    {/if}
-
-    {#if rdv.commande_prete && $currentUser.canEdit("vrac")}
-      <div class="commande_prete-bouton-annuler">
-        <MaterialButton
-          icon="package_2"
-          title="Annuler la préparation de commande"
-          invert
-          on:click={renseignerCommandePrete}
-        />
-      </div>
-    {/if}
-
-    {#if !rdv.commande_prete && $currentUser.canEdit("vrac")}
-      <div class="commande_prete-bouton-confirmer">
-        <MaterialButton
-          icon="package_2"
-          title="Renseigner commande prête"
-          on:click={renseignerCommandePrete}
-        />
-      </div>
-    {/if}
-  </div>
-
-  <div
-    class="quantite-unite pure-u-lg-2-24 pure-u-6-24"
-    style:color={rdv.max ? "red" : "initial"}
+<Modal bind:open={showMenuModal} outsideclose dismissable={false}>
+  <BoutonAction on:click={toggleOrderReady}
+    >{appointment.commande_prete ? "Annuler" : "Renseigner"} commande prête</BoutonAction
   >
-    <span class="quantite">{rdv.quantite}</span>
-    <span class="unite">{produit.unite}</span>
-    <span class="max">{rdv.max ? "max" : ""}</span>
+  <BoutonAction preset="modifier" on:click={$goto(`./${appointment.id}`)} />
+  <BoutonAction
+    preset="copier"
+    on:click={$goto(`./new?copie=${appointment.id}`)}
+  />
+  <BoutonAction
+    text={appointment.archive ? "Restaurer" : "Archiver"}
+    color="hsl(32, 100%, 50%)"
+    on:click={toggleArchive}
+  />
+  <BoutonAction preset="annuler" on:click={() => (showMenuModal = false)} />
+</Modal>
+
+<div
+  class="group grid grid-cols-[50px_1fr] gap-2 py-2 lg:grid-cols-[4%_16%_3%_3%_8%_27%_8%_16%_auto] lg:text-lg"
+  bind:this={ligne}
+>
+  <!-- Heure -->
+  <div
+    class="font-bold text-[#d91ffa] [grid-area:1/1/6/2] lg:col-auto lg:row-auto"
+  >
+    {appointment.heure ?? ""}
   </div>
 
-  <div class="client pure-u-lg-7-24 pure-u-1">
-    {client.nom_court}
-    {client.ville}
-  </div>
-  <div class="transporteur pure-u-lg-3-24 pure-u-1">
-    {transporteur.nom_court}
+  <!-- Produit + qualité -->
+  <div class="font-bold">
+    <span style:color={produit.couleur}>{produit.nom}</span>
+
+    {#if appointment.qualite}
+      <span style:color={qualite?.couleur}>{qualite?.nom}</span>
+    {/if}
   </div>
 
-  <div class="num_commande pure-u-lg-3-24 pure-u-12-24">{rdv.num_commande}</div>
+  <!-- Commande prête -->
+  <div class="col-start-1 row-start-2 lg:col-auto lg:row-auto">
+    <OrderReadyButton
+      bind:orderReady={appointment.commande_prete}
+      module="vrac"
+      {toggleOrderReady}
+    />
+  </div>
+
+  <!-- Dispatch -->
+  <div class="col-start-1 row-start-3 lg:col-auto lg:row-auto">
+    <DispatchButton
+      bind:dispatch={appointment.dispatch}
+      bind:showDispatchModal
+      module="vrac"
+    />
+
+    <DispatchModal
+      bind:appointment
+      bind:open={showDispatchModal}
+      bind:awaitingDispatchBeforeOrderReady
+      {toggleOrderReady}
+      bind:awaitingDispatchBeforeArchive
+      {toggleArchive}
+    />
+  </div>
+
+  <!-- Quantité + unité + max -->
+  <div style:color={appointment.max ? "red" : "initial"}>
+    <span class="font-bold">{appointment.quantite}</span>
+    <span>{produit.unite}</span>
+    <span>{appointment.max ? "max" : ""}</span>
+  </div>
+
+  <!-- Client -->
+  <div>
+    {$tiers?.get(appointment.client)?.nom_court || ""}
+    {$tiers?.get(appointment.client)?.ville || ""}
+  </div>
+
+  <!-- Transporteur -->
+  <div class="font-bold">
+    {$tiers?.get(appointment.transporteur)?.nom_court || ""}
+  </div>
+
+  <!-- Numéro de commande -->
+  <div>{appointment.num_commande}</div>
 
   {#if $currentUser.canEdit("vrac")}
-    <div class="copie-modif-suppr">
-      <MaterialButton
-        preset="copier"
+    <div class="no-mobile invisible ms-auto group-hover:visible">
+      <LucideButton
+        preset="copy"
         on:click={() => {
-          $goto(`./new?copie=${rdv.id}`);
+          $goto(`./new?copie=${appointment.id}${archives ? "&archives" : ""}`);
         }}
       />
-      <MaterialButton
-        preset="modifier"
+      <LucideButton
+        preset="edit"
         on:click={() => {
-          $goto(`./${rdv.id}`);
+          $goto(`./${appointment.id}${archives ? "?archives" : ""}`);
         }}
       />
-      <MaterialButton preset="supprimer" on:click={supprimerRdv} />
+      <LucideButton
+        icon={appointment.archive ? ArchiveRestoreIcon : ArchiveIcon}
+        on:click={toggleArchive}
+        title={appointment.archive ? "Restaurer" : "Archiver"}
+        hoverColor="hsl(32, 100%, 50%)"
+      />
     </div>
   {/if}
 
-  <div class="pure-u-lg-6-24">
-    <!-- Espacement -->
+  <!-- Espacement -->
+  <div class="lg:col-span-3"></div>
+
+  <!-- Commentaires -->
+  <div class="lg:col-span-4">
+    <!-- Commentaire public -->
+    {#if appointment.commentaire_public}
+      <div class="lg:pl-1">
+        <IconText hideIcon={["desktop"]}>
+          <span slot="icon" title="Commentaire public"
+            ><MessageSquareTextIcon /></span
+          >
+          <span slot="text"
+            >{@html appointment.commentaire_public.replace(
+              /\r\n|\r|\n/g,
+              "<br/>"
+            )}</span
+          >
+        </IconText>
+      </div>
+    {/if}
+
+    {#if appointment.commentaire_public && appointment.commentaire_prive}
+      <div class="h-3" />
+    {/if}
+
+    <!-- Commentaire privé -->
+    {#if appointment.commentaire_prive}
+      <div
+        class="text-gray-400 lg:border-l-[1px] lg:border-dotted lg:border-l-gray-400 lg:pl-1"
+      >
+        <IconText hideIcon={["desktop"]}>
+          <span slot="icon" title="Commentaire caché"
+            ><MessageSquareOffIcon /></span
+          >
+          <span slot="text"
+            >{@html appointment.commentaire_prive.replace(
+              /\r\n|\r|\n/g,
+              "<br/>"
+            )}</span
+          >
+        </IconText>
+      </div>
+    {/if}
   </div>
-  <div class="commentaire pure-u-lg-17-24 pure-u-1">
-    {@html rdv.commentaire.replace(/(?:\r\n|\r|\n)/g, "<br>")}
-  </div>
-  <!-- <hr /> -->
 </div>
-
-<style>
-  .rdv {
-    border-bottom: 1px solid #ddd;
-  }
-
-  .rdv:last-child {
-    border-bottom: none;
-  }
-
-  .heure,
-  .produit-qualite,
-  .quantite-unite,
-  .client,
-  .transporteur,
-  .num_commande {
-    display: inline-block;
-  }
-
-  .qualite,
-  .unite,
-  .max {
-    margin-left: 0.3em;
-  }
-
-  .heure {
-    font-weight: bold;
-    color: #d91ffa;
-  }
-
-  .produit-qualite,
-  .quantite,
-  .transporteur {
-    font-weight: bold;
-  }
-
-  .commande_prete-bouton-confirmer {
-    display: none;
-  }
-
-  /* Mobile */
-  @media screen and (max-width: 767px) {
-    .no-mobile {
-      display: none;
-    }
-
-    .rdv {
-      padding: 8px 0;
-    }
-
-    .produit-qualite {
-      margin-left: 0;
-    }
-
-    .client,
-    .transporteur,
-    .num_commande,
-    .commentaire {
-      margin-left: 16.667%;
-    }
-
-    .quantite-unite {
-      margin-left: auto;
-      text-align: right;
-    }
-
-    .commande_prete {
-      text-align: left;
-    }
-  }
-
-  /* Desktop */
-  @media screen and (min-width: 768px) {
-    .no-desktop {
-      display: none;
-    }
-
-    .rdv {
-      font-size: 1.2rem;
-      padding: 8px 0 8px 5px;
-    }
-
-    .rdv:hover > .copie-modif-suppr {
-      visibility: visible;
-      margin-right: 10px;
-    }
-
-    .produit-qualite,
-    .client,
-    .transporteur,
-    .num_commande,
-    .commentaire {
-      margin-left: 10px;
-    }
-
-    .commande_prete {
-      text-align: center;
-    }
-
-    .rdv:hover .commande_prete-bouton-confirmer {
-      display: inline-block;
-    }
-  }
-</style>

@@ -1,8 +1,13 @@
 <?php
 
+// Path: api/src/Core/Database/Redis.php
+
+declare(strict_types=1);
+
 namespace App\Core\Database;
 
 use App\Core\Exceptions\Server\DB\DBConnectionException;
+use App\Core\Array\Environment;
 
 /**
  * Connexion à la base de données Redis.
@@ -13,10 +18,14 @@ class Redis extends \Redis
     {
         try {
             parent::__construct();
-            $this->pconnect($_ENV["REDIS_HOST"], $_ENV["REDIS_PORT"]);
+            $this->pconnect(
+                host: Environment::getString('REDIS_HOST'),
+                port: Environment::getInt('REDIS_PORT', 6379),
+                read_timeout: 1,
+            );
             $this->ping(); // Vérifier la connexion à la base Redis
-        } catch (\RedisException $redis_exception) {
-            throw new DBConnectionException(previous: $redis_exception);
+        } catch (\RedisException $redisException) {
+            throw new DBConnectionException(previous: $redisException);
         }
     }
 

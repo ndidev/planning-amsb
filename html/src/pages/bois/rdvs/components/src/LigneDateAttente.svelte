@@ -17,10 +17,10 @@
   };
 </script>
 
-<div>
-  <div class="date">En attente de confirmation</div>
+<div class="mb-2 mt-5 w-full first:mt-12 lg:mb-4 lg:mt-8 lg:text-lg">
+  <div class="inline-block text-green-400">En attente de confirmation</div>
 
-  <div class="camions-stats">
+  <div class="camions-stats inline-block">
     <div class="total">
       <span class="camions">
         {camions.total}
@@ -31,18 +31,7 @@
 </div>
 
 <style>
-  .date {
-    color: hsl(124, 50%, 56%);
-    margin-top: 30px;
-    margin-bottom: 15px;
-  }
-
   /* CAMIONS */
-
-  .date,
-  .camions-stats {
-    display: inline-block;
-  }
 
   .camions-stats {
     margin-left: 20px;

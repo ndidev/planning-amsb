@@ -9,12 +9,21 @@
   ```
  -->
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, tick } from "svelte";
 
   import Notiflix from "notiflix";
   import autosize from "autosize";
+  import {
+    AccordionItem,
+    Label,
+    Input,
+    Textarea,
+    Radio,
+    Button,
+  } from "flowbite-svelte";
+  import { CircleHelpIcon, HistoryIcon } from "lucide-svelte";
 
-  import { MaterialButton } from "@app/components";
+  import { LucideButton, Badge } from "@app/components";
 
   import { adminUsers, currentUser, authInfo } from "@app/stores";
 
@@ -29,25 +38,28 @@
   let compte: CompteUtilisateur;
   let compteInitital: CompteUtilisateur;
 
-  let inputLogin: HTMLInputElement;
+  let loginInput: HTMLInputElement;
 
   const unsubscribeAdminUsers = adminUsers.subscribe((users) => {
     compte = structuredClone(users.get(id));
+
+    if (!compte) return;
+
+    // Vérification que toutes les rubriques ont une valeur de rôle
+    // Sinon, mettre à zéro
+    for (const module of sitemap.keys()) {
+      if (compte.roles[module] === undefined) {
+        compte.roles[module] = UserRoles.NONE;
+      }
+    }
+
     compteInitital = structuredClone(compte);
   });
-
-  // Vérification que toutes les rubriques ont une valeur de rôle
-  // Sinon, mettre à zéro
-  for (const module of sitemap.keys()) {
-    if (compte.roles[module] === undefined) {
-      compte.roles[module] = UserRoles.NONE;
-    }
-  }
 
   /**
    * Ce composant.
    */
-  let ligne: HTMLLIElement;
+  let ligne: HTMLFormElement | undefined;
 
   /**
    * La ligne est un compte en cours de création.
@@ -62,12 +74,16 @@
   /**
    * État d'affichage des détails du compte.
    */
-  let afficherDetails = isNew; // Afficher par défaut si nouveau compte uniquement
+  let open = isNew; // Afficher par défaut si nouveau compte uniquement
 
   /**
    * La ligne du compte est celle de l'utilisateur courant.
    */
   let self = compte.uid === $currentUser.uid;
+
+  $: if (open) {
+    addEventListeners();
+  }
 
   /**
    * @type {Explication}
@@ -192,7 +208,7 @@
    * Afficher l'historique du compte.
    */
   function afficherHistorique() {
-    compte.historique = compte.historique.replaceAll("\n", "<br/>");
+    compte.historique = compte.historique.replace(/\r\n|\r|\n/g, "<br/>");
 
     Notiflix.Report.info(
       "Historique du compte",
@@ -212,21 +228,21 @@
    *
    * Si c'est le cas, mettre le champ invalide.
    */
-  function verifierLogin() {
-    inputLogin.value = inputLogin.value
+  function checkLoginIsAvailable() {
+    loginInput.value = loginInput.value
       .toLowerCase()
-      .replaceAll(/[^a-z0-9_-]/g, "");
+      .replace(/[^a-z0-9_-]/g, "");
 
-    const newLogin = inputLogin.value;
+    const newLogin = loginInput.value;
 
     const loginList = [...$adminUsers.values()]
       .map((user) => user.login)
       .filter((login) => login !== compteInitital.login);
 
     if (loginList.includes(newLogin)) {
-      inputLogin.setCustomValidity("L'identifiant existe déjà.");
+      loginInput.setCustomValidity("L'identifiant existe déjà.");
     } else {
-      inputLogin.setCustomValidity("");
+      loginInput.setCustomValidity("");
     }
   }
 
@@ -293,7 +309,9 @@
   /**
    * Réinitialiser le compte.
    */
-  function reinitialiserCompte() {
+  function reinitialiserCompte(e: Event) {
+    e.preventDefault();
+
     // Demande de confirmation
     Notiflix.Confirm.show(
       "Réinitialisation du compte",
@@ -323,7 +341,9 @@
   /**
    * Désactiver le compte.
    */
-  function desactiverCompte() {
+  function desactiverCompte(e: Event) {
+    e.preventDefault();
+
     // Demande de confirmation
     Notiflix.Confirm.show(
       "Désactivation du compte",
@@ -354,7 +374,9 @@
   /**
    * Désactiver le compte.
    */
-  function supprimerCompte() {
+  function supprimerCompte(e: Event) {
+    e.preventDefault();
+
     // Demande de confirmation
     Notiflix.Confirm.show(
       "Suppression du compte",
@@ -382,12 +404,16 @@
     );
   }
 
-  onMount(() => {
+  async function addEventListeners() {
+    await tick();
+
+    if (!ligne) return;
+
     // Si changement d'une ligne, activation de la classe "modificationEnCours"
     ligne
-      .querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
-        "input, textarea"
-      )
+      .querySelectorAll<
+        HTMLInputElement | HTMLTextAreaElement
+      >("input, textarea")
       .forEach((input) => {
         input.onchange = () => (modificationEnCours = true);
         input.oninput = () => (modificationEnCours = true);
@@ -396,207 +422,182 @@
     // Autosize
     const inputCommentaire = ligne.querySelector("textarea");
     if (inputCommentaire) autosize(inputCommentaire);
-  });
+  }
+
+  onMount(() => {});
 
   onDestroy(() => {
     unsubscribeAdminUsers();
   });
 </script>
 
-<li class="compte" class:modificationEnCours bind:this={ligne}>
-  <details bind:open={afficherDetails}>
-    <!-- Nom + statut -->
-    <summary class="nom-statut">
+{#if compte}
+  <AccordionItem bind:open paddingDefault="p-3">
+    <span slot="header">
       {#if !isNew}
-        <button
-          class="nom"
-          style:color={`var(--statut-${compte.statut})`}
-          title="Cliquer pour afficher/masquer les détails"
-          on:click={() => {
-            afficherDetails = !afficherDetails;
-          }}
-        >
+        <span class="nom" style:color={`var(--statut-${compte.statut})`}>
           {compteInitital.nom}
-        </button>
-        <MaterialButton
-          icon="help"
-          title="Statut du compte"
-          on:click={afficherExplications}
-        />
-        <MaterialButton
-          icon="history"
-          title="Historique du compte"
-          on:click={afficherHistorique}
-        />
+        </span>
         {#if compteInitital.roles.admin}
-          <span class="admin">Administrateur</span>
+          <Badge size="xs">Administrateur</Badge>
         {/if}
+      {:else}
+        Nouveau compte
       {/if}
-    </summary>
+    </span>
 
-    <form class="pure-form">
-      <div class="details">
-        <div class="nom-login">
+    {#if !isNew}
+      <div class="flex flex-wrap gap-4 mb-4">
+        <Button on:click={afficherExplications} color="light">
+          <CircleHelpIcon size={20} />
+          <span class="ms-2">Statut du compte</span>
+        </Button>
+
+        <Button on:click={afficherHistorique} color="light">
+          <HistoryIcon size={20} /> <span class="ms-2">Historique</span>
+        </Button>
+      </div>
+    {/if}
+
+    <form bind:this={ligne} class="mb-3" class:modificationEnCours>
+      <div
+        class="grid [grid-template-areas:'a''b''d''c'] lg:[grid-template-areas:'a_b_c''d_d_d'] gap-3"
+      >
+        <div class="[grid-area:a]">
           <!-- Nom -->
-          <div class="champ pure-control-group">
-            <label for={"nom_" + compte.uid}>Nom</label>
-            <input
+          <div class="mb-4">
+            <Label for={"nom_" + compte.uid}>Nom</Label>
+            <Input
               type="text"
-              class="nom"
               id={"nom_" + compte.uid}
               name="nom"
               data-nom="Nom"
               bind:value={compte.nom}
-              maxlength="255"
+              maxlength={255}
               required
             />
           </div>
 
           <!-- Login -->
-          <div class="champ pure-control-group">
-            <label for={"login_" + compte.uid}>Login</label>
-            <input
-              bind:this={inputLogin}
-              type="text"
-              class="login"
-              id={"login_" + compte.uid}
-              name="login"
-              data-nom="Login"
-              bind:value={compte.login}
-              on:input={verifierLogin}
-              maxlength="255"
-              required
-            />
+          <div class="mb-4">
+            <Label for={"login_" + compte.uid}>Login</Label>
+            <Input let:props>
+              <input
+                bind:this={loginInput}
+                type="text"
+                class="login"
+                id={"login_" + compte.uid}
+                name="login"
+                data-nom="Login"
+                bind:value={compte.login}
+                on:input={checkLoginIsAvailable}
+                maxlength={255}
+                required
+                {...props}
+              />
+            </Input>
           </div>
         </div>
 
         <!-- Commentaire -->
-        <div class="champ commentaire">
-          <label for={"commentaire_" + compte.uid}>Commentaire</label>
-          <textarea
+        <div class="[grid-area:b]">
+          <Label for={"commentaire_" + compte.uid}>Commentaire</Label>
+          <Textarea
             id={"commentaire_" + compte.uid}
             name="commentaire"
-            rows="3"
+            rows={3}
             bind:value={compte.commentaire}
           />
         </div>
 
         <!-- Boutons modification-->
-        <div class="modif-suppr">
-          <MaterialButton
-            icon="done"
-            title="Valider"
+        <div
+          class="place-self-center [grid-area:c]"
+          style:visibility={modificationEnCours ? "visible" : "hidden"}
+        >
+          <LucideButton
+            preset="confirm"
             on:click={isNew ? validerAjout : validerModification}
           />
-          <MaterialButton
-            icon="close"
-            title="Annuler"
+          <LucideButton
+            preset="cancel"
             on:click={isNew ? annulerAjout : annulerModification}
           />
         </div>
 
         <!-- Rôles -->
-        <div class="roles">
+        <div class="roles grid [grid-area:d]">
           {#each [...sitemap] as [module, { affichage, type }]}
             <fieldset
               name={module}
-              class="rubrique"
+              class="mt-2 disabled:text-gray-500 disabled:opacity-50"
               disabled={/* Désactivé si admin : un administrateur ne peut pas se retirer lui-même le privilège */ module ===
                 "admin" && self}
             >
-              <legend>{affichage}</legend>
+              <legend class="text-sm">{affichage}</legend>
 
               <!-- Module de type "Accès" -->
               {#if type === TypesModules.ACCESS}
-                <label class="pure-radio">
-                  <input
-                    type="radio"
-                    bind:group={compte.roles[module]}
-                    name={module}
-                    value={UserRoles.NONE}
-                  />
+                <Radio bind:group={compte.roles[module]} value={UserRoles.NONE}>
                   Pas accès
-                </label>
-                <label class="pure-radio">
-                  <input
-                    type="radio"
-                    bind:group={compte.roles[module]}
-                    name={module}
-                    value={UserRoles.ACCESS}
-                  />
+                </Radio>
+                <Radio
+                  bind:group={compte.roles[module]}
+                  value={UserRoles.ACCESS}
+                >
                   Accès
-                </label>
+                </Radio>
               {/if}
 
               <!-- Module de type "Modifier" -->
               {#if type === TypesModules.EDIT}
-                <label class="pure-radio">
-                  <input
-                    type="radio"
-                    bind:group={compte.roles[module]}
-                    name={module}
-                    value={UserRoles.NONE}
-                  />
+                <Radio bind:group={compte.roles[module]} value={UserRoles.NONE}>
                   Aucun
-                </label>
-                <label class="pure-radio">
-                  <input
-                    type="radio"
-                    bind:group={compte.roles[module]}
-                    name={module}
-                    value={UserRoles.ACCESS}
-                  />
+                </Radio>
+                <Radio
+                  bind:group={compte.roles[module]}
+                  value={UserRoles.ACCESS}
+                >
                   Voir
-                </label>
-                <label class="pure-radio">
-                  <input
-                    type="radio"
-                    bind:group={compte.roles[module]}
-                    name={module}
-                    value={UserRoles.EDIT}
-                  />
+                </Radio>
+                <Radio bind:group={compte.roles[module]} value={UserRoles.EDIT}>
                   Modifier
-                </label>
+                </Radio>
               {/if}
             </fieldset>
           {/each}
         </div>
-
-        <!-- Boutons -->
-        {#if !self && !isNew}
-          <div class="boutons-action">
-            <div class="action">
-              <button
-                on:click|preventDefault={reinitialiserCompte}
-                disabled={compte.statut === AccountStatus.PENDING}
-              >
-                Réinitialiser le compte
-              </button>
-            </div>
-
-            <div class="action">
-              <button
-                on:click|preventDefault={desactiverCompte}
-                disabled={compte.statut === AccountStatus.INACTIVE}
-              >
-                Désactiver le compte
-              </button>
-            </div>
-
-            <div class="action red">
-              <button
-                on:click|preventDefault={supprimerCompte}
-                disabled={compte.statut === AccountStatus.DELETED}
-              >
-                Supprimer le compte
-              </button>
-            </div>
-          </div>
-        {/if}
       </div>
     </form>
-  </details>
-</li>
+
+    <!-- Boutons -->
+    {#if !self && !isNew}
+      <div class="flex flex-col justify-center gap-2 lg:flex-row">
+        <Button
+          on:click={reinitialiserCompte}
+          disabled={compte.statut === AccountStatus.PENDING}
+        >
+          Réinitialiser le compte
+        </Button>
+
+        <Button
+          on:click={desactiverCompte}
+          disabled={compte.statut === AccountStatus.INACTIVE}
+        >
+          Désactiver le compte
+        </Button>
+
+        <Button
+          color="red"
+          on:click={supprimerCompte}
+          disabled={compte.statut === AccountStatus.DELETED}
+        >
+          Supprimer le compte
+        </Button>
+      </div>
+    {/if}
+  </AccordionItem>
+{/if}
 
 <style>
   * {
@@ -606,118 +607,10 @@
     --statut-locked: hsl(0, 60%, 50%);
   }
 
-  .compte {
-    width: 80%;
-    margin: 5px auto;
-    padding: 10px;
-    border-radius: 5px;
-    border: 2px solid #ddd;
-    background-color: #eee;
-    list-style-type: none;
-  }
-
-  details > summary {
-    list-style: none;
-  }
-
-  /* GRID STRUCTURE */
-
-  .details {
-    display: grid;
-    gap: 10px;
-  }
-
-  .nom-login {
-    grid-area: a;
-  }
-
-  .commentaire {
-    grid-area: b;
-  }
-
-  .modif-suppr {
-    grid-area: c;
-  }
-
-  .roles {
-    grid-area: d;
-  }
-
-  .boutons-action {
-    grid-area: e;
-  }
-
   /* -------------- */
-
-  .nom-statut > .nom {
-    font-size: 1.2em;
-    cursor: pointer;
-    background-color: transparent;
-    border: none;
-  }
-
-  .nom-statut > .admin {
-    font-size: 0.8em;
-    font-weight: bold;
-    padding-left: 0.5em;
-  }
-
-  .champ {
-    display: flex;
-    flex-direction: column;
-    margin-left: 1%;
-  }
-
-  fieldset:disabled {
-    color: darkgray;
-  }
-
-  .compte textarea {
-    padding: 5px;
-  }
 
   .modificationEnCours {
     background-color: lightyellow;
-  }
-
-  .modificationEnCours .modif-suppr {
-    visibility: visible;
-  }
-
-  .modif-suppr {
-    justify-self: center;
-    align-self: center;
-    visibility: hidden;
-  }
-
-  .roles {
-    display: grid;
-  }
-
-  .roles > .rubrique {
-    margin-top: 10px;
-  }
-
-  .boutons-action {
-    justify-self: center;
-  }
-
-  .action {
-    display: inline-block;
-    margin-block: 5px;
-  }
-
-  .action > button {
-    padding: 5px;
-    cursor: pointer;
-  }
-
-  .action > button:disabled {
-    cursor: auto;
-  }
-
-  .action.red > button:not(:disabled) {
-    color: var(--statut-locked);
   }
 
   /* Notiflix */
@@ -728,38 +621,13 @@
 
   /* Mobile */
   @media screen and (max-width: 767px) {
-    .details {
-      grid-template-areas:
-        "a"
-        "b"
-        "d"
-        "e"
-        "c";
-    }
-
     .roles {
       grid-template-columns: repeat(2, 1fr);
-    }
-
-    .action,
-    .action > button {
-      width: 100%;
     }
   }
 
   /* Desktop */
   @media screen and (min-width: 768px) {
-    .compte {
-      min-width: 650px;
-    }
-
-    .details {
-      grid-template-areas:
-        "a b c"
-        "d d d"
-        "e e e";
-    }
-
     .roles {
       grid-column: 1 / span 3;
       grid-template-columns: repeat(4, 1fr);

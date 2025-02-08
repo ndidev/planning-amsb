@@ -1,5 +1,9 @@
 <?php
 
+// Path: api/src/Core/Exceptions/Client/Auth/MaxLoginAttemptsException.php
+
+declare(strict_types=1);
+
 namespace App\Core\Exceptions\Client\Auth;
 
 /**

@@ -9,11 +9,12 @@
   ```
  -->
 <script lang="ts">
-  import { MaterialButton, NumericInput } from "@app/components";
+  import { ConfigLine } from "../../";
+  import { LucideButton, NumericInput } from "@app/components";
 
   import Notiflix from "notiflix";
 
-  import { fetcher, notiflixOptions } from "@app/utils";
+  import { fetcher } from "@app/utils";
 
   import type { Cote } from "@app/types";
 
@@ -32,7 +33,7 @@
       Notiflix.Block.dots([ligne]);
       ligne.style.minHeight = "initial";
 
-      cote.valeur = parseFloat(String(cote.valeur));
+      cote.valeur = parseFloat(String(cote.valeur || 0));
 
       await fetcher(`config/cotes/${cote.cote}`, {
         requestInit: {
@@ -60,46 +61,21 @@
   }
 </script>
 
-<div class="ligne pure-form" class:modificationEnCours bind:this={ligne}>
-  <div class="bloc pure-u-1 pure-u-lg-20-24">
-    <!-- Valeur -->
-    <div class="pure-control-group">
-      <label for={"config_cotes_" + cote.cote}>Valeur : </label>
-      <NumericInput
-        id={"config_cotes_" + cote.cote}
-        format="+2"
-        bind:value={cote.valeur}
-        on:input={() => (modificationEnCours = true)}
-      />
-    </div>
+<ConfigLine bind:modificationEnCours bind:ligne>
+  <div>
+    <NumericInput
+      id={"config_cotes_" + cote.cote}
+      format="+2"
+      bind:value={cote.valeur}
+      on:input={() => (modificationEnCours = true)}
+    />
   </div>
 
   <!-- Boutons -->
-  <span class="valider-annuler">
-    <MaterialButton
-      icon="done"
-      title="Valider"
-      on:click={validerModification}
-    />
-    <MaterialButton
-      icon="close"
-      title="Annuler"
-      on:click={annulerModification}
-    />
-  </span>
-</div>
-
-<style>
-  /* Mobile */
-  @media screen and (max-width: 767px) {
-    .ligne {
-      text-align: left;
-      flex-direction: column;
-      width: 100%;
-    }
-
-    .ligne :global(input) {
-      width: 100%;
-    }
-  }
-</style>
+  <div slot="actions">
+    {#if modificationEnCours}
+      <LucideButton preset="confirm" on:click={validerModification} />
+      <LucideButton preset="cancel" on:click={annulerModification} />
+    {/if}
+  </div>
+</ConfigLine>

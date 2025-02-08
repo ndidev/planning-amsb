@@ -38,9 +38,11 @@ export const configBandeauInfo = (function () {
       fetchAll();
 
       document.addEventListener(`planning:${endpoint}`, handleDBEvent);
+      document.addEventListener(`planning:sse-reconnect`, fetchAll);
 
       return () => {
         document.removeEventListener(`planning:${endpoint}`, handleDBEvent);
+        document.removeEventListener(`planning:sse-reconnect`, fetchAll);
       };
     }
   );
@@ -67,6 +69,8 @@ export const configBandeauInfo = (function () {
       const updated = structuredClone(empty);
 
       for (const config of configs) {
+        if (!(config.module in updated)) continue;
+
         updated[config.module].set(config.id, config);
       }
 

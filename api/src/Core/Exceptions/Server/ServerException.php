@@ -1,22 +1,27 @@
 <?php
 
+// Path: api/src/Core/Exceptions/Server/ServerException.php
+
+declare(strict_types=1);
+
 namespace App\Core\Exceptions\Server;
 
 use App\Core\Exceptions\AppException;
+use App\Core\HTTP\HTTPResponse;
 
 /**
- * Exception de mauvaise requête client.
+ * Exception d'erreur serveur.
  */
 class ServerException extends AppException
 {
     private const DEFAULT_MESSAGE = "Erreur serveur";
-    private const HTTP_STATUS = 500;
+    private const HTTP_STATUS = HTTPResponse::HTTP_INTERNAL_SERVER_ERROR_500;
 
     public function __construct(
         string $message = self::DEFAULT_MESSAGE,
-        public int $http_status = self::HTTP_STATUS,
+        public int $httpStatus = self::HTTP_STATUS,
         \Throwable|null $previous = null
     ) {
-        parent::__construct($message, $http_status, $previous);
+        parent::__construct($message, $httpStatus, $previous);
     }
 }

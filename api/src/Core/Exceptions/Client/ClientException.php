@@ -1,8 +1,13 @@
 <?php
 
+// Path: api/src/Core/Exceptions/Client/ClientException.php
+
+declare(strict_types=1);
+
 namespace App\Core\Exceptions\Client;
 
 use App\Core\Exceptions\AppException;
+use App\Core\HTTP\HTTPResponse;
 
 /**
  * Exception de mauvaise requête client.
@@ -10,13 +15,13 @@ use App\Core\Exceptions\AppException;
 class ClientException extends AppException
 {
     private const DEFAULT_MESSAGE = "Erreur de requête";
-    private const HTTP_STATUS = 400;
+    private const HTTP_STATUS = HTTPResponse::HTTP_BAD_REQUEST_400;
 
     public function __construct(
         string $message = self::DEFAULT_MESSAGE,
-        public int $http_status = self::HTTP_STATUS,
+        public int $httpStatus = self::HTTP_STATUS,
         \Throwable|null $previous = null
     ) {
-        parent::__construct($message, $http_status, $previous);
+        parent::__construct($message, $httpStatus, $previous);
     }
 }

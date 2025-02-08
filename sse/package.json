@@ -5,24 +5,23 @@
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
+    "dev": "npx rollup -w -c",
     "build": "npx rollup -c"
   },
   "dependencies": {
-    "cookie": "^0.5.0",
+    "cookie": "^1.0.0",
     "md5": "^2.3.0",
-    "redis": "^4.5.1",
-    "uuid": "^9.0.0"
+    "redis": "^4.7.0"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^25.0.1",
+    "@rollup/plugin-commonjs": "^28.0.1",
+    "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.0.1",
-    "@rollup/plugin-typescript": "^11.0.0",
-    "@tsconfig/node-lts": "^18.12.1",
-    "@types/cookie": "^0.5.1",
+    "@rollup/plugin-typescript": "^12.0.0",
+    "@tsconfig/node20": "^20.1.4",
     "@types/md5": "^2.3.2",
-    "@types/node": "^18.11.18",
-    "@types/uuid": "^9.0.0",
-    "rollup": "^3.12.0",
+    "@types/node": "20.10.0",
+    "rollup": "^4.24.0",
     "tslib": "^2.5.0",
     "typescript": "^5.0.0"
   }

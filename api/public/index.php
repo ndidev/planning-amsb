@@ -1,46 +1,68 @@
 <?php
+
+// Path: api/public/index.php
+
+declare(strict_types=1);
+
 require_once __DIR__ . "/../bootstrap.php";
 
-use App\Core\Router;
-use App\Core\HTTP\HTTPResponse;
-use App\Core\Security;
-use App\Core\Exceptions\Client\ClientException;
+use App\Controller\Admin\UserAccountController;
+use App\Controller\Bulk\BulkAppointmentController;
+use App\Controller\Bulk\BulkDispatchController;
+use App\Controller\Bulk\BulkProductController;
+use App\Controller\Chartering\CharterController;
+use App\Controller\Config\AgencyController;
+use App\Controller\Config\ChartDatumController;
+use App\Controller\Config\InfoBannerController;
+use App\Controller\Config\PdfConfigController;
+use App\Controller\Config\PdfViewerController;
+use App\Controller\Config\QuickAppointmentAddController;
+use App\Controller\Config\TimberQuickAppointmentAddController;
+use App\Controller\Controller;
+use App\Controller\ErrorController;
+use App\Controller\RootController;
+use App\Controller\Shipping\DraftsPerTonnageController;
+use App\Controller\Shipping\ShipNamesController;
+use App\Controller\Shipping\ShippingCallController;
+use App\Controller\Shipping\ShippingCargoListController;
+use App\Controller\Shipping\ShippingCustomersListController;
+use App\Controller\Shipping\ShippingStatsController;
+use App\Controller\Shipping\ShipsInOpsController;
+use App\Controller\Shipping\VoyageNumberController;
+use App\Controller\Stevedoring\CallsWithoutReportController;
+use App\Controller\Stevedoring\DispatchController;
+use App\Controller\Stevedoring\EquipmentController;
+use App\Controller\Stevedoring\IgnoredShippingCallsContoller;
+use App\Controller\Stevedoring\ShipReportController;
+use App\Controller\Stevedoring\ShipReportPdfController;
+use App\Controller\Stevedoring\ShipReportsFilterDataController;
+use App\Controller\Stevedoring\StaffController;
+use App\Controller\Stevedoring\SubcontractorsDataController;
+use App\Controller\Stevedoring\TempWorkDispatchForDateController;
+use App\Controller\Stevedoring\TempWorkHoursController;
+use App\Controller\Stevedoring\TempWorkHoursReportController;
+use App\Controller\ThirdParty\AppointmentCountController;
+use App\Controller\ThirdParty\ThirdPartyController;
+use App\Controller\Timber\TimberAppointmentController;
+use App\Controller\Timber\TimberDeliveryNoteController;
+use App\Controller\Timber\TimberRegistryController;
+use App\Controller\Timber\TimberStatsController;
+use App\Controller\Timber\TransportSuggestionsController;
+use App\Controller\User\UserController;
+use App\Controller\Utils\CountryController;
+use App\Controller\Utils\PortController;
+use App\Controller\Utils\TideController;
+use App\Core\Array\Environment;
+use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Exceptions\Server\ServerException;
-use App\Controllers\Controller;
-use App\Controllers\RootController as Root;
-use App\Controllers\Bois\RdvController as RdvBois;
-use App\Controllers\Bois\RegistreController as RegistreBois;
-use App\Controllers\Bois\StatsController as StatsBois;
-use App\Controllers\Bois\SuggestionsTransporteursController as SuggestionsTransporteurs;
-use App\Controllers\Vrac\RdvController as RdvVrac;
-use App\Controllers\Vrac\ProduitController as VracProduit;
-use App\Controllers\Consignation\EscaleController as EscaleConsignation;
-use App\Controllers\Consignation\NumVoyageController as NumVoyageConsignation;
-use App\Controllers\Consignation\TEController as TE;
-use App\Controllers\Consignation\StatsController as StatsConsignation;
-use App\Controllers\Consignation\NaviresEnActiviteController as NaviresEnActivite;
-use App\Controllers\Consignation\ListeNaviresController as NaviresConsignation;
-use App\Controllers\Consignation\ListeMarchandisesController as MarchandisesConsignation;
-use App\Controllers\Consignation\ListeClientsController as ClientsConsignation;
-use App\Controllers\Chartering\CharterController as AffretementMaritime;
-use App\Controllers\Tiers\TiersController as Tiers;
-use App\Controllers\Tiers\NombreRdvController as NombreRdv;
-use App\Controllers\Utils\PortsController as Ports;
-use App\Controllers\Utils\PaysController as Pays;
-use App\Controllers\Utils\MareesController as Marees;
-use App\Controllers\Config\AgenceController as Agence;
-use App\Controllers\Config\BandeauInfoController as BandeauInfo;
-use App\Controllers\Config\ConfigPDFController as ConfigPDF;
-use App\Controllers\Config\PDF\VisualiserPDFController as VisualiserPDF;
-use App\Controllers\Config\PDF\EnvoiPDFController as EnvoiPDF;
-use App\Controllers\Config\AjoutRapideController as AjoutRapide;
-use App\Controllers\Config\CoteController as Cote;
-use App\Controllers\User\UserController as UserManagement;
-use App\Controllers\Admin\UserAccountController as UserAccount;
-use App\Core\Logger\ErrorLogger;
+use App\Core\HTTP\HTTPResponse;
+use App\Core\Router\Router;
+use App\Core\Security;
 
-if (Security::check_if_request_can_be_done() === false) {
-    (new HTTPResponse(429))
+set_exception_handler([ErrorController::class, "handleEmergency"]);
+
+if (Security::checkIfRequestCanBeDone() === false) {
+    (new HTTPResponse(HTTPResponse::HTTP_TOO_MANY_REQUESTS_429))
         ->addHeader("Retry-After", (string) Security::BLOCKED_IP_TIMEOUT)
         ->setType("text/plain")
         ->setBody("IP address blocked. Too many unauthenticated requests.")
@@ -49,102 +71,113 @@ if (Security::check_if_request_can_be_done() === false) {
 
 /**
  * Routes de l'API.
- * @var array{{string, string}} $routes
+ * @var list<array{0: string, 1: class-string}> $routes
  */
 $routes = [
     // Affichage général
-    ["/", Root::class],
+    ["/", RootController::class],
 
     // Bois
-    ["/bois/rdvs/[i:id]?", RdvBois::class],
-    ["/bois/registre", RegistreBois::class],
-    ["/bois/stats", StatsBois::class],
-    ["/bois/suggestions-transporteurs", SuggestionsTransporteurs::class],
+    ["/bois/rdvs/[i:id]?", TimberAppointmentController::class],
+    ["/bois/registre", TimberRegistryController::class],
+    ["/bois/stats", TimberStatsController::class],
+    ["/bois/suggestions-transporteurs", TransportSuggestionsController::class],
+    ["/bois/check-delivery-note-available", TimberDeliveryNoteController::class],
 
     // Vrac
-    ["/vrac/rdvs/[i:id]?", RdvVrac::class],
-    ["/vrac/produits/[i:id]?", VracProduit::class],
+    ["/vrac/rdvs/[i:id]?", BulkAppointmentController::class],
+    ["/vrac/produits/[i:id]?", BulkProductController::class],
+    ["/vrac/dispatch", BulkDispatchController::class],
 
     // Consignation
-    ["/consignation/escales/[i:id]?", EscaleConsignation::class],
-    ["/consignation/voyage", NumVoyageConsignation::class],
-    ["/consignation/te", TE::class],
-    ["/consignation/stats/[*:ids]?", StatsConsignation::class],
-    ["/consignation/navires", NaviresConsignation::class],
-    ["/consignation/marchandises", MarchandisesConsignation::class],
-    ["/consignation/clients", ClientsConsignation::class],
-    ["/consignation/navires-en-activite", NaviresEnActivite::class],
+    ["/consignation/escales/[i:id]?", ShippingCallController::class],
+    ["/consignation/voyage", VoyageNumberController::class],
+    ["/consignation/te", DraftsPerTonnageController::class],
+    ["/consignation/stats/[*:ids]?", ShippingStatsController::class],
+    ["/consignation/navires", ShipNamesController::class],
+    ["/consignation/marchandises", ShippingCargoListController::class],
+    ["/consignation/clients", ShippingCustomersListController::class],
+    ["/consignation/navires-en-activite", ShipsInOpsController::class],
 
     // Chartering
-    ["/chartering/charters/[i:id]?", AffretementMaritime::class],
+    ["/chartering/charters/[i:id]?", CharterController::class],
+
+    // Manutention
+    ["/manutention/personnel/[i:id]?", StaffController::class],
+    ["/manutention/equipements/[i:id]?", EquipmentController::class],
+    ["/manutention/dispatch", DispatchController::class],
+    ["/manutention/dispatch-interimaire/[date:date]", TempWorkDispatchForDateController::class],
+    ["/manutention/heures-interimaires/[i:id]?", TempWorkHoursController::class],
+    ["/manutention/heures-interimaires/rapport", TempWorkHoursReportController::class],
+    ["/manutention/rapports-navires/[i:id]?", ShipReportController::class],
+    ["/manutention/rapports-navires/[i:id]/pdf", ShipReportPdfController::class],
+    ["/manutention/rapports-navires/filter-data", ShipReportsFilterDataController::class],
+    ["/manutention/rapports-navires/calls-without-report", CallsWithoutReportController::class],
+    ["/manutention/rapports-navires/ignored-shipping-calls/[i:id]?", IgnoredShippingCallsContoller::class],
+    ["/manutention/rapports-navires/sous-traitants", SubcontractorsDataController::class],
 
     // Utilitaires
-    ["/ports/[a:locode]?", Ports::class],
-    ["/pays/[a:iso]?", Pays::class],
-    ["/marees/[i:annee]?", Marees::class],
-    ["/marees/annees", Marees::class],
+    ["/ports/[a:locode]?", PortController::class],
+    ["/pays/[a:iso]?", CountryController::class],
+    ["/marees/[i:year]?", TideController::class],
+    ["/marees/annees", TideController::class],
 
     // Config
-    ["/config/agence/[a:service]?", Agence::class],
-    ["/config/bandeau-info/[i:id]?", BandeauInfo::class],
-    ["/config/pdf/[i:id]?", ConfigPDF::class],
-    ["/config/pdf/visu", VisualiserPDF::class],
-    ["/config/pdf/envoi", EnvoiPDF::class],
-    ["/config/ajouts-rapides/[i:id]?", AjoutRapide::class],
-    ["/config/cotes/[a:cote]?", Cote::class],
+    ["/config/agence/[a:service]?", AgencyController::class],
+    ["/config/bandeau-info/[i:id]?", InfoBannerController::class],
+    ["/config/pdf/[i:id]?", PdfConfigController::class],
+    ["/config/pdf/generer", PdfViewerController::class],
+    ["/config/ajouts-rapides", QuickAppointmentAddController::class],
+    ["/config/ajouts-rapides/bois/[i:id]?", TimberQuickAppointmentAddController::class],
+    ["/config/cotes/[a:cote]?", ChartDatumController::class],
 
     // Tiers
-    ["/tiers/[i:id]?", Tiers::class],
-    ["/tiers/[i:id]?/nombre_rdv", NombreRdv::class],
+    ["/tiers/[i:id]?", ThirdPartyController::class],
+    ["/tiers/[i:id]/nombre_rdv", AppointmentCountController::class],
 
     // Admin
-    ["/admin/users/[a:uid]?", UserAccount::class],
+    ["/admin/users/[a:uid]?", UserAccountController::class],
 
     // Utilisateur
-    ["/user", UserManagement::class],
+    ["/user", UserController::class],
 ];
 
 /**
  * @var HTTPResponse $response
  */
-$response = null;
+$response = new HTTPResponse();
 
 /**
  * Routeur
  */
 try {
-    $router = new Router($routes, $_ENV["API_PATH"]);
+    $router = new Router(
+        $routes,
+        Environment::getString('API_PATH'),
+        ['date' => '\d{4}-\d{2}-\d{2}']
+    );
     $match = $router->match();
 
-    if (is_array($match)) {
-        $controllerClass = $match["target"];
-        $params = $match["params"];
-        $name = $match["name"];
-
-        /** @var Controller $controller */
-        $controller = new $controllerClass(...$params);
-    } else {
-        // 404 Not Found
-        $controller = new Root(true);
+    if (!\is_array($match)) {
+        throw new NotFoundException("Route not found");
     }
+
+    $controllerClass = $match["target"];
+    $params = $match["params"];
+    $name = $match["name"];
+
+    if (!\is_string($controllerClass) || !class_exists($controllerClass)) {
+        throw new ServerException("Controller not found");
+    }
+
+    /** @var Controller $controller */
+    $controller = new $controllerClass(...$params);
 
     $response = $controller->getResponse();
 
     $controller->sse->notify();
-} catch (ClientException $e) {
-    $response = (new HTTPResponse($e->http_status))
-        ->setType("text")
-        ->setBody($e->getMessage());
-} catch (ServerException $e) {
-    ErrorLogger::log($e);
-    $response = (new HTTPResponse($e->http_status))
-        ->setType("text")
-        ->setBody("Erreur serveur");
 } catch (\Throwable $e) {
-    ErrorLogger::log($e);
-    $response = (new HTTPResponse(500))
-        ->setType("text")
-        ->setBody("Erreur serveur");
+    $response = (new ErrorController($e))->getResponse();
 }
 
 $response->send();

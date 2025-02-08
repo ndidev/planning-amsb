@@ -13,7 +13,8 @@
   Chart.register(ScatterController, PointElement, LinearScale, Tooltip);
 
   import { fetcher, locale } from "@app/utils";
-  import { ConnexionSSE } from "@app/components";
+  import { SseConnection } from "@app/components";
+  import { consignationEscales } from "@app/stores";
 
   type TE = {
     navire: string;
@@ -40,7 +41,10 @@
   }
 
   onMount(async () => {
-    document.addEventListener("planning:consignation/escales", fetchTE);
+    document.addEventListener(
+      `planning:${consignationEscales.endpoint}`,
+      fetchTE
+    );
 
     // Chart
     chart = new Chart(canvas, {
@@ -79,13 +83,16 @@
   });
 
   onDestroy(() => {
-    document.removeEventListener("planning:consignation/escales", fetchTE);
+    document.removeEventListener(
+      `planning:${consignationEscales.endpoint}`,
+      fetchTE
+    );
   });
 </script>
 
 <!-- routify:options guard="consignation" -->
 
-<ConnexionSSE subscriptions={["consignation/escales"]} />
+<SseConnection subscriptions={[consignationEscales.endpoint]} />
 
 <main>
   <div id="canvas">

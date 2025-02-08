@@ -1,48 +1,41 @@
 <!-- routify:options title="Planning AMSB - Statistiques consignation" -->
 <script lang="ts">
-  import { onDestroy, setContext } from "svelte";
-  import { writable } from "svelte/store";
+  import { onDestroy } from "svelte";
 
-  import { Filtre as BandeauFiltre, CarteEscale } from "./components";
+  import { FilterModal, filter, CarteEscale } from "./components";
+  import { PageHeading } from "@app/components";
 
-  import { fetcher, Filtre } from "@app/utils";
+  import { fetcher } from "@app/utils";
 
-  import type { FiltreConsignation, EscaleConsignation } from "@app/types";
+  import type { EscaleConsignation } from "@app/types";
   import Notiflix from "notiflix";
-
-  let filtre = new Filtre<FiltreConsignation>(
-    JSON.parse(sessionStorage.getItem("filtre-stats-consignation")) || {}
-  );
 
   let stats: Stats;
   let details: EscaleConsignation[] = [];
 
-  const storeFiltre = writable(filtre);
-
-  const unsubscribeFiltre = storeFiltre.subscribe((value) => {
-    filtre = value;
-    recupererStats();
+  const unsubscribeFilter = filter.subscribe((value) => {
+    const params = value.toSearchParams();
+    fetchStats(params);
     details = [];
   });
 
-  setContext("filtre", storeFiltre);
-
   type Stats = {
     Total: number;
-    "Par année": {
-      [annee: string]: {
-        "1": { nombre: number; ids: number[] };
-        "2": { nombre: number; ids: number[] };
-        "3": { nombre: number; ids: number[] };
-        "4": { nombre: number; ids: number[] };
-        "5": { nombre: number; ids: number[] };
-        "6": { nombre: number; ids: number[] };
-        "7": { nombre: number; ids: number[] };
-        "8": { nombre: number; ids: number[] };
-        "9": { nombre: number; ids: number[] };
-        "10": { nombre: number; ids: number[] };
-        "11": { nombre: number; ids: number[] };
-        "12": { nombre: number; ids: number[] };
+    ByYear: {
+      [year: string]: {
+        [month in
+          | "1"
+          | "2"
+          | "3"
+          | "4"
+          | "5"
+          | "6"
+          | "7"
+          | "8"
+          | "9"
+          | "10"
+          | "11"
+          | "12"]: { nombre: number; ids: number[] };
       };
     };
   };
@@ -52,10 +45,10 @@
    *
    * @returns Statistiques au format JSON
    */
-  async function recupererStats() {
+  async function fetchStats(searchParams: URLSearchParams) {
     try {
       stats = await fetcher("consignation/stats", {
-        params: filtre.toParams(),
+        searchParams,
       });
     } catch (error) {
       Notiflix.Notify.failure(error.message);
@@ -64,6 +57,11 @@
   }
 
   async function recupererDetails(ids: number[]) {
+    if (ids.length === 0) {
+      details = [];
+      return;
+    }
+
     const escales = await fetcher<EscaleConsignation[]>(
       `consignation/stats/${ids.join(",")}`
     );
@@ -72,17 +70,16 @@
   }
 
   onDestroy(() => {
-    unsubscribeFiltre();
+    unsubscribeFilter();
   });
 </script>
 
 <!-- routify:options guard="consignation" -->
 
-<main class="formulaire">
-  <h1>Statistiques</h1>
+<main>
+  <PageHeading>Statistiques</PageHeading>
 
-  <!-- Filtre par date/client -->
-  <BandeauFiltre />
+  <FilterModal />
 
   <div id="statistiques">
     {#if stats}
@@ -108,33 +105,41 @@
         </thead>
 
         <tbody>
-          {#each Object.entries(stats["Par année"]) as [annee, statsAnnee]}
+          {#each Object.entries(stats.ByYear) as [year, yearStats]}
+            {@const yearTotal = Object.values(yearStats)
+              .map(({ nombre }) => nombre)
+              .reduce((sum, current) => sum + current, 0)}
+
             <tr>
-              <th scope="row">{annee}</th>
-              {#each Object.entries(statsAnnee) as [mois, statsMois]}
+              <th scope="row">{year}</th>
+              {#each Object.entries(yearStats) as [monthIndex, monthStats]}
                 <td>
-                  <button on:click={() => recupererDetails(statsMois.ids)}
-                    >{statsMois.nombre.toLocaleString("fr-FR")}</button
+                  <button on:click={() => recupererDetails(monthStats.ids)}
+                    >{monthStats.nombre.toLocaleString("fr-FR")}</button
                   >
                 </td>
               {/each}
 
               <!-- Total par année -->
               <td class="total">
-                <button
-                  class="bold"
-                  on:click={() =>
-                    recupererDetails(
-                      Object.values(statsAnnee)
-                        .map(({ ids }) => ids)
-                        .reduce((prev, current) => [...current, ...prev], [])
-                    )}
-                >
-                  {Object.values(statsAnnee)
-                    .map(({ nombre }) => nombre)
-                    .reduce((sum, current) => sum + current, 0)
-                    .toLocaleString("fr-FR")}
-                </button>
+                {#if yearTotal > 0}
+                  <button
+                    class="bold"
+                    on:click={() =>
+                      recupererDetails(
+                        Object.values(yearStats)
+                          .map(({ ids }) => ids)
+                          .reduce((prev, current) => [...current, ...prev], [])
+                      )}
+                  >
+                    {Object.values(yearStats)
+                      .map(({ nombre }) => nombre)
+                      .reduce((sum, current) => sum + current, 0)
+                      .toLocaleString("fr-FR")}
+                  </button>
+                {:else}
+                  0
+                {/if}
               </td>
             </tr>
           {/each}
@@ -144,16 +149,16 @@
         <tfoot>
           <tr>
             <th>Moyenne</th>
-            {#each [...Array(12).keys()] as mois}
+            {#each [...Array(12).keys()] as monthIndex}
               <td>
                 {Math.round(
                   // Total des escales par mois
-                  Object.values(stats["Par année"])
-                    .map((statsAnnee) => statsAnnee[mois + 1].nombre)
+                  Object.values(stats.ByYear)
+                    .map((statsAnnee) => statsAnnee[monthIndex + 1].nombre)
                     .reduce((total, valeur) => total + valeur, 0) /
                     // Nombre d'années (ignorer les années à zéro escale)
-                    (Object.values(stats["Par année"])
-                      .map((statsAnnee) => statsAnnee[mois + 1])
+                    (Object.values(stats.ByYear)
+                      .map((yearStats) => yearStats[monthIndex + 1])
                       .filter((valeur) => valeur).length || 1)
                 ).toLocaleString("fr-FR")}
               </td>
@@ -163,13 +168,13 @@
                 class="bold"
                 on:click={() =>
                   recupererDetails(
-                    Object.values(stats["Par année"])
-                      .map((annee) =>
-                        Object.values(annee)
+                    Object.values(stats.ByYear)
+                      .map((year) =>
+                        Object.values(year)
                           .map(({ ids }) => ids)
-                          .reduce((prev, current) => [...prev, ...current])
+                          .reduce((prev, current) => [...prev, ...current], [])
                       )
-                      .reduce((prev, current) => [...prev, ...current])
+                      .reduce((prev, current) => [...prev, ...current], [])
                   )}
               >
                 {stats.Total.toLocaleString("fr-FR")}
@@ -190,13 +195,8 @@
 
 <style>
   main {
-    width: calc(95% - 200px); /* 200px = largeur du menu */
-    margin-left: 200px;
-  }
-
-  h1 {
-    margin: 20px 0;
-    text-align: center;
+    width: calc(95%);
+    margin: auto;
   }
 
   .bold {
@@ -275,10 +275,12 @@
     list-style-type: none;
   }
 
-  @media screen and (max-width: 480px) {
+  @media screen and (min-width: 768px) {
     main {
-      width: calc(95%);
-      margin: auto;
+      /* Largeur du menu = 256px */
+      --margin-left: 280px;
+      width: calc(95% - var(--margin-left));
+      margin-left: var(--margin-left);
     }
   }
 </style>

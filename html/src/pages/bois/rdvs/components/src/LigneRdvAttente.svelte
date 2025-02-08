@@ -5,179 +5,155 @@
 
   Usage :
   ```tsx
-  <LigneRdvAttente rdv: RdvBois={rdv} />
+  <LigneRdvAttente appointment: RdvBois={appointment} />
   ```
  -->
 <script lang="ts">
-  import { onMount, onDestroy, getContext } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { goto } from "@roxi/routify";
 
   import Notiflix from "notiflix";
   import Hammer from "hammerjs";
-
+  import { Modal } from "flowbite-svelte";
   import {
-    MaterialButton,
-    Modal,
+    ArrowRightFromLineIcon,
+    ArrowRightToLineIcon,
+    MessageSquareOffIcon,
+    MessageSquareTextIcon,
+    TruckIcon,
+    UserIcon,
+  } from "lucide-svelte";
+
+  import { ThirdPartyAddress, DispatchModal } from "../";
+  import {
+    LucideButton,
     BoutonAction,
     IconText,
+    DispatchButton,
+    OrderReadyButton,
   } from "@app/components";
 
-  import { notiflixOptions, device, DateUtils } from "@app/utils";
-  import type { Stores, RdvBois, Tiers } from "@app/types";
+  import {
+    notiflixOptions,
+    device,
+    DateUtils,
+    removeDiacritics,
+  } from "@app/utils";
 
-  // Stores
-  const { boisRdvs, currentUser, tiers, pays } = getContext<Stores>("stores");
+  import { boisRdvs, currentUser, tiers, pays } from "@app/stores";
 
-  export let rdv: RdvBois;
+  import type { RdvBois, Tiers } from "@app/types";
+
+  export let appointment: RdvBois;
   let ligne: HTMLDivElement;
 
   let mc: HammerManager;
-  let afficherModal = false;
+  let showModal = false;
 
-  const tiersVierge: Partial<Tiers> = {
-    nom_complet: "",
-    nom_court: "",
-    adresse_ligne_1: "",
-    adresse_ligne_2: "",
-    cp: "",
-    ville: "",
-    pays: "",
-    telephone: "",
-    commentaire: "",
-    lie_agence: false,
-  };
+  let showDispatchModal = false;
 
-  $: client = $tiers?.get(rdv.client) || tiersVierge;
-  $: livraison = $tiers?.get(rdv.livraison) || tiersVierge;
-  $: chargement = $tiers?.get(rdv.chargement) || tiersVierge;
-  $: transporteur = $tiers?.get(rdv.transporteur) || tiersVierge;
-  $: fournisseur = $tiers?.get(rdv.fournisseur) || tiersVierge;
-  $: affreteur = $tiers?.get(rdv.affreteur) || tiersVierge;
+  let awaitingDispatchBeforeOrderReady = false;
 
-  $: adresses = {
-    client: [
-      client.nom_court,
-      client.pays.toLowerCase() === "fr" ? client.cp.substring(0, 2) : "",
-      client.ville,
-      ["fr", "zz"].includes(client.pays.toLowerCase())
-        ? ""
-        : `(${
-            $pays?.find(({ iso }) => client.pays === iso)?.nom || client.pays
-          })`,
-    ]
-      .filter((champ) => champ)
-      .join(" "),
+  $: client = $tiers?.get(appointment.client);
+  $: livraison = $tiers?.get(appointment.livraison);
+  $: chargement = $tiers?.get(appointment.chargement);
+  $: transporteur = $tiers?.get(appointment.transporteur);
+  $: fournisseur = $tiers?.get(appointment.fournisseur);
+  $: affreteur = $tiers?.get(appointment.affreteur);
 
-    tootipClient: !client.id
-      ? "Pas de client renseigné"
-      : [
-          "Client :",
-          client.nom_complet,
-          client.adresse_ligne_1,
-          client.adresse_ligne_2,
-          [client.cp || "", client.ville || ""]
-            .filter((champ) => champ)
-            .join(" "),
-          $pays?.find(({ iso }) => client.pays === iso)?.nom || client.pays,
-          client.telephone,
-          client.commentaire ? " " : "",
-          client.commentaire,
-        ]
-          .filter((champ) => champ)
-          .join("\n"),
+  $: loadingPlaceIsDisplayed =
+    appointment.chargement && appointment.chargement !== 1;
+  $: deliveryPlaceIsDisplayed =
+    appointment.livraison && appointment.client !== appointment.livraison;
 
-    chargement: [
-      chargement.nom_court,
-      chargement.pays?.toLowerCase() === "fr"
-        ? chargement.cp?.substring(0, 2)
-        : "",
-      chargement.ville,
-      ["fr", "zz"].includes(chargement.pays?.toLowerCase())
-        ? ""
-        : `(${
-            $pays?.find(({ iso }) => chargement.pays === iso)?.nom ||
-            chargement.pays
-          })`,
-    ]
-      .filter((champ) => champ)
-      .join(" "),
-
-    tooltipChargement: !chargement.id
-      ? "Pas de lieu de chargement renseigné"
-      : [
-          "Chargement :",
-          chargement.nom_complet,
-          chargement.adresse_ligne_1,
-          chargement.adresse_ligne_2,
-          [chargement.cp || "", chargement.ville || ""]
-            .filter((champ) => champ)
-            .join(" "),
-          chargement.pays.toLowerCase() === "zz"
-            ? ""
-            : $pays?.find(({ iso }) => chargement.pays === iso)?.nom ||
-              chargement.pays,
-          chargement.telephone,
-          chargement.commentaire ? " " : "",
-          chargement.commentaire,
-        ]
-          .filter((champ) => champ)
-          .join("\n"),
-
-    livraison: [
-      livraison.nom_court,
-      livraison.pays.toLowerCase() === "fr" ? livraison.cp.substring(0, 2) : "",
-      livraison.ville,
-      ["fr", "zz"].includes(livraison.pays.toLowerCase())
-        ? ""
-        : `(${
-            $pays?.find(({ iso }) => livraison.pays === iso)?.nom ||
-            livraison.pays
-          })`,
-    ]
-      .filter((champ) => champ)
-      .join(" "),
-
-    tooltipLivraison: !livraison.id
-      ? "Pas de lieu de livraison renseigné"
-      : [
-          "Livraison :",
-          livraison.nom_complet,
-          livraison.adresse_ligne_1,
-          livraison.adresse_ligne_2,
-          [livraison.cp || "", livraison.ville || ""]
-            .filter((champ) => champ)
-            .join(" "),
-          livraison.pays.toLowerCase() === "zz"
-            ? ""
-            : $pays?.find(({ iso }) => livraison.pays === iso)?.nom ||
-              livraison.pays,
-          livraison.telephone,
-          livraison.commentaire ? " " : "",
-          livraison.commentaire,
-        ]
-          .filter((champ) => champ)
-          .join("\n"),
-  };
-
-  $: chargementAffiche = rdv.chargement && rdv.chargement !== 1;
-  $: livraisonAffiche = rdv.livraison && rdv.client !== rdv.livraison;
-
-  const formattedDate = rdv.date_rdv
-    ? new DateUtils(rdv.date_rdv).format().long
+  const formattedDate = appointment.date_rdv
+    ? new DateUtils(appointment.date_rdv).format().long
     : "Pas de date";
+
+  function makeThirdPartyTooltip(
+    thirdParty: Tiers,
+    role: "chargement" | "client" | "livraison"
+  ) {
+    return thirdParty
+      ? [
+          role.charAt(0).toUpperCase() + role.slice(1) + " :",
+          thirdParty.nom_complet,
+          thirdParty.adresse_ligne_1,
+          thirdParty.adresse_ligne_2,
+          [thirdParty.cp || "", thirdParty.ville || ""]
+            .filter((champ) => champ)
+            .join(" "),
+          thirdParty.pays.toLowerCase() === "zz"
+            ? ""
+            : $pays?.find(({ iso }) => thirdParty.pays === iso)?.nom ||
+              thirdParty.pays,
+          thirdParty.telephone,
+          thirdParty.commentaire ? " " : "",
+          thirdParty.commentaire,
+        ]
+          .filter((champ) => champ)
+          .join("\n")
+      : "";
+  }
+
+  function showDispatchIfNecessary(type: "beforeOrderReady") {
+    const normalizedRemarks = removeDiacritics(
+      appointment.dispatch.map(({ remarks }) => remarks).join()
+    );
+
+    const w2w = 219;
+    const yv = 13;
+
+    switch (type) {
+      case "beforeOrderReady":
+        if (
+          !appointment.commande_prete &&
+          !normalizedRemarks.includes("prepa")
+        ) {
+          appointment.dispatch = [
+            ...appointment.dispatch,
+            {
+              staffId: appointment.fournisseur === w2w ? yv : null,
+              date: new DateUtils().toLocaleISODateString(),
+              remarks: "Préparation",
+              new: true,
+            },
+          ];
+
+          awaitingDispatchBeforeOrderReady = true;
+          showDispatchModal = true;
+        }
+        break;
+
+      default:
+        break;
+    }
+  }
 
   /**
    * Renseigner commande prête en cliquant sur l'icône paquet.
    */
-  async function renseignerCommandePrete() {
+  async function toggleOrderReady() {
+    showDispatchIfNecessary("beforeOrderReady");
+
+    if (awaitingDispatchBeforeOrderReady) return;
+
     try {
-      await boisRdvs.patch(rdv.id, {
-        commande_prete: !rdv.commande_prete,
+      const newState = !appointment.commande_prete;
+
+      await boisRdvs.patch(appointment.id, {
+        commande_prete: newState,
       });
+
+      Notiflix.Notify.success(
+        newState
+          ? "Commande marquée comme prête"
+          : "Commande marquée comme non prête"
+      );
     } catch (err) {
       Notiflix.Notify.failure(err.message);
     } finally {
-      afficherModal = false;
+      showModal = false;
     }
   }
 
@@ -195,7 +171,7 @@
           Notiflix.Block.dots([ligne], notiflixOptions.texts.suppression);
           ligne.style.minHeight = "initial";
 
-          boisRdvs.delete(rdv.id);
+          boisRdvs.delete(appointment.id);
 
           Notiflix.Notify.success("Le RDV a été supprimé");
         } catch (erreur) {
@@ -207,14 +183,14 @@
       notiflixOptions.themes.red
     );
 
-    afficherModal = false;
+    showModal = false;
   }
 
   onMount(() => {
     mc = new Hammer(ligne);
     mc.on("press", () => {
       if ($device.is("mobile")) {
-        afficherModal = true;
+        showModal = true;
       }
     });
   });
@@ -224,245 +200,187 @@
   });
 </script>
 
-{#if afficherModal}
-  <Modal on:outclick={() => (afficherModal = false)}>
-    <div
-      style:background="white"
-      style:padding="20px"
-      style:border-radius="20px"
-    >
-      <BoutonAction preset="modifier" on:click={$goto(`./${rdv.id}`)} />
-      <BoutonAction preset="copier" on:click={$goto(`./new?copie=${rdv.id}`)} />
-      <BoutonAction preset="supprimer" on:click={supprimerRdv} />
-      <BoutonAction preset="annuler" on:click={() => (afficherModal = false)} />
-    </div>
-  </Modal>
-{/if}
+<Modal bind:open={showModal} outsideclose dismissable={false}>
+  <BoutonAction on:click={toggleOrderReady}
+    >{appointment.commande_prete ? "Annuler" : "Renseigner"} commande prête</BoutonAction
+  >
+  <BoutonAction preset="modifier" on:click={$goto(`./${appointment.id}`)} />
+  <BoutonAction
+    preset="copier"
+    on:click={$goto(`./new?copie=${appointment.id}`)}
+  />
+  <BoutonAction preset="supprimer" on:click={supprimerRdv} />
+  <BoutonAction preset="annuler" on:click={() => (showModal = false)} />
+</Modal>
 
-<div class="rdv pure-g" bind:this={ligne}>
-  <div class="pure-u-1 pure-u-lg-22-24">
-    <div class="date-rdv pure-u-1 pure-u-lg-4-24">{formattedDate}</div>
-
-    <div class="adresses-tiers pure-u-1 pure-u-lg-5-24">
-      {#if chargementAffiche}
-        <div class="chargement">
-          <IconText>
-            <span slot="icon" title="Chargement">line_start_diamond</span>
-            <span slot="text">{adresses.chargement}</span>
-            <span slot="tooltip">{adresses.tooltipChargement}</span>
-          </IconText>
-        </div>
-      {/if}
-
-      <div class="client">
-        <IconText>
-          <span slot="icon" title="Client">
-            {#if chargementAffiche || livraisonAffiche}
-              person
-            {/if}
-          </span>
-          <span slot="text">{adresses.client}</span>
-          <span slot="tooltip">{adresses.tootipClient}</span>
-        </IconText>
-      </div>
-
-      {#if livraisonAffiche}
-        <div class="livraison">
-          <IconText>
-            <span slot="icon" title="Livraison">line_end_circle</span>
-            <span slot="text">{adresses.livraison}</span>
-            <span slot="tooltip">{adresses.tooltipLivraison}</span>
-          </IconText>
-        </div>
-      {/if}
-    </div>
-
-    <div class="transporteur pure-u-1 pure-u-lg-2-24">
-      {#if rdv.transporteur}
-        <IconText hideIcon={["desktop"]}>
-          <span slot="icon" title="Transporteur">local_shipping</span>
-          <span slot="text" style:font-weight="bold"
-            >{transporteur.nom_court}</span
-          >
-          <span slot="tooltip">
-            {#if rdv.transporteur >= 11}
-              <!-- Transporteur non "spécial" -->
-              {transporteur.telephone || "Téléphone non renseigné"}
-            {/if}
-          </span>
-        </IconText>
-      {/if}
-    </div>
-
-    <div
-      class="affreteur pure-u-1 pure-u-lg-2-24"
-      class:lie-agence={affreteur.lie_agence}
-    >
-      <IconText iconType="text" hideIcon={["desktop"]}>
-        <span slot="icon" title="Affréteur">A</span>
-        <span slot="text">{affreteur.nom_court}</span>
-      </IconText>
-    </div>
-
-    <div class="fournisseur pure-u-1 pure-u-lg-2-24">
-      <IconText iconType="text" hideIcon={["desktop"]}>
-        <span slot="icon" title="Fournisseur">F</span>
-        <span slot="text">{fournisseur.nom_court}</span>
-      </IconText>
-    </div>
-
-    <div class="commande_prete pure-u-1 pure-u-lg-1-24">
-      {#if rdv.commande_prete && !$currentUser.canEdit("bois")}
-        <IconText hideText={["desktop"]}>
-          <span slot="icon" title="Commande prête">package_2</span>
-          <span slot="text">Commande prête</span>
-        </IconText>
-      {/if}
-
-      {#if rdv.commande_prete && $currentUser.canEdit("bois")}
-        <div class="commande_prete-bouton-annuler">
-          <MaterialButton
-            icon="package_2"
-            title="Annuler la préparation de commande"
-            invert
-            on:click={renseignerCommandePrete}
-          />
-        </div>
-      {/if}
-
-      {#if !rdv.commande_prete && $currentUser.canEdit("bois")}
-        <div class="commande_prete-bouton-confirmer">
-          <MaterialButton
-            icon="package_2"
-            title="Renseigner commande prête"
-            on:click={renseignerCommandePrete}
-          />
-        </div>
-      {/if}
-    </div>
-
-    <div class="commentaires pure-u-1 pure-u-lg-6-24">
-      {#if rdv.commentaire_public}
-        <div class="commentaire_public">
-          <IconText hideIcon={["desktop"]}>
-            <span slot="icon" title="Commentaire public">comment</span>
-            <span slot="text"
-              >{@html rdv.commentaire_public.replace(
-                /(?:\r\n|\r|\n)/g,
-                "<br>"
-              )}</span
-            >
-          </IconText>
-        </div>
-      {/if}
-
-      {#if rdv.commentaire_public && rdv.commentaire_cache}
-        <div class="separateur" />
-      {/if}
-
-      {#if rdv.commentaire_cache}
-        <div class="commentaire_cache">
-          <IconText hideIcon={["desktop"]}>
-            <span slot="icon" title="Commentaire caché">comments_disabled</span>
-            <span slot="text"
-              >{@html rdv.commentaire_cache.replace(
-                /(?:\r\n|\r|\n)/g,
-                "<br>"
-              )}</span
-            >
-          </IconText>
-        </div>
-      {/if}
-    </div>
+<div
+  class="group grid py-2 text-gray-500 lg:min-h-11 lg:grid-cols-[17%_20%_8%_8%_8%_3%_3%_21%_auto]"
+  bind:this={ligne}
+>
+  <!-- Date -->
+  <div>
+    {formattedDate}
   </div>
 
+  <!-- Adresses -->
+  <div>
+    <!-- Chargement -->
+    {#if loadingPlaceIsDisplayed}
+      <div class="chargement">
+        <IconText>
+          <span slot="icon" title="Chargement"><ArrowRightFromLineIcon /></span>
+          <span slot="text"><ThirdPartyAddress thirdParty={chargement} /></span>
+          <span slot="tooltip">
+            {makeThirdPartyTooltip(chargement, "chargement")}
+          </span>
+        </IconText>
+      </div>
+    {/if}
+
+    <!-- Client -->
+    <div class="client">
+      <IconText>
+        <span slot="icon" title="Client">
+          {#if loadingPlaceIsDisplayed || deliveryPlaceIsDisplayed || $device.is("mobile")}
+            <UserIcon />
+          {/if}
+        </span>
+        <span slot="text"><ThirdPartyAddress thirdParty={client} /></span>
+        <span slot="tooltip">
+          {makeThirdPartyTooltip(client, "client")}
+        </span>
+      </IconText>
+    </div>
+
+    <!-- Livraison -->
+    {#if deliveryPlaceIsDisplayed}
+      <div class="livraison">
+        <IconText>
+          <span slot="icon" title="Livraison"><ArrowRightToLineIcon /></span>
+          <span slot="text"><ThirdPartyAddress thirdParty={livraison} /></span>
+          <span slot="tooltip">
+            {makeThirdPartyTooltip(livraison, "livraison")}
+          </span>
+        </IconText>
+      </div>
+    {/if}
+  </div>
+
+  <div>
+    {#if appointment.transporteur}
+      <IconText hideIcon={["desktop"]}>
+        <span slot="icon" title="Transporteur"><TruckIcon /></span>
+        <span slot="text" style:font-weight="bold"
+          >{transporteur?.nom_court || ""}</span
+        >
+        <span slot="tooltip">
+          {#if appointment.transporteur >= 11}
+            <!-- Transporteur non "spécial" -->
+            {transporteur?.telephone || "Téléphone non renseigné"}
+          {/if}
+        </span>
+      </IconText>
+    {/if}
+  </div>
+
+  <!-- Affréteur -->
+  <div class="affreteur" class:lie-agence={affreteur?.lie_agence || false}>
+    <IconText hideIcon={["desktop"]}>
+      <span slot="icon" title="Affréteur">A</span>
+      <span slot="text">{affreteur?.nom_court || ""}</span>
+    </IconText>
+  </div>
+
+  <!-- Fournisseur -->
+  <div class="fournisseur">
+    <IconText hideIcon={["desktop"]}>
+      <span slot="icon" title="Fournisseur">F</span>
+      <span slot="text">{fournisseur?.nom_court || ""}</span>
+    </IconText>
+  </div>
+
+  <!-- Commande prête -->
+  <div class="no-mobile">
+    <OrderReadyButton
+      bind:orderReady={appointment.commande_prete}
+      module="bois"
+      {toggleOrderReady}
+    />
+  </div>
+
+  <!-- Dispatch -->
+  <div class="no-mobile">
+    <DispatchButton
+      bind:dispatch={appointment.dispatch}
+      bind:showDispatchModal
+      module="bois"
+    />
+  </div>
+
+  <DispatchModal
+    bind:appointment
+    bind:open={showDispatchModal}
+    bind:awaitingDispatchBeforeOrderReady
+    {toggleOrderReady}
+  />
+
+  <!-- Commentaires -->
+  <div>
+    {#if appointment.commentaire_public}
+      <div class="lg:pl-1">
+        <IconText hideIcon={["desktop"]}>
+          <span slot="icon" title="Commentaire public"
+            ><MessageSquareTextIcon /></span
+          >
+          <span slot="text"
+            >{@html appointment.commentaire_public.replace(
+              /\r\n|\r|\n/g,
+              "<br/>"
+            )}</span
+          >
+        </IconText>
+      </div>
+    {/if}
+
+    {#if appointment.commentaire_public && appointment.commentaire_cache}
+      <div class="h-3" />
+    {/if}
+
+    {#if appointment.commentaire_cache}
+      <div
+        class="text-gray-400 lg:border-l-[1px] lg:border-dotted lg:border-l-gray-400 lg:pl-1"
+      >
+        <IconText hideIcon={["desktop"]}>
+          <span slot="icon" title="Commentaire caché"
+            ><MessageSquareOffIcon /></span
+          >
+          <span slot="text"
+            >{@html appointment.commentaire_cache.replace(
+              /\r\n|\r|\n/g,
+              "<br/>"
+            )}</span
+          >
+        </IconText>
+      </div>
+    {/if}
+  </div>
+
+  <!-- Boutons -->
   {#if $currentUser.canEdit("bois")}
-    <div class="copie-modif-suppr">
-      <MaterialButton
-        preset="copier"
+    <div class="no-mobile invisible ms-auto me-2 group-hover:visible">
+      <LucideButton
+        preset="copy"
         on:click={() => {
-          $goto(`./new?copie=${rdv.id}`);
+          $goto(`./new?copie=${appointment.id}`);
         }}
       />
-      <MaterialButton
-        preset="modifier"
+      <LucideButton
+        preset="edit"
         on:click={() => {
-          $goto(`./${rdv.id}`);
+          $goto(`./${appointment.id}`);
         }}
       />
-      <MaterialButton preset="supprimer" on:click={supprimerRdv} />
+      <LucideButton preset="delete" on:click={supprimerRdv} />
     </div>
   {/if}
 </div>
-
-<style>
-  .rdv {
-    color: #555;
-    padding: 8px 0 8px 5px;
-    border-bottom: 1px solid #999;
-    align-items: baseline;
-  }
-
-  .rdv:last-child {
-    border-bottom: none;
-  }
-
-  .rdv .date-rdv {
-    margin-left: 5px;
-  }
-
-  .adresses-tiers,
-  .transporteur,
-  .affreteur,
-  .fournisseur,
-  .commentaires,
-  .commande_prete {
-    margin-left: 5px;
-  }
-
-  .commentaires .separateur {
-    height: 10px;
-  }
-
-  .commentaire_cache {
-    --commentaire-cache-color: hsl(0, 0%, 70%);
-    color: var(--commentaire-cache-color);
-  }
-
-  .commande_prete-bouton-confirmer {
-    display: none;
-  }
-
-  /* Mobile */
-  @media screen and (max-width: 767px) {
-    .transporteur,
-    .commentaires {
-      margin-top: 10px;
-    }
-  }
-
-  /* Desktop */
-  @media screen and (min-width: 768px) {
-    .rdv {
-      min-height: 2.75rem; /* Pour éviter saut de contenu lors de hover avec icônes Material */
-    }
-
-    .rdv:hover .copie-modif-suppr {
-      visibility: visible;
-      margin-right: 10px;
-    }
-
-    .commentaire_cache {
-      border-left: 1px dotted var(--commentaire-cache-color);
-    }
-
-    .commentaire_public,
-    .commentaire_cache {
-      padding-left: 5px;
-    }
-
-    .rdv:hover .commande_prete-bouton-confirmer {
-      display: inline-block;
-    }
-  }
-</style>

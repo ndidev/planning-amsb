@@ -1,17 +1,23 @@
+# Local
 .vscode/
+DEVSENSE/
 .DS_Store
 docker/
 node_modules/
 vendor/
-.parcel-cache/
 dist/
 logos/
 .env
 .env.*
 !.env.example
-backup/
 .routify
 
-# Temp
-_src
-_html
+# PHPUnit
+.phpunit.cache
+/api/public/tests
+
+# Local config files
+phpstan.neon
+
+# UML
+uml/

@@ -1,13 +1,19 @@
 <!-- routify:options title="Planning AMSB - RDV bois" -->
 <script lang="ts">
-  import { getContext } from "svelte";
   import { params, goto, redirect } from "@roxi/routify";
 
+  import { Label, Input, Toggle, Textarea } from "flowbite-svelte";
+  import {
+    CircleHelpIcon,
+    SparklesIcon,
+    TriangleAlertIcon,
+  } from "lucide-svelte";
   import Notiflix from "notiflix";
 
   import {
+    PageHeading,
     Svelecte,
-    MaterialButton,
+    LucideButton,
     Chargement,
     BoutonAction,
   } from "@app/components";
@@ -17,42 +23,18 @@
     notiflixOptions,
     validerFormulaire,
     preventFormSubmitOnEnterKeydown,
-    locale,
   } from "@app/utils";
 
   import { HTTP } from "@app/errors";
 
-  import type { RdvBois, Stores } from "@app/types";
+  import { boisRdvs, tiers } from "@app/stores";
 
-  const { boisRdvs, tiers } = getContext<Stores>("stores");
+  import type { RdvBois } from "@app/types";
 
-  let formulaire: HTMLFormElement;
-  let boutonAjouter: BoutonAction;
-  let boutonModifier: BoutonAction;
-  let boutonSupprimer: BoutonAction;
-
-  const nouveauRdv: RdvBois = {
-    id: null,
-    attente: false,
-    date_rdv: new Date()
-      .toLocaleDateString(locale)
-      .split("/")
-      .reverse()
-      .join("-"),
-    heure_arrivee: null,
-    heure_depart: null,
-    fournisseur: null,
-    chargement: 1, // AMSB
-    client: null,
-    livraison: null,
-    transporteur: null,
-    affreteur: null,
-    commande_prete: false,
-    confirmation_affretement: false,
-    numero_bl: "",
-    commentaire_public: "",
-    commentaire_cache: "",
-  };
+  let form: HTMLFormElement;
+  let createButton: BoutonAction;
+  let updateButton: BoutonAction;
+  let deleteButton: BoutonAction;
 
   /**
    * Identifiant du RDV.
@@ -60,21 +42,32 @@
   let id: RdvBois["id"] = parseInt($params.id);
 
   let isNew = $params.id === "new";
-  const copie = parseInt($params.copie);
+  const copy = parseInt($params.copie);
 
-  let rdv: RdvBois = { ...nouveauRdv };
-  let numero_bl = rdv?.numero_bl;
-  let heure_arrivee = rdv?.heure_arrivee?.substring(0, 5) ?? "";
-  let heure_depart = rdv?.heure_depart?.substring(0, 5) ?? "";
+  let appointment = boisRdvs.getTemplate();
+  let numero_bl = appointment?.numero_bl;
+  let heure_arrivee = appointment?.heure_arrivee?.substring(0, 5) ?? "";
+  let heure_depart = appointment?.heure_depart?.substring(0, 5) ?? "";
 
   (async () => {
     try {
-      if (id || copie) {
-        rdv = structuredClone(await boisRdvs.get(id || copie));
-        if (!rdv) throw new Error();
-        numero_bl = rdv.numero_bl;
-        heure_arrivee = rdv.heure_arrivee?.substring(0, 5) ?? "";
-        heure_depart = rdv.heure_depart?.substring(0, 5) ?? "";
+      if (id || copy) {
+        appointment = structuredClone(await boisRdvs.get(id || copy));
+        if (!appointment) throw new Error();
+
+        if (copy) {
+          appointment.id = null;
+          appointment.heure_arrivee = null;
+          appointment.heure_depart = null;
+          appointment.commande_prete = false;
+          appointment.confirmation_affretement = false;
+          appointment.numero_bl = null;
+          appointment.dispatch = [];
+        }
+
+        numero_bl = appointment.numero_bl;
+        heure_arrivee = appointment.heure_arrivee?.substring(0, 5) ?? "";
+        heure_depart = appointment.heure_depart?.substring(0, 5) ?? "";
       }
     } catch (error) {
       $redirect("./new");
@@ -90,25 +83,22 @@
    * Pour ne pas perdre les informations sur les secondes,
    * celles-ci sont rajoutée lors de la soumission du formulaire.
    *
-   * @param heure
+   * @param time
    * @param type
    */
-  function ajouterSecondes(
-    heure: string,
-    type: "arrivee" | "depart"
-  ): string | null {
-    if (!heure) {
+  function addSeconds(time: string, type: "arrivee" | "depart"): string | null {
+    if (!time) {
       return null;
     }
 
-    const heure_rdv = (rdv["heure_" + type] as string) || "";
+    const appointmentTime = (appointment["heure_" + type] as string) || "";
 
-    if (heure === heure_rdv.substring(0, 5)) {
+    if (time === appointmentTime.substring(0, 5)) {
       // Si l'heure n'a pas changé, conserver les secondes
-      return heure_rdv;
+      return appointmentTime;
     } else {
       // Si l'heure a changé, mettre les secondes à zéro
-      return heure + ":00";
+      return time + ":00";
     }
   }
 
@@ -117,44 +107,58 @@
    * lors de la saisie du client
    * si le champ livraison est vide
    */
-  function remplirLivraisonAuto() {
-    if (rdv.client !== null && rdv.livraison === null) {
-      rdv.livraison = rdv.client;
+  function autoFillDeliveryPlace() {
+    if (appointment.client !== null && appointment.livraison === null) {
+      appointment.livraison = appointment.client;
     }
   }
 
   /**
    * Vérification du numéro BL directement pour éviter doublon
    */
-  async function verifierNumeroBL() {
+  async function checkDeliveryNoteNumber() {
     try {
-      await fetcher(`bois/rdvs/${rdv.id}`, {
-        requestInit: {
-          method: "PATCH",
-          body: JSON.stringify({
-            numero_bl,
-            dry_run: "true",
-          }),
-        },
-      });
+      if (numero_bl === appointment.numero_bl || numero_bl === "") {
+        appointment.numero_bl = numero_bl;
+        return;
+      }
 
-      rdv.numero_bl = numero_bl;
+      const isDeliveryNoteNumberAvailable: boolean = await fetcher(
+        `bois/check-delivery-note-available`,
+        {
+          searchParams: {
+            supplierId: appointment.fournisseur?.toString(),
+            deliveryNoteNumber: numero_bl,
+            currentAppointmentId: appointment.id?.toString(),
+          },
+        }
+      );
+
+      if (isDeliveryNoteNumberAvailable) {
+        appointment.numero_bl = numero_bl;
+      } else {
+        const supplierName = $tiers.get(appointment.fournisseur)?.nom_court;
+
+        Notiflix.Report.failure(
+          "Erreur",
+          `Le numéro BL ${numero_bl} est déjà utilisé pour ${supplierName}.`,
+          "OK"
+        );
+
+        numero_bl = appointment.numero_bl;
+      }
     } catch (err: unknown) {
       const error = err as HTTP.Error | Error;
-      if (error instanceof HTTP.BadRequest) {
-        Notiflix.Report.failure("Erreur", error.message, "OK");
-      } else {
-        Notiflix.Notify.failure(error.message);
-      }
-      numero_bl = rdv.numero_bl;
+      Notiflix.Notify.failure(error.message);
+      numero_bl = appointment.numero_bl;
     }
   }
 
   /**
    * Afficher des suggestions de transporteurs.
    */
-  async function afficherSuggestionsTransporteurs() {
-    if (!rdv.chargement || !rdv.livraison) {
+  async function showCarrierSuggestions() {
+    if (!appointment.chargement || !appointment.livraison) {
       Notiflix.Notify.failure(
         "Le chargement et la livraison doivent être renseignés pour obtenir des suggestions"
       );
@@ -165,9 +169,9 @@
       const suggestions: SuggestionsTransporteurs = await fetcher(
         "bois/suggestions-transporteurs",
         {
-          params: {
-            chargement: rdv.chargement.toString(),
-            livraison: rdv.livraison.toString(),
+          searchParams: {
+            chargement: appointment.chargement.toString(),
+            livraison: appointment.livraison.toString(),
           },
         }
       );
@@ -178,49 +182,52 @@
         transporteurs: any[];
       };
 
-      let ul = document.createElement("ul");
-      ul.classList.add("suggestions");
+      let message = "";
 
-      suggestions.transporteurs.forEach((transporteur) => {
-        const li = document.createElement("li");
-        li.classList.add("suggestion");
+      if (suggestions.transporteurs.length > 0) {
+        let ul = document.createElement("ul");
+        ul.classList.add("suggestions");
 
-        const spanTransporteur = document.createElement("span");
-        spanTransporteur.classList.add("suggestion-transporteur");
-        spanTransporteur.textContent = transporteur.nom;
+        suggestions.transporteurs.forEach((transporteur) => {
+          const li = document.createElement("li");
+          li.classList.add("suggestion");
 
-        const spanTelephone = document.createElement("span");
-        spanTelephone.classList.add("suggestion-telephone");
-        spanTelephone.textContent =
-          transporteur.telephone || "Téléphone non renseigné";
+          const spanTransporteur = document.createElement("span");
+          spanTransporteur.classList.add("suggestion-transporteur");
+          spanTransporteur.textContent = transporteur.nom;
 
-        li.append(spanTransporteur, " - ", spanTelephone);
-        ul.appendChild(li);
+          const spanTelephone = document.createElement("span");
+          spanTelephone.classList.add("suggestion-telephone");
+          spanTelephone.textContent =
+            transporteur.telephone || "Téléphone non renseigné";
+
+          li.append(spanTransporteur, " - ", spanTelephone);
+          ul.appendChild(li);
+        });
+
+        message = ul.outerHTML;
+      } else {
+        message = "Aucun transport similaire n'a été effectué précédemment.";
+      }
+
+      Notiflix.Report.info("Suggestions de transporteurs", message, "Fermer", {
+        messageMaxLength: Infinity,
+        width: "min(400px, 95%)",
+        info: {
+          backOverlayColor: "hsla(200, 100%, 20%, 0.1)",
+        },
       });
-
-      Notiflix.Report.info(
-        "Suggestions de transporteurs",
-        ul.outerHTML,
-        "Fermer",
-        {
-          messageMaxLength: Infinity,
-          width: "min(400px, 95%)",
-          info: {
-            backOverlayColor: "hsla(200, 100%, 20%, 0.1)",
-          },
-        }
-      );
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
     }
   }
 
   /**
-   * Afficher les explications pour le commentaire caché.
+   * Afficher les explications pour le commentaire privé.
    */
-  function afficherExplicationsCommentaireCache() {
+  function showPrivateCommentsHelp() {
     Notiflix.Report.info(
-      "Commentaire caché",
+      "Commentaire privé",
       "Ce commentaire ne sera pas visible dans le planning envoyé au client." +
         "<br/>" +
         "Utile pour ajouter des informations sur les tarifs d'affrètement, l'état de préparation de la commande, etc.",
@@ -231,56 +238,56 @@
   /**
    * Créer le RDV.
    */
-  async function ajouterRdv() {
-    if (!validerFormulaire(formulaire)) return;
+  async function createAppointment() {
+    if (!validerFormulaire(form)) return;
 
-    boutonAjouter.$set({ disabled: true });
+    createButton.$set({ disabled: true });
 
     try {
-      rdv.heure_arrivee = ajouterSecondes(heure_arrivee, "arrivee");
-      rdv.heure_depart = ajouterSecondes(heure_depart, "depart");
+      appointment.heure_arrivee = addSeconds(heure_arrivee, "arrivee");
+      appointment.heure_depart = addSeconds(heure_depart, "depart");
 
-      await boisRdvs.create(rdv);
+      await boisRdvs.create(appointment);
 
       Notiflix.Notify.success("Le RDV a été ajouté");
       $goto("./");
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
       console.error(erreur);
-      boutonAjouter.$set({ disabled: false });
+      createButton.$set({ disabled: false });
     }
   }
 
   /**
    * Modifier le RDV.
    */
-  async function modifierRdv() {
-    if (!validerFormulaire(formulaire)) return;
+  async function updateAppointment() {
+    if (!validerFormulaire(form)) return;
 
-    boutonModifier.$set({ disabled: true });
+    updateButton.$set({ disabled: true });
 
     try {
-      rdv.heure_arrivee = ajouterSecondes(heure_arrivee, "arrivee");
-      rdv.heure_depart = ajouterSecondes(heure_depart, "depart");
+      appointment.heure_arrivee = addSeconds(heure_arrivee, "arrivee");
+      appointment.heure_depart = addSeconds(heure_depart, "depart");
 
-      await boisRdvs.update(rdv);
+      await boisRdvs.update(appointment);
 
       Notiflix.Notify.success("Le RDV a été modifié");
       $goto("./");
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
       console.error(erreur);
-      boutonModifier.$set({ disabled: false });
+      updateButton.$set({ disabled: false });
     }
   }
 
   /**
    * Supprimer le RDV.
    */
-  function supprimerRdv() {
+  function deleteAppointment() {
     if (!id) return;
 
-    boutonSupprimer.$set({ disabled: true });
+    deleteButton.$set({ disabled: true });
 
     // Demande de confirmation
     Notiflix.Confirm.show(
@@ -297,258 +304,361 @@
         } catch (erreur) {
           Notiflix.Notify.failure(erreur.message);
           console.error(erreur);
-          boutonSupprimer.$set({ disabled: false });
+          deleteButton.$set({ disabled: false });
         }
       },
-      () => boutonSupprimer.$set({ disabled: false }),
+      () => deleteButton.$set({ disabled: false }),
       notiflixOptions.themes.red
     );
+  }
+
+  function addDispatchLine() {
+    appointment.dispatch = [
+      ...appointment.dispatch,
+      {
+        staffId: null,
+        date: "",
+        remarks: "",
+      },
+    ];
+  }
+
+  function deleteDispatchLine(index: number) {
+    appointment.dispatch.splice(index, 1);
+
+    appointment.dispatch = appointment.dispatch;
   }
 </script>
 
 <!-- routify:options param-is-page -->
 <!-- routify:options guard="bois/edit" -->
 
-<main class="formulaire">
-  <h1>Rendez-vous</h1>
+<main class="mx-auto w-10/12 lg:w-1/3">
+  <PageHeading>Rendez-vous</PageHeading>
 
-  {#if !rdv}
+  {#if !appointment}
     <Chargement />
   {:else}
     <form
-      class="pure-form pure-form-aligned"
-      bind:this={formulaire}
+      class="flex flex-col gap-3 mb-4"
+      bind:this={form}
       use:preventFormSubmitOnEnterKeydown
     >
-      <!-- Date -->
-      <div class="pure-control-group">
-        <label for="date_rdv">Date (jj/mm/aaaa)</label>
-        <input
-          type="date"
-          id="date_rdv"
-          name="date_rdv"
-          data-nom="Date"
-          bind:value={rdv.date_rdv}
-          required={!rdv.attente}
-        />
+      <div class="flex flex-col lg:flex-row gap-3 lg:gap-8">
+        <!-- Date -->
+        <div>
+          <Label for="date_rdv">Date (jj/mm/aaaa)</Label>
+          <Input
+            type="date"
+            id="date_rdv"
+            name="date_rdv"
+            data-nom="Date"
+            bind:value={appointment.date_rdv}
+            required={!appointment.attente}
+            class="w-full lg:w-max"
+          />
+        </div>
+
+        <!-- En attente -->
+        <div class="lg:self-center">
+          <Toggle name="attente" bind:checked={appointment.attente}
+            >En attente de confirmation</Toggle
+          >
+        </div>
       </div>
 
-      <!-- En attente -->
-      <div class="pure-control-group">
-        <label for="attente">En attente de confirmation</label>
-        <input
-          type="checkbox"
-          name="attente"
-          id="attente"
-          bind:checked={rdv.attente}
-        />
-      </div>
+      <div class="flex flex-col lg:flex-row gap-3 lg:gap-8">
+        <!-- Heure arrivée -->
+        <div>
+          <Label for="heure_arrivee">Heure arrivée (hh:mm)</Label>
+          <Input
+            type="time"
+            name="heure_arrivee"
+            id="heure_arrivee"
+            bind:value={heure_arrivee}
+            placeholder="hh:mm"
+            class="w-full lg:w-max"
+          />
+        </div>
 
-      <!-- Heure arrivée -->
-      <div class="pure-control-group">
-        <label for="heure_arrivee">Heure arrivée (hh:mm)</label>
-        <input
-          type="time"
-          name="heure_arrivee"
-          id="heure_arrivee"
-          bind:value={heure_arrivee}
-          placeholder="hh:mm"
-        />
-      </div>
-
-      <!-- Heure départ -->
-      <div class="pure-control-group">
-        <label for="heure_depart">Heure départ (hh:mm)</label>
-        <input
-          type="time"
-          name="heure_depart"
-          id="heure_depart"
-          bind:value={heure_depart}
-          placeholder="hh:mm"
-        />
+        <!-- Heure départ -->
+        <div>
+          <Label for="heure_depart">Heure départ (hh:mm)</Label>
+          <Input
+            type="time"
+            id="heure_depart"
+            bind:value={heure_depart}
+            placeholder="hh:mm"
+            class="w-full lg:w-max"
+          />
+        </div>
       </div>
 
       <!-- Fournisseur -->
-      <div class="pure-control-group">
-        <label for="fournisseur">Fournisseur</label>
+      <div>
+        <Label for="fournisseur"
+          >Fournisseur
+          {#if appointment.fournisseur && appointment.affreteur && appointment.fournisseur !== appointment.affreteur && $tiers?.get(appointment.affreteur)?.roles.bois_fournisseur}
+            <span
+              class="warning-fournisseur"
+              title="Erreur possible : vérifier que le fournisseur et l'affréteur sont corrects"
+              ><TriangleAlertIcon /></span
+            >
+          {/if}
+        </Label>
         <Svelecte
           inputId="fournisseur"
           type="tiers"
           role="bois_fournisseur"
-          bind:value={rdv.fournisseur}
+          bind:value={appointment.fournisseur}
           name="Fournisseur"
           required
         />
-        {#if rdv.fournisseur && rdv.affreteur && rdv.fournisseur !== rdv.affreteur && $tiers.get(rdv.affreteur)?.bois_fournisseur}
-          <span
-            class="material-symbols-outlined warning-fournisseur"
-            title="Erreur possible : vérifier que le fournisseur est correct"
-            >warning</span
-          >
-        {/if}
       </div>
 
       <!-- Chargement -->
-      <div class="pure-control-group">
-        <label for="chargement">Chargement</label>
+      <div>
+        <Label for="chargement"
+          >Chargement
+          {#if appointment.chargement && appointment.livraison === appointment.chargement}
+            <span
+              class="warning-fournisseur"
+              title="Les lieux de chargement et livraison sont identiques"
+              ><TriangleAlertIcon /></span
+            >
+          {/if}
+        </Label>
         <Svelecte
           inputId="chargement"
           type="tiers"
           role="bois_client"
-          bind:value={rdv.chargement}
+          bind:value={appointment.chargement}
           name="Chargement"
           required
         />
       </div>
 
       <!-- Client -->
-      <div class="pure-control-group">
-        <label for="client">Client</label>
+      <div>
+        <Label for="client">Client</Label>
         <Svelecte
           inputId="client"
           type="tiers"
           role="bois_client"
-          bind:value={rdv.client}
+          bind:value={appointment.client}
           name="Client"
-          on:change={remplirLivraisonAuto}
+          on:change={autoFillDeliveryPlace}
           required
         />
       </div>
 
       <!-- Livraison -->
-      <div class="pure-control-group">
-        <label for="livraison">Livraison</label>
+      <div>
+        <Label for="livraison"
+          >Livraison
+          {#if appointment.livraison && appointment.livraison === appointment.chargement}
+            <span
+              class="warning-fournisseur"
+              title="Les lieux de chargement et livraison sont identiques"
+              ><TriangleAlertIcon /></span
+            >
+          {/if}
+        </Label>
         <Svelecte
           inputId="livraison"
           type="tiers"
           role="bois_client"
-          bind:value={rdv.livraison}
+          bind:value={appointment.livraison}
           name="Livraison"
           required
         />
       </div>
 
       <!-- Transporteur -->
-      <div class="pure-control-group">
-        <label for="transporteur"
-          >Transporteur {#if rdv.affreteur === 1 || rdv.affreteur === null}
-            <MaterialButton
-              icon="tips_and_updates"
-              title="Suggestions de transporteurs"
-              on:click={afficherSuggestionsTransporteurs}
-            />
-          {/if}</label
-        >
+      <div>
+        <Label for="transporteur"
+          >Transporteur
+          {#if appointment.affreteur === 1 || appointment.affreteur === null}
+            <span>
+              <LucideButton
+                icon={SparklesIcon}
+                title="Suggestions de transporteurs"
+                on:click={showCarrierSuggestions}
+              />
+            </span>
+          {/if}
+        </Label>
         <Svelecte
           inputId="transporteur"
           type="tiers"
           role="bois_transporteur"
-          bind:value={rdv.transporteur}
+          bind:value={appointment.transporteur}
           name="Transporteur"
         />
       </div>
 
       <!-- Affréteur -->
-      <div class="pure-control-group">
-        <label for="affreteur">Affréteur</label>
+      <div>
+        <Label for="affreteur"
+          >Affréteur
+          {#if appointment.fournisseur && appointment.affreteur && appointment.fournisseur !== appointment.affreteur && $tiers?.get(appointment.affreteur)?.roles.bois_fournisseur}
+            <span
+              class="warning-fournisseur"
+              title="Erreur possible : vérifier que le fournisseur et l'affréteur sont corrects"
+              ><TriangleAlertIcon /></span
+            >
+          {/if}</Label
+        >
         <Svelecte
           inputId="affreteur"
           type="tiers"
           role="bois_affreteur"
-          bind:value={rdv.affreteur}
+          bind:value={appointment.affreteur}
           name="Affréteur"
         />
       </div>
 
       <!-- Commande prête -->
-      <div class="pure-control-group">
-        <label for="commande_prete">Commande prête</label>
-        <input
-          type="checkbox"
-          name="commande_prete"
-          id="commande_prete"
-          bind:checked={rdv.commande_prete}
-        />
+      <div>
+        <Toggle name="commande_prete" bind:checked={appointment.commande_prete}
+          >Commande prête</Toggle
+        >
       </div>
 
       <!-- Confirmation d'affrètement -->
-      <div class="pure-control-group">
-        <label for="confirmation_affretement">Confirmation d'affrètement</label>
-        <input
-          type="checkbox"
+      <div>
+        <Toggle
           name="confirmation_affretement"
-          id="confirmation_affretement"
-          bind:checked={rdv.confirmation_affretement}
-          disabled={$tiers?.get(rdv.affreteur)?.lie_agence === false ||
-            !rdv.transporteur}
-        />
+          bind:checked={appointment.confirmation_affretement}
+          disabled={$tiers?.get(appointment.affreteur)?.lie_agence === false ||
+            !appointment.transporteur}>Confirmation d'affrètement</Toggle
+        >
       </div>
 
       <!-- Numéro BL -->
-      <div class="pure-control-group">
-        <label for="numero_bl">Numéro BL</label>
-        <input
+      <div>
+        <Label for="numero_bl">Numéro BL</Label>
+        <Input
           type="text"
           name="numero_bl"
           id="numero_bl"
           bind:value={numero_bl}
-          on:change={verifierNumeroBL}
+          on:change={checkDeliveryNoteNumber}
         />
       </div>
 
       <!-- Commentaire public -->
-      <div class="pure-control-group">
-        <label for="commentaire_public">Commentaire public</label>
-        <textarea
-          class="rdv_commentaire"
-          name="commentaire_public"
+      <div>
+        <Label for="commentaire_public">Commentaire public</Label>
+        <Textarea
           id="commentaire_public"
-          rows="3"
-          cols="30"
-          bind:value={rdv.commentaire_public}
+          rows={3}
+          cols={30}
+          bind:value={appointment.commentaire_public}
         />
       </div>
 
       <!-- Commentaire caché -->
-      <div class="pure-control-group">
-        <label for="commentaire_cache"
-          >Commentaire caché<br /><MaterialButton
-            icon="help"
-            on:click={afficherExplicationsCommentaireCache}
-          /></label
+      <div>
+        <Label for="commentaire_prive"
+          >Commentaire privé <LucideButton
+            icon={CircleHelpIcon}
+            on:click={showPrivateCommentsHelp}
+          /></Label
         >
-        <textarea
-          class="rdv_commentaire"
-          name="commentaire_cache"
-          id="commentaire_cache"
-          rows="3"
-          cols="30"
-          bind:value={rdv.commentaire_cache}
+        <Textarea
+          id="commentaire_prive"
+          rows={3}
+          cols={30}
+          bind:value={appointment.commentaire_cache}
         />
+      </div>
+
+      <!-- Dispatch -->
+      <div>
+        <div class="text-xl font-bold">
+          Dispatch
+          <LucideButton
+            preset="add"
+            title="Ajouter une ligne"
+            on:click={addDispatchLine}
+          />
+        </div>
+        <div class="divide-y">
+          {#each appointment.dispatch as dispatchItem, index}
+            <div
+              class="flex flex-col items-center gap-2 py-1 lg:flex-row lg:gap-4 lg:py-2"
+            >
+              <div class="w-full">
+                <Label for="">Personnel</Label>
+                <Svelecte
+                  type="staff"
+                  inputId="staff-{index}"
+                  name="Personnel"
+                  bind:value={dispatchItem.staffId}
+                  placeholder="Sélectionner le personnel"
+                  required
+                />
+              </div>
+
+              <div class="w-full lg:w-min">
+                <Label for="date-{index}">Date</Label>
+                <Input
+                  type="date"
+                  id="date-{index}"
+                  name="Date"
+                  bind:value={dispatchItem.date}
+                  required
+                />
+              </div>
+
+              <div class="w-full">
+                <Label for="remarks-{index}">Remarques</Label>
+                <Input
+                  type="text"
+                  id="remarks-{index}"
+                  bind:value={dispatchItem.remarks}
+                  list="remarks"
+                />
+                <datalist id="remarks">
+                  <option value="JCB"></option>
+                  <option value="Trémie"></option>
+                </datalist>
+              </div>
+              <div>
+                <LucideButton
+                  preset="delete"
+                  title="Supprimer la ligne"
+                  on:click={() => deleteDispatchLine(index)}
+                />
+              </div>
+            </div>
+          {/each}
+        </div>
       </div>
     </form>
 
     <!-- Validation/Annulation/Suppression -->
-    <div class="boutons">
+    <div class="text-center">
       {#if isNew}
         <!-- Bouton "Ajouter" -->
         <BoutonAction
           preset="ajouter"
-          on:click={ajouterRdv}
-          bind:this={boutonAjouter}
+          on:click={createAppointment}
+          bind:this={createButton}
         />
       {:else}
         <!-- Bouton "Modifier" -->
         <BoutonAction
           preset="modifier"
-          on:click={modifierRdv}
-          bind:this={boutonModifier}
+          on:click={updateAppointment}
+          bind:this={updateButton}
         />
         <!-- Bouton "Supprimer" -->
         <BoutonAction
           preset="supprimer"
-          on:click={supprimerRdv}
-          bind:this={boutonSupprimer}
+          on:click={deleteAppointment}
+          bind:this={deleteButton}
         />
       {/if}
 
@@ -568,6 +678,7 @@
     color: red;
     cursor: help;
     animation: warning-animation 0.5s linear 0s 6 alternate;
+    vertical-align: text-top;
   }
 
   @keyframes warning-animation {

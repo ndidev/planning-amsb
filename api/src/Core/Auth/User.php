@@ -1,11 +1,17 @@
 <?php
 
+// Path: api/src/Core/Auth/User.php
+
+declare(strict_types=1);
+
 namespace App\Core\Auth;
 
+use App\Core\Array\ArrayHandler;
+use App\Core\Component\DateUtils;
+use App\Core\Component\Module;
 use App\Core\Component\SSEHandler;
 use App\Core\Database\MySQL;
 use App\Core\Database\Redis;
-use App\Core\DateUtils;
 use App\Core\Exceptions\Client\Auth\AccountDeletedException;
 use App\Core\Exceptions\Client\Auth\AccountInactiveException;
 use App\Core\Exceptions\Client\Auth\AccountLockedException;
@@ -17,61 +23,44 @@ use App\Core\Exceptions\Client\Auth\InvalidApiKeyException;
 use App\Core\Exceptions\Client\Auth\LoginException;
 use App\Core\Exceptions\Client\Auth\MaxLoginAttemptsException;
 use App\Core\Exceptions\Client\Auth\SessionException;
+use App\Core\Exceptions\Server\DB\DBException;
+use App\Core\Exceptions\Server\ServerException;
+use App\Core\Array\Environment;
+use App\Core\Array\Server;
 use App\Core\Security;
-use App\Core\Constants;
+use const App\Core\Component\Constants\ONE_WEEK;
 
 /**
  * Classe contenant toutes les propriétés d'un compte utilisateur.
  * 
- * @package App\Core
+ * @property ?string $uid           UID de l'utilisateur.
+ * @property ?string $login         Identifiant de l'utilisateur.
+ * @property ?string $password      Hash du mot de passe.
+ * @property bool    $canLogin      `true` si le compte peut être utilisé pour se connecter (utilisateur normal).
+ *                                  `false` si le compte ne peut pas être utilisé pour se connecter (ex: compte "kiosque" type Raspberry Pi).
+ * @property string  $name          Nom de l'utilisateur.
+ * @property int     $loginAttempts Nombre de tentatives de connexion échouées.
+ * @property string  $status        Statut du compte de l'utilisateur.
+ * @property-read UserRoles $roles  Rôles de l'utilisateur.
  */
 class User
 {
-    /**
-     * UID de l'utilisateur.
-     */
     public ?string $uid = null;
 
-    /**
-     * Identifiant de l'utilisateur.
-     */
     public ?string $login = null;
 
-    /**
-     * Hash du mot de passe.
-     */
     public ?string $password;
 
-    /**
-     * `true` si le compte peut être utilisé pour se connecter (utilisateur normal).  
-     * `false` si le compte ne peut pas être utilisé pour se connecter (ex: compte "kiosque" type Raspberry Pi). 
-     */
-    public bool $can_login;
+    public bool $canLogin;
 
-    /**
-     * Nom de l'utilisateur.
-     */
-    public string $nom;
+    public string $name;
 
-    /**
-     * Nombre de tentatives de connexion échouées.
-     */
-    public int $login_attempts;
+    public int $loginAttempts;
 
-    /**
-     * Statut du compte de l'utilisateur.
-     */
-    public AccountStatus|string $statut;
+    /** @phpstan-var AccountStatus::* $status */
+    public string $status;
 
-    /**
-     * Rôles de l'utilisateur.
-     */
-    public object $roles;
-
-    /**
-     * `true` si l'utilisateur est administrateur, `false` sinon.
-     */
-    public readonly bool $is_admin;
+    public readonly UserRoles $roles;
 
     private Redis $redis;
 
@@ -85,6 +74,8 @@ class User
         } else {
             $this->redis = new Redis();
         }
+
+        $this->roles = new UserRoles();
 
         if ($uid) {
             $this->uid = $uid;
@@ -113,67 +104,60 @@ class User
         try {
             $this->identify(login: $login);
         } catch (InvalidAccountException) {
-            Security::prevent_bruteforce();
+            Security::preventBruteforce();
 
             throw new LoginException();
         }
 
         $this->populate();
 
-        if ($this->can_login === false) {
-            Security::prevent_bruteforce();
+        if ($this->canLogin === false) {
+            Security::preventBruteforce();
 
             throw new LoginException();
         }
 
         // Première connexion (le mot de passe doit avoir été laissé vide)
-        if ($this->statut ===  AccountStatus::PENDING && $password === "") {
+        if ($this->status ===  AccountStatus::PENDING && $password === "") {
             throw new AccountPendingException();
         }
 
         // Vérification du mot de passe AVANT la vérification du statut
         // de façon à ne pas donner d'informations sur le statut
         // si le mot de passe n'est pas correct
-        $password_is_valid = password_verify($password, $this->password ?? "");
+        $isValidPassword = password_verify($password, $this->password ?? "");
 
-        if (!$password_is_valid) {
-            Security::prevent_bruteforce();
+        if (!$isValidPassword) {
+            Security::preventBruteforce();
 
             throw new LoginException();
         }
 
         // Vérification du statut du compte
-        switch ($this->statut) {
+        switch ($this->status) {
             case AccountStatus::ACTIVE:
                 break;
 
             case AccountStatus::PENDING:
                 throw new AccountPendingException();
-                break;
 
             case AccountStatus::INACTIVE:
                 throw new AccountInactiveException();
-                break;
 
             case AccountStatus::LOCKED:
                 throw new AccountLockedException();
-                break;
 
             case AccountStatus::DELETED:
                 throw new AccountDeletedException();
-                break;
 
             default:
-                throw new AccountStatusException($this->statut);
-                break;
+                throw new AccountStatusException($this->status);
         }
 
         // Si tout est OK :
-        // - remise à zéro des tentatives de connexions
         // - mise à jour de la dernière connexion
         // - enregistrement de la session
         // - envoi du cookie
-        $this->reset_login_attempts();
 
         $now = DateUtils::format(DateUtils::SQL_TIMESTAMP, new \DateTime());
 
@@ -183,7 +167,7 @@ class User
         $this->redis->hSet("admin:users:{$this->uid}", "last_connection", $now);
 
         $sid = bin2hex(random_bytes(10));
-        $this->register_session($sid);
+        $this->registerSession($sid);
 
         return $this;
     }
@@ -193,13 +177,13 @@ class User
      */
     public function logout(): void
     {
-        if (!isset($_COOKIE[$_ENV["SESSION_COOKIE_NAME"]])) {
+        $sid = $_COOKIE[Environment::getString('SESSION_COOKIE_NAME')] ?? null;
+
+        if (!\is_string($sid)) {
             return;
         }
 
-        $sid = $_COOKIE[$_ENV["SESSION_COOKIE_NAME"]];
-
-        $this->delete_session($sid);
+        $this->deleteSession($sid);
     }
 
     /**
@@ -207,35 +191,41 @@ class User
      * 
      * @throws AccountStatusException
      */
-    public function first_login(string $login, string $password): void
+    public function initializeAccount(string $login, string $password): void
     {
         $this->identify(login: $login);
 
         $this->populate();
 
-        if ($this->statut !== AccountStatus::PENDING) {
-            throw new AccountStatusException($this->statut, "Le compte n'est pas en attente d'activation");
+        if ($this->status !== AccountStatus::PENDING) {
+            throw new AccountStatusException(
+                $this->status,
+                "Le compte n'est pas en attente d'activation"
+            );
         }
 
         (new MySQL)
             ->prepare(
                 "UPDATE `admin_users`
-          SET
-            `password` = :password,
-            `statut` = :statut,
-            `login_attempts` = 0,
-            `historique` = CONCAT(historique, '\n', '(', NOW(), ') Compte activé')
-          WHERE `uid` = :uid"
+                SET
+                    `password` = :password,
+                    `statut` = :statut,
+                    `login_attempts` = 0,
+                    `historique` = CONCAT(historique, '\n', '(', NOW(), ') Compte activé')
+                WHERE `uid` = :uid"
             )
             ->execute([
                 "uid" => $this->uid,
                 "password" => password_hash($password, PASSWORD_DEFAULT),
-                "statut" => AccountStatus::ACTIVE->value
+                "statut" => AccountStatus::ACTIVE,
             ]);
 
-        $this->update_redis();
+        $this->updateRedis();
 
-        $this->sse->addEvent("admin/users", "update", $this->uid);
+        /** @var string $uid */
+        $uid = $this->uid;
+
+        $this->sse->addEvent("admin/users", "update", $uid);
     }
 
 
@@ -249,84 +239,104 @@ class User
      * @throws AccountStatusException 
      * @throws \RedisException 
      */
-    public function from_session(): User
+    public function identifyFromSession(): User
     {
-        if (!isset($_COOKIE[$_ENV["SESSION_COOKIE_NAME"]])) {
+        $sid = $_COOKIE[Environment::getString('SESSION_COOKIE_NAME')] ?? null;
+
+        if (!\is_string($sid)) {
             throw new SessionException();
         }
-
-        $sid = $_COOKIE[$_ENV["SESSION_COOKIE_NAME"]];
 
         try {
             $this->identify(sid: $sid);
         } catch (SessionException $e) {
             // Si la session n'existe plus, supprimer le cookie
-            $this->delete_session($sid);
+            $this->deleteSession($sid);
             throw $e;
         }
 
         // Renseignement des infos de l'utilisateur
         $this->populate();
 
-        if ($this->statut !== AccountStatus::ACTIVE) {
-            throw new AccountStatusException($this->statut);
+        if ($this->status !== AccountStatus::ACTIVE) {
+            throw new AccountStatusException($this->status);
         }
 
         // Prolonger la session
-        $this->register_session($sid);
+        $this->registerSession($sid);
 
         return $this;
     }
 
     /**
-     * Identifie et remplit les informations d'un utilisateur
-     * d'après une clé API.
+     * Identifie et remplit les informations d'un utilisateur d'après une clé API.
      * 
      * @return User
      * 
      * @throws InvalidApiKeyException
      * @throws \RedisException
      */
-    public function from_api_key(): User
+    public function identifyFromApiKey(): User
     {
-        $api_key = $_SERVER["HTTP_X_API_KEY"] ?? null;
+        $apiKey = Server::getString('HTTP_X_API_KEY', null);
 
-        if (!$api_key) {
+        if (!$apiKey) {
             throw new InvalidApiKeyException();
         }
 
-        $api_key_hash = md5($api_key);
+        $apiKeyHash = \md5($apiKey);
 
-        $key_info =
-            $this->redis->hGetAll("admin:apikeys:{$api_key_hash}")
-            ?: (new MySQL)
-            ->query("SELECT `uid`, `status`, expiration FROM admin_api_keys WHERE `key` = '{$api_key_hash}'")
-            ->fetch();
+        $apiKeyInfo = $this->redis->hGetAll("admin:apikeys:{$apiKeyHash}");
 
-        if ($key_info) {
-            $this->redis->hMSet("admin:apikeys:{$api_key_hash}", $key_info);
-            $this->redis->expire("admin:apikeys:{$api_key_hash}", Constants::ONE_WEEK);
+        if ($apiKeyInfo instanceof \Redis) {
+            throw new ServerException("Redis shouldn't be in multimode");
         }
 
-        [
-            "uid" => $uid,
-            "status" => $status,
-            "expiration" => $expiration
-        ] = $key_info;
+        if (empty($apiKeyInfo)) {
+            $keyInfoPdoStatement = (new MySQL())
+                ->query("SELECT `uid`, `status`, expiration FROM admin_api_keys WHERE `key` = '{$apiKeyHash}'");
+
+            if (!$keyInfoPdoStatement) {
+                throw new DBException("Impossible de récupérer les informations de la clé API");
+            }
+
+            $apiKeyInfo = $keyInfoPdoStatement->fetch();
+
+            if (!\is_array($apiKeyInfo)) {
+                throw new InvalidApiKeyException();
+            }
+        }
+
+        $uid = $apiKeyInfo["uid"] ?? null;
+        $status = $apiKeyInfo["status"] ?? null;
+        $expiration = $apiKeyInfo["expiration"] ?? null;
+
+        $expirationIsInThePast = true;
+
+        if (null === $expiration || "" === $expiration) {
+            $expirationIsInThePast = false;
+        }
+
+        try {
+            $expirationIsInThePast = \is_string($expiration) && "" !== $expiration && DateUtils::isInThePast($expiration);
+        } catch (\Exception) {
+            $expirationIsInThePast = true;
+        }
 
 
-        if (!$uid) {
-            Security::prevent_bruteforce();
+        $this->redis->hMSet("admin:apikeys:{$apiKeyHash}", $apiKeyInfo);
+        $this->redis->expire("admin:apikeys:{$apiKeyHash}", ONE_WEEK);
+
+
+        if (!\is_string($uid)) {
             throw new InvalidApiKeyException();
         }
 
         if ($status !== ApiKeyStatus::ACTIVE) {
-            Security::prevent_bruteforce();
             throw new InvalidApiKeyException();
         }
 
-        $now = DateUtils::format(DateUtils::SQL_TIMESTAMP, new \DateTime);
-        if ($expiration && $expiration < $now) {
+        if ($expirationIsInThePast) {
             throw new InvalidApiKeyException();
         }
 
@@ -336,8 +346,8 @@ class User
         // Renseignement des infos de l'utilisateur
         $this->populate();
 
-        if ($this->statut !== AccountStatus::ACTIVE) {
-            throw new AccountStatusException($this->statut);
+        if ($this->status !== AccountStatus::ACTIVE) {
+            throw new AccountStatusException($this->status);
         }
 
         return $this;
@@ -346,54 +356,68 @@ class User
     /**
      * Vérifie si l'utilisateur peut accéder à une rubrique.
      * 
-     * @param ?string Rubrique dont l'accès doit être vérifié.
+     * @param ?string $module Rubrique dont l'accès doit être vérifié.
      * 
      * @return bool `true` si l'utilisateur peut accéder à la rubrique, `false` sinon.
      */
-    public function can_access(?string $rubrique): bool
+    public function canAccess(?string $module): bool
     {
         // Accès à l'accueil et à l'écran individuel de modification du nom/mdp
-        if ($rubrique === null || $rubrique === "user") return true;
+        if ($module === null || $module === Module::USER) return true;
 
-        return ($this->roles->$rubrique ?? -1) >= UserRoles::ACCESS->value;
+        return $this->roles->$module >= UserRoles::ACCESS;
     }
 
     /**
      * Vérifie si l'utilisateur peut éditer une rubrique.
      * 
-     * @param ?string Rubrique dont l'accès doit être vérifié.
+     * @param ?string $module Rubrique dont l'accès doit être vérifié.
      * 
      * @return bool `true` si l'utilisateur peut éditer la rubrique, `false` sinon.
      */
-    public function can_edit(?string $rubrique): bool
+    public function canEdit(?string $module): bool
     {
-        return ($this->roles->$rubrique ?? -1) >= UserRoles::EDIT->value;
+        return $this->roles->$module >= UserRoles::EDIT;
+    }
+
+    /**
+     * `true` si l'utilisateur est administrateur, `false` sinon.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->roles->admin >= UserRoles::ACCESS;
     }
 
     /**
      * Met à jours les informations de l'utilisateur dans Redis.
      */
-    public function update_redis(): void
+    public function updateRedis(): void
     {
-        $user =
-            (new MySQL)
-            ->query("SELECT * FROM admin_users WHERE uid = '{$this->uid}'")
-            ->fetch();
+        $userPdoStatement = (new MySQL())->query("SELECT * FROM admin_users WHERE uid = '{$this->uid}'");
 
-        // Copie des infos dans Redis (hash)
+        if (!$userPdoStatement) {
+            throw new DBException("Impossible de récupérer les informations de l'utilisateur");
+        }
+
+        $user = $userPdoStatement->fetch();
+
+        if (!\is_array($user)) {
+            throw new InvalidAccountException();
+        }
+
         $this->redis->hMSet("admin:users:{$this->uid}", $user);
     }
 
     /**
      * Supprimer les sessions de l'utilisateur dans Redis.
      */
-    public function clear_sessions(): void
+    public function clearSessions(): void
     {
         // Obtenir toutes les sessions en cours
         $sessions = [];
         do {
             $batch = $this->redis->scan($iterator, "admin:sessions:*");
-            if ($batch) $sessions = array_merge($sessions, $batch);
+            if ($batch) $sessions = \array_merge($sessions, $batch);
         } while ($iterator);
 
         // Obtenir les utilisateurs pour chaque session
@@ -454,17 +478,19 @@ class User
             $requete = $mysql->prepare("SELECT uid FROM admin_users WHERE login = :login");
             $requete->execute(["login" => $login]);
             $user = $requete->fetch();
-            $uid = $user["uid"] ?? null;
 
-            if (!$uid) {
+            if (!\is_array($user) || !isset($user["uid"])) {
                 throw new InvalidAccountException();
             }
+
+            /** @var string */
+            $uid = $user["uid"];
         }
 
         // Identification grâce à l'identifiant de session
         if ($sid) {
             $uid = $this->redis->get("admin:sessions:{$sid}");
-            if ($uid === false) {
+            if (!\is_string($uid)) {
                 throw new SessionException();
             }
         }
@@ -488,22 +514,23 @@ class User
 
         // Tentative Redis
         if (!$this->redis->exists("admin:users:{$this->uid}")) {
-            $this->update_redis();
+            $this->updateRedis();
         }
 
         $user = $this->redis->hGetAll("admin:users:{$this->uid}");
 
         // Prolongation cache
-        $this->redis->expire("admin:users:{$this->uid}", $_ENV["SESSION_EXPIRATION"]);
+        $this->redis->expire("admin:users:{$this->uid}", Environment::getInt('SESSION_EXPIRATION', -1));
 
-        $this->login = $user["login"];
-        $this->password = $user["password"];
-        $this->can_login = $user["can_login"];
-        $this->nom = $user["nom"];
-        $this->login_attempts = $user["login_attempts"];
-        $this->statut = AccountStatus::tryFrom($user["statut"]) ?? $user["statut"];
-        $this->roles = json_decode($user["roles"]);
-        $this->is_admin = (bool) ($this->roles?->admin ?? false);
+        $userAH = new ArrayHandler($user);
+
+        $this->login = $userAH->getString('login');
+        $this->password = $userAH->getString('password');
+        $this->canLogin = (bool) $userAH->getBool('can_login');
+        $this->name = $userAH->getString('nom');
+        $this->loginAttempts = (int) $userAH->getInt('login_attempts');
+        $this->status = AccountStatus::from($userAH->getString('statut'));
+        $this->roles->fillFromJsonString($userAH->getString('roles'));
     }
 
     /**
@@ -516,16 +543,16 @@ class User
      * 
      * @throws \RedisException
      */
-    private function register_session(string $sid): void
+    private function registerSession(string $sid): void
     {
-        $this->redis->setex("admin:sessions:{$sid}", $_ENV["SESSION_EXPIRATION"], $this->uid);
+        $this->redis->setex("admin:sessions:{$sid}", Environment::getInt('SESSION_EXPIRATION', -1), $this->uid);
 
-        setcookie($_ENV["SESSION_COOKIE_NAME"], $sid, [
-            "expires" => time() + $_ENV["SESSION_EXPIRATION"],
-            "path" => $_ENV["SESSION_COOKIE_PATH"],
-            // "samesite" => str_starts_with($_SERVER['HTTP_HOST'], "localhost") ? "None" : "Strict",
+        setcookie(Environment::getString('SESSION_COOKIE_NAME'), $sid, [
+            "expires" => time() + Environment::getInt('SESSION_EXPIRATION'),
+            "path" => Environment::getString('SESSION_COOKIE_PATH'),
+            // "samesite" => str_starts_with(Server::getString('HTTP_HOST'), "localhost") ? "None" : "Strict",
             "samesite" => "Strict",
-            "secure" => $_ENV["APP_ENV"] !== "development",
+            "secure" => Environment::getString('APP_ENV') !== "development",
             // "secure" => true,
             "httponly" => true
         ]);
@@ -539,103 +566,15 @@ class User
      * 
      * @throws \RedisException
      */
-    private function delete_session(string $sid): void
+    private function deleteSession(string $sid): void
     {
         $this->redis->del("admin:sessions:{$sid}");
 
-        setcookie($_ENV["SESSION_COOKIE_NAME"], false, [
-            "path" => $_ENV["SESSION_COOKIE_PATH"]
+        setcookie(Environment::getString('SESSION_COOKIE_NAME'), "", [
+            "path" => Environment::getString('SESSION_COOKIE_PATH')
         ]);
 
         $this->sse->addEvent("admin/sessions", "close", "sid:{$sid}");
-    }
-
-    /**
-     * Incrémente le nombre de tentatives de connexions de l'utilisateur.
-     *
-     * @return int Nombre de tentatives de connexion.
-     *
-     * @throws \PDOException 
-     * @throws \RedisException 
-     */
-    private function increment_login_attempts(): int
-    {
-        (new MySQL)
-            ->query(
-                "UPDATE admin_users
-          SET login_attempts = login_attempts + 1
-          WHERE uid = '{$this->uid}'"
-            );
-
-        $login_attempts = $this->redis->hIncrBy("admin:users:{$this->uid}", "login_attempts", 1);
-
-        return $login_attempts;
-    }
-
-    /**
-     * Réinitialise le nombre de tentatives de connexions pour un utilisateur.
-     * 
-     * @throws \PDOException 
-     * @throws \RedisException 
-     */
-    private function reset_login_attempts(): void
-    {
-        (new MySQL)
-            ->query("UPDATE admin_users SET login_attempts = 0 WHERE uid = '{$this->uid}'");
-
-        $this->redis->hSet("admin:users:{$this->uid}", "login_attempts", 0);
-    }
-
-    /**
-     * Bloque le compte d'un utilisateur.
-     * 
-     * @param string $raison Raison du blocage du compte.
-     * 
-     * @throws \PDOException 
-     * @throws \RedisException 
-     */
-    private function lock_account(string $raison = ""): void
-    {
-        // Si le compte est déjà bloqué, ne rien faire
-        if ($this->statut === AccountStatus::LOCKED) {
-            return;
-        }
-
-        (new MySQL)
-            ->prepare(
-                "UPDATE admin_users
-          SET
-            statut = :statut,
-            historique = CONCAT(historique, '\n', :raison)
-          WHERE uid = :uid"
-            )
-            ->execute([
-                "statut" => AccountStatus::LOCKED->value,
-                "raison" => $raison,
-                "uid" => $this->uid
-            ]);
-
-        $this->redis->hMSet(
-            "admin:users:{$this->uid}",
-            [
-                "statut" => AccountStatus::LOCKED->value,
-                "historique" => $this->redis->hGet("admin:users:{$this->uid}", "historique") . PHP_EOL . $raison
-            ]
-        );
-
-        // Notification SSE
-        $user = $this->redis->hGetAll("admin:users:{$this->uid}");
-        unset($user["password"]);
-        unset($user["can_login"]);
-        unset($user["login_attempts"]);
-        // Rétablissement des types int pour les rôles
-        $user["roles"] = json_decode($user["roles"]);
-        foreach ($user["roles"] as $role => &$value) {
-            $value = (int) $value;
-        }
-        $this->sse->addEvent("admin/users", "update", $this->uid, $user);
-
-        $this->clear_sessions();
     }
 
     /**

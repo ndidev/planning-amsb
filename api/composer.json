@@ -1,19 +1,45 @@
 {
   "require": {
+    "ext-calendar": "*",
+    "ext-ds": "*",
+    "ext-gd": "*",
+    "ext-intl": "*",
+    "ext-pdo_mysql": "*",
+    "ext-redis": "*",
+    "ext-zip": "*",
     "phpmailer/phpmailer": "^6.2",
     "setasign/tfpdf": "^1.32",
-    "vlucas/phpdotenv": "^5.3"
+    "vlucas/phpdotenv": "^5.3",
+    "psr/log": "^3.0",
+    "twig/twig": "^3.0",
+    "twig/intl-extra": "^3.18",
+    "mpdf/mpdf": "^8.2"
   },
   "require-dev": {
     "symfony/var-dumper": "^7.0",
-    "phpunit/phpunit": "^9.5"
+    "phpunit/phpunit": "^11.4",
+    "phpro/grumphp": "^2.8",
+    "phpstan/phpstan": "^2.1"
   },
   "autoload": {
     "psr-4": {
       "App\\": "src/"
     }
   },
+  "autoload-dev": {
+    "psr-4": {
+      "App\\Tests\\": "tests/"
+    }
+  },
   "scripts": {
-    "test": "./vendor/bin/phpunit tests"
+    "test": "./vendor/bin/phpunit tests --testdox  --coverage-html public/tests"
+  },
+  "config": {
+    "platform": {
+      "php": "8.4.3"
+    },
+    "allow-plugins": {
+      "phpro/grumphp": true
+    }
   }
 }

@@ -10,8 +10,6 @@
   import { appURLs } from "@app/utils";
   import { User } from "@app/auth";
 
-  import logo from "/src/images/logo_agence_combi.min.svg";
-
   let login: string;
 
   /**
@@ -75,52 +73,13 @@
   });
 
   onDestroy(() => {
-    unsubscribeScreen;
-    unsubscribeLogin;
+    unsubscribeScreen();
+    unsubscribeLogin();
   });
 </script>
 
-<div class="page">
-  <header class="logo-header">
-    <img src={logo} id="logo" alt="Agence Maritime Saint-Brieuc" />
-  </header>
-
-  <main>
-    {#if screen}
-      <svelte:component this={screens[screen]} />
-    {:else}
-      <Chargement />
-    {/if}
-  </main>
-</div>
-
-<style>
-  * {
-    --footer-height: 50px;
-  }
-
-  .page {
-    display: flex;
-    flex-direction: column;
-    height: calc(100svh - var(--footer-height));
-  }
-
-  .logo-header {
-    flex: 0 1 auto;
-  }
-
-  #logo {
-    display: block;
-    margin: auto;
-    margin-top: 5vh;
-    max-width: 70%;
-    max-height: 15vh;
-  }
-
-  main {
-    flex: 1 1 auto;
-    display: grid;
-    justify-content: center;
-    align-items: center;
-  }
-</style>
+{#if screen}
+  <svelte:component this={screens[screen]} />
+{:else}
+  <Chargement />
+{/if}

@@ -1,12 +1,10 @@
 <script lang="ts">
-  import { onDestroy, getContext } from "svelte";
+  import { onDestroy } from "svelte";
   import Notiflix from "notiflix";
 
-  import { locale } from "@app/utils";
+  import { configAjoutsRapides, boisRdvs, tiers } from "@app/stores";
 
-  import type { Stores, AjoutRapideBois, Tiers } from "@app/types";
-
-  const { configAjoutsRapides, boisRdvs, tiers } = getContext<Stores>("stores");
+  import type { AjoutRapideBois, Tiers } from "@app/types";
 
   let ajoutsRapides: Map<Tiers["id"], AjoutRapideBois[]>;
 
@@ -52,11 +50,7 @@
     try {
       await boisRdvs.create({
         id: null,
-        date_rdv: new Date()
-          .toLocaleDateString(locale)
-          .split("/")
-          .reverse()
-          .join("-"),
+        date_rdv: new Date().toISOString().split("T")[0],
         heure_arrivee: new Date().toLocaleTimeString(),
         heure_depart: null,
         fournisseur: rdv.fournisseur,
@@ -71,6 +65,7 @@
         commentaire_public: "",
         commentaire_cache: "",
         numero_bl: "",
+        dispatch: [],
       });
 
       document.dispatchEvent(new CustomEvent("planning:bois/rdvs"));

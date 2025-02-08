@@ -13,49 +13,81 @@
   import { goto } from "@roxi/routify";
 
   import Hammer from "hammerjs";
+  import { Modal } from "flowbite-svelte";
 
-  import { MaterialButton, Modal, BoutonAction } from "@app/components";
+  import { Badge, LucideButton, BoutonAction } from "@app/components";
 
   import { device, locale } from "@app/utils";
 
-  import type { Charter, Stores } from "@app/types";
+  import { currentUser, tiers, ports } from "@app/stores";
 
-  const { currentUser, tiers, ports } = getContext<Stores>("stores");
+  import type { Charter } from "@app/types";
 
   export let charter: Charter;
   let ligne: HTMLDivElement;
 
   let mc: HammerManager;
-  let afficherModal = false;
+  let showModal = false;
 
   const archives: boolean = getContext("archives");
 
+  type Status = {
+    name: "planned" | "confirmed" | "chartered" | "loaded" | "completed";
+    color: string;
+    text: string;
+  };
+
+  const statusMap = new Map<Status["name"], Status>([
+    [
+      "planned",
+      { name: "planned", color: "hsla(0, 0%, 80%, 1)", text: "Planifié" },
+    ],
+    [
+      "confirmed",
+      { name: "confirmed", color: "hsl(210, 100%, 50%)", text: "Confirmé" },
+    ],
+    [
+      "chartered",
+      { name: "chartered", color: "hsla(270, 100%, 50%, 1)", text: "Affrété" },
+    ],
+    [
+      "loaded",
+      { name: "loaded", color: "hsla(30, 100%, 50%, 1)", text: "Chargé" },
+    ],
+    [
+      "completed",
+      { name: "completed", color: "hsla(120, 100%, 50%, 1)", text: "Terminé" },
+    ],
+  ]);
+
+  let charterStatus: Status | null = null;
+
   // @ts-expect-error
-  $: statutCharter = (charter, archives ? null : obtenirStatutCharter());
+  $: charterStatus = (charter, getCharterStatus());
 
   /**
    * Assignation d'une classe à chaque affrètement en fonction de son statut
    * afin de mettre en forme le planning.
    */
-  function obtenirStatutCharter() {
+  function getCharterStatus() {
     switch (charter.statut) {
       case 0:
-        return "plannifie";
+        return statusMap.get("planned");
 
       case 1:
-        return "confirme";
+        return statusMap.get("confirmed");
 
       case 2:
-        return "affrete";
+        return statusMap.get("chartered");
 
       case 3:
-        return "charge";
+        return statusMap.get("loaded");
 
       case 4:
-        return "termine";
+        return statusMap.get("completed");
 
       default:
-        return "";
+        return null;
     }
   }
 
@@ -63,7 +95,7 @@
     mc = new Hammer(ligne);
     mc.on("press", () => {
       if ($device.is("mobile")) {
-        afficherModal = true;
+        showModal = true;
       }
     });
   });
@@ -73,56 +105,69 @@
   });
 </script>
 
-{#if afficherModal}
-  <Modal on:outclick={() => (afficherModal = false)}>
-    <div
-      style:background="white"
-      style:padding="20px"
-      style:border-radius="20px"
-    >
-      <BoutonAction preset="modifier" on:click={$goto(`./${charter.id}`)} />
-      <BoutonAction preset="annuler" on:click={() => (afficherModal = false)} />
-    </div>
-  </Modal>
-{/if}
+<Modal bind:open={showModal} outsideclose dismissable={false}>
+  <BoutonAction preset="modifier" on:click={$goto(`./${charter.id}`)} />
+  <BoutonAction preset="annuler" on:click={() => (showModal = false)} />
+</Modal>
 
-<div bind:this={ligne} class={`charter pure-g ${statutCharter}`}>
-  <!-- Navire / Armateur -->
-  <div class="navire-armateur bloc pure-u-lg-4-24 pure-u-1">
-    <div class="navire">{charter.navire}</div>
-    <div class="armateur">{$tiers?.get(charter.armateur)?.nom_court || ""}</div>
-    <div class="affreteur">
+<div
+  class="group grid gap-1 border-l-[10px] border-l-[color:var(--status-color)] px-6 py-2 text-sm first:mt-10 last:mb-12 lg:grid-cols-[20%_20%_50%_auto] lg:gap-2 lg:px-10 lg:text-base"
+  style:--status-color={charterStatus?.color || "transparent"}
+  bind:this={ligne}
+>
+  <!-- Navire / Statut / Armateur -->
+  <div>
+    <!-- Navire -->
+    <div class="mb-2 text-2xl">{charter.navire}</div>
+
+    <!-- Statut -->
+    {#if charterStatus}
+      <div class="mb-2">
+        <Badge color={charterStatus.color} size="sm">{charterStatus.text}</Badge
+        >
+      </div>
+    {/if}
+
+    <!-- Armateur -->
+    <div>{$tiers?.get(charter.armateur)?.nom_court || ""}</div>
+
+    <!-- Affréteur -->
+    <div>
       {$tiers?.get(charter.affreteur)?.nom_court || ""}
     </div>
-    <div class="courtier">
+
+    <!-- Courtier -->
+    <div>
       {$tiers?.get(charter.courtier)?.nom_court || ""}
     </div>
   </div>
 
   <!-- Dates -->
-  <div class="etx bloc pure-u-lg-4-24 pure-u-1">
+  <div class="etx">
     <!-- Laycan début -->
-    <div class="etx">
+    <div>
       <span>LC début :</span>
-      <span class="lc_debut date">
+      <span class="ml-1">
         {charter.lc_debut
           ? new Date(charter.lc_debut).toLocaleDateString(locale)
           : ""}
       </span>
     </div>
+
     <!-- Laycan fin -->
-    <div class="etx">
+    <div>
       <span>LC fin :</span>
-      <span class="lc_fin date">
+      <span class="ml-1">
         {charter.lc_fin
           ? new Date(charter.lc_fin).toLocaleDateString(locale)
           : ""}
       </span>
     </div>
+
     <!-- C/P -->
-    <div class="etx">
+    <div>
       <span>C/P :</span>
-      <span class="cp date">
+      <span class="ml-1">
         {charter.cp_date
           ? new Date(charter.cp_date).toLocaleDateString(locale)
           : ""}
@@ -131,9 +176,9 @@
   </div>
 
   <!-- Legs -->
-  <div class="legs bloc pure-u-lg-12-24 pure-u-1">
+  <div class="legs">
     {#each charter.legs as leg}
-      <div class="leg pure-u-1">
+      <div class="leg">
         <div>
           <span class="marchandise">{leg.marchandise}</span>
           <span class="quantite">{leg.quantite}</span>
@@ -154,9 +199,9 @@
 
   <!-- Copie / Modification / Suppression -->
   {#if $currentUser.canEdit("chartering")}
-    <div class="copie-modif-suppr">
-      <MaterialButton
-        preset="modifier"
+    <div class="no-mobile invisible ms-auto self-center group-hover:visible">
+      <LucideButton
+        preset="edit"
         on:click={$goto(`./${charter.id}${archives ? "?archives" : ""}`)}
       />
     </div>
@@ -164,58 +209,13 @@
 
   <!-- Commentaire -->
   {#if charter.commentaire}
-    <div class="commentaire pure-u-1">
+    <div class="mt-3 lg:col-span-5 lg:ml-6">
       {@html charter.commentaire.replace(/\r\n|\r|\n/g, "<br/>")}
     </div>
   {/if}
 </div>
 
 <style>
-  * {
-    --status-bar-width: 10px;
-    --status-color: transparent;
-    --plannifie: hsla(0, 0%, 80%, 1);
-    --confirme: hsl(210, 100%, 50%);
-    --affrete: hsla(270, 100%, 50%, 1);
-    --charge: hsla(30, 100%, 50%, 1);
-    --termine: hsla(120, 100%, 50%, 1);
-  }
-
-  .charter {
-    padding: 10px 0px 10px 20px;
-    border-bottom: 1px solid #ddd;
-    border-left: var(--status-bar-width) solid var(--status-color);
-    align-items: flex-start;
-  }
-
-  .charter:first-child {
-    margin-top: 40px;
-  }
-
-  .charter:last-child {
-    margin-bottom: 40px;
-    border-bottom: none;
-  }
-
-  .bloc {
-    margin: 3px 5px;
-  }
-
-  .navire {
-    font-size: 1.5em;
-    margin-bottom: 10px;
-    width: auto;
-  }
-
-  .etx .date {
-    margin-left: 5px;
-  }
-
-  .commentaire {
-    margin-top: 10px;
-    margin-left: 0;
-  }
-
   /** LEGS */
   .leg {
     margin-bottom: 10px;
@@ -235,45 +235,5 @@
 
   .leg .commentaire {
     margin: 5px 0 0 10px;
-  }
-
-  /* STATUT AFFRÈTEMENT */
-  .charter.plannifie {
-    --status-color: var(--plannifie);
-  }
-
-  .charter.confirme {
-    --status-color: var(--confirme);
-  }
-
-  .charter.affrete {
-    --status-color: var(--affrete);
-  }
-
-  .charter.charge {
-    --status-color: var(--charge);
-  }
-
-  .charter.termine {
-    --status-color: var(--termine);
-  }
-
-  /* Desktop */
-  @media screen and (min-width: 768px) {
-    .charter {
-      align-items: center;
-    }
-
-    .charter:hover .copie-modif-suppr {
-      visibility: visible;
-    }
-
-    .bloc {
-      margin-left: 10px;
-    }
-
-    .commentaire {
-      margin-left: 30px;
-    }
   }
 </style>

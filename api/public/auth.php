@@ -1,17 +1,25 @@
 <?php
 
+// Path: api/public/auth.php
+
+declare(strict_types=1);
+
 require_once __DIR__ . "/../bootstrap.php";
 
 use App\Core\Auth\User;
-use App\Core\HTTP\HTTPResponse;
-use App\Core\Security;
-use App\Core\Exceptions\Client\Auth\AccountPendingException;
 use App\Core\Exceptions\AppException;
+use App\Core\Exceptions\Client\Auth\AccountPendingException;
+use App\Core\Exceptions\Client\BadRequestException;
+use App\Core\Exceptions\Server\ServerException;
+use App\Core\Array\Environment;
+use App\Core\Array\Server;
+use App\Core\HTTP\HTTPResponse;
 use App\Core\Logger\ErrorLogger;
+use App\Core\Security;
 
 
-if (Security::check_if_request_can_be_done() === false) {
-    (new HTTPResponse(429))
+if (Security::checkIfRequestCanBeDone() === false) {
+    (new HTTPResponse(HTTPResponse::HTTP_TOO_MANY_REQUESTS_429))
         ->addHeader("Retry-After", (string) Security::BLOCKED_IP_TIMEOUT)
         ->setType("text/plain")
         ->setBody("IP address blocked. Too many unauthenticated requests.")
@@ -19,7 +27,7 @@ if (Security::check_if_request_can_be_done() === false) {
 }
 
 // Pre-flight request
-if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
+if (Server::getString('REQUEST_METHOD') === "OPTIONS") {
     (new HTTPResponse())->sendCorsPreflight();
 }
 
@@ -38,17 +46,24 @@ $supported_methods = [
 ];
 
 // Méthode non supportée
-if (array_search($_SERVER["REQUEST_METHOD"], $supported_methods) === FALSE) {
-    (new HTTPResponse(501))->send();
+if (array_search(Server::getString('REQUEST_METHOD'), $supported_methods) === FALSE) {
+    (new HTTPResponse(HTTPResponse::HTTP_NOT_IMPLEMENTED_501))->send();
 }
 
 
 // Décomposition du chemin
-$url = parse_url($_SERVER['REQUEST_URI']);
+$requestUri = Server::getString('REQUEST_URI', null);
+
+if (null === $requestUri) {
+    throw new ServerException("Request URI not found");
+}
+$url = parse_url($requestUri);
 $path = $url["path"] ?? null;
 $endpoint = makeEndpoint($path);
 $query = [];
 parse_str($url["query"] ?? "", $query);
+
+$response = new HTTPResponse();
 
 /**
  * Liste des endoints.
@@ -59,12 +74,11 @@ try {
         case null:
         case "":
         case "/":
-            switch ($_SERVER["REQUEST_METHOD"]) {
+            switch (Server::getString('REQUEST_METHOD')) {
                 case "OPTIONS":
-                    (new HTTPResponse)
-                        ->setCode(204)
-                        ->addHeader("Access-Control-Allow-Methods", "OPTIONS, HEAD, GET")
-                        ->send();
+                    $response
+                        ->setCode(HTTPResponse::HTTP_NO_CONTENT_204)
+                        ->addHeader("Access-Control-Allow-Methods", "OPTIONS, HEAD, GET");
                     break;
 
                 case "GET":
@@ -72,113 +86,110 @@ try {
                     break;
 
                 default:
-                    (new HTTPResponse)
-                        ->setCode(405)
-                        ->addHeader("Allow", "OPTIONS, HEAD, GET")
-                        ->send();
+                    $response
+                        ->setCode(HTTPResponse::HTTP_METHOD_NOT_ALLOWED_405)
+                        ->addHeader("Allow", "OPTIONS, HEAD, GET");
                     break;
             }
 
 
         case '/login':
-            if (!isset($_POST["login"]) || !isset($_POST["password"])) {
-                (new HTTPResponse(400))->send();
+            if (
+                !isset($_POST["login"])
+                || !is_string($_POST["login"])
+                || !isset($_POST["password"])
+                || !is_string($_POST["password"])
+            ) {
+                throw new BadRequestException("Login et mot de passe requis");
             }
 
             // Authentification et envoi du cookie
             try {
-                $user = (new User)->login($_POST["login"], $_POST["password"]);
+                $user = (new User())->login($_POST["login"], $_POST["password"]);
 
-                (new HTTPResponse(200))
-                    ->setType("json")
-                    ->setBody(json_encode([
-                        "uid" => $user->uid,
-                        "login" => $user->login,
-                        "nom" => $user->nom,
-                        "roles" => $user->roles,
-                        "statut" => $user->statut,
-                    ]))
-                    ->send();
+                $response->setJSON([
+                    "uid" => $user->uid,
+                    "login" => $user->login,
+                    "nom" => $user->name,
+                    "roles" => $user->roles,
+                    "statut" => $user->status,
+                ]);
             } catch (AccountPendingException $e) {
-                (new HTTPResponse(200))
-                    ->setType("json")
-                    ->setBody(json_encode([
-                        "message" => $e->getMessage(),
-                        "statut" => $e->getStatut()
-                    ]))
-                    ->send();
+                $response->setJSON([
+                    "message" => $e->getMessage(),
+                    "statut" => $e->getStatus()
+                ]);
             }
             break;
 
 
         case '/logout':
             // Suppression de la session et suppression du cookie
-            (new User)->logout();
-            (new HTTPResponse(204))->send();
+            (new User())->logout();
+            $response->setCode(HTTPResponse::HTTP_NO_CONTENT_204);
             break;
 
 
         case '/check':
             // Bypass pour développement
-            if ($_ENV["AUTH"] === "OFF") {
-                (new HTTPResponse(200))
-                    ->setType("html")
-                    ->setBody("Auth OFF")
-                    ->send();
+            if (Environment::getString("AUTH") === "OFF") {
+                $response->setBody("Auth OFF");
+                break;
             }
 
-            $user = (new User)->from_session();
+            $user = (new User)->identifyFromSession();
 
-            (new HTTPResponse(200))
-                ->setType("json")
-                ->setBody(json_encode([
-                    "login" => $user->login,
-                    "nom" => $user->nom,
-                    "roles" => $user->roles,
-                    "statut" => $user->statut,
-                ]))
-                ->send();
+            $response->setJSON([
+                "login" => $user->login,
+                "nom" => $user->name,
+                "roles" => $user->roles,
+                "statut" => $user->status,
+            ]);
             break;
 
 
         case '/first-login':
-            if (!isset($_POST["login"]) || !isset($_POST["password"])) {
-                (new HTTPResponse(400))->send();
+            if (
+                !isset($_POST["login"])
+                || !is_string($_POST["login"])
+                || !isset($_POST["password"])
+                || !is_string($_POST["password"])
+            ) {
+                throw new BadRequestException("Login et mot de passe requis");
             }
 
-            (new User)->first_login($_POST["login"], $_POST["password"]);
+            (new User())->initializeAccount($_POST["login"], $_POST["password"]);
 
-            (new HTTPResponse(200))->send();
             break;
 
 
         case '/info':
-            (new HTTPResponse(200))
-                ->setType("json")
-                ->setBody(json_encode([
-                    "MAX_LOGIN_ATTEMPTS" => (int) $_ENV["AUTH_MAX_LOGIN_ATTEMPTS"],
-                    "LONGUEUR_MINI_PASSWORD" => (int) $_ENV["AUTH_LONGUEUR_MINI_PASSWORD"],
-                ]))
-                ->send();
+            $maxLoginAttempts = Environment::getInt("AUTH_MAX_LOGIN_ATTEMPTS", 0);
+            $minPasswordLength = Environment::getInt("AUTH_LONGUEUR_MINI_PASSWORD", 0);
+
+            $response->setJSON([
+                "MAX_LOGIN_ATTEMPTS" => $maxLoginAttempts,
+                "LONGUEUR_MINI_PASSWORD" => $minPasswordLength,
+            ]);
             break;
 
 
             /** DEFAUT */
         default:
-            (new HTTPResponse(404))->send();
+            $response->setCode(HTTPResponse::HTTP_NOT_FOUND_404);
             break;
     }
 } catch (AppException $e) {
-    (new HTTPResponse($e->http_status))
-        ->setType("text")
-        ->setBody($e->getMessage())
-        ->send();
-} catch (Throwable $e) {
+    $response
+        ->setCode($e->httpStatus)
+        ->setText($e->getMessage());
+} catch (\Throwable $e) {
     ErrorLogger::log($e);
-    (new HTTPResponse(500))
-        ->setType("text")
-        ->setBody("Erreur serveur")
-        ->send();
+    $response
+        ->setCode(HTTPResponse::HTTP_INTERNAL_SERVER_ERROR_500)
+        ->setText("Erreur serveur");
+} finally {
+    $response->send();
 }
 
 
@@ -187,11 +198,11 @@ try {
 /**
  * Crée l'endpoint à partir du path.
  * 
- * @param string $path Path obtenu de parse_url()
+ * @param ?string $path Path obtenu de parse_url()
  * 
- * @return string Endpoint au format "path/to/endpoint"
+ * @return ?string Endpoint au format "path/to/endpoint"
  */
-function makeEndpoint(string $path): ?string
+function makeEndpoint(?string $path): ?string
 {
     if (!$path) {
         return null;
@@ -199,8 +210,8 @@ function makeEndpoint(string $path): ?string
 
     // Suppression du chemin de l'auth dans la requête
     // ex : "/planning-amsb/auth/login" => "login"
-    $auth_path = $_ENV["AUTH_PATH"];
-    $endpoint = substr_replace($path, "", 0, strlen($auth_path));
+    $auth_path = Environment::getString('AUTH_PATH', '/auth');
+    $endpoint = substr_replace($path, "", 0, \strlen($auth_path));
 
     return $endpoint;
 }

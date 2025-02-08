@@ -14,18 +14,22 @@ type ParamsMarees = {
 };
 
 // Marées
-export const marees = (params: ParamsMarees = {}) => {
+export const marees = createStore();
+
+function createStore() {
   const initial = null;
   const endpoint = "marees";
-  let paramsSP = new URLSearchParams(params);
+  let searchParams = new URLSearchParams();
 
   const { subscribe, set, update } = writable<Maree[]>(initial, () => {
     fetchAll();
 
     document.addEventListener(`planning:${endpoint}`, handleDBEvent);
+    document.addEventListener(`planning:sse-reconnect`, fetchAll);
 
     return () => {
       document.removeEventListener(`planning:${endpoint}`, handleDBEvent);
+      document.removeEventListener(`planning:sse-reconnect`, fetchAll);
     };
   });
 
@@ -33,7 +37,7 @@ export const marees = (params: ParamsMarees = {}) => {
     subscribe,
     create: _dbCreate,
     delete: _dbDelete,
-    setParams,
+    setSearchParams,
     endpoint,
   };
 
@@ -46,14 +50,14 @@ export const marees = (params: ParamsMarees = {}) => {
    */
   async function _dbCreate(
     data: FormData,
-    params: FetcherOptions["params"] = {}
+    params: FetcherOptions["searchParams"] = {}
   ) {
     const { annee } = await fetcher<{ annee: number }>(endpoint, {
       requestInit: {
         method: "POST",
         body: data,
       },
-      params,
+      searchParams: params,
     });
 
     mareesAnnees.update((annees) => {
@@ -71,13 +75,13 @@ export const marees = (params: ParamsMarees = {}) => {
    */
   async function _dbDelete(
     annee: number,
-    params: FetcherOptions["params"] = {}
+    params: FetcherOptions["searchParams"] = {}
   ) {
     await fetcher(`${endpoint}/${annee}`, {
       requestInit: {
         method: "DELETE",
       },
-      params,
+      searchParams: params,
     });
 
     _delete(annee);
@@ -88,12 +92,18 @@ export const marees = (params: ParamsMarees = {}) => {
    *
    * @param params Paramètres de requête
    */
-  function setParams(newParams: ParamsMarees = {}) {
-    let newParamsSP = new URLSearchParams(newParams);
+  function setSearchParams(
+    newParams: ParamsMarees = {},
+    fetch: boolean = true
+  ) {
+    let newSearchParams = new URLSearchParams(newParams);
 
-    if (paramsSP.toString() !== newParamsSP.toString()) {
+    if (searchParams.toString() !== newSearchParams.toString()) {
       set(initial);
-      paramsSP = newParamsSP;
+      searchParams = newSearchParams;
+    }
+
+    if (fetch) {
       fetchAll();
     }
   }
@@ -103,7 +113,9 @@ export const marees = (params: ParamsMarees = {}) => {
    */
   async function fetchAll() {
     try {
-      const lignes: Maree[] = await fetcher(endpoint, { params: paramsSP });
+      const lignes: Maree[] = await fetcher(endpoint, {
+        searchParams: searchParams,
+      });
 
       set(lignes);
     } catch (err: unknown) {
@@ -176,7 +188,7 @@ export const marees = (params: ParamsMarees = {}) => {
       return annees;
     });
   }
-};
+}
 
 export const mareesAnnees = writable<string[]>(null, (set) => {
   fetcher<string[]>("marees/annees").then((annees) =>

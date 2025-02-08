@@ -1,12 +1,12 @@
 <!-- routify:options title="Planning AMSB - Bois" -->
 <script lang="ts">
-  import { onDestroy, setContext, getContext } from "svelte";
-  import { writable } from "svelte/store";
+  import { onDestroy } from "svelte";
 
-  import { BandeauInfo, ConnexionSSE } from "@app/components";
+  import { BandeauInfo, SseConnection } from "@app/components";
   import {
     ExtractionRegistre,
-    Filtre as BandeauFiltre,
+    FilterModal,
+    filter,
     Placeholder,
     LigneDate,
     LigneRdv,
@@ -14,50 +14,47 @@
     LigneRdvAttente,
   } from "./components";
 
-  import { Filtre } from "@app/utils";
-  import type { Stores, RdvBois, FiltreBois, CamionsParDate } from "@app/types";
+  import {
+    boisRdvs,
+    tiers,
+    configBandeauInfo,
+    configAjoutsRapides,
+  } from "@app/stores";
 
-  const { boisRdvs, tiers } = getContext<Stores>("stores");
+  import type { RdvBois, CamionsParDate } from "@app/types";
 
   type DateString = string;
   type GroupesRdv = Map<DateString, RdvBois[]>;
 
-  // Stores Filtre et RDVs
-  let filtre = new Filtre<FiltreBois>(
-    JSON.parse(sessionStorage.getItem("filtre-planning-bois")) || {}
-  );
+  let appointments: typeof $boisRdvs = null;
 
-  const storeFiltre = writable(filtre);
-
-  let rdvsBois: typeof $boisRdvs = null;
-
-  const unsubscribeFiltre = storeFiltre.subscribe((value) => {
-    boisRdvs.setParams(value.toParams());
+  const unsubscribeFilter = filter.subscribe((value) => {
+    const params = value.toSearchParams();
+    boisRdvs.setSearchParams(params);
   });
 
-  const unsubscribeRdvs = boisRdvs.subscribe((rdvs) => {
-    rdvsBois = rdvs;
+  const unsubscribeAppointments = boisRdvs.subscribe((value) => {
+    appointments = value;
   });
-
-  setContext("filtre", storeFiltre);
 
   let dates: Set<DateString>;
-  let rdvsGroupes: GroupesRdv;
-  let camions: Map<DateString, CamionsParDate>;
+  let groupedAppointments: GroupesRdv;
+  let trucks: Map<DateString, CamionsParDate>;
 
-  $: if (rdvsBois) {
+  $: if (appointments) {
     dates = new Set(
-      [...rdvsBois.values()]
+      [...appointments.values()]
         .map(({ date_rdv, attente }) => (attente ? null : date_rdv))
         .sort()
     );
 
-    rdvsGroupes = ($tiers, grouperRdvs([...rdvsBois.values()]));
+    groupedAppointments =
+      ($tiers, groupAppointments([...appointments.values()]));
 
-    camions = new Map();
+    trucks = new Map();
 
-    rdvsGroupes.forEach((rdvs, date) => {
-      const statsCamions: CamionsParDate = {
+    groupedAppointments.forEach((rdvs, date) => {
+      const trucksStats: CamionsParDate = {
         total: rdvs.length,
         attendus: rdvs.filter((rdv) => !rdv.heure_arrivee && !rdv.heure_depart)
           .length,
@@ -67,28 +64,31 @@
           .length,
       };
 
-      camions.set(date, statsCamions);
+      trucks.set(date, trucksStats);
     });
   }
 
   /**
    * Grouper et trier les RDVs.
    */
-  function grouperRdvs(rdvs: RdvBois[]) {
-    const rdvsParDate: GroupesRdv = new Map<DateString, RdvBois[]>();
+  function groupAppointments(appointments: RdvBois[]) {
+    const appointmentsByDate: GroupesRdv = new Map<DateString, RdvBois[]>();
 
     dates.forEach((date) => {
-      rdvsParDate.set(
+      appointmentsByDate.set(
         date,
-        rdvs
+        appointments
           .filter(({ date_rdv, attente }) => date_rdv === date && !attente)
-          .sort(triPlanning)
+          .sort(sortPlanning)
       );
     });
 
-    rdvsParDate.set("attente", rdvs.filter(({ attente }) => attente).sort());
+    appointmentsByDate.set(
+      "attente",
+      appointments.filter(({ attente }) => attente).sort()
+    );
 
-    return rdvsParDate;
+    return appointmentsByDate;
   }
 
   /**
@@ -100,16 +100,16 @@
    * - nom de client, croissant
    * - numéro de BL, croissant
    */
-  function triPlanning(a: RdvBois, b: RdvBois): number {
+  function sortPlanning(a: RdvBois, b: RdvBois): number {
     return (
-      comparerHeureArrivee(a, b) ||
-      comparerHeureDepart(a, b) ||
-      comparerFournisseur(a, b) ||
-      comparerClient(a, b) ||
-      comparerNumeroBL(a, b)
+      compareArrivalTime(a, b) ||
+      compareDepartureTime(a, b) ||
+      compareSupplierName(a, b) ||
+      compareCustomerName(a, b) ||
+      compareDeliveryNoteNumber(a, b)
     );
 
-    function comparerHeureArrivee(a: RdvBois, b: RdvBois): number {
+    function compareArrivalTime(a: RdvBois, b: RdvBois): number {
       if (
         a.heure_arrivee < b.heure_arrivee ||
         (a.heure_arrivee && !b.heure_arrivee)
@@ -123,7 +123,7 @@
       return 0;
     }
 
-    function comparerHeureDepart(a: RdvBois, b: RdvBois): number {
+    function compareDepartureTime(a: RdvBois, b: RdvBois): number {
       if (
         a.heure_depart < b.heure_depart ||
         (a.heure_depart && !b.heure_depart)
@@ -137,7 +137,7 @@
       return 0;
     }
 
-    function comparerClient(a: RdvBois, b: RdvBois): number {
+    function compareCustomerName(a: RdvBois, b: RdvBois): number {
       if (!$tiers) return 0;
 
       return ($tiers.get(a.client)?.nom_court || "").localeCompare(
@@ -145,7 +145,7 @@
       );
     }
 
-    function comparerFournisseur(a: RdvBois, b: RdvBois): number {
+    function compareSupplierName(a: RdvBois, b: RdvBois): number {
       if (!$tiers) return 0;
 
       return ($tiers.get(a.fournisseur)?.nom_court || "").localeCompare(
@@ -153,7 +153,7 @@
       );
     }
 
-    function comparerNumeroBL(a: RdvBois, b: RdvBois): number {
+    function compareDeliveryNoteNumber(a: RdvBois, b: RdvBois): number {
       if (a.numero_bl < b.numero_bl) return -1;
       if (a.numero_bl > b.numero_bl) return 1;
       return 0;
@@ -161,51 +161,52 @@
   }
 
   onDestroy(() => {
-    unsubscribeRdvs();
-    unsubscribeFiltre();
+    unsubscribeAppointments();
+    unsubscribeFilter();
   });
 </script>
 
 <!-- routify:options guard="bois" -->
 
-<ConnexionSSE
+<SseConnection
   subscriptions={[
-    "bois/rdvs",
-    "tiers",
-    "config/bandeau-info",
-    "config/ajouts-rapides",
+    boisRdvs.endpoint,
+    tiers.endpoint,
+    configBandeauInfo.endpoint,
+    configAjoutsRapides.endpoint,
   ]}
 />
 
-<BandeauInfo module="bois" pc />
-
-<div class="filtre">
-  <BandeauFiltre />
+<div class="sticky top-0 z-[1] ml-16 lg:ml-24">
+  <BandeauInfo module="bois" pc />
 </div>
 
-<!-- Filtre SQL pour registre affrètement -->
-<div id="bouton-registre">
-  <ExtractionRegistre />
-</div>
+<ExtractionRegistre />
 
-<main>
-  {#if rdvsBois}
+<FilterModal />
+
+<main class="w-11/12 mx-auto mb-24">
+  {#if appointments}
     <!-- RDVs en attente -->
     <div>
-      <LigneDateAttente camions={camions.get("attente")} />
-      {#each [...rdvsGroupes.get("attente")] as rdv (rdv.id)}
-        <LigneRdvAttente {rdv} />
-      {/each}
+      <LigneDateAttente camions={trucks.get("attente")} />
+      <div class="divide-y">
+        {#each [...groupedAppointments.get("attente")] as appointment (appointment.id)}
+          <LigneRdvAttente {appointment} />
+        {/each}
+      </div>
     </div>
 
     <!-- RDVs plannifiés -->
-    {#each [...rdvsGroupes] as [date, rdvs] (date)}
+    {#each [...groupedAppointments] as [date, scheduledAppointments] (date)}
       {#if date !== "attente" && date !== null}
         <div>
-          <LigneDate {date} camions={camions.get(date)} />
-          {#each rdvs as rdv (rdv.id)}
-            <LigneRdv {rdv} />
-          {/each}
+          <LigneDate {date} camions={trucks.get(date)} />
+          <div class="divide-y">
+            {#each scheduledAppointments as appointment (appointment.id)}
+              <LigneRdv {appointment} />
+            {/each}
+          </div>
         </div>
       {/if}
     {/each}
@@ -214,58 +215,3 @@
     <Placeholder />
   {/if}
 </main>
-
-<style>
-  * {
-    --couleur-total: hsl(0, 0%, 0%);
-    --couleur-attendus: hsl(0, 0%, 31%);
-    --couleur-parc: hsl(29, 100%, 74%);
-    --couleur-charges: hsl(110, 52%, 55%);
-  }
-
-  .filtre {
-    position: sticky;
-    top: 0;
-    left: 0;
-    margin-left: 100px;
-    z-index: 2;
-  }
-
-  /* LISTE RDV */
-
-  main {
-    width: 95%;
-    margin: auto;
-    margin-bottom: 6rem;
-  }
-
-  /* Mobile */
-  @media screen and (max-width: 767px) {
-    #bouton-registre {
-      display: none;
-    }
-  }
-
-  /* Desktop */
-  @media screen and (min-width: 768px) {
-    #bouton-registre {
-      --size: 50px;
-
-      display: grid;
-      position: fixed;
-      right: 30px;
-      top: 15px;
-      width: var(--size);
-      height: var(--size);
-      z-index: 3;
-
-      background: radial-gradient(
-        circle at center,
-        white 0,
-        white 50%,
-        transparent 100%
-      );
-      border-radius: 50%;
-    }
-  }
-</style>

@@ -1,34 +1,46 @@
 <!-- routify:options title="Planning AMSB - Vrac" -->
 <script lang="ts">
-  import { LigneDate, LigneRdv } from "./components";
-  import { BandeauInfo, ConnexionSSE } from "@app/components";
+  import { onDestroy } from "svelte";
 
-  import { vracRdvs, vracProduits, currentUser } from "@app/stores";
+  import { LigneDate, LigneRdv } from "./components";
+  import { BandeauInfo, SseConnection } from "@app/components";
+
+  import {
+    vracRdvs,
+    vracProduits,
+    tiers,
+    configBandeauInfo,
+    currentUser,
+  } from "@app/stores";
 
   import type { RdvVrac } from "@app/types";
 
   type GroupesRdv = Map<string, RdvVrac[]>;
 
-  let dates: Set<string>;
-  let rdvsGroupes: GroupesRdv;
+  vracRdvs.setSearchParams({ tv: "true" });
 
-  $: if ($vracRdvs && $vracProduits) {
-    dates = new Set(
-      [...$vracRdvs.values()].map(({ date_rdv }) => date_rdv).sort()
-    );
-    rdvsGroupes = grouperRdvs([...$vracRdvs.values()]);
-  }
+  let appointments: RdvVrac[];
+  let dates: Set<string>;
+  let groupedAppointments: GroupesRdv;
+
+  const unsubscribeAppointments = vracRdvs.subscribe((value) => {
+    if (!value) return;
+
+    appointments = [...value.values()].filter(({ showOnTv }) => showOnTv);
+    dates = new Set(appointments.map(({ date_rdv }) => date_rdv).sort());
+    groupedAppointments = groupAppointments(appointments, dates);
+  });
 
   /**
    * Grouper et trier les RDVs.
    */
-  function grouperRdvs(rdvs: RdvVrac[]) {
+  function groupAppointments(rdvs: RdvVrac[], dates: Set<string>): GroupesRdv {
     const groupes: GroupesRdv = new Map<string, RdvVrac[]>();
 
     dates.forEach((date) => {
       groupes.set(
         date,
-        rdvs.filter(({ date_rdv }) => date_rdv === date).sort(triPlanning)
+        rdvs.filter(({ date_rdv }) => date_rdv === date).sort(sortPlanning)
       );
     });
 
@@ -43,7 +55,7 @@
    * - heure, croissant (null en dernier)
    * - nom de qualite, croissant
    */
-  function triPlanning(a: RdvVrac, b: RdvVrac): number {
+  function sortPlanning(a: RdvVrac, b: RdvVrac): number {
     if (!$vracProduits) return 0;
 
     return (
@@ -74,25 +86,31 @@
       );
     }
   }
+
+  onDestroy(() => {
+    unsubscribeAppointments();
+  });
 </script>
 
 {#if $currentUser.canUseApp && $currentUser.canAccess("vrac")}
-  <ConnexionSSE
+  <SseConnection
     subscriptions={[
-      "vrac/rdvs",
-      "vrac/produits",
-      "tiers",
-      "config/bandeau-info",
+      vracRdvs.endpoint,
+      vracProduits.endpoint,
+      tiers.endpoint,
+      configBandeauInfo.endpoint,
     ]}
   />
 
-  <BandeauInfo module="vrac" tv />
+  <div class="sticky top-0">
+    <BandeauInfo module="vrac" tv />
+  </div>
 
-  <main>
+  <main class="w-[95vw] mx-auto">
     {#if $vracRdvs && $vracProduits}
-      {#each [...rdvsGroupes] as [date, rdvs] (date)}
+      {#each [...groupedAppointments] as [date, rdvs] (date)}
         <LigneDate {date} />
-        <div>
+        <div class="divide-y">
           {#each rdvs as rdv (rdv.id)}
             <LigneRdv {rdv} />
           {/each}
@@ -119,12 +137,5 @@
     background-position: center center;
     background-attachment: fixed;
     background-size: 60%;
-  }
-
-  /* LISTE RDV */
-
-  main {
-    width: 95vw;
-    margin: auto;
   }
 </style>

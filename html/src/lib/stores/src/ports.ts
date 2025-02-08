@@ -15,9 +15,11 @@ export const ports = writable<Port[]>(initial, () => {
   fetchAll();
 
   document.addEventListener(`planning:${endpoint}`, fetchAll);
+  document.addEventListener(`planning:sse-reconnect`, fetchAll);
 
   return () => {
     document.removeEventListener(`planning:${endpoint}`, fetchAll);
+    document.removeEventListener(`planning:sse-reconnect`, fetchAll);
   };
 });
 

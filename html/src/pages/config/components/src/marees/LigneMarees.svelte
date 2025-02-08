@@ -9,20 +9,21 @@
   ```
  -->
 <script lang="ts">
-  import { MaterialButton } from "@app/components";
+  import { ConfigLine } from "../../";
+  import { LucideButton } from "@app/components";
 
   import Notiflix from "notiflix";
 
   import { marees } from "@app/stores";
 
-  import { fetcher, notiflixOptions } from "@app/utils";
+  import { notiflixOptions } from "@app/utils";
 
   /**
    * Année de la ligne.
    */
   export let annee: string;
 
-  let ligne: HTMLLIElement;
+  let ligne: HTMLDivElement;
 
   /**
    * Supprimer les marées d'une année.
@@ -55,14 +56,8 @@
   }
 </script>
 
-<li class="ligne" bind:this={ligne}>
-  <span class="annee">{annee}</span>
+<ConfigLine bind:ligne>
+  <span>{annee}</span>
 
-  <MaterialButton preset="supprimer" on:click={supprimerMarees} />
-</li>
-
-<style>
-  .annee {
-    margin-right: 10px;
-  }
-</style>
+  <LucideButton preset="delete" on:click={supprimerMarees} />
+</ConfigLine>

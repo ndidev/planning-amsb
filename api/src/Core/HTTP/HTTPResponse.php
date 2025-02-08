@@ -1,28 +1,97 @@
 <?php
 
+// Path: api/src/Core/HTTP/HTTPResponse.php
+
+declare(strict_types=1);
+
 namespace App\Core\HTTP;
 
-include __DIR__ . "/../../Core/Functions/lzw.inc.php";
-
+use App\Core\Exceptions\Server\ServerException;
+use App\Core\Array\Server;
 use App\Core\Logger\ErrorLogger;
-
-use function App\Core\Functions\lzw_compress;
 
 /**
  * Réponses HTTP.
  * 
  * Construction des réponses HTTP, avec compression du corps.
  */
-class HTTPResponse
+final class HTTPResponse
 {
-    private int $code = 200;
+    // HTTP status codes constants
+    public const HTTP_CONTINUE_100 = 100;
+    public const HTTP_SWITCHING_PROTOCOLS_101 = 101;
+    public const HTTP_PROCESSING_102 = 102;
+    public const HTTP_EARLY_HINTS_103 = 103;
+    public const HTTP_OK_200 = 200;
+    public const HTTP_CREATED_201 = 201;
+    public const HTTP_ACCEPTED_202 = 202;
+    public const HTTP_NON_AUTHORITATIVE_INFORMATION_203 = 203;
+    public const HTTP_NO_CONTENT_204 = 204;
+    public const HTTP_RESET_CONTENT_205 = 205;
+    public const HTTP_PARTIAL_CONTENT_206 = 206;
+    public const HTTP_MULTI_STATUS_207 = 207;
+    public const HTTP_ALREADY_REPORTED_208 = 208;
+    public const HTTP_IM_USED_226 = 226;
+    public const HTTP_MULTIPLE_CHOICES_300 = 300;
+    public const HTTP_MOVED_PERMANENTLY_301 = 301;
+    public const HTTP_FOUND_302 = 302;
+    public const HTTP_SEE_OTHER_303 = 303;
+    public const HTTP_NOT_MODIFIED_304 = 304;
+    public const HTTP_USE_PROXY_305 = 305;
+    public const HTTP_SWITCH_PROXY_306 = 306;
+    public const HTTP_TEMPORARY_REDIRECT_307 = 307;
+    public const HTTP_PERMANENT_REDIRECT_308 = 308;
+    public const HTTP_BAD_REQUEST_400 = 400;
+    public const HTTP_UNAUTHORIZED_401 = 401;
+    public const HTTP_PAYMENT_REQUIRED_402 = 402;
+    public const HTTP_FORBIDDEN_403 = 403;
+    public const HTTP_NOT_FOUND_404 = 404;
+    public const HTTP_METHOD_NOT_ALLOWED_405 = 405;
+    public const HTTP_NOT_ACCEPTABLE_406 = 406;
+    public const HTTP_PROXY_AUTHENTICATION_REQUIRED_407 = 407;
+    public const HTTP_REQUEST_TIMEOUT_408 = 408;
+    public const HTTP_CONFLICT_409 = 409;
+    public const HTTP_GONE_410 = 410;
+    public const HTTP_LENGTH_REQUIRED_411 = 411;
+    public const HTTP_PRECONDITION_FAILED_412 = 412;
+    public const HTTP_PAYLOAD_TOO_LARGE_413 = 413;
+    public const HTTP_URI_TOO_LONG_414 = 414;
+    public const HTTP_UNSUPPORTED_MEDIA_TYPE_415 = 415;
+    public const HTTP_RANGE_NOT_SATISFIABLE_416 = 416;
+    public const HTTP_EXPECTATION_FAILED_417 = 417;
+    public const HTTP_IM_A_TEAPOT_418 = 418;
+    public const HTTP_MISDIRECTED_REQUEST_421 = 421;
+    public const HTTP_UNPROCESSABLE_ENTITY_422 = 422;
+    public const HTTP_LOCKED_423 = 423;
+    public const HTTP_FAILED_DEPENDENCY_424 = 424;
+    public const HTTP_TOO_EARLY_425 = 425;
+    public const HTTP_UPGRADE_REQUIRED_426 = 426;
+    public const HTTP_PRECONDITION_REQUIRED_428 = 428;
+    public const HTTP_TOO_MANY_REQUESTS_429 = 429;
+    public const HTTP_REQUEST_HEADER_FIELDS_TOO_LARGE_431 = 431;
+    public const HTTP_UNAVAILABLE_FOR_LEGAL_REASONS_451 = 451;
+    public const HTTP_INTERNAL_SERVER_ERROR_500 = 500;
+    public const HTTP_NOT_IMPLEMENTED_501 = 501;
+    public const HTTP_BAD_GATEWAY_502 = 502;
+    public const HTTP_SERVICE_UNAVAILABLE_503 = 503;
+    public const HTTP_GATEWAY_TIMEOUT_504 = 504;
+    public const HTTP_HTTP_VERSION_NOT_SUPPORTED_505 = 505;
+    public const HTTP_VARIANT_ALSO_NEGOTIATES_506 = 506;
+    public const HTTP_INSUFFICIENT_STORAGE_507 = 507;
+    public const HTTP_LOOP_DETECTED_508 = 508;
+    public const HTTP_NOT_EXTENDED_510 = 510;
+    public const HTTP_NETWORK_AUTHENTICATION_REQUIRED_511 = 511;
+
+
+
+    private int $code = self::HTTP_OK_200;
+    /** @var array<string|int, string> $headers */
     private array $headers = [];
     private ?string $body = null;
     private bool $compression = true;
-    private string $type = 'application/json; charset=UTF-8';
-    private bool $exit = true;
-    private bool $is_sent = false;
-    private bool $preflight_headers_added = false;
+    private string $type = 'text/html; charset=UTF-8';
+    private bool $isSent = false;
+    private bool $preflightHeadersAdded = false;
 
     public function __construct(?int $code = null)
     {
@@ -36,7 +105,7 @@ class HTTPResponse
      */
     public function send(): void
     {
-        if ($this->is_sent === true) {
+        if ($this->isSent === true) {
             return;
         }
 
@@ -48,65 +117,11 @@ class HTTPResponse
         $this->applyHeaders();
 
         // Corps de la réponse
-        if ($this->body && $_SERVER["REQUEST_METHOD"] !== "HEAD") {
+        if ($this->body !== null && Server::getString('REQUEST_METHOD') !== "HEAD") {
             echo $this->body;
         }
 
-        $this->is_sent = true;
-
-        // Sortie de script
-        if ($this->exit) {
-            exit;
-        }
-    }
-
-    /**
-     * Envoi de la réponse HTTP sans quitter le script.
-     * 
-     * Permet la continuité de l'exécution après l'envoi.
-     */
-    public function flush(): void
-    {
-        @ob_start();
-
-        if ($this->compression) {
-            $this->compressResponse();
-        }
-
-        $this->applyStatusCode();
-        $this->applyHeaders();
-
-        // Corps de la réponse
-        if ($this->body && $_SERVER["REQUEST_METHOD"] !== "HEAD") {
-            echo $this->body;
-        }
-
-        ob_end_flush();
-        @ob_flush();
-        flush();
-
-        $this->is_sent = true;
-    }
-
-    /**
-     * Debug HTTP response.
-     * 
-     * @return never
-     */
-    public function debug()
-    {
-        echo "<pre>";
-        print_r([
-            "code" => $this->code,
-            "headers" => $this->headers,
-            "body" => $this->body,
-            "compression" => $this->compression,
-            "type" => $this->type,
-            "exit" => $this->exit
-        ]);
-        echo "</pre>";
-
-        exit;
+        $this->isSent = true;
     }
 
     /**
@@ -115,26 +130,10 @@ class HTTPResponse
      * The default code is `200`.
      * 
      * @param int $code HTTP status code.
-     * 
-     * @return HTTPResponse
      */
-    public function setCode(int $code): HTTPResponse
+    public function setCode(int $code): self
     {
         $this->code = $code;
-
-        return $this;
-    }
-
-    /**
-     * Set HTTP reponse headers.
-     * 
-     * @param array $headers Array of HTTP headers `[name => value]`.
-     * 
-     * @return HTTPResponse
-     */
-    public function setHeaders(array $headers): HTTPResponse
-    {
-        $this->headers = $headers;
 
         return $this;
     }
@@ -144,10 +143,8 @@ class HTTPResponse
      * 
      * @param string $name  Name of the header.
      * @param string $value Value of the header.
-     * 
-     * @return HTTPResponse
      */
-    public function addHeader(string $name, string $value): HTTPResponse
+    public function addHeader(string $name, string $value): self
     {
         $this->headers[$name] = $value;
 
@@ -157,13 +154,39 @@ class HTTPResponse
     /**
      * Set the body of the HTTP response.
      * 
-     * @param mixed $body Body of the HTTP response.
-     * 
-     * @return HTTPResponse
+     * @param ?string $body Body of the HTTP response.
      */
-    public function setBody(mixed $body): HTTPResponse
+    public function setBody(?string $body): self
     {
         $this->body = $body;
+
+        return $this;
+    }
+
+    /**
+     * Set the body of the HTTP response as JSON.
+     * 
+     * @param mixed $data        Data to encode as JSON.
+     * @param bool  $alreadyJson Set to true if the data is already JSON encoded.
+     */
+    public function setJSON(mixed $data, bool $alreadyJson = false): self
+    {
+        $body = $alreadyJson ? $data : \json_encode($data);
+
+        if (!\is_string($body)) {
+            throw new ServerException("Error while encoding data to JSON.");
+        }
+
+        $this->body = $body;
+        $this->setType('json');
+
+        return $this;
+    }
+
+    public function setText(string $body): self
+    {
+        $this->body = $body;
+        $this->setType('text');
 
         return $this;
     }
@@ -174,10 +197,8 @@ class HTTPResponse
      * By default the compression is set to `TRUE`.
      * 
      * @param bool $compression TRUE (activate) or FALSE (deactivate).
-     * 
-     * @return HTTPResponse
      */
-    public function setCompression(bool $compression = true): HTTPResponse
+    public function setCompression(bool $compression = true): self
     {
         $this->compression = $compression;
 
@@ -190,16 +211,16 @@ class HTTPResponse
      * By default, the type is set to `text/html; charset=UTF-8`.
      * 
      * @param string $type MIME type of the body.
-     * 
-     * @return HTTPResponse
      */
-    public function setType(string $type): HTTPResponse
+    public function setType(string $type): self
     {
         $type = match ($type) {
             'text', 'plain' => 'text/plain',
             'html' => 'text/html; charset=UTF-8',
             'json' => 'application/json; charset=UTF-8',
             'yaml' => 'application/x-yaml',
+            'pdf'  => 'application/pdf',
+            'csv'  => 'text/csv',
             default => $type
         };
 
@@ -209,27 +230,11 @@ class HTTPResponse
     }
 
     /**
-     * Set if the script must exit after sending the HTTP reponse.
-     * 
-     * Default is `TRUE`.
-     * 
-     * @param bool $exit 
-     * 
-     * @return HTTPResponse
-     */
-    public function setExit(bool $exit = true): HTTPResponse
-    {
-        $this->exit = $exit;
-
-        return $this;
-    }
-
-    /**
      * Envoyer une réponse à la requête preflight.
      */
     public function sendCorsPreflight(string $supportedMethods = "OPTIONS, HEAD, GET"): void
     {
-        $this->setCode(204);
+        $this->setCode(self::HTTP_NO_CONTENT_204);
         $this->applyStatusCode();
         $this->addCorsHeaders(true, $supportedMethods);
         $this->applyHeaders();
@@ -255,12 +260,11 @@ class HTTPResponse
 
         /**
          * Méthodes de compression acceptées par le client.
-         * @var string
          */
-        $client_accept_encoding = $_SERVER["HTTP_ACCEPT_ENCODING"] ?? null;
+        $clientAcceptEncoding = Server::getString('HTTP_ACCEPT_ENCODING', null);
 
         // Si pas de compression acceptée, renvoi de la réponse intacte
-        if ($client_accept_encoding === null) {
+        if ($clientAcceptEncoding === null) {
             return;
         }
 
@@ -268,37 +272,37 @@ class HTTPResponse
          * Tableau des méthodes accpetées par le client, par ordre de priorité.
          * @var string[]
          */
-        $client_accepted_methods = explode(",", $client_accept_encoding);
+        $clientAcceptedMethods = explode(",", $clientAcceptEncoding);
 
         /**
          * Tableau des priorités de compression.  
          * ```
          * [(string) $method => (float) $priority]
          * ```
-         * @var float[]
+         * @var array<string, float>
          */
-        $client_compression_priority = [];
+        $clientCompressionPriority = [];
 
-        foreach ($client_accepted_methods as $method) {
-            $method_array = explode(";q=", $method);
-            $method_name = trim($method_array[0]);
-            $method_priority = (float) ($method_array[1] ?? 1);
+        foreach ($clientAcceptedMethods as $method) {
+            $methodArray = explode(";q=", $method);
+            $methodName = trim($methodArray[0]);
+            $methodPriority = (float) ($methodArray[1] ?? 1.0);
 
-            $client_compression_priority[$method_name] = $method_priority;
+            $clientCompressionPriority[$methodName] = $methodPriority;
         }
 
         // Tri du tableau par priorité décroissante
-        arsort($client_compression_priority);
+        arsort($clientCompressionPriority);
 
 
         /**
          * Méthodes de compression supportées par le serveur.
          * @var bool[]
          */
-        $server_supported_methods = [
+        $serverSupportedMethods = [
             "gzip" => true,
             "deflate" => true,
-            "compress" => false, // La fonction ne prend en charge que la table ASCII
+            "compress" => false,
             "br" => false, // Voir ci-dessous pour implémentation
             "identity" => true
         ];
@@ -307,36 +311,55 @@ class HTTPResponse
          * Méthode de compression utilisée ("identity" par défaut, modifié ci-dessous).
          * @var string
          */
-        $compression_method = "identity";
+        $selectedCompressionMethod = "identity";
 
         // Enregistrement de la première méthode acceptée par le client
         // et supportée par le serveur
-        foreach ($client_compression_priority as $method => $priority) {
-            $is_supported = $server_supported_methods[$method] ?? false;
+        foreach ($clientCompressionPriority as $method => $priority) {
+            $isSupportedMethod = $serverSupportedMethods[$method] ?? false;
 
-            if ($is_supported && $priority != 0) {
-                $compression_method = $method;
+            if ($isSupportedMethod && $priority != 0) {
+                $selectedCompressionMethod = $method;
                 break;
             }
         }
 
         try {
             // Méthodes de compression
-            switch ($compression_method) {
+            switch ($selectedCompressionMethod) {
                 case 'gzip':
                     // GZIP (== PHP gzencode)
-                    $this->body = gzencode($this->body);
+                    $compressedBody = gzencode($this->body);
+
+                    // Si la compression est inefficace, on ne compresse pas
+                    if ($compressedBody && \strlen($compressedBody) >= \strlen($this->body)) {
+                        $selectedCompressionMethod = "identity";
+                        break;
+                    }
+
+                    /** @var string $compressedBody */
+                    $this->body = $compressedBody;
                     break;
 
                 case 'deflate':
                     // HTTP DEFLATE (== PHP gzcompress)
-                    $this->body = gzcompress($this->body, 9);
+                    $compressedBody = gzcompress($this->body, 9);
+
+                    // Si la compression est inefficace, on ne compresse pas
+                    if ($compressedBody && \strlen($compressedBody) >= \strlen($this->body)) {
+                        $selectedCompressionMethod = "identity";
+                        break;
+                    }
+
+                    /** @var string $compressedBody */
+                    $this->body = $compressedBody;
                     break;
 
                 case 'compress':
                     // HTTP Compress (== LZW compress)
                     // https://code.google.com/archive/p/php-lzw/
-                    $this->body = lzw_compress($this->body);
+                    // Pas trouvé d'implémentation satisfaisante
+                    // Compression jamais utilisée
                     break;
 
                 case 'br':
@@ -357,7 +380,7 @@ class HTTPResponse
             }
 
             // En-tête HTTP
-            $this->headers["Content-Encoding"] = $compression_method;
+            $this->headers["Content-Encoding"] = $selectedCompressionMethod;
         } catch (\Throwable $th) {
             ErrorLogger::log($th);
 
@@ -369,13 +392,13 @@ class HTTPResponse
     /**
      * Ajouter les en-têtes relatifs à CORS.
      * 
-     * @param string $supported_methods Méthodes HTTP supportées.
+     * @param string $supportedMethods Méthodes HTTP supportées.
      */
-    private function addCorsHeaders(bool $is_preflight = false, string $supported_methods = "OPTIONS, HEAD, GET"): void
+    private function addCorsHeaders(bool $is_preflight = false, string $supportedMethods = "OPTIONS, HEAD, GET"): void
     {
         // Pre-flight request
         if ($is_preflight) {
-            header("Access-Control-Allow-Methods: " . $supported_methods);
+            header("Access-Control-Allow-Methods: " . $supportedMethods);
             header("Access-Control-Allow-Headers: Content-Type, X-API-Key, X-SSE-Connection");
             header("Access-Control-Max-Age: 3600");
         }
@@ -385,19 +408,16 @@ class HTTPResponse
          * @var string[]
          */
         $allowedOrigins = [
-            "https://planning.amsb-mk.com",
-            "http://planning.amsb-mk.local",
-            "https://amsb.ndi.dev",
             "https://localhost",
             "http://localhost",
-            ($_SERVER["REQUEST_SCHEME"] ?? "") . "://" . explode(":", $_SERVER["HTTP_HOST"])[0],
+            Server::getString('REQUEST_SCHEME') . "://" . explode(":", Server::getString('HTTP_HOST'))[0],
         ];
 
-        $serverOrigin = $_SERVER["HTTP_ORIGIN"] ?? "";
+        $serverOrigin = Server::getString('HTTP_ORIGIN');
         $origin = "*";
 
         foreach ($allowedOrigins as $allowOrigin) {
-            if (str_starts_with($serverOrigin, $allowOrigin)) {
+            if (\str_starts_with($serverOrigin, $allowOrigin)) {
                 $origin = $serverOrigin;
                 break;
             }
@@ -424,13 +444,13 @@ class HTTPResponse
         header("Cache-control: no-cache");
 
         // CORS headers
-        if ($this->preflight_headers_added === false) {
+        if ($this->preflightHeadersAdded === false) {
             $this->addCorsHeaders();
         }
 
         // "Content-Length" header if there is a body
         if ($this->code >= 200 && $this->code !== 204 && $this->code !== 304) {
-            header("Content-Length: " . strlen($this->body ?? ""));
+            header("Content-Length: " . \strlen($this->body ?? ""));
         }
 
         // "Content-Type" header if there is a body
@@ -521,7 +541,7 @@ class HTTPResponse
      */
     private function _100_Continue(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 100 Continue";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 100 Continue";
     }
 
     /**
@@ -531,13 +551,13 @@ class HTTPResponse
      */
     private function _101_SwitchingProtocols(): void
     {
-        if ($_SERVER["SERVER_PROTOCOL"] === "HTTP/1.1") {
-            $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 101 Switching Protocols";
+        if (Server::getString('SERVER_PROTOCOL') === "HTTP/1.1") {
+            $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 101 Switching Protocols";
             // self::$response["Connection"] = "upgrade";
             // self::$response["headers"]["Upgrade"] = null; // Inclure le nouveau protocole dans ce header
 
         } else {
-            $this->_200_OK("");
+            $this->_200_OK();
         }
     }
 
@@ -548,7 +568,7 @@ class HTTPResponse
      */
     private function _103_EarlyHints(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 103 Early Hints";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 103 Early Hints";
         // $this->headers["Link"] = null; // En-tête Link à compléter par l'utilisateur
 
     }
@@ -563,7 +583,7 @@ class HTTPResponse
      */
     private function _200_OK(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 200 OK";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 200 OK";
     }
 
     /**
@@ -573,7 +593,7 @@ class HTTPResponse
      */
     private function _201_Created(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 201 Created";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 201 Created";
     }
 
     /**
@@ -583,7 +603,7 @@ class HTTPResponse
      */
     private function _202_Accepted(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 202 Accepted";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 202 Accepted";
     }
 
     /**
@@ -593,7 +613,7 @@ class HTTPResponse
      */
     private function _203_NonAuthoritativeInformation(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 203 Non-Authoritative Information";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 203 Non-Authoritative Information";
     }
 
     /**
@@ -603,7 +623,7 @@ class HTTPResponse
      */
     private function _204_NoContent(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 204 No Content";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 204 No Content";
     }
 
     /**
@@ -613,7 +633,7 @@ class HTTPResponse
      */
     private function _205_ResetContent(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 205 Reset Content";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 205 Reset Content";
     }
 
     /**
@@ -623,7 +643,7 @@ class HTTPResponse
      */
     private function _206_PartialContent(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 206 Partial Content";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 206 Partial Content";
     }
 
 
@@ -636,7 +656,7 @@ class HTTPResponse
      */
     private function _301_MovedPermanently(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 301 Moved Permanently";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 301 Moved Permanently";
     }
 
     /**
@@ -646,7 +666,7 @@ class HTTPResponse
      */
     private function _302_Found(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 302 Found";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 302 Found";
     }
 
     /**
@@ -656,7 +676,7 @@ class HTTPResponse
      */
     private function _303_SeeOther(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 303 See Other";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 303 See Other";
     }
 
     /**
@@ -666,7 +686,7 @@ class HTTPResponse
      */
     private function _304_NotModified(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 304 Not Modified";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 304 Not Modified";
         // Headers à envoyer : Cache-Control, Content-Location, ETag, Expires, and Vary
 
     }
@@ -678,7 +698,7 @@ class HTTPResponse
      */
     private function _307_TemporaryRedirect(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 307 Temporary Redirect";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 307 Temporary Redirect";
     }
 
     /**
@@ -688,7 +708,7 @@ class HTTPResponse
      */
     private function _308_PermanentRedirect(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 308 Permanent Redirect";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 308 Permanent Redirect";
     }
 
 
@@ -701,7 +721,7 @@ class HTTPResponse
      */
     private function _400_BadRequest(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 400 Bad Request";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 400 Bad Request";
     }
 
     /**
@@ -711,7 +731,7 @@ class HTTPResponse
      */
     private function _401_Unauthorized(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 401 Unauthorized";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 401 Unauthorized";
         // $this->headers["WWW-Authenticate"] = null; // En-tête WWW-Athenticate à renseigner par l'utilisateur
 
     }
@@ -723,7 +743,7 @@ class HTTPResponse
      */
     private function _402_PaymentRequired(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 402 Payment Required";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 402 Payment Required";
     }
 
     /**
@@ -733,7 +753,7 @@ class HTTPResponse
      */
     private function _403_Forbidden(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 403 Forbidden";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 403 Forbidden";
     }
 
     /**
@@ -743,7 +763,7 @@ class HTTPResponse
      */
     private function _404_NotFound(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 404 Not Found";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 404 Not Found";
     }
 
     /**
@@ -753,19 +773,17 @@ class HTTPResponse
      */
     private function _405_MethodNotAllowed(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 405 Method Not Allowed";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 405 Method Not Allowed";
     }
 
     /**
      * Réponse 406 (Not Acceptable).
      *
      * @link https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/406
-     *  
-     * @return array Contenu de la réponse HTTP
      */
     private function _406_NotAcceptable(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 406 Not Acceptable";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 406 Not Acceptable";
     }
 
     /**
@@ -775,7 +793,7 @@ class HTTPResponse
      */
     private function _407_ProxyAuthenticationRequired(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 407 Proxy Authentication Required";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 407 Proxy Authentication Required";
     }
 
     /**
@@ -785,7 +803,7 @@ class HTTPResponse
      */
     private function _408_RequestTimeout(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 408 Request Timeout";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 408 Request Timeout";
     }
 
     /**
@@ -795,7 +813,7 @@ class HTTPResponse
      */
     private function _409_Conflict(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 409 Conflict";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 409 Conflict";
     }
 
     /**
@@ -805,7 +823,7 @@ class HTTPResponse
      */
     private function _410_Gone(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 410 Gone";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 410 Gone";
     }
 
     /**
@@ -815,7 +833,7 @@ class HTTPResponse
      */
     private function _411_LengthRequired(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 411 Length Required";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 411 Length Required";
     }
 
     /**
@@ -825,7 +843,7 @@ class HTTPResponse
      */
     private function _412_PreconditionFailed(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 412 Precondition Failed";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 412 Precondition Failed";
     }
 
     /**
@@ -835,7 +853,7 @@ class HTTPResponse
      */
     private function _413_PayloadTooLarge(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 413 Payload Too Large";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 413 Payload Too Large";
     }
 
     /**
@@ -845,7 +863,7 @@ class HTTPResponse
      */
     private function _414_URITooLong(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 414 URI Too Long";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 414 URI Too Long";
     }
 
     /**
@@ -855,7 +873,7 @@ class HTTPResponse
      */
     private function _415_UnsupportedMediaType(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 415 Unsupported Media Type";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 415 Unsupported Media Type";
     }
 
     /**
@@ -865,7 +883,7 @@ class HTTPResponse
      */
     private function _416_RangeNotSatisfiable(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 416 Range Not Satisfiable";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 416 Range Not Satisfiable";
     }
 
     /**
@@ -875,7 +893,7 @@ class HTTPResponse
      */
     private function _417_ExpectationFailed(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 417 Expectation Failed";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 417 Expectation Failed";
     }
 
     /**
@@ -885,7 +903,7 @@ class HTTPResponse
      */
     private function _418_Imateapot(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 418 I'm a teapot";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 418 I'm a teapot";
     }
 
     /**
@@ -895,7 +913,7 @@ class HTTPResponse
      */
     private function _422_UnprocessableEntity(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 422 Unprocessable Entity";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 422 Unprocessable Entity";
     }
 
     /**
@@ -905,7 +923,7 @@ class HTTPResponse
      */
     private function _425_TooEarly(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 425 Too Early";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 425 Too Early";
     }
 
     /**
@@ -915,7 +933,7 @@ class HTTPResponse
      */
     private function _426_UpgradeRequired(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 426 Upgrade Required";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 426 Upgrade Required";
     }
 
     /**
@@ -925,7 +943,7 @@ class HTTPResponse
      */
     private function _428_PreconditionRequired(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 428 Precondition Required";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 428 Precondition Required";
     }
 
     /**
@@ -935,7 +953,7 @@ class HTTPResponse
      */
     private function _429_TooManyRequests(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 429 Too Many Requests";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 429 Too Many Requests";
     }
 
     /**
@@ -945,7 +963,7 @@ class HTTPResponse
      */
     private function _431_RequestHeaderFieldsTooLarge(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 431 Request Header Fields Too Large";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 431 Request Header Fields Too Large";
     }
 
     /**
@@ -955,7 +973,7 @@ class HTTPResponse
      */
     private function _451_UnavailableForLegalReasons(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 451 Unavailable For Legal Reasons";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 451 Unavailable For Legal Reasons";
     }
 
 
@@ -968,7 +986,7 @@ class HTTPResponse
      */
     private function _500_InternalServerError(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 500 Internal Server Error";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 500 Internal Server Error";
     }
 
     /**
@@ -978,7 +996,7 @@ class HTTPResponse
      */
     private function _501_NotImplemented(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 501 Not Implemented";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 501 Not Implemented";
     }
 
     /**
@@ -988,7 +1006,7 @@ class HTTPResponse
      */
     private function _502_BadGateway(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 502 Bad Gateway";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 502 Bad Gateway";
     }
 
     /**
@@ -998,7 +1016,7 @@ class HTTPResponse
      */
     private function _503_ServiceUnavailable(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 503 Service Unavailable";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 503 Service Unavailable";
     }
 
     /**
@@ -1008,7 +1026,7 @@ class HTTPResponse
      */
     private function _504_GatewayTimeout(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 504 Gateway Timeout";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 504 Gateway Timeout";
     }
 
     /**
@@ -1018,7 +1036,7 @@ class HTTPResponse
      */
     private function _505_HTTPVersionNotSupported(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 505 HTTP Version Not Supported";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 505 HTTP Version Not Supported";
     }
 
     /**
@@ -1028,7 +1046,7 @@ class HTTPResponse
      */
     private function _506_VariantAlsoNegotiates(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 506 Variant Also Negotiates";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 506 Variant Also Negotiates";
     }
 
     /**
@@ -1038,7 +1056,7 @@ class HTTPResponse
      */
     private function _507_InsufficientStorage(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 507 Insufficient Storage";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 507 Insufficient Storage";
     }
 
     /**
@@ -1048,7 +1066,7 @@ class HTTPResponse
      */
     private function _508_LoopDetected(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 508 Loop Detected";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 508 Loop Detected";
     }
 
     /**
@@ -1058,7 +1076,7 @@ class HTTPResponse
      */
     private function _510_NotExtended(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 510 Not Extended";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 510 Not Extended";
     }
 
     /**
@@ -1068,6 +1086,6 @@ class HTTPResponse
      */
     private function _511_NetworkAuthenticationRequired(): void
     {
-        $this->headers[] = $_SERVER["SERVER_PROTOCOL"] . " 511 Network Authentication Required";
+        $this->headers[] = Server::getString('SERVER_PROTOCOL') . " 511 Network Authentication Required";
     }
 }

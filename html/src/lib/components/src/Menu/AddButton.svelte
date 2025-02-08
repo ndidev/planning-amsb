@@ -9,22 +9,19 @@
   ```
  -->
 <script lang="ts">
-  import { getContext } from "svelte";
   import { goto } from "@roxi/routify";
 
-  // import Hammer from "hammerjs";
+  import { PlusIcon } from "lucide-svelte";
 
-  import { MaterialButton } from "@app/components";
+  import { LucideButton } from "@app/components";
   import AjoutsRapidesBois from "./AjoutsRapidesBois.svelte";
+  import AjoutsRapidesVrac from "./AjoutsRapidesVrac.svelte";
 
   import { device } from "@app/utils";
 
-  import type { Stores, ModuleId } from "@app/types";
+  import { configAjoutsRapides } from "@app/stores";
 
-  const { configAjoutsRapides } = getContext<Stores>("stores");
-
-  // let mc: HammerManager;
-  let addButton: HTMLSpanElement;
+  import type { ModuleId } from "@app/types";
 
   type Nouveau =
     | {
@@ -44,10 +41,16 @@
       "chartering",
       { title: "Nouvel affrètement", href: "/chartering/charters/new" },
     ],
+    [
+      "manutention",
+      { title: "Nouveau rapport", href: "/manutention/rapports-navires/new" },
+    ],
   ]);
 
-  const ajoutsRapides: { [P in keyof typeof $configAjoutsRapides]: any } = {
+  // const ajoutsRapides: { [P in keyof typeof $configAjoutsRapides]: any } = {
+  const ajoutsRapides = {
     bois: AjoutsRapidesBois,
+    vrac: AjoutsRapidesVrac,
   };
 
   /**
@@ -56,29 +59,14 @@
   export let rubrique: ModuleId;
 
   $: nouveau = nouveaux.get(rubrique);
-
-  // let afficherAjoutsRapides = false;
-
-  // onMount(() => {
-  //   mc = new Hammer(addButton);
-  //   mc.on("press", () => {
-  //     if ($device.is("mobile")) {
-  //       afficherAjoutsRapides = true;
-  //     }
-  //   });
-  // });
-
-  // onDestroy(() => {
-  //   mc.destroy();
-  // });
 </script>
 
 {#if nouveau}
-  <span class="add-button" bind:this={addButton}>
-    <MaterialButton
-      icon="add"
+  <span class="add-button">
+    <LucideButton
+      icon={PlusIcon}
       title={nouveau.title}
-      fontSize={$device.isSmallerThan("desktop") ? "24px" : "36px"}
+      size={$device.isSmallerThan("desktop") ? "24px" : "36px"}
       on:click={() => $goto(nouveau.href)}
     />
 
@@ -93,21 +81,7 @@
   @media screen and (max-width: 767px) {
     .add-button {
       display: inline-block;
-      position: relative;
-      /* isolation: isolate; */
     }
-
-    /* .add-button::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      background-color: aqua;
-      z-index: -1;
-    } */
   }
 
   /* Desktop */

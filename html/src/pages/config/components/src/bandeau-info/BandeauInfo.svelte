@@ -9,7 +9,7 @@
   ```
  -->
 <script lang="ts">
-  import { LigneConfigBandeauInfo, TitreSousSection } from "../../";
+  import { LigneConfigBandeauInfo, ConfigLine, TitreSousSection } from "../../";
   import { Chargement } from "@app/components";
 
   import { currentUser, configBandeauInfo } from "@app/stores";
@@ -34,16 +34,13 @@
         }}
       />
 
-      <ul id="infos-{module}">
+      <div id="infos-{module}" class="mb-4">
         {#each [...$configBandeauInfo[module].values()] as ligneInfo (ligneInfo.id)}
           <LigneConfigBandeauInfo {ligneInfo} />
         {:else}
-          <li class="ligne-vide">Aucune ligne configurée.</li>
+          <ConfigLine>Aucune ligne configurée.</ConfigLine>
         {/each}
-      </ul>
+      </div>
     {/if}
   {/each}
 {/if}
-
-<style>
-</style>

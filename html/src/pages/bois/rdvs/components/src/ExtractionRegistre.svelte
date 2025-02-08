@@ -9,64 +9,33 @@
   ```
  -->
 <script lang="ts">
-  import { getContext } from "svelte";
-  import type { Writable } from "svelte/store";
-
   import Notiflix from "notiflix";
+  import { Modal, Label, Input, Button } from "flowbite-svelte";
+  import { ScrollTextIcon } from "lucide-svelte";
 
-  import { MaterialButton } from "@app/components";
-  import { type Filtre, fetcher, notiflixOptions, DateUtils } from "@app/utils";
-  import type { FiltreBois } from "@app/types";
+  import { filter } from "../";
+  import { LucideButton } from "@app/components";
+  import { fetcher, DateUtils } from "@app/utils";
 
-  const filtre = getContext<Writable<Filtre<FiltreBois>>>("filtre");
-
-  /**
-   * Afficher la fenêtre de choix des dates.
-   */
-  function afficherChoixDates() {
-    let date_debut: string =
-      $filtre.data.date_debut ??
-      new DateUtils(new Date()).jourOuvrePrecedent().toLocaleISODateString();
-    let date_fin: string =
-      $filtre.data.date_fin ??
-      new DateUtils(new Date()).toLocaleISODateString();
-
-    Notiflix.Confirm.show(
-      "Extraire le registre d'affrètement",
-      `<div class="pure-form pdf-form-notiflix">
-          <div class="pdf-champ-notiflix">
-            <label>Date début : <input type="date" class="date_debut" value="${date_debut}"></label>
-          </div>
-          <div class="pdf-champ-notiflix">
-            <label>Date fin : <input type="date" class="date_fin" value="${date_fin}"></label>
-          </div>
-        </div>`,
-      "Extraire",
-      "Annuler",
-      () =>
-        extraireRegistreAffretement(
-          document.querySelector<HTMLInputElement>(".date_debut").value,
-          document.querySelector<HTMLInputElement>(".date_fin").value
-        ),
-      null,
-      notiflixOptions.themes.green
-    );
-  }
+  // Affichage de la fenêtre modale
+  let showModal = false;
+  $: startDate =
+    $filter.data.date_debut ||
+    new DateUtils(new Date()).getPreviousWorkingDay().toLocaleISODateString();
+  $: endDate =
+    $filter.data.date_fin || new DateUtils(new Date()).toLocaleISODateString();
 
   /**
    * Bouton registre
    *
    * Extraction du registre d'affrètement
    */
-  async function extraireRegistreAffretement(
-    date_debut: string,
-    date_fin: string
-  ) {
+  async function extractRegistry(startDate: string, endDate: string) {
     try {
-      const params = { date_debut, date_fin };
+      const params = { date_debut: startDate, date_fin: endDate };
 
       const blob = await fetcher<Blob>("bois/registre", {
-        params,
+        searchParams: params,
         accept: "blob",
       });
 
@@ -82,8 +51,55 @@
   }
 </script>
 
-<MaterialButton
-  icon="assignment"
-  title="Extraire registre d'affrètement"
-  on:click={afficherChoixDates}
-/>
+<div class="bouton-registre hidden lg:grid">
+  <LucideButton
+    icon={ScrollTextIcon}
+    title="Extraire le registre d'affrètement"
+    on:click={() => (showModal = true)}
+  />
+</div>
+
+<Modal
+  title="Extraire le registre d'affrètement"
+  bind:open={showModal}
+  outsideclose
+  autoclose
+  dismissable={false}
+  size="xs"
+>
+  <div>
+    <Label for="registry-start-date">Date début :</Label>
+    <Input type="date" id="registry-start-date" bind:value={startDate} />
+  </div>
+  <div>
+    <Label for="registry-end-date">Date fin :</Label>
+    <Input type="date" id="registry-end-date" bind:value={endDate} />
+  </div>
+  <div class="text-center">
+    <Button on:click={() => extractRegistry(startDate, endDate)}
+      >Extraire</Button
+    >
+    <Button on:click={() => (showModal = false)} color="dark">Annuler</Button>
+  </div>
+</Modal>
+
+<style>
+  .bouton-registre {
+    --size: 50px;
+
+    place-items: center;
+    position: fixed;
+    right: 20px;
+    bottom: calc(var(--footer-height) + 70px);
+    width: var(--size);
+    height: var(--size);
+    z-index: 3;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle at center,
+      white 0,
+      white 50%,
+      transparent 100%
+    );
+  }
+</style>

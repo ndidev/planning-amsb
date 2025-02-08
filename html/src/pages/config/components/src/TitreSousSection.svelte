@@ -12,6 +12,9 @@
   ```
  -->
 <script lang="ts">
+  import { Heading } from "flowbite-svelte";
+  import { PlusIcon } from "lucide-svelte";
+
   /**
    * Titre de la sous-section.
    */
@@ -23,30 +26,19 @@
   export let fonctionAjout: Function = undefined;
 </script>
 
-<h3>
-  {titre}
+<div class="border-b-[1px] border-gray-500">
+  <Heading tag="h3" class="inline">{titre}</Heading>
 
   {#if fonctionAjout}
-    <button title="Ajouter une ligne" on:click={() => fonctionAjout()}>
+    <button
+      title="Ajouter une ligne"
+      class="text-base font-normal bg-transparent ml-2 border-none cursor-pointer"
+      on:click={() => fonctionAjout()}
+    >
       Ajouter une ligne
-      <i class="material-symbols-outlined" title="Ajouter une ligne">add</i>
+      <i class="icon align-middle" title="Ajouter une ligne"
+        ><PlusIcon class="inline" /></i
+      >
     </button>
   {/if}
-</h3>
-
-<style>
-  h3 {
-    margin: 20px 10% 5px 10%;
-    color: #333;
-    border-bottom: 1px solid #666;
-  }
-
-  button {
-    font-size: 1rem;
-    font-weight: normal;
-    background-color: transparent;
-    margin-left: 1%;
-    border: none;
-    cursor: pointer;
-  }
-</style>
+</div>

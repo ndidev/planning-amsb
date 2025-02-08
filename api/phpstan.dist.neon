@@ -1,0 +1,9 @@
+parameters:
+	level: max
+	paths:
+		- public
+		- src
+		- tests
+		- ./bootstrap.php
+		- ./envoi_pdf_auto.php
+	treatPhpDocTypesAsCertain: false

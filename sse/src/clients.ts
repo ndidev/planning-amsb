@@ -4,7 +4,7 @@ import { authenticate } from "./auth";
 import { connections } from "./stores";
 import type { Connection } from "../types";
 
-const CLIENTS_PORT = parseInt(env["CLIENTS_PORT"] as string);
+const CLIENTS_PORT = parseInt(env["SSE_CLIENTS_PORT"] as string);
 
 /**
  * Serveur SSE.

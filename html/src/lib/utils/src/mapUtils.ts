@@ -26,14 +26,15 @@ export function mapify<T extends { id: number | string }>(
   json: string | T[]
 ): Map<T["id"], T> {
   try {
-    const obj: T[] = typeof json === "string" ? JSON.parse(json) : json;
-    const objWithIds: Iterable<[T["id"], T]> = obj.map((item) => [
+    const objects: T[] = typeof json === "string" ? JSON.parse(json) : json;
+
+    const objectsWithIds: Iterable<[T["id"], T]> = objects.map((item) => [
       item.id,
       item,
     ]);
-    return new Map(objWithIds);
+
+    return new Map(objectsWithIds);
   } catch (error) {
-    console.error(error);
-    console.debug("error", typeof json, json);
+    console.error(error, typeof json, json);
   }
 }

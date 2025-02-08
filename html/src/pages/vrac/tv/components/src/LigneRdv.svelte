@@ -9,115 +9,72 @@
   ```
  -->
 <script lang="ts">
+  import { PackageIcon } from "lucide-svelte";
+
   import { tiers, vracProduits } from "@app/stores";
-  import type { RdvVrac, ProduitVrac, QualiteVrac, Tiers } from "@app/types";
+  import type { RdvVrac } from "@app/types";
 
   export let rdv: RdvVrac;
 
-  const tiersVierge: Partial<Tiers> = {
-    nom_court: "",
-  };
+  $: client = $tiers?.get(rdv.client);
 
-  const produitVierge: Partial<ProduitVrac> = {
-    nom: "",
-    couleur: "#000000",
-    qualites: [],
-  };
+  $: transporteur = $tiers?.get(rdv.transporteur);
 
-  const qualiteVierge: Partial<QualiteVrac> = {
-    nom: "",
-    couleur: "#000000",
-  };
+  $: produit = $vracProduits?.get(rdv.produit);
 
-  $: client = $tiers?.get(rdv.client) || { ...tiersVierge };
-
-  $: transporteur = $tiers?.get(rdv.transporteur) || { ...tiersVierge };
-
-  $: produit = $vracProduits?.get(rdv.produit) || { ...produitVierge };
-
-  $: qualite = produit.qualites.find(
-    (qualite) => qualite.id === rdv.qualite
-  ) || { ...qualiteVierge };
+  $: qualite = produit?.qualites.find((qualite) => qualite.id === rdv.qualite);
 </script>
 
-<div class="rdv pure-g">
-  <div class="produit-qualite pure-u-lg-4-24 pure-u-12-24">
-    <span class="produit" style:color={produit.couleur}>{produit.nom}</span>
+<div class="grid grid-cols-[16%_4%_4%_8%_29%_8%_16%] gap-2 px-1 py-2 text-xl">
+  <!-- Produit + Qualité -->
+  <div class="font-bold">
+    <span style:color={produit?.couleur || "#000000"}>{produit?.nom || ""}</span
+    >
     {#if rdv.qualite}
-      <span class="qualite" style:color={qualite.couleur}>{qualite.nom}</span>
-    {/if}
-  </div>
-
-  <div class="heure pure-u-lg-1-24 pure-u-4-24">{rdv.heure ?? ""}</div>
-
-  <div class="commande_prete pure-u-1 pure-u-lg-1-24" style:text-align="right">
-    {#if rdv.commande_prete}
-      <span class="material-symbols-outlined" title="Commande prête"
-        >package_2</span
+      <span style:color={qualite?.couleur || "#000000"}
+        >{qualite?.nom || ""}</span
       >
     {/if}
   </div>
 
-  <div
-    class="quantite-unite pure-u-lg-2-24 pure-u-6-24"
-    style:color={rdv.max ? "red" : "initial"}
-  >
-    <span class="quantite">{rdv.quantite}</span>
+  <!-- Heure -->
+  <div class="font-bold text-[#d91ffa]">
+    {rdv.heure ?? ""}
+  </div>
+
+  <!-- Commande prête -->
+  <div class="text-center">
+    {#if rdv.commande_prete}
+      <PackageIcon />
+    {/if}
+  </div>
+
+  <!-- Quantité + unité + max -->
+  <div style:color={rdv.max ? "red" : "initial"}>
+    <span class="font-bold">{rdv.quantite}</span>
     <span class="unite">{produit.unite}</span>
     <span class="max">{rdv.max ? "max" : ""}</span>
   </div>
 
-  <div class="client pure-u-lg-7-24 pure-u-1">
-    {client.nom_court}
-    {client.ville}
-  </div>
-  <div class="transporteur pure-u-lg-3-24 pure-u-1">
-    {transporteur.nom_court}
+  <!-- Client -->
+  <div>
+    {client?.nom_court || ""}
+    {client?.ville || ""}
   </div>
 
-  <div class="num_commande pure-u-lg-3-24 pure-u-12-24">{rdv.num_commande}</div>
-
-  <div class="pure-u-lg-6-24">
-    <!-- Espacement -->
+  <!-- Transporteur -->
+  <div class="font-bold">
+    {transporteur?.nom_court || ""}
   </div>
-  <div class="commentaire pure-u-lg-17-24 pure-u-1">
-    {@html rdv.commentaire.replace(/(?:\r\n|\r|\n)/g, "<br>")}
+
+  <!-- Numéro de commande -->
+  <div>{rdv.num_commande}</div>
+
+  <!-- Espacement avant commentaire -->
+  <div class="col-span-3"></div>
+
+  <!-- Commentaire -->
+  <div class="col-span-4">
+    {@html rdv.commentaire_public.replace(/\r\n|\r|\n/g, "<br/>")}
   </div>
 </div>
-
-<style>
-  .rdv {
-    font-size: 1.3em;
-    padding: 8px 0 8px 5px;
-    border-bottom: 1px solid #999;
-  }
-
-  .rdv:last-child {
-    border-bottom: none;
-  }
-
-  .heure {
-    font-weight: bold;
-    color: #d91ffa;
-  }
-
-  .produit-qualite {
-    font-weight: bold;
-  }
-
-  .quantite {
-    font-weight: bold;
-  }
-
-  .transporteur {
-    font-weight: bold;
-  }
-
-  .quantite-unite,
-  .client,
-  .transporteur,
-  .num_commande,
-  .commentaire {
-    margin-left: 2%;
-  }
-</style>

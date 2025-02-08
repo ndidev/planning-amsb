@@ -1,68 +1,79 @@
 <!-- routify:options title="Planning AMSB - Consignation" -->
 <script lang="ts">
-  import { onDestroy, getContext, setContext } from "svelte";
-  import { params } from "@roxi/routify";
+  import { onDestroy } from "svelte";
 
   import {
     BandeauInfo,
     CoteCesson,
     Chargement,
-    ConnexionSSE,
+    SseConnection,
   } from "@app/components";
-  import { LigneEscale } from "./components";
+  import { LigneEscale, FilterModal, filter } from "./components";
 
-  import type { Stores } from "@app/types";
+  import { consignationEscales, tiers, configBandeauInfo } from "@app/stores";
 
-  const { consignationEscales } = getContext<Stores>("stores");
+  import type { EscaleConsignation } from "@app/types";
 
-  const archives = "archives" in $params;
+  let escales: EscaleConsignation[];
 
-  setContext("archives", archives);
+  let callsReady = consignationEscales.getReadyState();
 
-  if (archives) {
-    consignationEscales.setParams({ archives: "true" });
-  } else {
-    consignationEscales.setParams({});
-  }
+  const unsubscribeFilter = filter.subscribe((value) => {
+    const params = value.toSearchParams();
+    consignationEscales.setSearchParams(params);
 
-  let escales: typeof $consignationEscales;
+    callsReady = consignationEscales.getReadyState();
+  });
 
   const unsubscribeEscales = consignationEscales.subscribe((value) => {
-    escales = value;
+    if (!value) return;
+
+    escales = [...value.values()].sort((a, b) => {
+      return (
+        (a.eta_date ?? "9").localeCompare(b.eta_date ?? "9") ||
+        a.eta_heure.localeCompare(b.eta_heure) ||
+        (a.etb_date ?? "9").localeCompare(b.etb_date ?? "9") ||
+        a.etb_heure.localeCompare(b.etb_heure)
+      );
+    });
   });
 
   onDestroy(() => {
+    unsubscribeFilter();
     unsubscribeEscales();
   });
 </script>
 
-<!-- routify:options query-params-is-page -->
 <!-- routify:options guard="consignation" -->
 
-<ConnexionSSE
+<SseConnection
   subscriptions={[
-    "consignation/escales",
-    "tiers",
-    "config/bandeau-info",
+    consignationEscales.endpoint,
+    tiers.endpoint,
+    configBandeauInfo.endpoint,
     "config/cotes",
   ]}
 />
 
-<CoteCesson />
-<BandeauInfo module="consignation" pc />
+<div class="sticky top-0 z-[1] ml-16 lg:ml-24">
+  <CoteCesson />
+  <BandeauInfo module="consignation" pc />
+</div>
 
-<main>
-  {#if escales}
-    {#each [...escales.values()] as escale (escale.id)}
-      <LigneEscale {escale} />
-    {/each}
-  {:else}
+<FilterModal />
+
+<main class="w-full flex-auto">
+  {#await callsReady}
     <Chargement />
-  {/if}
+  {:then}
+    <div class="divide-y">
+      {#each escales as escale (escale.id)}
+        <LigneEscale {escale} />
+      {:else}
+        <div class="p-4 text-center">Aucune escale trouvée.</div>
+      {/each}
+    </div>
+  {:catch error}
+    <div class="p-4 text-center text-red-500">Erreur de chargement</div>
+  {/await}
 </main>
-
-<style>
-  main {
-    margin-bottom: 2rem;
-  }
-</style>

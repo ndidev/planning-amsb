@@ -2,24 +2,28 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
 
+  import {
+    Label,
+    Input,
+    Helper,
+    Accordion,
+    AccordionItem,
+  } from "flowbite-svelte";
   import Notiflix from "notiflix";
 
-  import { BoutonAction } from "@app/components";
+  import { PageHeading, BoutonAction } from "@app/components";
 
   import { currentUser, authInfo } from "@app/stores";
 
   import { fetcher } from "@app/utils";
   import { User, type UserInfo } from "@app/auth";
 
-  let validerButton: BoutonAction;
-
-  /**
-   * Longueur minimum du mot de passe.
-   */
-  const { LONGUEUR_MINI_PASSWORD } = $authInfo;
+  let submitButton: BoutonAction;
 
   let password: string = "";
   let passwordConfirm: string = "";
+  let passwordIsValid: boolean = true;
+  let passwordConfirmIsValid: boolean = true;
   let passwordMessage: string = "";
   let passwordConfirmMessage: string = "";
 
@@ -41,6 +45,8 @@
     // Réinitialisation des messages à chaque saisie
     passwordMessage = "";
     passwordConfirmMessage = "";
+    passwordIsValid = true;
+    passwordConfirmIsValid = true;
 
     /**
      * Mot de passe supérieur à la longueur minimum
@@ -48,13 +54,18 @@
      * Champs mdp et confirmation identiques
      */
     const conditions = {
-      longueur: password.length >= LONGUEUR_MINI_PASSWORD,
+      longueur: password.length >= $authInfo.LONGUEUR_MINI_PASSWORD,
       differentIdentifiant: password !== $currentUser.login,
       identiques: password === passwordConfirm,
     };
 
     if (password.length > 0 || passwordConfirm.length > 0) {
+      passwordIsValid = false;
       afficherConditions(conditions);
+    }
+
+    if (password !== passwordConfirm) {
+      passwordConfirmIsValid = false;
     }
 
     let conditionsValides = true;
@@ -64,11 +75,12 @@
       }
     }
 
-    if (password.length === 0 && passwordConfirm.length === 0)
+    if (password.length === 0 && passwordConfirm.length === 0) {
       conditionsValides = true;
+    }
 
-    if (validerButton) {
-      validerButton.$set({ disabled: !conditionsValides });
+    if (submitButton) {
+      submitButton.$set({ disabled: !conditionsValides });
     }
   }
 
@@ -84,17 +96,17 @@
   ) {
     // Longueur
     passwordMessage = longueur
-      ? `✔ Le mot de passe fait ${LONGUEUR_MINI_PASSWORD} caractères ou plus`
-      : `❌ Le mot de passe doit faire ${LONGUEUR_MINI_PASSWORD} caractères au minimum`;
+      ? `✅ Le mot de passe fait ${$authInfo.LONGUEUR_MINI_PASSWORD} caractères ou plus`
+      : `❌ Le mot de passe doit faire ${$authInfo.LONGUEUR_MINI_PASSWORD} caractères au minimum`;
 
     // Différent de l'identifiant
     passwordMessage = differentIdentifiant
       ? passwordMessage
-      : `🚫 Le mot de passe ne peut pas être identique à l'identifiant (${$currentUser.login})`;
+      : `❌ Le mot de passe ne peut pas être identique à l'identifiant (${$currentUser.login})`;
 
     // Identiques
     passwordConfirmMessage = identiques
-      ? "✔ Les mots de passe sont identiques"
+      ? "✅ Les mots de passe sont identiques"
       : "❌ Les mots de passe ne sont pas identiques";
   }
 
@@ -102,7 +114,7 @@
    * Modifier les informations utilisateur.
    */
   async function submitForm() {
-    validerButton.$set({ block: true });
+    submitButton.$set({ block: true });
 
     try {
       const user: UserInfo = await fetcher("user", {
@@ -124,7 +136,7 @@
     } catch (error) {
       Notiflix.Notify.failure(error.message);
     } finally {
-      validerButton.$set({ block: false });
+      submitButton.$set({ block: false });
     }
   }
 
@@ -139,80 +151,85 @@
   onDestroy(unsubscribeCurrentUser);
 </script>
 
-<main class="formulaire">
-  <h1>Utilisateur</h1>
+<main class="mx-auto w-11/12 lg:w-7/12">
+  <PageHeading>Utilisateur</PageHeading>
 
-  <form class="pure-form pure-form-aligned">
+  <form>
     <!-- Nom -->
-    <div class="pure-control-group">
-      <label for="nom">Nom</label>
-      <input
+    <div class="mb-4">
+      <Label for="nom">Nom</Label>
+      <Input
         type="text"
         id="nom"
         name="nom"
         placeholder="Nom"
         bind:value={nom}
-        maxlength="255"
+        maxlength={255}
         required
       />
     </div>
 
     <!-- Identifiant -->
-    <div class="pure-control-group">
-      <label for="login">Identifiant</label>
-      <input
+    <div class="mb-4">
+      <Label for="login"
+        >Identifiant (demander à un administrateur pour le modifier)</Label
+      >
+      <Input
         type="text"
         id="login"
         name="login"
         autocomplete="off"
         value={$currentUser.login}
-        readonly
+        disabled
       />
     </div>
 
     <!-- Mot de passe -->
-    <details>
-      <summary>Modifier le mot de passe</summary>
-      <div class="pure-control-group">
-        <label for="password">Mot de passe</label>
-        <input
-          type="password"
-          id="password"
-          name="password"
-          placeholder="Mot de passe"
-          autocomplete="new-password"
-          bind:value={password}
-          minlength={LONGUEUR_MINI_PASSWORD}
-        />
-        <span class="pure-form-message-inline">
-          {passwordMessage}
-        </span>
-      </div>
+    <Accordion class="mb-4">
+      <AccordionItem>
+        <span slot="header">Modifier le mot de passe</span>
 
-      <!-- Confirmation mot de passe -->
-      <div class="pure-control-group">
-        <label for="passwordConfirm">Confirmation mot de passe</label>
-        <input
-          type="password"
-          id="passwordConfirm"
-          placeholder="Retaper le mot de passe"
-          autocomplete="new-password"
-          bind:value={passwordConfirm}
-        />
-        <span class="pure-form-message-inline">
-          {passwordConfirmMessage}
-        </span>
-      </div>
-    </details>
+        <div class="mb-4">
+          <Label for="password">Mot de passe</Label>
+          <Input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Mot de passe"
+            autocomplete="new-password"
+            bind:value={password}
+            minlength={$authInfo.LONGUEUR_MINI_PASSWORD}
+          />
+          <Helper class="mt-2" color={passwordIsValid ? "green" : "red"}>
+            {passwordMessage}
+          </Helper>
+        </div>
+
+        <!-- Confirmation mot de passe -->
+        <div class="mb-4">
+          <Label for="passwordConfirm">Confirmation mot de passe</Label>
+          <Input
+            type="password"
+            id="passwordConfirm"
+            placeholder="Retaper le mot de passe"
+            autocomplete="new-password"
+            bind:value={passwordConfirm}
+          />
+          <Helper class="mt-2" color={passwordConfirmIsValid ? "green" : "red"}>
+            {passwordConfirmMessage}
+          </Helper>
+        </div>
+      </AccordionItem>
+    </Accordion>
 
     <!-- Validation/Annulation -->
-    <div class="boutons">
+    <div class="text-center">
       <!-- Bouton "Valider" -->
       <BoutonAction
         preset="ajouter"
         type="submit"
         on:click={submitForm}
-        bind:this={validerButton}
+        bind:this={submitButton}
       >
         Valider
       </BoutonAction>
@@ -226,11 +243,3 @@
     </div>
   </form>
 </main>
-
-<style>
-  details > summary {
-    margin-top: 10px;
-    margin-left: 50px;
-    padding: 10px;
-  }
-</style>

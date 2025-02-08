@@ -9,25 +9,30 @@
   ```
  -->
 <script lang="ts">
-  import { LigneMarees, TitreSousSection } from "../../";
+  import { Fileupload, Button, Spinner } from "flowbite-svelte";
+
+  import { LigneMarees, ConfigLine, TitreSousSection } from "../../";
   import { Chargement } from "@app/components";
 
   import { marees, mareesAnnees as annees } from "@app/stores";
 
   import Notiflix from "notiflix";
 
-  import { fetcher } from "@app/utils";
+  let selectedFiles: FileList | undefined;
+  let uploadButtonDisabled = true;
+  let uploadSubmitting = false;
 
-  let fileInput: HTMLInputElement;
-  let ajouterBtn: HTMLButtonElement;
+  $: uploadButtonDisabled = !selectedFiles;
 
   /**
    * Ajouter des marées.
    */
-  async function ajouterMarees() {
-    ajouterBtn.disabled = true;
+  async function uploadTides() {
+    if (!selectedFiles) {
+      return;
+    }
 
-    const [csv] = fileInput.files;
+    const csv = selectedFiles[0];
 
     if (!csv) {
       Notiflix.Notify.failure("Veuillez sélectionner un fichier");
@@ -38,6 +43,9 @@
     formData.append("csv", csv);
 
     try {
+      uploadButtonDisabled = true;
+      uploadSubmitting = true;
+
       await marees().create(formData);
 
       Notiflix.Notify.success("Les marées ont été ajoutées");
@@ -45,59 +53,49 @@
       Notiflix.Notify.failure(erreur.message);
       console.error(erreur);
     } finally {
-      ajouterBtn.disabled = false;
+      selectedFiles = undefined;
+      uploadButtonDisabled = false;
+      uploadSubmitting = false;
     }
   }
 </script>
 
-<div>
+<div class="mb-4">
   <TitreSousSection titre="Années existantes" />
   {#if !$annees}
     <Chargement />
   {:else}
-    <ul id="marees-existantes">
+    <div id="marees-existantes">
       {#each [...$annees] as annee (annee)}
         <LigneMarees {annee} />
       {:else}
-        <li class="ligne-vide">Aucune donnée de marées trouvées</li>
+        <ConfigLine>Aucune donnée de marées trouvées</ConfigLine>
       {/each}
-    </ul>
+    </div>
   {/if}
 </div>
 
-<div>
+<div class="mb-4">
   <TitreSousSection titre="Ajouter des marées" />
   <div class="ajouter-marees">
-    <div class="ligne-explicative">
+    <div class="my-3">
       Intégrer l'onglet "SQL CSV" du fichier des marées (Z:\Commun\TE Marées\{`{année}`}),
       enregistré au format ".csv"
     </div>
     <div>
-      <input
-        type="file"
-        accept=".csv,text/csv"
-        bind:this={fileInput}
-        on:change={() => (ajouterBtn.disabled = false)}
-      />
-      <button
-        class="pure-button pure-button-primary"
-        on:click|preventDefault={ajouterMarees}
-        bind:this={ajouterBtn}
-        disabled
+      <Fileupload accept=".csv,text/csv" bind:files={selectedFiles} clearable />
+      <Button
+        color="primary"
+        class="mt-3"
+        on:click={uploadTides}
+        disabled={uploadButtonDisabled}
       >
-        Ajouter les marées
-      </button>
+        {#if uploadSubmitting}
+          <Spinner size={5} class="me-4" /> Chargement...
+        {:else}
+          Ajouter les marées
+        {/if}
+      </Button>
     </div>
   </div>
 </div>
-
-<style>
-  .ajouter-marees {
-    margin-left: 10%;
-  }
-
-  .ligne-explicative {
-    margin-top: 10px;
-    margin-bottom: 10px;
-  }
-</style>

@@ -1,53 +1,33 @@
 <!-- routify:options title="Planning AMSB - RDV vrac" -->
 <script lang="ts">
-  import { tick, getContext } from "svelte";
+  import { tick } from "svelte";
   import { params, goto, redirect } from "@roxi/routify";
 
+  import { Label, Input, Textarea, Toggle, Select } from "flowbite-svelte";
+  import { CircleHelpIcon } from "lucide-svelte";
   import Notiflix from "notiflix";
 
-  import { Svelecte, Chargement, BoutonAction } from "@app/components";
+  import {
+    PageHeading,
+    Svelecte,
+    Chargement,
+    BoutonAction,
+    LucideButton,
+  } from "@app/components";
   import {
     notiflixOptions,
     validerFormulaire,
     preventFormSubmitOnEnterKeydown,
-    locale,
   } from "@app/utils";
 
-  import type { Stores, RdvVrac, ProduitVrac } from "@app/types";
+  import { vracRdvs, vracProduits } from "@app/stores";
 
-  const { vracRdvs, vracProduits } = getContext<Stores>("stores");
+  import type { RdvVrac } from "@app/types";
 
-  let formulaire: HTMLFormElement;
-  let boutonAjouter: BoutonAction;
-  let boutonModifier: BoutonAction;
-  let boutonSupprimer: BoutonAction;
-
-  const nouveauRdv: RdvVrac = {
-    id: null,
-    date_rdv: new Date()
-      .toLocaleDateString(locale)
-      .split("/")
-      .reverse()
-      .join("-"),
-    heure: "",
-    produit: null,
-    qualite: null,
-    quantite: 0,
-    max: false,
-    commande_prete: false,
-    fournisseur: null,
-    client: null,
-    transporteur: null,
-    num_commande: "",
-    commentaire: "",
-  };
-
-  const produitVierge: Partial<ProduitVrac> = {
-    id: null,
-    nom: "",
-    unite: "",
-    qualites: [],
-  };
+  let form: HTMLFormElement;
+  let createButton: BoutonAction;
+  let updateButton: BoutonAction;
+  let deleteButton: BoutonAction;
 
   /**
    * Identifiant du RDV.
@@ -55,22 +35,34 @@
   let id: RdvVrac["id"] = parseInt($params.id);
 
   const isNew = $params.id === "new";
-  const copie = parseInt($params.copie);
+  const copy = parseInt($params.copie);
+  const archives = "archives" in $params;
 
-  let rdv: RdvVrac = isNew && !copie ? { ...nouveauRdv } : null;
+  let appointment: RdvVrac =
+    isNew && !copy ? { ...vracRdvs.getTemplate() } : null;
 
   (async () => {
     try {
-      if (id || copie) {
-        rdv = structuredClone(await vracRdvs.get(id || copie));
-        if (!rdv) throw new Error();
+      if (id || copy) {
+        appointment = structuredClone(await vracRdvs.get(id || copy));
+        if (!appointment) throw new Error();
+
+        if (copy) {
+          appointment.id = null;
+          appointment.archive = false;
+          appointment.date_rdv = null;
+          appointment.heure = null;
+          appointment.commande_prete = false;
+          appointment.dispatch = [];
+        }
       }
     } catch (error) {
       $redirect("./new");
     }
   })();
 
-  $: produit = $vracProduits?.get(rdv?.produit) || produitVierge;
+  $: product =
+    $vracProduits?.get(appointment?.produit) || vracProduits.getTemplate();
 
   /**
    * Aide à la saisie.
@@ -80,54 +72,56 @@
    */
   async function selectionnerPremiereQualite() {
     await tick(); // Attendre la mise à jour du composant après le changement de la liste déroulante
-    rdv.qualite = produit.qualites[0]?.id || null;
+    appointment.qualite = product.qualites[0]?.id || null;
   }
 
   /**
    * Créer le RDV.
    */
-  async function ajouterRdv() {
-    if (!validerFormulaire(formulaire)) return;
+  async function createAppointment() {
+    if (!validerFormulaire(form)) return;
 
-    boutonAjouter.$set({ disabled: true });
+    createButton.$set({ disabled: true });
 
     try {
-      await vracRdvs.create(rdv);
+      await vracRdvs.create(appointment);
 
       Notiflix.Notify.success("Le RDV a été ajouté");
-      $goto("./");
+
+      $goto(`./${archives ? "?archives" : ""}`);
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
-      boutonAjouter.$set({ disabled: false });
+      createButton.$set({ disabled: false });
     }
   }
 
   /**
    * Modifier le RDV.
    */
-  async function modifierRdv() {
-    if (!validerFormulaire(formulaire)) return;
+  async function updateAppointment() {
+    if (!validerFormulaire(form)) return;
 
-    boutonModifier.$set({ disabled: true });
+    updateButton.$set({ disabled: true });
 
     try {
-      await vracRdvs.update(rdv);
+      await vracRdvs.update(appointment);
 
       Notiflix.Notify.success("Le RDV a été modifié");
-      $goto("./");
+
+      $goto(`./${archives ? "?archives" : ""}`);
     } catch (erreur) {
       Notiflix.Notify.failure(erreur.message);
-      boutonModifier.$set({ disabled: false });
+      updateButton.$set({ disabled: false });
     }
   }
 
   /**
    * Supprimer le RDV.
    */
-  function supprimerRdv() {
+  function deleteAppointment() {
     if (!id) return;
 
-    boutonSupprimer.$set({ disabled: true });
+    deleteButton.$set({ disabled: true });
 
     // Demande de confirmation
     Notiflix.Confirm.show(
@@ -140,42 +134,72 @@
           await vracRdvs.delete(id);
 
           Notiflix.Notify.success("Le RDV a été supprimé");
-          $goto("./");
+
+          $goto(`./${archives ? "?archives" : ""}`);
         } catch (erreur) {
           Notiflix.Notify.failure(erreur.message);
-          boutonSupprimer.$set({ disabled: false });
+          deleteButton.$set({ disabled: false });
         }
       },
-      () => boutonSupprimer.$set({ disabled: false }),
+      () => deleteButton.$set({ disabled: false }),
       notiflixOptions.themes.red
     );
+  }
+
+  /**
+   * Afficher les explications pour le commentaire privé.
+   */
+  function showPrivateCommentsHelp() {
+    Notiflix.Report.info(
+      "Commentaire privé",
+      "Ce commentaire ne sera pas visible sur l'écran TV.",
+      "Fermer"
+    );
+  }
+
+  function addDispatchLine() {
+    appointment.dispatch = [
+      ...appointment.dispatch,
+      {
+        staffId: null,
+        date: "",
+        remarks: "",
+      },
+    ];
+  }
+
+  function deleteDispatchLine(index: number) {
+    appointment.dispatch.splice(index, 1);
+
+    appointment.dispatch = appointment.dispatch;
   }
 </script>
 
 <!-- routify:options param-is-page -->
 <!-- routify:options guard="vrac/edit" -->
 
-<main class="formulaire">
-  <h1>Rendez-vous</h1>
+<main class="mx-auto w-10/12 lg:w-1/3">
+  <PageHeading>Rendez-vous</PageHeading>
 
-  {#if !rdv}
+  {#if !appointment}
     <Chargement />
   {:else}
     <form
-      class="pure-form pure-form-aligned"
-      bind:this={formulaire}
+      class="flex flex-col gap-3 mb-4"
+      bind:this={form}
       use:preventFormSubmitOnEnterKeydown
     >
       <!-- Produit -->
-      <div class="pure-control-group form-control">
-        <label for="produit">Produit</label>
-        <select
+      <div>
+        <Label for="produit">Produit</Label>
+        <Select
           id="produit"
           name="produit"
           data-nom="Produit"
-          bind:value={rdv.produit}
+          bind:value={appointment.produit}
           on:change={selectionnerPremiereQualite}
           required
+          placeholder=""
         >
           <option value="">Sélectionnez</option>
           {#if $vracProduits}
@@ -183,176 +207,260 @@
               <option value={_produit.id}>{_produit.nom}</option>
             {/each}
           {/if}
-        </select>
+        </Select>
       </div>
 
       <!-- Qualité -->
-      <div class="pure-control-group form-control">
-        <label for="qualite">Qualité</label>
-        <select
+      <div>
+        <Label for="qualite">Qualité</Label>
+        <Select
           id="qualite"
           name="qualite"
           data-nom="Qualité"
-          bind:value={rdv.qualite}
-          disabled={produit.qualites.length === 0}
+          bind:value={appointment.qualite}
+          placeholder=""
+          disabled={product.qualites.length === 0}
         >
-          {#each produit.qualites as qualite}
+          {#each product.qualites as qualite}
             <option value={qualite.id}>{qualite.nom}</option>
           {/each}
-        </select>
+        </Select>
       </div>
 
       <!-- Date -->
-      <div class="pure-control-group form-control">
-        <label for="date_rdv">Date (jj/mm/aaaa)</label>
-        <input
+      <div>
+        <Label for="date_rdv">Date (jj/mm/aaaa)</Label>
+        <Input
           type="date"
           name="date_rdv"
           id="date_rdv"
           data-nom="Date"
-          bind:value={rdv.date_rdv}
+          bind:value={appointment.date_rdv}
           required
         />
       </div>
 
       <!-- Heure -->
-      <div class="pure-control-group form-control">
-        <label for="heure">Heure RDV (hh:mm)</label>
-        <input
+      <div>
+        <Label for="heure">Heure RDV (hh:mm)</Label>
+        <Input
           type="time"
           name="heure"
           id="heure"
           step="60"
           data-nom="Heure"
-          bind:value={rdv.heure}
+          bind:value={appointment.heure}
         />
       </div>
 
-      <!-- Quantité + unité -->
-      <div class="pure-control-group form-control">
-        <label for="quantite">
+      <!-- Quantité -->
+      <div>
+        <Label for="quantite">
           Quantité
-          {#if produit.unite}
-            (<span id="unite">{produit.unite}</span>)
+          {#if product.unite}
+            (<span id="unite">{product.unite}</span>)
           {/if}
-        </label>
-        <input
+        </Label>
+        <Input
           type="number"
           min="0"
           name="quantite"
           id="quantite"
           data-nom="Quantité"
-          bind:value={rdv.quantite}
+          bind:value={appointment.quantite}
           required
         />
-        <span class="pure-form-message-inline">
-          <label class="pure-checkbox"
-            ><input
-              type="checkbox"
-              name="max"
-              id="max"
-              bind:checked={rdv.max}
-            /> Max</label
-          >
-        </span>
+      </div>
+
+      <!-- Max -->
+      <div>
+        <Toggle name="max" bind:checked={appointment.max}
+          >Max (la quantité ne doit pas être dépassée)</Toggle
+        >
       </div>
 
       <!-- Commande prête -->
-      <div class="pure-control-group">
-        <label for="commande_prete">Commande prête</label>
-        <input
-          type="checkbox"
-          name="commande_prete"
-          id="commande_prete"
-          bind:checked={rdv.commande_prete}
-        />
+      <div>
+        <Toggle name="commande_prete" bind:checked={appointment.commande_prete}
+          >Commande prête</Toggle
+        >
       </div>
 
       <!-- Fournisseur -->
-      <div class="pure-control-group">
-        <label for="fournisseur">Fournisseur</label>
+      <div>
+        <Label for="fournisseur">Fournisseur</Label>
         <Svelecte
           inputId="fournisseur"
           type="tiers"
           role="vrac_fournisseur"
           name="Fournisseur"
-          bind:value={rdv.fournisseur}
+          bind:value={appointment.fournisseur}
           required
         />
       </div>
 
       <!-- Client -->
-      <div class="pure-control-group">
-        <label for="client">Client</label>
+      <div>
+        <Label for="client">Client</Label>
         <Svelecte
           inputId="client"
           type="tiers"
           role="vrac_client"
           name="Client"
-          bind:value={rdv.client}
+          bind:value={appointment.client}
           required
         />
       </div>
 
       <!-- Transporteur -->
-      <div class="pure-control-group">
-        <label for="transporteur">Transporteur</label>
+      <div>
+        <Label for="transporteur">Transporteur</Label>
         <Svelecte
           inputId="transporteur"
           type="tiers"
           role="vrac_transporteur"
           name="Transporteur"
-          bind:value={rdv.transporteur}
+          bind:value={appointment.transporteur}
         />
       </div>
 
       <!-- Numéro commande -->
-      <div class="pure-control-group form-control">
-        <label for="num_commande">Numéro commande</label>
-        <input
+      <div>
+        <Label for="num_commande">Numéro commande</Label>
+        <Input
           type="text"
-          name="num_commande"
           id="num_commande"
-          bind:value={rdv.num_commande}
+          bind:value={appointment.num_commande}
           data-nom="Numéro commande"
         />
       </div>
 
-      <!-- Commentaire -->
-      <div class="pure-control-group form-control">
-        <label for="commentaire">Commentaire</label>
-        <textarea
-          class="rdv_commentaire"
-          name="commentaire"
-          id="commentaire"
-          bind:value={rdv.commentaire}
-          rows="3"
-          cols="30"
+      <!-- Commentaire public -->
+      <div>
+        <Label for="public-comments">Commentaire public</Label>
+        <Textarea
+          id="public-comments"
+          bind:value={appointment.commentaire_public}
+          rows={3}
+          cols={30}
         />
+      </div>
+
+      <!-- Commentaire privé -->
+      <div>
+        <Label for="private-comments"
+          >Commentaire privé <LucideButton
+            icon={CircleHelpIcon}
+            on:click={showPrivateCommentsHelp}
+          /></Label
+        >
+        <Textarea
+          id="private-comments"
+          bind:value={appointment.commentaire_prive}
+          rows={3}
+          cols={30}
+        />
+      </div>
+
+      <!-- Show on TV -->
+      <div>
+        <Toggle name="showOnTv" bind:checked={appointment.showOnTv}
+          >Afficher sur la TV</Toggle
+        >
+      </div>
+
+      <!-- Archive -->
+      <div>
+        <Toggle name="archive" bind:checked={appointment.archive}
+          >Archivé</Toggle
+        >
+      </div>
+
+      <!-- Dispatch -->
+      <div>
+        <div class="text-xl font-bold">
+          Dispatch
+          <LucideButton
+            preset="add"
+            title="Ajouter une ligne"
+            on:click={addDispatchLine}
+          />
+        </div>
+        <div class="divide-y">
+          {#each appointment.dispatch as dispatchItem, index}
+            <div
+              class="flex flex-col items-center gap-2 py-1 lg:flex-row lg:gap-4 lg:py-2"
+            >
+              <div class="w-full">
+                <Label for="">Personnel</Label>
+                <Svelecte
+                  type="staff"
+                  inputId="staff-{index}"
+                  bind:value={dispatchItem.staffId}
+                  placeholder="Sélectionner le personnel"
+                  required
+                />
+              </div>
+
+              <div class="w-full lg:w-min">
+                <Label for="date-{index}">Date</Label>
+                <Input
+                  type="date"
+                  id="date-{index}"
+                  name="Date"
+                  bind:value={dispatchItem.date}
+                  required
+                />
+              </div>
+
+              <div class="w-full">
+                <Label for="remarks-{index}">Remarques</Label>
+                <Input
+                  type="text"
+                  id="remarks-{index}"
+                  bind:value={dispatchItem.remarks}
+                  list="remarks"
+                />
+                <datalist id="remarks">
+                  <option value="JCB"></option>
+                  <option value="Trémie"></option>
+                  <option value="Chargeuse"></option>
+                </datalist>
+              </div>
+              <div>
+                <LucideButton
+                  preset="delete"
+                  title="Supprimer la ligne"
+                  on:click={() => deleteDispatchLine(index)}
+                />
+              </div>
+            </div>
+          {/each}
+        </div>
       </div>
     </form>
 
     <!-- Validation/Annulation/Suppression -->
-    <div class="boutons">
+    <div class="text-center">
       {#if isNew}
         <!-- Bouton "Ajouter" -->
         <BoutonAction
           preset="ajouter"
-          on:click={ajouterRdv}
-          bind:this={boutonAjouter}
+          on:click={createAppointment}
+          bind:this={createButton}
         />
       {:else}
         <!-- Bouton "Modifier" -->
         <BoutonAction
           preset="modifier"
-          on:click={modifierRdv}
-          bind:this={boutonModifier}
+          on:click={updateAppointment}
+          bind:this={updateButton}
         />
         <!-- Bouton "Supprimer" -->
         <BoutonAction
           preset="supprimer"
-          on:click={supprimerRdv}
-          bind:this={boutonSupprimer}
+          on:click={deleteAppointment}
+          bind:this={deleteButton}
         />
       {/if}
 
@@ -360,12 +468,9 @@
       <BoutonAction
         preset="annuler"
         on:click={() => {
-          $goto("./");
+          $goto(`./${archives ? "?archives" : ""}`);
         }}
       />
     </div>
   {/if}
 </main>
-
-<style>
-</style>

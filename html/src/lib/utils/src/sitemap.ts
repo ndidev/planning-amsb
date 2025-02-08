@@ -47,6 +47,12 @@ export const sitemap: Map<ModuleId, Module> = new Map([
             href: "/vrac/produits",
             devices: ["mobile", "desktop"],
           },
+          {
+            affichage: "Dispatch",
+            roleMini: UserRoles.ACCESS,
+            href: "/vrac/dispatch",
+            devices: ["mobile", "desktop"],
+          },
         ],
       },
     },
@@ -62,12 +68,6 @@ export const sitemap: Map<ModuleId, Module> = new Map([
             affichage: "Planning",
             roleMini: UserRoles.ACCESS,
             href: "/consignation/escales",
-            devices: ["mobile", "desktop"],
-          },
-          {
-            affichage: "Archives",
-            roleMini: UserRoles.ACCESS,
-            href: "/consignation/escales?archives",
             devices: ["mobile", "desktop"],
           },
           {
@@ -99,13 +99,54 @@ export const sitemap: Map<ModuleId, Module> = new Map([
             href: "/chartering/charters",
             devices: ["mobile", "desktop"],
           },
+        ],
+      },
+    },
+  ],
+  [
+    "manutention",
+    {
+      affichage: "Manutention",
+      type: TypesModules.EDIT,
+      tree: {
+        children: [
           {
-            affichage: "Archives",
+            affichage: "Rapports navires",
             roleMini: UserRoles.ACCESS,
-            href: "/chartering/charters?archives",
+            href: "/manutention/rapports-navires",
+            devices: ["desktop", "mobile"],
+          },
+          {
+            affichage: "Équipements",
+            roleMini: UserRoles.ACCESS,
+            href: "/manutention/equipements",
             devices: ["mobile", "desktop"],
           },
+          {
+            affichage: "Activités hors navires",
+            roleMini: UserRoles.ACCESS,
+            href: "/manutention/activites-hors-navires",
+            devices: ["desktop", "mobile"],
+          },
+          {
+            affichage: "Heures intérimaires",
+            roleMini: UserRoles.ACCESS,
+            href: "/manutention/heures-interimaires",
+            devices: ["desktop", "mobile"],
+          },
         ],
+      },
+    },
+  ],
+  [
+    "personnel",
+    {
+      affichage: "Personnel de manutention",
+      type: TypesModules.ACCESS,
+      tree: {
+        href: "/personnel",
+        roleMini: UserRoles.ACCESS,
+        devices: ["mobile", "desktop"],
       },
     },
   ],

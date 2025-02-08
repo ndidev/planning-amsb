@@ -1,4 +1,4 @@
-import { sitemap, fetcher } from "@app/utils";
+import { fetcher } from "@app/utils";
 import { UserRoles, AccountStatus } from "@app/auth";
 import type { Roles, ModuleId, CompteUtilisateur } from "@app/types";
 
@@ -45,14 +45,6 @@ export class User {
     this.nom = user.nom;
     this.#roles = user.roles;
     this.statut = user.statut;
-
-    // En cas de manque d'un module dans les caractéristiques de l'utilisateur
-    // le mettre à zéro par défaut
-    for (const rubrique of sitemap.keys()) {
-      if (this.#roles[rubrique] === undefined) {
-        this.#roles[rubrique] = UserRoles.NONE;
-      }
-    }
   }
 
   /**
