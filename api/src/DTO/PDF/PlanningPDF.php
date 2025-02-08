@@ -176,19 +176,19 @@ abstract class PlanningPDF extends \tFPDF
 
         $ratio = $width_px / $height_px;
 
-        define("PNG_MM_PER_INCH", 25.4);
-        define("PNG_MAX_WIDTH", 50); // Largeur maximale de l'image sur le PDF (en mm)
-        define("PNG_MAX_HEIGHT", 20); // Hauteur maximale de l'image sur le PDF (en mm)
+        $PNG_MM_PER_INCH = 25.4;
+        $PNG_MAX_WIDTH = 50; // Largeur maximale de l'image sur le PDF (en mm)
+        $PNG_MAX_HEIGHT = 20; // Hauteur maximale de l'image sur le PDF (en mm)
 
-        $original_width_mm = $width_px / $res_w * PNG_MM_PER_INCH;
-        $original_height_mm = $height_px / $res_h * PNG_MM_PER_INCH;
+        $original_width_mm = $width_px / $res_w * $PNG_MM_PER_INCH;
+        $original_height_mm = $height_px / $res_h * $PNG_MM_PER_INCH;
 
         // D'abord, réduction de la largeur (si nécessaire)
-        $pdf_width_mm = min($original_width_mm, PNG_MAX_WIDTH);
+        $pdf_width_mm = min($original_width_mm, $PNG_MAX_WIDTH);
         $pdf_height_mm = $pdf_width_mm / $ratio;
 
         // Ensuite, réduction de la hauteur (si nécessaire)
-        $pdf_height_mm = min($pdf_height_mm, PNG_MAX_HEIGHT);
+        $pdf_height_mm = min($pdf_height_mm, $PNG_MAX_HEIGHT);
         $pdf_width_mm = $pdf_height_mm * $ratio;
 
         $this->Image(LOGOS . "/" . $this->supplier->getLogoFilename(), 10, 6, $pdf_width_mm, $pdf_height_mm);
