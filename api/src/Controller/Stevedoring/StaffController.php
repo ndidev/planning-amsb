@@ -21,7 +21,7 @@ final class StaffController extends Controller
 {
     private StevedoringService $stevedoringService;
     private string $module = Module::STEVEDORING_STAFF;
-    private string $sseEventName = "stevedoring/staff";
+    private string $sseEventName = "manutention/personnel";
 
     public function __construct(
         private ?int $id = null,

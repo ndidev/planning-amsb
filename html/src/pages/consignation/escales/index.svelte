@@ -10,7 +10,7 @@
   } from "@app/components";
   import { LigneEscale, FilterModal, filter } from "./components";
 
-  import { consignationEscales } from "@app/stores";
+  import { consignationEscales, tiers, configBandeauInfo } from "@app/stores";
 
   import type { EscaleConsignation } from "@app/types";
 
@@ -48,9 +48,9 @@
 
 <SseConnection
   subscriptions={[
-    "consignation/escales",
-    "tiers",
-    "config/bandeau-info",
+    consignationEscales.endpoint,
+    tiers.endpoint,
+    configBandeauInfo.endpoint,
     "config/cotes",
   ]}
 />

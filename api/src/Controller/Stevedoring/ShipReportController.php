@@ -21,7 +21,7 @@ final class ShipReportController extends Controller
 {
     private StevedoringService $stevedoringService;
     private string $module = Module::STEVEDORING;
-    private string $sseEventName = "stevedoring/ship-report";
+    private string $sseEventName = "manutention/rapports-navires";
 
     public function __construct(
         private ?int $id = null,

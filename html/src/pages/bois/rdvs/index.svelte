@@ -14,7 +14,12 @@
     LigneRdvAttente,
   } from "./components";
 
-  import { boisRdvs, tiers } from "@app/stores";
+  import {
+    boisRdvs,
+    tiers,
+    configBandeauInfo,
+    configAjoutsRapides,
+  } from "@app/stores";
 
   import type { RdvBois, CamionsParDate } from "@app/types";
 
@@ -165,10 +170,10 @@
 
 <SseConnection
   subscriptions={[
-    "bois/rdvs",
-    "tiers",
-    "config/bandeau-info",
-    "config/ajouts-rapides",
+    boisRdvs.endpoint,
+    tiers.endpoint,
+    configBandeauInfo.endpoint,
+    configAjoutsRapides.endpoint,
   ]}
 />
 

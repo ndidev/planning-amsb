@@ -35,7 +35,7 @@
 
 <!-- routify:options guard="manutention" -->
 
-<SseConnection subscriptions={["manutention/rapports-navires"]} />
+<SseConnection subscriptions={[stevedoringShipReports.endpoint]} />
 
 <FilterModal />
 

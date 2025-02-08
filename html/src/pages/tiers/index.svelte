@@ -268,7 +268,7 @@
 
 <!-- routify:options guard="tiers" -->
 
-<SseConnection subscriptions={["tiers"]} />
+<SseConnection subscriptions={[tiers.endpoint]} />
 
 <main class="mx-auto w-11/12 lg:w-7/12">
   <PageHeading>Tiers</PageHeading>

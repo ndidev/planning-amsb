@@ -61,7 +61,7 @@
 
 <!-- routify:options guard="personnel" -->
 
-<SseConnection subscriptions={["stevedoring/staff"]} />
+<SseConnection subscriptions={[stevedoringStaff.endpoint]} />
 
 <main class="mx-auto w-10/12 lg:w-2/3">
   <PageHeading>Personnel de manutention</PageHeading>

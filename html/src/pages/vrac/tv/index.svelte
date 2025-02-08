@@ -5,7 +5,13 @@
   import { LigneDate, LigneRdv } from "./components";
   import { BandeauInfo, SseConnection } from "@app/components";
 
-  import { vracRdvs, vracProduits, currentUser } from "@app/stores";
+  import {
+    vracRdvs,
+    vracProduits,
+    tiers,
+    configBandeauInfo,
+    currentUser,
+  } from "@app/stores";
 
   import type { RdvVrac } from "@app/types";
 
@@ -89,10 +95,10 @@
 {#if $currentUser.canUseApp && $currentUser.canAccess("vrac")}
   <SseConnection
     subscriptions={[
-      "vrac/rdvs",
-      "vrac/produits",
-      "tiers",
-      "config/bandeau-info",
+      vracRdvs.endpoint,
+      vracProduits.endpoint,
+      tiers.endpoint,
+      configBandeauInfo.endpoint,
     ]}
   />
 

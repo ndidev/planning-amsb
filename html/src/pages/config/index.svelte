@@ -11,7 +11,13 @@
     Marees,
   } from "./components";
 
-  import { currentUser } from "@app/stores";
+  import {
+    currentUser,
+    configBandeauInfo,
+    configPdf,
+    configAjoutsRapides,
+    marees,
+  } from "@app/stores";
 
   import { PageHeading, SseConnection } from "@app/components";
 
@@ -67,12 +73,12 @@
 
 <SseConnection
   subscriptions={[
-    "config/bandeau-info",
-    "config/pdf",
-    "config/ajouts-rapides",
+    configBandeauInfo.endpoint,
+    configPdf.endpoint,
+    configAjoutsRapides.endpoint,
     "config/agence",
     "config/cotes",
-    "marees",
+    marees.endpoint,
   ]}
 />
 

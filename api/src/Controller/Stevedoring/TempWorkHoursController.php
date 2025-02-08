@@ -21,7 +21,7 @@ final class TempWorkHoursController extends Controller
 {
     private StevedoringService $stevedoringService;
     private string $module = Module::STEVEDORING_STAFF;
-    private string $sseEventName = "stevedoring/temp-work-hours";
+    private string $sseEventName = "manutention/heures-interimaires";
 
     public function __construct(
         private ?int $id = null,

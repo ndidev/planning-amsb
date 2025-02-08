@@ -20,7 +20,7 @@ final class EquipmentController extends Controller
 {
     private StevedoringService $stevedoringService;
     private string $module = Module::STEVEDORING;
-    private string $sseEventName = "stevedoring/equipment";
+    private string $sseEventName = "manutention/equipements";
 
     public function __construct(
         private ?int $id = null,

@@ -1,4 +1,5 @@
 import { createFlatStore } from "../generics/flatStore";
+import { consignationEscales } from "@app/stores";
 import type {
   StevedoringStaff,
   StevedoringEquipment,
@@ -77,6 +78,6 @@ export const stevedoringShipReports = createFlatStore<StevedoringShipReport>(
     storageEntries: [],
   },
   {
-    additionalEvents: ["consignation/planning"],
+    additionalEvents: [consignationEscales.endpoint],
   }
 );

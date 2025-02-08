@@ -21,7 +21,11 @@
 
   import { DateUtils, fetcher } from "@app/utils";
 
-  import { stevedoringTempWorkHours, currentUser } from "@app/stores";
+  import {
+    stevedoringTempWorkHours,
+    stevedoringStaff,
+    currentUser,
+  } from "@app/stores";
 
   import type { TempWorkHours } from "@app/types";
 
@@ -104,7 +108,7 @@
 <!-- routify:options guard="manutention" -->
 
 <SseConnection
-  subscriptions={["stevedoring/temp-work-hours", "stevedoring/staff"]}
+  subscriptions={[stevedoringTempWorkHours.endpoint, stevedoringStaff.endpoint]}
 />
 
 {#if $currentUser.canEdit("manutention")}

@@ -41,7 +41,7 @@
 
 <!-- routify:options guard="manutention" -->
 
-<SseConnection subscriptions={["stevedoring/equipments"]} />
+<SseConnection subscriptions={[stevedoringEquipments.endpoint]} />
 
 <main class="mx-auto w-10/12 lg:w-2/3">
   <PageHeading>Équipements de manutention</PageHeading>

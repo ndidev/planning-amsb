@@ -5,7 +5,7 @@
   import { Chargement, BandeauInfo, SseConnection } from "@app/components";
   import { FilterModal, filter, LigneCharter } from "./components";
 
-  import { charteringCharters } from "@app/stores";
+  import { charteringCharters, tiers, configBandeauInfo } from "@app/stores";
 
   let charters: typeof $charteringCharters;
 
@@ -28,7 +28,11 @@
 <!-- routify:options guard="chartering" -->
 
 <SseConnection
-  subscriptions={["chartering/charters", "tiers", "config/bandeau-info"]}
+  subscriptions={[
+    charteringCharters.endpoint,
+    tiers.endpoint,
+    configBandeauInfo.endpoint,
+  ]}
 />
 
 <div class="sticky top-0 z-[1] ml-16 lg:ml-24">

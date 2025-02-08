@@ -13,7 +13,14 @@
 
   import { fetcher } from "@app/utils";
 
-  import { vracRdvs, vracProduits, marees } from "@app/stores";
+  import {
+    vracRdvs,
+    vracProduits,
+    consignationEscales,
+    tiers,
+    configBandeauInfo,
+    marees,
+  } from "@app/stores";
 
   import type { RdvVrac } from "@app/types";
 
@@ -177,14 +184,14 @@
 
   onMount(() => {
     document.addEventListener(
-      "planning:consignation/escales",
+      `planning:${consignationEscales.endpoint}`,
       updateNaviresParDate
     );
   });
 
   onDestroy(() => {
     document.removeEventListener(
-      "planning:consignation/escales",
+      `planning:${consignationEscales.endpoint}`,
       updateNaviresParDate
     );
 
@@ -198,12 +205,12 @@
 
 <SseConnection
   subscriptions={[
-    "vrac/rdvs",
-    "vrac/produits",
-    "consignation/escales",
-    "tiers",
-    "config/bandeau-info",
-    "marees",
+    vracRdvs.endpoint,
+    vracProduits.endpoint,
+    consignationEscales.endpoint,
+    tiers.endpoint,
+    configBandeauInfo.endpoint,
+    marees.endpoint,
   ]}
 />
 

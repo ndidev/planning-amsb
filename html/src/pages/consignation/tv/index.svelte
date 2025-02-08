@@ -3,15 +3,20 @@
   import { BandeauInfo, CoteCesson, SseConnection } from "@app/components";
   import { LigneEscale } from "./components";
 
-  import { currentUser, consignationEscales } from "@app/stores";
+  import {
+    currentUser,
+    consignationEscales,
+    tiers,
+    configBandeauInfo,
+  } from "@app/stores";
 </script>
 
 {#if $currentUser.canUseApp && $currentUser.canAccess("consignation")}
   <SseConnection
     subscriptions={[
-      "consignation/escales",
-      "tiers",
-      "config/bandeau-info",
+      consignationEscales.endpoint,
+      tiers.endpoint,
+      configBandeauInfo.endpoint,
       "config/cotes",
     ]}
   />

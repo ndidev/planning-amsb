@@ -13,7 +13,7 @@
 
 <!-- routify:options guard="admin" -->
 
-<SseConnection subscriptions={["admin/users"]} />
+<SseConnection subscriptions={[adminUsers.endpoint]} />
 
 <main class="mx-auto w-11/12 lg:w-7/12">
   <PageHeading>Administration</PageHeading>
