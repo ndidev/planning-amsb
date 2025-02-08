@@ -101,6 +101,9 @@
       appointment.dispatch.map(({ remarks }) => remarks).join()
     );
 
+    const w2w = 219;
+    const yv = 13;
+
     switch (type) {
       case "beforeOrderReady":
         if (
@@ -110,8 +113,8 @@
           appointment.dispatch = [
             ...appointment.dispatch,
             {
-              staffId: null,
-              date: new Date().toISOString().split("T")[0],
+              staffId: appointment.fournisseur === w2w ? yv : null,
+              date: new DateUtils().toLocaleISODateString(),
               remarks: "Préparation",
               new: true,
             },
