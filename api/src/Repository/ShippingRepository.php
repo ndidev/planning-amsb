@@ -73,7 +73,7 @@ final class ShippingRepository extends Repository
         $callsStatement =
             "SELECT
                 cp.id,
-                cp.stevedoring_ship_report_id,
+                cp.stevedoring_ship_report_id as `shipReportId`,
                 cp.navire,
                 cp.voyage,
                 cp.armateur,
@@ -208,7 +208,7 @@ final class ShippingRepository extends Repository
                 $callStatement =
                     "SELECT
                         id,
-                        stevedoring_ship_report_id,
+                        stevedoring_ship_report_id as `shipReportId`,
                         navire,
                         voyage,
                         armateur,
@@ -448,6 +448,8 @@ final class ShippingRepository extends Repository
                 cubage_outturn = :cubage_outturn,
                 nombre_outturn = :nombre_outturn
             ON DUPLICATE KEY UPDATE
+                escale_id = :escale_id,
+                ship_report_id = :shipReportId,
                 marchandise = :marchandise,
                 client = :client,
                 operation = :operation,

@@ -57,14 +57,14 @@ final class ShippingService
             ->setLastPort($this->portService->getPort($rawDataAH->getString('last_port', null)))
             ->setNextPort($this->portService->getPort($rawDataAH->getString('next_port', null)));
 
-        $shippingCall->shipReport = $this->stevedoringService->getShipReport($rawDataAH->getInt('stevedoringShipReportId'));
+        $shippingCall->shipReport = $this->stevedoringService->getShipReport($rawDataAH->getInt('shipReportId'));
 
         /** @var ShippingCallCargoArray[] */
         $cargoesRaw = $rawDataAH->getArray('marchandises');
 
         $shippingCall->setCargoes(
             \array_map(
-                fn(array $cargo) => $this->makeShippingCallCargoFromDatabase($cargo),
+                fn($cargo) => $this->makeShippingCallCargoFromDatabase($cargo),
                 $cargoesRaw
             )
         );
@@ -88,12 +88,12 @@ final class ShippingService
 
         $shippingCall->shipReport = $this->stevedoringService->getShipReport($requestBody->getInt('shipReportId'));
 
-        /** @var ShippingCallCargoArray[] $cargoes */
+        /** @var ShippingCallCargoArray[] */
         $cargoes = $requestBody->getArray('marchandises');
 
         $shippingCall->setCargoes(
             \array_map(
-                fn(array $cargo) => $this->makeShippingCallCargoFromRequest($cargo),
+                fn($cargo) => $this->makeShippingCallCargoFromRequest($cargo),
                 $cargoes
             )
         );
