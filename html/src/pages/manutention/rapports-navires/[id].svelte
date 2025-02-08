@@ -776,7 +776,7 @@
         </div>
       </div>
 
-      <!-- Jours -->
+      <!-- Détail journalier -->
       <DailyEntriesModal
         bind:report
         bind:open={dailyEntriesModalOpen}
@@ -784,7 +784,7 @@
       />
       <div>
         <div>
-          <span class="text-2xl font-bold me-2">Jours</span>
+          <span class="text-2xl font-bold me-2">Détail journalier</span>
           <Button
             on:click={addDay}
             color="light"
