@@ -24,7 +24,7 @@
 </script>
 
 <div>
-  <SectionTitle>Jours</SectionTitle>
+  <SectionTitle>Détail journalier</SectionTitle>
 
   {#if Object.values(report.entriesByDate).flat().length > 0}
     <div class="ms-2">
