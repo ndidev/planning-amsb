@@ -498,6 +498,7 @@ final class StevedoringRepository extends Repository
                 staff.type as `staffContractType`,
                 staff.temp_work_agency as `staffTempWorkAgency`,
                 dispatch.remarks as `remarks`,
+                p.id as `productId`,
                 p.nom as `productName`,
                 q.nom as `qualityName`
             FROM stevedoring_bulk_dispatch dispatch
@@ -530,6 +531,7 @@ final class StevedoringRepository extends Repository
          *        staffContractType: 'mensuel'|'interim',
          *        staffTempWorkAgency: string,
          *        remarks: string,
+         *        productId: int,
          *        productName: string,
          *        qualityName: string
          *      }[]

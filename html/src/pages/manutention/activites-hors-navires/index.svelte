@@ -99,7 +99,9 @@
                             <span class="ml-2">{remarks}</span>
                           {/if}
 
-                          <span class="ml-2">x{multiplier}</span>
+                          {#if multiplier}
+                            <span class="ml-2">x{multiplier}</span>
+                          {/if}
                         </li>
                       {/each}
                     </ul>

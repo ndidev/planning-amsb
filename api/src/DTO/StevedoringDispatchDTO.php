@@ -34,6 +34,9 @@ final class StevedoringDispatchDTO implements \JsonSerializable
      */
     private array $dispatch = [];
 
+    private const FEED_PRODUCT_ID = 1;
+    private const MISC_PRODUCT_ID = 2;
+
     /**
      * @param array{
      *          date: string,
@@ -41,6 +44,7 @@ final class StevedoringDispatchDTO implements \JsonSerializable
      *          staffContractType: 'mensuel'|'interim',
      *          staffTempWorkAgency: string,
      *          remarks: string,
+     *          productId: int,
      *          productName: string,
      *          qualityName: string,
      *        }[] $bulkData 
@@ -74,13 +78,17 @@ final class StevedoringDispatchDTO implements \JsonSerializable
 
             $newItem = true;
 
+            $isSpecialProduct = $data['productId'] === self::FEED_PRODUCT_ID || $data['productId'] === self::MISC_PRODUCT_ID;
+
             foreach ($currentItem['bulk'] as &$line) {
                 if (
                     $line['remarks'] === $data['remarks']
                     && $line['product'] === $data['productName']
                     && $line['quality'] === $data['qualityName']
                 ) {
-                    $line['multiplier']++;
+                    if (!$isSpecialProduct) {
+                        $line['multiplier']++;
+                    }
                     $newItem = false;
                     break;
                 }
@@ -91,7 +99,7 @@ final class StevedoringDispatchDTO implements \JsonSerializable
                     'product' => $data['productName'],
                     'quality' => $data['qualityName'],
                     'remarks' => $data['remarks'],
-                    'multiplier' => 1,
+                    'multiplier' => $isSpecialProduct ? 0 : 1,
                 ];
             }
         }
