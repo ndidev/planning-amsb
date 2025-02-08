@@ -37,6 +37,7 @@ export const stevedoringEquipments = createFlatStore<StevedoringEquipment>(
     type: "",
     internalNumber: "",
     displayName: "",
+    year: null,
     serialNumber: "",
     isActive: true,
     comments: "",

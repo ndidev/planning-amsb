@@ -90,6 +90,11 @@
       Numéro de série : {equipment.serialNumber || "non renseigné"}
     </div>
 
+    <!-- Année -->
+    <div>
+      Année : {equipment.year || "non renseigné"}
+    </div>
+
     <!-- Commentaires -->
     <div>
       <div>Commentaires :</div>

@@ -295,6 +295,7 @@ final class StevedoringRepository extends Repository
                 model,
                 internal_number as `internalNumber`,
                 serial_number as `serialNumber`,
+                `year`,
                 comments,
                 is_active as `isActive`
              FROM stevedoring_equipments
@@ -344,6 +345,7 @@ final class StevedoringRepository extends Repository
                         model,
                         internal_number as `internalNumber`,
                         serial_number as `serialNumber`,
+                        `year`,
                         comments,
                         is_active as `isActive`
                      FROM stevedoring_equipments
@@ -378,6 +380,7 @@ final class StevedoringRepository extends Repository
                 model = :model,
                 internal_number = :internalNumber,
                 serial_number = :serialNumber,
+                year = :year,
                 comments = :comments,
                 is_active = :isActive";
 
@@ -390,6 +393,7 @@ final class StevedoringRepository extends Repository
                 'model' => $equipment->model,
                 'internalNumber' => $equipment->internalNumber,
                 'serialNumber' => $equipment->serialNumber,
+                'year' => $equipment->year,
                 'comments' => $equipment->comments,
                 'isActive' => (int) $equipment->isActive,
             ]);
@@ -417,6 +421,7 @@ final class StevedoringRepository extends Repository
                 model = :model,
                 internal_number = :internalNumber,
                 serial_number = :serialNumber,
+                year = :year,
                 comments = :comments,
                 is_active = :isActive
             WHERE
@@ -429,6 +434,7 @@ final class StevedoringRepository extends Repository
                 'model' => $equipment->model,
                 'internalNumber' => $equipment->internalNumber,
                 'serialNumber' => $equipment->serialNumber,
+                'year' => $equipment->year,
                 'comments' => $equipment->comments,
                 'isActive' => (int) $equipment->isActive,
                 'id' => $equipment->id,

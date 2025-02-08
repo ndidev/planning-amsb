@@ -24,12 +24,21 @@
   let drawerHidden = true;
 </script>
 
-<Card size="xs">
-  <div class:opacity-50={!equipment.isActive}>
-    <div>
-      <button on:click={() => (drawerHidden = false)} class="hover:underline"
-        >{equipment.model} {equipment.internalNumber}</button
-      >
+<Card
+  size="xs"
+  class="hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+  on:click={() => (drawerHidden = false)}
+>
+  <div
+    class:opacity-50={!equipment.isActive}
+    class="text-gray-700 dark:text-gray-400"
+  >
+    <div class="font-semibold">
+      {equipment.model}
+      {equipment.internalNumber}
+      {#if equipment.year}
+        <span>({equipment.year})</span>
+      {/if}
     </div>
 
     <div>{equipment.type}</div>

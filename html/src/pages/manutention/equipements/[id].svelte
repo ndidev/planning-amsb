@@ -11,6 +11,7 @@
     Chargement,
     BoutonAction,
     Svelecte,
+    NumericInput,
   } from "@app/components";
 
   import {
@@ -57,9 +58,6 @@
       )
     : [];
 
-  /**
-   * Créer le RDV.
-   */
   async function createEquipment() {
     if (!validerFormulaire(form)) return;
 
@@ -77,9 +75,6 @@
     }
   }
 
-  /**
-   * Modifier le RDV.
-   */
   async function updateEquipment() {
     if (!validerFormulaire(form)) return;
 
@@ -97,9 +92,6 @@
     }
   }
 
-  /**
-   * Supprimer le RDV.
-   */
   function deleteEquipment() {
     if (!id) return;
 
@@ -198,6 +190,19 @@
           id="serialNumber"
           bind:value={equipment.serialNumber}
           placeholder="Numéro de série"
+        />
+      </div>
+
+      <!-- Année -->
+      <div>
+        <Label for="year">Année</Label>
+        <NumericInput
+          id="year"
+          name="Année"
+          min={1900}
+          max={new Date().getFullYear()}
+          bind:value={equipment.year}
+          placeholder="Année"
         />
       </div>
 

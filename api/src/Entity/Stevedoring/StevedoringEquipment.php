@@ -19,6 +19,7 @@ use App\Entity\AbstractEntity;
  *                                           model: string,
  *                                           internalNumber: string,
  *                                           serialNumber: string,
+ *                                           year: ?int,
  *                                           comments: string,
  *                                           isActive: bool
  *                                         }
@@ -43,6 +44,8 @@ class StevedoringEquipment extends AbstractEntity implements \Stringable
     }
 
     public string $serialNumber = '';
+
+    public ?int $year = null;
 
     public bool $isCrane {
         get => \array_any(["pelle", "grue"], fn(string $match) => \str_contains(\mb_strtolower($this->type), $match));
@@ -69,6 +72,7 @@ class StevedoringEquipment extends AbstractEntity implements \Stringable
         $this->model = $dataAH->getString('model');
         $this->internalNumber = $dataAH->getString('internalNumber');
         $this->serialNumber = $dataAH->getString('serialNumber');
+        $this->year = $dataAH->getInt('year');
         $this->comments = $dataAH->getString('comments');
         $this->isActive = $dataAH->getBool('isActive');
     }
@@ -83,6 +87,7 @@ class StevedoringEquipment extends AbstractEntity implements \Stringable
             'internalNumber' => $this->internalNumber,
             'serialNumber' => $this->serialNumber,
             'displayName' => $this->displayName,
+            'year' => $this->year,
             'comments' => $this->comments,
             'isCrane' => $this->isCrane,
             'isActive' => $this->isActive,
