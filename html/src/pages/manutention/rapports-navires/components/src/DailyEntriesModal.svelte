@@ -331,11 +331,11 @@
     const formattedValue =
       String(Math.floor(start)).padStart(2, "0") +
       "h" +
-      String((start % 1) * 60).padStart(2, "0") +
+      String(Math.floor((start % 1) * 60)).padStart(2, "0") +
       "-" +
       String(Math.floor(end)).padStart(2, "0") +
       "h" +
-      String((end % 1) * 60).padStart(2, "0");
+      String(Math.floor((end % 1) * 60)).padStart(2, "0");
 
     entry.hoursHint = formattedValue;
 
@@ -398,13 +398,27 @@
     }
 
     Object.values(selectedItems.categories).forEach((items) => {
-      items.forEach((entry: Entry) => {
+      items.forEach((target: Entry) => {
         if (
-          entry !== source &&
-          entry[property] !== undefined &&
-          (force || !entry[property])
+          target !== source &&
+          property in target &&
+          (!target[property] || force)
         ) {
-          entry[property] = source[property];
+          // If the value is being updated from a "normal" entry
+          // and the target is in trucking or otherSubcontracts
+          // do not update it
+          if (
+            ![...dateEntries.trucking, ...dateEntries.otherSubcontracts].find(
+              (item) => item === source
+            ) &&
+            [...dateEntries.trucking, ...dateEntries.otherSubcontracts].find(
+              (item) => item === target
+            )
+          ) {
+            return;
+          }
+
+          target[property] = source[property];
         }
       });
     });
@@ -672,7 +686,7 @@
                 bind:value={entry.hoursHint}
                 on:input={() => updateMultipleValues("hoursHint", entry)}
                 on:change={() => {
-                  inferHoursWorked(entry);
+                  entry.hoursWorked = inferHoursWorked(entry);
                   updateMultipleValues("hoursHint", entry);
                   updateMultipleValues("hoursWorked", entry, false);
                 }}
@@ -783,7 +797,7 @@
                 bind:value={entry.hoursHint}
                 on:input={() => updateMultipleValues("hoursHint", entry)}
                 on:change={() => {
-                  inferHoursWorked(entry);
+                  entry.hoursWorked = inferHoursWorked(entry);
                   updateMultipleValues("hoursHint", entry);
                   updateMultipleValues("hoursWorked", entry, false);
                 }}
@@ -894,7 +908,7 @@
                 bind:value={entry.hoursHint}
                 on:input={() => updateMultipleValues("hoursHint", entry)}
                 on:change={() => {
-                  inferHoursWorked(entry);
+                  entry.hoursWorked = inferHoursWorked(entry);
                   updateMultipleValues("hoursHint", entry);
                   updateMultipleValues("hoursWorked", entry, false);
                 }}
