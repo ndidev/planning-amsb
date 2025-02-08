@@ -14,14 +14,15 @@ final readonly class BulkDispatchStatsFilterDTO extends Filter
     private \DateTimeInterface $endDate;
     private string $staffFilter;
 
-    public const DEFAULT_END_DATE = '9999-12-31';
-
     public function __construct(HTTPRequestQuery $query)
     {
-        $defaultStartDate = (new \DateTime())->sub(new \DateInterval('P1Y'));
+        $year = (int) new \DateTime()->format('Y');
+
+        $defaultStartDate = new \DateTime()->setDate($year, 1, 1);
         $this->startDate = $query->getDatetime('startDate', $defaultStartDate);
 
-        $this->endDate = $query->getDatetime('endDate', self::DEFAULT_END_DATE);
+        $defaultEndDate = new \DateTime()->setDate($year, 12, 31);
+        $this->endDate = $query->getDatetime('endDate', $defaultEndDate);
 
         $this->staffFilter = trim($query->getString('staff'), ',');
     }

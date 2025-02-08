@@ -11,7 +11,7 @@
 <script lang="ts" context="module">
   import { writable } from "svelte/store";
 
-  import { Filter, parseJSON } from "@app/utils";
+  import { DateUtils, Filter, parseJSON } from "@app/utils";
 
   import type { StevedoringStaff } from "@app/types";
 
@@ -21,9 +21,11 @@
     staff?: StevedoringStaff["id"][];
   };
 
+  const year = new Date().getFullYear();
+
   const emptyFilter: BulkDispatchFilter = {
-    startDate: "",
-    endDate: "",
+    startDate: new DateUtils(new Date(year, 0, 1)).toLocaleISODateString(),
+    endDate: new DateUtils(new Date(year, 11, 31)).toLocaleISODateString(),
     staff: [],
   };
 

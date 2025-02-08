@@ -599,22 +599,7 @@ final class BulkAppointmentRepository extends Repository
                 staff.firstname ASC
             ";
 
-        static $dispatchRequest;
-
         try {
-            if (!$dispatchRequest instanceof \PDOStatement) {
-                $dispatchRequest = $this->mysql->prepare($dispatchStatement);
-            }
-
-            if (!$dispatchRequest) {
-                throw new DBException("Impossible de récupérer les statistiques de dispatch");
-            }
-
-            $dispatchRequest->execute([
-                "startDate" => $filter->getSqlStartDate(),
-                "endDate" => $filter->getSqlEndDate(),
-            ]);
-
             /** 
              * @var array{
              *        date: string,
@@ -623,7 +608,12 @@ final class BulkAppointmentRepository extends Repository
              *        unit: string,
              *      }[]
              */
-            $rawData = $dispatchRequest->fetchAll();
+            $rawData = $this->mysql
+                ->prepareAndExecute($dispatchStatement, [
+                    "startDate" => $filter->getSqlStartDate(),
+                    "endDate" => $filter->getSqlEndDate(),
+                ])
+                ->fetchAll();
 
             $dispatchDTO = new BulkDispatchStatsDTO($rawData);
 
