@@ -174,6 +174,14 @@ final class ShippingCallController extends Controller
         $this->response->setJSON($updatedCall);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $updatedCall);
+        if ($updatedCall->shipReport?->id) {
+            $this->sse->addEvent(
+                SseEventNames::STEVEDORING_SHIP_REPORT,
+                __FUNCTION__,
+                $updatedCall->shipReport->id,
+                $updatedCall->shipReport
+            );
+        }
     }
 
     /**

@@ -137,6 +137,14 @@ final class ShipReportController extends Controller
             ->setJSON($newReport);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $newReport);
+        if ($newReport->linkedShippingCall?->id) {
+            $this->sse->addEvent(
+                SseEventNames::SHIPPING_CALL,
+                "update",
+                $newReport->linkedShippingCall->id,
+                $newReport->linkedShippingCall
+            );
+        }
     }
 
     public function update(?int $id = null): void
@@ -162,6 +170,14 @@ final class ShipReportController extends Controller
             ->setJSON($updatedReport);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $updatedReport);
+        if ($updatedReport->linkedShippingCall?->id) {
+            $this->sse->addEvent(
+                SseEventNames::SHIPPING_CALL,
+                "update",
+                $updatedReport->linkedShippingCall->id,
+                $updatedReport->linkedShippingCall
+            );
+        }
     }
 
     public function delete(?int $id = null): void
