@@ -295,7 +295,7 @@ abstract class DateUtils
         if (\is_float($time)) {
             $hours = (int) $time;
             $minutes = ($time - $hours) * 60;
-            return sprintf("%02d:%02d", $hours, $minutes);
+            return sprintf("%01dh%02d", $hours, $minutes);
         }
 
         $time = self::convertDate($time);

@@ -800,7 +800,7 @@ final class StevedoringRepository extends Repository
 
             $shipReportsDetails = \array_map(
                 function ($row) {
-                    $formattedHoursWorked = DateUtils::stringifyTime($row['hoursWorked']);
+                    $formattedHoursWorked = DateUtils::stringifyTime((float) $row['hoursWorked']);
 
                     return $row['ship']
                         . ($row['hoursHint'] ? " : {$row['hoursHint']}" : '')
