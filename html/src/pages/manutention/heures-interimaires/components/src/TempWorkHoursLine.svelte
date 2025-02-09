@@ -12,7 +12,6 @@
     stevedoringTempWorkHours,
     currentUser,
   } from "@app/stores";
-  import { Underline } from "lucide-svelte";
 
   export let tempWorkHours: TempWorkHours;
 
