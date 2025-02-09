@@ -452,10 +452,32 @@
       delete report.entriesByDate[date];
     }
 
+    // If the date entries are empty, delete the date from the report
+    if (
+      Object.values(report.entriesByDate[dateFromInput]).flatMap(
+        (items) => items as Entry[]
+      ).length === 0
+    ) {
+      delete report.entriesByDate[dateFromInput];
+    }
+
+    report.entriesByDate = report.entriesByDate;
+
     open = false;
   }
 
   function cancelUpdate() {
+    // If the date entries are empty, delete the date from the report
+    if (
+      Object.values(report.entriesByDate[date]).flatMap(
+        (items) => items as Entry[]
+      ).length === 0
+    ) {
+      delete report.entriesByDate[date];
+    }
+
+    report.entriesByDate = report.entriesByDate;
+
     open = false;
   }
 
