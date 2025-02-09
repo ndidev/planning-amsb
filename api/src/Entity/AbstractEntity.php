@@ -37,4 +37,9 @@ abstract class AbstractEntity implements Arrayable, \JsonSerializable, Validatio
     {
         return $this->toArray();
     }
+
+    public function __serialize(): array
+    {
+        return $this->toArray();
+    }
 }

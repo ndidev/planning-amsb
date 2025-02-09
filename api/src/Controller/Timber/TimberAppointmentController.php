@@ -12,6 +12,7 @@ use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Array\Environment;
+use App\Core\Component\SseEventNames;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\DTO\Filter\TimberFilterDTO;
@@ -21,7 +22,7 @@ final class TimberAppointmentController extends Controller
 {
     private TimberService $timberService;
     private string $module = Module::TIMBER;
-    private string $sse_event = "bois/rdvs";
+    private string $sseEventName = SseEventNames::TIMBER_APPOINTMENT;
 
     public function __construct(
         private ?int $id = null
@@ -148,7 +149,7 @@ final class TimberAppointmentController extends Controller
             ->addHeader("Location", Environment::getString('API_URL') . "/bois/rdvs/$id")
             ->setJSON($appointment);
 
-        $this->sse->addEvent($this->sse_event, __FUNCTION__, $id, $appointment);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $appointment);
     }
 
     /**
@@ -176,7 +177,7 @@ final class TimberAppointmentController extends Controller
 
         $this->response->setJSON($appointment);
 
-        $this->sse->addEvent($this->sse_event, __FUNCTION__, $id, $appointment);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $appointment);
     }
 
     /**
@@ -212,7 +213,7 @@ final class TimberAppointmentController extends Controller
 
         $this->response->setJSON($appointment);
 
-        $this->sse->addEvent($this->sse_event, __FUNCTION__, $id, $appointment);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $appointment);
     }
 
     /**
@@ -237,6 +238,6 @@ final class TimberAppointmentController extends Controller
         $this->timberService->deleteAppointment($id);
 
         $this->response->setCode(HTTPResponse::HTTP_NO_CONTENT_204);
-        $this->sse->addEvent($this->sse_event, __FUNCTION__, $id);
+        $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id);
     }
 }

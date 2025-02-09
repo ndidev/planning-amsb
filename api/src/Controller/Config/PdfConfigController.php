@@ -12,6 +12,7 @@ use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Array\Environment;
+use App\Core\Component\SseEventNames;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\PdfConfigService;
@@ -20,7 +21,7 @@ final class PdfConfigController extends Controller
 {
     private PdfConfigService $pdfService;
     private string $module = Module::CONFIG;
-    private string $sseEventName = "config/pdf";
+    private string $sseEventName = SseEventNames::CONFIG_PDF_CONFIG;
 
     public function __construct(
         private ?int $id = null,

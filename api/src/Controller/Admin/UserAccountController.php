@@ -12,6 +12,7 @@ use App\Core\Exceptions\Client\Auth\ForbiddenException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Array\Environment;
+use App\Core\Component\SseEventNames;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\UserService;
@@ -19,7 +20,7 @@ use App\Service\UserService;
 final class UserAccountController extends Controller
 {
     private UserService $userService;
-    private string $sseEventName = "admin/users";
+    private string $sseEventName = SseEventNames::USER_ACCOUNT;
 
     public function __construct(
         private ?string $uid = null,

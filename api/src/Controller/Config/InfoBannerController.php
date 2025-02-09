@@ -12,6 +12,7 @@ use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Array\Environment;
+use App\Core\Component\SseEventNames;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\InfoBannerService;
@@ -20,7 +21,7 @@ final class InfoBannerController extends Controller
 {
     private InfoBannerService $infoBannerService;
     private string $module = Module::CONFIG;
-    private string $sseEventName = "config/bandeau-info";
+    private string $sseEventName = SseEventNames::CONFIG_INFO_BANNER;
 
     public function __construct(
         private ?int $id = null,

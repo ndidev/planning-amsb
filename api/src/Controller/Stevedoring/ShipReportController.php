@@ -9,6 +9,7 @@ namespace App\Controller\Stevedoring;
 use App\Controller\Controller;
 use App\Core\Array\Environment;
 use App\Core\Component\Module;
+use App\Core\Component\SseEventNames;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
@@ -21,7 +22,7 @@ final class ShipReportController extends Controller
 {
     private StevedoringService $stevedoringService;
     private string $module = Module::STEVEDORING;
-    private string $sseEventName = "manutention/rapports-navires";
+    private string $sseEventName = SseEventNames::STEVEDORING_SHIP_REPORT;
 
     public function __construct(
         private ?int $id = null,
@@ -136,6 +137,14 @@ final class ShipReportController extends Controller
             ->setJSON($newReport);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $newReport);
+        if ($newReport->linkedShippingCall?->id) {
+            $this->sse->addEvent(
+                SseEventNames::SHIPPING_CALL,
+                "update",
+                $newReport->linkedShippingCall->id,
+                $newReport->linkedShippingCall
+            );
+        }
     }
 
     public function update(?int $id = null): void
@@ -161,6 +170,14 @@ final class ShipReportController extends Controller
             ->setJSON($updatedReport);
 
         $this->sse->addEvent($this->sseEventName, __FUNCTION__, $id, $updatedReport);
+        if ($updatedReport->linkedShippingCall?->id) {
+            $this->sse->addEvent(
+                SseEventNames::SHIPPING_CALL,
+                "update",
+                $updatedReport->linkedShippingCall->id,
+                $updatedReport->linkedShippingCall
+            );
+        }
     }
 
     public function delete(?int $id = null): void

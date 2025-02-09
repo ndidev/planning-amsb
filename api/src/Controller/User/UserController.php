@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Controller\User;
 
 use App\Controller\Controller;
+use App\Core\Component\SseEventNames;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
@@ -15,7 +16,7 @@ use App\Service\UserService;
 final class UserController extends Controller
 {
     private UserService $userService;
-    private string $sseEventName = "admin/users";
+    private string $sseEventName = SseEventNames::USER_ACCOUNT;
 
     public function __construct()
     {

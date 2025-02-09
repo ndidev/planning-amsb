@@ -8,6 +8,7 @@ namespace App\Controller\Config;
 
 use App\Controller\Controller;
 use App\Core\Component\Module;
+use App\Core\Component\SseEventNames;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
@@ -19,7 +20,7 @@ final class ChartDatumController extends Controller
 {
     private ChartDatumService $chartDatumService;
     private string $module = Module::CONFIG;
-    private string $sseEventName = "config/cotes";
+    private string $sseEventName = SseEventNames::CONFIG_CHART_DATUM;
 
     public function __construct(
         private ?string $cote = null,

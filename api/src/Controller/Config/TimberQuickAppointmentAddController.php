@@ -12,6 +12,7 @@ use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Array\Environment;
+use App\Core\Component\SseEventNames;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\QuickAppointmentAddService;
@@ -20,7 +21,7 @@ final class TimberQuickAppointmentAddController extends Controller
 {
     private QuickAppointmentAddService $quickAppointmentAddService;
     private string $module = Module::CONFIG;
-    private string $sseEventName = "config/ajouts-rapides";
+    private string $sseEventName = SseEventNames::CONFIG_QUICK_APPOINTMENT_ADD;
 
     public function __construct(
         private ?int $id = null,

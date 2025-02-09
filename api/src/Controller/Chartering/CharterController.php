@@ -12,6 +12,7 @@ use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Array\Environment;
+use App\Core\Component\SseEventNames;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\DTO\Filter\CharteringFilterDTO;
@@ -21,7 +22,7 @@ final class CharterController extends Controller
 {
     private CharteringService $charteringService;
     private string $module = Module::CHARTERING;
-    private string $sseEventName = "chartering/charters";
+    private string $sseEventName = SseEventNames::CHARTERING_CHARTER;
 
     public function __construct(
         private ?int $id = null

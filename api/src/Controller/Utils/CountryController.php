@@ -10,7 +10,6 @@ use App\Controller\Controller;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
-use App\Entity\Country;
 use App\Service\CountryService;
 
 final class CountryController extends Controller

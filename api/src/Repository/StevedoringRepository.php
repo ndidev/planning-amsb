@@ -1164,6 +1164,8 @@ final class StevedoringRepository extends Repository
             }
         );
 
+        $this->shipReportReflector->getProperty('id')->setRawValueWithoutLazyInitialization($shipReport, $id);
+
         $cache[$id] = $shipReport;
 
         return $shipReport;
@@ -1199,20 +1201,6 @@ final class StevedoringRepository extends Repository
             );
 
             $report->id = (int) $this->mysql->lastInsertId();
-
-            if ($report->linkedShippingCall) {
-                $this->mysql->prepareAndExecute(
-                    "UPDATE consignation_planning
-                     SET
-                        stevedoring_ship_report_id = :reportId
-                     WHERE
-                        id = :callId",
-                    [
-                        'reportId' => $report->id,
-                        'callId' => $report->linkedShippingCall->id,
-                    ]
-                );
-            }
 
             // Equipment entries
             foreach ($report->equipmentEntries as $equipmentEntry) {
@@ -1278,6 +1266,8 @@ final class StevedoringRepository extends Repository
                 $storageEntry->id = $this->createShipReportStorageEntry($storageEntry)->id;
             }
 
+            $this->updateLinkedShippingCall($report);
+
             $this->mysql->commit();
 
             return $report;
@@ -1322,20 +1312,6 @@ final class StevedoringRepository extends Repository
                     'id' => $report->id,
                 ]
             );
-
-            if ($report->linkedShippingCall) {
-                $this->mysql->prepareAndExecute(
-                    "UPDATE consignation_planning
-                     SET
-                        stevedoring_ship_report_id = :reportId
-                     WHERE
-                        id = :callId",
-                    [
-                        'reportId' => $report->id,
-                        'callId' => $report->linkedShippingCall->id,
-                    ]
-                );
-            }
 
             // Equipment entries
             // Delete entries that are not in the new list
@@ -1471,6 +1447,8 @@ final class StevedoringRepository extends Repository
                 }
             }
 
+            $this->updateLinkedShippingCall($report);
+
             $this->mysql->commit();
 
             return $report;
@@ -1499,6 +1477,38 @@ final class StevedoringRepository extends Repository
             );
         } catch (\PDOException $e) {
             throw new DBException("Erreur lors de la suppression.", previous: $e);
+        }
+    }
+
+    private function updateLinkedShippingCall(ShipReport $shipReport): void
+    {
+        if ($shipReport->linkedShippingCall) {
+            $this->mysql->prepareAndExecute(
+                "UPDATE consignation_planning
+             SET
+                stevedoring_ship_report_id = :reportId,
+                navire = :shipName,
+                call_port = :port,
+                quai = :berth
+             WHERE
+                id = :callId",
+                [
+                    'reportId' => $shipReport->id,
+                    'shipName' => $shipReport->ship,
+                    'port' => $shipReport->port,
+                    'berth' => $shipReport->berth,
+                    'callId' => $shipReport->linkedShippingCall->id,
+                ]
+            );
+        } else {
+            $this->mysql->prepareAndExecute(
+                "UPDATE consignation_planning
+                 SET
+                    stevedoring_ship_report_id = NULL
+                 WHERE
+                    stevedoring_ship_report_id = :reportId",
+                ['reportId' => $shipReport->id]
+            );
         }
     }
 
