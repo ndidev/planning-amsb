@@ -12,6 +12,7 @@ use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Array\Environment;
+use App\Core\Component\SseEventNames;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\DTO\Filter\BulkFilterDTO;
@@ -21,7 +22,7 @@ final class BulkAppointmentController extends Controller
 {
     private BulkService $bulkService;
     private string $module = Module::BULK;
-    private string $sseEventName = "vrac/rdvs";
+    private string $sseEventName = SseEventNames::BULK_APPOINTMENT;
 
     public function __construct(
         private ?int $id = null

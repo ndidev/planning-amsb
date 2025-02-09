@@ -13,6 +13,7 @@ use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Array\Environment;
+use App\Core\Component\SseEventNames;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\ThirdPartyService;
@@ -21,7 +22,7 @@ final class ThirdPartyController extends Controller
 {
     private ThirdPartyService $thirdPartyService;
     private string $module = Module::THIRD_PARTY;
-    private string $sseEventName = "tiers";
+    private string $sseEventName = SseEventNames::THIRD_PARTY;
 
     public function __construct(
         private ?int $id = null,

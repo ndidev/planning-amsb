@@ -9,6 +9,7 @@ namespace App\Controller\Stevedoring;
 use App\Controller\Controller;
 use App\Core\Array\Environment;
 use App\Core\Component\Module;
+use App\Core\Component\SseEventNames;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
@@ -20,7 +21,7 @@ final class EquipmentController extends Controller
 {
     private StevedoringService $stevedoringService;
     private string $module = Module::STEVEDORING;
-    private string $sseEventName = "manutention/equipements";
+    private string $sseEventName = SseEventNames::STEVEDORING_EQUIPMENT;
 
     public function __construct(
         private ?int $id = null,

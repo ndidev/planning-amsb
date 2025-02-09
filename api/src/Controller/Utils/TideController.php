@@ -12,6 +12,7 @@ use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Array\Environment;
+use App\Core\Component\SseEventNames;
 use App\Core\HTTP\ETag;
 use App\Core\HTTP\HTTPResponse;
 use App\Service\TideService;
@@ -19,7 +20,7 @@ use App\Service\TideService;
 final class TideController extends Controller
 {
     private TideService $service;
-    private string $sseEventName = "marees";
+    private string $sseEventName = SseEventNames::TIDES;
 
     public function __construct(
         private ?int $year = 0,

@@ -9,6 +9,7 @@ namespace App\Controller\Stevedoring;
 use App\Controller\Controller;
 use App\Core\Array\Environment;
 use App\Core\Component\Module;
+use App\Core\Component\SseEventNames;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
@@ -21,7 +22,7 @@ final class TempWorkHoursController extends Controller
 {
     private StevedoringService $stevedoringService;
     private string $module = Module::STEVEDORING_STAFF;
-    private string $sseEventName = "manutention/heures-interimaires";
+    private string $sseEventName = SseEventNames::STEVEDORING_TEMP_WORK_HOURS;
 
     public function __construct(
         private ?int $id = null,

@@ -9,6 +9,7 @@ namespace App\Controller\Shipping;
 use App\Controller\Controller;
 use App\Core\Array\Environment;
 use App\Core\Component\Module;
+use App\Core\Component\SseEventNames;
 use App\Core\Exceptions\Client\Auth\AccessException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\NotFoundException;
@@ -21,7 +22,7 @@ final class ShippingCallController extends Controller
 {
     private ShippingService $shippingService;
     private string $module = Module::SHIPPING;
-    private string $sseEventName = "consignation/escales";
+    private string $sseEventName = SseEventNames::SHIPPING_CALL;
 
     public function __construct(
         private ?int $id = null,
