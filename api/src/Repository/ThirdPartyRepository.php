@@ -127,14 +127,13 @@ final class ThirdPartyRepository extends Repository
                 pays = :country,
                 telephone = :phone,
                 commentaire = :comments,
-                roles = := roles,
+                roles = :roles,
                 logo = :logo,
                 actif = :active";
 
-        $request = $this->mysql->prepare($statement);
-
         $this->mysql->beginTransaction();
-        $request->execute([
+
+        $this->mysql->prepareAndExecute($statement, [
             'shortName' => $thirdParty->getShortName() ?: $thirdParty->getFullName(),
             'fullName' => $thirdParty->getFullName(),
             'addressLine1' => $thirdParty->getAddressLine1(),
@@ -193,8 +192,6 @@ final class ThirdPartyRepository extends Repository
                 actif = :active
             WHERE id = :id";
 
-        $request = $this->mysql->prepare($thirdPartyStatement);
-
         $fields = [
             'shortName' => $thirdParty->getShortName() ?: $thirdParty->getFullName(),
             'fullName' => $thirdParty->getFullName(),
@@ -214,7 +211,7 @@ final class ThirdPartyRepository extends Repository
             $fields["logo"] = $thirdParty->getLogoFilename();
         }
 
-        $request->execute($fields);
+        $this->mysql->prepareAndExecute($thirdPartyStatement, $fields);
 
         /** @var ThirdParty */
         $updatedThirdParty = $this->fetchThirdParty($id);
@@ -236,8 +233,7 @@ final class ThirdPartyRepository extends Repository
 
         try {
             $deleteStatement = "DELETE FROM tiers WHERE id = :id";
-            $deleteRequest = $this->mysql->prepare($deleteStatement);
-            $deleteRequest->execute(["id" => $id]);
+            $this->mysql->prepareAndExecute($deleteStatement, ["id" => $id]);
         } catch (\PDOException $e) {
             throw new DBException("Erreur lors de la suppression.", previous: $e);
         }
