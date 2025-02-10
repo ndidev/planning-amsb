@@ -8,7 +8,7 @@ namespace App\Service;
 
 use App\Core\Array\ArrayHandler;
 use App\Core\Array\Environment;
-use App\Core\Auth\User as AuthUser;
+use App\Core\Auth\UserAuthenticator;
 use App\Core\Auth\UserRoles;
 use App\Core\Component\SSEHandler;
 use App\Core\Exceptions\Client\Auth\UnauthorizedException;
@@ -17,18 +17,18 @@ use App\Core\Exceptions\Client\ClientException;
 use App\Core\HTTP\HTTPRequestBody;
 use App\DTO\CurrentUserFormDTO;
 use App\DTO\CurrentUserInfoDTO;
-use App\Entity\UserAccount;
+use App\Entity\User;
 use App\Repository\UserRepository;
 
 /**
- * @phpstan-import-type UserAccountArray from \App\Entity\UserAccount
+ * @phpstan-import-type UserAccountArray from \App\Entity\User
  */
 final class UserService
 {
     private UserRepository $userRepository;
 
     public function __construct(
-        private ?AuthUser $currentUser = null,
+        private ?User $currentUser = null,
         private ?SSEHandler $sse = null,
     ) {
         $this->userRepository = new UserRepository($this);
@@ -41,22 +41,22 @@ final class UserService
      * 
      * @phpstan-param UserAccountArray $rawData
      * 
-     * @return UserAccount 
+     * @return User 
      */
-    public function makeUserAccountFromDatabase(array $rawData): UserAccount
+    public function makeUserAccountFromDatabase(array $rawData): User
     {
         $rawDataAH = new ArrayHandler($rawData);
 
-        $user = (new UserAccount())
-            ->setUid($rawDataAH->getString('uid'))
-            ->setLogin($rawDataAH->getString('login'))
-            ->setName($rawDataAH->getString('nom'))
-            ->setCanLogin($rawDataAH->getBool('can_login'))
-            ->setRoles($rawDataAH->getString('roles', '{}'))
-            ->setStatus($rawDataAH->getString('statut'))
-            ->setLastLogin($rawDataAH->getDatetime('last_connection'))
-            ->setComments($rawDataAH->getString('commentaire'))
-            ->setHistory($rawDataAH->getString('historique'));
+        $user = new User();
+        $user->uid = $rawDataAH->getString('uid');
+        $user->login = $rawDataAH->getString('login');
+        $user->name = $rawDataAH->getString('nom');
+        $user->canLogin = $rawDataAH->getBool('can_login');
+        $user->roles = $rawDataAH->getString('roles', '{}');
+        $user->status = $rawDataAH->getString('statut');
+        $user->lastLogin = $rawDataAH->getDatetime('last_connection');
+        $user->comments = $rawDataAH->getString('commentaire');
+        $user->history = $rawDataAH->getString('historique');
 
         return $user;
     }
@@ -66,17 +66,17 @@ final class UserService
      * 
      * @param HTTPRequestBody $requestBody 
      * 
-     * @return UserAccount 
+     * @return User 
      */
-    public function makeUserAccountFromForm(HTTPRequestBody $requestBody): UserAccount
+    public function makeUserAccountFromForm(HTTPRequestBody $requestBody): User
     {
-        $user = (new UserAccount())
-            ->setUid($requestBody->getString('uid'))
-            ->setLogin($requestBody->getString('login'))
-            ->setName($requestBody->getString('nom'))
-            ->setRoles($requestBody->getArray('roles', []))
-            ->setStatus($requestBody->getString('statut'))
-            ->setComments($requestBody->getString('commentaire'));
+        $user = new User();
+        $user->uid = $requestBody->getString('uid');
+        $user->login = $requestBody->getString('login');
+        $user->name = $requestBody->getString('nom');
+        $user->roles = $requestBody->getArray('roles', []);
+        $user->status = $requestBody->getString('statut');
+        $user->comments = $requestBody->getString('commentaire');
 
         return $user;
     }
@@ -98,10 +98,10 @@ final class UserService
             throw new UnauthorizedException("Impossible de récupérer l'identifiant de l'utilisateur.");
         }
 
-        $currentUserFormDTO = (new CurrentUserFormDTO())
-            ->setUid($this->currentUser->uid)
-            ->setName($requestBody->getString('nom', $this->currentUser->name))
-            ->setPassword($requestBody->getString('password', null));
+        $currentUserFormDTO = new CurrentUserFormDTO();
+        $currentUserFormDTO->uid = $this->currentUser->uid;
+        $currentUserFormDTO->name = $requestBody->getString('nom', $this->currentUser->name);
+        $currentUserFormDTO->password = $requestBody->getString('password', null);
 
         return $currentUserFormDTO;
     }
@@ -116,14 +116,14 @@ final class UserService
      * 
      * @param bool $canLoginOnly `true` pour récupérer uniquement les utilisateurs pouvant se connecter.
      * 
-     * @return UserAccount[]
+     * @return User[]
      */
     public function getUserAccounts(bool $canLoginOnly = true): array
     {
         $users = $this->userRepository->fetchAllUsers();
 
         if ($canLoginOnly) {
-            $users = array_values(array_filter($users, fn($user) => $user->canLogin()));
+            $users = array_values(array_filter($users, fn($user) => $user->canLogin));
         }
 
         return $users;
@@ -134,7 +134,7 @@ final class UserService
      * 
      * @param string $uid Identifiant de l'utilisateur.
      */
-    public function getUserAccount(string $uid): ?UserAccount
+    public function getUserAccount(string $uid): ?User
     {
         return $this->userRepository->fetchUserByUid($uid);
     }
@@ -144,17 +144,17 @@ final class UserService
      * 
      * @param HTTPRequestBody $input
      * 
-     * @return UserAccount 
+     * @return User 
      */
-    public function createUserAccount(HTTPRequestBody $input): UserAccount
+    public function createUserAccount(HTTPRequestBody $input): User
     {
         $user = $this->makeUserAccountFromForm($input);
 
-        if (!$user->getLogin()) {
+        if (!$user->login) {
             throw new BadRequestException("Le login est obligatoire.");
         }
 
-        if (!$user->getName()) {
+        if (!$user->name) {
             throw new BadRequestException("Le nom est obligatoire.");
         }
 
@@ -167,15 +167,16 @@ final class UserService
      * @param string $uid 
      * @param HTTPRequestBody $input 
      * 
-     * @return UserAccount 
+     * @return User 
      */
-    public function updateUserAccount(string $uid, HTTPRequestBody $input): UserAccount
+    public function updateUserAccount(string $uid, HTTPRequestBody $input): User
     {
-        $user = $this->makeUserAccountFromForm($input)->setUid($uid);
+        $user = $this->makeUserAccountFromForm($input);
+        $user->uid = $uid;
 
         // Conservation du rôle admin : un utilisateur ne peut pas changer lui-même son statut admin
         if ($uid === $this->currentUser?->uid) {
-            $user->setAdmin($this->currentUser->isAdmin());
+            $user->roles->admin = (int) $this->currentUser->isAdmin;
         }
 
         return $this->userRepository->updateUser($user, $this->currentUser->name ?? '');
@@ -185,17 +186,10 @@ final class UserService
     {
         $this->userRepository->deleteUser($uid, $adminName);
 
-        $this->clearSessions($uid);
-    }
+        // new UserAuthenticator($uid)->clearSessions();
 
-    /**
-     * Supprimer les sessions de l'utilisateur dans Redis.
-     */
-    public function clearSessions(string $uid): void
-    {
         $this->userRepository->clearSessions($uid);
 
-        // Clôturer les connexions SSE
         $this->sse?->addEvent("admin/sessions", "close", "uid:{$uid}");
     }
 
@@ -239,8 +233,8 @@ final class UserService
         $minPasswordLength = Environment::getInt('AUTH_LONGUEUR_MINI_PASSWORD');
 
         if (
-            $currentUserDTO->getPassword()
-            && \strlen($currentUserDTO->getPassword()) < $minPasswordLength
+            $currentUserDTO->password
+            && \strlen($currentUserDTO->password) < $minPasswordLength
         ) {
             throw new ClientException("Le mot de passe doit contenir au moins {$minPasswordLength} caractères.");
         }
