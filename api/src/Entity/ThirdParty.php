@@ -105,13 +105,17 @@ class ThirdParty extends AbstractEntity
         $this->isActive = $dataAH->getBool('actif', true);
 
         /** @var string|ArrayHandler */
-        $roles = $dataAH->get('roles');
-        if (\is_string($roles)) {
-            $rolesArray = \json_decode($roles, true);
-            if (!\is_array($rolesArray)) {
-                throw new \InvalidArgumentException("Invalid roles data.");
-            }
+        $rolesArray = $dataAH->get('roles');
+        if (\is_string($rolesArray)) {
+            $rolesArray = \json_decode($rolesArray, true);
+        }
+        if (\is_array($rolesArray)) {
             $roles = new ArrayHandler($rolesArray);
+        } else {
+            $roles = $rolesArray;
+        }
+        if (!$roles instanceof ArrayHandler) {
+            throw new \InvalidArgumentException("Roles must be an array or an ArrayHandler.");
         }
 
         foreach ($this->roles as $role => $default) {
