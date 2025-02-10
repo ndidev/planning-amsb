@@ -10,7 +10,6 @@ use App\Core\Exceptions\AppException;
 use App\Core\Exceptions\Server\ServerException;
 use App\Core\HTTP\HTTPResponse;
 use App\Core\Logger\ErrorLogger;
-use Error;
 
 final class ErrorController extends Controller
 {

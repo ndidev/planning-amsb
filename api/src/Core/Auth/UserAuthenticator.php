@@ -39,16 +39,14 @@ class UserAuthenticator
 
     private SSEHandler $sse;
 
+    /**
+     * @param null|Redis $redis Pour les tests, une connexion Redis est directement passée en paramètre.
+     */
     public function __construct(?Redis $redis = null)
     {
-        if ($redis) {
-            // Utilisé pour les tests, une connexion Redis est directement passée en paramètre
-            $this->redis = $redis;
-        } else {
-            $this->redis = new Redis();
-        }
-
         $this->user = new User();
+
+        $this->redis = $redis ?? new Redis();
 
         $this->sse = new SSEHandler();
     }
@@ -70,14 +68,14 @@ class UserAuthenticator
     public function login(string $login, string $password): User
     {
         try {
-            $this->identify(login: $login);
+            $this->identifyUser(login: $login);
         } catch (InvalidAccountException) {
             Security::preventBruteforce();
 
             throw new LoginException();
         }
 
-        $this->populate();
+        $this->populateUser();
 
         if ($this->user->canLogin === false) {
             Security::preventBruteforce();
@@ -160,9 +158,9 @@ class UserAuthenticator
      */
     public function initializeAccount(string $login, string $password): void
     {
-        $this->identify(login: $login);
+        $this->identifyUser(login: $login);
 
-        $this->populate();
+        $this->populateUser();
 
         if ($this->user->status !== AccountStatus::PENDING) {
             throw new AccountStatusException(
@@ -214,7 +212,7 @@ class UserAuthenticator
         }
 
         try {
-            $this->identify(sid: $sid);
+            $this->identifyUser(sid: $sid);
         } catch (SessionException $e) {
             // Si la session n'existe plus, supprimer le cookie
             $this->deleteSession($sid);
@@ -222,7 +220,7 @@ class UserAuthenticator
         }
 
         // Renseignement des infos de l'utilisateur
-        $this->populate();
+        $this->populateUser();
 
         if ($this->user->status !== AccountStatus::ACTIVE) {
             throw new AccountStatusException($this->user->status);
@@ -310,7 +308,7 @@ class UserAuthenticator
         $this->user->uid = $uid;
 
         // Renseignement des infos de l'utilisateur
-        $this->populate();
+        $this->populateUser();
 
         if ($this->user->status !== AccountStatus::ACTIVE) {
             throw new AccountStatusException($this->user->status);
@@ -395,7 +393,7 @@ class UserAuthenticator
      * @throws InvalidAccountException 
      * @throws SessionException 
      */
-    private function identify(?string $login = null, ?string $sid = null): void
+    private function identifyUser(?string $login = null, ?string $sid = null): void
     {
         // Si déjà identifié, ne pas exécuter la fonction
         if ($this->user->uid) return;
@@ -438,7 +436,7 @@ class UserAuthenticator
      *
      * @throws InvalidAccountException Si le compte n'existe pas.
      */
-    private function populate(): void
+    private function populateUser(): void
     {
         if (!$this->user->uid) {
             throw new AuthException("Utilisateur non identifié");
