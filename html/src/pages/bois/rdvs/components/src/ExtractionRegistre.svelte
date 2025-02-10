@@ -19,11 +19,8 @@
 
   // Affichage de la fenêtre modale
   let showModal = false;
-  $: startDate =
-    $filter.data.date_debut ||
-    new DateUtils(new Date()).getPreviousWorkingDay().toLocaleISODateString();
-  $: endDate =
-    $filter.data.date_fin || new DateUtils(new Date()).toLocaleISODateString();
+  let startDate: string;
+  let endDate: string;
 
   /**
    * Bouton registre
@@ -66,6 +63,14 @@
   autoclose
   dismissable={false}
   size="xs"
+  on:open={() => {
+    startDate =
+      $filter.data.date_debut ||
+      new DateUtils(new Date()).getPreviousWorkingDay().toLocaleISODateString();
+    endDate =
+      $filter.data.date_fin ||
+      new DateUtils(new Date()).toLocaleISODateString();
+  }}
 >
   <div>
     <Label for="registry-start-date">Date début :</Label>
