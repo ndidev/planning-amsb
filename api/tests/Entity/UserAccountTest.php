@@ -6,22 +6,21 @@ declare(strict_types=1);
 
 namespace App\Tests\Entity;
 
-use App\Entity\UserAccount;
+use App\Entity\User;
 use App\Core\Auth\AccountStatus;
-use App\Core\Auth\UserRoles;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(UserAccount::class)]
+#[CoversClass(User::class)]
 final class UserAccountTest extends TestCase
 {
     public function testInstanciationWithoutUid(): void
     {
         // Given
-        $userAccount = new UserAccount();
+        $userAccount = new User();
 
         // When
-        $actualUid = $userAccount->getUid();
+        $actualUid = $userAccount->uid;
 
         // Then
         $this->assertNull($actualUid);
@@ -33,8 +32,8 @@ final class UserAccountTest extends TestCase
         $uid = 'uid';
 
         // When
-        $userAccount = new UserAccount($uid);
-        $actualUid = $userAccount->getUid();
+        $userAccount = new User($uid);
+        $actualUid = $userAccount->uid;
 
         // Then
         $this->assertSame($uid, $actualUid);
@@ -43,12 +42,12 @@ final class UserAccountTest extends TestCase
     public function testSetAndGetUid(): void
     {
         // Given
-        $userAccount = new UserAccount();
+        $userAccount = new User();
         $uid = 'uid';
 
         // When
-        $userAccount->setUid($uid);
-        $actualUid = $userAccount->getUid();
+        $userAccount->uid = $uid;
+        $actualUid = $userAccount->uid;
 
         // Then
         $this->assertSame($uid, $actualUid);
@@ -57,12 +56,12 @@ final class UserAccountTest extends TestCase
     public function testSetAndGetLogin(): void
     {
         // Given
-        $userAccount = new UserAccount();
+        $userAccount = new User();
         $login = 'login';
 
         // When
-        $userAccount->setLogin($login);
-        $actualLogin = $userAccount->getLogin();
+        $userAccount->login = $login;
+        $actualLogin = $userAccount->login;
 
         // Then
         $this->assertSame($login, $actualLogin);
@@ -71,12 +70,12 @@ final class UserAccountTest extends TestCase
     public function testSetAndGetPasswordHash(): void
     {
         // Given
-        $userAccount = new UserAccount();
+        $userAccount = new User();
         $passwordHash = 'password';
 
         // When
-        $userAccount->setPasswordHash($passwordHash);
-        $actualPasswordHash = $userAccount->getPasswordHash();
+        $userAccount->passwordHash = $passwordHash;
+        $actualPasswordHash = $userAccount->passwordHash;
 
         // Then
         $this->assertSame($passwordHash, $actualPasswordHash);
@@ -85,26 +84,26 @@ final class UserAccountTest extends TestCase
     public function testSetAndGetCanLogin(): void
     {
         // Given
-        $userAccount = new UserAccount();
+        $userAccount = new User();
         $canLogin = true;
 
         // When
-        $userAccount->setCanLogin($canLogin);
-        $actualCanLogin = $userAccount->canLogin();
+        $userAccount->canLogin = $canLogin;
+        $actualCanLogin = $userAccount->canLogin;
 
         // Then
-        $this->assertSame($canLogin, $actualCanLogin);
+        $this->assertSame($canLogin, $actualCanLogin); // @phpstan-ignore method.alreadyNarrowedType
     }
 
     public function testSetAndGetName(): void
     {
         // Given
-        $userAccount = new UserAccount();
+        $userAccount = new User();
         $name = 'name';
 
         // When
-        $userAccount->setName($name);
-        $actualName = $userAccount->getName();
+        $userAccount->name = $name;
+        $actualName = $userAccount->name;
 
         // Then
         $this->assertSame($name, $actualName);
@@ -113,12 +112,12 @@ final class UserAccountTest extends TestCase
     public function testSetAndGetLoginAttempts(): void
     {
         // Given
-        $userAccount = new UserAccount();
+        $userAccount = new User();
         $loginAttempts = 1;
 
         // When
-        $userAccount->setLoginAttempts($loginAttempts);
-        $actualLoginAttempts = $userAccount->getLoginAttempts();
+        $userAccount->loginAttempts = $loginAttempts;
+        $actualLoginAttempts = $userAccount->loginAttempts;
 
         // Then
         $this->assertSame($loginAttempts, $actualLoginAttempts);
@@ -127,12 +126,12 @@ final class UserAccountTest extends TestCase
     public function testSetAndGetLastLogin(): void
     {
         // Given
-        $userAccount = new UserAccount();
+        $userAccount = new User();
         $lastLogin = new \DateTimeImmutable();
 
         // When
-        $userAccount->setLastLogin($lastLogin);
-        $actualLastLogin = $userAccount->getLastLogin();
+        $userAccount->lastLogin = $lastLogin;
+        $actualLastLogin = $userAccount->lastLogin;
 
         // Then
         $this->assertEquals($lastLogin, $actualLastLogin);
@@ -141,12 +140,12 @@ final class UserAccountTest extends TestCase
     public function testSetAndGetStatusWithEnum(): void
     {
         // Given
-        $userAccount = new UserAccount();
+        $userAccount = new User();
         $status = AccountStatus::ACTIVE;
 
         // When
-        $userAccount->setStatus($status);
-        $actualStatus = $userAccount->getStatus();
+        $userAccount->status = $status;
+        $actualStatus = $userAccount->status;
 
         // Then
         $this->assertSame($status, $actualStatus);
@@ -155,12 +154,12 @@ final class UserAccountTest extends TestCase
     public function testSetAndGetStatusWithString(): void
     {
         // Given
-        $userAccount = new UserAccount();
+        $userAccount = new User();
         $status = 'active';
 
         // When
-        $userAccount->setStatus($status);
-        $actualStatus = $userAccount->getStatus();
+        $userAccount->status = $status;
+        $actualStatus = $userAccount->status;
 
         // Then
         $this->assertSame(AccountStatus::ACTIVE, $actualStatus);
@@ -169,20 +168,20 @@ final class UserAccountTest extends TestCase
     public function testExpectsExceptionWhenSetStatusWithInvalidString(): void
     {
         // Given
-        $userAccount = new UserAccount();
+        $userAccount = new User();
         $status = 'invalid';
 
         // Then
         $this->expectException(\InvalidArgumentException::class);
 
         // When
-        $userAccount->setStatus($status);
+        $userAccount->status = $status;
     }
 
     public function testSetAndGetRolesFromString(): void
     {
         // Given
-        $userAccount = new UserAccount();
+        $userAccount = new User();
         $roles = '{"role1": 0,"role2": 1}';
         $expectedRolesArray = [
             'role1' => 0,
@@ -190,8 +189,8 @@ final class UserAccountTest extends TestCase
         ];
 
         // When
-        $userAccount->setRoles($roles);
-        $actualRolesArray = $userAccount->getRoles()->toArray();
+        $userAccount->roles = $roles;
+        $actualRolesArray = $userAccount->roles->toArray();
 
         // Then
         $this->assertSame($expectedRolesArray, $actualRolesArray);
@@ -200,15 +199,15 @@ final class UserAccountTest extends TestCase
     public function testSetAndGetRolesFromArray(): void
     {
         // Given
-        $userAccount = new UserAccount();
+        $userAccount = new User();
         $roles = [
             'role1' => 0,
             'role2' => 1,
         ];
 
         // When
-        $userAccount->setRoles($roles);
-        $actualRolesArray = $userAccount->getRoles()->toArray();
+        $userAccount->roles = $roles;
+        $actualRolesArray = $userAccount->roles->toArray();
 
         // Then
         $this->assertSame($roles, $actualRolesArray);
@@ -217,13 +216,13 @@ final class UserAccountTest extends TestCase
     public function testGetRole(): void
     {
         // Given
-        $userAccount = new UserAccount();
+        $userAccount = new User();
         $role = 'role';
         $value = 1;
 
         // When
-        $userAccount->setRoles([$role => $value]);
-        $actualValue = $userAccount->getRole($role);
+        $userAccount->roles->$role = $value;
+        $actualValue = $userAccount->roles->$role;
 
         // Then
         $this->assertSame($value, $actualValue);
@@ -232,12 +231,12 @@ final class UserAccountTest extends TestCase
     public function testSetAndGetAdmin(): void
     {
         // Given
-        $userAccount = new UserAccount();
+        $userAccount = new User();
         $admin = true;
 
         // When
-        $userAccount->setAdmin($admin);
-        $actualAdmin = $userAccount->isAdmin();
+        $userAccount->roles->admin = (int) $admin;
+        $actualAdmin = $userAccount->isAdmin;
 
         // Then
         $this->assertSame($admin, $actualAdmin);
@@ -246,12 +245,12 @@ final class UserAccountTest extends TestCase
     public function testSetAndGetComments(): void
     {
         // Given
-        $userAccount = new UserAccount();
+        $userAccount = new User();
         $comments = 'comments';
 
         // When
-        $userAccount->setComments($comments);
-        $actualComments = $userAccount->getComments();
+        $userAccount->comments = $comments;
+        $actualComments = $userAccount->comments;
 
         // Then
         $this->assertSame($comments, $actualComments);
@@ -260,12 +259,12 @@ final class UserAccountTest extends TestCase
     public function testSetAndGetHistory(): void
     {
         // Given
-        $userAccount = new UserAccount();
+        $userAccount = new User();
         $history = 'history';
 
         // When
-        $userAccount->setHistory($history);
-        $actualHistory = $userAccount->getHistory();
+        $userAccount->history = $history;
+        $actualHistory = $userAccount->history;
 
         // Then
         $this->assertSame($history, $actualHistory);
@@ -274,20 +273,18 @@ final class UserAccountTest extends TestCase
     public function testToArray(): void
     {
         // Given
-        $userAccount = (new UserAccount())
-            ->setUid('uid1')
-            ->setLogin('login string')
-            ->setPasswordHash('1234567890')
-            ->setCanLogin(true)
-            ->setName('User name')
-            ->setLoginAttempts(4)
-            ->setLastLogin(new \DateTimeImmutable('2024-03-05 12:15:16'))
-            ->setStatus(AccountStatus::ACTIVE)
-            ->setRoles('{"role1": 0,"role2": 1}')
-            ->setComments('Comments')
-            ->setHistory('History');
-
-        $roles = '{"role1": 0,"role2": 1}';
+        $userAccount = new User();
+        $userAccount->uid = 'uid1';
+        $userAccount->login = 'login string';
+        $userAccount->passwordHash = '1234567890';
+        $userAccount->canLogin = true;
+        $userAccount->name = 'User name';
+        $userAccount->loginAttempts = 4;
+        $userAccount->lastLogin = new \DateTimeImmutable('2024-03-05 12:15:16');
+        $userAccount->status = AccountStatus::ACTIVE;
+        $userAccount->roles = '{"role1": 0,"role2": 1}';
+        $userAccount->comments = 'Comments';
+        $userAccount->history = 'History';
 
         $expectedArray = [
             'uid' => 'uid1',

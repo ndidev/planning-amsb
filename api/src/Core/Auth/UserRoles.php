@@ -40,12 +40,12 @@ final class UserRoles implements Arrayable, \JsonSerializable
     /** @var array<string, self::*> */
     private array $roles = [];
 
-    public function fillFromJsonString(string $roles): void
+    public function fillFromJsonString(string $roles): self
     {
         $rolesArray = \json_decode($roles, true);
 
         if (!\is_array($rolesArray)) {
-            return;
+            throw new \InvalidArgumentException('Invalid JSON string.');
         }
 
         foreach ($rolesArray as $role => $value) {
@@ -60,12 +60,14 @@ final class UserRoles implements Arrayable, \JsonSerializable
 
             $this->roles[$role] = $safeValue;
         }
+
+        return $this;
     }
 
     /**
      * @param array<mixed> $roles 
      */
-    public function fillFromArray(array $roles): void
+    public function fillFromArray(array $roles): self
     {
         foreach ($roles as $role => $value) {
             if (!\is_string($role)) continue;
@@ -81,6 +83,8 @@ final class UserRoles implements Arrayable, \JsonSerializable
 
             $this->roles[$role] = $safeValue;
         }
+
+        return $this;
     }
 
     public function __get(string $role): int

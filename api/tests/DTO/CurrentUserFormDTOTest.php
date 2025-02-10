@@ -8,6 +8,7 @@ namespace App\Tests\DTO;
 
 use App\DTO\CurrentUserFormDTO;
 use App\Core\Exceptions\Client\BadRequestException;
+use App\Core\Exceptions\Client\ValidationException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -23,8 +24,8 @@ final class CurrentUserFormDTOTest extends TestCase
         $uid = 'uid';
 
         // When
-        $dto->setUid($uid);
-        $result = $dto->getUid();
+        $dto->uid = $uid;
+        $result = $dto->uid;
 
         // Then
         $this->assertSame($uid, $result);
@@ -37,8 +38,8 @@ final class CurrentUserFormDTOTest extends TestCase
         $name = 'name';
 
         // When
-        $dto->setName($name);
-        $result = $dto->getName();
+        $dto->name = $name;
+        $result = $dto->name;
 
         // Then
         $this->assertSame($name, $result);
@@ -48,13 +49,14 @@ final class CurrentUserFormDTOTest extends TestCase
     {
         // Given
         $dto = new CurrentUserFormDTO();
+        $dto->name = '';
 
         // Then
-        $this->expectException(BadRequestException::class);
+        $this->expectException(ValidationException::class);
         $this->expectExceptionMessage('Le nom est requis.');
 
         // When
-        $dto->setName('');
+        $dto->validate();
     }
 
     public function testSetAndGetStringPassword(): void
@@ -64,8 +66,8 @@ final class CurrentUserFormDTOTest extends TestCase
         $password = 'password';
 
         // When
-        $dto->setPassword($password);
-        $result = $dto->getPassword();
+        $dto->password = $password;
+        $result = $dto->password;
 
         // Then
         $this->assertSame($password, $result);
@@ -77,11 +79,11 @@ final class CurrentUserFormDTOTest extends TestCase
         $dto = new CurrentUserFormDTO();
 
         // When
-        $dto->setPassword(null);
-        $result = $dto->getPassword();
+        $dto->password = null;
+        $result = $dto->password;
 
         // Then
-        $this->assertNull($result);
+        $this->assertNull($result); // @phpstan-ignore method.alreadyNarrowedType
     }
 
     public function testGetPasswordHashWithStringPassword(): void
@@ -91,12 +93,12 @@ final class CurrentUserFormDTOTest extends TestCase
         $password = 'password';
 
         // When
-        $dto->setPassword($password);
+        $dto->password = $password;
         /** @var string */
-        $passwordHash = $dto->getPasswordHash();
+        $passwordHash = $dto->passwordHash;
 
         // Then
-        $this->assertTrue(password_verify($password, $passwordHash));
+        $this->assertTrue(\password_verify($password, $passwordHash));
     }
 
     public function testGetPasswordHashWithNullPassword(): void
@@ -105,8 +107,8 @@ final class CurrentUserFormDTOTest extends TestCase
         $dto = new CurrentUserFormDTO();
 
         // When
-        $dto->setPassword(null);
-        $passwordHash = $dto->getPasswordHash();
+        $dto->password = null;
+        $passwordHash = $dto->passwordHash;
 
         // Then
         $this->assertNull($passwordHash);
@@ -118,8 +120,8 @@ final class CurrentUserFormDTOTest extends TestCase
         $dto = new CurrentUserFormDTO();
 
         // When
-        $dto->setPassword('');
-        $passwordHash = $dto->getPasswordHash();
+        $dto->password = '';
+        $passwordHash = $dto->passwordHash;
 
         // Then
         $this->assertNull($passwordHash);

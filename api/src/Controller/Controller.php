@@ -6,13 +6,14 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Core\Auth\User;
 use App\Core\Array\Environment;
+use App\Core\Auth\UserAuthenticator;
 use App\Core\Component\SSEHandler;
 use App\Core\Exceptions\Client\Auth\AuthException;
 use App\Core\HTTP\HTTPRequest;
 use App\Core\HTTP\HTTPResponse;
 use App\Core\Security;
+use App\Entity\User;
 
 /**
  * Classe servant de base aux contrôleurs.
@@ -91,16 +92,18 @@ abstract class Controller
       $validSession = true;
       $validApiKey = true;
 
+      $userAuthenticator = new UserAuthenticator();
+
       // Session
       try {
-        $this->user = (new User)->identifyFromSession();
+        $this->user = $userAuthenticator->identifyFromSession();
       } catch (AuthException) {
         $validSession = false;
       }
 
       // Clé API
       try {
-        $this->user = (new User)->identifyFromApiKey();
+        $this->user = $userAuthenticator->identifyFromApiKey();
       } catch (AuthException) {
         $validApiKey = false;
       }
