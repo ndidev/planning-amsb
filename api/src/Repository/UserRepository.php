@@ -8,6 +8,7 @@ namespace App\Repository;
 
 use App\Core\Array\ArrayHandler;
 use App\Core\Auth\AccountStatus;
+use App\Core\Auth\UserAuthenticator;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\Core\Exceptions\Server\ServerException;
 use App\DTO\CurrentUserFormDTO;
@@ -257,7 +258,7 @@ final class UserRepository extends Repository
                 "uid" => $uid
             ]);
 
-            $this->clearSessions($uid);
+            new UserAuthenticator()->clearSessions($uid);
         }
 
         // Passage au statut "INACTIVE" (désactivation)
@@ -277,7 +278,7 @@ final class UserRepository extends Repository
                 "uid" => $uid,
             ]);
 
-            $this->clearSessions($uid);
+            new UserAuthenticator()->clearSessions($uid);
         }
 
         $this->updateRedis($uid);
@@ -342,38 +343,6 @@ final class UserRepository extends Repository
 
         // Copie des infos dans Redis (hash)
         $this->redis->hMSet("admin:users:{$uid}", $user);
-    }
-
-    /**
-     * Supprimer les sessions de l'utilisateur dans Redis.
-     */
-    public function clearSessions(string $uid): void
-    {
-        // Obtenir toutes les sessions en cours
-        $sessions = [];
-        do {
-            $batch = $this->redis->scan($iterator, "admin:sessions:*");
-            if ($batch) $sessions = \array_merge($sessions, $batch);
-        } while ($iterator);
-
-        // Obtenir les utilisateurs pour chaque session
-        $this->redis->pipeline();
-        foreach ($sessions as $session) {
-            $this->redis->get($session);
-        }
-        $uids = $this->redis->exec();
-
-        // Combiner sessions et utilisateurs
-        $sessions = array_combine($sessions, $uids);
-
-        // Supprimer les sessions de l'utilisateur
-        $this->redis->pipeline();
-        foreach ($sessions as $session => $sessionUid) {
-            if ($sessionUid === $uid) {
-                $this->redis->del($session);
-            }
-        }
-        $this->redis->exec();
     }
 
     public function updateCurrentUser(CurrentUserFormDTO $user): User

@@ -186,11 +186,7 @@ final class UserService
     {
         $this->userRepository->deleteUser($uid, $adminName);
 
-        // new UserAuthenticator($uid)->clearSessions();
-
-        $this->userRepository->clearSessions($uid);
-
-        $this->sse?->addEvent("admin/sessions", "close", "uid:{$uid}");
+        new UserAuthenticator()->clearSessions($uid);
     }
 
     /**

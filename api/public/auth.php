@@ -6,15 +6,14 @@ declare(strict_types=1);
 
 require_once __DIR__ . "/../bootstrap.php";
 
+use App\Controller\ErrorController;
 use App\Core\Array\Environment;
 use App\Core\Array\Server;
 use App\Core\Auth\UserAuthenticator;
-use App\Core\Exceptions\AppException;
 use App\Core\Exceptions\Client\Auth\AccountPendingException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Server\ServerException;
 use App\Core\HTTP\HTTPResponse;
-use App\Core\Logger\ErrorLogger;
 use App\Core\Security;
 
 
@@ -181,15 +180,10 @@ try {
             $response->setCode(HTTPResponse::HTTP_NOT_FOUND_404);
             break;
     }
-} catch (AppException $e) {
-    $response
-        ->setCode($e->httpStatus)
-        ->setText($e->getMessage());
+
+    $userAuthenticator->sse->notify();
 } catch (\Throwable $e) {
-    ErrorLogger::log($e);
-    $response
-        ->setCode(HTTPResponse::HTTP_INTERNAL_SERVER_ERROR_500)
-        ->setText("Erreur serveur");
+    $response = new ErrorController($e)->getResponse();
 } finally {
     $response->send();
 }
