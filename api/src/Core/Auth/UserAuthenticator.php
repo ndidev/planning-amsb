@@ -37,25 +37,18 @@ class UserAuthenticator
 
     private Redis $redis;
 
-    private SSEHandler $sse;
+    public readonly SSEHandler $sse;
 
     /**
      * @param null|Redis $redis Pour les tests, une connexion Redis est directement passée en paramètre.
      */
     public function __construct(?Redis $redis = null)
     {
-        if ($redis) {
-            // Utilisé pour les tests, une connexion Redis est directement passée en paramètre
-            $this->redis = $redis;
-        } else {
-            $this->redis = new Redis();
-        }
-
         $this->user = new User();
 
         $this->redis = $redis ?? new Redis();
 
-        $this->sse = new SSEHandler();
+        $this->sse = SSEHandler::getInstance();
     }
 
     /**

@@ -10,7 +10,6 @@ use App\Core\Array\ArrayHandler;
 use App\Core\Array\Environment;
 use App\Core\Auth\UserAuthenticator;
 use App\Core\Auth\UserRoles;
-use App\Core\Component\SSEHandler;
 use App\Core\Exceptions\Client\Auth\UnauthorizedException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\ClientException;
@@ -27,10 +26,8 @@ final class UserService
 {
     private UserRepository $userRepository;
 
-    public function __construct(
-        private ?User $currentUser = null,
-        private ?SSEHandler $sse = null,
-    ) {
+    public function __construct(private ?User $currentUser = null)
+    {
         $this->userRepository = new UserRepository($this);
     }
 

@@ -51,7 +51,7 @@ abstract class Controller
   ) {
     $this->request = new HTTPRequest();
     $this->response = new HTTPResponse();
-    $this->sse = new SSEHandler();
+    $this->sse = SSEHandler::getInstance();
     $this->supportedMethods = $supportedMethods;
 
     if ($error) {
