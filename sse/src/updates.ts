@@ -40,42 +40,57 @@ function dbEventsListener(
     const events: DBEvent[] = JSON.parse(body);
     response.end();
 
-    events.forEach((event) => {
-      notifyEvent(event);
+    const isCloseEvent = (event: DBEvent) =>
+      event.name === "admin/sessions" && event.type === "close";
+
+    const normalEvents = events.filter((event) => !isCloseEvent(event));
+    const closeEvents = events.filter((event) => isCloseEvent(event));
+
+    const normalEventsHandled = new Map<DBEvent, Promise<void>>();
+
+    normalEvents.forEach((event) => {
+      normalEventsHandled.set(
+        event,
+        new Promise((resolve) => notifyEvent(event, resolve))
+      );
 
       // En cas de mise à jour d'un compte utilisateur par l'admin ou l'utilisateur lui-même,
       // envoi de la mise à jour au compte concerné (événement "user")
       if (event.name === "admin/users") {
         // Filtrer les données sensibles
-        if (event.data) {
-          const data = {
+        const userEvent = {
+          ...event,
+          name: "user",
+          data: event.data && {
             uid: event.id,
             login: event.data.login,
             nom: event.data.nom,
             roles: event.data.roles,
             statut: event.data.statut,
-          };
-          event.data = data;
-        }
+          },
+        } satisfies DBEvent;
 
-        notifyImpactedUser(event);
-      }
-
-      // En cas de déconnexion (ex: utilisateur désactivé/bloqué), clôturer la connexion
-      if (event.name === "admin/sessions" && event.type === "close") {
-        notifyImpactedUser(event);
-
-        if (String(event.id).startsWith("uid:")) {
-          const uid = String(event.id).substring(4);
-          closeConnectionsForUser(uid);
-        }
-
-        if (String(event.id).startsWith("sid:")) {
-          const sid = String(event.id).substring(4);
-          closeConnectionForSession(sid);
-        }
+        normalEventsHandled.set(
+          userEvent,
+          new Promise((resolve) => notifyImpactedUser(userEvent, resolve))
+        );
       }
     });
+
+    normalEventsHandled.size > 0 &&
+      Promise.all(normalEventsHandled.values()).then(() => {
+        closeEvents.forEach((event) => {
+          // En cas de déconnexion (ex: utilisateur désactivé/bloqué), clôturer la connexion
+          if (String(event.id).startsWith("uid:")) {
+            const uid = String(event.id).substring(4);
+            closeConnectionsForUser(uid);
+          }
+          if (String(event.id).startsWith("sid:")) {
+            const sid = String(event.id).substring(4);
+            closeConnectionForSession(sid);
+          }
+        });
+      });
   });
 }
 
@@ -84,9 +99,11 @@ function dbEventsListener(
  *
  * @param event Événement à notifier.
  */
-function notifyEvent(event: DBEvent) {
+function notifyEvent(event: DBEvent, markEventHandled: () => void) {
   const origin = event.origin;
   delete event.origin;
+
+  const allConnectionsNotified: Promise<void>[] = [];
 
   // Envoi de l'événement/notification aux clients concernés
   connections.forEach((connection) => {
@@ -94,10 +111,18 @@ function notifyEvent(event: DBEvent) {
       connection.subscriptions.includes(event.name) &&
       origin !== connection.id
     ) {
-      connection.response.write(`event: db\n`);
-      connection.response.write(`data: ${JSON.stringify(event)}\n\n`);
+      allConnectionsNotified.push(
+        new Promise((resolve) => {
+          connection.response.write(`event: db\n`);
+          connection.response.write(`data: ${JSON.stringify(event)}\n\n`, () =>
+            resolve()
+          );
+        })
+      );
     }
   });
+
+  Promise.all(allConnectionsNotified).then(markEventHandled);
 }
 
 /**
@@ -106,14 +131,23 @@ function notifyEvent(event: DBEvent) {
  *
  * @param event The database event containing the user ID and other relevant information.
  */
-function notifyImpactedUser(event: DBEvent) {
-  event.name = "user";
+function notifyImpactedUser(event: DBEvent, markEventHandled: () => void) {
+  const allUserConnectionsNotified: Promise<void>[] = [];
+
   [...connections]
     .filter((connection) => connection.userId === event.id)
     .forEach((connection) => {
-      connection.response.write(`event: db\n`);
-      connection.response.write(`data: ${JSON.stringify(event)}\n\n`);
+      allUserConnectionsNotified.push(
+        new Promise((resolve) => {
+          connection.response.write(`event: db\n`);
+          connection.response.write(`data: ${JSON.stringify(event)}\n\n`, () =>
+            resolve()
+          );
+        })
+      );
     });
+
+  Promise.all(allUserConnectionsNotified).then(markEventHandled);
 }
 
 /**
