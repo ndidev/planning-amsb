@@ -1,14 +1,29 @@
+<script lang="ts" context="module">
+  import type { StevedoringStaff } from "@app/types";
+
+  export function getDedicatedStaffForSupplier(
+    supplierId: RdvBois["fournisseur"]
+  ) {
+    const map = new Map<RdvBois["fournisseur"], StevedoringStaff["id"]>([
+      [219, 13], // W2W => YV
+    ]);
+
+    return map.get(supplierId) || null;
+  }
+</script>
+
 <script lang="ts">
   import { Modal, Label, Input } from "flowbite-svelte";
   import Notiflix from "notiflix";
 
   import { LucideButton, BoutonAction, Svelecte } from "@app/components";
 
-  import { validerFormulaire } from "@app/utils";
+  import { validerFormulaire, DateUtils } from "@app/utils";
 
   import { boisRdvs } from "@app/stores";
 
   import type { RdvBois } from "@app/types";
+  import { get } from "svelte/store";
 
   let form: HTMLFormElement;
   let updateButton: BoutonAction;
@@ -36,7 +51,7 @@
       ...dispatch,
       {
         staffId: null,
-        date: new Date().toISOString().split("T")[0],
+        date: new DateUtils().toLocaleISODateString(),
         remarks: "",
         new: true,
       },
@@ -51,6 +66,23 @@
     }
 
     dispatch = dispatch;
+  }
+
+  function addLoadingDispatchLineIfLoadingStarted() {
+    if (
+      appointment.heure_arrivee &&
+      !dispatch.some((item) => item.remarks === "Chargement")
+    ) {
+      dispatch = [
+        ...dispatch,
+        {
+          staffId: getDedicatedStaffForSupplier(appointment.fournisseur),
+          date: new DateUtils(appointment.date_rdv).toLocaleISODateString(),
+          remarks: appointment.chargement === 1 ? "Chargement" : "Déchargement",
+          new: true,
+        },
+      ];
+    }
   }
 
   async function updateDispatch() {
@@ -95,7 +127,10 @@
   bind:open
   dismissable={false}
   size="lg"
-  on:open={() => (dispatch = structuredClone(appointment.dispatch))}
+  on:open={() => {
+    dispatch = structuredClone(appointment.dispatch);
+    addLoadingDispatchLineIfLoadingStarted();
+  }}
 >
   <div class="text-lg">
     Ajouter une ligne
