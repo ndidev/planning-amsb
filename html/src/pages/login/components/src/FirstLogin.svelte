@@ -174,6 +174,17 @@
 
   <form>
     <fieldset>
+      <!-- Username (accessiblité) -->
+      <div>
+        <input
+          hidden
+          type="text"
+          name="username"
+          autocomplete="username"
+          value={$login}
+        />
+      </div>
+
       <!-- Mot de passe -->
       <div class="mb-4">
         <Label for="new-password">Mot de passe</Label>
