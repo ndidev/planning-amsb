@@ -8,7 +8,10 @@ namespace App\Core\Component;
 
 final class SseEventNames
 {
+    public const USER = "user";
+
     public const USER_ACCOUNT = "admin/users";
+    public const ADMIN_SESSIONS = "admin/sessions";
 
     public const BULK_APPOINTMENT = "vrac/rdvs";
     public const BULK_PRODUCT = "vrac/produits";
