@@ -103,14 +103,58 @@
   }
 
   /**
-   * Remplissage automatique de la livraison
-   * lors de la saisie du client
-   * si le champ livraison est vide
+   * Remplissage automatique de certains champs
+   * en fonction de la situation.
    */
-  function autoFillDeliveryPlace() {
-    if (appointment.client !== null && appointment.livraison === null) {
-      appointment.livraison = appointment.client;
-    }
+  function checkScenario() {
+    const currentState = structuredClone(appointment);
+
+    const scenarii = [
+      {
+        condition:
+          currentState.client !== null && currentState.livraison === null,
+        result: () => {
+          appointment.livraison = appointment.client;
+        },
+      },
+      {
+        condition: currentState.fournisseur === 219,
+        result: () => {
+          !currentState.transporteur && (appointment.transporteur = 367);
+          !currentState.affreteur && (appointment.affreteur = 219);
+        },
+      },
+      {
+        condition:
+          currentState.fournisseur === 219 && currentState.chargement !== 1,
+        result: () => {
+          appointment.client = 219;
+          appointment.livraison = 1;
+        },
+      },
+      {
+        condition:
+          currentState.fournisseur === 219 && currentState.chargement === 8,
+        result: () => {
+          appointment.client = 219;
+          appointment.livraison = 1;
+          appointment.transporteur = 6;
+          appointment.affreteur = 219;
+        },
+      },
+      {
+        condition: currentState.fournisseur === 292,
+        result: () => {
+          !currentState.affreteur && (appointment.affreteur = 1);
+        },
+      },
+    ] satisfies { condition: boolean; result: () => void }[];
+
+    scenarii.forEach((scenario) => {
+      if (scenario.condition) {
+        scenario.result();
+      }
+    });
   }
 
   /**
@@ -328,6 +372,8 @@
 
     appointment.dispatch = appointment.dispatch;
   }
+
+  $: console.debug({ appointment });
 </script>
 
 <!-- routify:options param-is-page -->
@@ -412,6 +458,7 @@
           role="bois_fournisseur"
           bind:value={appointment.fournisseur}
           name="Fournisseur"
+          on:change={checkScenario}
           required
         />
       </div>
@@ -434,6 +481,7 @@
           role="bois_client"
           bind:value={appointment.chargement}
           name="Chargement"
+          on:change={checkScenario}
           required
         />
       </div>
@@ -447,7 +495,7 @@
           role="bois_client"
           bind:value={appointment.client}
           name="Client"
-          on:change={autoFillDeliveryPlace}
+          on:change={checkScenario}
           required
         />
       </div>
@@ -520,8 +568,10 @@
 
       <!-- Commande prête -->
       <div>
-        <Toggle name="commande_prete" bind:checked={appointment.commande_prete}
-          >Commande prête</Toggle
+        <Toggle
+          name="commande_prete"
+          bind:checked={appointment.commande_prete}
+          disabled={appointment.chargement !== 1}>Commande prête</Toggle
         >
       </div>
 
