@@ -295,11 +295,16 @@
 
   <!-- Produit + qualité -->
   <div class="font-bold">
-    <span style:color={produit.couleur}>{produit.nom}</span>
+    <div>
+      <span style:color={produit.couleur}>{produit.nom}</span>
 
-    {#if appointment.qualite}
-      <span style:color={qualite?.couleur}>{qualite?.nom}</span>
-    {/if}
+      {#if appointment.qualite}
+        <span style:color={qualite?.couleur}>{qualite?.nom}</span>
+      {/if}
+    </div>
+    <div class="text-gray-400 text-sm font-normal">
+      {$tiers?.get(appointment.fournisseur)?.nom_court || ""}
+    </div>
   </div>
 
   <!-- Commande prête -->
