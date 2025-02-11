@@ -37,25 +37,18 @@ class UserAuthenticator
 
     private Redis $redis;
 
-    private SSEHandler $sse;
+    public readonly SSEHandler $sse;
 
     /**
      * @param null|Redis $redis Pour les tests, une connexion Redis est directement passée en paramètre.
      */
     public function __construct(?Redis $redis = null)
     {
-        if ($redis) {
-            // Utilisé pour les tests, une connexion Redis est directement passée en paramètre
-            $this->redis = $redis;
-        } else {
-            $this->redis = new Redis();
-        }
-
         $this->user = new User();
 
         $this->redis = $redis ?? new Redis();
 
-        $this->sse = new SSEHandler();
+        $this->sse = SSEHandler::getInstance();
     }
 
     /**
@@ -196,7 +189,7 @@ class UserAuthenticator
         /** @var string $uid */
         $uid = $this->user->uid;
 
-        $this->sse->addEvent("admin/users", "update", $uid);
+        $this->sse->addEvent(SseEventNames::USER_ACCOUNT, "update", $uid);
     }
 
 
@@ -329,7 +322,7 @@ class UserAuthenticator
      */
     public function updateRedis(): void
     {
-        $userPdoStatement = (new MySQL())->query("SELECT * FROM admin_users WHERE uid = '{$this->user->uid}'");
+        $userPdoStatement = new MySQL()->query("SELECT * FROM admin_users WHERE uid = '{$this->user->uid}'");
 
         if (!$userPdoStatement) {
             throw new DBException("Impossible de récupérer les informations de l'utilisateur");
@@ -376,7 +369,7 @@ class UserAuthenticator
         $this->redis->exec();
 
         // Clôturer les connexions SSE
-        $this->sse->addEvent("admin/sessions", "close", "uid:{$this->user->uid}");
+        $this->sse->addEvent(SseEventNames::ADMIN_SESSIONS, "close", "uid:{$uid}");
     }
 
 
@@ -511,7 +504,7 @@ class UserAuthenticator
             "path" => Environment::getString('SESSION_COOKIE_PATH')
         ]);
 
-        $this->sse->addEvent("admin/sessions", "close", "sid:{$sid}");
+        $this->sse->addEvent(SseEventNames::ADMIN_SESSIONS, "close", "sid:{$sid}");
     }
 
     /**

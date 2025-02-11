@@ -31,10 +31,7 @@ final class UserAccountController extends Controller
             throw new AdminException();
         }
 
-        $this->userService = new UserService(
-            currentUser: $this->user,
-            sse: $this->sse,
-        );
+        $this->userService = new UserService($this->user);
 
         $this->processRequest();
     }

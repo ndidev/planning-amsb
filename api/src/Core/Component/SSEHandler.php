@@ -15,8 +15,17 @@ use App\Core\Logger\ErrorLogger;
  * Server-Sent Events.
  * 
  */
-class SSEHandler
+final class SSEHandler
 {
+    private static ?self $instance = null;
+
+    private function __construct() {}
+
+    public static function getInstance(): self
+    {
+        return self::$instance ??= new self();
+    }
+
     /**
      * Events to be sent to the SSE server.
      * @var list<
@@ -64,22 +73,20 @@ class SSEHandler
 
         $url = "http://{$host}:{$port}";
 
-        foreach ($this->events as $key => $event) {
-            $options = [
-                "http" => [
-                    "header" => "Content-type: application/json\r\n",
-                    "method" => "POST",
-                    "content" => \json_encode($event),
-                    "timeout" => 0.5,
-                ]
-            ];
+        $options = [
+            "http" => [
+                "header" => "Content-type: application/json\r\n",
+                "method" => "POST",
+                "content" => \json_encode($this->events),
+                "timeout" => 0.5,
+            ]
+        ];
 
-            $context = stream_context_create($options);
-            $result = \file_get_contents($url, false, $context);
+        $context = stream_context_create($options);
+        $result = \file_get_contents($url, false, $context);
 
-            if ($result === false) {
-                ErrorLogger::log(new \Exception("Erreur de notification SSE"));
-            }
+        if ($result === false) {
+            ErrorLogger::log(new \Exception("Erreur de notification SSE"));
         }
     }
 }
