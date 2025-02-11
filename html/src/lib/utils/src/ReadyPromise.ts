@@ -1,5 +1,5 @@
 /**
- * EnhancedPromise class extends the native Promise class to add additional functionality.
+ * ReadyPromise class extends the native Promise class to add additional functionality.
  * It tracks the pending state of the promise and provides custom resolve and reject methods.
  */
 export class ReadyPromise {
@@ -21,7 +21,7 @@ export class ReadyPromise {
   reject: (reason?: unknown) => void;
 
   /**
-   * Creates an instance of EnhancedPromise.
+   * Creates an instance of ReadyPromise.
    * @param executor - The executor function for the promise.
    */
   constructor() {
