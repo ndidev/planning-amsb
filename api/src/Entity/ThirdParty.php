@@ -35,29 +35,29 @@ class ThirdParty extends AbstractEntity
 {
     use IdentifierTrait;
 
-    private string $shortName = '';
+    public string $shortName = '';
 
     #[Required("Le nom complet est obligatoire.")]
-    private string $fullName = '';
+    public string $fullName = '';
 
-    private string $addressLine1 = '';
+    public string $addressLine1 = '';
 
-    private string $addressLine2 = '';
+    public string $addressLine2 = '';
 
-    private string $postCode = '';
+    public string $postCode = '';
 
     #[Required("La ville est obligatoire.")]
-    private string $city = '';
+    public string $city = '';
 
     #[Required("Le pays est obligatoire.")]
-    private ?Country $country = null;
+    public ?Country $country = null;
 
-    private string $phone = '';
+    public string $phone = '';
 
-    private string $comments = '';
+    public string $comments = '';
 
     /** @var array<string, bool> $roles */
-    private array $roles = [
+    public array $roles = [
         "bois_fournisseur" => false,
         "bois_client" => false,
         "bois_transporteur" => false,
@@ -70,15 +70,15 @@ class ThirdParty extends AbstractEntity
         "maritime_courtier" => false,
     ];
 
-    private bool $isNonEditable = false;
+    public bool $isNonEditable = false;
 
-    private bool $isAgency = false;
+    public bool $isAgency = false;
 
-    private string|null|false $logo = null;
+    public string|null|false $logo = null;
 
-    private bool $isActive = true;
+    public bool $isActive = true;
 
-    private int $appointmentCount = 0;
+    public int $appointmentCount = 0;
 
     /**
      * @param ArrayHandler|ThirdPartyArray|null $data 

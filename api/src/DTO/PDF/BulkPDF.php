@@ -124,16 +124,16 @@ final class BulkPDF extends PlanningPDF
     ): void {
         $this->SetFont('Roboto', '', 10);
         // Heure
-        [$r, $g, $b] = explode(',', ColorConverter::hexToRgb('#D91FFA'));
+        [$r, $g, $b] = \explode(',', ColorConverter::hexToRgb('#D91FFA'));
         $this->SetTextColor($r, $g, $b);
         $this->Cell(15, 6, $time);
         // Produit
-        [$r, $g, $b] = explode(',', ColorConverter::hexToRgb((string) $productColor));
+        [$r, $g, $b] = \explode(',', ColorConverter::hexToRgb((string) $productColor));
         $this->SetTextColor($r, $g, $b);
         $this->Cell(20, 6, $productName);
         // Qualité
         if ($qualityColor) {
-            [$r, $g, $b] = explode(',', ColorConverter::hexToRgb($qualityColor));
+            [$r, $g, $b] = \explode(',', ColorConverter::hexToRgb($qualityColor));
             $this->SetTextColor($r, $g, $b);
         }
         $this->Cell(20, 6, $qualityName);

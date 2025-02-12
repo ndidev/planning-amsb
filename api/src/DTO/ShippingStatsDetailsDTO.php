@@ -56,7 +56,7 @@ final class ShippingStatsDetailsDTO implements \JsonSerializable
     private function groupByCall(): void
     {
         foreach ($this->statsDetailsRaw as $call) {
-            if (!array_key_exists($call["id"], $this->groupedCalls)) {
+            if (!\array_key_exists($call["id"], $this->groupedCalls)) {
                 $this->groupedCalls[$call["id"]] = [
                     "id" => $call["id"],
                     "navire" => $call["navire"],
@@ -78,6 +78,6 @@ final class ShippingStatsDetailsDTO implements \JsonSerializable
 
     public function jsonSerialize(): mixed
     {
-        return array_values($this->groupedCalls);
+        return \array_values($this->groupedCalls);
     }
 }

@@ -352,7 +352,7 @@ final class BulkProductRepository extends Repository
         $qualitiesIdsToBeDeleted = \array_diff($existingQualitiesIds, $submittedQualitiesIds);
 
         if (!empty($qualitiesIdsToBeDeleted)) {
-            $deleteQualitiesStatement = "DELETE FROM vrac_qualites WHERE id IN (" . implode(",", $qualitiesIdsToBeDeleted) . ")";
+            $deleteQualitiesStatement = "DELETE FROM vrac_qualites WHERE id IN (" . \implode(",", $qualitiesIdsToBeDeleted) . ")";
             $this->mysql->exec($deleteQualitiesStatement);
         }
 

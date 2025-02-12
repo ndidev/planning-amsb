@@ -121,7 +121,7 @@ class Email extends PHPMailer
 
         // BCC
         foreach ($bcc as $address) {
-            $addresses = explode(',', Environment::getString('MAIL_BCC'));
+            $addresses = \explode(',', Environment::getString('MAIL_BCC'));
             foreach ($addresses as $address) {
                 $address = trim($address, " \t\n\r\0\x0B-_;,");
                 $this->addBCC($address);

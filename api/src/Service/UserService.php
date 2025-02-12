@@ -120,7 +120,7 @@ final class UserService
         $users = $this->userRepository->fetchAllUsers();
 
         if ($canLoginOnly) {
-            $users = array_values(array_filter($users, fn($user) => $user->canLogin));
+            $users = \array_values(\array_filter($users, fn($user) => $user->canLogin));
         }
 
         return $users;

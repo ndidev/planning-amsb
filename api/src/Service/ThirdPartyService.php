@@ -189,7 +189,7 @@ final class ThirdPartyService
             if (!isset($file["data"]) || !\is_string($file["data"])) {
                 throw new ServerException("Logo : Données du fichier non trouvées.");
             }
-            $data = explode(",", $file["data"])[1];
+            $data = \explode(",", $file["data"])[1];
 
             // Création de l'image depuis les données
             $imageString = base64_decode($data);

@@ -311,7 +311,7 @@ class TimberAppointment extends AbstractEntity
             "numero_bl" => $this->getDeliveryNoteNumber(),
             "commentaire_public" => $this->getPublicComment(),
             "commentaire_cache" => $this->getPrivateComment(),
-            "dispatch" => array_map(
+            "dispatch" => \array_map(
                 fn(TimberDispatchItem $dispatch) => $dispatch->toArray(),
                 $this->getDispatch()
             ),

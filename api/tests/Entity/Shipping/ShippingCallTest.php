@@ -377,7 +377,7 @@ final class ShippingCallTest extends TestCase
     {
         // Given
         $shippingCall = new ShippingCall();
-        $cargoes = array_fill(0, 3, new ShippingCallCargo());
+        $cargoes = \array_fill(0, 3, new ShippingCallCargo());
 
         // When
         $shippingCall->setCargoes($cargoes);
@@ -425,7 +425,7 @@ final class ShippingCallTest extends TestCase
         $shippingCall->callPort = 'Port';
         $shippingCall->quay = 'Quay';
         $shippingCall->comment = 'Comment';
-        $cargoes = array_fill(0, 3, new ShippingCallCargo());
+        $cargoes = \array_fill(0, 3, new ShippingCallCargo());
         $shippingCall->setCargoes($cargoes);
 
         $expected = [

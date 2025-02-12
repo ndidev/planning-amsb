@@ -243,7 +243,7 @@ final class CharterTest extends TestCase
     {
         // Given
         $charter = new Charter();
-        $legs = array_fill(0, 3, new CharterLeg());
+        $legs = \array_fill(0, 3, new CharterLeg());
 
         // When
         $charter->setLegs($legs);
@@ -293,7 +293,7 @@ final class CharterTest extends TestCase
         $charter->setDemurrageSold(1000);
         $charter->setComments('Comments');
         $charter->setArchive(true);
-        $legs = array_fill(0, 3, new CharterLeg());
+        $legs = \array_fill(0, 3, new CharterLeg());
         $charter->setLegs($legs);
 
         $expectedArray = [

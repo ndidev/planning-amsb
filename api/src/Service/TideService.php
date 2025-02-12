@@ -83,7 +83,7 @@ final class TideService
         $content = \str_replace("\u{FEFF}", "", $content);
         // Delete the Windows carriage return
         $content = \str_replace("\r", "", $content);
-        $lines = explode(PHP_EOL, $content);
+        $lines = \explode(PHP_EOL, $content);
 
         $separator = ";";
 
@@ -100,7 +100,7 @@ final class TideService
             /** @var string $date */
             /** @var string $time */
             /** @var string $heightOfWater */
-            array_push($newTides, [
+            \array_push($newTides, [
                 $date,
                 $time,
                 (float) $heightOfWater,

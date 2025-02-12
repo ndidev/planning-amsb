@@ -45,7 +45,7 @@ $supported_methods = [
 ];
 
 // Méthode non supportée
-if (array_search(Server::getString('REQUEST_METHOD'), $supported_methods) === FALSE) {
+if (\array_search(Server::getString('REQUEST_METHOD'), $supported_methods) === FALSE) {
     (new HTTPResponse(HTTPResponse::HTTP_NOT_IMPLEMENTED_501))->send();
 }
 
@@ -56,11 +56,11 @@ $requestUri = Server::getString('REQUEST_URI', null);
 if (null === $requestUri) {
     throw new ServerException("Request URI not found");
 }
-$url = parse_url($requestUri);
+$url = \parse_url($requestUri);
 $path = $url["path"] ?? null;
 $endpoint = makeEndpoint($path);
 $query = [];
-parse_str($url["query"] ?? "", $query);
+\parse_str($url["query"] ?? "", $query);
 
 $response = new HTTPResponse();
 

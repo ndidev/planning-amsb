@@ -36,7 +36,7 @@ final class TimberStatsDTO implements \JsonSerializable
 
         // Compilation du nombre de RDV par année et par mois
         foreach ($this->dates as $date) {
-            $date = explode("-", $date);
+            $date = \explode("-", $date);
             $year = (int) $date[0];
             $month = (int) $date[1];
 

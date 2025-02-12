@@ -115,7 +115,7 @@ class Router
     }
 
     /**
-     * Add named match types. It uses array_merge so keys can be overwritten.
+     * Add named match types. It uses `array_merge` so keys can be overwritten.
      *
      * @param array<string, string> $matchTypes The key is the name and the value is the regex.
      */

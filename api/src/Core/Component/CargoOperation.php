@@ -24,7 +24,7 @@ abstract class CargoOperation
             return null;
         }
 
-        return match (strtolower($temptativeOperationName)) {
+        return match (\mb_strtolower($temptativeOperationName)) {
             self::IMPORT => self::IMPORT,
             self::EXPORT => self::EXPORT,
             default => null,

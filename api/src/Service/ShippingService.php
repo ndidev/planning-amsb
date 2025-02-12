@@ -282,7 +282,7 @@ final class ShippingService
     {
         $ids = \is_array($ids)
             ? $ids
-            : \array_map(fn(string $id) => (int) $id, explode(",", $ids));
+            : \array_map(fn(string $id) => (int) $id, \explode(",", $ids));
 
         return $this->shippingRepository->fetchStatsDetails($ids);
     }

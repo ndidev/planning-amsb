@@ -448,12 +448,12 @@ final class TimberAppointmentRepository extends Repository
             \preg_match_all("/$regexp/", $deliveryNoteNumber, $matches); // Filtre sur les numéros valides (6 chiffres)
             $matches = $matches[0]; // Extraction des résultats
             sort($matches); // Tri des numéros
-            $previousDeliveryNotesNumbers[] = array_pop($matches); // Récupération du numéro le plus élevé
+            $previousDeliveryNotesNumbers[] = \array_pop($matches); // Récupération du numéro le plus élevé
         }
 
         // Tri des 10 derniers numéros de BL puis récupération du plus élevé
         sort($previousDeliveryNotesNumbers);
-        $previousDeliveryNoteNumber = array_pop($previousDeliveryNotesNumbers);
+        $previousDeliveryNoteNumber = \array_pop($previousDeliveryNotesNumbers);
 
         return $previousDeliveryNoteNumber;
     }

@@ -144,7 +144,7 @@ final class ShippingRepository extends Repository
                 cubage_outturn,
                 nombre_outturn
             FROM consignation_escales_marchandises
-            WHERE escale_id IN (" . implode(",", $callsIds) . ")";
+            WHERE escale_id IN (" . \implode(",", $callsIds) . ")";
 
             $cargoesRequest = $this->mysql->query($cargoesStatement);
 
@@ -162,8 +162,8 @@ final class ShippingRepository extends Repository
             // Rétablir heure ETA
             $call->setEtaTime(ETAConverter::toLetters($call->getEtaTime()));
 
-            $filteredCargoesRaw = array_values(
-                array_filter(
+            $filteredCargoesRaw = \array_values(
+                \array_filter(
                     $cargoesRaw,
                     fn($cargo) => ($cargo["escale_id"]) === $call->id
                 )
@@ -516,7 +516,7 @@ final class ShippingRepository extends Repository
             $cargoesIdsToBeDeleted = \array_diff($existingCargoesIds, $submittedCargoesIds);
 
             if (\count($cargoesIdsToBeDeleted) > 0) {
-                $this->mysql->exec("DELETE FROM consignation_escales_marchandises WHERE id IN (" . implode(",", $cargoesIdsToBeDeleted) . ")");
+                $this->mysql->exec("DELETE FROM consignation_escales_marchandises WHERE id IN (" . \implode(",", $cargoesIdsToBeDeleted) . ")");
             }
 
             // Ajout et modification marchandises
@@ -804,7 +804,7 @@ final class ShippingRepository extends Repository
         }
 
         // Filtre
-        $idsAsString = join(",", $ids);
+        $idsAsString = \join(",", $ids);
 
         $callsStatement =
             "SELECT

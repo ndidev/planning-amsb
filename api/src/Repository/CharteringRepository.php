@@ -90,7 +90,7 @@ final class CharteringRepository extends Repository
 
         if (count($chartersRaw) > 0) {
             $chartersIds = \array_map(fn(array $charter) => $charter["id"] ?? null, $chartersRaw);
-            $legsStatement = "SELECT * FROM chartering_detail WHERE charter IN (" . implode(",", $chartersIds) . ")";
+            $legsStatement = "SELECT * FROM chartering_detail WHERE charter IN (" . \implode(",", $chartersIds) . ")";
             $legsRequest = $this->mysql->query($legsStatement);
 
             if (!$legsRequest) {
@@ -105,8 +105,8 @@ final class CharteringRepository extends Repository
             function (array $charterRaw) use ($legsRaw) {
                 $charter = $this->charteringService->makeCharterFromDatabase($charterRaw);
 
-                $filteredLegsRaw = array_values(
-                    array_filter(
+                $filteredLegsRaw = \array_values(
+                    \array_filter(
                         $legsRaw,
                         fn(array $legRaw) => ($legRaw["charter"] ?? null) === $charter->id
                     )
@@ -376,10 +376,10 @@ final class CharteringRepository extends Repository
         $existingLegsIds = $legsIdsRequest->fetchAll(\PDO::FETCH_COLUMN, 0);
 
         $submittedLegsIds = \array_map(fn(CharterLeg $leg) => $leg->id, $charter->getLegs()->asArray());
-        $legsIdsToBeDeleted = array_diff($existingLegsIds, $submittedLegsIds);
+        $legsIdsToBeDeleted = \array_diff($existingLegsIds, $submittedLegsIds);
 
         if (!empty($legsIdsToBeDeleted)) {
-            $deleteLegsStatement = "DELETE FROM chartering_detail WHERE id IN (" . implode(",", $legsIdsToBeDeleted) . ")";
+            $deleteLegsStatement = "DELETE FROM chartering_detail WHERE id IN (" . \implode(",", $legsIdsToBeDeleted) . ")";
             $this->mysql->exec($deleteLegsStatement);
         }
 

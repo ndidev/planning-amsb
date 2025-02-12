@@ -272,7 +272,7 @@ final class HTTPResponse
          * Tableau des méthodes accpetées par le client, par ordre de priorité.
          * @var string[]
          */
-        $clientAcceptedMethods = explode(",", $clientAcceptEncoding);
+        $clientAcceptedMethods = \explode(",", $clientAcceptEncoding);
 
         /**
          * Tableau des priorités de compression.  
@@ -284,15 +284,15 @@ final class HTTPResponse
         $clientCompressionPriority = [];
 
         foreach ($clientAcceptedMethods as $method) {
-            $methodArray = explode(";q=", $method);
-            $methodName = trim($methodArray[0]);
+            $methodArray = \explode(";q=", $method);
+            $methodName = \trim($methodArray[0]);
             $methodPriority = (float) ($methodArray[1] ?? 1.0);
 
             $clientCompressionPriority[$methodName] = $methodPriority;
         }
 
         // Tri du tableau par priorité décroissante
-        arsort($clientCompressionPriority);
+        \arsort($clientCompressionPriority);
 
 
         /**
@@ -329,7 +329,7 @@ final class HTTPResponse
             switch ($selectedCompressionMethod) {
                 case 'gzip':
                     // GZIP (== PHP gzencode)
-                    $compressedBody = gzencode($this->body);
+                    $compressedBody = \gzencode($this->body);
 
                     // Si la compression est inefficace, on ne compresse pas
                     if ($compressedBody && \strlen($compressedBody) >= \strlen($this->body)) {
@@ -343,7 +343,7 @@ final class HTTPResponse
 
                 case 'deflate':
                     // HTTP DEFLATE (== PHP gzcompress)
-                    $compressedBody = gzcompress($this->body, 9);
+                    $compressedBody = \gzcompress($this->body, 9);
 
                     // Si la compression est inefficace, on ne compresse pas
                     if ($compressedBody && \strlen($compressedBody) >= \strlen($this->body)) {
@@ -398,9 +398,9 @@ final class HTTPResponse
     {
         // Pre-flight request
         if ($is_preflight) {
-            header("Access-Control-Allow-Methods: " . $supportedMethods);
-            header("Access-Control-Allow-Headers: Content-Type, X-API-Key, X-SSE-Connection");
-            header("Access-Control-Max-Age: 3600");
+            \header("Access-Control-Allow-Methods: " . $supportedMethods);
+            \header("Access-Control-Allow-Headers: Content-Type, X-API-Key, X-SSE-Connection");
+            \header("Access-Control-Max-Age: 3600");
         }
 
         /**
@@ -410,7 +410,7 @@ final class HTTPResponse
         $allowedOrigins = [
             "https://localhost",
             "http://localhost",
-            Server::getString('REQUEST_SCHEME') . "://" . explode(":", Server::getString('HTTP_HOST'))[0],
+            Server::getString('REQUEST_SCHEME') . "://" . \explode(":", Server::getString('HTTP_HOST'))[0],
         ];
 
         $serverOrigin = Server::getString('HTTP_ORIGIN');
@@ -424,9 +424,9 @@ final class HTTPResponse
         }
 
         // All requests
-        header("Access-Control-Allow-Origin:" . $origin);
-        header("Access-Control-Allow-Credentials: true");
-        header("Vary: Origin");
+        \header("Access-Control-Allow-Origin:" . $origin);
+        \header("Access-Control-Allow-Credentials: true");
+        \header("Vary: Origin");
     }
 
 
@@ -441,7 +441,7 @@ final class HTTPResponse
         // Default headers
 
         // Cache-Control
-        header("Cache-control: no-cache");
+        \header("Cache-control: no-cache");
 
         // CORS headers
         if ($this->preflightHeadersAdded === false) {
@@ -450,17 +450,17 @@ final class HTTPResponse
 
         // "Content-Length" header if there is a body
         if ($this->code >= 200 && $this->code !== 204 && $this->code !== 304) {
-            header("Content-Length: " . \strlen($this->body ?? ""));
+            \header("Content-Length: " . \strlen($this->body ?? ""));
         }
 
         // "Content-Type" header if there is a body
         if ($this->body) {
-            header("Content-Type: {$this->type}");
+            \header("Content-Type: {$this->type}");
         }
 
         // Apply customs headers
         foreach ($this->headers as $name => $value) {
-            header($name ? "$name: $value" : $value);
+            \header($name ? "$name: $value" : $value);
         }
     }
 

@@ -188,7 +188,7 @@ class TimberRegistryEntryDTO
             return $this->loadingPlaceName
                 . ' '
                 . $this->loadingPlaceCity
-                . (strtolower((string) $this->loadingPlaceCountry) == 'france'
+                . (\mb_strtolower((string) $this->loadingPlaceCountry) == 'france'
                     ? ""
                     : " ({$this->loadingPlaceCountry})");
         }
@@ -197,7 +197,7 @@ class TimberRegistryEntryDTO
     public function getDeliveryPlace(): string
     {
         if ($this->deliveryPlaceName) {
-            if (strtolower((string) $this->deliveryPlaceCountry) === 'france') {
+            if (\mb_strtolower((string) $this->deliveryPlaceCountry) === 'france') {
                 $livraison_departement = " " . \substr((string) $this->deliveryPlacePostCode, 0, 2);
                 $this->deliveryPlaceCountry = "";
             } else {

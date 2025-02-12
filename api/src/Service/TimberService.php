@@ -102,7 +102,7 @@ final class TimberService
             ->setPublicComment($rawData->getString('commentaire_public'))
             ->setPrivateComment($rawData->getString('commentaire_cache'))
             ->setDispatch(
-                array_map(
+                \array_map(
                     // @phpstan-ignore argument.type
                     fn(array $dispatchRaw) => $this->makeTimberDispatchItemFromFormData(new ArrayHandler($dispatchRaw)),
                     $rawData->getArray('dispatch')
@@ -308,7 +308,7 @@ final class TimberService
         }
 
         if (!\is_null($dispatch)) {
-            $dispatchItems = array_map(
+            $dispatchItems = \array_map(
                 // @phpstan-ignore argument.type
                 function (array $dispatchRaw) {
                     $dispatchItem = $this->makeTimberDispatchItemFromFormData(new ArrayHandler($dispatchRaw));
@@ -487,7 +487,7 @@ final class TimberService
     {
         $suppliersWithUniqueDeliveryNoteNumber = $this->getSuppliersWithUniqueDeliveryNoteNumbers();
 
-        return array_key_exists($supplierId, $suppliersWithUniqueDeliveryNoteNumber);
+        return \array_key_exists($supplierId, $suppliersWithUniqueDeliveryNoteNumber);
     }
 
     public function getNextDeliveryNoteNumber(int $supplierId): ?string

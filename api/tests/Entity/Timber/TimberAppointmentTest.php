@@ -350,7 +350,7 @@ class TimberAppointmentTest extends TestCase
             ->setPublicComment('This is a public comment.')
             ->setPrivateComment('This is a private comment.')
             ->setDispatch(
-                array_map(function (array $item) {
+                \array_map(function (array $item) {
                     return (new TimberDispatchItem())
                         ->setStaff((new StevedoringStaff())->setId($item[0]))
                         ->setDate('2023-10-01')

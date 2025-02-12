@@ -152,6 +152,10 @@ final class PdfConfigService
      * @param \DateTimeInterface $endDate   Date de fin des RDV.
      * 
      * @return PlanningPDF
+     * 
+     * @throws ClientException Si l'identifiant de configuration est manquant.
+     * @throws NotFoundException Si la configuration PDF ou le fournisseur n'est pas trouvé.
+     * @throws ServerException Si le module spécifié n'est pas pris en charge.
      */
     public function generatePDF(
         ?int $configId,
@@ -269,11 +273,9 @@ final class PdfConfigService
 
             $module = $config->getModule();
 
-            if (!\in_array($module, $supportedModules)) {
+            if (!$module || !\in_array($module, $supportedModules)) {
                 throw new ServerException("Le module spécifié n'est pas pris en charge");
             }
-
-            /** @phpstan-var Module::* $module */
 
             $pdf = $this->generatePDF($configId, $startDate, $endDate);
 

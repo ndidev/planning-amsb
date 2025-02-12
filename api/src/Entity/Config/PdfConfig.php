@@ -78,7 +78,7 @@ class PdfConfig extends AbstractEntity
 
     public function getEmailsAsString(): string
     {
-        return implode(PHP_EOL, $this->emails);
+        return \implode(PHP_EOL, $this->emails);
     }
 
     /**
@@ -89,9 +89,9 @@ class PdfConfig extends AbstractEntity
     public function setEmails(array|string $emails): static
     {
         if (\is_string($emails)) {
-            $this->emails = \array_map('trim', explode(PHP_EOL, $emails));
+            $this->emails = \array_map('trim', \explode(PHP_EOL, $emails));
         } else {
-            $this->emails = array_filter($emails, 'is_string');
+            $this->emails = \array_filter($emails, 'is_string');
         }
 
         return $this;
