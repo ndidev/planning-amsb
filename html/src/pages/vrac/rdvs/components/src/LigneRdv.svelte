@@ -217,6 +217,19 @@
 
     if (awaitingDispatchBeforeArchive) return;
 
+    // Fix animal feed dispatch if it's not containing the quantity
+    if (
+      !appointment.archive &&
+      appointment.produit === 1 &&
+      appointment.dispatch.length === 1 &&
+      !new RegExp(`x${appointment.quantite}`).test(
+        appointment.dispatch[0].remarks
+      )
+    ) {
+      appointment.dispatch[0].remarks += " x" + appointment.quantite;
+      vracRdvs.patch(appointment.id, { dispatch: appointment.dispatch });
+    }
+
     Notiflix.Confirm.show(
       appointment.archive ? "Restauration RDV" : "Archivage RDV",
       appointment.archive

@@ -116,6 +116,10 @@
   }
 
   function cancelUpdate() {
+    appointment.dispatch = dispatch
+      .filter((item) => !item.new)
+      .map((item) => ({ ...item, deleted: false }));
+
     awaitingDispatchBeforeOrderReady = false;
     awaitingDispatchBeforeSettingDepartureTime = false;
     open = false;
