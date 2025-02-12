@@ -350,7 +350,7 @@
       </div>
     {/if}
 
-    {#if !appointment.heure_arrivee && appointment.date_rdv === new DateUtils().toLocaleISODateString() && $currentUser.canEdit("bois")}
+    {#if !appointment.heure_arrivee && appointment.date_rdv === new DateUtils().toLocaleISODateString() && (appointment.chargement === 1 || appointment.livraison === 1) && $currentUser.canEdit("bois")}
       <div class="invisible group-hover:visible text-center">
         <LucideButton
           icon={ClockIcon}
