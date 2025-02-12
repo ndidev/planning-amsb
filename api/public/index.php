@@ -142,14 +142,8 @@ $routes = [
     ["/user", UserController::class],
 ];
 
-/**
- * @var HTTPResponse $response
- */
 $response = new HTTPResponse();
 
-/**
- * Routeur
- */
 try {
     $router = new Router(
         $routes,
@@ -166,7 +160,7 @@ try {
     $params = $match["params"];
     $name = $match["name"];
 
-    if (!\is_string($controllerClass) || !class_exists($controllerClass)) {
+    if (!\is_string($controllerClass) || !\class_exists($controllerClass)) {
         throw new ServerException("Controller not found");
     }
 
@@ -177,7 +171,7 @@ try {
 
     $controller->sse->notify();
 } catch (\Throwable $e) {
-    $response = (new ErrorController($e))->getResponse();
+    $response = new ErrorController($e)->getResponse();
+} finally {
+    $response->send();
 }
-
-$response->send();

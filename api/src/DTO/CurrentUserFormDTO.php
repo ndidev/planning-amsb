@@ -6,63 +6,22 @@ declare(strict_types=1);
 
 namespace App\DTO;
 
-use App\Core\Exceptions\Client\BadRequestException;
+use App\Core\Validation\Constraints\Required;
+use App\Core\Validation\Validation;
+use App\Core\Validation\ValidatorTrait;
 
-class CurrentUserFormDTO
+class CurrentUserFormDTO implements Validation
 {
-    private string $uid = '';
-    private string $name = '';
-    private ?string $password = null;
-    private ?string $passwordHash = null;
+    use ValidatorTrait;
 
-    public function getUid(): string
-    {
-        return $this->uid;
-    }
+    public string $uid = '';
 
-    public function setUid(string $uid): static
-    {
-        $this->uid = $uid;
+    #[Required('Le nom est requis.')]
+    public string $name = '';
 
-        return $this;
-    }
+    public ?string $password = null;
 
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    public function setName(string $name): static
-    {
-        if (!$name) {
-            throw new BadRequestException('Le nom est requis.');
-        }
-
-        $this->name = $name;
-
-        return $this;
-    }
-
-    public function getPassword(): ?string
-    {
-        return $this->password;
-    }
-
-    public function setPassword(
-        #[\SensitiveParameter]
-        ?string $password
-    ): static {
-        $this->password = $password;
-
-        return $this;
-    }
-
-    public function getPasswordHash(): ?string
-    {
-        if ($this->password) {
-            $this->passwordHash = password_hash($this->password, PASSWORD_DEFAULT);
-        }
-
-        return $this->passwordHash;
+    public ?string $passwordHash {
+        get => $this->password ? \password_hash($this->password, PASSWORD_DEFAULT) : null;
     }
 }

@@ -7,3 +7,5 @@ parameters:
 		- ./bootstrap.php
 		- ./envoi_pdf_auto.php
 	treatPhpDocTypesAsCertain: false
+	universalObjectCratesClasses:
+		- App\Core\Auth\UserRoles

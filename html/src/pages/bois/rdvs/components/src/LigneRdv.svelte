@@ -26,7 +26,11 @@
     UserIcon,
   } from "lucide-svelte";
 
-  import { ThirdPartyAddress, DispatchModal } from "../";
+  import {
+    ThirdPartyAddress,
+    DispatchModal,
+    getDedicatedStaffForSupplier,
+  } from "../";
   import {
     LucideButton,
     BoutonAction,
@@ -119,9 +123,6 @@
       appointment.dispatch.map(({ remarks }) => remarks).join()
     );
 
-    const w2w = 219;
-    const yv = 13;
-
     switch (type) {
       case "beforeOrderReady":
         if (
@@ -131,7 +132,7 @@
           appointment.dispatch = [
             ...appointment.dispatch,
             {
-              staffId: appointment.fournisseur === w2w ? yv : null,
+              staffId: getDedicatedStaffForSupplier(appointment.fournisseur),
               date: new DateUtils().toLocaleISODateString(),
               remarks: "Préparation",
               new: true,
@@ -151,7 +152,7 @@
           appointment.dispatch = [
             ...appointment.dispatch,
             {
-              staffId: appointment.fournisseur === w2w ? yv : null,
+              staffId: getDedicatedStaffForSupplier(appointment.fournisseur),
               date: new DateUtils().toLocaleISODateString(),
               remarks:
                 appointment.chargement === 1 ? "Chargement" : "Déchargement",
@@ -349,7 +350,7 @@
       </div>
     {/if}
 
-    {#if !appointment.heure_arrivee && $currentUser.canEdit("bois")}
+    {#if !appointment.heure_arrivee && appointment.date_rdv === new DateUtils().toLocaleISODateString() && (appointment.chargement === 1 || appointment.livraison === 1) && $currentUser.canEdit("bois")}
       <div class="invisible group-hover:visible text-center">
         <LucideButton
           icon={ClockIcon}
@@ -481,29 +482,33 @@
 
   <!-- Commande prête -->
   <div class="col-start-1 row-start-3 lg:col-auto lg:row-auto">
-    <OrderReadyButton
-      bind:orderReady={appointment.commande_prete}
-      module="bois"
-      {toggleOrderReady}
-    />
+    {#if appointment.chargement === 1}
+      <OrderReadyButton
+        bind:orderReady={appointment.commande_prete}
+        module="bois"
+        {toggleOrderReady}
+      />
+    {/if}
   </div>
 
   <!-- Dispatch -->
   <div class="col-start-1 row-start-4 lg:col-auto lg:row-auto">
-    <DispatchButton
-      bind:dispatch={appointment.dispatch}
-      bind:showDispatchModal
-      module="bois"
-    />
+    {#if appointment.chargement === 1 || appointment.livraison === 1}
+      <DispatchButton
+        bind:dispatch={appointment.dispatch}
+        bind:showDispatchModal
+        module="bois"
+      />
 
-    <DispatchModal
-      bind:appointment
-      bind:open={showDispatchModal}
-      bind:awaitingDispatchBeforeOrderReady
-      {toggleOrderReady}
-      bind:awaitingDispatchBeforeSettingDepartureTime
-      {setDepartureTime}
-    />
+      <DispatchModal
+        bind:appointment
+        bind:open={showDispatchModal}
+        bind:awaitingDispatchBeforeOrderReady
+        {toggleOrderReady}
+        bind:awaitingDispatchBeforeSettingDepartureTime
+        {setDepartureTime}
+      />
+    {/if}
   </div>
 
   <!-- Numéro B/L -->

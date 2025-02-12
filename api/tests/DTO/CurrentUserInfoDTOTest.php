@@ -8,13 +8,13 @@ namespace App\Tests\DTO;
 
 use App\Core\Auth\UserRoles;
 use App\DTO\CurrentUserInfoDTO;
-use App\Entity\UserAccount;
+use App\Entity\User;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(CurrentUserInfoDTO::class)]
-#[UsesClass(UserAccount::class)]
+#[UsesClass(User::class)]
 #[UsesClass(UserRoles::class)]
 final class CurrentUserInfoDTOTest extends TestCase
 {
@@ -32,12 +32,12 @@ final class CurrentUserInfoDTOTest extends TestCase
             "statut" => "active",
         ];
 
-        $user = (new UserAccount())
-            ->setUid($userInfo['uid'])
-            ->setLogin($userInfo['login'])
-            ->setName($userInfo['nom'])
-            ->setRoles($userInfo['roles'])
-            ->setStatus($userInfo['statut']);
+        $user = new User();
+        $user->uid = $userInfo['uid'];
+        $user->login = $userInfo['login'];
+        $user->name = $userInfo['nom'];
+        $user->roles = $userInfo['roles'];
+        $user->status = $userInfo['statut'];
 
         $dto = new CurrentUserInfoDTO($user);
 

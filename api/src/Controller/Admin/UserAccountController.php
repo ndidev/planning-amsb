@@ -27,14 +27,11 @@ final class UserAccountController extends Controller
     ) {
         parent::__construct("OPTIONS, HEAD, GET, POST, PUT, DELETE");
 
-        if ($this->user->isAdmin() === false) {
+        if ($this->user->isAdmin === false) {
             throw new AdminException();
         }
 
-        $this->userService = new UserService(
-            currentUser: $this->user,
-            sse: $this->sse,
-        );
+        $this->userService = new UserService($this->user);
 
         $this->processRequest();
     }
@@ -131,7 +128,7 @@ final class UserAccountController extends Controller
         $newUser = $this->userService->createUserAccount($input);
 
         /** @var string $uid */
-        $uid = $newUser->getUid();
+        $uid = $newUser->uid;
 
         $this->response
             ->setCode(HTTPResponse::HTTP_CREATED_201)

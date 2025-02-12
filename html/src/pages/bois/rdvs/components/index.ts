@@ -1,4 +1,7 @@
-export { default as DispatchModal } from "./src/DispatchModal.svelte";
+export {
+  default as DispatchModal,
+  getDedicatedStaffForSupplier,
+} from "./src/DispatchModal.svelte";
 export { default as ExtractionRegistre } from "./src/ExtractionRegistre.svelte";
 export { default as FilterModal, filter } from "./src/FilterModal.svelte";
 export { default as LigneDate } from "./src/LigneDate.svelte";

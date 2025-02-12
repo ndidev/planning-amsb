@@ -11,10 +11,10 @@ const CLIENTS_PORT = parseInt(env["SSE_CLIENTS_PORT"] as string);
  *
  * Reçoit les connexions clients et les enregistre.
  */
-const sseServer = http.createServer(clientsListener);
-sseServer.listen(CLIENTS_PORT, () => {
+const clientsServer = http.createServer(clientsListener);
+clientsServer.listen(CLIENTS_PORT, () => {
   console.log(
-    `[${new Date().toISOString()}] SSE server listening on port ${CLIENTS_PORT}...`
+    `[${new Date().toISOString()}] Clients server listening on port ${CLIENTS_PORT}...`
   );
 });
 

@@ -11,7 +11,6 @@ use App\Core\Database\Redis;
 
 abstract class Repository
 {
-
     protected MySQL $mysql {
         get => self::$staticMysql ??= new MySQL();
     }

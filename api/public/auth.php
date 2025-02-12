@@ -6,15 +6,14 @@ declare(strict_types=1);
 
 require_once __DIR__ . "/../bootstrap.php";
 
-use App\Core\Auth\User;
-use App\Core\Exceptions\AppException;
+use App\Controller\ErrorController;
+use App\Core\Array\Environment;
+use App\Core\Array\Server;
+use App\Core\Auth\UserAuthenticator;
 use App\Core\Exceptions\Client\Auth\AccountPendingException;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Server\ServerException;
-use App\Core\Array\Environment;
-use App\Core\Array\Server;
 use App\Core\HTTP\HTTPResponse;
-use App\Core\Logger\ErrorLogger;
 use App\Core\Security;
 
 
@@ -65,12 +64,14 @@ parse_str($url["query"] ?? "", $query);
 
 $response = new HTTPResponse();
 
+$userAuthenticator = new UserAuthenticator();
+
 /**
  * Liste des endoints.
  */
 try {
     switch ($endpoint) {
-            /** AFFICHAGE GENERAL */
+        /** AFFICHAGE GENERAL */
         case null:
         case "":
         case "/":
@@ -105,7 +106,7 @@ try {
 
             // Authentification et envoi du cookie
             try {
-                $user = (new User())->login($_POST["login"], $_POST["password"]);
+                $user = $userAuthenticator->login($_POST["login"], $_POST["password"]);
 
                 $response->setJSON([
                     "uid" => $user->uid,
@@ -125,7 +126,7 @@ try {
 
         case '/logout':
             // Suppression de la session et suppression du cookie
-            (new User())->logout();
+            $userAuthenticator->logout();
             $response->setCode(HTTPResponse::HTTP_NO_CONTENT_204);
             break;
 
@@ -137,7 +138,7 @@ try {
                 break;
             }
 
-            $user = (new User)->identifyFromSession();
+            $user = $userAuthenticator->identifyFromSession();
 
             $response->setJSON([
                 "login" => $user->login,
@@ -158,7 +159,7 @@ try {
                 throw new BadRequestException("Login et mot de passe requis");
             }
 
-            (new User())->initializeAccount($_POST["login"], $_POST["password"]);
+            $userAuthenticator->initializeAccount($_POST["login"], $_POST["password"]);
 
             break;
 
@@ -179,15 +180,10 @@ try {
             $response->setCode(HTTPResponse::HTTP_NOT_FOUND_404);
             break;
     }
-} catch (AppException $e) {
-    $response
-        ->setCode($e->httpStatus)
-        ->setText($e->getMessage());
+
+    $userAuthenticator->sse->notify();
 } catch (\Throwable $e) {
-    ErrorLogger::log($e);
-    $response
-        ->setCode(HTTPResponse::HTTP_INTERNAL_SERVER_ERROR_500)
-        ->setText("Erreur serveur");
+    $response = new ErrorController($e)->getResponse();
 } finally {
     $response->send();
 }

@@ -6,20 +6,20 @@ declare(strict_types=1);
 
 namespace App\DTO;
 
-use App\Entity\UserAccount;
+use App\Entity\User;
 
 class CurrentUserInfoDTO implements \JsonSerializable
 {
-    public function __construct(private UserAccount $user) {}
+    public function __construct(private User $user) {}
 
     public function jsonSerialize(): mixed
     {
         return [
-            "uid" => $this->user->getUid(),
-            "login" => $this->user->getLogin(),
-            "nom" => $this->user->getName(),
-            "roles" => $this->user->getRoles()->toArray(),
-            "statut" => $this->user->getStatus(),
+            "uid" => $this->user->uid,
+            "login" => $this->user->login,
+            "nom" => $this->user->name,
+            "roles" => $this->user->roles->toArray(),
+            "statut" => $this->user->status,
         ];
     }
 }
