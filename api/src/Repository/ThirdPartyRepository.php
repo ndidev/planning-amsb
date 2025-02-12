@@ -134,18 +134,18 @@ final class ThirdPartyRepository extends Repository
         $this->mysql->beginTransaction();
 
         $this->mysql->prepareAndExecute($statement, [
-            'shortName' => $thirdParty->getShortName() ?: $thirdParty->getFullName(),
-            'fullName' => $thirdParty->getFullName(),
-            'addressLine1' => $thirdParty->getAddressLine1(),
-            'addressLine2' => $thirdParty->getAddressLine2(),
-            'postCode' => $thirdParty->getPostCode(),
-            'city' => $thirdParty->getCity(),
-            'country' => $thirdParty->getCountry()?->getISO(),
-            'phone' => $thirdParty->getPhone(),
-            'comments' => $thirdParty->getComments(),
-            'roles' => \json_encode($thirdParty->getRoles()),
-            'logo' => $thirdParty->getLogoFilename(),
-            'active' => (int) $thirdParty->isActive(),
+            'shortName' => $thirdParty->shortName ?: $thirdParty->fullName,
+            'fullName' => $thirdParty->fullName,
+            'addressLine1' => $thirdParty->addressLine1,
+            'addressLine2' => $thirdParty->addressLine2,
+            'postCode' => $thirdParty->postCode,
+            'city' => $thirdParty->city,
+            'country' => $thirdParty->country?->iso,
+            'phone' => $thirdParty->phone,
+            'comments' => $thirdParty->comments,
+            'roles' => \json_encode($thirdParty->roles),
+            'logo' => $thirdParty->logoFilename,
+            'active' => (int) $thirdParty->isActive,
         ]);
 
         $lastInsertId = (int) $this->mysql->lastInsertId();
@@ -173,7 +173,7 @@ final class ThirdPartyRepository extends Repository
         }
 
         // Si un logo a été ajouté, l'utiliser, sinon, ne pas changer
-        $logoStatement = $thirdParty->getLogoFilename() !== false ? ":logo" : "logo";
+        $logoStatement = $thirdParty->logoFilename !== false ? ":logo" : "logo";
 
         $thirdPartyStatement =
             "UPDATE tiers
@@ -193,22 +193,22 @@ final class ThirdPartyRepository extends Repository
             WHERE id = :id";
 
         $fields = [
-            'shortName' => $thirdParty->getShortName() ?: $thirdParty->getFullName(),
-            'fullName' => $thirdParty->getFullName(),
-            'addressLine1' => $thirdParty->getAddressLine1(),
-            'addressLine2' => $thirdParty->getAddressLine2(),
-            'postCode' => $thirdParty->getPostCode(),
-            'city' => $thirdParty->getCity(),
-            'country' => $thirdParty->getCountry()?->getISO(),
-            'phone' => $thirdParty->getPhone(),
-            'comments' => $thirdParty->getComments(),
-            'roles' => \json_encode($thirdParty->getRoles()),
-            'active' => (int) $thirdParty->isActive(),
+            'shortName' => $thirdParty->shortName ?: $thirdParty->fullName,
+            'fullName' => $thirdParty->fullName,
+            'addressLine1' => $thirdParty->addressLine1,
+            'addressLine2' => $thirdParty->addressLine2,
+            'postCode' => $thirdParty->postCode,
+            'city' => $thirdParty->city,
+            'country' => $thirdParty->country?->iso,
+            'phone' => $thirdParty->phone,
+            'comments' => $thirdParty->comments,
+            'roles' => \json_encode($thirdParty->roles),
+            'active' => (int) $thirdParty->isActive,
             'id' => $thirdParty->id,
         ];
 
-        if ($thirdParty->getLogoFilename() !== false) {
-            $fields["logo"] = $thirdParty->getLogoFilename();
+        if ($thirdParty->logoFilename !== false) {
+            $fields["logo"] = $thirdParty->logoFilename;
         }
 
         $this->mysql->prepareAndExecute($thirdPartyStatement, $fields);

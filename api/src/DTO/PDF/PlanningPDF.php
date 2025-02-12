@@ -34,7 +34,7 @@ abstract class PlanningPDF extends \tFPDF
     function Header(): void
     {
         // Logo
-        $logoFilename = $this->supplier->getLogoFilename();
+        $logoFilename = $this->supplier->logoFilename;
         if ($logoFilename && file_exists(LOGOS . "/" . $logoFilename)) {
             $this->includeLogo(LOGOS . "/" . $logoFilename);
         }
@@ -45,7 +45,7 @@ abstract class PlanningPDF extends \tFPDF
         // Décalage à droite
         $this->Cell(70);
         // Titre
-        $this->Cell(70, 10, "Planning {$this->supplier->getShortName()} ({$this->agencyDepartment->getCity()})", 'B', 0, 'C');
+        $this->Cell(70, 10, "Planning {$this->supplier->shortName} ({$this->agencyDepartment->getCity()})", 'B', 0, 'C');
         // Saut de ligne
         $this->Ln(20);
     }
@@ -191,6 +191,6 @@ abstract class PlanningPDF extends \tFPDF
         $pdf_height_mm = min($pdf_height_mm, $PNG_MAX_HEIGHT);
         $pdf_width_mm = $pdf_height_mm * $ratio;
 
-        $this->Image(LOGOS . "/" . $this->supplier->getLogoFilename(), 10, 6, $pdf_width_mm, $pdf_height_mm);
+        $this->Image(LOGOS . "/" . $this->supplier->logoFilename, 10, 6, $pdf_width_mm, $pdf_height_mm);
     }
 }

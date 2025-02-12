@@ -260,7 +260,7 @@ final class TimberService
                 !$this->isDeliveryNoteNumberAvailable($deliveryNoteNumber, $supplierId, $appointmentId)
             ) {
                 throw new ClientException(
-                    "Le numéro de BL {$deliveryNoteNumber} est déjà utilisé pour {$supplier?->getShortName()}."
+                    "Le numéro de BL {$deliveryNoteNumber} est déjà utilisé pour {$supplier?->shortName}."
                 );
             }
 
