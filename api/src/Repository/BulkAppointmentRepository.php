@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\DTO\BulkDispatchStatsDTO;
@@ -73,7 +74,7 @@ final class BulkAppointmentRepository extends Repository
             ORDER BY date_rdv";
 
         try {
-            /** @phpstan-var BulkAppointmentArray[] $appointmentsRaw */
+            /** @var BulkAppointmentArray[] */
             $appointmentsRaw = $this->mysql
                 ->prepareAndExecute(
                     $statement,
@@ -85,7 +86,7 @@ final class BulkAppointmentRepository extends Repository
                 ->fetchAll();
 
             $appointments = \array_map(
-                fn(array $appointmentRaw) => $this->bulkService->makeBulkAppointmentFromDatabase($appointmentRaw),
+                fn($appointmentRaw) => $this->bulkService->makeBulkAppointmentFromDatabase(new ArrayHandler($appointmentRaw)),
                 $appointmentsRaw
             );
 
@@ -94,7 +95,7 @@ final class BulkAppointmentRepository extends Repository
                 /** @var int $id */
                 $id = $appointment->id;
                 $dispatch = $this->fetchDispatchForAppointment($id);
-                $appointment->setDispatch($dispatch);
+                $appointment->dispatch = $dispatch;
             }
 
             return new Collection($appointments);
@@ -147,11 +148,11 @@ final class BulkAppointmentRepository extends Repository
 
             /** @phpstan-var BulkAppointmentArray $appointmentRaw */
 
-            $appointment = $this->bulkService->makeBulkAppointmentFromDatabase($appointmentRaw);
+            $appointment = $this->bulkService->makeBulkAppointmentFromDatabase(new ArrayHandler($appointmentRaw));
 
             // Get dispatch
             $dispatch = $this->fetchDispatchForAppointment($id);
-            $appointment->setDispatch($dispatch);
+            $appointment->dispatch = $dispatch;
 
             return $appointment;
         } catch (\PDOException $e) {
@@ -197,26 +198,26 @@ final class BulkAppointmentRepository extends Repository
 
             $this->mysql->beginTransaction();
             $request->execute([
-                'date' => $appointment->getSqlDate(),
-                'time' => $appointment->getSqlTime(),
-                'productId' => $appointment->getProduct()?->id,
-                'qualityId' => $appointment->getQuality()?->id,
-                'quantity' => $appointment->getQuantityValue(),
-                'max' => (int) $appointment->getQuantityIsMax(),
-                'orderIsReady' => (int) $appointment->isReady(),
-                'supplierId' => $appointment->getSupplier()?->id,
-                'customerId' => $appointment->getCustomer()?->id,
-                'carrierId' => $appointment->getCarrier()?->id,
-                'orderNumber' => $appointment->getOrderNumber(),
-                'publicComments' => $appointment->getPublicComments(),
-                'privateComments' => $appointment->getPrivateComments(),
-                'showOnTv' => (int) $appointment->isOnTv(),
-                'archive' => (int) $appointment->isArchive(),
+                'date' => $appointment->sqlDate,
+                'time' => $appointment->sqlTime,
+                'productId' => $appointment->product?->id,
+                'qualityId' => $appointment->quality?->id,
+                'quantity' => $appointment->quantityValue,
+                'max' => (int) $appointment->quantityIsMax,
+                'orderIsReady' => (int) $appointment->isReady,
+                'supplierId' => $appointment->supplier?->id,
+                'customerId' => $appointment->customer?->id,
+                'carrierId' => $appointment->carrier?->id,
+                'orderNumber' => $appointment->orderNumber,
+                'publicComments' => $appointment->publicComments,
+                'privateComments' => $appointment->privateComments,
+                'showOnTv' => (int) $appointment->isOnTv,
+                'archive' => (int) $appointment->isArchive,
             ]);
 
             $lastInsertId = (int) $this->mysql->lastInsertId();
 
-            $this->insertDispatchForAppointment($lastInsertId, $appointment->getDispatch());
+            $this->insertDispatchForAppointment($lastInsertId, $appointment->dispatch);
 
             $this->mysql->commit();
 
@@ -266,21 +267,21 @@ final class BulkAppointmentRepository extends Repository
             }
 
             $request->execute([
-                'date' => $appointment->getSqlDate(),
-                'time' => $appointment->getSqlTime(),
-                'productId' => $appointment->getProduct()?->id,
-                'qualityId' => $appointment->getQuality()?->id,
-                'quantity' => $appointment->getQuantityValue(),
-                'max' => (int) $appointment->getQuantityIsMax(),
-                'orderIsReady' => (int) $appointment->isReady(),
-                'supplierId' => $appointment->getSupplier()?->id,
-                'customerId' => $appointment->getCustomer()?->id,
-                'carrierId' => $appointment->getCarrier()?->id,
-                'orderNumber' => $appointment->getOrderNumber(),
-                'publicComments' => $appointment->getPublicComments(),
-                'privateComments' => $appointment->getPrivateComments(),
-                'showOnTv' => (int) $appointment->isOnTv(),
-                'archive' => (int) $appointment->isArchive(),
+                'date' => $appointment->sqlDate,
+                'time' => $appointment->sqlTime,
+                'productId' => $appointment->product?->id,
+                'qualityId' => $appointment->quality?->id,
+                'quantity' => $appointment->quantityValue,
+                'max' => (int) $appointment->quantityIsMax,
+                'orderIsReady' => (int) $appointment->isReady,
+                'supplierId' => $appointment->supplier?->id,
+                'customerId' => $appointment->customer?->id,
+                'carrierId' => $appointment->carrier?->id,
+                'orderNumber' => $appointment->orderNumber,
+                'publicComments' => $appointment->publicComments,
+                'privateComments' => $appointment->privateComments,
+                'showOnTv' => (int) $appointment->isOnTv,
+                'archive' => (int) $appointment->isArchive,
                 'id' => $appointment->id,
             ]);
 
@@ -289,7 +290,7 @@ final class BulkAppointmentRepository extends Repository
             $id = $appointment->id;
 
             $this->deleteDispatchForAppointment($id);
-            $this->insertDispatchForAppointment($id, $appointment->getDispatch());
+            $this->insertDispatchForAppointment($id, $appointment->dispatch);
 
             /** @var BulkAppointment */
             $updatedAppointment = $this->getAppointment($id);
@@ -440,7 +441,7 @@ final class BulkAppointmentRepository extends Repository
             $appointmentsRaw = $request->fetchAll();
 
             $appointments = \array_map(
-                fn(array $appointmentRaw) => $this->bulkService->makeBulkAppointmentFromDatabase($appointmentRaw),
+                fn($appointmentRaw) => $this->bulkService->makeBulkAppointmentFromDatabase(new ArrayHandler($appointmentRaw)),
                 $appointmentsRaw
             );
 
@@ -480,7 +481,7 @@ final class BulkAppointmentRepository extends Repository
                 ->fetchAll();
 
             $dispatches = \array_map(
-                fn(array $dispatchRaw) => $this->bulkService->makeBulkDispatchItemFromDatabase($dispatchRaw),
+                fn($dispatchRaw) => $this->bulkService->makeBulkDispatchItemFromDatabase(new ArrayHandler($dispatchRaw)),
                 $dispatchesRaw
             );
 
@@ -518,9 +519,9 @@ final class BulkAppointmentRepository extends Repository
                 \array_map(
                     fn(BulkDispatchItem $dispatchItem) => [
                         'id' => $id,
-                        'staffId' => $dispatchItem->getStaff()?->id,
-                        'date' => $dispatchItem->getDate()?->format('Y-m-d'),
-                        'remarks' => $dispatchItem->getRemarks(),
+                        'staffId' => $dispatchItem->staff?->id,
+                        'date' => $dispatchItem->date?->format('Y-m-d'),
+                        'remarks' => $dispatchItem->remarks,
                     ],
                     $dispatch
                 )

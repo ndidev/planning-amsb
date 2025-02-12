@@ -16,40 +16,32 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(BulkQuality::class)]
 class BulkProductTest extends TestCase
 {
-    public function testSetAndGetName(): void
-    {
-        // Given
-        $bulkProduct = new BulkProduct();
-
-        // When
-        $bulkProduct->setName("Test Product");
-
-        // Then
-        $this->assertEquals("Test Product", $bulkProduct->getName());
-    }
-
     public function testSetAndGetColor(): void
     {
         // Given
         $bulkProduct = new BulkProduct();
+        $color = 'Red';
 
         // When
-        $bulkProduct->setColor("Red");
+        $bulkProduct->color = $color;
+        $actualColor = $bulkProduct->color;
 
         // Then
-        $this->assertEquals("Red", $bulkProduct->getColor());
+        $this->assertEquals($color, $actualColor);
     }
 
-    public function testSetAndGetUnit(): void
+    public function testSetAndGetEmptyColor(): void
     {
         // Given
         $bulkProduct = new BulkProduct();
+        $expectedColor = BulkProduct::DEFAULT_COLOR;
 
         // When
-        $bulkProduct->setUnit("kg");
+        $bulkProduct->color = '';
+        $actualColor = $bulkProduct->color;
 
         // Then
-        $this->assertEquals("kg", $bulkProduct->getUnit());
+        $this->assertEquals($expectedColor, $actualColor);
     }
 
     public function testSetAndGetQualities(): void
@@ -60,29 +52,31 @@ class BulkProductTest extends TestCase
         $quality2 = new BulkQuality();
 
         // When
-        $bulkProduct->setQualities([$quality1, $quality2]);
+        $bulkProduct->qualities = [$quality1, $quality2];
 
         // Then
-        $this->assertCount(2, $bulkProduct->getQualities());
-        $this->assertSame($quality1, $bulkProduct->getQualities()[0]);
-        $this->assertSame($quality2, $bulkProduct->getQualities()[1]);
+        $this->assertCount(2, $bulkProduct->qualities);
+        $this->assertSame($quality1, $bulkProduct->qualities[0]);
+        $this->assertSame($quality2, $bulkProduct->qualities[1]);
+        $this->assertSame($bulkProduct, $quality1->product);
+        $this->assertSame($bulkProduct, $quality2->product);
     }
 
     public function testToArray(): void
     {
         // Given
         $bulkProduct = new BulkProduct();
-        $bulkProduct->setId(1)
-            ->setName("Test Product")
-            ->setColor("Red")
-            ->setUnit("kg");
+        $bulkProduct->id = 1;
+        $bulkProduct->name = "Test Product";
+        $bulkProduct->color = "Red";
+        $bulkProduct->unit = "kg";
 
         $quality = $this->createMock(BulkQuality::class);
         $quality->expects($this->once())
             ->method('toArray')
             ->willReturn(['quality' => 'high']);
 
-        $bulkProduct->setQualities([$quality]);
+        $bulkProduct->qualities = [$quality];
 
         $expectedArray = [
             "id" => 1,

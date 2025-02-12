@@ -52,8 +52,8 @@ final class BulkPDF extends PlanningPDF
             $previousDate = null;
 
             foreach ($this->appointments as $appointment) {
-                $appointmentDate = $appointment->getDate();
-                $appointmentTime = $appointment->getTime();
+                $appointmentDate = $appointment->date;
+                $appointmentTime = $appointment->time;
 
                 $formattedTime = $appointmentTime
                     ? DateUtils::format(DateUtils::ISO_TIME, $appointmentTime)
@@ -68,14 +68,14 @@ final class BulkPDF extends PlanningPDF
 
                 $this->AddLine(
                     $formattedTime,
-                    $appointment->getProduct()?->getName(),
-                    $appointment->getProduct()?->getColor(),
-                    $appointment->getQuality()?->getName(),
-                    $appointment->getQuality()?->getColor(),
-                    $appointment->getCustomer()?->getShortName(),
-                    $appointment->getCustomer()?->getCity(),
-                    $appointment->getCarrier()?->getShortName() ?? "",
-                    $appointment->getOrderNumber()
+                    $appointment->product?->name,
+                    $appointment->product?->color,
+                    $appointment->quality?->name,
+                    $appointment->quality?->color,
+                    $appointment->customer?->shortName,
+                    $appointment->customer?->city,
+                    $appointment->carrier->shortName ?? "",
+                    $appointment->orderNumber
                 );
 
                 $previousDate = $appointmentDate;

@@ -25,56 +25,22 @@ class BulkQuality extends AbstractEntity
     public const DEFAULT_COLOR = "#000000";
 
     #[Required("Le nom est obligatoire.")]
-    private string $name = "";
+    public string $name = '';
 
     #[Required("La couleur est obligatoire.")]
-    private string $color = self::DEFAULT_COLOR;
-
-    private ?BulkProduct $product = null;
-
-    public function setName(string $name): static
-    {
-        $this->name = $name;
-
-        return $this;
+    public string $color = self::DEFAULT_COLOR {
+        set => $value ?: self::DEFAULT_COLOR;
     }
 
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    public function setColor(string $color): static
-    {
-        $this->color = $color;
-
-        return $this;
-    }
-
-    public function getColor(): string
-    {
-        return $this->color ?: self::DEFAULT_COLOR;
-    }
-
-    public function setProduct(BulkProduct $produit): static
-    {
-        $this->product = $produit;
-
-        return $this;
-    }
-
-    public function getProduct(): ?BulkProduct
-    {
-        return $this->product;
-    }
+    public ?BulkProduct $product = null;
 
     #[\Override]
     public function toArray(): array
     {
         return [
             "id" => $this->id,
-            "nom" => $this->getName(),
-            "couleur" => $this->getColor(),
+            "nom" => $this->name,
+            "couleur" => $this->color,
         ];
     }
 }

@@ -16,60 +16,52 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(BulkProduct::class)]
 class BulkQualityTest extends TestCase
 {
-    public function testSetName(): void
+    public function testSetAndGetColor(): void
     {
         // Given
-        $bulkQuality = new BulkQuality();
-        $name = "High Quality";
+        $bulkProduct = new BulkQuality();
+        $color = 'Red';
 
         // When
-        $bulkQuality->setName($name);
+        $bulkProduct->color = $color;
+        $actualColor = $bulkProduct->color;
 
         // Then
-        $this->assertEquals($name, $bulkQuality->getName());
+        $this->assertEquals($color, $actualColor);
     }
 
-    public function testSetColor(): void
+    public function testSetAndGetEmptyColor(): void
     {
         // Given
-        $bulkQuality = new BulkQuality();
-        $color = "Red";
+        $bulkProduct = new BulkQuality();
+        $expectedColor = BulkQuality::DEFAULT_COLOR;
 
         // When
-        $bulkQuality->setColor($color);
+        $bulkProduct->color = '';
+        $actualColor = $bulkProduct->color;
 
         // Then
-        $this->assertEquals($color, $bulkQuality->getColor());
-    }
-
-    public function testSetProduct(): void
-    {
-        // Given
-        $bulkQuality = new BulkQuality();
-        $bulkProduct = $this->createMock(BulkProduct::class);
-
-        // When
-        $bulkQuality->setProduct($bulkProduct);
-
-        // Then
-        $this->assertSame($bulkProduct, $bulkQuality->getProduct());
+        $this->assertEquals($expectedColor, $actualColor);
     }
 
     public function testToArray(): void
     {
         // Given
         $bulkQuality = new BulkQuality();
-        $bulkQuality->setName("High Quality");
-        $bulkQuality->setColor("Red");
+        $bulkQuality->id = 1;
+        $bulkQuality->name = "High Quality";
+        $bulkQuality->color = "Red";
+
+        $expectedArray = [
+            'id' => 1,
+            'nom' => "High Quality",
+            'couleur' => "Red",
+        ];
 
         // When
-        $array = $bulkQuality->toArray();
+        $actualArray = $bulkQuality->toArray();
 
         // Then
-        $this->assertArrayHasKey('id', $array);
-        $this->assertArrayHasKey('nom', $array);
-        $this->assertArrayHasKey('couleur', $array);
-        $this->assertEquals("High Quality", $array['nom']);
-        $this->assertEquals("Red", $array['couleur']);
+        $this->assertEquals($expectedArray, $actualArray);
     }
 }

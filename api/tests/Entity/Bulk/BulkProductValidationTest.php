@@ -42,7 +42,7 @@ class BulkProductValidationTest extends TestCase
     {
         // Given
         $product = $this->makeValidProduct();
-        $product->setName('');
+        $product->name = '';
 
         // Then
         $this->expectException(ValidationException::class);
@@ -51,24 +51,24 @@ class BulkProductValidationTest extends TestCase
         $product->validate();
     }
 
-    public function testExpectValidationExceptionWhenColorIsEmpty(): void
+    public function testExpectNoValidationExceptionWhenColorIsEmpty(): void
     {
         // Given
         $product = $this->makeValidProduct();
-        $product->setColor('');
-
-        // Then
-        $this->expectException(ValidationException::class);
+        $product->color = '';
 
         // When
         $product->validate();
+
+        // Then
+        $this->expectNotToPerformAssertions();
     }
 
     public function testExpectNoValidationExceptionWhenUnitIsEmpty(): void
     {
         // Given
         $product = $this->makeValidProduct();
-        $product->setUnit('');
+        $product->unit = '';
 
         // When
         $product->validate();
@@ -80,9 +80,9 @@ class BulkProductValidationTest extends TestCase
     private function makeValidProduct(): BulkProduct
     {
         $product = new BulkProduct();
-        $product->setName('Test Product');
-        $product->setColor('Red');
-        $product->setUnit('kg');
+        $product->name = 'Test Product';
+        $product->color = 'Red';
+        $product->unit = 'kg';
 
         return $product;
     }
