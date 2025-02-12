@@ -112,20 +112,7 @@
       Notiflix.Block.dots([ligne], notiflixOptions.texts.envoi);
       ligne.style.minHeight = "initial";
 
-      type SendingResult = {
-        statut: "succes" | "echec";
-        message: string;
-        module: string;
-        fournisseur: number;
-        adresses: {
-          from: string;
-          to: string[];
-          cc: [];
-          bcc: [];
-        };
-      };
-
-      const resultat: SendingResult = await fetcher("config/pdf/generer", {
+      await fetcher("config/pdf/generer", {
         requestInit: {
           method: "POST",
           body: JSON.stringify({
@@ -136,13 +123,7 @@
         },
       });
 
-      if (resultat.statut === "succes") {
-        Notiflix.Notify.success(resultat.message);
-      }
-
-      if (resultat.statut === "echec") {
-        throw new Error("Échec d'envoi du PDF");
-      }
+      Notiflix.Notify.success("Le PDF a été envoyé avec succès");
     } catch (err) {
       Notiflix.Notify.failure(err.message);
     } finally {
