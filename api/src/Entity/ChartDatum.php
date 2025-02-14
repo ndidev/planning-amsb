@@ -17,56 +17,20 @@ use App\Core\Validation\Constraints\PositiveNumber;
  */
 class ChartDatum extends AbstractEntity
 {
-    private string $name = '';
+    public string $name = '';
 
-    private string $displayName = '';
+    public string $displayName = '';
 
     #[PositiveNumber('La valeur doit être un nombre positif.')]
-    private float $value = 0.0;
-
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    public function setName(string $name): static
-    {
-        $this->name = $name;
-
-        return $this;
-    }
-
-    public function getDisplayName(): string
-    {
-        return $this->displayName;
-    }
-
-    public function setDisplayName(string $displayName): static
-    {
-        $this->displayName = $displayName;
-
-        return $this;
-    }
-
-    public function getValue(): float
-    {
-        return $this->value;
-    }
-
-    public function setValue(float $value): static
-    {
-        $this->value = $value;
-
-        return $this;
-    }
+    public float $value = 0.0;
 
     #[\Override]
     public function toArray(): array
     {
         return [
-            'cote' => $this->getName(),
-            'affichage' => $this->getDisplayName(),
-            'valeur' => $this->getValue(),
+            'cote' => $this->name,
+            'affichage' => $this->displayName,
+            'valeur' => $this->value,
         ];
     }
 }

@@ -35,10 +35,10 @@ final class ChartDatumService
     {
         $rawDataAH = new ArrayHandler($rawData);
 
-        $chartDatum = (new ChartDatum())
-            ->setName($rawDataAH->getString('cote'))
-            ->setDisplayName($rawDataAH->getString('affichage'))
-            ->setValue($rawDataAH->getFloat('valeur', 0));
+        $chartDatum = new ChartDatum();
+        $chartDatum->name = $rawDataAH->getString('cote');
+        $chartDatum->displayName = $rawDataAH->getString('affichage');
+        $chartDatum->value = $rawDataAH->getFloat('valeur', 0);
 
         return $chartDatum;
     }
@@ -50,10 +50,10 @@ final class ChartDatumService
      */
     public function makeChartDatumFromForm(HTTPRequestBody $rawData): ChartDatum
     {
-        $chartDatum = (new ChartDatum())
-            ->setName($rawData->getString('cote'))
-            ->setDisplayName($rawData->getString('affichage'))
-            ->setValue($rawData->getFloat('valeur', 0));
+        $chartDatum = new ChartDatum();
+        $chartDatum->name = $rawData->getString('cote');
+        $chartDatum->displayName = $rawData->getString('affichage');
+        $chartDatum->value = $rawData->getFloat('valeur', 0);
 
         return $chartDatum;
     }
@@ -86,7 +86,8 @@ final class ChartDatumService
      */
     public function updateDatumValue(string $name, HTTPRequestBody $rawData): ChartDatum
     {
-        $chartDatum = $this->makeChartDatumFromForm($rawData)->setName($name);
+        $chartDatum = $this->makeChartDatumFromForm($rawData);
+        $chartDatum->name = $name;
 
         $chartDatum->validate();
 

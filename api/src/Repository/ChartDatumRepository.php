@@ -84,14 +84,13 @@ final class ChartDatumRepository extends Repository
     {
         $statement = "UPDATE config_cotes SET valeur = :value WHERE cote = :name";
 
-        $request = $this->mysql->prepare($statement);
-        $request->execute([
-            'value' => $datum->getValue(),
-            'name' => $datum->getName(),
+        $this->mysql->prepareAndExecute($statement, [
+            'value' => $datum->value,
+            'name' => $datum->name,
         ]);
 
         /** @var ChartDatum */
-        $updatedDatum = $this->fetchDatum($datum->getName());
+        $updatedDatum = $this->fetchDatum($datum->name);
 
         return $updatedDatum;
     }
