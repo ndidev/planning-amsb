@@ -888,9 +888,9 @@ final class TimberAppointmentRepository extends Repository
             foreach ($dispatch as $dispatchItem) {
                 $request->execute([
                     'id' => $id,
-                    'staffId' => $dispatchItem->getStaff()?->id,
-                    'date' => $dispatchItem->getDate()?->format('Y-m-d'),
-                    'remarks' => $dispatchItem->getRemarks(),
+                    'staffId' => $dispatchItem->staff?->id,
+                    'date' => $dispatchItem->date?->format('Y-m-d'),
+                    'remarks' => $dispatchItem->remarks,
                 ]);
             }
         } catch (\PDOException $e) {

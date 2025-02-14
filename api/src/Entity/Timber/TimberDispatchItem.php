@@ -19,71 +19,25 @@ use App\Entity\Timber\TimberAppointment;
  */
 class TimberDispatchItem extends AbstractEntity
 {
-    private ?TimberAppointment $appointment = null;
+    public ?TimberAppointment $appointment = null;
 
     #[Required("Le personnel est obligatoire.")]
-    private ?StevedoringStaff $staff = null;
+    public ?StevedoringStaff $staff = null;
 
     #[Required("La date est obligatoire.")]
-    private ?\DateTimeImmutable $date = null;
-
-    private string $remarks = '';
-
-    public function setAppointment(TimberAppointment $appointment): static
-    {
-        $this->appointment = $appointment;
-
-        return $this;
+    public ?\DateTimeImmutable $date = null {
+        set(\DateTimeImmutable|string|null $value) => DateUtils::makeDateTimeImmutable($value);
     }
 
-    public function getAppointment(): ?TimberAppointment
-    {
-        return $this->appointment;
-    }
-
-    public function setStaff(?StevedoringStaff $stevedoringStaff): static
-    {
-        $this->staff = $stevedoringStaff;
-
-        return $this;
-    }
-
-    public function getStaff(): ?StevedoringStaff
-    {
-        return $this->staff;
-    }
-
-    public function setDate(\DateTimeImmutable|string|null $date): static
-    {
-        $this->date = DateUtils::makeDateTimeImmutable($date);
-
-        return $this;
-    }
-
-    public function getDate(): ?\DateTimeImmutable
-    {
-        return $this->date;
-    }
-
-    public function setRemarks(string $role): static
-    {
-        $this->remarks = $role;
-
-        return $this;
-    }
-
-    public function getRemarks(): string
-    {
-        return $this->remarks;
-    }
+    public string $remarks = '';
 
     public function toArray(): array
     {
         return [
-            'appointmentId' => $this->getAppointment()?->id,
-            'staffId' => $this->getStaff()?->id,
-            'date' => $this->getDate()?->format('Y-m-d'),
-            'remarks' => $this->getRemarks(),
+            'appointmentId' => $this->appointment?->id,
+            'staffId' => $this->staff?->id,
+            'date' => $this->date?->format('Y-m-d'),
+            'remarks' => $this->remarks,
         ];
     }
 }

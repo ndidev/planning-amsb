@@ -277,7 +277,8 @@ class TimberAppointment extends AbstractEntity
         $this->dispatch = $dispatch;
 
         foreach ($dispatch as $dispatch) {
-            $dispatch->setAppointment($this);
+            /** @disregard P1006 */
+            $dispatch->appointment = $this;
         }
 
         return $this;

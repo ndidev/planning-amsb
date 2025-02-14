@@ -552,20 +552,20 @@ final class TimberService
     {
         $rawDataAH = new ArrayHandler($rawData);
 
-        $dispatch = (new TimberDispatchItem())
-            ->setStaff($this->stevedoringService->getStaff($rawDataAH->getInt('staff_id')))
-            ->setDate($rawDataAH->getDatetime('date'))
-            ->setRemarks($rawDataAH->getString('remarks'));
+        $dispatch = new TimberDispatchItem();
+        $dispatch->staff = $this->stevedoringService->getStaff($rawDataAH->getInt('staff_id'));
+        $dispatch->date = $rawDataAH->getDatetime('date');
+        $dispatch->remarks = $rawDataAH->getString('remarks');
 
         return $dispatch;
     }
 
     public function makeTimberDispatchItemFromFormData(ArrayHandler $requestBody): TimberDispatchItem
     {
-        $dispatch = (new TimberDispatchItem())
-            ->setStaff($this->stevedoringService->getStaff($requestBody->getInt('staffId')))
-            ->setDate($requestBody->getDatetime('date'))
-            ->setRemarks($requestBody->getString('remarks'));
+        $dispatch = new TimberDispatchItem();
+        $dispatch->staff = $this->stevedoringService->getStaff($requestBody->getInt('staffId'));
+        $dispatch->date = $requestBody->getDatetime('date');
+        $dispatch->remarks = $requestBody->getString('remarks');
 
         return $dispatch;
     }

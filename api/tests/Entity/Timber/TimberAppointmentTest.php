@@ -351,10 +351,12 @@ class TimberAppointmentTest extends TestCase
             ->setPrivateComment('This is a private comment.')
             ->setDispatch(
                 \array_map(function (array $item) {
-                    return (new TimberDispatchItem())
-                        ->setStaff((new StevedoringStaff())->setId($item[0]))
-                        ->setDate('2023-10-01')
-                        ->setRemarks($item[1]);
+                    $dispatchItem = new TimberDispatchItem();
+                    $dispatchItem->staff = new StevedoringStaff(['id' => $item[0]]);
+                    $dispatchItem->date = '2023-10-01';
+                    $dispatchItem->remarks = $item[1];
+
+                    return $dispatchItem;
                 }, [[1, "A"], [2, "B"], [3, "C"]])
             );;
 
