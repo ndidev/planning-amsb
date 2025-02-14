@@ -52,22 +52,15 @@ final class ShippingService
     {
         $rawDataAH = new ArrayHandler($rawData);
 
-        $shippingCall = new ShippingCall($rawDataAH)
-            ->setShipOperator($this->thirdPartyService->getThirdParty($rawDataAH->getInt('armateur')))
-            ->setLastPort($this->portService->getPort($rawDataAH->getString('last_port', null)))
-            ->setNextPort($this->portService->getPort($rawDataAH->getString('next_port', null)));
-
+        $shippingCall = new ShippingCall($rawDataAH);
+        $shippingCall->shipOperator = $this->thirdPartyService->getThirdParty($rawDataAH->getInt('armateur'));
+        $shippingCall->lastPort = $this->portService->getPort($rawDataAH->getString('last_port', null));
+        $shippingCall->nextPort = $this->portService->getPort($rawDataAH->getString('next_port', null));
         $shippingCall->shipReport = $this->stevedoringService->getShipReport($rawDataAH->getInt('shipReportId'));
 
         /** @var ShippingCallCargoArray[] */
         $cargoesRaw = $rawDataAH->getArray('marchandises');
-
-        $shippingCall->setCargoes(
-            \array_map(
-                fn($cargo) => $this->makeShippingCallCargoFromDatabase($cargo),
-                $cargoesRaw
-            )
-        );
+        $shippingCall->cargoes = \array_map(fn($cargo) => $this->makeShippingCallCargoFromDatabase($cargo), $cargoesRaw);
 
         return $shippingCall;
     }
@@ -81,22 +74,15 @@ final class ShippingService
      */
     public function makeShippingCallFromRequest(HTTPRequestBody $requestBody): ShippingCall
     {
-        $shippingCall = new ShippingCall($requestBody)
-            ->setShipOperator($this->thirdPartyService->getThirdParty($requestBody->getInt('armateur')))
-            ->setLastPort($this->portService->getPort($requestBody->getString('last_port', null)))
-            ->setNextPort($this->portService->getPort($requestBody->getString('next_port', null)));
-
+        $shippingCall = new ShippingCall($requestBody);
+        $shippingCall->shipOperator = $this->thirdPartyService->getThirdParty($requestBody->getInt('armateur'));
+        $shippingCall->lastPort = $this->portService->getPort($requestBody->getString('last_port', null));
+        $shippingCall->nextPort = $this->portService->getPort($requestBody->getString('next_port', null));
         $shippingCall->shipReport = $this->stevedoringService->getShipReport($requestBody->getInt('shipReportId'));
 
         /** @var ShippingCallCargoArray[] */
         $cargoes = $requestBody->getArray('marchandises');
-
-        $shippingCall->setCargoes(
-            \array_map(
-                fn($cargo) => $this->makeShippingCallCargoFromRequest($cargo),
-                $cargoes
-            )
-        );
+        $shippingCall->cargoes = \array_map(fn($cargo) => $this->makeShippingCallCargoFromRequest($cargo), $cargoes);
 
         return $shippingCall;
     }

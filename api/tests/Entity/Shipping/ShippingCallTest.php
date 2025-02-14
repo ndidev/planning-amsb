@@ -31,7 +31,7 @@ final class ShippingCallTest extends TestCase
         $expected = 'TBN';
 
         // When
-        $actual = $shippingCall->getShipName();
+        $actual = $shippingCall->shipName;
 
         // Then
         $this->assertSame($expected, $actual);
@@ -44,36 +44,22 @@ final class ShippingCallTest extends TestCase
         $expected = 'Ship name';
 
         // When
-        $shippingCall->setShipName($expected);
-        $actual = $shippingCall->getShipName();
+        $shippingCall->shipName = $expected;
+        $actual = $shippingCall->shipName;
 
         // Then
         $this->assertSame($expected, $actual);
     }
 
-    public function testSetAndGetVoyage(): void
+    public function testSetAndGetEmptyShipName(): void
     {
         // Given
         $shippingCall = new ShippingCall();
-        $expected = 'Voyage';
+        $expected = 'TBN';
 
         // When
-        $shippingCall->setVoyage($expected);
-        $actual = $shippingCall->getVoyage();
-
-        // Then
-        $this->assertSame($expected, $actual);
-    }
-
-    public function testSetAndGetShipOperator(): void
-    {
-        // Given
-        $shippingCall = new ShippingCall();
-        $expected = new ThirdParty();
-
-        // When
-        $shippingCall->setShipOperator($expected);
-        $actual = $shippingCall->getShipOperator();
+        $shippingCall->shipName = '';
+        $actual = $shippingCall->shipName;
 
         // Then
         $this->assertSame($expected, $actual);
@@ -86,25 +72,11 @@ final class ShippingCallTest extends TestCase
         $expected = new \DateTimeImmutable('2021-01-01');
 
         // When
-        $shippingCall->setEtaDate($expected);
-        $actual = $shippingCall->getEtaDate();
+        $shippingCall->etaDate = $expected;
+        $actual = $shippingCall->etaDate;
 
         // Then
         $this->assertEquals($expected, $actual);
-    }
-
-    public function testSetAndGetEtaTime(): void
-    {
-        // Given
-        $shippingCall = new ShippingCall();
-        $expected = '12:00';
-
-        // When
-        $shippingCall->setEtaTime($expected);
-        $actual = $shippingCall->getEtaTime();
-
-        // Then
-        $this->assertSame($expected, $actual);
     }
 
     public function testSetAndGetNorDate(): void
@@ -114,25 +86,11 @@ final class ShippingCallTest extends TestCase
         $expected = new \DateTimeImmutable('2021-01-01');
 
         // When
-        $shippingCall->setNorDate($expected);
-        $actual = $shippingCall->getNorDate();
+        $shippingCall->norDate = $expected;
+        $actual = $shippingCall->norDate;
 
         // Then
         $this->assertEquals($expected, $actual);
-    }
-
-    public function testSetAndGetNorTime(): void
-    {
-        // Given
-        $shippingCall = new ShippingCall();
-        $expected = '12:00';
-
-        // When
-        $shippingCall->setNorTime($expected);
-        $actual = $shippingCall->getNorTime();
-
-        // Then
-        $this->assertSame($expected, $actual);
     }
 
     public function testSetAndGetPobDate(): void
@@ -142,25 +100,11 @@ final class ShippingCallTest extends TestCase
         $expected = new \DateTimeImmutable('2021-01-01');
 
         // When
-        $shippingCall->setPobDate($expected);
-        $actual = $shippingCall->getPobDate();
+        $shippingCall->pobDate = $expected;
+        $actual = $shippingCall->pobDate;
 
         // Then
         $this->assertEquals($expected, $actual);
-    }
-
-    public function testSetAndGetPobTime(): void
-    {
-        // Given
-        $shippingCall = new ShippingCall();
-        $expected = '12:00';
-
-        // When
-        $shippingCall->setPobTime($expected);
-        $actual = $shippingCall->getPobTime();
-
-        // Then
-        $this->assertSame($expected, $actual);
     }
 
     public function testSetAndGetEtbDate(): void
@@ -170,25 +114,11 @@ final class ShippingCallTest extends TestCase
         $expected = new \DateTimeImmutable('2021-01-01');
 
         // When
-        $shippingCall->setEtbDate($expected);
-        $actual = $shippingCall->getEtbDate();
+        $shippingCall->etbDate = $expected;
+        $actual = $shippingCall->etbDate;
 
         // Then
         $this->assertEquals($expected, $actual);
-    }
-
-    public function testSetAndGetEtbTime(): void
-    {
-        // Given
-        $shippingCall = new ShippingCall();
-        $expected = '12:00';
-
-        // When
-        $shippingCall->setEtbTime($expected);
-        $actual = $shippingCall->getEtbTime();
-
-        // Then
-        $this->assertSame($expected, $actual);
     }
 
     public function testSetAndGetOpsDate(): void
@@ -198,25 +128,11 @@ final class ShippingCallTest extends TestCase
         $expected = new \DateTimeImmutable('2021-01-01');
 
         // When
-        $shippingCall->setOpsDate($expected);
-        $actual = $shippingCall->getOpsDate();
+        $shippingCall->opsDate = $expected;
+        $actual = $shippingCall->opsDate;
 
         // Then
         $this->assertEquals($expected, $actual);
-    }
-
-    public function testSetAndGetOpsTime(): void
-    {
-        // Given
-        $shippingCall = new ShippingCall();
-        $expected = '12:00';
-
-        // When
-        $shippingCall->setOpsTime($expected);
-        $actual = $shippingCall->getOpsTime();
-
-        // Then
-        $this->assertSame($expected, $actual);
     }
 
     public function testSetAndGetEtcDate(): void
@@ -226,25 +142,11 @@ final class ShippingCallTest extends TestCase
         $expected = new \DateTimeImmutable('2021-01-01');
 
         // When
-        $shippingCall->setEtcDate($expected);
-        $actual = $shippingCall->getEtcDate();
+        $shippingCall->etcDate = $expected;
+        $actual = $shippingCall->etcDate;
 
         // Then
         $this->assertEquals($expected, $actual);
-    }
-
-    public function testSetAndGetEtcTime(): void
-    {
-        // Given
-        $shippingCall = new ShippingCall();
-        $expected = '12:00';
-
-        // When
-        $shippingCall->setEtcTime($expected);
-        $actual = $shippingCall->getEtcTime();
-
-        // Then
-        $this->assertSame($expected, $actual);
     }
 
     public function testSetAndGetEtdDate(): void
@@ -254,123 +156,11 @@ final class ShippingCallTest extends TestCase
         $expected = new \DateTimeImmutable('2021-01-01');
 
         // When
-        $shippingCall->setEtdDate($expected);
-        $actual = $shippingCall->getEtdDate();
+        $shippingCall->etdDate = $expected;
+        $actual = $shippingCall->etdDate;
 
         // Then
         $this->assertEquals($expected, $actual);
-    }
-
-    public function testSetAndGetEtdTime(): void
-    {
-        // Given
-        $shippingCall = new ShippingCall();
-        $expected = '12:00';
-
-        // When
-        $shippingCall->setEtdTime($expected);
-        $actual = $shippingCall->getEtdTime();
-
-        // Then
-        $this->assertSame($expected, $actual);
-    }
-
-    public function setAndGetArrivalDraft(): void
-    {
-        // Given
-        $shippingCall = new ShippingCall();
-        $expected = 1.0;
-
-        // When
-        $shippingCall->setArrivalDraft($expected);
-        $actual = $shippingCall->getArrivalDraft();
-
-        // Then
-        $this->assertSame($expected, $actual);
-    }
-
-    public function setAndGetDepartureDraft(): void
-    {
-        // Given
-        $shippingCall = new ShippingCall();
-        $expected = 1.0;
-
-        // When
-        $shippingCall->setDepartureDraft($expected);
-        $actual = $shippingCall->getDepartureDraft();
-
-        // Then
-        $this->assertSame($expected, $actual);
-    }
-
-    public function testSetAndGetLastPort(): void
-    {
-        // Given
-        $shippingCall = new ShippingCall();
-        $expected = new Port();
-
-        // When
-        $shippingCall->setLastPort($expected);
-        $actual = $shippingCall->getLastPort();
-
-        // Then
-        $this->assertSame($expected, $actual);
-    }
-
-    public function testSetAndGetNextPort(): void
-    {
-        // Given
-        $shippingCall = new ShippingCall();
-        $expected = new Port();
-
-        // When
-        $shippingCall->setNextPort($expected);
-        $actual = $shippingCall->getNextPort();
-
-        // Then
-        $this->assertSame($expected, $actual);
-    }
-
-    public function testSetAndGetCallPort(): void
-    {
-        // Given
-        $shippingCall = new ShippingCall();
-        $expected = 'Port';
-
-        // When
-        $shippingCall->setCallPort($expected);
-        $actual = $shippingCall->getCallPort();
-
-        // Then
-        $this->assertSame($expected, $actual);
-    }
-
-    public function testSetAndGetQuay(): void
-    {
-        // Given
-        $shippingCall = new ShippingCall();
-        $expected = 'Quay';
-
-        // When
-        $shippingCall->setQuay($expected);
-        $actual = $shippingCall->getQuay();
-
-        // Then
-        $this->assertSame($expected, $actual);
-    }
-
-    public function testSetAndGetComment(): void
-    {
-        // Given
-        $shippingCall = new ShippingCall();
-        $expected = 'Comment';
-
-        // When
-        $shippingCall->setComment($expected);
-        $actual = $shippingCall->getComment();
-
-        // Then
-        $this->assertSame($expected, $actual);
     }
 
     public function testSetAndGetCargoes(): void
@@ -380,8 +170,8 @@ final class ShippingCallTest extends TestCase
         $cargoes = \array_fill(0, 3, new ShippingCallCargo());
 
         // When
-        $shippingCall->setCargoes($cargoes);
-        $actual = $shippingCall->getCargoes();
+        $shippingCall->cargoes = $cargoes;
+        $actual = $shippingCall->cargoes;
 
         // Then
         $this->assertInstanceOf(Collection::class, $actual);
@@ -395,15 +185,11 @@ final class ShippingCallTest extends TestCase
     {
         // Given
         $shippingCall = new ShippingCall();
-
-        $shipReport = new ShipReport();
-        $shipReport->id = 20;
-
         $shippingCall->id = 1;
-        $shippingCall->shipReport = $shipReport;
+        $shippingCall->shipReport = new ShipReport()->setId(20);
         $shippingCall->shipName = 'Ship name';
         $shippingCall->voyageNumber = 'Voyage 1';
-        $shippingCall->shipOperator = (new ThirdParty())->setId(10);
+        $shippingCall->shipOperator = new ThirdParty()->setId(10);
         $shippingCall->etaDate = new \DateTimeImmutable('2021-01-01');
         $shippingCall->etaTime = '12:00';
         $shippingCall->norDate = new \DateTimeImmutable('2021-01-02');
@@ -423,10 +209,10 @@ final class ShippingCallTest extends TestCase
         $shippingCall->lastPort = new Port(['locode' => 'Last port']);
         $shippingCall->nextPort = new Port(['locode' => 'Next port']);
         $shippingCall->callPort = 'Port';
-        $shippingCall->quay = 'Quay';
+        $shippingCall->berth = 'Quay';
         $shippingCall->comment = 'Comment';
         $cargoes = \array_fill(0, 3, new ShippingCallCargo());
-        $shippingCall->setCargoes($cargoes);
+        $shippingCall->cargoes = $cargoes;
 
         $expected = [
             'id' => 1,
@@ -455,7 +241,7 @@ final class ShippingCallTest extends TestCase
             'call_port' => 'Port',
             'quai' => 'Quay',
             'commentaire' => 'Comment',
-            'marchandises' => \array_map(fn(ShippingCallCargo $cargo) => $cargo->toArray(), $cargoes),
+            'marchandises' => \array_map(fn($cargo) => $cargo->toArray(), $cargoes),
         ];
 
         // When
