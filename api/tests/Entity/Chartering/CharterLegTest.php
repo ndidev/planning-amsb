@@ -124,8 +124,8 @@ final class CharterLegTest extends TestCase
         $charterLeg = new CharterLeg();
         $charter = (new Charter())->setId(10);
         $blDate = new \DateTimeImmutable('2021-01-01');
-        $pol = (new Port())->setLocode('POL');
-        $pod = (new Port())->setLocode('POD');
+        $pol = new Port(['locode' => 'POL']);
+        $pod = new Port(['locode' => 'POD']);
         $commodity = 'Commodity';
         $quantity = 'Quantity';
         $comments = 'Comments';

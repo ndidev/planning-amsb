@@ -11,9 +11,9 @@ use App\Core\Validation\Constraints\Required;
 
 /**
  * @phpstan-type PortArray array{
- *                           locode: string,
- *                           nom: string,
- *                           nom_affichage: string,
+ *                           locode?: string,
+ *                           nom?: string,
+ *                           nom_affichage?: string,
  *                         }
  */
 class Port extends AbstractEntity
@@ -40,42 +40,6 @@ class Port extends AbstractEntity
         $this->locode = $dataAH->getString("locode");
         $this->name = $dataAH->getString("nom");
         $this->displayName = $dataAH->getString("nom_affichage");
-    }
-
-    public function getLocode(): string
-    {
-        return $this->locode;
-    }
-
-    public function setLocode(string $locode): static
-    {
-        $this->locode = $locode;
-
-        return $this;
-    }
-
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    public function setName(string $name): static
-    {
-        $this->name = $name;
-
-        return $this;
-    }
-
-    public function getDisplayName(): string
-    {
-        return $this->displayName;
-    }
-
-    public function setDisplayName(string $displayName): static
-    {
-        $this->displayName = $displayName;
-
-        return $this;
     }
 
     #[\Override]

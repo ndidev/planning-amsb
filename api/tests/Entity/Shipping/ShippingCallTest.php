@@ -420,8 +420,8 @@ final class ShippingCallTest extends TestCase
         $shippingCall->etdTime = '18:00';
         $shippingCall->arrivalDraft = 1.0;
         $shippingCall->departureDraft = 2.0;
-        $shippingCall->lastPort = new Port()->setLocode('Last port');
-        $shippingCall->nextPort = new Port()->setLocode('Next port');
+        $shippingCall->lastPort = new Port(['locode' => 'Last port']);
+        $shippingCall->nextPort = new Port(['locode' => 'Next port']);
         $shippingCall->callPort = 'Port';
         $shippingCall->quay = 'Quay';
         $shippingCall->comment = 'Comment';

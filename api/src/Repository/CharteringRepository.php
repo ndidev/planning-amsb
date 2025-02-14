@@ -272,8 +272,8 @@ final class CharteringRepository extends Repository
                 "bl_date" => $leg->getSqlBlDate(),
                 "marchandise" => $leg->getCommodity(),
                 "quantite" => $leg->getQuantity(),
-                "pol" => $leg->getPod()?->getLocode(),
-                "pod" => $leg->getPod()?->getLocode(),
+                "pol" => $leg->getPod()?->locode,
+                "pod" => $leg->getPod()?->locode,
                 "commentaire" => $leg->getComments(),
             ]);
         }
@@ -390,8 +390,8 @@ final class CharteringRepository extends Repository
             if ($leg->id) {
                 $updateLegRequest->execute([
                     "bl_date" => $leg->getSqlBlDate(),
-                    "pol" => $leg->getPol()?->getLocode(),
-                    "pod" => $leg->getPod()?->getLocode(),
+                    "pol" => $leg->getPol()?->locode,
+                    "pod" => $leg->getPod()?->locode,
                     "marchandise" => $leg->getCommodity(),
                     "quantite" => $leg->getQuantity(),
                     "commentaire" => $leg->getComments(),
@@ -401,8 +401,8 @@ final class CharteringRepository extends Repository
                 $insertLegRequest->execute([
                     "charter" => $charter->id,
                     "bl_date" => $leg->getSqlBlDate(),
-                    "pol" => $leg->getPol()?->getLocode(),
-                    "pod" => $leg->getPod()?->getLocode(),
+                    "pol" => $leg->getPol()?->locode,
+                    "pod" => $leg->getPod()?->locode,
                     "marchandise" => $leg->getCommodity(),
                     "quantite" => $leg->getQuantity(),
                     "commentaire" => $leg->getComments(),
