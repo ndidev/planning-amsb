@@ -59,15 +59,15 @@ final class TimberPDF extends PlanningPDF
             $previousDate = null;
 
             foreach ($confirmedAppointments as $appointment) {
-                $appointmentDate = $appointment->getDate();
+                $appointmentDate = $appointment->date;
 
                 $formattedDate = $appointmentDate
                     ? DateUtils::format(DateUtils::DATE_FULL, $appointmentDate)
                     : "Pas de date";
 
-                $loadingPlace = $appointment->getLoadingPlace();
-                $deliveryPlace = $appointment->getDeliveryPlace();
-                $customer = $appointment->getCustomer();
+                $loadingPlace = $appointment->loadingPlace;
+                $deliveryPlace = $appointment->deliveryPlace;
+                $customer = $appointment->customer;
 
                 if (
                     $loadingPlace?->country?->iso === 'FR'
@@ -102,7 +102,7 @@ final class TimberPDF extends PlanningPDF
                     $deliveryCountry = ' (' . $deliveryPlace?->country?->iso . ')';
                 }
 
-                if ($appointment->getDate() != $previousDate) {
+                if ($appointment->date != $previousDate) {
                     $this->AddDate($formattedDate);
                 }
                 $this->AddLine(
@@ -121,13 +121,13 @@ final class TimberPDF extends PlanningPDF
                     $deliveryPostCode,
                     $deliveryPlace?->city,
                     $deliveryCountry,
-                    $appointment->getTransportBroker()?->isAgency,
-                    $appointment->getTransportBroker()->shortName ?? "À affréter",
-                    $appointment->getDeliveryNoteNumber(),
-                    $appointment->getPublicComment()
+                    $appointment->transportBroker?->isAgency,
+                    $appointment->transportBroker->shortName ?? "À affréter",
+                    $appointment->deliveryNoteNumber,
+                    $appointment->publicComment
                 );
 
-                $previousDate = $appointment->getDate();
+                $previousDate = $appointment->date;
             }
         } else {
             // Affichage de "Aucun RDV"
@@ -143,15 +143,15 @@ final class TimberPDF extends PlanningPDF
          */
         if (count($appointmentsOnHold) > 0) {
             foreach ($appointmentsOnHold as $appointment) {
-                $appointmentDate = $appointment->getDate();
+                $appointmentDate = $appointment->date;
 
                 $formattedDate = $appointmentDate
                     ? DateUtils::format(DateUtils::DATE_FULL, $appointmentDate)
                     : "Pas de date";
 
-                $loadingPlace = $appointment->getLoadingPlace();
-                $deliveryPlace = $appointment->getDeliveryPlace();
-                $customer = $appointment->getCustomer();
+                $loadingPlace = $appointment->loadingPlace;
+                $deliveryPlace = $appointment->deliveryPlace;
+                $customer = $appointment->customer;
 
                 if (
                     $loadingPlace?->country?->iso === 'FR'
@@ -203,7 +203,7 @@ final class TimberPDF extends PlanningPDF
                     $deliveryPostCode,
                     $deliveryPlace?->city,
                     $deliveryCountry,
-                    $appointment->getPublicComment()
+                    $appointment->publicComment
                 );
             }
         } else {

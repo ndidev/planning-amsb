@@ -20,14 +20,27 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(StevedoringStaff::class)]
 class TimberAppointmentTest extends TestCase
 {
-    public function testSetAndGetOnHold(): void
+    public function testSetAndGetOnHoldWithBool(): void
     {
         // Given
         $appointment = new TimberAppointment();
 
         // When
-        $appointment->setOnHold(true);
-        $actualOnHold = $appointment->isOnHold();
+        $appointment->isOnHold = true;
+        $actualOnHold = $appointment->isOnHold;
+
+        // Then
+        $this->assertTrue($actualOnHold);
+    }
+
+    public function testSetAndGetOnHoldWithInt(): void
+    {
+        // Given
+        $appointment = new TimberAppointment();
+
+        // When
+        $appointment->isOnHold = 1;
+        $actualOnHold = $appointment->isOnHold;
 
         // Then
         $this->assertTrue($actualOnHold);
@@ -41,8 +54,8 @@ class TimberAppointmentTest extends TestCase
         $expectedDate = new \DateTimeImmutable($dateString);
 
         // When
-        $appointment->setDate($dateString);
-        $actualDate = $appointment->getDate();
+        $appointment->date = $dateString;
+        $actualDate = $appointment->date;
 
         // Then
         $this->assertEquals($expectedDate, $actualDate);
@@ -55,8 +68,8 @@ class TimberAppointmentTest extends TestCase
         $date = new \DateTimeImmutable('2023-10-01');
 
         // When
-        $appointment->setDate($date);
-        $actualDate = $appointment->getDate();
+        $appointment->date = $date;
+        $actualDate = $appointment->date;
 
         // Then
         $this->assertEquals($date, $actualDate);
@@ -69,8 +82,8 @@ class TimberAppointmentTest extends TestCase
         $date = new \DateTimeImmutable('2023-10-01');
 
         // When
-        $appointment->setDate($date);
-        $sqlDate = $appointment->getSqlDate();
+        $appointment->date = $date;
+        $sqlDate = $appointment->sqlDate;
 
         // Then
         $this->assertEquals('2023-10-01', $sqlDate);
@@ -84,8 +97,8 @@ class TimberAppointmentTest extends TestCase
         $expectedTime = new \DateTimeImmutable($timeString);
 
         // When
-        $appointment->setArrivalTime($timeString);
-        $actualTime = $appointment->getArrivalTime();
+        $appointment->arrivalTime = $timeString;
+        $actualTime = $appointment->arrivalTime;
 
         // Then
         $this->assertEquals($expectedTime, $actualTime);
@@ -98,8 +111,8 @@ class TimberAppointmentTest extends TestCase
         $time = new \DateTimeImmutable('08:00');
 
         // When
-        $appointment->setArrivalTime($time);
-        $actualTime = $appointment->getArrivalTime();
+        $appointment->arrivalTime = $time;
+        $actualTime = $appointment->arrivalTime;
 
         // Then
         $this->assertEquals($time, $actualTime);
@@ -112,8 +125,8 @@ class TimberAppointmentTest extends TestCase
         $time = new \DateTimeImmutable('08:00');
 
         // When
-        $appointment->setArrivalTime($time);
-        $sqlTime = $appointment->getSqlArrivalTime();
+        $appointment->arrivalTime = $time;
+        $sqlTime = $appointment->sqlArrivalTime;
 
         // Then
         $this->assertEquals('08:00', $sqlTime);
@@ -127,8 +140,8 @@ class TimberAppointmentTest extends TestCase
         $expectedTime = new \DateTimeImmutable($timeString);
 
         // When
-        $appointment->setDepartureTime($timeString);
-        $actualTime = $appointment->getDepartureTime();
+        $appointment->departureTime = $timeString;
+        $actualTime = $appointment->departureTime;
 
         // Then
         $this->assertEquals($expectedTime, $actualTime);
@@ -141,8 +154,8 @@ class TimberAppointmentTest extends TestCase
         $time = new \DateTimeImmutable('10:00');
 
         // When
-        $appointment->setDepartureTime($time);
-        $actualTime = $appointment->getDepartureTime();
+        $appointment->departureTime = $time;
+        $actualTime = $appointment->departureTime;
 
         // Then
         $this->assertEquals($time, $actualTime);
@@ -155,163 +168,63 @@ class TimberAppointmentTest extends TestCase
         $time = new \DateTimeImmutable('10:00');
 
         // When
-        $appointment->setDepartureTime($time);
-        $sqlTime = $appointment->getSqlDepartureTime();
+        $appointment->departureTime = $time;
+        $sqlTime = $appointment->sqlDepartureTime;
 
         // Then
         $this->assertEquals('10:00', $sqlTime);
     }
 
-    public function testSetSupplier(): void
-    {
-        // Given
-        $appointment = new TimberAppointment();
-        $supplier = new ThirdParty();
-
-        // When
-        $appointment->setSupplier($supplier);
-        $actualSupplier = $appointment->getSupplier();
-
-        // Then
-        $this->assertSame($supplier, $actualSupplier);
-    }
-
-    public function testSetLoadingPlace(): void
-    {
-        // Given
-        $appointment = new TimberAppointment();
-        $loadingPlace = new ThirdParty();
-
-        // When
-        $appointment->setLoadingPlace($loadingPlace);
-        $actualLoadingPlace = $appointment->getLoadingPlace();
-
-        // Then
-        $this->assertSame($loadingPlace, $actualLoadingPlace);
-    }
-
-    public function testSetDeliveryPlace(): void
-    {
-        // Given
-        $appointment = new TimberAppointment();
-        $deliveryPlace = new ThirdParty();
-
-        // When
-        $appointment->setDeliveryPlace($deliveryPlace);
-        $actualDeliveryPlace = $appointment->getDeliveryPlace();
-
-        // Then
-        $this->assertSame($deliveryPlace, $actualDeliveryPlace);
-    }
-
-    public function testSetCustomer(): void
-    {
-        // Given
-        $appointment = new TimberAppointment();
-        $customer = new ThirdParty();
-
-        // When
-        $appointment->setCustomer($customer);
-        $actualCustomer = $appointment->getCustomer();
-
-        // Then
-        $this->assertSame($customer, $actualCustomer);
-    }
-
-    public function testSetCarrier(): void
-    {
-        // Given
-        $appointment = new TimberAppointment();
-        $carrier = new ThirdParty();
-
-        // When
-        $appointment->setCarrier($carrier);
-        $actualCarrier = $appointment->getCarrier();
-
-        // Then
-        $this->assertSame($carrier, $actualCarrier);
-    }
-
-    public function testSetTransportBroker(): void
-    {
-        // Given
-        $appointment = new TimberAppointment();
-        $transportBroker = new ThirdParty();
-
-        // When
-        $appointment->setTransportBroker($transportBroker);
-        $actualTransportBroker = $appointment->getTransportBroker();
-
-        // Then
-        $this->assertSame($transportBroker, $actualTransportBroker);
-    }
-
-    public function testSetReady(): void
+    public function testSetReadyWithBool(): void
     {
         // Given
         $appointment = new TimberAppointment();
 
         // When
-        $appointment->setReady(true);
-        $actualReady = $appointment->isReady();
+        $appointment->isReady = true;
+        $actualReady = $appointment->isReady;
 
         // Then
         $this->assertTrue($actualReady);
     }
 
-    public function testSetCharteringConfirmationSent(): void
+    public function testSetReadyWithInt(): void
     {
         // Given
         $appointment = new TimberAppointment();
 
         // When
-        $appointment->setCharteringConfirmationSent(true);
-        $actualCharteringConfirmationSent = $appointment->isCharteringConfirmationSent();
+        $appointment->isReady = 1;
+        $actualReady = $appointment->isReady;
+
+        // Then
+        $this->assertTrue($actualReady);
+    }
+
+    public function testSetCharteringConfirmationSentWithBool(): void
+    {
+        // Given
+        $appointment = new TimberAppointment();
+
+        // When
+        $appointment->isCharteringConfirmationSent = true;
+        $actualCharteringConfirmationSent = $appointment->isCharteringConfirmationSent;
 
         // Then
         $this->assertTrue($actualCharteringConfirmationSent);
     }
 
-    public function testSetDeliveryNoteNumber(): void
+    public function testSetCharteringConfirmationSentWithInt(): void
     {
         // Given
         $appointment = new TimberAppointment();
-        $deliveryNoteNumber = 'DN12345';
 
         // When
-        $appointment->setDeliveryNoteNumber($deliveryNoteNumber);
-        $actualDeliveryNoteNumber = $appointment->getDeliveryNoteNumber();
+        $appointment->isCharteringConfirmationSent = 1;
+        $actualCharteringConfirmationSent = $appointment->isCharteringConfirmationSent;
 
         // Then
-        $this->assertEquals($deliveryNoteNumber, $actualDeliveryNoteNumber);
-    }
-
-    public function testSetPublicComment(): void
-    {
-        // Given
-        $appointment = new TimberAppointment();
-        $publicComment = 'This is a public comment.';
-
-        // When
-        $appointment->setPublicComment($publicComment);
-        $actualComment = $appointment->getPublicComment();
-
-        // Then
-        $this->assertEquals($publicComment, $actualComment);
-    }
-
-    public function testSetPrivateComment(): void
-    {
-        // Given
-        $appointment = new TimberAppointment();
-        $privateComment = 'This is a private comment.';
-
-        // When
-        $appointment->setPrivateComment($privateComment);
-        $actualComment = $appointment->getPrivateComment();
-
-        // Then
-        $this->assertEquals($privateComment, $actualComment);
+        $this->assertTrue($actualCharteringConfirmationSent);
     }
 
     public function testSetAndGetDispatch(): void
@@ -321,8 +234,8 @@ class TimberAppointmentTest extends TestCase
         $dispatch = \array_fill(0, 3, new TimberDispatchItem());
 
         // When
-        $bulkAppointment->setDispatch($dispatch);
-        $actualIsDispatch = $bulkAppointment->getDispatch();
+        $bulkAppointment->dispatch = $dispatch;
+        $actualIsDispatch = $bulkAppointment->dispatch;
 
         // Then
         $this->assertSame($dispatch, $actualIsDispatch);
@@ -331,34 +244,32 @@ class TimberAppointmentTest extends TestCase
     public function testToArray(): void
     {
         // Given
-        $appointment =
-            (new TimberAppointment())
-            ->setId(1)
-            ->setOnHold(true)
-            ->setDate('2023-10-01')
-            ->setArrivalTime('08:00')
-            ->setDepartureTime('10:00')
-            ->setSupplier((new ThirdParty())->setId(10))
-            ->setLoadingPlace((new ThirdParty())->setId(20))
-            ->setDeliveryPlace((new ThirdParty())->setId(30))
-            ->setCustomer((new ThirdParty())->setId(40))
-            ->setCarrier((new ThirdParty())->setId(50))
-            ->setTransportBroker((new ThirdParty())->setId(60))
-            ->setReady(true)
-            ->setCharteringConfirmationSent(true)
-            ->setDeliveryNoteNumber('DN12345')
-            ->setPublicComment('This is a public comment.')
-            ->setPrivateComment('This is a private comment.')
-            ->setDispatch(
-                \array_map(function (array $item) {
-                    $dispatchItem = new TimberDispatchItem();
-                    $dispatchItem->staff = new StevedoringStaff(['id' => $item[0]]);
-                    $dispatchItem->date = '2023-10-01';
-                    $dispatchItem->remarks = $item[1];
+        $appointment = new TimberAppointment();
+        $appointment->id = 1;
+        $appointment->isOnHold = true;
+        $appointment->date = '2023-10-01';
+        $appointment->arrivalTime = '08:00';
+        $appointment->departureTime = '10:00';
+        $appointment->supplier = new ThirdParty()->setId(10);
+        $appointment->loadingPlace = new ThirdParty()->setId(20);
+        $appointment->deliveryPlace = new ThirdParty()->setId(30);
+        $appointment->customer = new ThirdParty()->setId(40);
+        $appointment->carrier = new ThirdParty()->setId(50);
+        $appointment->transportBroker = new ThirdParty()->setId(60);
+        $appointment->isReady = true;
+        $appointment->isCharteringConfirmationSent = true;
+        $appointment->deliveryNoteNumber = 'DN12345';
+        $appointment->publicComment = 'This is a public comment.';
+        $appointment->privateComment = 'This is a private comment.';
+        $appointment->dispatch =
+            \array_map(function (array $item) {
+                $dispatchItem = new TimberDispatchItem();
+                $dispatchItem->staff = new StevedoringStaff(['id' => $item[0]]);
+                $dispatchItem->date = '2023-10-01';
+                $dispatchItem->remarks = $item[1];
 
-                    return $dispatchItem;
-                }, [[1, "A"], [2, "B"], [3, "C"]])
-            );;
+                return $dispatchItem;
+            }, [[1, "A"], [2, "B"], [3, "C"]]);
 
         $expectedArray = [
             'id' => 1,

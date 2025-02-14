@@ -54,23 +54,23 @@ final class TimberService
     {
         $rawDataAH = new ArrayHandler($rawData);
 
-        $appointment = (new TimberAppointment())
-            ->setId($rawDataAH->getInt('id'))
-            ->setOnHold($rawDataAH->getBool('attente'))
-            ->setDate($rawDataAH->getDatetime('date_rdv'))
-            ->setArrivalTime($rawDataAH->getDatetime('heure_arrivee'))
-            ->setDepartureTime($rawDataAH->getDatetime('heure_depart'))
-            ->setSupplier($this->thirdPartyService->getThirdParty($rawDataAH->getInt('fournisseur')))
-            ->setLoadingPlace($this->thirdPartyService->getThirdParty($rawDataAH->getInt('chargement')))
-            ->setDeliveryPlace($this->thirdPartyService->getThirdParty($rawDataAH->getInt('livraison')))
-            ->setCustomer($this->thirdPartyService->getThirdParty($rawDataAH->getInt('client')))
-            ->setCarrier($this->thirdPartyService->getThirdParty($rawDataAH->getInt('transporteur')))
-            ->setTransportBroker($this->thirdPartyService->getThirdParty($rawDataAH->getInt('affreteur')))
-            ->setReady($rawDataAH->getBool('commande_prete'))
-            ->setCharteringConfirmationSent($rawDataAH->getBool('confirmation_affretement'))
-            ->setDeliveryNoteNumber($rawDataAH->getString('numero_bl'))
-            ->setPublicComment($rawDataAH->getString('commentaire_public'))
-            ->setPrivateComment($rawDataAH->getString('commentaire_cache'));
+        $appointment = new TimberAppointment();
+        $appointment->id = $rawDataAH->getInt('id');
+        $appointment->isOnHold = $rawDataAH->getBool('attente');
+        $appointment->date = $rawDataAH->getDatetime('date_rdv');
+        $appointment->arrivalTime = $rawDataAH->getDatetime('heure_arrivee');
+        $appointment->departureTime = $rawDataAH->getDatetime('heure_depart');
+        $appointment->supplier = $this->thirdPartyService->getThirdParty($rawDataAH->getInt('fournisseur'));
+        $appointment->loadingPlace = $this->thirdPartyService->getThirdParty($rawDataAH->getInt('chargement'));
+        $appointment->deliveryPlace = $this->thirdPartyService->getThirdParty($rawDataAH->getInt('livraison'));
+        $appointment->customer = $this->thirdPartyService->getThirdParty($rawDataAH->getInt('client'));
+        $appointment->carrier = $this->thirdPartyService->getThirdParty($rawDataAH->getInt('transporteur'));
+        $appointment->transportBroker = $this->thirdPartyService->getThirdParty($rawDataAH->getInt('affreteur'));
+        $appointment->isReady = $rawDataAH->getBool('commande_prete');
+        $appointment->isCharteringConfirmationSent = $rawDataAH->getBool('confirmation_affretement');
+        $appointment->deliveryNoteNumber = $rawDataAH->getString('numero_bl');
+        $appointment->publicComment = $rawDataAH->getString('commentaire_public');
+        $appointment->privateComment = $rawDataAH->getString('commentaire_cache');
 
         return $appointment;
     }
@@ -84,29 +84,28 @@ final class TimberService
      */
     public function makeTimberAppointmentFromForm(HTTPRequestBody $rawData): TimberAppointment
     {
-        $appointment = (new TimberAppointment())
-            ->setId($rawData->getInt('id'))
-            ->setOnHold($rawData->getBool('attente'))
-            ->setDate($rawData->getDatetime('date_rdv'))
-            ->setArrivalTime($rawData->getDatetime('heure_arrivee'))
-            ->setDepartureTime($rawData->getDatetime('heure_depart'))
-            ->setSupplier($this->thirdPartyService->getThirdParty($rawData->getInt('fournisseur')))
-            ->setLoadingPlace($this->thirdPartyService->getThirdParty($rawData->getInt('chargement')))
-            ->setDeliveryPlace($this->thirdPartyService->getThirdParty($rawData->getInt('livraison')))
-            ->setCustomer($this->thirdPartyService->getThirdParty($rawData->getInt('client')))
-            ->setCarrier($this->thirdPartyService->getThirdParty($rawData->getInt('transporteur')))
-            ->setTransportBroker($this->thirdPartyService->getThirdParty($rawData->getInt('affreteur')))
-            ->setReady($rawData->getBool('commande_prete'))
-            ->setCharteringConfirmationSent($rawData->getBool('confirmation_affretement'))
-            ->setDeliveryNoteNumber($rawData->getString('numero_bl'))
-            ->setPublicComment($rawData->getString('commentaire_public'))
-            ->setPrivateComment($rawData->getString('commentaire_cache'))
-            ->setDispatch(
-                \array_map(
-                    // @phpstan-ignore argument.type
-                    fn(array $dispatchRaw) => $this->makeTimberDispatchItemFromFormData(new ArrayHandler($dispatchRaw)),
-                    $rawData->getArray('dispatch')
-                )
+        $appointment = new TimberAppointment();
+        $appointment->id = $rawData->getInt('id');
+        $appointment->isOnHold = $rawData->getBool('attente');
+        $appointment->date = $rawData->getDatetime('date_rdv');
+        $appointment->arrivalTime = $rawData->getDatetime('heure_arrivee');
+        $appointment->departureTime = $rawData->getDatetime('heure_depart');
+        $appointment->supplier = $this->thirdPartyService->getThirdParty($rawData->getInt('fournisseur'));
+        $appointment->loadingPlace = $this->thirdPartyService->getThirdParty($rawData->getInt('chargement'));
+        $appointment->deliveryPlace = $this->thirdPartyService->getThirdParty($rawData->getInt('livraison'));
+        $appointment->customer = $this->thirdPartyService->getThirdParty($rawData->getInt('client'));
+        $appointment->carrier = $this->thirdPartyService->getThirdParty($rawData->getInt('transporteur'));
+        $appointment->transportBroker = $this->thirdPartyService->getThirdParty($rawData->getInt('affreteur'));
+        $appointment->isReady = $rawData->getBool('commande_prete');
+        $appointment->isCharteringConfirmationSent = $rawData->getBool('confirmation_affretement');
+        $appointment->deliveryNoteNumber = $rawData->getString('numero_bl');
+        $appointment->publicComment = $rawData->getString('commentaire_public');
+        $appointment->privateComment = $rawData->getString('commentaire_cache');
+        $appointment->dispatch =
+            \array_map(
+                // @phpstan-ignore argument.type
+                fn(array $dispatchRaw) => $this->makeTimberDispatchItemFromFormData(new ArrayHandler($dispatchRaw)),
+                $rawData->getArray('dispatch')
             );
 
         return $appointment;
@@ -251,7 +250,7 @@ final class TimberService
         }
 
         if (!is_null($deliveryNoteNumber)) {
-            $supplier = $appointment->getSupplier();
+            $supplier = $appointment->supplier;
             $supplierId = $supplier?->id;
 
             // Check if the delivery note number is available
@@ -282,13 +281,13 @@ final class TimberService
             // and the loading place is the agency
             // and the delivery note number is not set
             // set the next delivery note number
-            $supplierId = $appointment->getSupplier()?->id;
+            $supplierId = $appointment->supplier?->id;
 
             if (
                 $supplierId
                 && $this->isSupplierWithUniqueDeliveryNoteNumbers($supplierId)
-                && $appointment->getLoadingPlace()?->id === 1
-                && $appointment->getDeliveryNoteNumber() === ""
+                && $appointment->loadingPlace?->id === 1
+                && $appointment->deliveryNoteNumber === ""
                 && $nextDeliveryNoteNumber = $this->getNextDeliveryNoteNumber($supplierId)
             ) {
                 $appointment = $this->appointmentRepository->setDeliveryNoteNumber(

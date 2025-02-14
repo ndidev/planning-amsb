@@ -97,7 +97,7 @@ final class TimberAppointmentRepository extends Repository
             /** @var int $id */
             $id = $appointment->id;
             $dispatch = $this->fetchDispatchForAppointment($id);
-            $appointment->setDispatch($dispatch);
+            $appointment->dispatch = $dispatch;
         }
 
         return new Collection($appointments);
@@ -145,7 +145,7 @@ final class TimberAppointmentRepository extends Repository
 
         // Get dispatch
         $dispatch = $this->fetchDispatchForAppointment($id);
-        $appointment->setDispatch($dispatch);
+        $appointment->dispatch = $dispatch;
 
         return $appointment;
     }
@@ -163,21 +163,21 @@ final class TimberAppointmentRepository extends Repository
     {
         $statement = "INSERT INTO bois_planning
             SET
-                attente = :attente,
-                date_rdv = :date_rdv,
-                heure_arrivee = :heure_arrivee,
-                heure_depart = :heure_depart,
-                chargement = :chargement,
-                client = :client,
-                livraison = :livraison,
-                transporteur = :transporteur,
-                affreteur = :affreteur,
-                fournisseur = :fournisseur,
-                commande_prete = :commande_prete,
-                confirmation_affretement = :confirmation_affretement,
-                numero_bl = :numero_bl,
-                commentaire_public = :commentaire_public,
-                commentaire_cache = :commentaire_cache
+                attente = :isOnHold,
+                date_rdv = :date,
+                heure_arrivee = :arrivalTime,
+                heure_depart = :departureTime,
+                fournisseur = :supplierId,
+                chargement = :loadingPlaceId,
+                client = :customerId,
+                livraison = :deliveryPlaceId,
+                transporteur = :carrierId,
+                affreteur = :brokerId,
+                commande_prete = :isReady,
+                confirmation_affretement = :isCharteringConfirmationSent,
+                numero_bl = :deliveryNoteNumber,
+                commentaire_public = :publicComment,
+                commentaire_cache = :privateComment
             ";
 
         try {
@@ -185,26 +185,26 @@ final class TimberAppointmentRepository extends Repository
 
             $this->mysql->beginTransaction();
             $request->execute([
-                'attente' => (int) $appointment->isOnHold(),
-                'date_rdv' => $appointment->getSqlDate(),
-                'heure_arrivee' => $appointment->getSqlArrivalTime(),
-                'heure_depart' => $appointment->getSqlDepartureTime(),
-                'chargement' => $appointment->getLoadingPlace()?->id,
-                'client' => $appointment->getCustomer()?->id,
-                'livraison' => $appointment->getDeliveryPlace()?->id,
-                'transporteur' => $appointment->getCarrier()?->id,
-                'affreteur' => $appointment->getTransportBroker()?->id,
-                'fournisseur' => $appointment->getSupplier()?->id,
-                'commande_prete' => (int) $appointment->isReady(),
-                'confirmation_affretement' => (int) $appointment->isCharteringConfirmationSent(),
-                'numero_bl' => $appointment->getDeliveryNoteNumber(),
-                'commentaire_public' => $appointment->getPublicComment(),
-                'commentaire_cache' => $appointment->getPrivateComment(),
+                'isOnHold' => (int) $appointment->isOnHold,
+                'date' => $appointment->sqlDate,
+                'arrivalTime' => $appointment->sqlArrivalTime,
+                'departureTime' => $appointment->sqlDepartureTime,
+                'supplierId' => $appointment->supplier?->id,
+                'loadingPlaceId' => $appointment->loadingPlace?->id,
+                'customerId' => $appointment->customer?->id,
+                'deliveryPlaceId' => $appointment->deliveryPlace?->id,
+                'carrierId' => $appointment->carrier?->id,
+                'brokerId' => $appointment->transportBroker?->id,
+                'isReady' => (int) $appointment->isReady,
+                'isCharteringConfirmationSent' => (int) $appointment->isCharteringConfirmationSent,
+                'deliveryNoteNumber' => $appointment->deliveryNoteNumber,
+                'publicComment' => $appointment->publicComment,
+                'privateComment' => $appointment->privateComment,
             ]);
 
             $lastInsertId = (int) $this->mysql->lastInsertId();
 
-            $this->insertDispatchForAppointment($lastInsertId, $appointment->getDispatch());
+            $this->insertDispatchForAppointment($lastInsertId, $appointment->dispatch);
 
             $this->mysql->commit();
 
@@ -229,41 +229,41 @@ final class TimberAppointmentRepository extends Repository
     {
         $statement = "UPDATE bois_planning
             SET
-                attente = :attente,
-                date_rdv = :date_rdv,
-                heure_arrivee = :heure_arrivee,
-                heure_depart = :heure_depart,
-                chargement = :chargement,
-                client = :client,
-                livraison = :livraison,
-                transporteur = :transporteur,
-                affreteur = :affreteur,
-                fournisseur = :fournisseur,
-                commande_prete = :commande_prete,
-                confirmation_affretement = :confirmation_affretement,
-                numero_bl = :numero_bl,
-                commentaire_public = :commentaire_public,
-                commentaire_cache = :commentaire_cache
+                attente = :isOnHold,
+                date_rdv = :date,
+                heure_arrivee = :arrivalTime,
+                heure_depart = :departureTime,
+                fournisseur = :supplierId,
+                chargement = :loadingPlaceId,
+                client = :customerId,
+                livraison = :deliveryPlaceId,
+                transporteur = :carrierId,
+                affreteur = :brokerId,
+                commande_prete = :isReady,
+                confirmation_affretement = :isCharteringConfirmationSent,
+                numero_bl = :deliveryNoteNumber,
+                commentaire_public = :publicComment,
+                commentaire_cache = :privateComment
             WHERE id = :id";
 
         try {
             $request = $this->mysql->prepare($statement);
             $request->execute([
-                'attente' => (int) $appointment->isOnHold(),
-                'date_rdv' => $appointment->getSqlDate(),
-                'heure_arrivee' => $appointment->getSqlArrivalTime(),
-                'heure_depart' => $appointment->getSqlDepartureTime(),
-                'chargement' => $appointment->getLoadingPlace()?->id,
-                'client' => $appointment->getCustomer()?->id,
-                'livraison' => $appointment->getDeliveryPlace()?->id,
-                'transporteur' => $appointment->getCarrier()?->id,
-                'affreteur' => $appointment->getTransportBroker()?->id,
-                'fournisseur' => $appointment->getSupplier()?->id,
-                'commande_prete' => (int) $appointment->isReady(),
-                'confirmation_affretement' => (int) $appointment->isCharteringConfirmationSent(),
-                'numero_bl' => $appointment->getDeliveryNoteNumber(),
-                'commentaire_public' => $appointment->getPublicComment(),
-                'commentaire_cache' => $appointment->getPrivateComment(),
+                'isOnHold' => (int) $appointment->isOnHold,
+                'date' => $appointment->sqlDate,
+                'arrivalTime' => $appointment->sqlArrivalTime,
+                'departureTime' => $appointment->sqlDepartureTime,
+                'supplierId' => $appointment->supplier?->id,
+                'loadingPlaceId' => $appointment->loadingPlace?->id,
+                'customerId' => $appointment->customer?->id,
+                'deliveryPlaceId' => $appointment->deliveryPlace?->id,
+                'carrierId' => $appointment->carrier?->id,
+                'brokerId' => $appointment->transportBroker?->id,
+                'isReady' => (int) $appointment->isReady,
+                'isCharteringConfirmationSent' => (int) $appointment->isCharteringConfirmationSent,
+                'deliveryNoteNumber' => $appointment->deliveryNoteNumber,
+                'publicComment' => $appointment->publicComment,
+                'privateComment' => $appointment->privateComment,
                 'id' => $appointment->id,
             ]);
 
@@ -271,7 +271,7 @@ final class TimberAppointmentRepository extends Repository
             $id = $appointment->id;
 
             $this->deleteDispatchForAppointment($id);
-            $this->insertDispatchForAppointment($id, $appointment->getDispatch());
+            $this->insertDispatchForAppointment($id, $appointment->dispatch);
 
             /** @var TimberAppointment */
             $updatedAppointment = $this->fetchAppointment($id);
@@ -843,14 +843,11 @@ final class TimberAppointmentRepository extends Repository
             WHERE appointment_id = :id";
 
         try {
-            $request = $this->mysql->prepare($statement);
-            $request->execute(["id" => $id]);
-
-            /** @phpstan-var TimberDispatchArray[] */
-            $dispatchesRaw = $request->fetchAll();
+            /** @var TimberDispatchArray[] */
+            $dispatchesRaw = $this->mysql->prepareAndExecute($statement, ["id" => $id])->fetchAll();
 
             $dispatches = \array_map(
-                fn(array $dispatchRaw) => $this->timberService->makeTimberDispatchItemFromDatabase($dispatchRaw),
+                fn($dispatchRaw) => $this->timberService->makeTimberDispatchItemFromDatabase($dispatchRaw),
                 $dispatchesRaw
             );
 
