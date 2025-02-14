@@ -11,12 +11,12 @@ use App\Core\Validation\Constraints\Required;
 
 /**
  * @phpstan-type PortArray array{
- *                           locode?: string,
+ *                           locode: string,
  *                           nom?: string,
  *                           nom_affichage?: string,
  *                         }
  */
-class Port extends AbstractEntity
+final class Port extends AbstractEntity
 {
     #[Required("Le code LOCODE est obligatoire.")]
     public string $locode = '';

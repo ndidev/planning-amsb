@@ -24,7 +24,7 @@ use App\Entity\AbstractEntity;
  *                                       email: string
  *                                     }
  */
-class AgencyDepartment extends AbstractEntity
+final class AgencyDepartment extends AbstractEntity
 {
     private string $service = '';
 

@@ -24,7 +24,7 @@ use App\Core\Component\Module;
  *                                  historique: string,
  *                                }
  */
-class User extends AbstractEntity
+final class User extends AbstractEntity
 {
     /**
      * UID de l'utilisateur.
@@ -70,6 +70,7 @@ class User extends AbstractEntity
      * @phpstan-var AccountStatus::* $status
      */
     public string $status = AccountStatus::INACTIVE {
+        /** @var string $value */
         set(string $value) {
             $this->status = AccountStatus::tryFrom($value) ?? throw new \InvalidArgumentException("Statut invalide");
         }

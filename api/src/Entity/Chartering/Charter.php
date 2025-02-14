@@ -36,7 +36,7 @@ use App\Entity\ThirdParty;
  * 
  * @phpstan-import-type CharterLegArray from CharterLeg
  */
-class Charter extends AbstractEntity
+final class Charter extends AbstractEntity
 {
     use IdentifierTrait;
 

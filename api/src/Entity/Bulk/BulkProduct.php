@@ -22,7 +22,7 @@ use App\Entity\AbstractEntity;
  * 
  * @phpstan-import-type BulkQualityArray from BulkQuality
  */
-class BulkProduct extends AbstractEntity
+final class BulkProduct extends AbstractEntity
 {
     use IdentifierTrait;
 

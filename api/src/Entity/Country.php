@@ -15,7 +15,7 @@ use App\Core\Validation\Constraints\Required;
  *                              nom?: string,
  *                            }
  */
-class Country extends AbstractEntity
+final class Country extends AbstractEntity
 {
     #[Required("Le code ISO est obligatoire.")]
     public string $iso = '';

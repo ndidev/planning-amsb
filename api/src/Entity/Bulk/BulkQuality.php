@@ -18,7 +18,7 @@ use App\Entity\AbstractEntity;
  *                                  couleur: string,
  *                                }
  */
-class BulkQuality extends AbstractEntity
+final class BulkQuality extends AbstractEntity
 {
     use IdentifierTrait;
 

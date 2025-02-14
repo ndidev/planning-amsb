@@ -15,7 +15,7 @@ use App\Core\Validation\Constraints\PositiveNumber;
  *                                 valeur?: float,
  *                               }
  */
-class ChartDatum extends AbstractEntity
+final class ChartDatum extends AbstractEntity
 {
     public string $name = '';
 

@@ -7,7 +7,7 @@ declare(strict_types=1);
 namespace App\Core\Validation\Constraints;
 
 #[\Attribute(\Attribute::TARGET_PROPERTY)]
-class Required implements Constraint
+final class Required implements Constraint
 {
     public function __construct(private string $message) {}
 

@@ -13,7 +13,7 @@ use App\Core\Validation\Constraints\Minimum;
 use App\Core\Validation\Constraints\Required;
 use App\Entity\AbstractEntity;
 
-class TempWorkHoursEntry extends AbstractEntity
+final class TempWorkHoursEntry extends AbstractEntity
 {
     use IdentifierTrait;
 

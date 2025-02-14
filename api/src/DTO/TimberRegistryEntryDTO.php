@@ -23,7 +23,7 @@ use App\Core\Component\DateUtils;
  *                                          transporteur: string|null,
  *                                        }
  */
-class TimberRegistryEntryDTO
+final class TimberRegistryEntryDTO
 {
     private string $date;
     private ?string $supplierName = null;

@@ -34,7 +34,7 @@ use App\Entity\ThirdParty;
  *                                        commentaire_cache: string,
  *                                      }
  */
-class TimberAppointment extends AbstractEntity
+final class TimberAppointment extends AbstractEntity
 {
     use IdentifierTrait;
 

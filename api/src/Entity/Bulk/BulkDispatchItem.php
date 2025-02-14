@@ -19,7 +19,7 @@ use App\Entity\Stevedoring\StevedoringStaff;
  *                                   remarks: string,
  *                                 }
  */
-class BulkDispatchItem extends AbstractEntity
+final class BulkDispatchItem extends AbstractEntity
 {
     public ?BulkAppointment $appointment = null;
 

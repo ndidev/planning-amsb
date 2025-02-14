@@ -17,7 +17,7 @@ use App\Entity\Timber\TimberAppointment;
  *                                     remarks: string,
  *                                   }
  */
-class TimberDispatchItem extends AbstractEntity
+final class TimberDispatchItem extends AbstractEntity
 {
     public ?TimberAppointment $appointment = null;
 

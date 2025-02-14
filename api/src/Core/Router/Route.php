@@ -6,7 +6,7 @@ declare(strict_types=1);
 
 namespace App\Core\Router;
 
-class Route
+final class Route
 {
     public function __construct(
         private string $path,

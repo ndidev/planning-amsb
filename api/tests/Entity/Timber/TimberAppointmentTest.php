@@ -166,7 +166,7 @@ class TimberAppointmentTest extends TestCase
     {
         // Given
         $appointment = new TimberAppointment();
-        $supplier = $this->createMock(ThirdParty::class);
+        $supplier = new ThirdParty();
 
         // When
         $appointment->setSupplier($supplier);
@@ -180,7 +180,7 @@ class TimberAppointmentTest extends TestCase
     {
         // Given
         $appointment = new TimberAppointment();
-        $loadingPlace = $this->createMock(ThirdParty::class);
+        $loadingPlace = new ThirdParty();
 
         // When
         $appointment->setLoadingPlace($loadingPlace);
@@ -194,7 +194,7 @@ class TimberAppointmentTest extends TestCase
     {
         // Given
         $appointment = new TimberAppointment();
-        $deliveryPlace = $this->createMock(ThirdParty::class);
+        $deliveryPlace = new ThirdParty();
 
         // When
         $appointment->setDeliveryPlace($deliveryPlace);
@@ -208,7 +208,7 @@ class TimberAppointmentTest extends TestCase
     {
         // Given
         $appointment = new TimberAppointment();
-        $customer = $this->createMock(ThirdParty::class);
+        $customer = new ThirdParty();
 
         // When
         $appointment->setCustomer($customer);
@@ -222,7 +222,7 @@ class TimberAppointmentTest extends TestCase
     {
         // Given
         $appointment = new TimberAppointment();
-        $carrier = $this->createMock(ThirdParty::class);
+        $carrier = new ThirdParty();
 
         // When
         $appointment->setCarrier($carrier);
@@ -236,7 +236,7 @@ class TimberAppointmentTest extends TestCase
     {
         // Given
         $appointment = new TimberAppointment();
-        $transportBroker = $this->createMock(ThirdParty::class);
+        $transportBroker = new ThirdParty();
 
         // When
         $appointment->setTransportBroker($transportBroker);

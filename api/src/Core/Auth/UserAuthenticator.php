@@ -31,7 +31,7 @@ use App\Core\Security;
 use App\Entity\User;
 use const App\Core\Component\Constants\ONE_WEEK;
 
-class UserAuthenticator
+final class UserAuthenticator
 {
     private User $user;
 

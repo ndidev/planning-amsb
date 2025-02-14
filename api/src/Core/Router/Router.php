@@ -18,7 +18,7 @@ use App\Core\Array\Server;
  * 
  * @phpstan-type RouteArray array{0: string, 1: mixed, 2?: string}
  */
-class Router
+final class Router
 {
     /**
      * Array of all routes (incl. named routes).

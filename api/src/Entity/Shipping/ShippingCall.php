@@ -48,7 +48,7 @@ use App\Entity\ThirdParty;
  *                                   marchandises?: ShippingCallCargoArray[],
  *                                 }
  */
-class ShippingCall extends AbstractEntity
+final class ShippingCall extends AbstractEntity
 {
     use IdentifierTrait;
 

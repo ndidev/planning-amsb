@@ -36,7 +36,7 @@ use App\Entity\ThirdParty;
  *                                      archive: int,
  *                                    }
  */
-class BulkAppointment extends AbstractEntity
+final class BulkAppointment extends AbstractEntity
 {
     use IdentifierTrait;
 

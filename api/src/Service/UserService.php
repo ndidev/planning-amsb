@@ -50,7 +50,7 @@ final class UserService
         $user->name = $rawDataAH->getString('nom');
         $user->canLogin = $rawDataAH->getBool('can_login');
         $user->roles = $rawDataAH->getString('roles', '{}');
-        $user->status = $rawDataAH->getString('statut');
+        $user->status = $rawDataAH->getString('statut'); // @phpstan-ignore assign.propertyType
         $user->lastLogin = $rawDataAH->getDatetime('last_connection');
         $user->comments = $rawDataAH->getString('commentaire');
         $user->history = $rawDataAH->getString('historique');
@@ -72,7 +72,7 @@ final class UserService
         $user->login = $requestBody->getString('login');
         $user->name = $requestBody->getString('nom');
         $user->roles = $requestBody->getArray('roles', []);
-        $user->status = $requestBody->getString('statut');
+        $user->status = $requestBody->getString('statut'); // @phpstan-ignore assign.propertyType
         $user->comments = $requestBody->getString('commentaire');
 
         return $user;

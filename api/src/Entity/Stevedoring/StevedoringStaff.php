@@ -17,17 +17,17 @@ use App\Entity\AbstractEntity;
 /**
  * @phpstan-type StevedoringStaffArray array{
  *                                       id: ?int,
- *                                       firstname: string,
- *                                       lastname: string,
- *                                       phone: string,
- *                                       type: string,
- *                                       tempWorkAgency: ?string,
- *                                       isActive: bool,
- *                                       comments: string,
+ *                                       firstname?: string,
+ *                                       lastname?: string,
+ *                                       phone?: string,
+ *                                       type?: string,
+ *                                       tempWorkAgency?: ?string,
+ *                                       isActive?: bool,
+ *                                       comments?: string,
  *                                       deletedAt?: ?string
  *                                     }
  */
-class StevedoringStaff extends AbstractEntity implements \Stringable
+final class StevedoringStaff extends AbstractEntity implements \Stringable
 {
     use IdentifierTrait;
 

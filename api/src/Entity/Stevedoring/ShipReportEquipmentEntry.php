@@ -24,7 +24,7 @@ use App\Entity\Stevedoring\StevedoringEquipment;
  *                                               comments: string,
  *                                             }
  */
-class ShipReportEquipmentEntry extends AbstractEntity
+final class ShipReportEquipmentEntry extends AbstractEntity
 {
     use IdentifierTrait;
 

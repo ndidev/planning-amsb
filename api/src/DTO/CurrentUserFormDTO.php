@@ -10,7 +10,7 @@ use App\Core\Validation\Constraints\Required;
 use App\Core\Validation\Validation;
 use App\Core\Validation\ValidatorTrait;
 
-class CurrentUserFormDTO implements Validation
+final class CurrentUserFormDTO implements Validation
 {
     use ValidatorTrait;
 

@@ -24,7 +24,7 @@ use App\Entity\Port;
  *                                 commentaire?: string,
  *                               }
  */
-class CharterLeg extends AbstractEntity
+final class CharterLeg extends AbstractEntity
 {
     use IdentifierTrait;
 

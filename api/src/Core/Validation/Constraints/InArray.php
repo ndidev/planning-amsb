@@ -7,7 +7,7 @@ declare(strict_types=1);
 namespace App\Core\Validation\Constraints;
 
 #[\Attribute(\Attribute::TARGET_PROPERTY)]
-class InArray implements Constraint
+final class InArray implements Constraint
 {
     /**
      * @param array<mixed> $values 

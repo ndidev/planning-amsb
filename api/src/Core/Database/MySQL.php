@@ -12,7 +12,7 @@ use App\Core\Array\Environment;
 /**
  * Connection to MySQL.
  */
-class MySQL extends \Pdo\Mysql
+final class MySQL extends \Pdo\Mysql
 {
     /**
      * @param string|null $database Optional. Name of the database.

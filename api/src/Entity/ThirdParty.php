@@ -31,7 +31,7 @@ use App\Core\Validation\Constraints\Required;
  *                                nombre_rdv?: int
  *                              }
  */
-class ThirdParty extends AbstractEntity
+final class ThirdParty extends AbstractEntity
 {
     use IdentifierTrait;
 

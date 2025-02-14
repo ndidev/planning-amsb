@@ -24,7 +24,7 @@ use App\Entity\ThirdParty;
  *                                jours_apres?: int,
  *                              }
  */
-class PdfConfig extends AbstractEntity
+final class PdfConfig extends AbstractEntity
 {
     use IdentifierTrait;
     use ModuleTrait;

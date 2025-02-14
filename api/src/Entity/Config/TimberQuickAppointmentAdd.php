@@ -21,7 +21,7 @@ use App\Entity\ThirdParty;
  *                                                livraison: int,
  *                                              }
  */
-class TimberQuickAppointmentAdd extends QuickAppointmentAdd
+final class TimberQuickAppointmentAdd extends QuickAppointmentAdd
 {
     #[Required("Le fournisseur est obligatoire.")]
     private ?ThirdParty $supplier = null;

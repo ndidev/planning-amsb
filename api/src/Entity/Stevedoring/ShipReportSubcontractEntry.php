@@ -25,7 +25,7 @@ use App\Entity\AbstractEntity;
  *                                                 comments: string,
  *                                               }
  */
-class ShipReportSubcontractEntry extends AbstractEntity
+final class ShipReportSubcontractEntry extends AbstractEntity
 {
     use IdentifierTrait;
 

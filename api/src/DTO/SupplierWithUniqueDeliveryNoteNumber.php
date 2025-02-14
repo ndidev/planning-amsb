@@ -6,7 +6,7 @@ declare(strict_types=1);
 
 namespace App\DTO;
 
-class SupplierWithUniqueDeliveryNoteNumber
+final class SupplierWithUniqueDeliveryNoteNumber
 {
     public ?int $id = null;
 

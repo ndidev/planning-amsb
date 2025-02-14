@@ -71,10 +71,10 @@ class BulkProductTest extends TestCase
         $bulkProduct->color = "Red";
         $bulkProduct->unit = "kg";
 
-        $quality = $this->createMock(BulkQuality::class);
-        $quality->expects($this->once())
-            ->method('toArray')
-            ->willReturn(['quality' => 'high']);
+        $quality = new BulkQuality();
+        $quality->id = 1;
+        $quality->name = 'high';
+        $quality->color = 'Red';
 
         $bulkProduct->qualities = [$quality];
 
@@ -84,7 +84,7 @@ class BulkProductTest extends TestCase
             "couleur" => "Red",
             "unite" => "kg",
             "qualites" => [
-                ['quality' => 'high']
+                ['id' => 1, 'nom' => 'high', 'couleur' => 'Red']
             ],
         ];
 

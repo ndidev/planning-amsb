@@ -6,7 +6,7 @@ declare(strict_types=1);
 
 namespace App\Core\Component;
 
-final class SseEventNames
+abstract class SseEventNames
 {
     public const USER = "user";
 

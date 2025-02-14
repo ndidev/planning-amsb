@@ -21,7 +21,7 @@ use App\Entity\AbstractEntity;
  *                                     couleur: string,
  *                                   }
  */
-class InfoBannerLine extends AbstractEntity
+final class InfoBannerLine extends AbstractEntity
 {
     use IdentifierTrait;
     use ModuleTrait;
