@@ -70,15 +70,8 @@ class User extends AbstractEntity
      * @phpstan-var AccountStatus::* $status
      */
     public string $status = AccountStatus::INACTIVE {
-        /** @param string $status */
-        set(string $status) {
-            $statusFromEnum = AccountStatus::tryFrom($status);
-
-            if (null === $statusFromEnum) {
-                throw new \InvalidArgumentException("Statut invalide");
-            }
-
-            $this->status = $statusFromEnum;
+        set(string $value) {
+            $this->status = AccountStatus::tryFrom($value) ?? throw new \InvalidArgumentException("Statut invalide");
         }
     }
 
