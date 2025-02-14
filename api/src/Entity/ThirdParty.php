@@ -153,7 +153,7 @@ class ThirdParty extends AbstractEntity
             "adresse_ligne_2" => $this->addressLine2,
             "cp" => $this->postCode,
             "ville" => $this->city,
-            "pays" => $this->country?->getISO(),
+            "pays" => $this->country?->iso,
             "telephone" => $this->phone,
             "commentaire" => $this->comments,
             "roles" => $this->roles,

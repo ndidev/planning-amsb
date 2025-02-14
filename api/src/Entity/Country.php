@@ -12,7 +12,7 @@ use App\Core\Validation\Constraints\Required;
 /**
  * @phpstan-type CountryArray array{
  *                              iso: string,
- *                              nom: string,
+ *                              nom?: string,
  *                            }
  */
 class Country extends AbstractEntity
@@ -34,32 +34,8 @@ class Country extends AbstractEntity
 
         $dataAH = $data instanceof ArrayHandler ? $data : new ArrayHandler($data);
 
-        $this->iso = $dataAH->getString("iso");
-        $this->name = $dataAH->getString("nom");
-    }
-
-    public function getISO(): string
-    {
-        return $this->iso;
-    }
-
-    public function setISO(string $iso): static
-    {
-        $this->iso = $iso;
-
-        return $this;
-    }
-
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    public function setName(string $name): static
-    {
-        $this->name = $name;
-
-        return $this;
+        $this->iso = $dataAH->getString('iso');
+        $this->name = $dataAH->getString('nom');
     }
 
     #[\Override]
