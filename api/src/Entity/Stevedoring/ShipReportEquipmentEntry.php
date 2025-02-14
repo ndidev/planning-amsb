@@ -35,9 +35,7 @@ final class ShipReportEquipmentEntry extends AbstractEntity
 
     #[Required("La date est obligatoire.")]
     public ?\DateTimeImmutable $date = null {
-        set(\DateTimeImmutable|string|null $date) {
-            $this->date = DateUtils::makeDateTimeImmutable($date);
-        }
+        set(\DateTimeImmutable|string|null $date) => DateUtils::makeDateTimeImmutable($date);
     }
 
     public string $hoursHint = '';
@@ -47,13 +45,6 @@ final class ShipReportEquipmentEntry extends AbstractEntity
     public float $hoursWorked = 0.0;
 
     public string $comments = '';
-
-    public function setReport(ShipReport $report): static
-    {
-        $this->report = $report;
-
-        return $this;
-    }
 
     #[\Override]
     public function toArray(): array

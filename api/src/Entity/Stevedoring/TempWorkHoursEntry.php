@@ -22,9 +22,7 @@ final class TempWorkHoursEntry extends AbstractEntity
 
     #[Required('La date est obligatoire.')]
     public ?\DateTimeImmutable $date = null {
-        set(\DateTimeImmutable|string|null $date) {
-            $this->date = DateUtils::makeDateTimeImmutable($date);
-        }
+        set(\DateTimeImmutable|string|null $date) => DateUtils::makeDateTimeImmutable($date);
     }
 
     #[Minimum(0, message: "Les heures travaillées ne peuvent pas être négatives.")]
