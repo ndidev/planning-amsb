@@ -24,7 +24,7 @@ final class TimberQuickAppointmentAddTest extends TestCase
         $timberQuickAppointmentAdd = new TimberQuickAppointmentAdd();
 
         // When
-        $module = $timberQuickAppointmentAdd->getModule();
+        $module = $timberQuickAppointmentAdd->module;
 
         // Then
         $this->assertSame(Module::TIMBER, $module);

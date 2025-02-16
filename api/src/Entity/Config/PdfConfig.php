@@ -126,7 +126,7 @@ final class PdfConfig extends AbstractEntity
     {
         return [
             "id" => $this->id,
-            "module" => $this->getModule(),
+            "module" => $this->module,
             "fournisseur" => $this->getSupplier()?->id,
             "envoi_auto" => $this->isAutoSend(),
             "liste_emails" => $this->getEmailsAsString(),

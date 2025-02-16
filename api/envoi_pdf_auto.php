@@ -70,7 +70,7 @@ foreach ($configs as $config) {
         );
 
         // Mise à jour du rapport
-        $rapport .= "• {$config->getModule()}/{$config->getSupplier()?->id} ({$config->getSupplier()?->shortName}) : succès" . PHP_EOL;
+        $rapport .= "• {$config->module}/{$config->getSupplier()?->id} ({$config->getSupplier()?->shortName}) : succès" . PHP_EOL;
         $rapport .= "  Dates : du {$formattedStartDate} au {$formattedEndDate}" . PHP_EOL;
         $rapport .= "  Adresses : " . PHP_EOL;
         $rapport .= "    From : " . $resultat["adresses"]["from"] . PHP_EOL;
@@ -87,7 +87,7 @@ foreach ($configs as $config) {
             $rapport .= "      $address" . PHP_EOL;
         }
     } catch (\Exception $e) {
-        $rapport .= "• {$config->getModule()}/{$config->getSupplier()?->id} ({$config->getSupplier()?->shortName}) : échec" . PHP_EOL;
+        $rapport .= "• {$config->module}/{$config->getSupplier()?->id} ({$config->getSupplier()?->shortName}) : échec" . PHP_EOL;
         $rapport .= "  Erreur : {$e->getMessage()}" . PHP_EOL;
         ErrorLogger::log($e);
     } finally {

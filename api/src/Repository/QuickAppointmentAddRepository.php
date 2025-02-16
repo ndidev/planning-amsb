@@ -115,7 +115,7 @@ final class QuickAppointmentAddRepository extends Repository
 
         $this->mysql->beginTransaction();
         $request->execute([
-            'module' => $quickAdd->getModule(),
+            'module' => $quickAdd->module,
             'supplierId' => $quickAdd->getSupplier()?->id,
             'carrierId' => $quickAdd->getCarrier()?->id,
             'chartererId' => $quickAdd->getCharterer()?->id,

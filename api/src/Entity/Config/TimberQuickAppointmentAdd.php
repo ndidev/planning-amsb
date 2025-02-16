@@ -40,7 +40,7 @@ final class TimberQuickAppointmentAdd extends QuickAppointmentAdd
 
     public function __construct()
     {
-        $this->setModule(Module::TIMBER);
+        $this->module = Module::TIMBER;
     }
 
     public function setSupplier(?ThirdParty $supplier): static
@@ -120,7 +120,7 @@ final class TimberQuickAppointmentAdd extends QuickAppointmentAdd
     {
         return [
             "id" => $this->id,
-            "module" => $this->getModule(),
+            "module" => $this->module,
             "fournisseur" => $this->getSupplier()?->id,
             "transporteur" => $this->getCarrier()?->id,
             "affreteur" => $this->getCharterer()?->id,

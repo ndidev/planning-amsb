@@ -16,20 +16,6 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ThirdParty::class)]
 final class PdfConfigTest extends TestCase
 {
-    public function testSetAndGetModule(): void
-    {
-        // Given
-        $pdfConfig = new PdfConfig();
-        $module = 'bois';
-
-        // When
-        $pdfConfig->setModule($module);
-        $actualModule = $pdfConfig->getModule();
-
-        // Then
-        $this->assertSame($module, $actualModule);
-    }
-
     public function testSetAndGetSupplier(): void
     {
         // Given
@@ -144,12 +130,12 @@ final class PdfConfigTest extends TestCase
 
         $pdfConfig
             ->setId($id)
-            ->setModule($module)
             ->setSupplier((new ThirdParty())->setId($supplierId))
             ->setAutoSend($autoSend)
             ->setEmails($emails)
             ->setDaysBefore($daysBefore)
             ->setDaysAfter($daysAfter);
+        $pdfConfig->module = $module;
 
         $expectedArray = [
             'id' => $id,

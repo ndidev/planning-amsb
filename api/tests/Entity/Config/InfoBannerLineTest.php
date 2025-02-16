@@ -13,20 +13,6 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(InfoBannerLine::class)]
 final class InfoBannerLineTest extends TestCase
 {
-    public function testSetAndGetModule(): void
-    {
-        // Given
-        $infoBannerLine = new InfoBannerLine();
-        $module = 'bois';
-
-        // When
-        $infoBannerLine->setModule($module);
-        $actualModule = $infoBannerLine->module;
-
-        // Then
-        $this->assertSame($module, $actualModule);
-    }
-
     public function testSetAndGetColor(): void
     {
         // Given

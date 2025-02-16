@@ -50,14 +50,15 @@ final class PdfConfigService
 
         $rawDataAH = new ArrayHandler($rawData);
 
-        $config = (new PdfConfig())
+        $config = new PdfConfig()
             ->setId($rawDataAH->getInt('id'))
-            ->setModule($rawDataAH->getString('module'))
             ->setSupplier($thirdPartyService->getThirdParty($rawDataAH->getInt('fournisseur')))
             ->setAutoSend($rawDataAH->getBool('envoi_auto'))
             ->setEmails($rawDataAH->getString('liste_emails'))
             ->setDaysBefore($rawDataAH->getInt('jours_avant', 0))
             ->setDaysAfter($rawDataAH->getInt('jours_apres', 0));
+
+        $config->module = $rawDataAH->getString('module'); // @phpstan-ignore assign.propertyType
 
         return $config;
     }
@@ -80,12 +81,13 @@ final class PdfConfigService
         }
 
         $config = (new PdfConfig())
-            ->setModule($module)
             ->setSupplier($thirdPartyService->getThirdParty($requestBody->getInt('fournisseur')))
             ->setAutoSend($requestBody->getBool('envoi_auto'))
             ->setEmails($requestBody->getArray('liste_emails'))
             ->setDaysBefore($requestBody->getInt('jours_avant', 0))
             ->setDaysAfter($requestBody->getInt('jours_apres', 0));
+
+        $config->module = $requestBody->getString('module'); // @phpstan-ignore assign.propertyType
 
         return $config;
     }
@@ -185,7 +187,7 @@ final class PdfConfigService
             throw new ServerException("Impossible de récupérer les informations de l'agence");
         }
 
-        $module = $config->getModule();
+        $module = $config->module;
 
         return match ($module) {
             Module::BULK => $this->generateBulkPdf($supplier, $startDate, $endDate, $agencyInfo),
@@ -271,7 +273,7 @@ final class PdfConfigService
 
             $supportedModules = [Module::BULK, Module::TIMBER];
 
-            $module = $config->getModule();
+            $module = $config->module;
 
             if (!$module || !\in_array($module, $supportedModules)) {
                 throw new ServerException("Le module spécifié n'est pas pris en charge");
