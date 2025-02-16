@@ -45,7 +45,7 @@ abstract class PlanningPDF extends \tFPDF
         // Décalage à droite
         $this->Cell(70);
         // Titre
-        $this->Cell(70, 10, "Planning {$this->supplier->shortName} ({$this->agencyDepartment->getCity()})", 'B', 0, 'C');
+        $this->Cell(70, 10, "Planning {$this->supplier->shortName} ({$this->agencyDepartment->city})", 'B', 0, 'C');
         // Saut de ligne
         $this->Ln(20);
     }
