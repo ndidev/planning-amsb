@@ -21,52 +21,10 @@ final class InfoBannerLineTest extends TestCase
 
         // When
         $infoBannerLine->setModule($module);
-        $actualModule = $infoBannerLine->getModule();
+        $actualModule = $infoBannerLine->module;
 
         // Then
         $this->assertSame($module, $actualModule);
-    }
-
-    public function testSetAndGetPc(): void
-    {
-        // Given
-        $infoBannerLine = new InfoBannerLine();
-        $pc = true;
-
-        // When
-        $infoBannerLine->setPc($pc);
-        $actualPc = $infoBannerLine->isPc();
-
-        // Then
-        $this->assertSame($pc, $actualPc);
-    }
-
-    public function testSetAndGetTv(): void
-    {
-        // Given
-        $infoBannerLine = new InfoBannerLine();
-        $tv = true;
-
-        // When
-        $infoBannerLine->setTv($tv);
-        $actualTv = $infoBannerLine->isTv();
-
-        // Then
-        $this->assertSame($tv, $actualTv);
-    }
-
-    public function testSetAndGetMessage(): void
-    {
-        // Given
-        $infoBannerLine = new InfoBannerLine();
-        $message = 'message';
-
-        // When
-        $infoBannerLine->setMessage($message);
-        $actualMessage = $infoBannerLine->getMessage();
-
-        // Then
-        $this->assertSame($message, $actualMessage);
     }
 
     public function testSetAndGetColor(): void
@@ -76,23 +34,38 @@ final class InfoBannerLineTest extends TestCase
         $color = 'color';
 
         // When
-        $infoBannerLine->setColor($color);
-        $actualColor = $infoBannerLine->getColor();
+        $infoBannerLine->color = $color;
+        $actualColor = $infoBannerLine->color;
 
         // Then
         $this->assertSame($color, $actualColor);
+    }
+
+    public function testSetAndGetEmptyColor(): void
+    {
+        // Given
+        $infoBannerLine = new InfoBannerLine();
+        $color = '';
+        $expected = InfoBannerLine::DEFAULT_COLOR;
+
+        // When
+        $infoBannerLine->color = $color;
+        $actualColor = $infoBannerLine->color;
+
+        // Then
+        $this->assertSame($expected, $actualColor);
     }
 
     public function testToArray(): void
     {
         // Given
         $infoBannerLine = new InfoBannerLine();
-        $infoBannerLine->setId(1);
-        $infoBannerLine->setModule('bois');
-        $infoBannerLine->setPc(true);
-        $infoBannerLine->setTv(true);
-        $infoBannerLine->setMessage('message');
-        $infoBannerLine->setColor('color');
+        $infoBannerLine->id = 1;
+        $infoBannerLine->module = 'bois';
+        $infoBannerLine->isDisplayedOnPC = true;
+        $infoBannerLine->isDisplayedOnTV = true;
+        $infoBannerLine->message = 'message';
+        $infoBannerLine->color = 'color';
 
         // When
         $actualArray = $infoBannerLine->toArray();
