@@ -9,28 +9,10 @@ namespace App\Core\Router;
 final class Route
 {
     public function __construct(
-        private string $path,
-        private mixed $target,
-        private ?string $name = null,
+        public private(set) string $path,
+        public private(set) mixed $target,
+        public private(set) ?string $name = null,
     ) {}
-
-    /**
-     * @return string
-     */
-    public function getPath(): string
-    {
-        return $this->path;
-    }
-
-    public function getTarget(): mixed
-    {
-        return $this->target;
-    }
-
-    public function getName(): ?string
-    {
-        return $this->name;
-    }
 
     /**
      * @return array{string, mixed, ?string}

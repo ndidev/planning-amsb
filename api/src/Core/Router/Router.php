@@ -173,7 +173,7 @@ final class Router
         $route = $this->namedRoutes[$routeName];
 
         // prepend base path to route url again
-        $path = $route->getPath();
+        $path = $route->path;
         $url = $this->basePath . $path;
 
         if (\preg_match_all('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`', $path, $matches, PREG_SET_ORDER)) {
