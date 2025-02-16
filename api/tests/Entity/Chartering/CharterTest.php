@@ -23,18 +23,33 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(CharterStatus::class)]
 final class CharterTest extends TestCase
 {
-    public function testSetAndGetStatus(): void
+    public function testSetAndGetValidStatus(): void
     {
         // Given
         $charter = new Charter();
         $status = CharterStatus::PENDING;
 
         // When
-        $charter->setStatus($status);
-        $actualStatus = $charter->getStatus();
+        $charter->status = $status;
+        $actualStatus = $charter->status;
 
         // Then
         $this->assertSame($status, $actualStatus);
+    }
+
+    public function testSetAndGetInvalidStatus(): void
+    {
+        // Given
+        $charter = new Charter();
+        $status = 999;
+        $expected = CharterStatus::PENDING;
+
+        // When
+        $charter->status = $status; // @phpstan-ignore assign.propertyType
+        $actualStatus = $charter->status;
+
+        // Then
+        $this->assertSame($expected, $actualStatus);
     }
 
     public function testSetAndGetLaycanStart(): void
@@ -44,9 +59,9 @@ final class CharterTest extends TestCase
         $laycanStart = new \DateTimeImmutable('2021-01-01');
 
         // When
-        $charter->setLaycanStart($laycanStart);
-        $actualLaycanStart = $charter->getLaycanStart();
-        $actualSqlLaycanStart = $charter->getSqlLaycanStart();
+        $charter->laycanStart = $laycanStart;
+        $actualLaycanStart = $charter->laycanStart;
+        $actualSqlLaycanStart = $charter->sqlLaycanStart;
 
         // Then
         $this->assertEquals($laycanStart, $actualLaycanStart, 'The laycan start is not the expected one.');
@@ -60,9 +75,9 @@ final class CharterTest extends TestCase
         $laycanEnd = new \DateTimeImmutable('2021-01-01');
 
         // When
-        $charter->setLaycanEnd($laycanEnd);
-        $actualLaycanEnd = $charter->getLaycanEnd();
-        $actualSqlLaycanEnd = $charter->getSqlLaycanEnd();
+        $charter->laycanEnd = $laycanEnd;
+        $actualLaycanEnd = $charter->laycanEnd;
+        $actualSqlLaycanEnd = $charter->sqlLaycanEnd;
 
         // Then
         $this->assertEquals($laycanEnd, $actualLaycanEnd, 'The laycan end is not the expected one.');
@@ -76,167 +91,42 @@ final class CharterTest extends TestCase
         $cpDate = new \DateTimeImmutable('2021-01-01');
 
         // When
-        $charter->setCpDate($cpDate);
-        $actualCpDate = $charter->getCpDate();
-        $actualSqlCpDate = $charter->getSqlCpDate();
+        $charter->cpDate = $cpDate;
+        $actualCpDate = $charter->cpDate;
+        $actualSqlCpDate = $charter->sqlCpDate;
 
         // Then
         $this->assertEquals($cpDate, $actualCpDate, 'The cp date is not the expected one.');
         $this->assertEquals('2021-01-01', $actualSqlCpDate, 'The SQL cp date is not the expected one.');
     }
 
-    public function testSetANdGetVesselName(): void
+    public function testSetAndGetVesselName(): void
     {
         // Given
         $charter = new Charter();
         $vesselName = 'Vessel Name';
 
         // When
-        $charter->setVesselName($vesselName);
-        $actualVesselName = $charter->getVesselName();
+        $charter->vesselName = $vesselName;
+        $actualVesselName = $charter->vesselName;
 
         // Then
         $this->assertSame($vesselName, $actualVesselName);
     }
 
-    public function testSetAndGetCharterer(): void
+    public function testSetAndGetEmptyVesselName(): void
     {
         // Given
         $charter = new Charter();
-        $charterer = new ThirdParty();
+        $vesselName = '';
+        $expected = 'TBN';
 
         // When
-        $charter->setCharterer($charterer);
-        $actualCharterer = $charter->getCharterer();
+        $charter->vesselName = $vesselName;
+        $actualVesselName = $charter->vesselName;
 
         // Then
-        $this->assertSame($charterer, $actualCharterer);
-    }
-
-    public function testSetAndGetShipOperator(): void
-    {
-        // Given
-        $charter = new Charter();
-        $shipOperator = new ThirdParty();
-
-        // When
-        $charter->setShipOperator($shipOperator);
-        $actualShipOperator = $charter->getShipOperator();
-
-        // Then
-        $this->assertSame($shipOperator, $actualShipOperator);
-    }
-
-    public function testSetAndGetShipbroker(): void
-    {
-        // Given
-        $charter = new Charter();
-        $shipbroker = new ThirdParty();
-
-        // When
-        $charter->setShipbroker($shipbroker);
-        $actualShipbroker = $charter->getShipbroker();
-
-        // Then
-        $this->assertSame($shipbroker, $actualShipbroker);
-    }
-
-    public function testSetAndGetFreightPayed(): void
-    {
-        // Given
-        $charter = new Charter();
-        $freightPayed = 1000.0;
-
-        // When
-        $charter->setFreightPayed($freightPayed);
-        $actualFreightPayed = $charter->getFreightPayed();
-
-        // Then
-        $this->assertSame($freightPayed, $actualFreightPayed);
-    }
-
-    public function testSetAndGetFreightSold(): void
-    {
-        // Given
-        $charter = new Charter();
-        $freightSold = 1000.0;
-
-        // When
-        $charter->setFreightSold($freightSold);
-        $actualFreightSold = $charter->getFreightSold();
-
-        // Then
-        $this->assertSame($freightSold, $actualFreightSold);
-    }
-
-    public function testSetAndGetDemurragePayed(): void
-    {
-        // Given
-        $charter = new Charter();
-        $demurragePayed = 1000.0;
-
-        // When
-        $charter->setDemurragePayed($demurragePayed);
-        $actualDemurragePayed = $charter->getDemurragePayed();
-
-        // Then
-        $this->assertSame($demurragePayed, $actualDemurragePayed);
-    }
-
-    public function testSetAndGetDemurrageSold(): void
-    {
-        // Given
-        $charter = new Charter();
-        $demurrageSold = 1000.0;
-
-        // When
-        $charter->setDemurrageSold($demurrageSold);
-        $actualDemurrageSold = $charter->getDemurrageSold();
-
-        // Then
-        $this->assertSame($demurrageSold, $actualDemurrageSold);
-    }
-
-    public function testSetAndGetComments(): void
-    {
-        // Given
-        $charter = new Charter();
-        $comments = 'Comments';
-
-        // When
-        $charter->setComments($comments);
-        $actualComments = $charter->getComments();
-
-        // Then
-        $this->assertSame($comments, $actualComments);
-    }
-
-    public function testSetAndGetArchiveTrue(): void
-    {
-        // Given
-        $charter = new Charter();
-        $archiveState = true;
-
-        // When
-        $charter->setArchive($archiveState);
-        $actualArchiveState = $charter->isArchive();
-
-        // Then
-        $this->assertTrue($actualArchiveState);
-    }
-
-    public function testSetAndGetArchiveFalse(): void
-    {
-        // Given
-        $charter = new Charter();
-        $archiveState = false;
-
-        // When
-        $charter->setArchive($archiveState);
-        $actualArchiveState = $charter->isArchive();
-
-        // Then
-        $this->assertFalse($actualArchiveState);
+        $this->assertSame($expected, $actualVesselName);
     }
 
     public function testSetAndGetLegs(): void
@@ -246,8 +136,8 @@ final class CharterTest extends TestCase
         $legs = \array_fill(0, 3, new CharterLeg());
 
         // When
-        $charter->setLegs($legs);
-        $actualLegs = $charter->getLegs();
+        $charter->legs = $legs;
+        $actualLegs = $charter->legs;
 
         // Then
         $this->assertInstanceOf(Collection::class, $actualLegs);
@@ -265,7 +155,7 @@ final class CharterTest extends TestCase
 
         // When
         $charter->addLeg($leg);
-        $actualLegs = $charter->getLegs();
+        $actualLegs = $charter->legs;
 
         // Then
         $this->assertContains($leg, $actualLegs);
@@ -275,26 +165,23 @@ final class CharterTest extends TestCase
     {
         // Given
         $charter = new Charter();
-        $charter->setId(1);
-        $charter->setStatus(CharterStatus::PENDING);
-        $charter->setLaycanStart(new \DateTimeImmutable('2021-01-01'));
-        $charter->setLaycanEnd(new \DateTimeImmutable('2021-01-01'));
-        $charter->setCpDate(new \DateTimeImmutable('2021-01-01'));
-        $charter->setVesselName('Vessel Name');
-        $charterer = (new ThirdParty())->setId(10);
-        $charter->setCharterer($charterer);
-        $shipOperator = (new ThirdParty())->setId(20);
-        $charter->setShipOperator($shipOperator);
-        $shipbroker = (new ThirdParty())->setId(30);
-        $charter->setShipbroker($shipbroker);
-        $charter->setFreightPayed(1000);
-        $charter->setFreightSold(1000);
-        $charter->setDemurragePayed(1000);
-        $charter->setDemurrageSold(1000);
-        $charter->setComments('Comments');
-        $charter->setArchive(true);
+        $charter->id = 1;
+        $charter->status = CharterStatus::PENDING;
+        $charter->laycanStart = new \DateTimeImmutable('2021-01-01');
+        $charter->laycanEnd = new \DateTimeImmutable('2021-01-01');
+        $charter->cpDate = new \DateTimeImmutable('2021-01-01');
+        $charter->vesselName = 'Vessel Name';
+        $charter->charterer = new ThirdParty()->setId(10);
+        $charter->shipOperator = new ThirdParty()->setId(20);
+        $charter->shipbroker = new ThirdParty()->setId(30);
+        $charter->freightPayed = 1000;
+        $charter->freightSold = 1000;
+        $charter->demurragePayed = 1000;
+        $charter->demurrageSold = 1000;
+        $charter->comments = 'Comments';
+        $charter->isArchive = true;
         $legs = \array_fill(0, 3, new CharterLeg());
-        $charter->setLegs($legs);
+        $charter->legs = $legs;
 
         $expectedArray = [
             'id' => 1,

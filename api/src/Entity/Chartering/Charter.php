@@ -41,255 +41,90 @@ final class Charter extends AbstractEntity
     use IdentifierTrait;
 
     /** @var CharterStatus::* $status */
-    private int $status = CharterStatus::PENDING;
+    public int $status = CharterStatus::PENDING {
+        set(int $value) => CharterStatus::tryFrom($value);
+    }
 
-    private ?\DateTimeImmutable $laycanStart = null;
+    public ?\DateTimeImmutable $laycanStart = null {
+        set(\DateTimeImmutable|string|null $value) => DateUtils::makeDateTimeImmutable($value);
+    }
 
-    private ?\DateTimeImmutable $laycanEnd = null;
+    public ?string $sqlLaycanStart {
+        get => $this->laycanStart?->format('Y-m-d');
+    }
 
-    private ?\DateTimeImmutable $cpDate = null;
+    public ?\DateTimeImmutable $laycanEnd = null {
+        set(\DateTimeImmutable|string|null $value) => DateUtils::makeDateTimeImmutable($value);
+    }
 
-    private string $vesselName = 'TBN';
+    public ?string $sqlLaycanEnd {
+        get => $this->laycanEnd?->format('Y-m-d');
+    }
+
+    public ?\DateTimeImmutable $cpDate = null {
+        set(\DateTimeImmutable|string|null $value) => DateUtils::makeDateTimeImmutable($value);
+    }
+
+    public ?string $sqlCpDate {
+        get => $this->cpDate?->format('Y-m-d');
+    }
+
+    public string $vesselName = 'TBN' {
+        get => $this->vesselName ?: 'TBN';
+    }
 
     #[Required("L'affréteur est obligatoire.")]
-    private ?ThirdParty $charterer = null;
+    public ?ThirdParty $charterer = null;
 
-    private ?ThirdParty $shipOperator = null;
+    public ?ThirdParty $shipOperator = null;
 
-    private ?ThirdParty $shipbroker = null;
+    public ?ThirdParty $shipbroker = null;
 
-    private float $freightPayed = 0.0;
+    public float $freightPayed = 0.0;
 
-    private float $freightSold = 0.0;
+    public float $freightSold = 0.0;
 
-    private float $demurragePayed = 0.0;
+    public float $demurragePayed = 0.0;
 
-    private float $demurrageSold = 0.0;
+    public float $demurrageSold = 0.0;
 
-    private string $comments = '';
+    public string $comments = '';
 
-    private bool $archive = false;
+    public bool $isArchive = false {
+        set(bool|int $value) => (bool) $value;
+    }
 
     /**
      * @var Collection<CharterLeg>
      */
-    private Collection $legs;
+    public Collection $legs {
+        /** @param CharterLeg[]|Collection<CharterLeg> $value */
+        set(array|Collection $value) {
+            $this->legs = $value instanceof Collection
+                ? $value
+                : new Collection(
+                    \array_map(
+                        function (CharterLeg $leg) {
+                            /** @disregard P1006 */
+                            $leg->charter = $this;
+                            return $leg;
+                        },
+                        $value
+                    )
+                );
+        }
+    }
 
     public function __construct()
     {
         $this->legs = new Collection();
     }
 
-    public function setStatus(int $status): static
-    {
-        $this->status = CharterStatus::tryFrom($status);
-
-        return $this;
-    }
-
-    /**
-     * @phpstan-return CharterStatus::*
-     */
-    public function getStatus(): int
-    {
-        return $this->status;
-    }
-
-    public function setLaycanStart(\DateTimeImmutable|string|null $date): static
-    {
-        $this->laycanStart = DateUtils::makeDateTimeImmutable($date);
-
-        return $this;
-    }
-
-    public function getLaycanStart(): ?\DateTimeImmutable
-    {
-        return $this->laycanStart;
-    }
-
-    public function getSqlLaycanStart(): ?string
-    {
-        return $this->laycanStart?->format('Y-m-d');
-    }
-
-    public function setLaycanEnd(\DateTimeImmutable|string|null $date): static
-    {
-        $this->laycanEnd = DateUtils::makeDateTimeImmutable($date);
-
-        return $this;
-    }
-
-    public function getLaycanEnd(): ?\DateTimeImmutable
-    {
-        return $this->laycanEnd;
-    }
-
-    public function getSqlLaycanEnd(): ?string
-    {
-        return $this->laycanEnd?->format('Y-m-d');
-    }
-
-    public function setCpDate(\DateTimeImmutable|string|null $date): static
-    {
-        $this->cpDate = DateUtils::makeDateTimeImmutable($date);
-
-        return $this;
-    }
-
-    public function getCpDate(): ?\DateTimeImmutable
-    {
-        return $this->cpDate;
-    }
-
-    public function getSqlCpDate(): ?string
-    {
-        return $this->cpDate?->format('Y-m-d');
-    }
-
-    public function setVesselName(string $vesselName): static
-    {
-        $this->vesselName = $vesselName ?: "TBN";
-
-        return $this;
-    }
-
-    public function getVesselName(): string
-    {
-        return $this->vesselName;
-    }
-
-    public function setCharterer(?ThirdParty $charterer): static
-    {
-        $this->charterer = $charterer;
-
-        return $this;
-    }
-
-    public function getCharterer(): ?ThirdParty
-    {
-        return $this->charterer;
-    }
-
-    public function setShipOperator(?ThirdParty $shipOperator): static
-    {
-        $this->shipOperator = $shipOperator;
-
-        return $this;
-    }
-
-    public function getShipOperator(): ?ThirdParty
-    {
-        return $this->shipOperator;
-    }
-
-    public function setShipbroker(?ThirdParty $shipbroker): static
-    {
-        $this->shipbroker = $shipbroker;
-
-        return $this;
-    }
-
-    public function getShipbroker(): ?ThirdParty
-    {
-        return $this->shipbroker;
-    }
-
-    public function setFreightPayed(float $freightPayed): static
-    {
-        $this->freightPayed = $freightPayed;
-
-        return $this;
-    }
-
-    public function getFreightPayed(): float
-    {
-        return $this->freightPayed;
-    }
-
-    public function setFreightSold(float $freightSold): static
-    {
-        $this->freightSold = $freightSold;
-
-        return $this;
-    }
-
-    public function getFreightSold(): float
-    {
-        return $this->freightSold;
-    }
-
-    public function setDemurragePayed(float $demurragePayed): static
-    {
-        $this->demurragePayed = $demurragePayed;
-
-        return $this;
-    }
-
-    public function getDemurragePayed(): float
-    {
-        return $this->demurragePayed;
-    }
-
-    public function setDemurrageSold(float $demurrageSold): static
-    {
-        $this->demurrageSold = $demurrageSold;
-
-        return $this;
-    }
-
-    public function getDemurrageSold(): float
-    {
-        return $this->demurrageSold;
-    }
-
-    public function setComments(string $comments): static
-    {
-        $this->comments = $comments;
-
-        return $this;
-    }
-
-    public function getComments(): string
-    {
-        return $this->comments;
-    }
-
-    public function setArchive(int|bool $archive): static
-    {
-        $this->archive = (bool) $archive;
-
-        return $this;
-    }
-
-    public function isArchive(): bool
-    {
-        return $this->archive;
-    }
-
-    /**
-     * @param CharterLeg[] $legs 
-     */
-    public function setLegs(array $legs): static
-    {
-        $this->legs = new Collection(
-            \array_map(fn(CharterLeg $leg) => $leg->setCharter($this), $legs)
-        );
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<CharterLeg>
-     */
-    public function getLegs(): Collection
-    {
-        return $this->legs;
-    }
-
     public function addLeg(CharterLeg $leg): static
     {
         $this->legs->add($leg);
-        $leg->setCharter($this);
+        /** @disregard P1006 */
+        $leg->charter = $this;
 
         return $this;
     }
@@ -299,21 +134,21 @@ final class Charter extends AbstractEntity
     {
         return [
             "id" => $this->id,
-            "statut" => $this->getStatus(),
-            "lc_debut" => $this->getLaycanStart()?->format('Y-m-d'),
-            "lc_fin" => $this->getLaycanEnd()?->format('Y-m-d'),
-            "cp_date" => $this->getCpDate()?->format('Y-m-d'),
-            "navire" => $this->getVesselName(),
-            "affreteur" => $this->getCharterer()?->id,
-            "armateur" => $this->getShipOperator()?->id,
-            "courtier" => $this->getShipbroker()?->id,
-            "fret_achat" => $this->getFreightPayed(),
-            "fret_vente" => $this->getFreightSold(),
-            "surestaries_achat" => $this->getDemurragePayed(),
-            "surestaries_vente" => $this->getDemurrageSold(),
-            "commentaire" => $this->getComments(),
-            "archive" => $this->isArchive(),
-            "legs" => $this->getLegs()->toArray(),
+            "statut" => $this->status,
+            "lc_debut" => $this->sqlLaycanStart,
+            "lc_fin" => $this->sqlLaycanEnd,
+            "cp_date" => $this->sqlCpDate,
+            "navire" => $this->vesselName,
+            "affreteur" => $this->charterer?->id,
+            "armateur" => $this->shipOperator?->id,
+            "courtier" => $this->shipbroker?->id,
+            "fret_achat" => $this->freightPayed,
+            "fret_vente" => $this->freightSold,
+            "surestaries_achat" => $this->demurragePayed,
+            "surestaries_vente" => $this->demurrageSold,
+            "commentaire" => $this->comments,
+            "archive" => $this->isArchive,
+            "legs" => $this->legs->toArray(),
         ];
     }
 }
