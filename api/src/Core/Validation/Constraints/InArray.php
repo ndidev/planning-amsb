@@ -25,6 +25,6 @@ final class InArray implements Constraint
 
     public function isValid(mixed $value): bool
     {
-        return in_array($value, $this->values);
+        return \in_array($value, $this->values);
     }
 }
