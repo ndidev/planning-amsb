@@ -122,18 +122,18 @@ final class TimberService
      */
     public function makeTimberRegisterEntryDTO(array $rawData): TimberRegistryEntryDTO
     {
-        $registryEntry = new TimberRegistryEntryDTO()
-            ->setDate($rawData["date_rdv"])
-            ->setSupplierName($rawData["fournisseur"] ?? "")
-            ->setLoadingPlaceName($rawData["chargement_nom"] ?? "")
-            ->setLoadingPlaceCity($rawData["chargement_ville"] ?? "")
-            ->setLoadingPlaceCountry($rawData["chargement_pays"] ?? "")
-            ->setDeliveryPlaceName($rawData["livraison_nom"] ?? "")
-            ->setDeliveryPlacePostCode($rawData["livraison_cp"] ?? "")
-            ->setDeliveryPlaceCity($rawData["livraison_ville"] ?? "")
-            ->setDeliveryPlaceCountry($rawData["livraison_pays"] ?? "")
-            ->setDeliveryNoteNumber($rawData["numero_bl"])
-            ->setTransport($rawData["transporteur"] ?? "");
+        $registryEntry = new TimberRegistryEntryDTO();
+        $registryEntry->date = $rawData['date_rdv'];
+        $registryEntry->supplierName = $rawData['fournisseur'] ?? '';
+        $registryEntry->loadingPlaceName = $rawData['chargement_nom'] ?? '';
+        $registryEntry->loadingPlaceCity = $rawData['chargement_ville'] ?? '';
+        $registryEntry->loadingPlaceCountry = $rawData['chargement_pays'] ?? '';
+        $registryEntry->deliveryPlaceName = $rawData['livraison_nom'] ?? '';
+        $registryEntry->deliveryPlacePostCode = $rawData['livraison_cp'] ?? '';
+        $registryEntry->deliveryPlaceCity = $rawData['livraison_ville'] ?? '';
+        $registryEntry->deliveryPlaceCountry = $rawData['livraison_pays'] ?? '';
+        $registryEntry->deliveryNoteNumber = $rawData['numero_bl'];
+        $registryEntry->carrier = $rawData['transporteur'] ?? '';
 
         return $registryEntry;
     }
@@ -384,14 +384,14 @@ final class TimberService
             foreach ($registryEntries as $entry) {
 
                 $ligne = [
-                    $entry->getDate(),
-                    $entry->getMonth(),
-                    $entry->getSupplierName(),
+                    $entry->date,
+                    $entry->month,
+                    $entry->supplierName,
                     "1 COMPLET DE BOIS",
                     $entry->getLoadingPlace(),
                     $entry->getDeliveryPlace(),
-                    $entry->getDeliveryNoteNumber(),
-                    $entry->getTransport(),
+                    $entry->deliveryNoteNumber,
+                    $entry->carrier,
                 ];
 
                 fputcsv($output, $ligne, ';', '"');
