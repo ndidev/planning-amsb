@@ -35,7 +35,7 @@ final class TimberFilterDTOTest extends TestCase
         $_SERVER['REQUEST_URI'] = "/path";
         $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
-        $expected = (new \DateTime(TimberFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
+        $expected = new \DateTime(TimberFilterDTO::DEFAULT_START_DATE)->format('Y-m-d');
 
         // When
         $sqlStartDate = $dto->getSqlStartDate();
@@ -50,7 +50,7 @@ final class TimberFilterDTOTest extends TestCase
         $_SERVER['REQUEST_URI'] = "/path?date_debut=";
         $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
-        $expected = (new \DateTime(TimberFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
+        $expected = new \DateTime(TimberFilterDTO::DEFAULT_START_DATE)->format('Y-m-d');
 
         // When
         $sqlStartDate = $dto->getSqlStartDate();
@@ -65,7 +65,7 @@ final class TimberFilterDTOTest extends TestCase
         $_SERVER['REQUEST_URI'] = "/path?date_debut=illegal";
         $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
-        $expected = (new \DateTime(TimberFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
+        $expected = new \DateTime(TimberFilterDTO::DEFAULT_START_DATE)->format('Y-m-d');
 
         // When
         $sqlStartDate = $dto->getSqlStartDate();
@@ -95,7 +95,7 @@ final class TimberFilterDTOTest extends TestCase
         $_SERVER['REQUEST_URI'] = "/path";
         $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
-        $expected = (new \DateTime(TimberFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
+        $expected = new \DateTime(TimberFilterDTO::DEFAULT_END_DATE)->format('Y-m-d');
 
         // When
         $sqlEndDate = $dto->getSqlEndDate();
@@ -110,7 +110,7 @@ final class TimberFilterDTOTest extends TestCase
         $_SERVER['REQUEST_URI'] = "/path?date_fin=";
         $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
-        $expected = (new \DateTime(TimberFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
+        $expected = new \DateTime(TimberFilterDTO::DEFAULT_END_DATE)->format('Y-m-d');
 
         // When
         $sqlEndDate = $dto->getSqlEndDate();
@@ -125,7 +125,7 @@ final class TimberFilterDTOTest extends TestCase
         $_SERVER['REQUEST_URI'] = "/path?date_fin=illegal";
         $query = new HTTPRequestQuery();
         $dto = new TimberFilterDTO($query);
-        $expected = (new \DateTime(TimberFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
+        $expected = new \DateTime(TimberFilterDTO::DEFAULT_END_DATE)->format('Y-m-d');
 
         // When
         $sqlEndDate = $dto->getSqlEndDate();

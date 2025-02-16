@@ -177,7 +177,7 @@ final class PdfConfigService
         }
 
         // Récupération données du service de l'agence.
-        $agencyInfo = (new AgencyService())->getDepartment("transit");
+        $agencyInfo = new AgencyService()->getDepartment("transit");
 
         if (!$agencyInfo) {
             throw new ServerException("Impossible de récupérer les informations de l'agence");
@@ -259,7 +259,7 @@ final class PdfConfigService
             }
 
             // Récupération données du service de l'agence.
-            $agencyInfo = (new AgencyService())->getDepartment("transit");
+            $agencyInfo = new AgencyService()->getDepartment("transit");
 
             if (!$agencyInfo) {
                 throw new ServerException("Impossible de récupérer les informations de l'agence");

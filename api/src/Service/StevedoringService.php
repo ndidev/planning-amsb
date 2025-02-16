@@ -296,7 +296,7 @@ final class StevedoringService
 
         $reportDataDto = $this->stevedoringRepository->fetchTempWorkHoursReportData($monday, $sunday);
 
-        $agencyInfo = (new AgencyService())->getDepartment('general');
+        $agencyInfo = new AgencyService()->getDepartment('general');
 
         if (!\extension_loaded('zip')) {
             throw new ServerException(

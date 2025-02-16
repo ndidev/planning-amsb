@@ -36,7 +36,7 @@ final class ShippingFilterDTOTest extends TestCase
         $_SERVER['REQUEST_URI'] = "/path";
         $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
-        $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
+        $expected = new \DateTime(ShippingFilterDTO::DEFAULT_START_DATE)->format('Y-m-d');
 
         // When
         $sqlStartDate = $dto->getSqlStartDate();
@@ -51,7 +51,7 @@ final class ShippingFilterDTOTest extends TestCase
         $_SERVER['REQUEST_URI'] = "/path?startDate=";
         $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
-        $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
+        $expected = new \DateTime(ShippingFilterDTO::DEFAULT_START_DATE)->format('Y-m-d');
 
         // When
         $sqlStartDate = $dto->getSqlStartDate();
@@ -66,7 +66,7 @@ final class ShippingFilterDTOTest extends TestCase
         $_SERVER['REQUEST_URI'] = "/path?startDate=illegal";
         $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
-        $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_START_DATE))->format('Y-m-d');
+        $expected = new \DateTime(ShippingFilterDTO::DEFAULT_START_DATE)->format('Y-m-d');
 
         // When
         $sqlStartDate = $dto->getSqlStartDate();
@@ -96,7 +96,7 @@ final class ShippingFilterDTOTest extends TestCase
         $_SERVER['REQUEST_URI'] = "/path";
         $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
-        $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
+        $expected = new \DateTime(ShippingFilterDTO::DEFAULT_END_DATE)->format('Y-m-d');
 
         // When
         $sqlEndDate = $dto->getSqlEndDate();
@@ -111,7 +111,7 @@ final class ShippingFilterDTOTest extends TestCase
         $_SERVER['REQUEST_URI'] = "/path?endDate=";
         $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
-        $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
+        $expected = new \DateTime(ShippingFilterDTO::DEFAULT_END_DATE)->format('Y-m-d');
 
         // When
         $sqlEndDate = $dto->getSqlEndDate();
@@ -126,7 +126,7 @@ final class ShippingFilterDTOTest extends TestCase
         $_SERVER['REQUEST_URI'] = "/path?endDate=illegal";
         $query = new HTTPRequestQuery();
         $dto = new ShippingFilterDTO($query);
-        $expected = (new \DateTime(ShippingFilterDTO::DEFAULT_END_DATE))->format('Y-m-d');
+        $expected = new \DateTime(ShippingFilterDTO::DEFAULT_END_DATE)->format('Y-m-d');
 
         // When
         $sqlEndDate = $dto->getSqlEndDate();

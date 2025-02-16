@@ -122,7 +122,7 @@ final class TimberService
      */
     public function makeTimberRegisterEntryDTO(array $rawData): TimberRegistryEntryDTO
     {
-        $registryEntry = (new TimberRegistryEntryDTO())
+        $registryEntry = new TimberRegistryEntryDTO()
             ->setDate($rawData["date_rdv"])
             ->setSupplierName($rawData["fournisseur"] ?? "")
             ->setLoadingPlaceName($rawData["chargement_nom"] ?? "")

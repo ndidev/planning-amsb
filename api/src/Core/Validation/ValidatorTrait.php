@@ -29,7 +29,7 @@ trait ValidatorTrait
     {
         $validationResult = new ValidationResult();
 
-        $properties = (new \ReflectionClass($this))->getProperties();
+        $properties = new \ReflectionClass($this)->getProperties();
 
         foreach ($properties as $property) {
             $propertValidationResult = $this->validateProperty($property);

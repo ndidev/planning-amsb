@@ -18,7 +18,7 @@ use App\Core\Security;
 
 
 if (Security::checkIfRequestCanBeDone() === false) {
-    (new HTTPResponse(HTTPResponse::HTTP_TOO_MANY_REQUESTS_429))
+    new HTTPResponse(HTTPResponse::HTTP_TOO_MANY_REQUESTS_429)
         ->addHeader("Retry-After", (string) Security::BLOCKED_IP_TIMEOUT)
         ->setType("text/plain")
         ->setBody("IP address blocked. Too many unauthenticated requests.")
@@ -27,7 +27,7 @@ if (Security::checkIfRequestCanBeDone() === false) {
 
 // Pre-flight request
 if (Server::getString('REQUEST_METHOD') === "OPTIONS") {
-    (new HTTPResponse())->sendCorsPreflight();
+    new HTTPResponse()->sendCorsPreflight();
 }
 
 /**
@@ -46,7 +46,7 @@ $supported_methods = [
 
 // Méthode non supportée
 if (\array_search(Server::getString('REQUEST_METHOD'), $supported_methods) === FALSE) {
-    (new HTTPResponse(HTTPResponse::HTTP_NOT_IMPLEMENTED_501))->send();
+    new HTTPResponse(HTTPResponse::HTTP_NOT_IMPLEMENTED_501)->send();
 }
 
 
