@@ -24,95 +24,23 @@ use App\Entity\ThirdParty;
 final class TimberQuickAppointmentAdd extends QuickAppointmentAdd
 {
     #[Required("Le fournisseur est obligatoire.")]
-    private ?ThirdParty $supplier = null;
+    public ?ThirdParty $supplier = null;
 
-    private ?ThirdParty $carrier = null;
+    public ?ThirdParty $carrier = null;
 
-    private ?ThirdParty $charterer = null;
+    public ?ThirdParty $charterer = null;
 
     #[Required("Le lieu chargement est obligatoire.")]
-    private ?ThirdParty $loading = null;
+    public ?ThirdParty $loading = null;
 
     #[Required("Le client est obligatoire.")]
-    private ?ThirdParty $customer = null;
+    public ?ThirdParty $customer = null;
 
-    private ?ThirdParty $delivery = null;
+    public ?ThirdParty $delivery = null;
 
     public function __construct()
     {
         $this->module = Module::TIMBER;
-    }
-
-    public function setSupplier(?ThirdParty $supplier): static
-    {
-        $this->supplier = $supplier;
-
-        return $this;
-    }
-
-    public function getSupplier(): ?ThirdParty
-    {
-        return $this->supplier;
-    }
-
-    public function setCarrier(?ThirdParty $carrier): static
-    {
-        $this->carrier = $carrier;
-
-        return $this;
-    }
-
-    public function getCarrier(): ?ThirdParty
-    {
-        return $this->carrier;
-    }
-
-    public function setCharterer(?ThirdParty $charterer): static
-    {
-        $this->charterer = $charterer;
-
-        return $this;
-    }
-
-    public function getCharterer(): ?ThirdParty
-    {
-        return $this->charterer;
-    }
-
-    public function setLoading(?ThirdParty $loading): static
-    {
-        $this->loading = $loading;
-
-        return $this;
-    }
-
-    public function getLoading(): ?ThirdParty
-    {
-        return $this->loading;
-    }
-
-    public function setCustomer(?ThirdParty $customer): static
-    {
-        $this->customer = $customer;
-
-        return $this;
-    }
-
-    public function getCustomer(): ?ThirdParty
-    {
-        return $this->customer;
-    }
-
-    public function setDelivery(?ThirdParty $delivery): static
-    {
-        $this->delivery = $delivery;
-
-        return $this;
-    }
-
-    public function getDelivery(): ?ThirdParty
-    {
-        return $this->delivery;
     }
 
     #[\Override]
@@ -121,12 +49,12 @@ final class TimberQuickAppointmentAdd extends QuickAppointmentAdd
         return [
             "id" => $this->id,
             "module" => $this->module,
-            "fournisseur" => $this->getSupplier()?->id,
-            "transporteur" => $this->getCarrier()?->id,
-            "affreteur" => $this->getCharterer()?->id,
-            "chargement" => $this->getLoading()?->id,
-            "client" => $this->getCustomer()?->id,
-            "livraison" => $this->getDelivery()?->id,
+            "fournisseur" => $this->supplier?->id,
+            "transporteur" => $this->carrier?->id,
+            "affreteur" => $this->charterer?->id,
+            "chargement" => $this->loading?->id,
+            "client" => $this->customer?->id,
+            "livraison" => $this->delivery?->id,
         ];
     }
 }

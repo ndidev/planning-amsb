@@ -110,22 +110,24 @@ final class QuickAppointmentAddRepository extends Repository
                 client = :customerId,
                 livraison = :deliveryId
             ";
+        try {
+            $this->mysql->beginTransaction();
 
-        $request = $this->mysql->prepare($statement);
+            $this->mysql->prepareAndExecute($statement, [
+                'module' => $quickAdd->module,
+                'supplierId' => $quickAdd->supplier?->id,
+                'carrierId' => $quickAdd->carrier?->id,
+                'chartererId' => $quickAdd->charterer?->id,
+                'loadingId' => $quickAdd->loading?->id,
+                'customerId' => $quickAdd->customer?->id,
+                'deliveryId' => $quickAdd->delivery?->id,
+            ]);
 
-        $this->mysql->beginTransaction();
-        $request->execute([
-            'module' => $quickAdd->module,
-            'supplierId' => $quickAdd->getSupplier()?->id,
-            'carrierId' => $quickAdd->getCarrier()?->id,
-            'chartererId' => $quickAdd->getCharterer()?->id,
-            'loadingId' => $quickAdd->getLoading()?->id,
-            'customerId' => $quickAdd->getCustomer()?->id,
-            'deliveryId' => $quickAdd->getDelivery()?->id,
-        ]);
-
-        $lastInsertId = (int) $this->mysql->lastInsertId();
-        $this->mysql->commit();
+            $lastInsertId = (int) $this->mysql->lastInsertId();
+            $this->mysql->commit();
+        } catch (\PDOException $e) {
+            throw new DBException("Erreur lors de la création de l'ajout rapide bois.", previous: $e);
+        }
 
         /** @var TimberQuickAppointmentAdd */
         $newTimberQuickAppointmentAdd = $this->fetchImtberQuickAppointmentAdd($lastInsertId);
@@ -153,16 +155,19 @@ final class QuickAppointmentAddRepository extends Repository
                 livraison = :deliveryId
             WHERE id = :id";
 
-        $request = $this->mysql->prepare($statement);
-        $request->execute([
-            'supplierId' => $quickAdd->getSupplier()?->id,
-            'carrierId' => $quickAdd->getCarrier()?->id,
-            'chartererId' => $quickAdd->getCharterer()?->id,
-            'loadingId' => $quickAdd->getLoading()?->id,
-            'customerId' => $quickAdd->getCustomer()?->id,
-            'deliveryId' => $quickAdd->getDelivery()?->id,
-            'id' => $quickAdd->id,
-        ]);
+        try {
+            $this->mysql->prepareAndExecute($statement, [
+                'supplierId' => $quickAdd->supplier?->id,
+                'carrierId' => $quickAdd->carrier?->id,
+                'chartererId' => $quickAdd->charterer?->id,
+                'loadingId' => $quickAdd->loading?->id,
+                'customerId' => $quickAdd->customer?->id,
+                'deliveryId' => $quickAdd->delivery?->id,
+                'id' => $quickAdd->id,
+            ]);
+        } catch (\PDOException $e) {
+            throw new DBException("Erreur lors de la mise à jour de l'ajout rapide bois.", previous: $e);
+        }
 
         /** @var int */
         $id = $quickAdd->id;
@@ -182,11 +187,10 @@ final class QuickAppointmentAddRepository extends Repository
      */
     public function deleteTimberQuickAppointmentAdd(int $id): void
     {
-        $request = $this->mysql->prepare("DELETE FROM config_ajouts_rapides_bois WHERE id = :id");
-        $isDeleted = $request->execute(["id" => $id]);
-
-        if (!$isDeleted) {
-            throw new DBException("Erreur lors de la suppression");
-        };
+        try {
+            $this->mysql->prepareAndExecute("DELETE FROM config_ajouts_rapides_bois WHERE id = :id", ['id' => $id]);
+        } catch (\PDOException $e) {
+            throw new DBException("Erreur lors de la suppression de l'ajout rapide bois.", previous: $e);
+        }
     }
 }
