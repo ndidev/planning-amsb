@@ -385,7 +385,7 @@ final class ShippingRepository extends Repository
 
             $this->mysql->commit();
         } catch (\PDOException $e) {
-            $this->mysql->rollBack();
+            $this->mysql->rollbackIfNeeded();
             throw new DBException("Erreur lors de la création", previous: $e);
         }
 
@@ -544,7 +544,7 @@ final class ShippingRepository extends Repository
 
             $this->mysql->commit();
         } catch (\PDOException $e) {
-            $this->mysql->rollBack();
+            $this->mysql->rollbackIfNeeded();
             throw new DBException("Erreur lors de la mise à jour", previous: $e);
         }
 

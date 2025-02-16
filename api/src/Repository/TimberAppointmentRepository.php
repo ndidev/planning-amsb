@@ -213,7 +213,7 @@ final class TimberAppointmentRepository extends Repository
 
             return $newAppointment;
         } catch (\PDOException $e) {
-            $this->mysql->rollBack();
+            $this->mysql->rollbackIfNeeded();
             throw new DBException("Erreur lors de la création du RDV", previous: $e);
         }
     }

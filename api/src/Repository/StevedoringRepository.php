@@ -212,7 +212,7 @@ final class StevedoringRepository extends Repository
 
             return $staff;
         } catch (\PDOException $e) {
-            $this->mysql->rollBack();
+            $this->mysql->rollbackIfNeeded();
             throw new DBException("Impossible de créer le personnel de manutention.", previous: $e);
         }
     }
@@ -406,7 +406,7 @@ final class StevedoringRepository extends Repository
 
             return $equipment;
         } catch (\PDOException $e) {
-            $this->mysql->rollBack();
+            $this->mysql->rollbackIfNeeded();
             throw new DBException("Impossible de créer l'équipement de manutention.", previous: $e);
         }
     }
@@ -899,9 +899,7 @@ final class StevedoringRepository extends Repository
 
             return $entry;
         } catch (\PDOException $e) {
-            if ($this->mysql->inTransaction()) {
-                $this->mysql->rollBack();
-            }
+            $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
                 $message = \sprintf(
@@ -943,9 +941,7 @@ final class StevedoringRepository extends Repository
 
             return $entry;
         } catch (\PDOException $e) {
-            if ($this->mysql->inTransaction()) {
-                $this->mysql->rollBack();
-            }
+            $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
                 $message = \sprintf(
