@@ -29,7 +29,7 @@ use App\Entity\Shipping\ShippingCallCargo;
  *                                 endDate?: string,
  *                               }
  */
-class ShipReport extends AbstractEntity
+final class ShipReport extends AbstractEntity
 {
     use IdentifierTrait;
 

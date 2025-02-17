@@ -16,57 +16,41 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ThirdParty::class)]
 final class PdfConfigTest extends TestCase
 {
-    public function testSetAndGetModule(): void
+    public function testIsAutoSendWithBool(): void
     {
         // Given
         $pdfConfig = new PdfConfig();
-        $module = 'bois';
 
         // When
-        $pdfConfig->setModule($module);
-        $actualModule = $pdfConfig->getModule();
+        $pdfConfig->autoSend = true;
+        $actualAutoSend = $pdfConfig->autoSend;
 
         // Then
-        $this->assertSame($module, $actualModule);
+        $this->assertTrue($actualAutoSend);
     }
 
-    public function testSetAndGetSupplier(): void
+    public function testIsAutoSendWithInt(): void
     {
         // Given
         $pdfConfig = new PdfConfig();
-        $supplier = new ThirdParty();
 
         // When
-        $pdfConfig->setSupplier($supplier);
-        $actualSupplier = $pdfConfig->getSupplier();
+        $pdfConfig->autoSend = 1;
+        $actualAutoSend = $pdfConfig->autoSend;
 
         // Then
-        $this->assertSame($supplier, $actualSupplier);
-    }
-
-    public function testIsAutoSend(): void
-    {
-        // Given
-        $pdfConfig = new PdfConfig();
-        $autoSend = true;
-
-        // When
-        $pdfConfig->setAutoSend($autoSend);
-        $actualAutoSend = $pdfConfig->isAutoSend();
-
-        // Then
-        $this->assertSame($autoSend, $actualAutoSend);
+        $this->assertTrue($actualAutoSend);
     }
 
     public function testSetAndGetEmailsFromArray(): void
     {
         // Given
         $pdfConfig = new PdfConfig();
-        $emails = ['email1', 'email2'];
+        $emails = ['email1@example.com', 'email2@example.com'];
 
         // When
-        $pdfConfig->setEmails($emails);
-        $actualEmails = $pdfConfig->getEmails();
+        $pdfConfig->emails = $emails;
+        $actualEmails = $pdfConfig->emails;
 
         // Then
         $this->assertSame($emails, $actualEmails);
@@ -76,12 +60,12 @@ final class PdfConfigTest extends TestCase
     {
         // Given
         $pdfConfig = new PdfConfig();
-        $emails = 'email1' . PHP_EOL . 'email2';
-        $expectedEmails = ['email1', 'email2'];
+        $emails = 'email1@example.com' . PHP_EOL . 'email2@example.com';
+        $expectedEmails = ['email1@example.com', 'email2@example.com'];
 
         // When
-        $pdfConfig->setEmails($emails);
-        $actualEmails = $pdfConfig->getEmails();
+        $pdfConfig->emails = $emails;
+        $actualEmails = $pdfConfig->emails;
 
         // Then
         $this->assertSame($expectedEmails, $actualEmails);
@@ -91,43 +75,15 @@ final class PdfConfigTest extends TestCase
     {
         // Given
         $pdfConfig = new PdfConfig();
-        $emails = ['email1', 'email2'];
-        $expectedEmailsAsString = 'email1' . PHP_EOL . 'email2';
+        $emails = ['email1@example.com', 'email2@example.com'];
+        $expectedEmailsAsString = 'email1@example.com' . PHP_EOL . 'email2@example.com';
 
         // When
-        $pdfConfig->setEmails($emails);
+        $pdfConfig->emails = $emails;
         $actualEmailsAsString = $pdfConfig->getEmailsAsString();
 
         // Then
         $this->assertSame($expectedEmailsAsString, $actualEmailsAsString);
-    }
-
-    public function testSetAndGetDaysBefore(): void
-    {
-        // Given
-        $pdfConfig = new PdfConfig();
-        $daysBefore = 5;
-
-        // When
-        $pdfConfig->setDaysBefore($daysBefore);
-        $actualDaysBefore = $pdfConfig->getDaysBefore();
-
-        // Then
-        $this->assertSame($daysBefore, $actualDaysBefore);
-    }
-
-    public function testSetAndGetDaysAfter(): void
-    {
-        // Given
-        $pdfConfig = new PdfConfig();
-        $daysAfter = 5;
-
-        // When
-        $pdfConfig->setDaysAfter($daysAfter);
-        $actualDaysAfter = $pdfConfig->getDaysAfter();
-
-        // Then
-        $this->assertSame($daysAfter, $actualDaysAfter);
     }
 
     public function testToArray(): void
@@ -138,25 +94,24 @@ final class PdfConfigTest extends TestCase
         $module = 'bois';
         $supplierId = 10;
         $autoSend = true;
-        $emails = ['email1', 'email2'];
+        $emails = ['email1@example.com', 'email2@example.com'];
         $daysBefore = 5;
         $daysAfter = 5;
 
-        $pdfConfig
-            ->setId($id)
-            ->setModule($module)
-            ->setSupplier((new ThirdParty())->setId($supplierId))
-            ->setAutoSend($autoSend)
-            ->setEmails($emails)
-            ->setDaysBefore($daysBefore)
-            ->setDaysAfter($daysAfter);
+        $pdfConfig->id = $id;
+        $pdfConfig->supplier = new ThirdParty()->setId($supplierId);
+        $pdfConfig->autoSend = $autoSend;
+        $pdfConfig->emails = $emails;
+        $pdfConfig->daysBefore = $daysBefore;
+        $pdfConfig->daysAfter = $daysAfter;
+        $pdfConfig->module = $module;
 
         $expectedArray = [
             'id' => $id,
             'module' => $module,
             'fournisseur' => $supplierId,
             'envoi_auto' => $autoSend,
-            'liste_emails' => 'email1' . PHP_EOL . 'email2',
+            'liste_emails' => 'email1@example.com' . PHP_EOL . 'email2@example.com',
             'jours_avant' => $daysBefore,
             'jours_apres' => $daysAfter,
         ];

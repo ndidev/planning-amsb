@@ -34,7 +34,7 @@ $configs = $pdfService->getAllConfigs();
  */
 foreach ($configs as $config) {
     // Si l'envoi_auto n'est pas activé pour le client, l'envoi n'a pas lieu
-    if (!$config->isAutoSend()) {
+    if (false === $config->autoSend) {
         continue;
     }
 
@@ -51,8 +51,8 @@ foreach ($configs as $config) {
          * Calcul des dates si la page est appelée automatiquement
          * (ex : si elle est appelée par CronJob)
          */
-        $startDate = DateUtils::getPreviousWorkingDay(TODAY, $config->getDaysBefore());
-        $endDate = DateUtils::getNextWorkingDay(TODAY, $config->getDaysAfter());
+        $startDate = DateUtils::getPreviousWorkingDay(TODAY, $config->daysBefore);
+        $endDate = DateUtils::getNextWorkingDay(TODAY, $config->daysAfter);
         $formattedStartDate = DateUtils::format(DateUtils::DATE_FULL, $startDate);
         $formattedEndDate = DateUtils::format(DateUtils::DATE_FULL, $endDate);
 
@@ -70,7 +70,7 @@ foreach ($configs as $config) {
         );
 
         // Mise à jour du rapport
-        $rapport .= "• {$config->getModule()}/{$config->getSupplier()?->id} ({$config->getSupplier()?->getShortName()}) : succès" . PHP_EOL;
+        $rapport .= "• {$config->module}/{$config->supplier?->id} ({$config->supplier?->shortName}) : succès" . PHP_EOL;
         $rapport .= "  Dates : du {$formattedStartDate} au {$formattedEndDate}" . PHP_EOL;
         $rapport .= "  Adresses : " . PHP_EOL;
         $rapport .= "    From : " . $resultat["adresses"]["from"] . PHP_EOL;
@@ -87,7 +87,7 @@ foreach ($configs as $config) {
             $rapport .= "      $address" . PHP_EOL;
         }
     } catch (\Exception $e) {
-        $rapport .= "• {$config->getModule()}/{$config->getSupplier()?->id} ({$config->getSupplier()?->getShortName()}) : échec" . PHP_EOL;
+        $rapport .= "• {$config->module}/{$config->supplier?->id} ({$config->supplier?->shortName}) : échec" . PHP_EOL;
         $rapport .= "  Erreur : {$e->getMessage()}" . PHP_EOL;
         ErrorLogger::log($e);
     } finally {

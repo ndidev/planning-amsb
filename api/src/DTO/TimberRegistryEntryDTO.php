@@ -23,173 +23,52 @@ use App\Core\Component\DateUtils;
  *                                          transporteur: string|null,
  *                                        }
  */
-class TimberRegistryEntryDTO
+final class TimberRegistryEntryDTO
 {
-    private string $date;
-    private ?string $supplierName = null;
-    private ?string $loadingPlaceName = null;
-    private ?string $loadingPlaceCity = null;
-    private ?string $loadingPlaceCountry = null;
-    private ?string $deliveryPlaceName = null;
-    private ?string $deliveryPlacePostCode = null;
-    private ?string $deliveryPlaceCity = null;
-    private ?string $deliveryPlaceCountry = null;
-    private string $deliveryNoteNumber = "";
-    private ?string $transport = null;
-
-    public function setDate(string $date): static
-    {
-        $this->date = $date;
-
-        return $this;
-    }
-
-    public function getDate(): string
-    {
-        $timestamp = strtotime($this->date);
-
-        if (!$timestamp) {
-            return $this->date;
+    public string $date {
+        set {
+            $this->date = $value;
+            $this->timestamp = strtotime($value) ?: null;
         }
-
-        return date('d/m/Y', $timestamp);
+        get => $this->timestamp ? date('d/m/Y', $this->timestamp) : $this->date;
     }
 
-    public function getMonth(): string
-    {
-        return DateUtils::format("LLLL", new \DateTime($this->date));
+    private ?int $timestamp = null;
+
+    public string $month {
+        get => $this->timestamp ? DateUtils::format("LLLL", new \DateTime("@{$this->timestamp}")) : '';
     }
 
-    public function setSupplierName(?string $supplierName): static
-    {
-        $this->supplierName = $supplierName;
+    public string $supplierName = '';
 
-        return $this;
-    }
+    public string $loadingPlaceName = '';
 
-    public function getSupplierName(): string
-    {
-        return (string) $this->supplierName;
-    }
+    public string $loadingPlaceCity = '';
 
-    public function setLoadingPlaceName(?string $loadingPlaceName): static
-    {
-        $this->loadingPlaceName = $loadingPlaceName;
+    public string $loadingPlaceCountry = '';
 
-        return $this;
-    }
+    public string $deliveryPlaceName = '';
 
-    public function getLoadingPlaceName(): string
-    {
-        return (string) $this->loadingPlaceName;
-    }
+    public string $deliveryPlacePostCode = '';
 
-    public function setLoadingPlaceCity(?string $loadingPlaceCity): static
-    {
-        $this->loadingPlaceCity = $loadingPlaceCity;
+    public string $deliveryPlaceCity = '';
 
-        return $this;
-    }
+    public string $deliveryPlaceCountry = '';
 
-    public function getLoadingPlaceCity(): string
-    {
-        return (string) $this->loadingPlaceCity;
-    }
+    public string $deliveryNoteNumber = '';
 
-    public function setLoadingPlaceCountry(?string $loadingPlaceCountry): static
-    {
-        $this->loadingPlaceCountry = $loadingPlaceCountry;
-
-        return $this;
-    }
-
-    public function getLoadingPlaceCountry(): string
-    {
-        return (string) $this->loadingPlaceCountry;
-    }
-
-    public function setDeliveryPlaceName(?string $deliveryPlaceName): static
-    {
-        $this->deliveryPlaceName = $deliveryPlaceName;
-
-        return $this;
-    }
-
-    public function getDeliveryPlaceName(): string
-    {
-        return (string) $this->deliveryPlaceName;
-    }
-
-    public function setDeliveryPlacePostCode(?string $deliveryPlacePostCode): static
-    {
-        $this->deliveryPlacePostCode = $deliveryPlacePostCode;
-
-        return $this;
-    }
-
-    public function getDeliveryPlacePostCode(): string
-    {
-        return (string) $this->deliveryPlacePostCode;
-    }
-
-    public function setDeliveryPlaceCity(?string $deliveryPlaceCity): static
-    {
-        $this->deliveryPlaceCity = $deliveryPlaceCity;
-
-        return $this;
-    }
-
-    public function getDeliveryPlaceCity(): string
-    {
-        return (string) $this->deliveryPlaceCity;
-    }
-
-    public function setDeliveryPlaceCountry(?string $deliveryPlaceCountry): static
-    {
-        $this->deliveryPlaceCountry = $deliveryPlaceCountry;
-
-        return $this;
-    }
-
-    public function getDeliveryPlaceCountry(): string
-    {
-        return (string) $this->deliveryPlaceCountry;
-    }
-
-    public function setDeliveryNoteNumber(string $deliveryNoteNumber): static
-    {
-        $this->deliveryNoteNumber = $deliveryNoteNumber;
-
-        return $this;
-    }
-
-    public function getDeliveryNoteNumber(): string
-    {
-        return $this->deliveryNoteNumber;
-    }
-
-    public function setTransport(?string $transport): static
-    {
-        $this->transport = $transport;
-
-        return $this;
-    }
-
-    public function getTransport(): string
-    {
-        return (string) $this->transport;
-    }
+    public string $carrier = '';
 
     public function getLoadingPlace(): string
     {
-        if ($this->loadingPlaceName === "AMSB") {
-            return "AMSB";
+        if ($this->loadingPlaceName === 'AMSB') {
+            return 'AMSB';
         } else {
             return $this->loadingPlaceName
                 . ' '
                 . $this->loadingPlaceCity
-                . (strtolower((string) $this->loadingPlaceCountry) == 'france'
-                    ? ""
+                . (\mb_strtolower($this->loadingPlaceCountry) == 'france'
+                    ? ''
                     : " ({$this->loadingPlaceCountry})");
         }
     }
@@ -197,11 +76,11 @@ class TimberRegistryEntryDTO
     public function getDeliveryPlace(): string
     {
         if ($this->deliveryPlaceName) {
-            if (strtolower((string) $this->deliveryPlaceCountry) === 'france') {
-                $livraison_departement = " " . \substr((string) $this->deliveryPlacePostCode, 0, 2);
-                $this->deliveryPlaceCountry = "";
+            if (\mb_strtolower($this->deliveryPlaceCountry) === 'france') {
+                $livraison_departement = ' ' . \mb_substr($this->deliveryPlacePostCode, 0, 2);
+                $this->deliveryPlaceCountry = '';
             } else {
-                $livraison_departement = "";
+                $livraison_departement = '';
                 $this->deliveryPlaceCountry = " ({$this->deliveryPlaceCountry})";
             }
 

@@ -18,81 +18,54 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(StevedoringStaff::class)]
 class BulkDispatchItemTest extends TestCase
 {
-    public function testSetAndGetAppointment(): void
-    {
-        // Given
-        $bulkDispatchItem = new BulkDispatchItem();
-        $bulkAppointment = new BulkAppointment();
-
-        // When
-        $bulkDispatchItem->setAppointment($bulkAppointment);
-        $actualBulkAppointment = $bulkDispatchItem->getAppointment();
-
-        // Then
-        $this->assertSame($bulkAppointment, $actualBulkAppointment);
-    }
-
-    public function testSetAndGetStaff(): void
-    {
-        // Given
-        $bulkDispatchItem = new BulkDispatchItem();
-        $stevedoringStaff = new StevedoringStaff();
-
-        // When
-        $bulkDispatchItem->setStaff($stevedoringStaff);
-        $actualStevedoringStaff = $bulkDispatchItem->getStaff();
-
-        // Then
-        $this->assertSame($stevedoringStaff, $actualStevedoringStaff);
-    }
-
-    public function testSetAndGetDate(): void
+    public function testSetAndGetDateFromDateTimeImmutable(): void
     {
         // Given
         $bulkDispatchItem = new BulkDispatchItem();
         $date = new \DateTimeImmutable();
 
         // When
-        $bulkDispatchItem->setDate($date);
-        $actualDate = $bulkDispatchItem->getDate();
+        $bulkDispatchItem->date = $date;
+        $actualDate = $bulkDispatchItem->date;
 
         // Then
         $this->assertEquals($date, $actualDate);
     }
 
-    public function testSetAndGetRemarks(): void
+    public function testSetAndGetDateFromString(): void
     {
         // Given
         $bulkDispatchItem = new BulkDispatchItem();
-        $remarks = 'Remarks';
+        $date = '2023-10-01';
+        $expectedDate = new \DateTimeImmutable($date);
 
         // When
-        $bulkDispatchItem->setRemarks($remarks);
-        $actualRemarks = $bulkDispatchItem->getRemarks();
+        $bulkDispatchItem->date = $date;
+        $actualDate = $bulkDispatchItem->date;
 
         // Then
-        $this->assertSame($remarks, $actualRemarks);
+        $this->assertEquals($expectedDate, $actualDate);
     }
 
     public function testToArray(): void
     {
         // Given
-        $bulkDispatchItem = new BulkDispatchItem();
-        $bulkAppointmentId = 1;
-        $stevedoringStaffId = 2;
-        $remarks = 'Remarks';
+        $bulkAppointment = new BulkAppointment();
+        $bulkAppointment->id = 1;
+        $stevedoringStaff = new StevedoringStaff();
+        $stevedoringStaff->id = 2;
 
-        $bulkDispatchItem = (new BulkDispatchItem())
-            ->setAppointment((new BulkAppointment())->setId($bulkAppointmentId))
-            ->setStaff((new StevedoringStaff())->setId($stevedoringStaffId))
-            ->setDate('2023-10-01')
-            ->setRemarks($remarks);
+        $bulkDispatchItem = new BulkDispatchItem();
+        $bulkDispatchItem->appointment = $bulkAppointment;
+        $bulkDispatchItem->staff = $stevedoringStaff;
+        $bulkDispatchItem->date = '2023-10-01';
+        $bulkDispatchItem->remarks = 'Remarks';
 
         $expectedArray = [
-            'appointmentId' => $bulkAppointmentId,
-            'staffId' => $stevedoringStaffId,
+            'appointmentId' => 1,
+            'staffId' => 2,
             'date' => '2023-10-01',
-            'remarks' => $remarks,
+            'remarks' => 'Remarks',
         ];
 
         // When

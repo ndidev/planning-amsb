@@ -22,10 +22,10 @@ final class HTTPRequestQuery extends ArrayHandler
             $query = $_GET;
         } else {
             /** @var string|false */
-            $queryString = parse_url(Server::getString('REQUEST_URI'), PHP_URL_QUERY);
+            $queryString = \parse_url(Server::getString('REQUEST_URI'), PHP_URL_QUERY);
 
             if (\is_string($queryString)) {
-                parse_str($queryString, $query);
+                \parse_str($queryString, $query);
             }
         }
 

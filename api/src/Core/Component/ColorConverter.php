@@ -25,7 +25,7 @@ final class ColorConverter
         $rgb = \str_replace(" ", "", $rgb);
 
         // Enregistrement des trois couleurs dans un tableau
-        $colors = explode(',', $rgb);
+        $colors = \explode(',', $rgb);
 
         // Vérification qu'il y a bien 3 couleurs
         if (count($colors) !== 3) {

@@ -51,7 +51,7 @@ final class CountryRepository extends Repository
                 throw new DBException("Impossible de récupérer les pays.");
             }
 
-            /** @phpstan-var CountryArray[] $countriesRaw */
+            /** @var CountryArray[] */
             $countriesRaw = $countriesRequest->fetchAll();
 
             $this->redis->set($this->redisNamespace, \json_encode($countriesRaw));
@@ -61,7 +61,7 @@ final class CountryRepository extends Repository
             }
         }
 
-        /** @phpstan-var CountryArray[] $countriesRaw */
+        /** @var CountryArray[] $countriesRaw */
 
         $countries = \array_map(
             fn($countryRaw) => $this->countryService->makeCountryFromDatabase($countryRaw),

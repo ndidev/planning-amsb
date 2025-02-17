@@ -29,9 +29,7 @@ final class InfoBannerService
     /**
      * Creates an info banner line from database data.
      * 
-     * @param array $rawData Raw data from the database.
-     * 
-     * @phpstan-param InfoBannerLineArray $rawData
+     * @param InfoBannerLineArray $rawData Raw data from the database.
      * 
      * @return InfoBannerLine 
      */
@@ -39,13 +37,13 @@ final class InfoBannerService
     {
         $rawDataAH = new ArrayHandler($rawData);
 
-        $line = (new InfoBannerLine())
-            ->setId($rawDataAH->getInt('id'))
-            ->setModule($rawDataAH->getString('module'))
-            ->setPc($rawDataAH->getBool('pc'))
-            ->setTv($rawDataAH->getBool('tv'))
-            ->setMessage($rawDataAH->getString('message'))
-            ->setColor($rawDataAH->getString('couleur', InfoBannerLine::DEFAULT_COLOR));
+        $line = new InfoBannerLine();
+        $line->id = $rawDataAH->getInt('id');
+        $line->module = $rawDataAH->getString('module'); // @phpstan-ignore assign.propertyType
+        $line->isDisplayedOnPC = $rawDataAH->getBool('pc');
+        $line->isDisplayedOnTV = $rawDataAH->getBool('tv');
+        $line->message = $rawDataAH->getString('message');
+        $line->color = $rawDataAH->getString('couleur');
 
         return $line;
     }
@@ -65,12 +63,12 @@ final class InfoBannerService
             throw new ClientException("Le module n'est pas valide.");
         }
 
-        $line = (new InfoBannerLine())
-            ->setModule($module)
-            ->setPc($requestBody->getBool('pc'))
-            ->setTv($requestBody->getBool('tv'))
-            ->setMessage($requestBody->getString('message'))
-            ->setColor($requestBody->getString('couleur', InfoBannerLine::DEFAULT_COLOR));
+        $line = new InfoBannerLine();
+        $line->module = $requestBody->getString('module'); // @phpstan-ignore assign.propertyType
+        $line->isDisplayedOnPC = $requestBody->getBool('pc');
+        $line->isDisplayedOnTV = $requestBody->getBool('tv');
+        $line->message = $requestBody->getString('message');
+        $line->color = $requestBody->getString('couleur');
 
         return $line;
     }

@@ -39,7 +39,7 @@ class Collection implements \IteratorAggregate, \Countable, Arrayable, \JsonSeri
      */
     public function remove(mixed $item): static
     {
-        $this->items = array_filter($this->items, fn($i) => $i !== $item);
+        $this->items = \array_filter($this->items, fn($i) => $i !== $item);
 
         return $this;
     }

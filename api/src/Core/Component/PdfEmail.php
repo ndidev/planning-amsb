@@ -34,7 +34,7 @@ class PdfEmail extends Email
     $formattedStartDate = DateUtils::format("dd MMMM yyyy", $this->startDate);
     $formattedEndDate = DateUtils::format("dd MMMM yyyy", $this->endDate);
 
-    $this->Subject = "[{$this->agency->getCity()}] Planning du $formattedStartDate au $formattedEndDate";
+    $this->Subject = "[{$this->agency->city}] Planning du $formattedStartDate au $formattedEndDate";
   }
 
   /**
@@ -47,7 +47,7 @@ class PdfEmail extends Email
     $formattedStartDate = DateUtils::format(DateUtils::DATE_FULL, $this->startDate);
     $formattedEndDate = DateUtils::format(DateUtils::DATE_FULL, $this->endDate);
 
-    $telephone = $this->agency->getPhone() ? 'Tel : ' . $this->agency->getPhone() : '';
+    $telephone = $this->agency->phoneNumber ? 'Tel : ' . $this->agency->phoneNumber : '';
 
     $html = <<<HTML
 <html lang="fr" dir="ltr">
@@ -89,12 +89,12 @@ class PdfEmail extends Email
     <p>Cordialement,</p>
   </div>
   <div class='signature'>
-    <p>{$this->agency->getFullName()}</p>
-    <p>{$this->agency->getAddressLine1()}</p>
-    <p>{$this->agency->getAddressLine2()}</p>
-    <p>{$this->agency->getPostCode()} {$this->agency->getCity()}</p>
+    <p>{$this->agency->fullName}</p>
+    <p>{$this->agency->addressLine1}</p>
+    <p>{$this->agency->addressLine2}</p>
+    <p>{$this->agency->postCode} {$this->agency->city}</p>
     <p>{$telephone}</p>
-    <p><a href="mailto:{$this->agency->getEmail()}" target="_blank">{$this->agency->getEmail()}</a></p>
+    <p><a href="mailto:{$this->agency->emailAddress}" target="_blank">{$this->agency->emailAddress}</a></p>
     <p><a href="http://www.maritimekuhn.com" target="_blank">www.maritimekuhn.com</a></p>
   </div>
   <div class="logo"><img src="cid:logoimg" alt="AMSB" height="auto" width="180"></div>

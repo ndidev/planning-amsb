@@ -11,7 +11,7 @@ use Twig\Extension\DebugExtension;
 use Twig\Extra\Intl\IntlExtension;
 use Twig\Loader\FilesystemLoader;
 
-class Twig extends Environment
+final class Twig extends Environment
 {
     private const DEFAULT_TEMPLATE_DIR = API . '/src/templates';
 

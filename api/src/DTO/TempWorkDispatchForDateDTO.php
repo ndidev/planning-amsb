@@ -11,7 +11,7 @@ use App\Core\Array\ArrayHandler;
 /**
  * @phpstan-type TempWorkDispatchForDateData array<int, float>
  */
-class TempWorkDispatchForDateDTO implements \JsonSerializable
+final class TempWorkDispatchForDateDTO implements \JsonSerializable
 {
     /** @phpstan-var TempWorkDispatchForDateData */
     private array $dispatchtData = [];

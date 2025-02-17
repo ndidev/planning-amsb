@@ -59,75 +59,75 @@ final class TimberPDF extends PlanningPDF
             $previousDate = null;
 
             foreach ($confirmedAppointments as $appointment) {
-                $appointmentDate = $appointment->getDate();
+                $appointmentDate = $appointment->date;
 
                 $formattedDate = $appointmentDate
                     ? DateUtils::format(DateUtils::DATE_FULL, $appointmentDate)
                     : "Pas de date";
 
-                $loadingPlace = $appointment->getLoadingPlace();
-                $deliveryPlace = $appointment->getDeliveryPlace();
-                $customer = $appointment->getCustomer();
+                $loadingPlace = $appointment->loadingPlace;
+                $deliveryPlace = $appointment->deliveryPlace;
+                $customer = $appointment->customer;
 
                 if (
-                    $loadingPlace?->getCountry()?->getISO() === 'FR'
-                    || $loadingPlace?->getCountry()?->getISO() === 'ZZ'
+                    $loadingPlace?->country?->iso === 'FR'
+                    || $loadingPlace?->country?->iso === 'ZZ'
                 ) {
-                    $loadingPostCode = ' ' . \substr((string) $loadingPlace->getPostCode(), 0, 2);
+                    $loadingPostCode = ' ' . \substr((string) $loadingPlace->postCode, 0, 2);
                     $loadingCountry = '';
                 } else {
                     $loadingPostCode = '';
-                    $loadingCountry = ' (' . $loadingPlace?->getCountry()?->getISO() . ')';
+                    $loadingCountry = ' (' . $loadingPlace?->country?->iso . ')';
                 }
 
                 if (
-                    $customer?->getCountry()?->getISO() === 'FR'
-                    || $customer?->getCountry()?->getISO() === 'ZZ'
+                    $customer?->country?->iso === 'FR'
+                    || $customer?->country?->iso === 'ZZ'
                 ) {
-                    $customerPostCode = ' ' . \substr((string) $customer->getPostCode(), 0, 2);
+                    $customerPostCode = ' ' . \substr((string) $customer->postCode, 0, 2);
                     $customerCountry = '';
                 } else {
                     $customerPostCode = '';
-                    $customerCountry = ' (' . $customer?->getCountry()?->getISO() . ')';
+                    $customerCountry = ' (' . $customer?->country?->iso . ')';
                 }
 
                 if (
-                    $deliveryPlace?->getCountry()?->getISO() === 'FR'
-                    || $deliveryPlace?->getCountry()?->getISO() === 'ZZ'
+                    $deliveryPlace?->country?->iso === 'FR'
+                    || $deliveryPlace?->country?->iso === 'ZZ'
                 ) {
-                    $deliveryPostCode = ' ' . \substr((string) $deliveryPlace->getPostCode(), 0, 2);
+                    $deliveryPostCode = ' ' . \substr((string) $deliveryPlace->postCode, 0, 2);
                     $deliveryCountry = '';
                 } else {
                     $deliveryPostCode = '';
-                    $deliveryCountry = ' (' . $deliveryPlace?->getCountry()?->getISO() . ')';
+                    $deliveryCountry = ' (' . $deliveryPlace?->country?->iso . ')';
                 }
 
-                if ($appointment->getDate() != $previousDate) {
+                if ($appointment->date != $previousDate) {
                     $this->AddDate($formattedDate);
                 }
                 $this->AddLine(
                     $loadingPlace?->id,
-                    $loadingPlace?->getShortName(),
+                    $loadingPlace?->shortName,
                     $loadingPostCode,
-                    $loadingPlace?->getCity(),
+                    $loadingPlace?->city,
                     $loadingCountry,
                     $customer?->id,
-                    $customer?->getShortName(),
+                    $customer?->shortName,
                     $customerPostCode,
-                    $customer?->getCity(),
+                    $customer?->city,
                     $customerCountry,
                     $deliveryPlace?->id,
-                    $deliveryPlace?->getShortName(),
+                    $deliveryPlace?->shortName,
                     $deliveryPostCode,
-                    $deliveryPlace?->getCity(),
+                    $deliveryPlace?->city,
                     $deliveryCountry,
-                    $appointment->getTransportBroker()?->isAgency(),
-                    $appointment->getTransportBroker()?->getShortName() ?? "À affréter",
-                    $appointment->getDeliveryNoteNumber(),
-                    $appointment->getPublicComment()
+                    $appointment->transportBroker?->isAgency,
+                    $appointment->transportBroker->shortName ?? "À affréter",
+                    $appointment->deliveryNoteNumber,
+                    $appointment->publicComment
                 );
 
-                $previousDate = $appointment->getDate();
+                $previousDate = $appointment->date;
             }
         } else {
             // Affichage de "Aucun RDV"
@@ -143,67 +143,67 @@ final class TimberPDF extends PlanningPDF
          */
         if (count($appointmentsOnHold) > 0) {
             foreach ($appointmentsOnHold as $appointment) {
-                $appointmentDate = $appointment->getDate();
+                $appointmentDate = $appointment->date;
 
                 $formattedDate = $appointmentDate
                     ? DateUtils::format(DateUtils::DATE_FULL, $appointmentDate)
                     : "Pas de date";
 
-                $loadingPlace = $appointment->getLoadingPlace();
-                $deliveryPlace = $appointment->getDeliveryPlace();
-                $customer = $appointment->getCustomer();
+                $loadingPlace = $appointment->loadingPlace;
+                $deliveryPlace = $appointment->deliveryPlace;
+                $customer = $appointment->customer;
 
                 if (
-                    $loadingPlace?->getCountry()?->getISO() === 'FR'
-                    || $loadingPlace?->getCountry()?->getISO() === 'ZZ'
+                    $loadingPlace?->country?->iso === 'FR'
+                    || $loadingPlace?->country?->iso === 'ZZ'
                 ) {
-                    $loadingPostCode = ' ' . \substr((string) $loadingPlace->getPostCode(), 0, 2);
+                    $loadingPostCode = ' ' . \substr((string) $loadingPlace->postCode, 0, 2);
                     $loadingCountry = '';
                 } else {
                     $loadingPostCode = '';
-                    $loadingCountry = ' (' . $loadingPlace?->getCountry()?->getISO() . ')';
+                    $loadingCountry = ' (' . $loadingPlace?->country?->iso . ')';
                 }
 
                 if (
-                    $customer?->getCountry()?->getISO() === 'FR'
-                    || $customer?->getCountry()?->getISO() === 'ZZ'
+                    $customer?->country?->iso === 'FR'
+                    || $customer?->country?->iso === 'ZZ'
                 ) {
-                    $customerPostCode = ' ' . \substr((string) $customer->getPostCode(), 0, 2);
+                    $customerPostCode = ' ' . \substr((string) $customer->postCode, 0, 2);
                     $customerCountry = '';
                 } else {
                     $customerPostCode = '';
-                    $customerCountry = ' (' . $customer?->getCountry()?->getISO() . ')';
+                    $customerCountry = ' (' . $customer?->country?->iso . ')';
                 }
 
                 if (
-                    $deliveryPlace?->getCountry()?->getISO() === 'FR'
-                    || $deliveryPlace?->getCountry()?->getISO() === 'ZZ'
+                    $deliveryPlace?->country?->iso === 'FR'
+                    || $deliveryPlace?->country?->iso === 'ZZ'
                 ) {
-                    $deliveryPostCode = ' ' . \substr((string) $deliveryPlace->getPostCode(), 0, 2);
+                    $deliveryPostCode = ' ' . \substr((string) $deliveryPlace->postCode, 0, 2);
                     $deliveryCountry = '';
                 } else {
                     $deliveryPostCode = '';
-                    $deliveryCountry = ' (' . $deliveryPlace?->getCountry()?->getISO() . ')';
+                    $deliveryCountry = ' (' . $deliveryPlace?->country?->iso . ')';
                 }
 
                 $this->AddLineAttente(
                     $formattedDate,
                     $loadingPlace?->id,
-                    $loadingPlace?->getShortName(),
+                    $loadingPlace?->shortName,
                     $loadingPostCode,
-                    $loadingPlace?->getCity(),
+                    $loadingPlace?->city,
                     $loadingCountry,
                     $customer?->id,
-                    $customer?->getShortName(),
+                    $customer?->shortName,
                     $customerPostCode,
-                    $customer?->getCity(),
+                    $customer?->city,
                     $customerCountry,
                     $deliveryPlace?->id,
-                    $deliveryPlace?->getShortName(),
+                    $deliveryPlace?->shortName,
                     $deliveryPostCode,
-                    $deliveryPlace?->getCity(),
+                    $deliveryPlace?->city,
                     $deliveryCountry,
-                    $appointment->getPublicComment()
+                    $appointment->publicComment
                 );
             }
         } else {

@@ -41,14 +41,14 @@ final class QuickAppointmentAddService
     {
         $rawDataAH = new ArrayHandler($rawData);
 
-        $quickAppointmentAdd = (new TimberQuickAppointmentAdd())
-            ->setId($rawDataAH->getInt('id'))
-            ->setSupplier($this->thirdPartyService->getThirdParty($rawDataAH->getInt('fournisseur')))
-            ->setCarrier($this->thirdPartyService->getThirdParty($rawDataAH->getInt('transporteur')))
-            ->setCharterer($this->thirdPartyService->getThirdParty($rawDataAH->getInt('affreteur')))
-            ->setLoading($this->thirdPartyService->getThirdParty($rawDataAH->getInt('chargement')))
-            ->setCustomer($this->thirdPartyService->getThirdParty($rawDataAH->getInt('client')))
-            ->setDelivery($this->thirdPartyService->getThirdParty($rawDataAH->getInt('livraison')));
+        $quickAppointmentAdd = new TimberQuickAppointmentAdd();
+        $quickAppointmentAdd->id = $rawDataAH->getInt('id');
+        $quickAppointmentAdd->supplier = $this->thirdPartyService->getThirdParty($rawDataAH->getInt('fournisseur'));
+        $quickAppointmentAdd->carrier = $this->thirdPartyService->getThirdParty($rawDataAH->getInt('transporteur'));
+        $quickAppointmentAdd->charterer = $this->thirdPartyService->getThirdParty($rawDataAH->getInt('affreteur'));
+        $quickAppointmentAdd->loading = $this->thirdPartyService->getThirdParty($rawDataAH->getInt('chargement'));
+        $quickAppointmentAdd->customer = $this->thirdPartyService->getThirdParty($rawDataAH->getInt('client'));
+        $quickAppointmentAdd->delivery = $this->thirdPartyService->getThirdParty($rawDataAH->getInt('livraison'));
 
         return $quickAppointmentAdd;
     }
@@ -62,14 +62,14 @@ final class QuickAppointmentAddService
      */
     public function makeTimberQuickAppointmentAddFromForm(HTTPRequestBody $requestBody): TimberQuickAppointmentAdd
     {
-        $quickAppointmentAdd = (new TimberQuickAppointmentAdd())
-            ->setId($requestBody->getInt('id'))
-            ->setSupplier($this->thirdPartyService->getThirdParty($requestBody->getInt('fournisseur')))
-            ->setCarrier($this->thirdPartyService->getThirdParty($requestBody->getInt('transporteur')))
-            ->setCharterer($this->thirdPartyService->getThirdParty($requestBody->getInt('affreteur')))
-            ->setLoading($this->thirdPartyService->getThirdParty($requestBody->getInt('chargement')))
-            ->setCustomer($this->thirdPartyService->getThirdParty($requestBody->getInt('client')))
-            ->setDelivery($this->thirdPartyService->getThirdParty($requestBody->getInt('livraison')));
+        $quickAppointmentAdd = new TimberQuickAppointmentAdd();
+        $quickAppointmentAdd->id = $requestBody->getInt('id');
+        $quickAppointmentAdd->supplier = $this->thirdPartyService->getThirdParty($requestBody->getInt('fournisseur'));
+        $quickAppointmentAdd->carrier = $this->thirdPartyService->getThirdParty($requestBody->getInt('transporteur'));
+        $quickAppointmentAdd->charterer = $this->thirdPartyService->getThirdParty($requestBody->getInt('affreteur'));
+        $quickAppointmentAdd->loading = $this->thirdPartyService->getThirdParty($requestBody->getInt('chargement'));
+        $quickAppointmentAdd->customer = $this->thirdPartyService->getThirdParty($requestBody->getInt('client'));
+        $quickAppointmentAdd->delivery = $this->thirdPartyService->getThirdParty($requestBody->getInt('livraison'));
 
         return $quickAppointmentAdd;
     }
@@ -120,12 +120,12 @@ final class QuickAppointmentAddService
         $quickAppointmentAdd = $this->makeTimberQuickAppointmentAddFromForm($rawData);
 
         if (
-            !$quickAppointmentAdd->getSupplier()
-            || !$quickAppointmentAdd->getCustomer()
-            || !$quickAppointmentAdd->getCarrier()
-            || !$quickAppointmentAdd->getCharterer()
-            || !$quickAppointmentAdd->getLoading()
-            || !$quickAppointmentAdd->getDelivery()
+            !$quickAppointmentAdd->supplier
+            || !$quickAppointmentAdd->carrier
+            || !$quickAppointmentAdd->charterer
+            || !$quickAppointmentAdd->loading
+            || !$quickAppointmentAdd->customer
+            || !$quickAppointmentAdd->delivery
         ) {
             throw new BadRequestException("Tous les champs sont requis.");
         }
@@ -146,12 +146,12 @@ final class QuickAppointmentAddService
         $quickAppointmentAdd = $this->makeTimberQuickAppointmentAddFromForm($rawData)->setId($id);
 
         if (
-            !$quickAppointmentAdd->getSupplier()
-            || !$quickAppointmentAdd->getCustomer()
-            || !$quickAppointmentAdd->getCarrier()
-            || !$quickAppointmentAdd->getCharterer()
-            || !$quickAppointmentAdd->getLoading()
-            || !$quickAppointmentAdd->getDelivery()
+            !$quickAppointmentAdd->supplier
+            || !$quickAppointmentAdd->carrier
+            || !$quickAppointmentAdd->charterer
+            || !$quickAppointmentAdd->loading
+            || !$quickAppointmentAdd->customer
+            || !$quickAppointmentAdd->delivery
         ) {
             throw new BadRequestException("Tous les champs sont requis.");
         }

@@ -8,7 +8,7 @@ namespace App\DTO;
 
 use App\Core\Array\ArrayHandler;
 
-class TempWorkHoursReportDataDTO
+final class TempWorkHoursReportDataDTO
 {
     /** @var array<string,
      *         array{

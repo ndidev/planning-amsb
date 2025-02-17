@@ -24,7 +24,7 @@ use App\Entity\Stevedoring\StevedoringStaff;
  *                                           comments: string,
  *                                         }
  */
-class ShipReportStaffEntry extends AbstractEntity
+final class ShipReportStaffEntry extends AbstractEntity
 {
     use IdentifierTrait;
 
@@ -35,9 +35,7 @@ class ShipReportStaffEntry extends AbstractEntity
 
     #[Required("La date est obligatoire.")]
     public ?\DateTimeImmutable $date = null {
-        set(\DateTimeImmutable|string|null $date) {
-            $this->date = DateUtils::makeDateTimeImmutable($date);
-        }
+        set(\DateTimeImmutable|string|null $date) => DateUtils::makeDateTimeImmutable($date);
     }
 
     public string $hoursHint = '';

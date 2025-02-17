@@ -24,7 +24,7 @@ use App\Entity\AbstractEntity;
  *                                           isActive: bool
  *                                         }
  */
-class StevedoringEquipment extends AbstractEntity implements \Stringable
+final class StevedoringEquipment extends AbstractEntity implements \Stringable
 {
     use IdentifierTrait;
 

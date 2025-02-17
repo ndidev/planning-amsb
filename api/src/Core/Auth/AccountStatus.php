@@ -72,7 +72,7 @@ abstract class AccountStatus
             return null;
         }
 
-        return match (strtolower($temptativeStatus)) {
+        return match (\mb_strtolower($temptativeStatus)) {
             self::ACTIVE => self::ACTIVE,
             self::PENDING => self::PENDING,
             self::INACTIVE => self::INACTIVE,

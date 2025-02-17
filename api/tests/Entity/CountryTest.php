@@ -13,32 +13,22 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Country::class)]
 final class CountryTest extends TestCase
 {
-    public function testSetAndGetISO(): void
+    public function testConstructor(): void
     {
         // Given
-        $country = new Country();
         $iso = 'FR';
-
-        // When
-        $country->setISO($iso);
-        $actualISO = $country->getISO();
-
-        // Then
-        $this->assertSame($iso, $actualISO);
-    }
-
-    public function testSetAndGetName(): void
-    {
-        // Given
-        $country = new Country();
         $name = 'France';
+        $data = [
+            'iso' => $iso,
+            'nom' => $name,
+        ];
 
         // When
-        $country->setName($name);
-        $actualName = $country->getName();
+        $country = new Country($data);
 
         // Then
-        $this->assertSame($name, $actualName);
+        $this->assertSame($iso, $country->iso);
+        $this->assertSame($name, $country->name);
     }
 
     public function testToArray(): void
@@ -47,8 +37,8 @@ final class CountryTest extends TestCase
         $country = new Country();
         $name = 'France';
         $iso = 'FR';
-        $country->setName($name);
-        $country->setISO($iso);
+        $country->name = $name;
+        $country->iso = $iso;
 
         $expectedArray = [
             "iso" => $iso,

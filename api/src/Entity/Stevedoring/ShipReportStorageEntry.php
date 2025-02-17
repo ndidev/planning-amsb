@@ -24,7 +24,7 @@ use App\Entity\Shipping\ShippingCallCargo;
  *                                             comments: string,
  *                                           }
  */
-class ShipReportStorageEntry extends AbstractEntity
+final class ShipReportStorageEntry extends AbstractEntity
 {
     use IdentifierTrait;
 

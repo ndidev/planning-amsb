@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\Bulk\BulkProduct;
@@ -89,14 +90,14 @@ final class BulkProductRepository extends Repository
 
         $products = \array_map(
             function (array $productRaw) use ($qualitiesRaw) {
-                $productRaw["qualites"] = array_values(
-                    array_filter(
+                $productRaw["qualites"] = \array_values(
+                    \array_filter(
                         $qualitiesRaw,
                         fn($qualityRaw) => $qualityRaw["produit"] === $productRaw["id"]
                     )
                 );
 
-                $product = $this->bulkService->makeProductFromDatabase($productRaw);
+                $product = $this->bulkService->makeProductFromDatabase(new ArrayHandler($productRaw));
 
                 return $product;
             },
@@ -141,18 +142,20 @@ final class BulkProductRepository extends Repository
                     FROM vrac_produits
                     WHERE id = :id";
 
-                /** @var BulkProductArray */
-                $productRaw = $this->mysql
-                    ->prepareAndExecute($productStatement, ["id" => $id])
-                    ->fetch();
+                try {
+                    /** @var BulkProductArray */
+                    $productRaw = $this->mysql
+                        ->prepareAndExecute($productStatement, ["id" => $id])
+                        ->fetch();
 
-                $product = $this->bulkService->makeProductFromDatabase($productRaw);
+                    $product = $this->bulkService->makeProductFromDatabase(new ArrayHandler($productRaw));
 
-                $qualities = $this->fetchProductQualities($id);
+                    $product->qualities = $this->fetchProductQualities($id);
 
-                $product->setQualities($qualities);
-
-                return $product;
+                    return $product;
+                } catch (\PDOException $e) {
+                    throw new DBException("Erreur lors de la récupération du produit vrac.", previous: $e);
+                }
             }
         );
 
@@ -187,7 +190,7 @@ final class BulkProductRepository extends Repository
             ->fetchAll();
 
         $qualities = \array_map(
-            fn($qualityRaw) => $this->bulkService->makeQualityFromDatabase($qualityRaw),
+            fn($qualityRaw) => $this->bulkService->makeQualityFromDatabase(new ArrayHandler($qualityRaw)),
             $qualitiesRaw
         );
 
@@ -235,9 +238,9 @@ final class BulkProductRepository extends Repository
                         ->prepareAndExecute($qualityStatement, ["id" => $id])
                         ->fetch();
 
-                    return $this->bulkService->makeQualityFromDatabase($qualityRaw);
+                    return $this->bulkService->makeQualityFromDatabase(new ArrayHandler($qualityRaw));
                 } catch (\PDOException $e) {
-                    throw new DBException("Erreur lors de la récupération de la qualité vrac.");
+                    throw new DBException("Erreur lors de la récupération de la qualité vrac.", previous: $e);
                 }
             }
         );
@@ -260,42 +263,40 @@ final class BulkProductRepository extends Repository
     {
         $productStatement =
             "INSERT INTO vrac_produits
-            VALUES(
-                NULL,
-                :nom,
-                :couleur,
-                :unite
-            )";
+            SET
+                nom = :name,
+                couleur = :color,
+                unite = :unit
+            ";
 
         $qualitiesStatement =
             "INSERT INTO vrac_qualites
-            VALUES(
-                NULL,
-                :produit,
-                :nom,
-                :couleur
+            SET
+                produit = :productId,
+                nom = :name,
+                couleur = :color
             )";
 
-        $productRequest = $this->mysql->prepare($productStatement);
-
         $this->mysql->beginTransaction();
-        $productRequest->execute([
-            'nom' => $product->getName(),
-            'couleur' => $product->getColor(),
-            'unite' => $product->getUnit(),
-        ]);
-        $lastInsertId = (int) $this->mysql->lastInsertId();
-        $this->mysql->commit();
 
-        // Qualities
-        $qualitiesRequest = $this->mysql->prepare($qualitiesStatement);
-        foreach ($product->getQualities() as $quality) {
-            $qualitiesRequest->execute([
-                'produit' => $lastInsertId,
-                'nom' => $quality->getName(),
-                'couleur' => $quality->getColor(),
-            ]);
-        }
+        $this->mysql->prepareAndExecute($productStatement, [
+            'name' => $product->name,
+            'color' => $product->color,
+            'unit' => $product->unit,
+        ]);
+
+        $lastInsertId = (int) $this->mysql->lastInsertId();
+
+        $this->mysql->prepareAndExecute($qualitiesStatement, \array_map(
+            fn($quality) => [
+                'productId' => $lastInsertId,
+                'name' => $quality->name,
+                'color' => $quality->color,
+            ],
+            $product->qualities
+        ));
+
+        $this->mysql->commit();
 
         /** @var BulkProduct */
         $newProduct = $this->fetchProduct($lastInsertId);
@@ -320,27 +321,22 @@ final class BulkProductRepository extends Repository
                 unite = :unit
             WHERE id = :id";
 
-        $insertQualityStatement =
+        $qualityStatement =
             "INSERT INTO vrac_qualites
-            VALUES(
-                NULL,
-                :productId,
-                :name,
-                :color
-            )";
-
-        $updateQualityStatement =
-            "UPDATE vrac_qualites
             SET
+                id = :id,
+                produit = :productId,
                 nom = :name,
                 couleur = :color
-            WHERE id = :id";
+            ON DUPLICATE KEY UPDATE
+                nom = :name,
+                couleur = :color
+            ";
 
-        $productRequest = $this->mysql->prepare($productStatement);
-        $productRequest->execute([
-            'name' => $product->getName(),
-            'color' => $product->getColor(),
-            'unit' => $product->getUnit(),
+        $this->mysql->prepareAndExecute($productStatement, [
+            'name' => $product->name,
+            'color' => $product->color,
+            'unit' => $product->unit,
             'id' => $product->id,
         ]);
 
@@ -352,33 +348,24 @@ final class BulkProductRepository extends Repository
         $qualitiesRequest->execute(['productId' => $product->id]);
         $existingQualitiesIds = $qualitiesRequest->fetchAll(\PDO::FETCH_COLUMN, 0);
 
-        $submittedQualitiesIds = \array_map(fn(BulkQuality $quality) => $quality->id, $product->getQualities());
-        $qualitiesIdsToBeDeleted = array_diff($existingQualitiesIds, $submittedQualitiesIds);
+        $submittedQualitiesIds = \array_map(fn($quality) => $quality->id, $product->qualities);
+        $qualitiesIdsToBeDeleted = \array_diff($existingQualitiesIds, $submittedQualitiesIds);
 
         if (!empty($qualitiesIdsToBeDeleted)) {
-            $deleteQualitiesStatement = "DELETE FROM vrac_qualites WHERE id IN (" . implode(",", $qualitiesIdsToBeDeleted) . ")";
+            $deleteQualitiesStatement = "DELETE FROM vrac_qualites WHERE id IN (" . \implode(",", $qualitiesIdsToBeDeleted) . ")";
             $this->mysql->exec($deleteQualitiesStatement);
         }
 
         // Insert and update qualities
-        $insertQualityRequest = $this->mysql->prepare($insertQualityStatement);
-        $updateQualityRequest = $this->mysql->prepare($updateQualityStatement);
-
-        foreach ($product->getQualities() as $quality) {
-            if ($quality->id) {
-                $updateQualityRequest->execute([
-                    'name' => $quality->getName(),
-                    'color' => $quality->getColor(),
-                    'id' => $quality->id,
-                ]);
-            } else {
-                $insertQualityRequest->execute([
-                    'productId' => $product->id,
-                    'name' => $quality->getName(),
-                    'color' => $quality->getColor(),
-                ]);
-            }
-        }
+        $this->mysql->prepareAndExecute($qualityStatement, \array_map(
+            fn($quality) => [
+                'id' => $quality->id,
+                'productId' => $product->id,
+                'name' => $quality->name,
+                'color' => $quality->color,
+            ],
+            $product->qualities
+        ));
 
         /** @var int */
         $id = $product->id;

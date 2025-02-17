@@ -7,7 +7,7 @@ declare(strict_types=1);
 namespace App\Core\Validation\Constraints;
 
 #[\Attribute(\Attribute::TARGET_PROPERTY)]
-class Maximum implements Constraint
+final class Maximum implements Constraint
 {
     public function __construct(
         private int|float $maximum,

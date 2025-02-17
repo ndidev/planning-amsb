@@ -25,7 +25,7 @@ use App\Entity\AbstractEntity;
  *                                                 comments: string,
  *                                               }
  */
-class ShipReportSubcontractEntry extends AbstractEntity
+final class ShipReportSubcontractEntry extends AbstractEntity
 {
     use IdentifierTrait;
 
@@ -39,9 +39,7 @@ class ShipReportSubcontractEntry extends AbstractEntity
 
     #[Required("La date est obligatoire.")]
     public ?\DateTimeImmutable $date = null {
-        set(\DateTimeImmutable|string|null $date) {
-            $this->date = DateUtils::makeDateTimeImmutable($date);
-        }
+        set(\DateTimeImmutable|string|null $date) => DateUtils::makeDateTimeImmutable($date);
     }
 
     #[Minimum(0, message: "Les heures travaillées ne peuvent pas être négatives.")]

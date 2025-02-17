@@ -46,7 +46,7 @@ final class ShippingStatsSummaryDTO implements \JsonSerializable
 
         // Compilation du nombre de RDV par année et par mois
         foreach ($this->statsSummaryRaw as $call) {
-            $date = explode("-", $call["date"]);
+            $date = \explode("-", $call["date"]);
             $year = (int) $date[0];
             $month = (int) $date[1];
 

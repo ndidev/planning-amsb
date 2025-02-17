@@ -62,7 +62,7 @@ use App\Core\Security;
 set_exception_handler([ErrorController::class, "handleEmergency"]);
 
 if (Security::checkIfRequestCanBeDone() === false) {
-    (new HTTPResponse(HTTPResponse::HTTP_TOO_MANY_REQUESTS_429))
+    new HTTPResponse(HTTPResponse::HTTP_TOO_MANY_REQUESTS_429)
         ->addHeader("Retry-After", (string) Security::BLOCKED_IP_TIMEOUT)
         ->setType("text/plain")
         ->setBody("IP address blocked. Too many unauthenticated requests.")

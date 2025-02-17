@@ -41,14 +41,8 @@ final class PdfConfigRepository extends Repository
                 jours_apres
             FROM config_pdf";
 
-        $request = $this->mysql->query($statement);
-
-        if (!$request) {
-            throw new DBException("Impossible de récupérer les configurations PDF.");
-        }
-
-        /** @phpstan-var PdfConfigArray[] $configsRaw */
-        $configsRaw = $request->fetchAll();
+        /** @var PdfConfigArray[] */
+        $configsRaw = $this->mysql->prepareAndExecute($statement)->fetchAll();
 
         $configs = \array_map(
             fn($config) => $this->pdfService->makeConfigFromDatabase($config),
@@ -79,15 +73,10 @@ final class PdfConfigRepository extends Repository
             FROM config_pdf
             WHERE id = :id";
 
-        $request = $this->mysql->prepare($statement);
-
-        $request->execute(['id' => $id]);
-
-        $configRaw = $request->fetch();
+        /** @var ?PdfConfigArray */
+        $configRaw = $this->mysql->prepareAndExecute($statement, ['id' => $id])->fetch();
 
         if (!\is_array($configRaw)) return null;
-
-        /** @phpstan-var PdfConfigArray $configRaw */
 
         $config = $this->pdfService->makeConfigFromDatabase($configRaw);
 
@@ -113,20 +102,23 @@ final class PdfConfigRepository extends Repository
                 jours_avant = :daysBefore,
                 jours_apres = :daysAfter";
 
-        $request = $this->mysql->prepare($statement);
+        try {
+            $this->mysql->beginTransaction();
 
-        $this->mysql->beginTransaction();
-        $request->execute([
-            "module" => $config->getModule(),
-            "supplierId" => $config->getSupplier()?->id,
-            "autoSend" => (int) $config->isAutoSend(),
-            "emails" => $config->getEmailsAsString(),
-            "daysBefore" => $config->getDaysBefore(),
-            "daysAfter" => $config->getDaysAfter(),
-        ]);
+            $this->mysql->prepareAndExecute($statement, [
+                "module" => $config->module,
+                "supplierId" => $config->supplier?->id,
+                "autoSend" => (int) $config->autoSend,
+                "emails" => $config->getEmailsAsString(),
+                "daysBefore" => $config->daysBefore,
+                "daysAfter" => $config->daysAfter,
+            ]);
 
-        $lastInsertId = (int) $this->mysql->lastInsertId();
-        $this->mysql->commit();
+            $lastInsertId = (int) $this->mysql->lastInsertId();
+            $this->mysql->commit();
+        } catch (\PDOException $e) {
+            throw new DBException("Erreur lors de la création", previous: $e);
+        }
 
         /** @var PdfConfig */
         $newConfig = $this->fetchConfig($lastInsertId);
@@ -154,16 +146,19 @@ final class PdfConfigRepository extends Repository
                 jours_apres = :daysAfter
             WHERE id = :id";
 
-        $request = $this->mysql->prepare($statement);
-        $request->execute([
-            "module" => $config->getModule(),
-            "supplierId" => $config->getSupplier()?->id,
-            "autoSend" => (int) $config->isAutoSend(),
-            "emails" => $config->getEmailsAsString(),
-            "daysBefore" => $config->getDaysBefore(),
-            "daysAfter" => $config->getDaysAfter(),
-            "id" => $config->id,
-        ]);
+        try {
+            $this->mysql->prepareAndExecute($statement, [
+                "module" => $config->module,
+                "supplierId" => $config->supplier?->id,
+                "autoSend" => (int) $config->autoSend,
+                "emails" => $config->getEmailsAsString(),
+                "daysBefore" => $config->daysBefore,
+                "daysAfter" => $config->daysAfter,
+                "id" => $config->id,
+            ]);
+        } catch (\PDOException $e) {
+            throw new DBException("Erreur lors de la mise à jour", previous: $e);
+        }
 
         /** @var int */
         $id = $config->id;
@@ -183,11 +178,10 @@ final class PdfConfigRepository extends Repository
      */
     public function deleteConfig(int $id): void
     {
-        $request = $this->mysql->prepare("DELETE FROM config_pdf WHERE id = :id");
-        $isDeleted = $request->execute(["id" => $id]);
-
-        if (!$isDeleted) {
-            throw new DBException("Erreur lors de la suppression");
-        };
+        try {
+            $this->mysql->prepareAndExecute("DELETE FROM config_pdf WHERE id = :id", ['id' => $id]);
+        } catch (\PDOException $e) {
+            throw new DBException("Erreur lors de la suppression", previous: $e);
+        }
     }
 }

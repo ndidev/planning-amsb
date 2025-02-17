@@ -90,7 +90,7 @@ final class CharteringRepository extends Repository
 
         if (count($chartersRaw) > 0) {
             $chartersIds = \array_map(fn(array $charter) => $charter["id"] ?? null, $chartersRaw);
-            $legsStatement = "SELECT * FROM chartering_detail WHERE charter IN (" . implode(",", $chartersIds) . ")";
+            $legsStatement = "SELECT * FROM chartering_detail WHERE charter IN (" . \implode(",", $chartersIds) . ")";
             $legsRequest = $this->mysql->query($legsStatement);
 
             if (!$legsRequest) {
@@ -105,19 +105,17 @@ final class CharteringRepository extends Repository
             function (array $charterRaw) use ($legsRaw) {
                 $charter = $this->charteringService->makeCharterFromDatabase($charterRaw);
 
-                $filteredLegsRaw = array_values(
-                    array_filter(
+                $filteredLegsRaw = \array_values(
+                    \array_filter(
                         $legsRaw,
                         fn(array $legRaw) => ($legRaw["charter"] ?? null) === $charter->id
                     )
                 );
 
-                $legs = \array_map(
-                    fn(array $legRaw) => $this->charteringService->makeCharterLegFromDatabase($legRaw),
+                $charter->legs = \array_map(
+                    fn($legRaw) => $this->charteringService->makeCharterLegFromDatabase($legRaw),
                     $filteredLegsRaw
                 );
-
-                $charter->setLegs($legs);
 
                 return $charter;
             },
@@ -198,84 +196,89 @@ final class CharteringRepository extends Repository
     {
         $charterStatement =
             "INSERT INTO chartering_registre
-            VALUES(
-                NULL,
-                :statut,
+            SET
+                statut = :status,
                 -- Laycan
-                :lc_debut,
-                :lc_fin,
+                lc_debut = :laycanStart,
+                lc_fin = :laycanEnd,
                 -- C/P
-                :cp_date,
+                cp_date = :cpDate,
                 -- Navire
-                :navire,
+                navire = :vesselName,
                 -- Tiers
-                :affreteur,
-                :armateur,
-                :courtier,
+                affreteur = :chartererId,
+                armateur = :shipOperatorId,
+                courtier = :shipbrokerId,
                 -- Montants
-                :fret_achat,
-                :fret_vente,
-                :surestaries_achat,
-                :surestaries_vente,
+                fret_achat = :freightPayed,
+                fret_vente = :freightSold,
+                surestaries_achat = :demurragePayed,
+                surestaries_vente = :demurrageSold,
                 -- Divers
-                :commentaire,
-                :archive
-            )";
+                commentaire = :comments,
+                archive = :isArchive";
 
         $legsStatement =
             "INSERT INTO chartering_detail
-            VALUES(
-                NULL,
-                :charter,
-                :bl_date,
-                :pol,
-                :pod,
-                :marchandise,
-                :quantite,
-                :commentaire
-            )";
+            SET
+                charter = :charterId,
+                bl_date = :blDate,
+                pol = :pol,
+                pod = :pod,
+                marchandise = :commodity,
+                quantite = :quantity,
+                commentaire = :comments";
 
-        $charterRequest = $this->mysql->prepare($charterStatement);
+        try {
+            $this->mysql->beginTransaction();
 
-        $this->mysql->beginTransaction();
-        $charterRequest->execute([
-            "statut" => $charter->getStatus(),
-            // Laycan
-            "lc_debut" => $charter->getSqlLaycanStart(),
-            "lc_fin" => $charter->getSqlLaycanEnd(),
-            // C/P
-            "cp_date" => $charter->getSqlCpDate(),
-            // Navire
-            "navire" => $charter->getVesselName(),
-            // Tiers
-            "affreteur" => $charter->getCharterer()?->id,
-            "armateur" => $charter->getShipOperator()?->id,
-            "courtier" => $charter->getShipbroker()?->id,
-            // Montants
-            "fret_achat" => $charter->getFreightPayed(),
-            "fret_vente" => $charter->getFreightSold(),
-            "surestaries_achat" => $charter->getDemurragePayed(),
-            "surestaries_vente" => $charter->getDemurrageSold(),
-            // Divers
-            "commentaire" => $charter->getComments(),
-            "archive" => (int) $charter->isArchive(),
-        ]);
-
-        $lastInsertId = (int) $this->mysql->lastInsertId();
-        $this->mysql->commit();
-
-        // Détails
-        $legsRequest = $this->mysql->prepare($legsStatement);
-        foreach ($charter->getLegs() as $leg) {
-            $legsRequest->execute([
-                "charter" => $lastInsertId,
-                "bl_date" => $leg->getSqlBlDate(),
-                "marchandise" => $leg->getCommodity(),
-                "quantite" => $leg->getQuantity(),
-                "pol" => $leg->getPod()?->getLocode(),
-                "pod" => $leg->getPod()?->getLocode(),
-                "commentaire" => $leg->getComments(),
+            $this->mysql->prepareAndExecute($charterStatement, [
+                'status' => $charter->status,
+                // Laycan
+                'laycanStart' => $charter->sqlLaycanStart,
+                'laycanEnd' => $charter->sqlLaycanEnd,
+                // C/P
+                'cpDate' => $charter->sqlCpDate,
+                // Navire
+                'vesselName' => $charter->vesselName,
+                // Tiers
+                'chartererId' => $charter->charterer?->id,
+                'shipOperatorId' => $charter->shipOperator?->id,
+                'shipbrokerId' => $charter->shipbroker?->id,
+                // Montants
+                'freightPayed' => $charter->freightPayed,
+                'freightSold' => $charter->freightSold,
+                'demurragePayed' => $charter->demurragePayed,
+                'demurrageSold' => $charter->demurrageSold,
+                // Divers
+                'comments' => $charter->comments,
+                'isArchive' => (int) $charter->isArchive,
             ]);
+
+            $lastInsertId = (int) $this->mysql->lastInsertId();
+
+            // Détails
+            $this->mysql->prepareAndExecute(
+                $legsStatement,
+                $charter->legs->map(
+                    function ($leg) use ($lastInsertId) {
+                        return [
+                            'charterId' => $lastInsertId,
+                            'blDate' => $leg->sqlBlDate,
+                            'pol' => $leg->pol?->locode,
+                            'pod' => $leg->pod?->locode,
+                            'commodity' => $leg->commodity,
+                            'quantity' => $leg->quantity,
+                            'comments' => $leg->comments,
+                        ];
+                    }
+                )
+            );
+
+            $this->mysql->commit();
+        } catch (\PDOException $e) {
+            $this->mysql->rollbackIfNeeded();
+            throw new DBException("Erreur lors de la création de l'affrètement", previous: $e);
         }
 
         /** @var Charter */
@@ -296,118 +299,116 @@ final class CharteringRepository extends Repository
         $charterStatement =
             "UPDATE chartering_registre
             SET
-                statut = :statut,
+                statut = :status,
                 -- Laycan
-                lc_debut = :lc_debut,
-                lc_fin = :lc_fin,
+                lc_debut = :laycanStart,
+                lc_fin = :laycanEnd,
                 -- C/P
-                cp_date = :cp_date,
+                cp_date = :cpDate,
                 -- Navire
-                navire = :navire,
+                navire = :vesselName,
                 -- Tiers
-                affreteur = :affreteur,
-                armateur = :armateur,
-                courtier = :courtier,
+                affreteur = :chartererId,
+                armateur = :shipOperatorId,
+                courtier = :shipbrokerId,
                 -- Montants
-                fret_achat = :fret_achat,
-                fret_vente = :fret_vente,
-                surestaries_achat = :surestaries_achat,
-                surestaries_vente = :surestaries_vente,
+                fret_achat = :freightPayed,
+                fret_vente = :freightSold,
+                surestaries_achat = :demurragePayed,
+                surestaries_vente = :demurrageSold,
                 -- Divers
-                commentaire = :commentaire,
-                archive = :archive
+                commentaire = :comments,
+                archive = :isArchive
             WHERE id = :id";
 
-        $insertLegStatement =
+        $legStatement =
             "INSERT INTO chartering_detail
-            VALUES(
-                NULL,
-                :charter,
-                :bl_date,
-                :pol,
-                :pod,
-                :marchandise,
-                :quantite,
-                :commentaire
-            )";
-
-        $updateLegStatement =
-            "UPDATE chartering_detail
             SET
-                bl_date = :bl_date,
+                id = :id,
+                charter = :charterId,
+                bl_date = :blDate,
                 pol = :pol,
                 pod = :pod,
-                marchandise = :marchandise,
-                quantite = :quantite,
-                commentaire = :commentaire
-            WHERE id = :id";
+                marchandise = :commodity,
+                quantite = :quantity,
+                commentaire = :comments
+            ON DUPLICATE KEY UPDATE
+                bl_date = :blDate,
+                pol = :pol,
+                pod = :pod,
+                marchandise = :commodity,
+                quantite = :quantity,
+                commentaire = :comments
+            ";
 
-        $charterRequest = $this->mysql->prepare($charterStatement);
-        $charterRequest->execute([
-            "statut" => $charter->getStatus(),
-            // Laycan
-            "lc_debut" => $charter->getSqlLaycanStart(),
-            "lc_fin" => $charter->getSqlLaycanEnd(),
-            // C/P
-            "cp_date" => $charter->getSqlCpDate(),
-            // Navire
-            "navire" => $charter->getVesselName(),
-            // Tiers
-            "affreteur" => $charter->getCharterer()?->id,
-            "armateur" => $charter->getShipOperator()?->id,
-            "courtier" => $charter->getShipbroker()?->id,
-            // Montants
-            "fret_achat" => $charter->getFreightPayed(),
-            "fret_vente" => $charter->getFreightSold(),
-            "surestaries_achat" => $charter->getDemurragePayed(),
-            "surestaries_vente" => $charter->getDemurrageSold(),
-            // Divers
-            "commentaire" => $charter->getComments(),
-            "archive" => (int) $charter->isArchive(),
-            'id' => $charter->id,
-        ]);
+        try {
+            $this->mysql->beginTransaction();
 
-        // DETAILS
-        // Suppression details
-        // !! SUPPRESSION A LAISSER *AVANT* L'AJOUT DE detail POUR EVITER SUPPRESSION IMMEDIATE APRES AJOUT !!
-        // Comparaison du tableau transmis par POST avec la liste existante des details pour le produit concerné
-        $legsIdsRequest = $this->mysql->prepare("SELECT id FROM chartering_detail WHERE charter = :charterId");
-        $legsIdsRequest->execute(['charterId' => $charter->id]);
-        $existingLegsIds = $legsIdsRequest->fetchAll(\PDO::FETCH_COLUMN, 0);
+            $this->mysql->prepareAndExecute($charterStatement, [
+                'status' => $charter->status,
+                // Laycan
+                'laycanStart' => $charter->sqlLaycanStart,
+                'laycanEnd' => $charter->sqlLaycanEnd,
+                // C/P
+                'cpDate' => $charter->sqlCpDate,
+                // Navire
+                'vesselName' => $charter->vesselName,
+                // Tiers
+                'chartererId' => $charter->charterer?->id,
+                'shipOperatorId' => $charter->shipOperator?->id,
+                'shipbrokerId' => $charter->shipbroker?->id,
+                // Montants
+                'freightPayed' => $charter->freightPayed,
+                'freightSold' => $charter->freightSold,
+                'demurragePayed' => $charter->demurragePayed,
+                'demurrageSold' => $charter->demurrageSold,
+                // Divers
+                'comments' => $charter->comments,
+                'isArchive' => (int) $charter->isArchive,
+                'id' => $charter->id,
+            ]);
 
-        $submittedLegsIds = \array_map(fn(CharterLeg $leg) => $leg->id, $charter->getLegs()->asArray());
-        $legsIdsToBeDeleted = array_diff($existingLegsIds, $submittedLegsIds);
+            // DETAILS
+            // Suppression details
+            // !! SUPPRESSION A LAISSER *AVANT* L'AJOUT DE detail POUR EVITER SUPPRESSION IMMEDIATE APRES AJOUT !!
+            // Comparaison du tableau transmis par POST avec la liste existante des details pour le produit concerné
+            $existingLegsIds = $this->mysql
+                ->prepareAndExecute(
+                    "SELECT id FROM chartering_detail WHERE charter = :charterId",
+                    ['charterId' => $charter->id]
+                )
+                ->fetchAll(\PDO::FETCH_COLUMN, 0);
 
-        if (!empty($legsIdsToBeDeleted)) {
-            $deleteLegsStatement = "DELETE FROM chartering_detail WHERE id IN (" . implode(",", $legsIdsToBeDeleted) . ")";
-            $this->mysql->exec($deleteLegsStatement);
-        }
+            $submittedLegsIds = \array_map(fn(CharterLeg $leg) => $leg->id, $charter->legs->asArray());
+            $legsIdsToBeDeleted = \array_diff($existingLegsIds, $submittedLegsIds);
 
-        // Ajout et modification details
-        $insertLegRequest = $this->mysql->prepare($insertLegStatement);
-        $updateLegRequest = $this->mysql->prepare($updateLegStatement);
-        foreach ($charter->getLegs() as $leg) {
-            if ($leg->id) {
-                $updateLegRequest->execute([
-                    "bl_date" => $leg->getSqlBlDate(),
-                    "pol" => $leg->getPol()?->getLocode(),
-                    "pod" => $leg->getPod()?->getLocode(),
-                    "marchandise" => $leg->getCommodity(),
-                    "quantite" => $leg->getQuantity(),
-                    "commentaire" => $leg->getComments(),
-                    "id" => $leg->id,
-                ]);
-            } else {
-                $insertLegRequest->execute([
-                    "charter" => $charter->id,
-                    "bl_date" => $leg->getSqlBlDate(),
-                    "pol" => $leg->getPol()?->getLocode(),
-                    "pod" => $leg->getPod()?->getLocode(),
-                    "marchandise" => $leg->getCommodity(),
-                    "quantite" => $leg->getQuantity(),
-                    "commentaire" => $leg->getComments(),
-                ]);
+            if (!empty($legsIdsToBeDeleted)) {
+                $this->mysql->exec("DELETE FROM chartering_detail WHERE id IN (" . \implode(",", $legsIdsToBeDeleted) . ")");
             }
+
+            // Ajout et modification details
+            $this->mysql->prepareAndExecute(
+                $legStatement,
+                $charter->legs->map(
+                    function ($leg) {
+                        return [
+                            'id' => $leg->id,
+                            'charterId' => $leg->charter?->id,
+                            'blDate' => $leg->sqlBlDate,
+                            'pol' => $leg->pol?->locode,
+                            'pod' => $leg->pod?->locode,
+                            'commodity' => $leg->commodity,
+                            'quantity' => $leg->quantity,
+                            'comments' => $leg->comments,
+                        ];
+                    }
+                )
+            );
+
+            $this->mysql->commit();
+        } catch (\PDOException $e) {
+            $this->mysql->rollbackIfNeeded();
+            throw new DBException("Erreur lors de la mise à jour de l'affrètement", previous: $e);
         }
 
         /** @var int */

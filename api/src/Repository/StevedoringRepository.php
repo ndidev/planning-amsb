@@ -212,7 +212,7 @@ final class StevedoringRepository extends Repository
 
             return $staff;
         } catch (\PDOException $e) {
-            $this->mysql->rollBack();
+            $this->mysql->rollbackIfNeeded();
             throw new DBException("Impossible de créer le personnel de manutention.", previous: $e);
         }
     }
@@ -406,7 +406,7 @@ final class StevedoringRepository extends Repository
 
             return $equipment;
         } catch (\PDOException $e) {
-            $this->mysql->rollBack();
+            $this->mysql->rollbackIfNeeded();
             throw new DBException("Impossible de créer l'équipement de manutention.", previous: $e);
         }
     }
@@ -899,9 +899,7 @@ final class StevedoringRepository extends Repository
 
             return $entry;
         } catch (\PDOException $e) {
-            if ($this->mysql->inTransaction()) {
-                $this->mysql->rollBack();
-            }
+            $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
                 $message = \sprintf(
@@ -943,9 +941,7 @@ final class StevedoringRepository extends Repository
 
             return $entry;
         } catch (\PDOException $e) {
-            if ($this->mysql->inTransaction()) {
-                $this->mysql->rollBack();
-            }
+            $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
                 $message = \sprintf(
@@ -1232,7 +1228,7 @@ final class StevedoringRepository extends Repository
                     \count($existingIds) > 0
                         ? \sprintf(
                             "DELETE FROM consignation_escales_marchandises WHERE escale_id = :callId AND NOT id IN (%s)",
-                            join(",", $existingIds)
+                            \join(",", $existingIds)
                         )
                         : "DELETE FROM consignation_escales_marchandises WHERE escale_id = :callId",
                     ['callId' => $report->linkedShippingCall->id]
@@ -1323,7 +1319,7 @@ final class StevedoringRepository extends Repository
                 \count($existingIds) > 0
                     ? \sprintf(
                         "DELETE FROM stevedoring_ship_reports_equipments WHERE ship_report_id = :reportId AND NOT id IN (%s)",
-                        join(",", $existingIds)
+                        \join(",", $existingIds)
                     )
                     : "DELETE FROM stevedoring_ship_reports_equipments WHERE ship_report_id = :reportId",
                 ['reportId' => $report->id]
@@ -1347,7 +1343,7 @@ final class StevedoringRepository extends Repository
                 \count($existingIds) > 0
                     ? \sprintf(
                         "DELETE FROM stevedoring_ship_reports_staff WHERE ship_report_id = :reportId AND NOT id IN (%s)",
-                        join(",", $existingIds)
+                        \join(",", $existingIds)
                     )
                     : "DELETE FROM stevedoring_ship_reports_staff WHERE ship_report_id = :reportId",
                 ['reportId' => $report->id]
@@ -1371,7 +1367,7 @@ final class StevedoringRepository extends Repository
                 \count($existingIds) > 0
                     ? \sprintf(
                         "DELETE FROM stevedoring_ship_reports_subcontracts WHERE ship_report_id = :reportId AND NOT id IN (%s)",
-                        join(",", $existingIds)
+                        \join(",", $existingIds)
                     )
                     : "DELETE FROM stevedoring_ship_reports_subcontracts WHERE ship_report_id = :reportId",
                 ['reportId' => $report->id]
@@ -1395,7 +1391,7 @@ final class StevedoringRepository extends Repository
                 \count($existingIds) > 0
                     ? \sprintf(
                         "DELETE FROM consignation_escales_marchandises WHERE ship_report_id = :reportId AND NOT id IN (%s)",
-                        join(",", $existingIds)
+                        \join(",", $existingIds)
                     )
                     : "DELETE FROM consignation_escales_marchandises WHERE ship_report_id = :reportId",
                 ['reportId' => $report->id]
@@ -1419,7 +1415,7 @@ final class StevedoringRepository extends Repository
                 \count($existingIds) > 0
                     ? \sprintf(
                         "DELETE FROM stevedoring_ship_reports_storage WHERE ship_report_id = :reportId AND NOT id IN (%s)",
-                        join(",", $existingIds)
+                        \join(",", $existingIds)
                     )
                     : "DELETE FROM stevedoring_ship_reports_storage WHERE ship_report_id = :reportId",
                 ['reportId' => $report->id]

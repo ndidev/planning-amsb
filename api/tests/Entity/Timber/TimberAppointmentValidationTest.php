@@ -45,8 +45,8 @@ final class TimberAppointmentValidationTest extends TestCase
     {
         // Given
         $timberAppointment = self::makeValidAppointment();
-        $timberAppointment->setDate(null);
-        $timberAppointment->setOnHold(false);
+        $timberAppointment->date = null;
+        $timberAppointment->isOnHold = false;
 
         // Then
         $this->expectException(ValidationException::class);
@@ -59,7 +59,7 @@ final class TimberAppointmentValidationTest extends TestCase
     {
         // Given
         $timberAppointment = self::makeValidAppointment();
-        $timberAppointment->setSupplier(null);
+        $timberAppointment->supplier = null;
 
         // Then
         $this->expectException(ValidationException::class);
@@ -72,7 +72,7 @@ final class TimberAppointmentValidationTest extends TestCase
     {
         // Given
         $timberAppointment = self::makeValidAppointment();
-        $timberAppointment->setLoadingPlace(null);
+        $timberAppointment->loadingPlace = null;
 
         // Then
         $this->expectException(ValidationException::class);
@@ -85,7 +85,7 @@ final class TimberAppointmentValidationTest extends TestCase
     {
         // Given
         $timberAppointment = self::makeValidAppointment();
-        $timberAppointment->setCustomer(null);
+        $timberAppointment->customer = null;
 
         // Then
         $this->expectException(ValidationException::class);
@@ -96,11 +96,13 @@ final class TimberAppointmentValidationTest extends TestCase
 
     private static function makeValidAppointment(): TimberAppointment
     {
-        return (new TimberAppointment())
-            ->setDate(new \DateTimeImmutable('2021-01-01'))
-            ->setOnHold(false)
-            ->setSupplier(new ThirdParty())
-            ->setLoadingPlace(new ThirdParty())
-            ->setCustomer(new ThirdParty());
+        $appointment = new TimberAppointment();
+        $appointment->date = new \DateTimeImmutable('2021-01-01');
+        $appointment->isOnHold = false;
+        $appointment->supplier = new ThirdParty();
+        $appointment->loadingPlace = new ThirdParty();
+        $appointment->customer = new ThirdParty();
+
+        return $appointment;
     }
 }
