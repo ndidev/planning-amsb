@@ -16,6 +16,7 @@
   import type { StevedoringShipReport } from "@app/types";
 
   export let report: StevedoringShipReport;
+  export let subreport: StevedoringShipReport["subreports"][number];
 
   let tableBodyCellPrintClass =
     "font-medium px-6 py-4 print:px-3 print:py-1 print:font-normal";
@@ -25,7 +26,7 @@
   <SectionTitle>Marchandises</SectionTitle>
 
   <div class="print:text-sm">
-    {#if report.cargoEntries.length > 0}
+    {#if subreport.cargoIds.length > 0}
       <div>
         <Table>
           <TableHead>
@@ -36,7 +37,10 @@
           </TableHead>
 
           <TableBody>
-            {#each report.cargoEntries as cargo}
+            {#each subreport.cargoIds as cargoId}
+              {@const cargo = report.cargoEntries.find(
+                (entry) => entry.id === cargoId
+              )}
               <TableBodyRow>
                 <!-- Marchandise + Client -->
                 <TableBodyCell tdClass={tableBodyCellPrintClass}>
@@ -127,54 +131,58 @@
             {/each}
           </TableBody>
 
-          {#if report.cargoEntries.length > 1}
+          {#if subreport.cargoIds.length > 1}
             <tfoot>
               <tr class="font-semibold text-gray-900 bg-gray-50 text-sm">
                 <th scope="row" class="py-3 px-6">Total</th>
 
                 <!-- BL -->
                 <td class="py-3 px-6">
-                  {#if report.cargoTotals.bl.tonnage}
+                  {#if subreport.cargoTotals.bl.tonnage}
                     <div>
-                      {NumberUtils.formatTonnage(report.cargoTotals.bl.tonnage)}
+                      {NumberUtils.formatTonnage(
+                        subreport.cargoTotals.bl.tonnage
+                      )}
                     </div>
                   {/if}
 
-                  {#if report.cargoTotals.bl.volume}
+                  {#if subreport.cargoTotals.bl.volume}
                     <div>
-                      {NumberUtils.formatVolume(report.cargoTotals.bl.volume)}
+                      {NumberUtils.formatVolume(
+                        subreport.cargoTotals.bl.volume
+                      )}
                     </div>
                   {/if}
 
-                  {#if report.cargoTotals.bl.units}
+                  {#if subreport.cargoTotals.bl.units}
                     <div>
-                      {NumberUtils.formatUnits(report.cargoTotals.bl.units)}
+                      {NumberUtils.formatUnits(subreport.cargoTotals.bl.units)}
                     </div>
                   {/if}
                 </td>
 
                 <!-- Outturn -->
                 <td class="py-3 px-6">
-                  {#if report.cargoTotals.bl.tonnage}
+                  {#if subreport.cargoTotals.bl.tonnage}
                     <div>
                       {NumberUtils.formatTonnage(
-                        report.cargoTotals.outturn.tonnage
+                        subreport.cargoTotals.outturn.tonnage
                       )}
                     </div>
                   {/if}
 
-                  {#if report.cargoTotals.bl.volume}
+                  {#if subreport.cargoTotals.bl.volume}
                     <div>
                       {NumberUtils.formatVolume(
-                        report.cargoTotals.outturn.volume
+                        subreport.cargoTotals.outturn.volume
                       )}
                     </div>
                   {/if}
 
-                  {#if report.cargoTotals.bl.units}
+                  {#if subreport.cargoTotals.bl.units}
                     <div>
                       {NumberUtils.formatUnits(
-                        report.cargoTotals.outturn.units
+                        subreport.cargoTotals.outturn.units
                       )}
                     </div>
                   {/if}
@@ -182,40 +190,40 @@
 
                 <!-- Différence -->
                 <td class="py-3 px-6">
-                  {#if report.cargoTotals.bl.tonnage}
+                  {#if subreport.cargoTotals.bl.tonnage}
                     <div
                       class={NumberUtils.getQuantityColor(
-                        report.cargoTotals.difference.tonnage
+                        subreport.cargoTotals.difference.tonnage
                       )}
                     >
                       {NumberUtils.formatTonnage(
-                        report.cargoTotals.difference.tonnage,
+                        subreport.cargoTotals.difference.tonnage,
                         true
                       )}
                     </div>
                   {/if}
 
-                  {#if report.cargoTotals.bl.volume}
+                  {#if subreport.cargoTotals.bl.volume}
                     <div
                       class={NumberUtils.getQuantityColor(
-                        report.cargoTotals.difference.volume
+                        subreport.cargoTotals.difference.volume
                       )}
                     >
                       {NumberUtils.formatVolume(
-                        report.cargoTotals.difference.volume,
+                        subreport.cargoTotals.difference.volume,
                         true
                       )}
                     </div>
                   {/if}
 
-                  {#if report.cargoTotals.bl.units}
+                  {#if subreport.cargoTotals.bl.units}
                     <div
                       class={NumberUtils.getQuantityColor(
-                        report.cargoTotals.difference.units
+                        subreport.cargoTotals.difference.units
                       )}
                     >
                       {NumberUtils.formatUnits(
-                        report.cargoTotals.difference.units,
+                        subreport.cargoTotals.difference.units,
                         true
                       )}
                     </div>

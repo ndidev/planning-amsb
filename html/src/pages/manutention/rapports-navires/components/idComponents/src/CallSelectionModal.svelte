@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { createEventDispatcher } from "svelte";
+
   import { Modal, Button, Accordion, AccordionItem } from "flowbite-svelte";
   import { EyeIcon, EyeOffIcon } from "lucide-svelte";
   import Notiflix from "notiflix";
@@ -28,6 +30,8 @@
   let ignoredCallsPromise: Promise<CallSummary[]> = null;
   let ignoredCallsError: Error = null;
 
+  const dispatch = createEventDispatcher();
+
   function handleCallSelection(callId: number) {
     try {
       if (type === "link") {
@@ -54,6 +58,8 @@
         report.berth = call.quai;
         report.cargoEntries = call.marchandises;
         report.startDate = call.ops_date;
+
+        dispatch("linked");
 
         open = false;
       }

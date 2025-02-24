@@ -15,8 +15,9 @@
   import type { StevedoringShipReport } from "@app/types";
 
   export let report: StevedoringShipReport;
+  export let subreport: StevedoringShipReport["subreports"][number];
 
-  let storageByCargo = report.storageEntries.reduce((acc, curr) => {
+  let storageByCargo = subreport.storageEntries.reduce((acc, curr) => {
     if (!acc[curr.cargoId]) {
       acc[curr.cargoId] = [];
     }
@@ -37,7 +38,7 @@
 
 <div>
   <SectionTitle>Stockage</SectionTitle>
-  {#if report.storageEntries.length > 0}
+  {#if subreport.storageEntries.length > 0}
     <div>
       <Table>
         <TableHead>
@@ -102,20 +103,20 @@
             <td class="py-3 px-6"></td>
 
             <td class="py-3 px-6">
-              {report.storageTotals.tonnage
-                ? NumberUtils.formatTonnage(report.storageTotals.tonnage)
+              {subreport.storageTotals.tonnage
+                ? NumberUtils.formatTonnage(subreport.storageTotals.tonnage)
                 : ""}
             </td>
 
             <td class="py-3 px-6">
-              {report.storageTotals.volume
-                ? NumberUtils.formatVolume(report.storageTotals.volume)
+              {subreport.storageTotals.volume
+                ? NumberUtils.formatVolume(subreport.storageTotals.volume)
                 : ""}
             </td>
 
             <td class="py-3 px-6">
-              {report.storageTotals.units
-                ? NumberUtils.formatUnits(report.storageTotals.units)
+              {subreport.storageTotals.units
+                ? NumberUtils.formatUnits(subreport.storageTotals.units)
                 : ""}
             </td>
           </tr>

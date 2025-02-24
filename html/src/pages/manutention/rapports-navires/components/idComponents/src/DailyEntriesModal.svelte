@@ -19,16 +19,18 @@
 
   export let open: boolean = false;
   export let date: string;
+  export let subreport: StevedoringShipReport["subreports"][number];
   export let report: StevedoringShipReport;
 
   let dateFromInput: string;
-  let dateEntries: StevedoringShipReport["entriesByDate"][string];
+  let dateEntries: StevedoringShipReport["subreports"][number]["entriesByDate"][string];
   let subcontractorTruckingList: string[] = [];
   let subcontractorOtherList: string[] = [];
 
-  type EntriesKey = keyof StevedoringShipReport["entriesByDate"][string];
+  type EntriesKey =
+    keyof StevedoringShipReport["subreports"][number]["entriesByDate"][string];
   type EntryType<T extends EntriesKey> =
-    StevedoringShipReport["entriesByDate"][string][T][number];
+    StevedoringShipReport["subreports"][number]["entriesByDate"][string][T][number];
   type Entry = EntryType<EntriesKey>;
 
   let selectedItems: {
@@ -431,7 +433,7 @@
 
     // If the date has changed, check that is does not interfere with existing entries
     if (dateFromInput !== date) {
-      const dateAlreadyExists = Object.keys(report.entriesByDate).includes(
+      const dateAlreadyExists = Object.keys(subreport.entriesByDate).includes(
         dateFromInput
       );
 
@@ -445,23 +447,23 @@
     }
 
     // Update the entries
-    report.entriesByDate[dateFromInput] = dateEntries;
+    subreport.entriesByDate[dateFromInput] = dateEntries;
 
     // Remove the old entries if the date has changed
     if (dateFromInput !== date) {
-      delete report.entriesByDate[date];
+      delete subreport.entriesByDate[date];
     }
 
     // If the date entries are empty, delete the date from the report
     if (
-      Object.values(report.entriesByDate[dateFromInput]).flatMap(
+      Object.values(subreport.entriesByDate[dateFromInput]).flatMap(
         (items) => items as Entry[]
       ).length === 0
     ) {
-      delete report.entriesByDate[dateFromInput];
+      delete subreport.entriesByDate[dateFromInput];
     }
 
-    report.entriesByDate = report.entriesByDate;
+    report.subreports = report.subreports;
 
     open = false;
   }
@@ -469,14 +471,14 @@
   function cancelUpdate() {
     // If the date entries are empty, delete the date from the report
     if (
-      Object.values(report.entriesByDate[date]).flatMap(
+      Object.values(subreport.entriesByDate[date]).flatMap(
         (items) => items as Entry[]
       ).length === 0
     ) {
-      delete report.entriesByDate[date];
+      delete subreport.entriesByDate[date];
     }
 
-    report.entriesByDate = report.entriesByDate;
+    subreport.entriesByDate = subreport.entriesByDate;
 
     open = false;
   }
@@ -493,7 +495,7 @@
   size="lg"
   on:open={() => {
     dateFromInput = date;
-    dateEntries = structuredClone(report.entriesByDate[date]) || {
+    dateEntries = structuredClone(subreport.entriesByDate[date]) || {
       cranes: [],
       equipments: [],
       permanentStaff: [],

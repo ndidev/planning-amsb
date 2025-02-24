@@ -18,19 +18,19 @@
 
   import type { StevedoringShipReport } from "@app/types";
 
-  export let report: StevedoringShipReport;
+  export let subreport: StevedoringShipReport["subreports"][number];
 
-  const dates = Object.keys(report.entriesByDate);
+  const dates = Object.keys(subreport.entriesByDate);
 </script>
 
 <div>
   <SectionTitle>Détail journalier</SectionTitle>
 
-  {#if Object.values(report.entriesByDate).flat().length > 0}
+  {#if Object.values(subreport.entriesByDate).flat().length > 0}
     <div class="ms-2">
       <Accordion multiple flush>
         {#each dates as date}
-          {@const dateEntries = report.entriesByDate[date]}
+          {@const dateEntries = subreport.entriesByDate[date]}
           <AccordionItem>
             <span slot="header">{new DateUtils(date).format().long}</span>
 

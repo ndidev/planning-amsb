@@ -5,21 +5,21 @@
 
   import type { StevedoringShipReport } from "@app/types";
 
-  export let report: StevedoringShipReport;
+  export let subreport: StevedoringShipReport["subreports"][number];
 
-  let totalCraneHours = Object.values(report.entriesByDate)
+  let totalCraneHours = Object.values(subreport.entriesByDate)
     .flatMap(({ cranes }) => cranes)
     .reduce((acc, curr) => acc + curr.hoursWorked, 0);
 
   let rate = {
-    tonnage: report.cargoTotals.outturn.tonnage
-      ? report.cargoTotals.outturn.tonnage / totalCraneHours
+    tonnage: subreport.cargoTotals.outturn.tonnage
+      ? subreport.cargoTotals.outturn.tonnage / totalCraneHours
       : null,
-    volume: report.cargoTotals.outturn.volume
-      ? report.cargoTotals.outturn.volume / totalCraneHours
+    volume: subreport.cargoTotals.outturn.volume
+      ? subreport.cargoTotals.outturn.volume / totalCraneHours
       : null,
-    units: report.cargoTotals.outturn.units
-      ? report.cargoTotals.outturn.units / totalCraneHours
+    units: subreport.cargoTotals.outturn.units
+      ? subreport.cargoTotals.outturn.units / totalCraneHours
       : null,
   };
 </script>
