@@ -57,6 +57,18 @@ final class CollectionTest extends TestCase
         $this->assertCount(0, $collection);
     }
 
+    public function testClear(): void
+    {
+        // Given
+        $collection = new Collection(['item1', 'item2', 'item3']);
+
+        // When
+        $collection->clear();
+
+        // Then
+        $this->assertCount(0, $collection);
+    }
+
     public function testGetArrayIterator(): void
     {
         // Given
@@ -113,6 +125,103 @@ final class CollectionTest extends TestCase
 
         // Then
         $this->assertSame($expected, $array);
+    }
+
+    public function testMapWithCallable(): void
+    {
+        // Given
+        $collection = new Collection(['item1', 'item2', 'item3']);
+
+        // When
+        $mapped = $collection->map(fn($item) => \strtoupper($item));
+
+        // Then
+        $this->assertSame(['ITEM1', 'ITEM2', 'ITEM3'], $mapped);
+    }
+
+    public function testMapWithFunctionName(): void
+    {
+        // Given
+        $collection = new Collection(['item1', 'item2', 'item3']);
+
+        // When
+        $mapped = $collection->map('strtoupper');
+
+        // Then
+        $this->assertSame(['ITEM1', 'ITEM2', 'ITEM3'], $mapped);
+    }
+
+    public function testMapWithNullCallable(): void
+    {
+        // Given
+        $collection = new Collection(['item1', 'item2', 'item3']);
+
+        // When
+        $mapped = $collection->map(null);
+
+        // Then
+        $this->assertSame(['item1', 'item2', 'item3'], $mapped);
+    }
+
+    public function testFilter(): void
+    {
+        // Given
+        $collection = new Collection(['item1', 'item2', 'item3']);
+
+        // When
+        $filtered = $collection->filter(fn($item) => $item !== 'item2');
+
+        // Then
+        $this->assertEquals(new Collection(['item1', 'item3']), $filtered);
+    }
+
+    public function testFilterWithNullCallable(): void
+    {
+        // Given
+        $collection = new Collection(['item1', 'item2', 'item3']);
+
+        // When
+        $filtered = $collection->filter(null);
+
+        // Then
+        $this->assertEquals(new Collection(['item1', 'item2', 'item3']), $filtered);
+    }
+
+    public function testFilterWithPreserveKeys(): void
+    {
+        // Given
+        $collection = new Collection(['item1', 'item2', 'item3']);
+
+        // When
+        $filtered = $collection->filter(fn($item) => $item !== 'item2', true);
+
+        // Then
+        $this->assertEquals(new Collection([0 => 'item1', 2 => 'item3']), $filtered);
+    }
+
+    public function testIncludes(): void
+    {
+        // Given
+        $collection = new Collection(['item1', 'item2', 'item3']);
+
+        // Then
+        $this->assertTrue($collection->includes('item2'));
+        $this->assertFalse($collection->includes('item4'));
+    }
+
+    public function testEach(): void
+    {
+        // Given
+        $collection = new Collection(['item1', 'item2', 'item3']);
+        $items = ['test'];
+
+        // When
+        $collection->each(function ($item) use (&$items) {
+            \array_push($items, \strtoupper($item));
+        });
+
+        // Then
+        $this->assertSame(['test', 'ITEM1', 'ITEM2', 'ITEM3'], $items);
     }
 
     public function testJsonSerialize(): void
