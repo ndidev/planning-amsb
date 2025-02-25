@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { Tooltip } from "flowbite-svelte";
+  import { TriangleAlertIcon } from "lucide-svelte";
+
   import { ShipReportDrawer } from "..";
 
   import { DateUtils } from "@app/utils";
@@ -8,6 +11,12 @@
   export let report: StevedoringShipReport;
 
   let drawerHidden = true;
+
+  let allCargoesAreInSubreports =
+    report.subreports.reduce(
+      (acc, subreport) => acc + subreport.cargoIds.length,
+      0
+    ) === report.cargoEntries.length;
 </script>
 
 <div class="mb-4 rounded-lg bg-white shadow-lg">
@@ -26,6 +35,12 @@
     <div>{report.port} {report.berth}</div>
     <div>
       {report.cargoEntries.map((entry) => entry.cargoName).join(", ")}
+      {#if !allCargoesAreInSubreports}
+        <TriangleAlertIcon class="text-red-500" />
+        <Tooltip type="auto">
+          Toutes les marchandises n'ont pas été réparties dans des sous-rapports
+        </Tooltip>
+      {/if}
     </div>
   </button>
 </div>
