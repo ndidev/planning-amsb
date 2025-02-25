@@ -63,7 +63,7 @@ final readonly class HTTPRequest
             $this->headers = [];
         }
 
-        $path = parse_url(Server::getString('REQUEST_URI'), PHP_URL_PATH);
+        $path = \parse_url(Server::getString('REQUEST_URI'), PHP_URL_PATH);
         if (!\is_string($path)) {
             throw new ServerException("The request path is not a string.");
         }

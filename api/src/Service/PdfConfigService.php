@@ -50,14 +50,14 @@ final class PdfConfigService
 
         $rawDataAH = new ArrayHandler($rawData);
 
-        $config = (new PdfConfig())
-            ->setId($rawDataAH->getInt('id'))
-            ->setModule($rawDataAH->getString('module'))
-            ->setSupplier($thirdPartyService->getThirdParty($rawDataAH->getInt('fournisseur')))
-            ->setAutoSend($rawDataAH->getBool('envoi_auto'))
-            ->setEmails($rawDataAH->getString('liste_emails'))
-            ->setDaysBefore($rawDataAH->getInt('jours_avant', 0))
-            ->setDaysAfter($rawDataAH->getInt('jours_apres', 0));
+        $config = new PdfConfig();
+        $config->id = $rawDataAH->getInt('id');
+        $config->supplier = $thirdPartyService->getThirdParty($rawDataAH->getInt('fournisseur'));
+        $config->autoSend = $rawDataAH->getBool('envoi_auto');
+        $config->emails = $rawDataAH->getString('liste_emails');
+        $config->daysBefore = $rawDataAH->getInt('jours_avant', 0);
+        $config->daysAfter = $rawDataAH->getInt('jours_apres', 0);
+        $config->module = $rawDataAH->getString('module'); // @phpstan-ignore assign.propertyType
 
         return $config;
     }
@@ -79,13 +79,13 @@ final class PdfConfigService
             throw new ClientException("Le module n'est pas valide.");
         }
 
-        $config = (new PdfConfig())
-            ->setModule($module)
-            ->setSupplier($thirdPartyService->getThirdParty($requestBody->getInt('fournisseur')))
-            ->setAutoSend($requestBody->getBool('envoi_auto'))
-            ->setEmails($requestBody->getArray('liste_emails'))
-            ->setDaysBefore($requestBody->getInt('jours_avant', 0))
-            ->setDaysAfter($requestBody->getInt('jours_apres', 0));
+        $config = new PdfConfig();
+        $config->supplier = $thirdPartyService->getThirdParty($requestBody->getInt('fournisseur'));
+        $config->autoSend = $requestBody->getBool('envoi_auto');
+        $config->emails = $requestBody->getString('liste_emails');
+        $config->daysBefore = $requestBody->getInt('jours_avant', 0);
+        $config->daysAfter = $requestBody->getInt('jours_apres', 0);
+        $config->module = $requestBody->getString('module'); // @phpstan-ignore assign.propertyType
 
         return $config;
     }
@@ -152,6 +152,10 @@ final class PdfConfigService
      * @param \DateTimeInterface $endDate   Date de fin des RDV.
      * 
      * @return PlanningPDF
+     * 
+     * @throws ClientException Si l'identifiant de configuration est manquant.
+     * @throws NotFoundException Si la configuration PDF ou le fournisseur n'est pas trouvé.
+     * @throws ServerException Si le module spécifié n'est pas pris en charge.
      */
     public function generatePDF(
         ?int $configId,
@@ -168,24 +172,20 @@ final class PdfConfigService
             throw new NotFoundException("Configuration PDF non trouvée");
         }
 
-        $supplier = $config->getSupplier();
-
-        if (!$supplier) {
+        if (!$config->supplier) {
             throw new NotFoundException("Fournisseur non trouvé");
         }
 
         // Récupération données du service de l'agence.
-        $agencyInfo = (new AgencyService())->getDepartment("transit");
+        $agencyInfo = new AgencyService()->getDepartment("transit");
 
         if (!$agencyInfo) {
             throw new ServerException("Impossible de récupérer les informations de l'agence");
         }
 
-        $module = $config->getModule();
-
-        return match ($module) {
-            Module::BULK => $this->generateBulkPdf($supplier, $startDate, $endDate, $agencyInfo),
-            Module::TIMBER => $this->generateTimberPdf($supplier, $startDate, $endDate, $agencyInfo),
+        return match ($config->module) {
+            Module::BULK => $this->generateBulkPdf($config->supplier, $startDate, $endDate, $agencyInfo),
+            Module::TIMBER => $this->generateTimberPdf($config->supplier, $startDate, $endDate, $agencyInfo),
             default => throw new ServerException("Le module spécifié n'est pas pris en charge"),
         };
     }
@@ -252,14 +252,14 @@ final class PdfConfigService
                 throw new NotFoundException("Configuration PDF non trouvée");
             }
 
-            $supplierId = $config->getSupplier()?->id;
+            $supplierId = $config->supplier?->id;
 
             if (!$supplierId) {
                 throw new NotFoundException("Fournisseur non trouvé");
             }
 
             // Récupération données du service de l'agence.
-            $agencyInfo = (new AgencyService())->getDepartment("transit");
+            $agencyInfo = new AgencyService()->getDepartment("transit");
 
             if (!$agencyInfo) {
                 throw new ServerException("Impossible de récupérer les informations de l'agence");
@@ -267,13 +267,11 @@ final class PdfConfigService
 
             $supportedModules = [Module::BULK, Module::TIMBER];
 
-            $module = $config->getModule();
+            $module = $config->module;
 
-            if (!\in_array($module, $supportedModules)) {
+            if (!$module || !\in_array($module, $supportedModules)) {
                 throw new ServerException("Le module spécifié n'est pas pris en charge");
             }
-
-            /** @phpstan-var Module::* $module */
 
             $pdf = $this->generatePDF($configId, $startDate, $endDate);
 
@@ -286,7 +284,7 @@ final class PdfConfigService
             );
 
             // Adresses
-            $mail->addAddresses(to: $config->getEmails());
+            $mail->addAddresses(to: $config->emails);
 
             $mail->send();
             $mail->smtpClose();

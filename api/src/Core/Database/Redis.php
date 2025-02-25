@@ -12,7 +12,7 @@ use App\Core\Array\Environment;
 /**
  * Connexion à la base de données Redis.
  */
-class Redis extends \Redis
+final class Redis extends \Redis
 {
     public function __construct()
     {

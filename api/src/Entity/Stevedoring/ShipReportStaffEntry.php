@@ -18,26 +18,25 @@ use App\Entity\Stevedoring\StevedoringStaff;
  * @phpstan-type ShipReportStaffEntryArray array{
  *                                           id: int,
  *                                           ship_report_id: int,
+ *                                           subreport_id: int,
  *                                           staff_id: int,
  *                                           date: string,
  *                                           hours_worked: float,
  *                                           comments: string,
  *                                         }
  */
-class ShipReportStaffEntry extends AbstractEntity
+final class ShipReportStaffEntry extends AbstractEntity
 {
     use IdentifierTrait;
 
-    public ?ShipReport $report = null;
+    public ?ShipSubreport $subreport = null;
 
     #[Required("Le personnel de manutention est obligatoire.")]
     public ?StevedoringStaff $staff = null;
 
     #[Required("La date est obligatoire.")]
     public ?\DateTimeImmutable $date = null {
-        set(\DateTimeImmutable|string|null $date) {
-            $this->date = DateUtils::makeDateTimeImmutable($date);
-        }
+        set(\DateTimeImmutable|string|null $date) => DateUtils::makeDateTimeImmutable($date);
     }
 
     public string $hoursHint = '';

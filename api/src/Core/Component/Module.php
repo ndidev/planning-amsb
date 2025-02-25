@@ -31,7 +31,7 @@ abstract class Module
             return null;
         }
 
-        return match (strtolower($temptativeModuleName)) {
+        return match (\mb_strtolower($temptativeModuleName)) {
             self::BULK => self::BULK,
             self::CHARTERING => self::CHARTERING,
             self::CONFIG => self::CONFIG,

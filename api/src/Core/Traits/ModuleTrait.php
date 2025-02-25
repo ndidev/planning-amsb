@@ -13,20 +13,7 @@ trait ModuleTrait
     /**
      * @phpstan-var ?Module::* $module
      */
-    private ?string $module = null;
-
-    public function setModule(?string $module): static
-    {
-        $this->module = Module::tryFrom($module);
-
-        return $this;
-    }
-
-    /**
-     * @phpstan-return ?Module::* $module
-     */
-    public function getModule(): ?string
-    {
-        return $this->module;
+    public ?string $module = null {
+        set(?string $value) => $this->module = Module::tryFrom($value);
     }
 }

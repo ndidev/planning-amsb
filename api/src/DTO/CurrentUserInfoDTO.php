@@ -8,7 +8,7 @@ namespace App\DTO;
 
 use App\Entity\User;
 
-class CurrentUserInfoDTO implements \JsonSerializable
+final readonly class CurrentUserInfoDTO implements \JsonSerializable
 {
     public function __construct(private User $user) {}
 

@@ -48,35 +48,31 @@ final class BulkService
     // ============
 
     /**
-     * Creates a bulk appointment from database data.
-     *
-     * @param array $rawData 
+     * Creates a bulk appointment from database data. 
      * 
-     * @phpstan-param BulkAppointmentArray $rawData 
+     * @param ArrayHandler $rawData 
      *
      * @return BulkAppointment 
      */
-    public function makeBulkAppointmentFromDatabase(array $rawData): BulkAppointment
+    public function makeBulkAppointmentFromDatabase(ArrayHandler $rawData): BulkAppointment
     {
-        $rawDataAH = new ArrayHandler($rawData);
-
-        $appointment = (new BulkAppointment())
-            ->setId($rawDataAH->getInt('id'))
-            ->setDate($rawDataAH->getDatetime('date_rdv', new \DateTimeImmutable("now")))
-            ->setTime($rawDataAH->getDatetime('heure', null))
-            ->setProduct($this->getProduct($rawDataAH->getInt('produit')))
-            ->setQuality($this->getQuality($rawDataAH->getInt('qualite')))
-            ->setQuantityValue($rawDataAH->getInt('quantite', 0))
-            ->setQuantityIsMax($rawDataAH->getBool('max'))
-            ->setReady($rawDataAH->getBool('commande_prete'))
-            ->setSupplier($this->thirdPartyService->getThirdParty($rawDataAH->getInt('fournisseur')))
-            ->setCustomer($this->thirdPartyService->getThirdParty($rawDataAH->getInt('client')))
-            ->setCarrier($this->thirdPartyService->getThirdParty($rawDataAH->getInt('transporteur')))
-            ->setOrderNumber($rawDataAH->getString('num_commande'))
-            ->setPublicComments($rawDataAH->getString('commentaire_public'))
-            ->setPrivateComments($rawDataAH->getString('commentaire_prive'))
-            ->setOnTv($rawDataAH->getBool('show_on_tv'))
-            ->setArchive($rawDataAH->getBool('archive'));
+        $appointment = new BulkAppointment();
+        $appointment->id = $rawData->getInt('id');
+        $appointment->date = $rawData->getDatetime('date_rdv', 'now');
+        $appointment->time = $rawData->getDatetime('heure', null);
+        $appointment->product = $this->getProduct($rawData->getInt('produit'));
+        $appointment->quality = $this->getQuality($rawData->getInt('qualite'));
+        $appointment->quantityValue = $rawData->getInt('quantite', 0);
+        $appointment->quantityIsMax = $rawData->getBool('max');
+        $appointment->supplier = $this->thirdPartyService->getThirdParty($rawData->getInt('fournisseur'));
+        $appointment->customer = $this->thirdPartyService->getThirdParty($rawData->getInt('client'));
+        $appointment->carrier = $this->thirdPartyService->getThirdParty($rawData->getInt('transporteur'));
+        $appointment->isReady = $rawData->getBool('commande_prete');
+        $appointment->orderNumber = $rawData->getString('num_commande');
+        $appointment->publicComments = $rawData->getString('commentaire_public');
+        $appointment->privateComments = $rawData->getString('commentaire_prive');
+        $appointment->isOnTv = $rawData->getBool('show_on_tv');
+        $appointment->isArchive = $rawData->getBool('archive');
 
         return $appointment;
     }
@@ -90,30 +86,28 @@ final class BulkService
      */
     public function makeBulkAppointmentFromFormData(HTTPRequestBody $requestBody): BulkAppointment
     {
-        $appointment = (new BulkAppointment())
-            ->setId($requestBody->getInt('id'))
-            ->setDate($requestBody->getDatetime('date_rdv', 'now'))
-            ->setTime($requestBody->getDatetime('heure'))
-            ->setProduct($this->getProduct($requestBody->getInt('produit')))
-            ->setQuality($this->getQuality($requestBody->getInt('qualite')))
-            ->setQuantityValue($requestBody->getInt('quantite', 0))
-            ->setQuantityIsMax($requestBody->getBool('max'))
-            ->setReady($requestBody->getBool('commande_prete'))
-            ->setSupplier($this->thirdPartyService->getThirdParty($requestBody->getInt('fournisseur')))
-            ->setCustomer($this->thirdPartyService->getThirdParty($requestBody->getInt('client')))
-            ->setCarrier($this->thirdPartyService->getThirdParty($requestBody->getInt('transporteur')))
-            ->setOrderNumber($requestBody->getString('num_commande'))
-            ->setPublicComments($requestBody->getString('commentaire_public'))
-            ->setPrivateComments($requestBody->getString('commentaire_prive'))
-            ->setOnTv($requestBody->getBool('showOnTv'))
-            ->setArchive($requestBody->getBool('archive'))
-            ->setDispatch(
-                array_map(
-                    // @phpstan-ignore argument.type
-                    fn(array $dispatchRaw) => $this->makeBulkDispatchItemFromFormData(new ArrayHandler($dispatchRaw)),
-                    $requestBody->getArray('dispatch')
-                )
-            );
+        $appointment = new BulkAppointment();
+        $appointment->id = $requestBody->getInt('id');
+        $appointment->date = $requestBody->getDatetime('date_rdv', 'now');
+        $appointment->time = $requestBody->getDatetime('heure', null);
+        $appointment->product = $this->getProduct($requestBody->getInt('produit'));
+        $appointment->quality = $this->getQuality($requestBody->getInt('qualite'));
+        $appointment->quantityValue = $requestBody->getInt('quantite', 0);
+        $appointment->quantityIsMax = $requestBody->getBool('max');
+        $appointment->supplier = $this->thirdPartyService->getThirdParty($requestBody->getInt('fournisseur'));
+        $appointment->customer = $this->thirdPartyService->getThirdParty($requestBody->getInt('client'));
+        $appointment->carrier = $this->thirdPartyService->getThirdParty($requestBody->getInt('transporteur'));
+        $appointment->isReady = $requestBody->getBool('commande_prete');
+        $appointment->orderNumber = $requestBody->getString('num_commande');
+        $appointment->publicComments = $requestBody->getString('commentaire_public');
+        $appointment->privateComments = $requestBody->getString('commentaire_prive');
+        $appointment->isOnTv = $requestBody->getBool('show_on_tv');
+        $appointment->isArchive = $requestBody->getBool('archive');
+        $appointment->dispatch = \array_map(
+            // @phpstan-ignore argument.type
+            fn($dispatchRaw) => $this->makeBulkDispatchItemFromFormData(new ArrayHandler($dispatchRaw)),
+            $requestBody->getArray('dispatch')
+        );
 
         return $appointment;
     }
@@ -229,7 +223,7 @@ final class BulkService
         }
 
         if ($input->isSet('dispatch')) {
-            $dispatchItems = array_map(
+            $dispatchItems = \array_map(
                 // @phpstan-ignore argument.type
                 function (array $dispatchRaw) {
                     $dispatchItem = $this->makeBulkDispatchItemFromFormData(new ArrayHandler($dispatchRaw));
@@ -265,26 +259,22 @@ final class BulkService
     /**
      * Creates a bulk product from database data.
      * 
-     * @param array $rawData 
-     * 
-     * @phpstan-param BulkProductArray $rawData
+     * @param ArrayHandler $rawData
      * 
      * @return BulkProduct 
      */
-    public function makeProductFromDatabase(array $rawData): BulkProduct
+    public function makeProductFromDatabase(ArrayHandler $rawData): BulkProduct
     {
-        $product = (new BulkProduct())
-            ->setId($rawData["id"])
-            ->setName($rawData["nom"])
-            ->setColor($rawData["couleur"])
-            ->setUnit($rawData["unite"]);
-
-        $qualities = \array_map(
-            fn(array $quality) => $this->makeQualityFromDatabase($quality),
-            $rawData["qualites"] ?? []
+        $product = new BulkProduct();
+        $product->id = $rawData->getInt('id');
+        $product->name = $rawData->getString('nom');
+        $product->color = $rawData->getString('couleur');
+        $product->unit = $rawData->getString('unite');
+        $product->qualities = \array_map(
+            // @phpstan-ignore argument.type
+            fn($quality) => $this->makeQualityFromDatabase(new ArrayHandler($quality)),
+            $rawData->getArray('qualites')
         );
-
-        $product->setQualities($qualities);
 
         return $product;
     }
@@ -298,20 +288,15 @@ final class BulkService
      */
     public function makeProductFromFormData(HTTPRequestBody $requestBody): BulkProduct
     {
-        $product = (new BulkProduct())
-            ->setId($requestBody->getInt('id'))
-            ->setName($requestBody->getString('nom'))
-            ->setColor($requestBody->getString('couleur'))
-            ->setUnit($requestBody->getString('unite'));
-
-        /** @phpstan-var BulkQualityArray[] $qualities */
-        $qualities = $requestBody->getArray('qualites');
-
-        $product->setQualities(
-            \array_map(
-                fn(array $quality) => $this->makeQualityFromFormData($quality),
-                $qualities
-            )
+        $product = new BulkProduct();
+        $product->id = $requestBody->getInt('id');
+        $product->name = $requestBody->getString('nom');
+        $product->color = $requestBody->getString('couleur');
+        $product->unit = $requestBody->getString('unite');
+        $product->qualities = \array_map(
+            // @phpstan-ignore argument.type
+            fn($quality) => $this->makeQualityFromFormData(new ArrayHandler($quality)),
+            $requestBody->getArray('qualites')
         );
 
         return $product;
@@ -408,18 +393,16 @@ final class BulkService
     /**
      * Creates a bulk quality from database data.
      *
-     * @param array $rawData 
-     *
-     * @phpstan-param BulkQualityArray $rawData
+     * @param ArrayHandler $rawData 
      * 
      * @return BulkQuality 
      */
-    public function makeQualityFromDatabase(array $rawData): BulkQuality
+    public function makeQualityFromDatabase(ArrayHandler $rawData): BulkQuality
     {
-        $quality = (new BulkQuality())
-            ->setId($rawData["id"])
-            ->setName($rawData["nom"])
-            ->setColor($rawData["couleur"]);
+        $quality = new BulkQuality();
+        $quality->id = $rawData->getInt('id');
+        $quality->name = $rawData->getString('nom');
+        $quality->color = $rawData->getString('couleur');
 
         return $quality;
     }
@@ -427,20 +410,16 @@ final class BulkService
     /**
      * Creates a bulk quality from form data.
      * 
-     * @param array $rawData 
-     * 
-     * @phpstan-param BulkQualityArray $rawData
+     * @param ArrayHandler $rawData 
      * 
      * @return BulkQuality 
      */
-    public function makeQualityFromFormData(array $rawData): BulkQuality
+    public function makeQualityFromFormData(ArrayHandler $rawData): BulkQuality
     {
-        $rawDataAH = new ArrayHandler($rawData);
-
-        $quality = (new BulkQuality())
-            ->setId($rawDataAH->getInt('id'))
-            ->setName($rawDataAH->getString('nom'))
-            ->setColor($rawDataAH->getString('couleur'));
+        $quality = new BulkQuality();
+        $quality->id = $rawData->getInt('id');
+        $quality->name = $rawData->getString('nom');
+        $quality->color = $rawData->getString('couleur');
 
         return $quality;
     }
@@ -480,32 +459,28 @@ final class BulkService
     /**
      * Creates a bulk dispatch from database data.
      * 
-     * @param array $rawData 
-     * 
-     * @phpstan-param BulkDispatchArray $rawData
+     * @param ArrayHandler $rawData 
      * 
      * @return BulkDispatchItem 
      * 
      * @throws DBException 
      */
-    public function makeBulkDispatchItemFromDatabase(array $rawData): BulkDispatchItem
+    public function makeBulkDispatchItemFromDatabase(ArrayHandler $rawData): BulkDispatchItem
     {
-        $rawDataAH = new ArrayHandler($rawData);
-
-        $dispatch = (new BulkDispatchItem())
-            ->setStaff($this->stevedoringService->getStaff($rawDataAH->getInt('staff_id')))
-            ->setDate($rawDataAH->getDatetime('date'))
-            ->setRemarks($rawDataAH->getString('remarks'));
+        $dispatch = new BulkDispatchItem();
+        $dispatch->staff = $this->stevedoringService->getStaff($rawData->getInt('staff_id'));
+        $dispatch->date = $rawData->getDatetime('date');
+        $dispatch->remarks = $rawData->getString('remarks');
 
         return $dispatch;
     }
 
     public function makeBulkDispatchItemFromFormData(ArrayHandler $requestBody): BulkDispatchItem
     {
-        $dispatch = (new BulkDispatchItem())
-            ->setStaff($this->stevedoringService->getStaff($requestBody->getInt('staffId')))
-            ->setDate($requestBody->getDatetime('date'))
-            ->setRemarks($requestBody->getString('remarks'));
+        $dispatch = new BulkDispatchItem();
+        $dispatch->staff = $this->stevedoringService->getStaff($requestBody->getInt('staffId'));
+        $dispatch->date = $requestBody->getDatetime('date');
+        $dispatch->remarks = $requestBody->getString('remarks');
 
         return $dispatch;
     }

@@ -31,7 +31,7 @@ use App\Core\Security;
 use App\Entity\User;
 use const App\Core\Component\Constants\ONE_WEEK;
 
-class UserAuthenticator
+final class UserAuthenticator
 {
     private User $user;
 
@@ -257,8 +257,7 @@ class UserAuthenticator
         }
 
         if (empty($apiKeyInfo)) {
-            $keyInfoPdoStatement = (new MySQL())
-                ->query("SELECT `uid`, `status`, expiration FROM admin_api_keys WHERE `key` = '{$apiKeyHash}'");
+            $keyInfoPdoStatement = new MySQL()->query("SELECT `uid`, `status`, expiration FROM admin_api_keys WHERE `key` = '{$apiKeyHash}'");
 
             if (!$keyInfoPdoStatement) {
                 throw new DBException("Impossible de récupérer les informations de la clé API");

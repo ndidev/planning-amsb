@@ -73,7 +73,7 @@ export const stevedoringShipReports = createFlatStore<StevedoringShipReport>(
     invoiceInstructions: "",
     startDate: null,
     endDate: null,
-    entriesByDate: {},
+    subreports: [],
     cargoEntries: [],
     storageEntries: [],
   },

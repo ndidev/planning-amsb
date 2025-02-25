@@ -89,19 +89,22 @@ final class InfoBannerRepository extends Repository
                 couleur = :color,
                 message = :message";
 
-        $request = $this->mysql->prepare($statement);
+        try {
+            $this->mysql->beginTransaction();
 
-        $this->mysql->beginTransaction();
-        $request->execute([
-            'module' => $line->getModule(),
-            'pc' => (int) $line->isPc(),
-            'tv' => (int) $line->isTv(),
-            'color' => $line->getColor(),
-            'message' => \mb_substr($line->getMessage(), 0, 255),
-        ]);
+            $this->mysql->prepareAndExecute($statement, [
+                'module' => $line->module,
+                'pc' => (int) $line->isDisplayedOnPC,
+                'tv' => (int) $line->isDisplayedOnTV,
+                'color' => $line->color,
+                'message' => \mb_substr($line->message, 0, 255),
+            ]);
 
-        $lastInsertId = (int) $this->mysql->lastInsertId();
-        $this->mysql->commit();
+            $lastInsertId = (int) $this->mysql->lastInsertId();
+            $this->mysql->commit();
+        } catch (\PDOException $e) {
+            throw new DBException("Erreur lors de la création", previous: $e);
+        }
 
         /** @var InfoBannerLine */
         $newLine = $this->fetchLine($lastInsertId);
@@ -128,15 +131,18 @@ final class InfoBannerRepository extends Repository
                 message = :message
             WHERE id = :id";
 
-        $request = $this->mysql->prepare($statement);
-        $request->execute([
-            'module' => $line->getModule(),
-            'pc' => (int) $line->isPc(),
-            'tv' => (int) $line->isTv(),
-            'color' => $line->getColor(),
-            'message' => \mb_substr($line->getMessage(), 0, 255),
-            'id' => $line->id,
-        ]);
+        try {
+            $this->mysql->prepareAndExecute($statement, [
+                'module' => $line->module,
+                'pc' => (int) $line->isDisplayedOnPC,
+                'tv' => (int) $line->isDisplayedOnTV,
+                'color' => $line->color,
+                'message' => \mb_substr($line->message, 0, 255),
+                'id' => $line->id,
+            ]);
+        } catch (\PDOException $e) {
+            throw new DBException("Erreur lors de la mise à jour", previous: $e);
+        }
 
         /** @var int */
         $id = $line->id;
@@ -154,11 +160,10 @@ final class InfoBannerRepository extends Repository
      */
     public function deleteLine(int $id): void
     {
-        $request = $this->mysql->prepare("DELETE FROM bandeau_info WHERE id = :id");
-        $isDeleted = $request->execute(["id" => $id]);
-
-        if (!$isDeleted) {
-            throw new DBException("Erreur lors de la suppression");
+        try {
+            $this->mysql->prepareAndExecute("DELETE FROM bandeau_info WHERE id = :id", ["id" => $id]);
+        } catch (\PDOException $e) {
+            throw new DBException("Erreur lors de la suppression", previous: $e);
         }
     }
 }

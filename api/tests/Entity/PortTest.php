@@ -13,61 +13,36 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Port::class)]
 final class PortTest extends TestCase
 {
-    public function testSetAndGetLocode(): void
+    public function testConstructor(): void
     {
         // Given
-        $port = new Port();
-        $locode = 'FRLEH';
+        $data = [
+            'locode' => 'FRLEH',
+            'nom' => 'Le Havre',
+            'nom_affichage' => 'Le Havre, France',
+        ];
 
         // When
-        $port->setLocode($locode);
-        $actual = $port->getLocode();
+        $port = new Port($data);
 
         // Then
-        $this->assertSame($locode, $actual);
-    }
-
-    public function testSetAndGetName(): void
-    {
-        // Given
-        $port = new Port();
-        $name = 'Le Havre';
-
-        // When
-        $port->setName($name);
-        $actual = $port->getName();
-
-        // Then
-        $this->assertSame($name, $actual);
-    }
-
-    public function testSetAndGetDisplayName(): void
-    {
-        // Given
-        $port = new Port();
-        $displayName = 'Le Havre';
-
-        // When
-        $port->setDisplayName($displayName);
-        $actual = $port->getDisplayName();
-
-        // Then
-        $this->assertSame($displayName, $actual);
+        $this->assertSame('FRLEH', $port->locode);
+        $this->assertSame('Le Havre', $port->name);
+        $this->assertSame('Le Havre, France', $port->displayName);
     }
 
     public function testToArray(): void
     {
         // Given
-        $port =
-            (new Port())
-            ->setLocode('FRLEH')
-            ->setName('Le Havre')
-            ->setDisplayName('Le Havre, France');
+        $port = new Port();
+        $port->locode = 'FRLEH';
+        $port->name = 'Le Havre';
+        $port->displayName = 'Le Havre, France';
 
         $expectedArray = [
-            "locode" => 'FRLEH',
-            "nom" => 'Le Havre',
-            "nom_affichage" => 'Le Havre, France',
+            'locode' => 'FRLEH',
+            'nom' => 'Le Havre',
+            'nom_affichage' => 'Le Havre, France',
         ];
 
         // When

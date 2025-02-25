@@ -57,7 +57,7 @@ final class ShipReportPdfController extends Controller
             throw new AccessException("Vous n'avez pas les droits pour accéder aux rapports navires.");
         }
 
-        $report = $this->stevedoringService->getShipReportPdf($id);
+        $report = $this->stevedoringService->makeShipReportPdf($id);
 
         if (!$report) {
             throw new NotFoundException("Le rapport navire n'existe pas.");

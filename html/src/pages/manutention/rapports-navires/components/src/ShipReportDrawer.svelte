@@ -2,17 +2,21 @@
   import { sineIn } from "svelte/easing";
   import { goto } from "@roxi/routify";
 
-  import { Drawer, CloseButton } from "flowbite-svelte";
+  import { Drawer, CloseButton, Tabs, TabItem } from "flowbite-svelte";
   import { PencilIcon, PrinterIcon } from "lucide-svelte";
   import Notiflix from "notiflix";
 
   import {
-    DailyEntries,
     Cargoes,
+    Comments,
     Costs,
+    Customers,
+    DailyEntries,
+    InvoiceInstructions,
+    PortAndBerth,
     Rate,
     Storage,
-  } from "./reportComponents";
+  } from "../reportComponents";
   import { LucideButton } from "@app/components";
 
   import { fetcher } from "@app/utils";
@@ -93,62 +97,34 @@
       />
     </div>
 
-    <!-- Port et quai -->
+    <PortAndBerth {report} />
+
+    <Comments {report} />
+
+    <InvoiceInstructions {report} />
+
+    <Customers {report} />
+
     <div>
-      <div>
-        <span class="font-bold">Port :</span>
-        {report.port}
-      </div>
-      <div>
-        <span class="font-bold">Quai :</span>
-        {report.berth}
-      </div>
+      <Tabs contentClass="dark:bg-gray-800">
+        {#each report.subreports as subreport, index}
+          <TabItem
+            title="Sous-rapport {index + 1}"
+            open={index === 0}
+            divClass="mt-3 flex flex-col gap-2 lg:gap-6"
+          >
+            <Cargoes {report} {subreport} />
+
+            <Storage {report} {subreport} />
+
+            <Costs {subreport} />
+
+            <Rate {subreport} />
+
+            <DailyEntries {subreport} />
+          </TabItem>
+        {/each}
+      </Tabs>
     </div>
-
-    <!-- Commentaires -->
-    <div>
-      <div class="text-lg font-bold">Constats & Commentaires</div>
-      {#if report.comments}
-        <div class="ms-2">
-          {@html report.comments.replace(/\r\n|\r|\n/g, "<br/>")}
-        </div>
-      {:else}
-        <div class="ms-2 italic">Aucun commentaire</div>
-      {/if}
-    </div>
-
-    <!-- Instructions de facturation -->
-    <div>
-      <div class="text-lg font-bold">Instructions de facturation</div>
-      {#if report.invoiceInstructions}
-        <div class="ms-2">
-          {@html report.invoiceInstructions.replace(/\r\n|\r|\n/g, "<br/>")}
-        </div>
-      {:else}
-        <div class="ms-2 italic">Aucune instruction de facturation</div>
-      {/if}
-    </div>
-
-    <!-- Clients -->
-    <div>
-      <div class="text-lg font-bold">Clients</div>
-      {#if report.customers.length > 0}
-        <div class="ms-2">
-          {report.customers.join(", ")}
-        </div>
-      {:else}
-        <div class="ms-2 italic">Aucun client</div>
-      {/if}
-    </div>
-
-    <Costs {report} />
-
-    <Rate {report} />
-
-    <Cargoes {report} />
-
-    <Storage {report} />
-
-    <DailyEntries {report} />
   </div>
 </Drawer>

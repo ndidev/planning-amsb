@@ -7,7 +7,7 @@ declare(strict_types=1);
 namespace App\Core\Validation\Constraints;
 
 #[\Attribute(\Attribute::TARGET_PROPERTY)]
-class PositiveOrNullNumber implements Constraint
+final class PositiveOrNullNumber implements Constraint
 {
     public function __construct(private string $message) {}
 

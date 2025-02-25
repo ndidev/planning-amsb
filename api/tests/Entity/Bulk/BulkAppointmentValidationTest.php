@@ -49,7 +49,7 @@ class BulkAppointmentValidationTest extends TestCase
     {
         // Given
         $appointment = $this->makeValidAppointment();
-        $appointment->setProduct(null);
+        $appointment->product = null;
 
         // Then
         $this->expectException(ValidationException::class);
@@ -62,7 +62,7 @@ class BulkAppointmentValidationTest extends TestCase
     {
         // Given
         $appointment = $this->makeValidAppointment();
-        $appointment->setQuantityValue(-1);
+        $appointment->quantityValue = -1;
 
         // Then
         $this->expectException(ValidationException::class);
@@ -75,7 +75,7 @@ class BulkAppointmentValidationTest extends TestCase
     {
         // Given
         $appointment = $this->makeValidAppointment();
-        $appointment->setSupplier(null);
+        $appointment->supplier = null;
 
         // Then
         $this->expectException(ValidationException::class);
@@ -88,7 +88,7 @@ class BulkAppointmentValidationTest extends TestCase
     {
         // Given
         $appointment = $this->makeValidAppointment();
-        $appointment->setCustomer(null);
+        $appointment->customer = null;
 
         // Then
         $this->expectException(ValidationException::class);
@@ -99,11 +99,13 @@ class BulkAppointmentValidationTest extends TestCase
 
     private function makeValidAppointment(): BulkAppointment
     {
-        return (new BulkAppointment())
-            ->setDate('2021-01-01')
-            ->setProduct(new BulkProduct())
-            ->setQuantityValue(1)
-            ->setSupplier(new ThirdParty())
-            ->setCustomer(new ThirdParty());
+        $bulkAppointment = new BulkAppointment();
+        $bulkAppointment->date = '2021-01-01';
+        $bulkAppointment->product = new BulkProduct();
+        $bulkAppointment->quantityValue = 1;
+        $bulkAppointment->supplier = new ThirdParty();
+        $bulkAppointment->customer = new ThirdParty();
+
+        return $bulkAppointment;
     }
 }

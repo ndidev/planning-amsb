@@ -9,7 +9,7 @@ namespace App\Core\Validation;
 /**
  * This class represents the result of a validation.
  */
-class ValidationResult implements \Stringable
+final class ValidationResult implements \Stringable
 {
     public function __construct(
         private bool $hasErrors = false,

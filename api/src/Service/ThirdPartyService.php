@@ -41,12 +41,12 @@ final class ThirdPartyService
 
         $thirdParty = new ThirdParty($rawDataAH);
 
-        $thirdParty->setCountry($this->countryService->getCountry($rawDataAH->getString('pays')));
+        $thirdParty->country = $this->countryService->getCountry($rawDataAH->getString('pays'));
 
         // Logo
         $logoData = $rawDataAH->get('logo');
         if (\is_string($logoData) || null === $logoData) {
-            $thirdParty->setLogo($logoData);
+            $thirdParty->logoFilename = $logoData;
         }
 
         return $thirdParty;
@@ -63,14 +63,14 @@ final class ThirdPartyService
     {
         $thirdParty = new ThirdParty($requestBody);
 
-        $thirdParty->setCountry($this->countryService->getCountry($requestBody->getString('pays')));
+        $thirdParty->country = $this->countryService->getCountry($requestBody->getString('pays'));
 
         // Logo
         $logoData = $requestBody->get('logo');
         if (\is_array($logoData) || \is_string($logoData) || null === $logoData) {
-            $thirdParty->setLogo($this->saveLogo($logoData));
+            $thirdParty->logoFilename = $this->saveLogo($logoData);
         } else {
-            $thirdParty->setLogo(false);
+            $thirdParty->logoFilename = false;
         }
 
         return $thirdParty;
@@ -189,7 +189,7 @@ final class ThirdPartyService
             if (!isset($file["data"]) || !\is_string($file["data"])) {
                 throw new ServerException("Logo : Données du fichier non trouvées.");
             }
-            $data = explode(",", $file["data"])[1];
+            $data = \explode(",", $file["data"])[1];
 
             // Création de l'image depuis les données
             $imageString = base64_decode($data);

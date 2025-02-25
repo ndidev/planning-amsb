@@ -12,7 +12,7 @@ use App\Core\Array\Environment;
 /**
  * Connection to MySQL.
  */
-class MySQL extends \Pdo\Mysql
+final class MySQL extends \Pdo\Mysql
 {
     /**
      * @param string|null $database Optional. Name of the database.
@@ -64,14 +64,14 @@ class MySQL extends \Pdo\Mysql
     /**
      * Prepares and executes a statement.
      * 
-     * @param string                           $statement  The SQL statement.
-     * @param array<mixed>|array<array<mixed>> $parameters An array of parameters or an array of arrays of parameters.
+     * @param string                                $statement  The SQL statement.
+     * @param array<mixed>|array<array<mixed>>|null $parameters An array of parameters or an array of arrays of parameters.
      * 
      * @return \PDOStatement 
      * 
      * @throws \PDOException 
      */
-    public function prepareAndExecute(string $statement, array $parameters = []): \PDOStatement
+    public function prepareAndExecute(string $statement, ?array $parameters = null): \PDOStatement
     {
         /** @var array<string, \PDOStatement> */
         static $statementCache = [];
@@ -79,6 +79,15 @@ class MySQL extends \Pdo\Mysql
         $statementHash = \md5($statement);
 
         $request = $statementCache[$statementHash] ??= $this->prepare($statement);
+
+        if (null === $parameters) {
+            $request->execute();
+            return $request;
+        }
+
+        if (empty($parameters)) {
+            return $request;
+        }
 
         // If the first parameter is not an array, then it is not an array of parameters.
         if (!isset($parameters[0]) || !\is_array($parameters[0])) {

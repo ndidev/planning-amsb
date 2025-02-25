@@ -18,7 +18,7 @@ use App\Core\Security;
 
 
 if (Security::checkIfRequestCanBeDone() === false) {
-    (new HTTPResponse(HTTPResponse::HTTP_TOO_MANY_REQUESTS_429))
+    new HTTPResponse(HTTPResponse::HTTP_TOO_MANY_REQUESTS_429)
         ->addHeader("Retry-After", (string) Security::BLOCKED_IP_TIMEOUT)
         ->setType("text/plain")
         ->setBody("IP address blocked. Too many unauthenticated requests.")
@@ -27,7 +27,7 @@ if (Security::checkIfRequestCanBeDone() === false) {
 
 // Pre-flight request
 if (Server::getString('REQUEST_METHOD') === "OPTIONS") {
-    (new HTTPResponse())->sendCorsPreflight();
+    new HTTPResponse()->sendCorsPreflight();
 }
 
 /**
@@ -45,8 +45,8 @@ $supported_methods = [
 ];
 
 // Méthode non supportée
-if (array_search(Server::getString('REQUEST_METHOD'), $supported_methods) === FALSE) {
-    (new HTTPResponse(HTTPResponse::HTTP_NOT_IMPLEMENTED_501))->send();
+if (\array_search(Server::getString('REQUEST_METHOD'), $supported_methods) === FALSE) {
+    new HTTPResponse(HTTPResponse::HTTP_NOT_IMPLEMENTED_501)->send();
 }
 
 
@@ -56,11 +56,11 @@ $requestUri = Server::getString('REQUEST_URI', null);
 if (null === $requestUri) {
     throw new ServerException("Request URI not found");
 }
-$url = parse_url($requestUri);
+$url = \parse_url($requestUri);
 $path = $url["path"] ?? null;
 $endpoint = makeEndpoint($path);
 $query = [];
-parse_str($url["query"] ?? "", $query);
+\parse_str($url["query"] ?? "", $query);
 
 $response = new HTTPResponse();
 

@@ -18,26 +18,25 @@ use App\Entity\Stevedoring\StevedoringEquipment;
  * @phpstan-type ShipReportEquipmentEntryArray array{
  *                                               id: int,
  *                                               ship_report_id: int,
+ *                                               subreport_id: int,
  *                                               equipment_id: int,
  *                                               date: string,
  *                                               hours_worked: float,
  *                                               comments: string,
  *                                             }
  */
-class ShipReportEquipmentEntry extends AbstractEntity
+final class ShipReportEquipmentEntry extends AbstractEntity
 {
     use IdentifierTrait;
 
-    public ?ShipReport $report = null;
+    public ?ShipSubreport $subreport = null;
 
     #[Required("L'équipement de manutention est obligatoire.")]
     public ?StevedoringEquipment $equipment = null;
 
     #[Required("La date est obligatoire.")]
     public ?\DateTimeImmutable $date = null {
-        set(\DateTimeImmutable|string|null $date) {
-            $this->date = DateUtils::makeDateTimeImmutable($date);
-        }
+        set(\DateTimeImmutable|string|null $date) => DateUtils::makeDateTimeImmutable($date);
     }
 
     public string $hoursHint = '';
@@ -47,13 +46,6 @@ class ShipReportEquipmentEntry extends AbstractEntity
     public float $hoursWorked = 0.0;
 
     public string $comments = '';
-
-    public function setReport(ShipReport $report): static
-    {
-        $this->report = $report;
-
-        return $this;
-    }
 
     #[\Override]
     public function toArray(): array

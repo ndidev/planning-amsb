@@ -39,7 +39,7 @@ class Collection implements \IteratorAggregate, \Countable, Arrayable, \JsonSeri
      */
     public function remove(mixed $item): static
     {
-        $this->items = array_filter($this->items, fn($i) => $i !== $item);
+        $this->items = \array_filter($this->items, fn($i) => $i !== $item);
 
         return $this;
     }
@@ -83,9 +83,10 @@ class Collection implements \IteratorAggregate, \Countable, Arrayable, \JsonSeri
      * Apply a callback to every item of the collection.
      * 
      * @template U
-     * @param callable(T): U|null $callback 
+     * @param null|callable(T): U $callback 
      * 
      * @return array<U>
+     * @phpstan-return ($callback is null ? T[] : U[])
      */
     public function map(?callable $callback): array
     {
@@ -95,13 +96,44 @@ class Collection implements \IteratorAggregate, \Countable, Arrayable, \JsonSeri
     /**
      * Filter the collection using a callback.
      * 
-     * @param callable(T): bool|null $callback 
+     * @param null|callable(T): bool $callback     Function to filter the collection.
+     * @param bool                   $preserveKeys Whether to preserve the keys of the collection.
      * 
      * @return self<T> 
      */
-    public function filter(?callable $callback): self
+    public function filter(?callable $callback, bool $preserveKeys = false): self
     {
-        return new self(\array_filter($this->items, $callback));
+        return $preserveKeys
+            ? new self(\array_filter($this->items, $callback))
+            : new self(\array_values(\array_filter($this->items, $callback)));
+    }
+
+    /**
+     * Check if the collection includes an item.
+     * 
+     * @param T|null $item Item to check.
+     * 
+     * @return bool 
+     */
+    public function includes(mixed $item): bool
+    {
+        return \in_array($item, $this->items, true);
+    }
+
+    /**
+     * Apply a callback to every item of the collection.
+     * 
+     * @param callable(T): mixed $callback 
+     * 
+     * @return self<T> 
+     */
+    public function each(callable $callback): self
+    {
+        foreach ($this->items as $item) {
+            $callback($item);
+        }
+
+        return $this;
     }
 
     /**

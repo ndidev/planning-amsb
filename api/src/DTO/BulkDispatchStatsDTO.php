@@ -119,7 +119,7 @@ final class BulkDispatchStatsDTO implements \JsonSerializable
         $remarksToLowerCase = $this->transliterator?->transliterate($remarks);
 
         if (!\is_string($remarksToLowerCase)) {
-            $remarksToLowerCase = \strtolower($remarks);
+            $remarksToLowerCase = \mb_strtolower($remarks);
         }
 
         $remarksContainHintForJcb = false;

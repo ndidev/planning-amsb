@@ -7,7 +7,7 @@ declare(strict_types=1);
 namespace App\Core\Validation\Constraints;
 
 #[\Attribute(\Attribute::TARGET_PROPERTY)]
-class InArray implements Constraint
+final class InArray implements Constraint
 {
     /**
      * @param array<mixed> $values 
@@ -25,6 +25,6 @@ class InArray implements Constraint
 
     public function isValid(mixed $value): bool
     {
-        return in_array($value, $this->values);
+        return \in_array($value, $this->values);
     }
 }

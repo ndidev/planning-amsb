@@ -1,6 +1,6 @@
 <?php
 
-// Path: api/tests/Entity/UserAccountTest.php
+// Path: api/tests/Entity/UserTest.php
 
 declare(strict_types=1);
 
@@ -12,7 +12,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(User::class)]
-final class UserAccountTest extends TestCase
+final class UserTest extends TestCase
 {
     public function testInstanciationWithoutUid(): void
     {
@@ -37,90 +37,6 @@ final class UserAccountTest extends TestCase
 
         // Then
         $this->assertSame($uid, $actualUid);
-    }
-
-    public function testSetAndGetUid(): void
-    {
-        // Given
-        $userAccount = new User();
-        $uid = 'uid';
-
-        // When
-        $userAccount->uid = $uid;
-        $actualUid = $userAccount->uid;
-
-        // Then
-        $this->assertSame($uid, $actualUid);
-    }
-
-    public function testSetAndGetLogin(): void
-    {
-        // Given
-        $userAccount = new User();
-        $login = 'login';
-
-        // When
-        $userAccount->login = $login;
-        $actualLogin = $userAccount->login;
-
-        // Then
-        $this->assertSame($login, $actualLogin);
-    }
-
-    public function testSetAndGetPasswordHash(): void
-    {
-        // Given
-        $userAccount = new User();
-        $passwordHash = 'password';
-
-        // When
-        $userAccount->passwordHash = $passwordHash;
-        $actualPasswordHash = $userAccount->passwordHash;
-
-        // Then
-        $this->assertSame($passwordHash, $actualPasswordHash);
-    }
-
-    public function testSetAndGetCanLogin(): void
-    {
-        // Given
-        $userAccount = new User();
-        $canLogin = true;
-
-        // When
-        $userAccount->canLogin = $canLogin;
-        $actualCanLogin = $userAccount->canLogin;
-
-        // Then
-        $this->assertSame($canLogin, $actualCanLogin); // @phpstan-ignore method.alreadyNarrowedType
-    }
-
-    public function testSetAndGetName(): void
-    {
-        // Given
-        $userAccount = new User();
-        $name = 'name';
-
-        // When
-        $userAccount->name = $name;
-        $actualName = $userAccount->name;
-
-        // Then
-        $this->assertSame($name, $actualName);
-    }
-
-    public function testSetAndGetLoginAttempts(): void
-    {
-        // Given
-        $userAccount = new User();
-        $loginAttempts = 1;
-
-        // When
-        $userAccount->loginAttempts = $loginAttempts;
-        $actualLoginAttempts = $userAccount->loginAttempts;
-
-        // Then
-        $this->assertSame($loginAttempts, $actualLoginAttempts);
     }
 
     public function testSetAndGetLastLogin(): void
@@ -175,7 +91,7 @@ final class UserAccountTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
 
         // When
-        $userAccount->status = $status;
+        $userAccount->status = $status; // @phpstan-ignore assign.propertyType
     }
 
     public function testSetAndGetRolesFromString(): void
@@ -240,34 +156,6 @@ final class UserAccountTest extends TestCase
 
         // Then
         $this->assertSame($admin, $actualAdmin);
-    }
-
-    public function testSetAndGetComments(): void
-    {
-        // Given
-        $userAccount = new User();
-        $comments = 'comments';
-
-        // When
-        $userAccount->comments = $comments;
-        $actualComments = $userAccount->comments;
-
-        // Then
-        $this->assertSame($comments, $actualComments);
-    }
-
-    public function testSetAndGetHistory(): void
-    {
-        // Given
-        $userAccount = new User();
-        $history = 'history';
-
-        // When
-        $userAccount->history = $history;
-        $actualHistory = $userAccount->history;
-
-        // Then
-        $this->assertSame($history, $actualHistory);
     }
 
     public function testToArray(): void

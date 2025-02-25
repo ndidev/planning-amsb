@@ -94,8 +94,8 @@ abstract class DateUtils
             $datetime = \DateTime::createFromInterface($date);
         } else {
             if (str_contains($date, "/")) {
-                $dateArray = explode("/", $date);
-                $dateYmd = join("-", array_reverse($dateArray));
+                $dateArray = \explode("/", $date);
+                $dateYmd = \join("-", \array_reverse($dateArray));
             } else {
                 $dateYmd = $date;
             }

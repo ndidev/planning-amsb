@@ -7,7 +7,6 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Core\Component\Collection;
-use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\Config\AgencyDepartment;
 use App\Service\AgencyService;
 
@@ -35,17 +34,11 @@ final class AgencyRepository extends Repository
      */
     public function fetchAllDepartments(): Collection
     {
-        $request = $this->mysql->query("SELECT * FROM config_agence");
-
-        if (!$request) {
-            throw new DBException("Impossible de récupérer les services de l'agence.");
-        }
-
-        /** @phpstan-var AgencyDepartmentArray[] $departmentsRaw */
-        $departmentsRaw = $request->fetchAll();
+        /** @var AgencyDepartmentArray[] */
+        $departmentsRaw = $this->mysql->prepareAndExecute("SELECT * FROM config_agence")->fetchAll();
 
         $departments = \array_map(
-            fn(array $departmentRaw) => $this->agencyService->makeDepartmentFromDatabase($departmentRaw),
+            fn($departmentRaw) => $this->agencyService->makeDepartmentFromDatabase($departmentRaw),
             $departmentsRaw
         );
 
@@ -61,13 +54,15 @@ final class AgencyRepository extends Repository
      */
     public function fetchDepartment(string $departmentName): ?AgencyDepartment
     {
-        $request = $this->mysql->prepare("SELECT * FROM config_agence WHERE service = :service");
-        $request->execute(["service" => $departmentName]);
-        $departmentRaw = $request->fetch();
+        /** @var ?AgencyDepartmentArray */
+        $departmentRaw = $this->mysql
+            ->prepareAndExecute(
+                "SELECT * FROM config_agence WHERE service = :service",
+                ["service" => $departmentName]
+            )
+            ->fetch();
 
         if (!\is_array($departmentRaw)) return null;
-
-        /** @phpstan-var AgencyDepartmentArray $departmentRaw */
 
         $department = $this->agencyService->makeDepartmentFromDatabase($departmentRaw);
 
@@ -86,33 +81,32 @@ final class AgencyRepository extends Repository
         $statement =
             "UPDATE config_agence
             SET
-                nom = :nom,
-                adresse_ligne_1 = :adresse_ligne_1,
-                adresse_ligne_2 = :adresse_ligne_2,
-                cp = :cp,
-                ville = :ville,
-                pays = :pays,
-                telephone = :telephone,
-                mobile = :mobile,
-                email = :email
+                nom = :fullName,
+                adresse_ligne_1 = :addressLine1,
+                adresse_ligne_2 = :addressLine2,
+                cp = :postCode,
+                ville = :city,
+                pays = :country,
+                telephone = :phoneNumber,
+                mobile = :mobileNumber,
+                email = :emailAddress
             WHERE service = :service";
 
-        $request = $this->mysql->prepare($statement);
-        $request->execute([
-            "nom" => $department->getFullName(),
-            "adresse_ligne_1" => $department->getAddressLine1(),
-            "adresse_ligne_2" => $department->getAddressLine2(),
-            "cp" => $department->getPostCode(),
-            "ville" => $department->getCity(),
-            "pays" => $department->getCountry(),
-            "telephone" => $department->getPhone(),
-            "mobile" => $department->getMobile(),
-            "email" => $department->getEmail(),
-            "service" => $department->getService(),
+        $this->mysql->prepareAndExecute($statement, [
+            'fullName' => $department->fullName,
+            'addressLine1' => $department->addressLine1,
+            'addressLine2' => $department->addressLine2,
+            'postCode' => $department->postCode,
+            'city' => $department->city,
+            'country' => $department->country,
+            'phoneNumber' => $department->phoneNumber,
+            'mobileNumber' => $department->mobileNumber,
+            'emailAddress' => $department->emailAddress,
+            'service' => $department->service,
         ]);
 
         /** @var AgencyDepartment $updatedDepartment */
-        $updatedDepartment = $this->fetchDepartment($department->getService());
+        $updatedDepartment = $this->fetchDepartment($department->service);
 
         return $updatedDepartment;
     }

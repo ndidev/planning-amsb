@@ -29,7 +29,7 @@ use App\Entity\Shipping\ShippingCallCargo;
  *                                 endDate?: string,
  *                               }
  */
-class ShipReport extends AbstractEntity
+final class ShipReport extends AbstractEntity
 {
     use IdentifierTrait;
 
@@ -60,26 +60,40 @@ class ShipReport extends AbstractEntity
         }
     }
 
-    /** @var Collection<ShipReportEquipmentEntry> */
-    public private(set) Collection $equipmentEntries;
-
-    /** @var Collection<ShipReportStaffEntry> */
-    public private(set) Collection $staffEntries;
-
-    /** @var Collection<ShipReportSubcontractEntry> */
-    public private(set) Collection $subcontractEntries;
+    /** @var Collection<ShipSubreport> */
+    public Collection $subreports {
+        set => $value->each(function ($subreport) {
+            /** @disregard P1006 */
+            $subreport->shipReport = $this;
+        });
+    }
 
     /** @var Collection<ShippingCallCargo> */
-    public private(set) Collection $cargoEntries;
+    public Collection $cargoEntries {
+        set => $value->each(function ($entry) {
+            /** @disregard P1006 */
+            $entry->shipReport = $this;
+            $entry->shippingCall = $this->linkedShippingCall;
+        });
+    }
 
     /** @var Collection<ShipReportStorageEntry> */
-    public private(set) Collection $storageEntries;
+    public Collection $storageEntries {
+        set => $value->each(function ($entry) {
+            /** @disregard P1006 */
+            $entry->report = $this;
+        });
+    }
 
     /** 
      * @param ArrayHandler|ShipReportArray|null $data 
      */
     public function __construct(ArrayHandler|array|null $data = null)
     {
+        $this->subreports = new Collection();
+        $this->cargoEntries = new Collection();
+        $this->storageEntries = new Collection();
+
         if (null === $data) {
             return;
         }
@@ -95,173 +109,6 @@ class ShipReport extends AbstractEntity
         $this->invoiceInstructions = $dataAH->getString('invoiceInstructions');
         $this->startDate = $dataAH->getDatetime('startDate');
         $this->endDate = $dataAH->getDatetime('endDate');
-
-        $this->equipmentEntries = new Collection();
-        $this->staffEntries = new Collection();
-        $this->subcontractEntries = new Collection();
-        $this->cargoEntries = new Collection();
-        $this->storageEntries = new Collection();
-    }
-
-    /**
-     * @param ShipReportEquipmentEntry[] $entries 
-     */
-    public function setEquipmentEntries(array $entries): static
-    {
-        $this->equipmentEntries = new Collection(
-            \array_map(
-                function (ShipReportEquipmentEntry $entry) {
-                    /** @disregard P1006 */
-                    $entry->report = $this;
-                    return $entry;
-                },
-                $entries
-            )
-        );
-
-        return $this;
-    }
-
-    /**
-     * @param ShipReportStaffEntry[] $entries 
-     */
-    public function setStaffEntries(array $entries): static
-    {
-        $this->staffEntries = new Collection(
-            \array_map(
-                function (ShipReportStaffEntry $entry) {
-                    /** @disregard P1006 */
-                    $entry->report = $this;
-                    return $entry;
-                },
-                $entries
-            )
-        );
-
-        return $this;
-    }
-
-    /**
-     * @param ShipReportSubcontractEntry[] $entries 
-     */
-    public function setSubcontractEntries(array $entries): static
-    {
-        $this->subcontractEntries = new Collection(
-            \array_map(
-                function (ShipReportSubcontractEntry $entry) {
-                    /** @disregard P1006 */
-                    $entry->report = $this;
-                    return $entry;
-                },
-                $entries
-            )
-        );
-
-        return $this;
-    }
-
-    /**
-     * @param ShippingCallCargo[] $entries 
-     */
-    public function setCargoEntries(array $entries): static
-    {
-        $this->cargoEntries = new Collection(
-            \array_map(
-                function (ShippingCallCargo $entry) {
-                    /** @disregard P1006 */
-                    $entry->shipReport = $this;
-                    $entry->shippingCall = $this->linkedShippingCall;
-                    return $entry;
-                },
-                $entries
-            )
-        );
-
-        return $this;
-    }
-
-    /**
-     * @param ShipReportStorageEntry[] $entries 
-     */
-    public function setStorageEntries(array $entries): static
-    {
-        $this->storageEntries = new Collection(
-            \array_map(
-                function (ShipReportStorageEntry $entry) {
-                    /** @disregard P1006 */
-                    $entry->report = $this;
-                    return $entry;
-                },
-                $entries
-            )
-        );
-
-        return $this;
-    }
-
-    /**
-     * @return array<string, array{
-     *                         cranes: ShipReportEquipmentEntry[],
-     *                         equipments: ShipReportEquipmentEntry[],
-     *                         permanentStaff: ShipReportStaffEntry[],
-     *                         tempStaff: ShipReportStaffEntry[],
-     *                         trucking: ShipReportSubcontractEntry[],
-     *                         otherSubcontracts: ShipReportSubcontractEntry[],
-     *                       }
-     *         >
-     */
-    public function getEntriesByDate(): array
-    {
-        /** @var array<ShipReportStaffEntry|ShipReportEquipmentEntry|ShipReportSubcontractEntry> */
-        $allEntries = \array_merge(
-            $this->equipmentEntries->asArray(),
-            $this->staffEntries->asArray(),
-            $this->subcontractEntries->asArray(),
-        );
-
-        $entriesByDate = [];
-
-        foreach ($allEntries as $entry) {
-            if (!$entry->date) continue;
-
-            $dateString = $entry->date->format('Y-m-d');
-
-            if (!isset($entriesByDate[$dateString])) {
-                $entriesByDate[$dateString] = [
-                    'cranes' => [],
-                    'equipments' => [],
-                    'permanentStaff' => [],
-                    'tempStaff' => [],
-                    'trucking' => [],
-                    'otherSubcontracts' => [],
-                ];
-            }
-
-            if ($entry instanceof ShipReportEquipmentEntry) {
-                if ($entry->equipment?->isCrane) {
-                    $entriesByDate[$dateString]['cranes'][] = $entry;
-                } else {
-                    $entriesByDate[$dateString]['equipments'][] = $entry;
-                }
-            } elseif ($entry instanceof ShipReportStaffEntry) {
-                if ($entry->staff?->type === "mensuel") {
-                    $entriesByDate[$dateString]['permanentStaff'][] = $entry;
-                }
-                if ($entry->staff?->type === "interim") {
-                    $entriesByDate[$dateString]['tempStaff'][] = $entry;
-                }
-            } elseif ($entry instanceof ShipReportSubcontractEntry) {
-                if ($entry->type === "trucking") {
-                    $entriesByDate[$dateString]['trucking'][] = $entry;
-                } else {
-                    $entriesByDate[$dateString]['otherSubcontracts'][] = $entry;
-                }
-            }
-        }
-
-        ksort($entriesByDate);
-
-        return $entriesByDate;
     }
 
     /**
@@ -397,7 +244,7 @@ class ShipReport extends AbstractEntity
             'customers' => $this->getCustomers(),
             'startDate' => $this->startDate?->format('Y-m-d'),
             'endDate' => $this->endDate?->format('Y-m-d'),
-            'entriesByDate' => $this->getEntriesByDate(),
+            'subreports' => $this->subreports->toArray(),
             'cargoEntries' => $this->cargoEntries->toArray(),
             'cargoTotals' => $this->calculateCargoTotals(),
             'storageEntries' => $this->storageEntries->toArray(),

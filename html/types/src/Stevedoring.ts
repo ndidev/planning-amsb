@@ -162,16 +162,6 @@ export type StevedoringShipReport = {
   customers?: string[];
   startDate: string | null;
   endDate: string | null;
-  entriesByDate: {
-    [date: string]: {
-      cranes: StevedoringShipReportEquipmentEntry[];
-      equipments: StevedoringShipReportEquipmentEntry[];
-      permanentStaff: StevedoringShipReportStaffEntry[];
-      tempStaff: StevedoringShipReportStaffEntry[];
-      trucking: StevedoringShipReportSubcontractEntry[];
-      otherSubcontracts: StevedoringShipReportSubcontractEntry[];
-    };
-  };
   cargoEntries: ShippingCallCargo[];
   cargoTotals?: {
     bl: {
@@ -196,6 +186,24 @@ export type StevedoringShipReport = {
     volume: number;
     units: number;
   };
+  subreports: {
+    id: number;
+    entriesByDate: {
+      [date: string]: {
+        cranes: StevedoringShipReportEquipmentEntry[];
+        equipments: StevedoringShipReportEquipmentEntry[];
+        permanentStaff: StevedoringShipReportStaffEntry[];
+        tempStaff: StevedoringShipReportStaffEntry[];
+        trucking: StevedoringShipReportSubcontractEntry[];
+        otherSubcontracts: StevedoringShipReportSubcontractEntry[];
+      };
+    };
+    cargoIds: number[];
+    // cargoEntries: StevedoringShipReport["cargoEntries"];
+    cargoTotals?: StevedoringShipReport["cargoTotals"];
+    storageEntries?: StevedoringShipReport["storageEntries"];
+    storageTotals?: StevedoringShipReport["storageTotals"];
+  }[];
 };
 
 /**

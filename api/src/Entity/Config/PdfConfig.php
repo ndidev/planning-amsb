@@ -24,101 +24,37 @@ use App\Entity\ThirdParty;
  *                                jours_apres?: int,
  *                              }
  */
-class PdfConfig extends AbstractEntity
+final class PdfConfig extends AbstractEntity
 {
     use IdentifierTrait;
     use ModuleTrait;
 
     #[Required("Le fournisseur est obligatoire.")]
-    private ?ThirdParty $supplier = null;
+    public ?ThirdParty $supplier = null;
 
-    private bool $autoSend = false;
+    public bool $autoSend = false {
+        set(bool|int $value) => $this->autoSend = (bool) $value;
+    }
 
     /** @var string[] */
 
-    private array $emails = [];
-
-    private int $daysBefore = 0;
-
-    private int $daysAfter = 0;
-
-    public function getSupplier(): ?ThirdParty
-    {
-        return $this->supplier;
+    public array $emails = [] {
+        set(array|string $emails) {
+            if (\is_string($emails)) {
+                $this->emails = \array_map('trim', \explode(PHP_EOL, $emails));
+            } else {
+                $this->emails = \array_filter($emails, 'is_string');
+            }
+        }
     }
 
-    public function setSupplier(?ThirdParty $supplier): static
-    {
-        $this->supplier = $supplier;
+    public int $daysBefore = 0;
 
-        return $this;
-    }
-
-    public function isAutoSend(): bool
-    {
-        return $this->autoSend;
-    }
-
-    public function setAutoSend(bool|int $autoSend): static
-    {
-        $this->autoSend = (bool) $autoSend;
-
-        return $this;
-    }
-
-    /**
-     * Get the list of emails.
-     * 
-     * @return string[]
-     */
-    public function getEmails(): array
-    {
-        return $this->emails;
-    }
+    public int $daysAfter = 0;
 
     public function getEmailsAsString(): string
     {
-        return implode(PHP_EOL, $this->emails);
-    }
-
-    /**
-     * Set the list of emails.
-     * 
-     * @param array<mixed>|string $emails 
-     */
-    public function setEmails(array|string $emails): static
-    {
-        if (\is_string($emails)) {
-            $this->emails = \array_map('trim', explode(PHP_EOL, $emails));
-        } else {
-            $this->emails = array_filter($emails, 'is_string');
-        }
-
-        return $this;
-    }
-
-    public function getDaysBefore(): int
-    {
-        return $this->daysBefore;
-    }
-
-    public function setDaysBefore(int $daysBefore): static
-    {
-        $this->daysBefore = $daysBefore;
-
-        return $this;
-    }
-
-    public function getDaysAfter(): int
-    {
-        return $this->daysAfter;
-    }
-
-    public function setDaysAfter(int $daysAfter): static
-    {
-        $this->daysAfter = $daysAfter;
-
-        return $this;
+        return \implode(PHP_EOL, $this->emails);
     }
 
     #[\Override]
@@ -126,12 +62,12 @@ class PdfConfig extends AbstractEntity
     {
         return [
             "id" => $this->id,
-            "module" => $this->getModule(),
-            "fournisseur" => $this->getSupplier()?->id,
-            "envoi_auto" => $this->isAutoSend(),
+            "module" => $this->module,
+            "fournisseur" => $this->supplier?->id,
+            "envoi_auto" => $this->autoSend,
             "liste_emails" => $this->getEmailsAsString(),
-            "jours_avant" => $this->getDaysBefore(),
-            "jours_apres" => $this->getDaysAfter(),
+            "jours_avant" => $this->daysBefore,
+            "jours_apres" => $this->daysAfter,
         ];
     }
 }

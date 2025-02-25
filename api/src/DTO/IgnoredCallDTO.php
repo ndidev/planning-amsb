@@ -12,7 +12,7 @@ namespace App\DTO;
  *                             shipName: string,
  *                           }
  */
-final class IgnoredCallDTO
+final readonly class IgnoredCallDTO
 {
     /**
      * Call ID.

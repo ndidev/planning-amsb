@@ -29,6 +29,7 @@ use App\Entity\Stevedoring\ShipReportEquipmentEntry;
 use App\Entity\Stevedoring\ShipReportStaffEntry;
 use App\Entity\Stevedoring\ShipReportStorageEntry;
 use App\Entity\Stevedoring\ShipReportSubcontractEntry;
+use App\Entity\Stevedoring\ShipSubreport;
 use App\Entity\Stevedoring\StevedoringEquipment;
 use App\Entity\Stevedoring\StevedoringStaff;
 use App\Entity\Stevedoring\TempWorkHoursEntry;
@@ -40,6 +41,7 @@ use ReflectionClass;
  * @phpstan-import-type StevedoringStaffArray from \App\Entity\Stevedoring\StevedoringStaff
  * @phpstan-import-type StevedoringEquipmentArray from \App\Entity\Stevedoring\StevedoringEquipment
  * @phpstan-import-type ShipReportArray from \App\Entity\Stevedoring\ShipReport
+ * @phpstan-import-type ShipSubreportArray from \App\Entity\Stevedoring\ShipSubreport
  * @phpstan-import-type ShipReportEquipmentEntryArray from \App\Entity\Stevedoring\ShipReportEquipmentEntry
  * @phpstan-import-type ShipReportStaffEntryArray from \App\Entity\Stevedoring\ShipReportStaffEntry
  * @phpstan-import-type ShipReportSubcontractEntryArray from \App\Entity\Stevedoring\ShipReportSubcontractEntry
@@ -64,6 +66,15 @@ final class StevedoringRepository extends Repository
         $this->equipmentReflector = new ReflectionClass(StevedoringEquipment::class);
         $this->shipReportReflector = new ReflectionClass(ShipReport::class);
     }
+
+    /**
+     * @var array{
+     *        shipReports: array<int, ShipReport>,
+     *      }
+     */
+    private static array $cache = [
+        'shipReports' => [],
+    ];
 
     // =====
     // Staff
@@ -212,7 +223,7 @@ final class StevedoringRepository extends Repository
 
             return $staff;
         } catch (\PDOException $e) {
-            $this->mysql->rollBack();
+            $this->mysql->rollbackIfNeeded();
             throw new DBException("Impossible de créer le personnel de manutention.", previous: $e);
         }
     }
@@ -406,7 +417,7 @@ final class StevedoringRepository extends Repository
 
             return $equipment;
         } catch (\PDOException $e) {
-            $this->mysql->rollBack();
+            $this->mysql->rollbackIfNeeded();
             throw new DBException("Impossible de créer l'équipement de manutention.", previous: $e);
         }
     }
@@ -899,9 +910,7 @@ final class StevedoringRepository extends Repository
 
             return $entry;
         } catch (\PDOException $e) {
-            if ($this->mysql->inTransaction()) {
-                $this->mysql->rollBack();
-            }
+            $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
                 $message = \sprintf(
@@ -943,9 +952,7 @@ final class StevedoringRepository extends Repository
 
             return $entry;
         } catch (\PDOException $e) {
-            if ($this->mysql->inTransaction()) {
-                $this->mysql->rollBack();
-            }
+            $this->mysql->rollbackIfNeeded();
 
             if ($e->getCode() == 23000) {
                 $message = \sprintf(
@@ -1101,12 +1108,11 @@ final class StevedoringRepository extends Repository
                 /** @var int */
                 $reportId = $report->id;
 
-                $report
-                    ->setEquipmentEntries($this->fetchShipReportEquipmentEntriesForReport($reportId))
-                    ->setStaffEntries($this->fetchShipReportStaffEntriesForReport($reportId))
-                    ->setSubcontractEntries($this->fetchShipReportSubcontractEntriesForReport($reportId))
-                    ->setCargoEntries($this->fetchCargoEntriesForReport($reportId))
-                    ->setStorageEntries($this->fetchShipReportStorageEntriesForReport($reportId));
+                $report->cargoEntries = $this->fetchCargoEntriesForReport($report);
+                $report->storageEntries = $this->fetchStorageEntriesForReport($report);
+                $report->subreports = $this->fetchSubreportsForReport($report);
+
+                static::$cache['shipReports'][$reportId] = $report;
             }
 
 
@@ -1116,57 +1122,56 @@ final class StevedoringRepository extends Repository
         }
     }
 
-    public function fetchShipReport(int $id): ?ShipReport
+    public function fetchShipReport(int $reportId): ?ShipReport
     {
-        /** @var array<int, ShipReport> */
-        static $cache = [];
-
-        if (isset($cache[$id])) {
-            return $cache[$id];
+        if (isset(static::$cache['shipReports'][$reportId])) {
+            return static::$cache['shipReports'][$reportId];
         }
 
-        if (!$this->shipReportExists($id)) {
+        if (!$this->shipReportExists($reportId)) {
             return null;
         }
 
         /** @var ShipReport */
         $shipReport = $this->shipReportReflector->newLazyProxy(
-            function () use ($id) {
+            function () use ($reportId) {
                 $reportStatement =
                     "SELECT
-                    r.id,
-                    r.is_archive as `isArchive`,
-                    r.linked_shipping_call_id as `linkedShippingCallId`,
-                    r.ship,
-                    r.port,
-                    r.berth,
-                    r.comments,
-                    r.invoice_instructions as `invoiceInstructions`
-                 FROM stevedoring_ship_reports r
-                 WHERE r.id = :id";
+                    id,
+                    is_archive as `isArchive`,
+                    linked_shipping_call_id as `linkedShippingCallId`,
+                    ship,
+                    port,
+                    berth,
+                    comments,
+                    invoice_instructions as `invoiceInstructions`
+                 FROM stevedoring_ship_reports
+                 WHERE id = :reportId";
 
                 try {
                     /** @var ShipReportArray */
                     $reportRaw = $this->mysql
-                        ->prepareAndExecute($reportStatement, ['id' => $id])
+                        ->prepareAndExecute($reportStatement, ['reportId' => $reportId])
                         ->fetch();
 
-                    return $this->stevedoringService
-                        ->makeShipReportFromDatabase($reportRaw)
-                        ->setEquipmentEntries($this->fetchShipReportEquipmentEntriesForReport($id))
-                        ->setStaffEntries($this->fetchShipReportStaffEntriesForReport($id))
-                        ->setSubcontractEntries($this->fetchShipReportSubcontractEntriesForReport($id))
-                        ->setCargoEntries($this->fetchCargoEntriesForReport($id))
-                        ->setStorageEntries($this->fetchShipReportStorageEntriesForReport($id));
+                    $report = $this->stevedoringService->makeShipReportFromDatabase($reportRaw);
+
+                    $report->cargoEntries = $this->fetchCargoEntriesForReport($report);
+                    $report->storageEntries = $this->fetchStorageEntriesForReport($report);
+                    $report->subreports = $this->fetchSubreportsForReport($report);
+
+                    static::$cache['shipReports'][$reportId] = $report;
+
+                    return $report;
                 } catch (\PDOException $e) {
                     throw new DBException("Impossible de récupérer le rapport navire.", previous: $e);
                 }
             }
         );
 
-        $this->shipReportReflector->getProperty('id')->setRawValueWithoutLazyInitialization($shipReport, $id);
+        $this->shipReportReflector->getProperty('id')->setRawValueWithoutLazyInitialization($shipReport, $reportId);
 
-        $cache[$id] = $shipReport;
+        static::$cache['shipReports'][$reportId] = $shipReport;
 
         return $shipReport;
     }
@@ -1202,19 +1207,9 @@ final class StevedoringRepository extends Repository
 
             $report->id = (int) $this->mysql->lastInsertId();
 
-            // Equipment entries
-            foreach ($report->equipmentEntries as $equipmentEntry) {
-                $equipmentEntry->id = $this->createShipReportEquipmentEntry($equipmentEntry)->id;
-            }
-
-            // Staff entries
-            foreach ($report->staffEntries as $staffEntry) {
-                $staffEntry->id = $this->createShipReportStaffEntry($staffEntry)->id;
-            }
-
-            // Subcontract entries
-            foreach ($report->subcontractEntries as $subcontractEntry) {
-                $subcontractEntry->id = $this->createShipReportSubcontractEntry($subcontractEntry)->id;
+            // Subreports
+            foreach ($report->subreports as $subreport) {
+                $this->createShipSubreport($subreport);
             }
 
             // Cargo entries
@@ -1232,7 +1227,7 @@ final class StevedoringRepository extends Repository
                     \count($existingIds) > 0
                         ? \sprintf(
                             "DELETE FROM consignation_escales_marchandises WHERE escale_id = :callId AND NOT id IN (%s)",
-                            join(",", $existingIds)
+                            \join(",", $existingIds)
                         )
                         : "DELETE FROM consignation_escales_marchandises WHERE escale_id = :callId",
                     ['callId' => $report->linkedShippingCall->id]
@@ -1313,75 +1308,27 @@ final class StevedoringRepository extends Repository
                 ]
             );
 
-            // Equipment entries
+            // Subreports
             // Delete entries that are not in the new list
             $existingIds = \array_filter(
-                $report->equipmentEntries->map(fn($entry) => $entry->id),
+                $report->subreports->map(fn($subreport) => $subreport->id),
                 fn($id) => $id !== null
             );
             $this->mysql->prepareAndExecute(
                 \count($existingIds) > 0
                     ? \sprintf(
-                        "DELETE FROM stevedoring_ship_reports_equipments WHERE ship_report_id = :reportId AND NOT id IN (%s)",
-                        join(",", $existingIds)
+                        "DELETE FROM stevedoring_ship_subreports WHERE report_id = :reportId AND NOT id IN (%s)",
+                        \join(",", $existingIds)
                     )
-                    : "DELETE FROM stevedoring_ship_reports_equipments WHERE ship_report_id = :reportId",
+                    : "DELETE FROM stevedoring_ship_subreports WHERE report_id = :reportId",
                 ['reportId' => $report->id]
             );
 
-            foreach ($report->equipmentEntries as $equipmentEntry) {
-                if (!$equipmentEntry->id) {
-                    $equipmentEntry->id = $this->createShipReportEquipmentEntry($equipmentEntry)->id;
+            foreach ($report->subreports as $subreport) {
+                if (!$subreport->id) {
+                    $this->createShipSubreport($subreport);
                 } else {
-                    $this->updateShipReportEquipmentEntry($equipmentEntry);
-                }
-            }
-
-            // Staff entries
-            // Delete entries that are not in the new list
-            $existingIds = \array_filter(
-                $report->staffEntries->map(fn($entry) => $entry->id),
-                fn($id) => $id !== null
-            );
-            $this->mysql->prepareAndExecute(
-                \count($existingIds) > 0
-                    ? \sprintf(
-                        "DELETE FROM stevedoring_ship_reports_staff WHERE ship_report_id = :reportId AND NOT id IN (%s)",
-                        join(",", $existingIds)
-                    )
-                    : "DELETE FROM stevedoring_ship_reports_staff WHERE ship_report_id = :reportId",
-                ['reportId' => $report->id]
-            );
-
-            foreach ($report->staffEntries as $staffEntry) {
-                if (!$staffEntry->id) {
-                    $staffEntry->id = $this->createShipReportStaffEntry($staffEntry)->id;
-                } else {
-                    $this->updateShipReportStaffEntry($staffEntry);
-                }
-            }
-
-            // Subcontract entries
-            // Delete entries that are not in the new list
-            $existingIds = \array_filter(
-                $report->subcontractEntries->map(fn($entry) => $entry->id),
-                fn($id) => $id !== null
-            );
-            $this->mysql->prepareAndExecute(
-                \count($existingIds) > 0
-                    ? \sprintf(
-                        "DELETE FROM stevedoring_ship_reports_subcontracts WHERE ship_report_id = :reportId AND NOT id IN (%s)",
-                        join(",", $existingIds)
-                    )
-                    : "DELETE FROM stevedoring_ship_reports_subcontracts WHERE ship_report_id = :reportId",
-                ['reportId' => $report->id]
-            );
-
-            foreach ($report->subcontractEntries as $subcontractEntry) {
-                if (!$subcontractEntry->id) {
-                    $subcontractEntry->id = $this->createShipReportSubcontractEntry($subcontractEntry)->id;
-                } else {
-                    $this->updateShipReportSubcontractEntry($subcontractEntry);
+                    $this->updateShipSubreport($subreport);
                 }
             }
 
@@ -1395,7 +1342,7 @@ final class StevedoringRepository extends Repository
                 \count($existingIds) > 0
                     ? \sprintf(
                         "DELETE FROM consignation_escales_marchandises WHERE ship_report_id = :reportId AND NOT id IN (%s)",
-                        join(",", $existingIds)
+                        \join(",", $existingIds)
                     )
                     : "DELETE FROM consignation_escales_marchandises WHERE ship_report_id = :reportId",
                 ['reportId' => $report->id]
@@ -1403,7 +1350,7 @@ final class StevedoringRepository extends Repository
 
             foreach ($report->cargoEntries as $cargoEntry) {
                 if (!$cargoEntry->id) {
-                    $cargoEntry->id = $this->createCargoEntry($cargoEntry)->id;
+                    $this->createCargoEntry($cargoEntry);
                 } else {
                     $this->updateCargoEntry($cargoEntry);
                 }
@@ -1419,7 +1366,7 @@ final class StevedoringRepository extends Repository
                 \count($existingIds) > 0
                     ? \sprintf(
                         "DELETE FROM stevedoring_ship_reports_storage WHERE ship_report_id = :reportId AND NOT id IN (%s)",
-                        join(",", $existingIds)
+                        \join(",", $existingIds)
                     )
                     : "DELETE FROM stevedoring_ship_reports_storage WHERE ship_report_id = :reportId",
                 ['reportId' => $report->id]
@@ -1441,7 +1388,7 @@ final class StevedoringRepository extends Repository
                 }
 
                 if (!$storageEntry->id) {
-                    $storageEntry->id = $this->createShipReportStorageEntry($storageEntry)->id;
+                    $this->createShipReportStorageEntry($storageEntry);
                 } else {
                     $this->updateShipReportStorageEntry($storageEntry);
                 }
@@ -1513,40 +1460,219 @@ final class StevedoringRepository extends Repository
     }
 
     /**
+     * @return Collection<ShipSubreport>
+     */
+    private function fetchSubreportsForReport(ShipReport $report): Collection
+    {
+        $subreportStatement =
+            "SELECT
+                id,
+                report_id
+             FROM stevedoring_ship_subreports
+             WHERE report_id = :reportId";
+
+        $cargoIdsStatement =
+            "SELECT cargo_id
+            FROM stevedoring_ship_subreport_cargo
+            WHERE subreport_id = :subreportId";
+
+        try {
+            /** @var ShipSubreportArray[] */
+            $subreportRaw = $this->mysql
+                ->prepareAndExecute($subreportStatement, ['reportId' => $report->id])
+                ->fetchAll();
+
+            $subreports = \array_map(
+                fn($data) => $this->stevedoringService->makeShipSubreportFromDatabase($data),
+                $subreportRaw
+            );
+
+            foreach ($subreports as $subreport) {
+                $cargoIds = $this->mysql
+                    ->prepareAndExecute($cargoIdsStatement, ['subreportId' => $subreport->id])
+                    ->fetchAll(\PDO::FETCH_COLUMN);
+
+                $subreport->cargoEntries = $report->cargoEntries->filter(
+                    fn(ShippingCallCargo $cargo) => \in_array($cargo->id, $cargoIds)
+                );
+                $subreport->equipmentEntries = $this->fetchEquipmentEntriesForSubreport($subreport);
+                $subreport->staffEntries = $this->fetchStaffEntriesForSubreport($subreport);
+                $subreport->subcontractEntries = $this->fetchSubcontractEntriesForSubreport($subreport);
+            }
+
+            return new Collection($subreports);
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer les sous-rapports.", previous: $e);
+        }
+    }
+
+    private function createShipSubreport(ShipSubreport $subreport): ShipSubreport
+    {
+        $statement = "INSERT INTO stevedoring_ship_subreports SET report_id = :reportId";
+
+        try {
+            $this->mysql->prepareAndExecute($statement, ['reportId' => $subreport->shipReport->id]);
+
+            $subreport->id = (int) $this->mysql->lastInsertId();
+
+            // Cargo entries
+            $this->mysql->prepareAndExecute(
+                "INSERT INTO stevedoring_ship_subreport_cargo SET subreport_id = :subreportId, cargo_id = :cargoId",
+                $subreport->cargoEntries->map(fn($cargo) => ['subreportId' => $subreport->id, 'cargoId' => $cargo->id])
+            );
+
+            // Equipment entries
+            foreach ($subreport->equipmentEntries as $equipmentEntry) {
+                $this->createShipReportEquipmentEntry($equipmentEntry);
+            }
+
+            // Staff entries
+            foreach ($subreport->staffEntries as $staffEntry) {
+                $this->createShipReportStaffEntry($staffEntry);
+            }
+
+            // Subcontract entries
+            foreach ($subreport->subcontractEntries as $subcontractEntry) {
+                $this->createShipReportSubcontractEntry($subcontractEntry);
+            }
+
+            return $subreport;
+        } catch (\PDOException $e) {
+            $this->mysql->rollbackIfNeeded();
+
+            throw new DBException("Impossible de créer le sous-rapport.", previous: $e);
+        }
+    }
+
+    private function updateShipSubreport(ShipSubreport $subreport): ShipSubreport
+    {
+        try {
+            // Cargo
+            // Delete and re-create cargo association
+            $this->mysql->prepareAndExecute(
+                "DELETE FROM stevedoring_ship_subreport_cargo WHERE subreport_id = :subreportId",
+                ['subreportId' => $subreport->id]
+            );
+            $this->mysql->prepareAndExecute(
+                "INSERT INTO stevedoring_ship_subreport_cargo SET subreport_id = :subreportId, cargo_id = :cargoId",
+                $subreport->cargoEntries->map(fn($cargo) => ['subreportId' => $subreport->id, 'cargoId' => $cargo->id])
+            );
+
+            // Equipment entries
+            // Delete entries that are not in the new list
+            $existingIds = \array_filter(
+                $subreport->equipmentEntries->map(fn($entry) => $entry->id),
+                fn($id) => $id !== null
+            );
+            $this->mysql->prepareAndExecute(
+                \count($existingIds) > 0
+                    ? \sprintf(
+                        "DELETE FROM stevedoring_ship_reports_equipments WHERE ship_report_id = :reportId AND NOT id IN (%s)",
+                        \join(",", $existingIds)
+                    )
+                    : "DELETE FROM stevedoring_ship_reports_equipments WHERE ship_report_id = :reportId",
+                ['reportId' => $subreport->id]
+            );
+
+            foreach ($subreport->equipmentEntries as $equipmentEntry) {
+                if (!$equipmentEntry->id) {
+                    $equipmentEntry->id = $this->createShipReportEquipmentEntry($equipmentEntry)->id;
+                } else {
+                    $this->updateShipReportEquipmentEntry($equipmentEntry);
+                }
+            }
+
+            // Staff entries
+            // Delete entries that are not in the new list
+            $existingIds = \array_filter(
+                $subreport->staffEntries->map(fn($entry) => $entry->id),
+                fn($id) => $id !== null
+            );
+            $this->mysql->prepareAndExecute(
+                \count($existingIds) > 0
+                    ? \sprintf(
+                        "DELETE FROM stevedoring_ship_reports_staff WHERE ship_report_id = :reportId AND NOT id IN (%s)",
+                        \join(",", $existingIds)
+                    )
+                    : "DELETE FROM stevedoring_ship_reports_staff WHERE ship_report_id = :reportId",
+                ['reportId' => $subreport->id]
+            );
+
+            foreach ($subreport->staffEntries as $staffEntry) {
+                if (!$staffEntry->id) {
+                    $staffEntry->id = $this->createShipReportStaffEntry($staffEntry)->id;
+                } else {
+                    $this->updateShipReportStaffEntry($staffEntry);
+                }
+            }
+
+            // Subcontract entries
+            // Delete entries that are not in the new list
+            $existingIds = \array_filter(
+                $subreport->subcontractEntries->map(fn($entry) => $entry->id),
+                fn($id) => $id !== null
+            );
+            $this->mysql->prepareAndExecute(
+                \count($existingIds) > 0
+                    ? \sprintf(
+                        "DELETE FROM stevedoring_ship_reports_subcontracts WHERE ship_report_id = :reportId AND NOT id IN (%s)",
+                        \join(",", $existingIds)
+                    )
+                    : "DELETE FROM stevedoring_ship_reports_subcontracts WHERE ship_report_id = :reportId",
+                ['reportId' => $subreport->id]
+            );
+
+            foreach ($subreport->subcontractEntries as $subcontractEntry) {
+                if (!$subcontractEntry->id) {
+                    $subcontractEntry->id = $this->createShipReportSubcontractEntry($subcontractEntry)->id;
+                } else {
+                    $this->updateShipReportSubcontractEntry($subcontractEntry);
+                }
+            }
+
+            return $subreport;
+        } catch (\PDOException $e) {
+            $this->mysql->rollbackIfNeeded();
+
+            throw new DBException("Impossible de mettre à jour le sous-rapport.", previous: $e);
+        }
+    }
+
+    /**
+     * @param ShipSubreport $subreport 
      * 
-     * @param int $reportId 
-     * 
-     * @return ShipReportEquipmentEntry[]  
+     * @return Collection<ShipReportEquipmentEntry>
      * 
      * @throws DBException 
      * @throws \RuntimeException 
      */
-    private function fetchShipReportEquipmentEntriesForReport(int $reportId): array
+    private function fetchEquipmentEntriesForSubreport(ShipSubreport $subreport): Collection
     {
         $statement =
             "SELECT
                 id,
                 ship_report_id,
+                subreport_id,
                 equipment_id,
                 date,
                 hours_hint,
                 hours_worked,
                 comments
              FROM stevedoring_ship_reports_equipments
-             WHERE ship_report_id = :reportId";
+             WHERE subreport_id = :subreportId";
 
         try {
-            /** @phpstan-var ShipReportEquipmentEntryArray[] */
+            /** @var ShipReportEquipmentEntryArray[] */
             $rawData = $this->mysql
-                ->prepareAndExecute($statement, ['reportId' => $reportId])
+                ->prepareAndExecute($statement, ['subreportId' => $subreport->id])
                 ->fetchAll();
 
             $entries = \array_map(
-                fn(array $data) => $this->stevedoringService->makeShipReportEquipmentEntryFromDatabase($data),
+                fn($data) => $this->stevedoringService->makeShipReportEquipmentEntryFromDatabase($data),
                 $rawData
             );
 
-            return $entries;
+            return new Collection($entries);
         } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les entrées d'équipement.", previous: $e);
         }
@@ -1568,6 +1694,7 @@ final class StevedoringRepository extends Repository
             "INSERT INTO stevedoring_ship_reports_equipments
              SET
                 ship_report_id = :reportId,
+                subreport_id = :subreportId,
                 equipment_id = :equipmentId,
                 date = :date,
                 hours_hint = :hoursHint,
@@ -1578,7 +1705,8 @@ final class StevedoringRepository extends Repository
             $this->mysql->prepareAndExecute(
                 $statement,
                 [
-                    'reportId' => $entry->report?->id,
+                    'reportId' => $entry->subreport?->shipReport->id,
+                    'subreportId' => $entry->subreport?->id,
                     'equipmentId' => $entry->equipment?->id,
                     'date' => $entry->date?->format('Y-m-d'),
                     'hoursHint' => $entry->hoursHint,
@@ -1621,7 +1749,6 @@ final class StevedoringRepository extends Repository
         $statement =
             "UPDATE stevedoring_ship_reports_equipments
              SET
-                ship_report_id = :reportId,
                 equipment_id = :equipmentId,
                 date = :date,
                 hours_hint = :hoursHint,
@@ -1635,7 +1762,6 @@ final class StevedoringRepository extends Repository
                 $statement,
                 [
                     'id' => $entry->id,
-                    'reportId' => $entry->report?->id,
                     'equipmentId' => $entry->equipment?->id,
                     'date' => $entry->date?->format('Y-m-d'),
                     'hoursHint' => $entry->hoursHint,
@@ -1663,19 +1789,20 @@ final class StevedoringRepository extends Repository
 
     /**
      * 
-     * @param int $reportId 
+     * @param ShipSubreport $subreport 
      * 
-     * @return ShipReportStaffEntry[]  
+     * @return Collection<ShipReportStaffEntry>
      * 
      * @throws DBException 
      * @throws \RuntimeException 
      */
-    private function fetchShipReportStaffEntriesForReport(int $reportId): array
+    private function fetchStaffEntriesForSubreport(ShipSubreport $subreport): Collection
     {
         $statement =
             "SELECT
                 reportsStaff.id,
                 reportsStaff.ship_report_id,
+                reportsStaff.subreport_id,
                 reportsStaff.staff_id,
                 reportsStaff.date,
                 reportsStaff.hours_hint,
@@ -1683,7 +1810,7 @@ final class StevedoringRepository extends Repository
                 reportsStaff.comments
              FROM stevedoring_ship_reports_staff reportsStaff
              LEFT JOIN stevedoring_staff staff ON staff.id = reportsStaff.staff_id
-             WHERE ship_report_id = :reportId
+             WHERE subreport_id = :subreportId
              ORDER BY
                 staff.lastname ASC,
                 staff.firstname ASC,
@@ -1692,15 +1819,15 @@ final class StevedoringRepository extends Repository
         try {
             /** @phpstan-var ShipReportStaffEntryArray[] */
             $rawData = $this->mysql
-                ->prepareAndExecute($statement, ['reportId' => $reportId])
+                ->prepareAndExecute($statement, ['subreportId' => $subreport->id])
                 ->fetchAll();
 
             $entries = \array_map(
-                fn(array $data) => $this->stevedoringService->makeShipReportStaffEntryFromDatabase($data),
+                fn($data) => $this->stevedoringService->makeShipReportStaffEntryFromDatabase($data),
                 $rawData
             );
 
-            return $entries;
+            return new Collection($entries);
         } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les entrées de personnel.", previous: $e);
         }
@@ -1722,6 +1849,7 @@ final class StevedoringRepository extends Repository
             "INSERT INTO stevedoring_ship_reports_staff
              SET
                 ship_report_id = :reportId,
+                subreport_id = :subreportId,
                 staff_id = :staffId,
                 date = :date,
                 hours_hint = :hoursHint,
@@ -1732,7 +1860,8 @@ final class StevedoringRepository extends Repository
             $this->mysql->prepareAndExecute(
                 $statement,
                 [
-                    'reportId' => $entry->report?->id,
+                    'reportId' => $entry->subreport?->shipReport->id,
+                    'subreportId' => $entry->subreport?->id,
                     'staffId' => $entry->staff?->id,
                     'date' => $entry->date?->format('Y-m-d'),
                     'hoursHint' => $entry->hoursHint,
@@ -1775,7 +1904,6 @@ final class StevedoringRepository extends Repository
         $statement =
             "UPDATE stevedoring_ship_reports_staff
              SET
-                ship_report_id = :reportId,
                 staff_id = :staffId,
                 date = :date,
                 hours_hint = :hoursHint,
@@ -1789,7 +1917,6 @@ final class StevedoringRepository extends Repository
                 $statement,
                 [
                     'id' => $entry->id,
-                    'reportId' => $entry->report?->id,
                     'staffId' => $entry->staff?->id,
                     'date' => $entry->date?->format('Y-m-d'),
                     'hoursHint' => $entry->hoursHint,
@@ -1817,19 +1944,20 @@ final class StevedoringRepository extends Repository
 
     /**
      * 
-     * @param int $reportId 
+     * @param ShipSubreport $subreport
      * 
-     * @return ShipReportSubcontractEntry[] 
+     * @return Collection<ShipReportSubcontractEntry>
      *  
      * @throws DBException 
      * @throws \RuntimeException 
      */
-    private function fetchShipReportSubcontractEntriesForReport(int $reportId): array
+    private function fetchSubcontractEntriesForSubreport(ShipSubreport $subreport): Collection
     {
         $statement =
             "SELECT
                 id,
                 ship_report_id,
+                subreport_id,
                 subcontractor_name,
                 type,
                 date,
@@ -1837,23 +1965,23 @@ final class StevedoringRepository extends Repository
                 cost,
                 comments
              FROM stevedoring_ship_reports_subcontracts
-             WHERE ship_report_id = :reportId
+             WHERE subreport_id = :subreportId
              ORDER BY
                 date ASC,
                 subcontractor_name ASC";
 
         try {
-            /** @phpstan-var ShipReportSubcontractEntryArray[] */
+            /** @var ShipReportSubcontractEntryArray[] */
             $rawData = $this->mysql
-                ->prepareAndExecute($statement, ['reportId' => $reportId])
+                ->prepareAndExecute($statement, ['subreportId' => $subreport->id])
                 ->fetchAll();
 
             $entries = \array_map(
-                fn(array $data) => $this->stevedoringService->makeShipReportSubcontractEntryFromDatabase($data),
+                fn($data) => $this->stevedoringService->makeShipReportSubcontractEntryFromDatabase($data),
                 $rawData
             );
 
-            return $entries;
+            return new Collection($entries);
         } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les entrées de personnel.", previous: $e);
         }
@@ -1875,6 +2003,7 @@ final class StevedoringRepository extends Repository
             "INSERT INTO stevedoring_ship_reports_subcontracts
              SET
                 ship_report_id = :reportId,
+                subreport_id = :subreportId,
                 subcontractor_name = :subcontractorName,
                 type = :type,
                 date = :date,
@@ -1886,7 +2015,8 @@ final class StevedoringRepository extends Repository
             $this->mysql->prepareAndExecute(
                 $statement,
                 [
-                    'reportId' => $entry->report?->id,
+                    'reportId' => $entry->subreport?->shipReport->id,
+                    'subreportId' => $entry->subreport?->id,
                     'subcontractorName' => $entry->subcontractorName,
                     'type' => $entry->type,
                     'date' => $entry->date?->format('Y-m-d'),
@@ -1930,7 +2060,6 @@ final class StevedoringRepository extends Repository
         $statement =
             "UPDATE stevedoring_ship_reports_subcontracts
              SET
-                ship_report_id = :reportId,
                 subcontractor_name = :subcontractorName,
                 type = :type,
                 date = :date,
@@ -1945,7 +2074,6 @@ final class StevedoringRepository extends Repository
                 $statement,
                 [
                     'id' => $entry->id,
-                    'reportId' => $entry->report?->id,
                     'subcontractorName' => $entry->subcontractorName,
                     'type' => $entry->type,
                     'date' => $entry->date?->format('Y-m-d'),
@@ -1974,32 +2102,34 @@ final class StevedoringRepository extends Repository
 
     /**
      * 
-     * @param int $reportId 
+     * @param ShipReport $report
      * 
-     * @return ShippingCallCargo[]  
+     * @return Collection<ShippingCallCargo>
      * 
      * @throws DBException 
      * @throws \RuntimeException 
      */
-    private function fetchCargoEntriesForReport(int $reportId): array
+    private function fetchCargoEntriesForReport(ShipReport $report): Collection
     {
         $statement =
-            "SELECT *
+            "SELECT id
              FROM consignation_escales_marchandises
              WHERE ship_report_id = :reportId";
 
+        $shippingService = new ShippingService();
+
         try {
-            /** @phpstan-var ShippingCallCargoArray[] */
-            $rawData = $this->mysql
-                ->prepareAndExecute($statement, ['reportId' => $reportId])
-                ->fetchAll();
+            /** @var int[] */
+            $cargoIds = $this->mysql
+                ->prepareAndExecute($statement, ['reportId' => $report->id])
+                ->fetchAll(\PDO::FETCH_COLUMN);
 
-            $entries = \array_map(
-                fn(array $data) => new ShippingService()->makeShippingCallCargoFromDatabase($data),
-                $rawData
-            );
+            $entries = \array_filter(\array_map(
+                fn($id) => $shippingService->getCargoEntry($id),
+                $cargoIds
+            ));
 
-            return $entries;
+            return new Collection($entries);
         } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les marchandises.", previous: $e);
         }
@@ -2116,14 +2246,14 @@ final class StevedoringRepository extends Repository
 
     /**
      * 
-     * @param int $reportId 
+     * @param ShipReport $report
      * 
-     * @return ShipReportStorageEntry[]
+     * @return Collection<ShipReportStorageEntry>
      *  
      * @throws DBException 
      * @throws \RuntimeException 
      */
-    private function fetchShipReportStorageEntriesForReport(int $reportId): array
+    private function fetchStorageEntriesForReport(ShipReport $report): Collection
     {
         $statement =
             "SELECT
@@ -2139,9 +2269,9 @@ final class StevedoringRepository extends Repository
              WHERE ship_report_id = :reportId";
 
         try {
-            /** @phpstan-var ShipReportStorageEntryArray[] */
+            /** @var ShipReportStorageEntryArray[] */
             $rawData = $this->mysql
-                ->prepareAndExecute($statement, ['reportId' => $reportId])
+                ->prepareAndExecute($statement, ['reportId' => $report->id])
                 ->fetchAll();
 
             $entries = \array_map(
@@ -2149,7 +2279,7 @@ final class StevedoringRepository extends Repository
                 $rawData
             );
 
-            return $entries;
+            return new Collection($entries);
         } catch (\PDOException $e) {
             throw new DBException("Impossible de récupérer les entrées de personnel.", previous: $e);
         }

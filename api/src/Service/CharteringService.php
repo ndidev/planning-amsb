@@ -46,32 +46,27 @@ final class CharteringService
     {
         $rawDataAH = new ArrayHandler($rawData);
 
-        $charter = (new Charter())
-            ->setId($rawDataAH->getInt('id'))
-            ->setStatus($rawDataAH->getInt('statut', CharterStatus::PENDING))
-            ->setLaycanStart($rawDataAH->getDatetime('lc_debut'))
-            ->setLaycanEnd($rawDataAH->getDatetime('lc_fin'))
-            ->setCpDate($rawDataAH->getDatetime('cp_date'))
-            ->setVesselName($rawDataAH->getString('navire'))
-            ->setCharterer($this->thirdPartyService->getThirdParty($rawDataAH->getInt('affreteur')))
-            ->setShipOperator($this->thirdPartyService->getThirdParty($rawDataAH->getInt('armateur')))
-            ->setShipbroker($this->thirdPartyService->getThirdParty($rawDataAH->getInt('courtier')))
-            ->setFreightPayed($rawDataAH->getFloat('fret_achat', 0))
-            ->setFreightSold($rawDataAH->getFloat('fret_vente', 0))
-            ->setDemurragePayed($rawDataAH->getFloat('surestaries_achat', 0))
-            ->setDemurrageSold($rawDataAH->getFloat('surestaries_vente', 0))
-            ->setComments($rawDataAH->getString('commentaire'))
-            ->setArchive($rawDataAH->getBool('archive'));
+        $charter = new Charter();
+        $charter->id = $rawDataAH->getInt('id');
+        $charter->status = $rawDataAH->getInt('statut', CharterStatus::PENDING); // @phpstan-ignore assign.propertyType
+        $charter->laycanStart = $rawDataAH->getDatetime('lc_debut');
+        $charter->laycanEnd = $rawDataAH->getDatetime('lc_fin');
+        $charter->cpDate = $rawDataAH->getDatetime('cp_date');
+        $charter->vesselName = $rawDataAH->getString('navire');
+        $charter->charterer = $this->thirdPartyService->getThirdParty($rawDataAH->getInt('affreteur'));
+        $charter->shipOperator = $this->thirdPartyService->getThirdParty($rawDataAH->getInt('armateur'));
+        $charter->shipbroker = $this->thirdPartyService->getThirdParty($rawDataAH->getInt('courtier'));
+        $charter->freightPayed = $rawDataAH->getFloat('fret_achat', 0);
+        $charter->freightSold = $rawDataAH->getFloat('fret_vente', 0);
+        $charter->demurragePayed = $rawDataAH->getFloat('surestaries_achat', 0);
+        $charter->demurrageSold = $rawDataAH->getFloat('surestaries_vente', 0);
+        $charter->comments = $rawDataAH->getString('commentaire');
+        $charter->isArchive = $rawDataAH->getBool('archive');
 
-        /** @phpstan-var CharterLegArray[] $legs */
+        /** @var CharterLegArray[] $legs */
         $legs = $rawDataAH->getArray('legs');
 
-        $charter->setLegs(
-            \array_map(
-                fn(array $leg) => $this->makeCharterLegFromDatabase($leg),
-                $legs
-            )
-        );
+        $charter->legs = \array_map(fn($leg) => $this->makeCharterLegFromDatabase($leg), $legs);
 
         return $charter;
     }
@@ -85,32 +80,27 @@ final class CharteringService
      */
     public function makeCharterFromFormData(HTTPRequestBody $requestBody): Charter
     {
-        $charter = (new Charter())
-            ->setId($requestBody->getInt('id'))
-            ->setStatus($requestBody->getInt('statut', CharterStatus::PENDING))
-            ->setLaycanStart($requestBody->getDatetime('lc_debut', null))
-            ->setLaycanEnd($requestBody->getDatetime('lc_fin', null))
-            ->setCpDate($requestBody->getDatetime('cp_date', null))
-            ->setVesselName($requestBody->getString('navire'))
-            ->setCharterer($this->thirdPartyService->getThirdParty($requestBody->getInt('affreteur')))
-            ->setShipOperator($this->thirdPartyService->getThirdParty($requestBody->getInt('armateur')))
-            ->setShipbroker($this->thirdPartyService->getThirdParty($requestBody->getInt('courtier')))
-            ->setFreightPayed($requestBody->getFloat('fret_achat', 0))
-            ->setFreightSold($requestBody->getFloat('fret_vente', 0))
-            ->setDemurragePayed($requestBody->getFloat('surestaries_achat', 0))
-            ->setDemurrageSold($requestBody->getFloat('surestaries_vente', 0))
-            ->setComments($requestBody->getString('commentaire'))
-            ->setArchive($requestBody->getBool('archive'));
+        $charter = new Charter();
+        $charter->id = $requestBody->getInt('id');
+        $charter->status = $requestBody->getInt('statut', CharterStatus::PENDING); // @phpstan-ignore assign.propertyType
+        $charter->laycanStart = $requestBody->getDatetime('lc_debut');
+        $charter->laycanEnd = $requestBody->getDatetime('lc_fin');
+        $charter->cpDate = $requestBody->getDatetime('cp_date');
+        $charter->vesselName = $requestBody->getString('navire');
+        $charter->charterer = $this->thirdPartyService->getThirdParty($requestBody->getInt('affreteur'));
+        $charter->shipOperator = $this->thirdPartyService->getThirdParty($requestBody->getInt('armateur'));
+        $charter->shipbroker = $this->thirdPartyService->getThirdParty($requestBody->getInt('courtier'));
+        $charter->freightPayed = $requestBody->getFloat('fret_achat', 0);
+        $charter->freightSold = $requestBody->getFloat('fret_vente', 0);
+        $charter->demurragePayed = $requestBody->getFloat('surestaries_achat', 0);
+        $charter->demurrageSold = $requestBody->getFloat('surestaries_vente', 0);
+        $charter->comments = $requestBody->getString('commentaire');
+        $charter->isArchive = $requestBody->getBool('archive');
 
-        /** @phpstan-var CharterLegArray[] $legs */
+        /** @var CharterLegArray[] $legs */
         $legs = $requestBody->getArray('legs');
 
-        $charter->setLegs(
-            \array_map(
-                fn(array $leg) => $this->makeCharterLegFromFormData($leg),
-                $legs
-            )
-        );
+        $charter->legs = \array_map(fn($leg) => $this->makeCharterLegFromFormData($leg), $legs);
 
         return $charter;
     }
@@ -118,9 +108,7 @@ final class CharteringService
     /**
      * Creates a CharterLeg object from database data.
      * 
-     * @param array $rawData 
-     * 
-     * @phpstan-param CharterLegArray $rawData
+     * @param CharterLegArray $rawData 
      * 
      * @return CharterLeg 
      */
@@ -128,14 +116,14 @@ final class CharteringService
     {
         $rawDataAH = new ArrayHandler($rawData);
 
-        $leg = (new CharterLeg())
-            ->setId($rawDataAH->getInt('id'))
-            ->setBlDate($rawDataAH->getDatetime('bl_date'))
-            ->setPol($this->portService->getPort($rawDataAH->getString('pol', null)))
-            ->setPod($this->portService->getPort($rawDataAH->getString('pod', null)))
-            ->setCommodity($rawDataAH->getString('marchandise'))
-            ->setQuantity($rawDataAH->getString('quantite'))
-            ->setComments($rawDataAH->getString('commentaire'));
+        $leg = new CharterLeg();
+        $leg->id = $rawDataAH->getInt('id');
+        $leg->blDate = $rawDataAH->getDatetime('bl_date');
+        $leg->pol = $this->portService->getPort($rawDataAH->getString('pol', null));
+        $leg->pod = $this->portService->getPort($rawDataAH->getString('pod', null));
+        $leg->commodity = $rawDataAH->getString('marchandise');
+        $leg->quantity = $rawDataAH->getString('quantite');
+        $leg->comments = $rawDataAH->getString('commentaire');
 
         return $leg;
     }
@@ -143,9 +131,7 @@ final class CharteringService
     /**
      * Creates a CharterLeg object from form data.
      * 
-     * @param array $rawData 
-     * 
-     * @phpstan-param CharterLegArray $rawData
+     * @param CharterLegArray $rawData 
      * 
      * @return CharterLeg 
      */
@@ -153,15 +139,15 @@ final class CharteringService
     {
         $rawDataAH = new ArrayHandler($rawData);
 
-        $leg = (new CharterLeg())
-            ->setId($rawDataAH->getInt('id'))
-            ->setCharter($this->getCharter($rawDataAH->getInt('charter')))
-            ->setBlDate($rawDataAH->getDatetime('bl_date'))
-            ->setPol($this->portService->getPort($rawDataAH->getString('pol', null)))
-            ->setPod($this->portService->getPort($rawDataAH->getString('pod', null)))
-            ->setCommodity($rawDataAH->getString('marchandise'))
-            ->setQuantity($rawDataAH->getString('quantite'))
-            ->setComments($rawDataAH->getString('commentaire'));
+        $leg = new CharterLeg();
+        $leg->id = $rawDataAH->getInt('id');
+        $leg->charter = $this->getCharter($rawDataAH->getInt('charter'));
+        $leg->blDate = $rawDataAH->getDatetime('bl_date');
+        $leg->pol = $this->portService->getPort($rawDataAH->getString('pol', null));
+        $leg->pod = $this->portService->getPort($rawDataAH->getString('pod', null));
+        $leg->commodity = $rawDataAH->getString('marchandise');
+        $leg->quantity = $rawDataAH->getString('quantite');
+        $leg->comments = $rawDataAH->getString('commentaire');
 
         return $leg;
     }

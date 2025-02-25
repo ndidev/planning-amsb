@@ -18,7 +18,7 @@ use App\Core\Array\Server;
  * 
  * @phpstan-type RouteArray array{0: string, 1: mixed, 2?: string}
  */
-class Router
+final class Router
 {
     /**
      * Array of all routes (incl. named routes).
@@ -115,7 +115,7 @@ class Router
     }
 
     /**
-     * Add named match types. It uses array_merge so keys can be overwritten.
+     * Add named match types. It uses `array_merge` so keys can be overwritten.
      *
      * @param array<string, string> $matchTypes The key is the name and the value is the regex.
      */
@@ -173,7 +173,7 @@ class Router
         $route = $this->namedRoutes[$routeName];
 
         // prepend base path to route url again
-        $path = $route->getPath();
+        $path = $route->path;
         $url = $this->basePath . $path;
 
         if (\preg_match_all('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`', $path, $matches, PREG_SET_ORDER)) {

@@ -31,39 +31,34 @@ final class AgencyService
     {
         $rawDataAH = new ArrayHandler($rawData);
 
-        $department = (new AgencyDepartment())
-            ->setService($rawDataAH->getString('service'))
-            ->setDisplayName($rawDataAH->getString('affichage'))
-            ->setFullName($rawDataAH->getString('nom'))
-            ->setAddressLine1($rawDataAH->getString('adresse_ligne_1'))
-            ->setAddressLine2($rawDataAH->getString('adresse_ligne_2'))
-            ->setPostCode($rawDataAH->getString('cp'))
-            ->setCity($rawDataAH->getString('ville'))
-            ->setCountry($rawDataAH->getString('pays'))
-            ->setPhone($rawDataAH->getString('telephone'))
-            ->setMobile($rawDataAH->getString('mobile'))
-            ->setEmail($rawDataAH->getString('email'));
+        $department = new AgencyDepartment();
+        $department->service = $rawDataAH->getString('service');
+        $department->displayName = $rawDataAH->getString('affichage');
+        $department->fullName = $rawDataAH->getString('nom');
+        $department->addressLine1 = $rawDataAH->getString('adresse_ligne_1');
+        $department->addressLine2 = $rawDataAH->getString('adresse_ligne_2');
+        $department->postCode = $rawDataAH->getString('cp');
+        $department->city = $rawDataAH->getString('ville');
+        $department->country = $rawDataAH->getString('pays');
+        $department->phoneNumber = $rawDataAH->getString('telephone');
+        $department->mobileNumber = $rawDataAH->getString('mobile');
+        $department->emailAddress = $rawDataAH->getString('email');
 
         return $department;
     }
 
-    /**
-     * @param HTTPRequestBody $rawData
-     * 
-     * @return AgencyDepartment
-     */
     public function makeDepartmentFromForm(HTTPRequestBody $rawData): AgencyDepartment
     {
-        $department = (new AgencyDepartment())
-            ->setFullName($rawData->getString('nom'))
-            ->setAddressLine1($rawData->getString('adresse_ligne_1'))
-            ->setAddressLine2($rawData->getString('adresse_ligne_2'))
-            ->setPostCode($rawData->getString('cp'))
-            ->setCity($rawData->getString('ville'))
-            ->setCountry($rawData->getString('pays'))
-            ->setPhone($rawData->getString('telephone'))
-            ->setMobile($rawData->getString('mobile'))
-            ->setEmail($rawData->getString('email'));
+        $department = new AgencyDepartment();
+        $department->fullName = $rawData->getString('nom');
+        $department->addressLine1 = $rawData->getString('adresse_ligne_1');
+        $department->addressLine2 = $rawData->getString('adresse_ligne_2');
+        $department->postCode = $rawData->getString('cp');
+        $department->city = $rawData->getString('ville');
+        $department->country = $rawData->getString('pays');
+        $department->phoneNumber = $rawData->getString('telephone');
+        $department->mobileNumber = $rawData->getString('mobile');
+        $department->emailAddress = $rawData->getString('email');
 
         return $department;
     }
@@ -88,15 +83,11 @@ final class AgencyService
 
     /**
      * Update a department.
-     * 
-     * @param string          $departmentName 
-     * @param HTTPRequestBody $input 
-     * 
-     * @return AgencyDepartment 
      */
     public function updateDepartment(string $departmentName, HTTPRequestBody $input): AgencyDepartment
     {
-        $department = $this->makeDepartmentFromForm($input)->setService($departmentName);
+        $department = $this->makeDepartmentFromForm($input);
+        $department->service = $departmentName;
 
         $department->validate();
 

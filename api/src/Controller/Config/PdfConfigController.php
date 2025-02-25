@@ -78,7 +78,7 @@ final class PdfConfigController extends Controller
 
         // Filtre sur les catégories autorisées pour l'utilisateur
         foreach ($pdfConfigs as $config) {
-            if (!$this->user->canAccess($config->getModule())) {
+            if (!$this->user->canAccess($config->module)) {
                 $pdfConfigs->remove($config);
             }
         }
@@ -108,7 +108,7 @@ final class PdfConfigController extends Controller
             throw new NotFoundException("Cette configuration PDF n'existe pas.");
         }
 
-        if (!$this->user->canAccess($pdfConfig->getModule())) {
+        if (!$this->user->canAccess($pdfConfig->module)) {
             throw new AccessException("Vous n'avez pas les droits pour accéder à cette configuration PDF.");
         }
 
@@ -176,7 +176,7 @@ final class PdfConfigController extends Controller
         $input = $this->request->getBody();
 
         if (
-            !$this->user->canEdit($current->getModule())
+            !$this->user->canEdit($current->module)
             || !$this->user->canEdit(Module::tryFrom($input->getString('module')))
         ) {
             throw new AccessException("Vous n'avez pas les droits pour modifier cette configuration PDF.");
@@ -210,7 +210,7 @@ final class PdfConfigController extends Controller
             throw new NotFoundException("Cette configuration PDF n'existe pas.");
         }
 
-        if (!$this->user->canEdit($config->getModule())) {
+        if (!$this->user->canEdit($config->module)) {
             throw new AccessException("Vous n'avez pas les droits pour supprimer cette configuration PDF.");
         }
 

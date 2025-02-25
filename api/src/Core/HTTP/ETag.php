@@ -9,7 +9,7 @@ namespace App\Core\HTTP;
 /**
  * ETag
  */
-class ETag
+abstract class ETag
 {
     /**
      * Renvoie un hash MD5 des données passées en paramètre.

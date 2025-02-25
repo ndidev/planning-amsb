@@ -42,6 +42,15 @@ final class ShippingRepository extends Repository
     /** @var ReflectionClass<ShippingCall> */
     private ReflectionClass $callReflector;
 
+    /**
+     * @var array{
+     *        cargoes: array<int, ShippingCallCargo>,
+     *      }
+     */
+    private static array $cache = [
+        'cargoes' => [],
+    ];
+
     public function __construct(private ShippingService $shippingService)
     {
         $this->callReflector = new ReflectionClass(ShippingCall::class);
@@ -144,7 +153,7 @@ final class ShippingRepository extends Repository
                 cubage_outturn,
                 nombre_outturn
             FROM consignation_escales_marchandises
-            WHERE escale_id IN (" . implode(",", $callsIds) . ")";
+            WHERE escale_id IN (" . \implode(",", $callsIds) . ")";
 
             $cargoesRequest = $this->mysql->query($cargoesStatement);
 
@@ -160,10 +169,10 @@ final class ShippingRepository extends Repository
             $call = $this->shippingService->makeShippingCallFromDatabase($callRaw);
 
             // Rétablir heure ETA
-            $call->setEtaTime(ETAConverter::toLetters($call->getEtaTime()));
+            $call->etaTime = ETAConverter::toLetters($call->etaTime);
 
-            $filteredCargoesRaw = array_values(
-                array_filter(
+            $filteredCargoesRaw = \array_values(
+                \array_filter(
                     $cargoesRaw,
                     fn($cargo) => ($cargo["escale_id"]) === $call->id
                 )
@@ -174,7 +183,7 @@ final class ShippingRepository extends Repository
                 $filteredCargoesRaw
             );
 
-            $call->setCargoes($cargoes);
+            $call->cargoes = $cargoes;
 
             return $call;
         }, $callsRaw);
@@ -289,30 +298,30 @@ final class ShippingRepository extends Repository
         $callStatement =
             "INSERT INTO consignation_planning
             SET
-                navire = :navire,
-                voyage = :voyage,
-                armateur = :armateur,
-                eta_date = :eta_date,
-                eta_heure = :eta_heure,
-                nor_date = :nor_date,
-                nor_heure = :nor_heure,
-                pob_date = :pob_date,
-                pob_heure = :pob_heure,
-                etb_date = :etb_date,
-                etb_heure = :etb_heure,
-                ops_date = :ops_date,
-                ops_heure = :ops_heure,
-                etc_date = :etc_date,
-                etc_heure = :etc_heure,
-                etd_date = :etd_date,
-                etd_heure = :etd_heure,
-                te_arrivee = :te_arrivee,
-                te_depart = :te_depart,
-                last_port = :last_port,
-                next_port = :next_port,
-                call_port = :call_port,
-                quai = :quai,
-                commentaire = :commentaire";
+                navire = :shipName,
+                voyage = :voyageNumber,
+                armateur = :shipOperatorId,
+                eta_date = :etaDate,
+                eta_heure = :etaTime,
+                nor_date = :norDate,
+                nor_heure = :norTime,
+                pob_date = :pobDate,
+                pob_heure = :pobTime,
+                etb_date = :etbDate,
+                etb_heure = :etbTime,
+                ops_date = :opsDate,
+                ops_heure = :opsTime,
+                etc_date = :etcDate,
+                etc_heure = :etcTime,
+                etd_date = :etdDate,
+                etd_heure = :etdTime,
+                te_arrivee = :arrivalDraft,
+                te_depart = :departureDraft,
+                last_port = :lastPort,
+                next_port = :nextPort,
+                call_port = :callPort,
+                quai = :berth,
+                commentaire = :comment";
 
         $insertCargoStatement =
             "INSERT INTO consignation_escales_marchandises
@@ -333,30 +342,30 @@ final class ShippingRepository extends Repository
             $this->mysql->beginTransaction();
 
             $this->mysql->prepareAndExecute($callStatement, [
-                'navire' => $call->getShipName() ?: "TBN",
-                'voyage' => $call->getVoyage(),
-                'armateur' => $call->getShipOperator()?->id,
-                'eta_date' => $call->getEtaDate()?->format('Y-m-d'),
-                'eta_heure' => ETAConverter::toDigits($call->getEtaTime()),
-                'nor_date' => $call->getNorDate()?->format('Y-m-d'),
-                'nor_heure' => $call->getNorTime(),
-                'pob_date' => $call->getPobDate()?->format('Y-m-d'),
-                'pob_heure' => $call->getPobTime(),
-                'etb_date' => $call->getEtbDate()?->format('Y-m-d'),
-                'etb_heure' => $call->getEtbTime(),
-                'ops_date' => $call->getOpsDate()?->format('Y-m-d'),
-                'ops_heure' => $call->getOpsTime(),
-                'etc_date' => $call->getEtcDate()?->format('Y-m-d'),
-                'etc_heure' => $call->getEtcTime(),
-                'etd_date' => $call->getEtdDate()?->format('Y-m-d'),
-                'etd_heure' => $call->getEtdTime(),
-                'te_arrivee' => $call->getArrivalDraft(),
-                'te_depart' => $call->getDepartureDraft(),
-                'last_port' => $call->getLastPort()?->getLocode() ?? '',
-                'next_port' => $call->getNextPort()?->getLocode() ?? '',
-                'call_port' => $call->getCallPort(),
-                'quai' => $call->getQuay(),
-                'commentaire' => $call->getComment(),
+                'shipName' => $call->shipName,
+                'voyageNumber' => $call->voyageNumber,
+                'shipOperatorId' => $call->shipOperator?->id,
+                'etaDate' => $call->etaDate?->format('Y-m-d'),
+                'etaTime' => ETAConverter::toDigits($call->etaTime),
+                'norDate' => $call->norDate?->format('Y-m-d'),
+                'norTime' => $call->norTime,
+                'pobDate' => $call->pobDate?->format('Y-m-d'),
+                'pobTime' => $call->pobTime,
+                'etbDate' => $call->etbDate?->format('Y-m-d'),
+                'etbTime' => $call->etbTime,
+                'opsDate' => $call->opsDate?->format('Y-m-d'),
+                'opsTime' => $call->opsTime,
+                'etcDate' => $call->etcDate?->format('Y-m-d'),
+                'etcTime' => $call->etcTime,
+                'etdDate' => $call->etdDate?->format('Y-m-d'),
+                'etdTime' => $call->etdTime,
+                'arrivalDraft' => $call->arrivalDraft,
+                'departureDraft' => $call->departureDraft,
+                'lastPort' => $call->lastPort->locode ?? '',
+                'nextPort' => $call->nextPort->locode ?? '',
+                'callPort' => $call->callPort,
+                'berth' => $call->berth,
+                'comment' => $call->comment,
             ]);
 
             $lastInsertId = (int) $this->mysql->lastInsertId();
@@ -364,7 +373,7 @@ final class ShippingRepository extends Repository
             // Marchandises
             $this->mysql->prepareAndExecute(
                 $insertCargoStatement,
-                $call->getCargoes()->map(
+                $call->cargoes->map(
                     function ($cargo) use ($lastInsertId) {
                         return [
                             'escale_id' => $lastInsertId,
@@ -385,7 +394,7 @@ final class ShippingRepository extends Repository
 
             $this->mysql->commit();
         } catch (\PDOException $e) {
-            $this->mysql->rollBack();
+            $this->mysql->rollbackIfNeeded();
             throw new DBException("Erreur lors de la création", previous: $e);
         }
 
@@ -417,30 +426,30 @@ final class ShippingRepository extends Repository
             $callStatement =
                 "UPDATE consignation_planning
             SET
-                navire = :navire,
-                voyage = :voyage,
-                armateur = :armateur,
-                eta_date = :eta_date,
-                eta_heure = :eta_heure,
-                nor_date = :nor_date,
-                nor_heure = :nor_heure,
-                pob_date = :pob_date,
-                pob_heure = :pob_heure,
-                etb_date = :etb_date,
-                etb_heure = :etb_heure,
-                ops_date = :ops_date,
-                ops_heure = :ops_heure,
-                etc_date = :etc_date,
-                etc_heure = :etc_heure,
-                etd_date = :etd_date,
-                etd_heure = :etd_heure,
-                te_arrivee = :te_arrivee,
-                te_depart = :te_depart,
-                last_port = :last_port,
-                next_port = :next_port,
-                call_port = :call_port,
-                quai = :quai,
-                commentaire = :commentaire
+                navire = :shipName,
+                voyage = :voyageNumber,
+                armateur = :shipOperatorId,
+                eta_date = :etaDate,
+                eta_heure = :etaTime,
+                nor_date = :norDate,
+                nor_heure = :norTime,
+                pob_date = :pobDate,
+                pob_heure = :pobTime,
+                etb_date = :etbDate,
+                etb_heure = :etbTime,
+                ops_date = :opsDate,
+                ops_heure = :opsTime,
+                etc_date = :etcDate,
+                etc_heure = :etcTime,
+                etd_date = :etdDate,
+                etd_heure = :etdTime,
+                te_arrivee = :arrivalDraft,
+                te_depart = :departureDraft,
+                last_port = :lastPort,
+                next_port = :nextPort,
+                call_port = :callPort,
+                quai = :berth,
+                commentaire = :comment
             WHERE id = :id";
 
             $cargoStatement =
@@ -475,30 +484,30 @@ final class ShippingRepository extends Repository
 
             $callRequest = $this->mysql->prepare($callStatement);
             $callRequest->execute([
-                'navire' => $call->shipName,
-                'voyage' => $call->getVoyage(),
-                'armateur' => $call->getShipOperator()?->id,
-                'eta_date' => $call->getEtaDate()?->format('Y-m-d'),
-                'eta_heure' => ETAConverter::toDigits($call->getEtaTime()),
-                'nor_date' => $call->getNorDate()?->format('Y-m-d'),
-                'nor_heure' => $call->getNorTime(),
-                'pob_date' => $call->getPobDate()?->format('Y-m-d'),
-                'pob_heure' => $call->getPobTime(),
-                'etb_date' => $call->getEtbDate()?->format('Y-m-d'),
-                'etb_heure' => $call->getEtbTime(),
-                'ops_date' => $call->getOpsDate()?->format('Y-m-d'),
-                'ops_heure' => $call->getOpsTime(),
-                'etc_date' => $call->getEtcDate()?->format('Y-m-d'),
-                'etc_heure' => $call->getEtcTime(),
-                'etd_date' => $call->getEtdDate()?->format('Y-m-d'),
-                'etd_heure' => $call->getEtdTime(),
-                'te_arrivee' => $call->getArrivalDraft(),
-                'te_depart' => $call->getDepartureDraft(),
-                'last_port' => $call->getLastPort()?->getLocode() ?? '',
-                'next_port' => $call->getNextPort()?->getLocode() ?? '',
-                'call_port' => $call->getCallPort(),
-                'quai' => $call->getQuay(),
-                'commentaire' => $call->getComment(),
+                'shipName' => $call->shipName,
+                'voyageNumber' => $call->voyageNumber,
+                'shipOperatorId' => $call->shipOperator?->id,
+                'etaDate' => $call->etaDate?->format('Y-m-d'),
+                'etaTime' => ETAConverter::toDigits($call->etaTime),
+                'norDate' => $call->norDate?->format('Y-m-d'),
+                'norTime' => $call->norTime,
+                'pobDate' => $call->pobDate?->format('Y-m-d'),
+                'pobTime' => $call->pobTime,
+                'etbDate' => $call->etbDate?->format('Y-m-d'),
+                'etbTime' => $call->etbTime,
+                'opsDate' => $call->opsDate?->format('Y-m-d'),
+                'opsTime' => $call->opsTime,
+                'etcDate' => $call->etcDate?->format('Y-m-d'),
+                'etcTime' => $call->etcTime,
+                'etdDate' => $call->etdDate?->format('Y-m-d'),
+                'etdTime' => $call->etdTime,
+                'arrivalDraft' => $call->arrivalDraft,
+                'departureDraft' => $call->departureDraft,
+                'lastPort' => $call->lastPort->locode ?? '',
+                'nextPort' => $call->nextPort->locode ?? '',
+                'callPort' => $call->callPort,
+                'berth' => $call->berth,
+                'comment' => $call->comment,
                 'id' => $call->id,
             ]);
 
@@ -512,16 +521,16 @@ final class ShippingRepository extends Repository
             $existingCargoesIdsRequest->execute(['callId' => $call->id]);
             $existingCargoesIds = $existingCargoesIdsRequest->fetchAll(\PDO::FETCH_COLUMN);
 
-            $submittedCargoesIds = \array_map(fn(ShippingCallCargo $cargo) => $cargo->id, $call->getCargoes()->asArray());
+            $submittedCargoesIds = \array_map(fn($cargo) => $cargo->id, $call->cargoes->asArray());
             $cargoesIdsToBeDeleted = \array_diff($existingCargoesIds, $submittedCargoesIds);
 
             if (\count($cargoesIdsToBeDeleted) > 0) {
-                $this->mysql->exec("DELETE FROM consignation_escales_marchandises WHERE id IN (" . implode(",", $cargoesIdsToBeDeleted) . ")");
+                $this->mysql->exec("DELETE FROM consignation_escales_marchandises WHERE id IN (" . \implode(",", $cargoesIdsToBeDeleted) . ")");
             }
 
             // Ajout et modification marchandises
             $cargoRequest = $this->mysql->prepare($cargoStatement);
-            $cargoes = $call->getCargoes();
+            $cargoes = $call->cargoes;
             foreach ($cargoes as $cargo) {
                 $cargoRequest->execute([
                     'id' => $cargo->id,
@@ -544,7 +553,7 @@ final class ShippingRepository extends Repository
 
             $this->mysql->commit();
         } catch (\PDOException $e) {
-            $this->mysql->rollBack();
+            $this->mysql->rollbackIfNeeded();
             throw new DBException("Erreur lors de la mise à jour", previous: $e);
         }
 
@@ -589,7 +598,7 @@ final class ShippingRepository extends Repository
             [
                 "ship" => $shippingCall->shipName,
                 "port" => $shippingCall->callPort,
-                "berth" => $shippingCall->quay,
+                "berth" => $shippingCall->berth,
                 "reportId" => $shippingCall->shipReport->id,
             ]
         );
@@ -609,26 +618,23 @@ final class ShippingRepository extends Repository
         return $this->mysql->exists("consignation_escales_marchandises", $id);
     }
 
-    public function fetchCargoEntry(int $id): ?ShippingCallCargo
+    public function fetchCargoEntry(int $cargoId): ?ShippingCallCargo
     {
-        $statement = "SELECT * FROM consignation_escales_marchandises WHERE id = :id";
+        if (isset(static::$cache['cargoes'][$cargoId])) {
+            return static::$cache['cargoes'][$cargoId];
+        }
 
         try {
-            $request = $this->mysql->prepare($statement);
+            $statement = "SELECT * FROM consignation_escales_marchandises WHERE id = :cargoId";
 
-            if (!$request) {
-                throw new DBException("Impossible de récupérer la marchandise.");
-            }
-
-            $request->execute(["id" => $id]);
-
-            $cargoRaw = $request->fetch();
+            /** @var ?ShippingCallCargoArray */
+            $cargoRaw = $this->mysql->prepareAndExecute($statement, ["cargoId" => $cargoId])->fetch();
 
             if (!\is_array($cargoRaw)) return null;
 
-            /** @phpstan-var ShippingCallCargoArray $cargoRaw */
-
             $cargo = $this->shippingService->makeShippingCallCargoFromDatabase($cargoRaw);
+
+            static::$cache['cargoes'][$cargoId] = $cargo;
 
             return $cargo;
         } catch (\PDOException $e) {
@@ -804,7 +810,7 @@ final class ShippingRepository extends Repository
         }
 
         // Filtre
-        $idsAsString = join(",", $ids);
+        $idsAsString = \join(",", $ids);
 
         $callsStatement =
             "SELECT

@@ -74,7 +74,7 @@ final class InfoBannerController extends Controller
 
         // Filtre sur les catégories autorisées pour l'utilisateur
         foreach ($lines as $line) {
-            if (!$this->user->canAccess($line->getModule())) {
+            if (!$this->user->canAccess($line->module)) {
                 $lines->remove($line);
             }
         }
@@ -143,7 +143,7 @@ final class InfoBannerController extends Controller
         $input = $this->request->getBody();
 
         if (
-            !$this->user->canEdit($current->getModule())
+            !$this->user->canEdit($current->module)
             || !$this->user->canEdit(Module::tryFrom($input->getString('module')))
         ) {
             throw new AccessException("Vous n'avez pas les droits pour modifier les informations de ce module.");
@@ -177,8 +177,8 @@ final class InfoBannerController extends Controller
             throw new NotFoundException("Cette ligne de bandeau d'information n'existe pas.");
         }
 
-        if (!$this->user->canEdit($line->getModule())) {
-            throw new AccessException("Vous n'avez pas les droits pour supprimer les informations {$line->getModule()}.");
+        if (!$this->user->canEdit($line->module)) {
+            throw new AccessException("Vous n'avez pas les droits pour supprimer les informations {$line->module}.");
         }
 
         $this->infoBannerService->deleteLine($id);

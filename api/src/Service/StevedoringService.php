@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Core\Array\ArrayHandler;
+use App\Core\Array\Server;
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Client\BadRequestException;
 use App\Core\Exceptions\Client\ClientException;
@@ -25,11 +26,13 @@ use App\DTO\IgnoredCallDTO;
 use App\DTO\StevedoringDispatchDTO;
 use App\DTO\StevedoringSubcontractorsDataDTO;
 use App\DTO\TempWorkDispatchForDateDTO;
+use App\Entity\Shipping\ShippingCallCargo;
 use App\Entity\Stevedoring\ShipReport;
 use App\Entity\Stevedoring\ShipReportEquipmentEntry;
 use App\Entity\Stevedoring\ShipReportStaffEntry;
 use App\Entity\Stevedoring\ShipReportStorageEntry;
 use App\Entity\Stevedoring\ShipReportSubcontractEntry;
+use App\Entity\Stevedoring\ShipSubreport;
 use App\Entity\Stevedoring\StevedoringEquipment;
 use App\Entity\Stevedoring\StevedoringStaff;
 use App\Entity\Stevedoring\TempWorkHoursEntry;
@@ -41,6 +44,7 @@ use Mpdf\Mpdf;
  * @phpstan-import-type StevedoringStaffArray from \App\Entity\Stevedoring\StevedoringStaff
  * @phpstan-import-type StevedoringEquipmentArray from \App\Entity\Stevedoring\StevedoringEquipment
  * @phpstan-import-type ShipReportArray from \App\Entity\Stevedoring\ShipReport
+ * @phpstan-import-type ShipSubreportArray from \App\Entity\Stevedoring\ShipSubreport
  * @phpstan-import-type ShipReportEquipmentEntryArray from \App\Entity\Stevedoring\ShipReportEquipmentEntry
  * @phpstan-import-type ShipReportStaffEntryArray from \App\Entity\Stevedoring\ShipReportStaffEntry
  * @phpstan-import-type ShipReportSubcontractEntryArray from \App\Entity\Stevedoring\ShipReportSubcontractEntry
@@ -296,7 +300,7 @@ final class StevedoringService
 
         $reportDataDto = $this->stevedoringRepository->fetchTempWorkHoursReportData($monday, $sunday);
 
-        $agencyInfo = (new AgencyService())->getDepartment('general');
+        $agencyInfo = new AgencyService()->getDepartment('general');
 
         if (!\extension_loaded('zip')) {
             throw new ServerException(
@@ -389,80 +393,44 @@ final class StevedoringService
 
     public function makeShipReportFromRequest(HTTPRequestBody $request): ShipReport
     {
-        $stevedoringShipReport = new ShipReport($request);
+        $shipReport = new ShipReport($request);
 
         $linkedShippingCallId = $request->getInt('linkedShippingCallId');
 
         if ($linkedShippingCallId !== null) {
-            $stevedoringShipReport->linkedShippingCall =
+            $shipReport->linkedShippingCall =
                 new ShippingService()->getShippingCall($linkedShippingCallId);
 
-            if (!$stevedoringShipReport->linkedShippingCall) {
+            if (!$shipReport->linkedShippingCall) {
                 throw new BadRequestException("L'escale consignation {$linkedShippingCallId} n'existe pas.");
             }
         }
 
-        $entriesByDate = $request->getArray('entriesByDate');
-
-        /**
-         * @var string $date
-         * @phpstan-var array{
-         *                 cranes: ShipReportEquipmentEntryArray[],
-         *                 equipments: ShipReportEquipmentEntryArray[],
-         *                 permanentStaff: ShipReportStaffEntryArray[],
-         *                 tempStaff: ShipReportStaffEntryArray[],
-         *                 trucking: ShipReportSubcontractEntryArray[],
-         *                 otherSubcontracts: ShipReportSubcontractEntryArray[],
-         *               } $entriesByType
-         */
-        foreach ($entriesByDate as $date => $entriesByType) {
-            foreach ($entriesByType as $type => $entries) {
-                foreach ($entries as $entryAsArray) {
-                    if ($type === 'equipments' || $type === 'cranes') {
-                        /** @phpstan-var ShipReportEquipmentEntryArray $entryAsArray */
-                        $entry = $this->makeShipReportEquipmentEntryFromRequest($entryAsArray);
-                        $entry->report = $stevedoringShipReport;
-                        $entry->date = $date;
-                        $stevedoringShipReport->equipmentEntries->add($entry);
-                    } elseif ($type === 'permanentStaff' || $type === 'tempStaff') {
-                        /** @phpstan-var ShipReportStaffEntryArray $entryAsArray */
-                        $entry = $this->makeShipReportStaffEntryFromRequest($entryAsArray);
-                        $entry->report = $stevedoringShipReport;
-                        $entry->date = $date;
-                        $stevedoringShipReport->staffEntries->add($entry);
-                    } elseif ($type === 'trucking' || $type === 'otherSubcontracts') {
-                        /** @phpstan-var ShipReportSubcontractEntryArray $entryAsArray */
-                        $entry = $this->makeShipReportSubcontractEntryFromRequest($entryAsArray);
-                        $entry->report = $stevedoringShipReport;
-                        $entry->date = $date;
-                        $entry->type = $type;
-                        $stevedoringShipReport->subcontractEntries->add($entry);
-                    }
-                }
-            }
-        }
-
-        /** @phpstan-var ShippingCallCargoArray[] */
+        /** @var ShippingCallCargoArray[] */
         $cargoEntries = $request->getArray('cargoEntries');
 
-        $stevedoringShipReport->setCargoEntries(
-            \array_map(
-                fn(array $entry) => new ShippingService()->makeShippingCallCargoFromRequest($entry),
-                $cargoEntries
-            )
-        );
+        $shipReport->cargoEntries = new Collection(\array_map(
+            fn(array $entry) => new ShippingService()->makeShippingCallCargoFromRequest($entry),
+            $cargoEntries
+        ));
 
-        /** @phpstan-var ShipReportStorageEntryArray[] */
+        /** @var ShipReportStorageEntryArray[] */
         $storageEntries = $request->getArray('storageEntries');
 
-        $stevedoringShipReport->setStorageEntries(
-            \array_map(
-                fn(array $entry) => $this->makeShipReportStorageEntryFromRequest($entry),
-                $storageEntries
-            )
-        );
+        $shipReport->storageEntries = new Collection(\array_map(
+            fn(array $entry) => $this->makeShipReportStorageEntryFromRequest($entry),
+            $storageEntries
+        ));
 
-        return $stevedoringShipReport;
+        /** @var array<array<mixed>> */
+        $subreportsArray = $request->getArray('subreports');
+
+        $shipReport->subreports = new Collection(\array_map(
+            fn(array $subreport) => $this->makeShipSubreportFromRequest($subreport, $shipReport->cargoEntries),
+            $subreportsArray
+        ));
+
+        return $shipReport;
     }
 
     public function shipReportExists(int $id): bool
@@ -510,6 +478,83 @@ final class StevedoringService
     {
         $this->stevedoringRepository->deleteShipReport($id);
     }
+
+    // ===============
+    // Ship subreports
+    // ===============
+
+    /**
+     * @param ShipSubreportArray $rawData
+     */
+    public function makeShipSubreportFromDatabase(array $rawData): ShipSubreport
+    {
+        $rawDataAH = new ArrayHandler($rawData);
+
+        $subreport = new ShipSubreport();
+        $subreport->id = $rawDataAH->getInt('id');
+
+        return $subreport;
+    }
+
+    /**
+     * @param array<mixed> $rawData
+     * @param Collection<ShippingCallCargo> $reportCargoEntries
+     */
+    public function makeShipSubreportFromRequest(array $rawData, Collection $reportCargoEntries): ShipSubreport
+    {
+        $rawDataAH = new ArrayHandler($rawData);
+
+        $subreport = new ShipSubreport();
+
+        $subreport->id = $rawDataAH->getInt('id');
+        $entriesByDate = $rawDataAH->getArray('entriesByDate');
+
+        /**
+         * @var string $date
+         * @var array{
+         *        cranes: ShipReportEquipmentEntryArray[],
+         *        equipments: ShipReportEquipmentEntryArray[],
+         *        permanentStaff: ShipReportStaffEntryArray[],
+         *        tempStaff: ShipReportStaffEntryArray[],
+         *        trucking: ShipReportSubcontractEntryArray[],
+         *        otherSubcontracts: ShipReportSubcontractEntryArray[],
+         *      } $entriesByType
+         */
+        foreach ($entriesByDate as $date => $entriesByType) {
+            foreach ($entriesByType as $type => $entries) {
+                foreach ($entries as $entryAsArray) {
+                    if ($type === 'equipments' || $type === 'cranes') {
+                        /** @var ShipReportEquipmentEntryArray $entryAsArray */
+                        $entry = $this->makeShipReportEquipmentEntryFromRequest($entryAsArray);
+                        $entry->subreport = $subreport;
+                        $entry->date = $date;
+                        $subreport->equipmentEntries->add($entry);
+                    } elseif ($type === 'permanentStaff' || $type === 'tempStaff') {
+                        /** @var ShipReportStaffEntryArray $entryAsArray */
+                        $entry = $this->makeShipReportStaffEntryFromRequest($entryAsArray);
+                        $entry->subreport = $subreport;
+                        $entry->date = $date;
+                        $subreport->staffEntries->add($entry);
+                    } elseif ($type === 'trucking' || $type === 'otherSubcontracts') {
+                        /** @var ShipReportSubcontractEntryArray $entryAsArray */
+                        $entry = $this->makeShipReportSubcontractEntryFromRequest($entryAsArray);
+                        $entry->subreport = $subreport;
+                        $entry->date = $date;
+                        $entry->type = $type;
+                        $subreport->subcontractEntries->add($entry);
+                    }
+                }
+            }
+        }
+
+        /** @var int[] */
+        $cargoIds = $rawDataAH->getArray('cargoIds');
+
+        $subreport->cargoEntries = $reportCargoEntries->filter(fn($entry) => \in_array($entry->id, $cargoIds));
+
+        return $subreport;
+    }
+
 
     // =============================
     // Ship report equipment entries
@@ -719,7 +764,7 @@ final class StevedoringService
     // PDF
     // ===
 
-    public function getShipReportPdf(int $id): string
+    public function makeShipReportPdf(int $id): string
     {
         $report = $this->getShipReport($id);
 
@@ -727,146 +772,156 @@ final class StevedoringService
             throw new NotFoundException("Le rapport navire {$id} n'existe pas.");
         }
 
-        $days = \array_keys($report->getEntriesByDate());
-
-        /**
-         * @var array{
-         *        entries: Map<StevedoringEquipment, array<string, ShipReportEquipmentEntry>>,
-         *        totals: array{
-         *                  byDay: array<string, array{hoursWorked: float}>,
-         *                  total: array{hoursWorked: float},
-         *                }
-         *      }
-         */
-        $craneEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0]]];
-        /**
-         * @var array{
-         *        entries: Map<StevedoringEquipment, array<string, ShipReportEquipmentEntry>>,
-         *        totals: array{
-         *                  byDay: array<string, array{hoursWorked: float}>,
-         *                  total: array{hoursWorked: float},
-         *                }
-         *      }
-         */
-        $equipmentEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0]]];
-        foreach ($report->equipmentEntries as $entry) {
-            if (!$entry->equipment || !$entry->date) continue;
-            $entry->equipment->isCrane
-                ? $map = &$craneEntries
-                : $map = &$equipmentEntries;
-            $map['entries'][$entry->equipment] ??= [];
-            $date = $entry->date->format('Y-m-d');
-            $map['entries'][$entry->equipment][$date] = $entry;
-            $map['totals']['byDay'][$date] ??= ['hoursWorked' => 0];
-            $map['totals']['byDay'][$date]['hoursWorked'] += $entry->hoursWorked;
-            $map['totals']['total']['hoursWorked'] += $entry->hoursWorked;
-            unset($map);
-        }
-
-        /**
-         * @var array{
-         *        entries: Map<StevedoringStaff, array<string, ShipReportStaffEntry>>,
-         *        totals: array{
-         *                  byDay: array<string, array{hoursWorked: float}>,
-         *                  total: array{hoursWorked: float},
-         *                }
-         *      }
-         */
-        $permanentStaffEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0]]];
-        /**
-         * @var array{
-         *        entries: Map<StevedoringStaff, array<string, ShipReportStaffEntry>>,
-         *        totals: array{
-         *                  byDay: array<string, array{hoursWorked: float}>,
-         *                  total: array{hoursWorked: float},
-         *                }
-         *      }
-         */
-        $tempStaffEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0]]];
-        foreach ($report->staffEntries as $entry) {
-            if (!$entry->staff || !$entry->date) continue;
-            $entry->staff->type === 'mensuel'
-                ? $map = &$permanentStaffEntries
-                : $map =  &$tempStaffEntries;
-            $map['entries'][$entry->staff] ??= [];
-            $date = $entry->date->format('Y-m-d');
-            $map['entries'][$entry->staff][$date] = $entry;
-            $map['totals']['byDay'][$date] ??= ['hoursWorked' => 0];
-            $map['totals']['byDay'][$date]['hoursWorked'] += $entry->hoursWorked;
-            $map['totals']['total']['hoursWorked'] += $entry->hoursWorked;
-            unset($map);
-        }
-
-        /**
-         * @var array{
-         *        entries: Map<string, array<string, ShipReportSubcontractEntry>>,
-         *        totals: array{
-         *                  byDay: array<string, array{hoursWorked: float, cost: float}>,
-         *                  total: array{hoursWorked: float, cost: float},
-         *                }
-         *      }
-         */
-        $truckingEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0, 'cost' => 0.0]]];
-        /**
-         * @var array{
-         *        entries: Map<string, array<string, ShipReportSubcontractEntry>>,
-         *        totals: array{
-         *                  byDay: array<string, array{hoursWorked: float, cost: float}>,
-         *                  total: array{hoursWorked: float, cost: float},
-         *                }
-         *      }
-         */
-        $otherSubcontractsEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0, 'cost' => 0.0]]];
-        foreach ($report->subcontractEntries as $entry) {
-            if (!$entry->date) continue;
-            $entry->type === 'trucking'
-                ? $map = &$truckingEntries
-                : $map = &$otherSubcontractsEntries;
-            $map['entries'][$entry->subcontractorName] ??= [];
-            $date = $entry->date->format('Y-m-d');
-            $map['entries'][$entry->subcontractorName][$date] = $entry;
-            $map['totals']['byDay'][$date] ??= ['hoursWorked' => 0, 'cost' => 0];
-            $map['totals']['byDay'][$date]['hoursWorked'] += $entry->hoursWorked;
-            $map['totals']['byDay'][$date]['cost'] += $entry->cost;
-            $map['totals']['total']['hoursWorked'] += $entry->hoursWorked;
-            $map['totals']['total']['cost'] += $entry->cost;
-            unset($map);
-        }
-
-        $html = new Twig()->render('ship-report/ship-report.html.twig', [
-            'shipName' => $report->ship,
-            'customers' => \join(', ', $report->getCustomers()),
-            'cargoNames' => \join(', ', $report->getCargoNames()),
-            'comments' => $report->comments,
-            'invoiceInstructions' => $report->invoiceInstructions,
-            'port' => $report->port,
-            'berth' => $report->berth,
-            'cargoEntries' => $report->cargoEntries,
-            'cargoTotals' => $report->calculateCargoTotals(),
-            'storageEntries' => $report->storageEntries,
-            'storageTotals' => $report->calculateStorageTotals(),
-            'days' => $days,
-            'craneEntries' => $craneEntries,
-            'equipmentEntries' => $equipmentEntries,
-            'permanentStaffEntries' => $permanentStaffEntries,
-            'tempStaffEntries' => $tempStaffEntries,
-            'truckingEntries' => $truckingEntries,
-            'otherSubcontractsEntries' => $otherSubcontractsEntries,
-        ]);
-
         $pdfReport = new Mpdf([
             'format' => 'A4',
             'orientation' => 'P',
             'tempDir' => sys_get_temp_dir(),
+            'mirrorMargins' => true, // recto-verso printing
         ]);
+        $pdfReport->SetDocTemplate('', true,);
         $pdfReport->SetTitle("Rapport navire - " . $report->ship);
         // @phpstan-ignore-next-line
         $pdfReport->imageVars['logo'] = \file_get_contents(API . '/images/logo_agence_combi_moyen.png');
-        $pdfReport->WriteHTML($html);
-        /** @var string */
+
+        foreach ($report->subreports as $subreport) {
+            $pdfReport->AddPage();
+
+            $days = \array_keys($subreport->getEntriesByDate());
+
+            /**
+             * @var array{
+             *        entries: Map<StevedoringEquipment, array<string, ShipReportEquipmentEntry>>,
+             *        totals: array{
+             *                  byDay: array<string, array{hoursWorked: float}>,
+             *                  total: array{hoursWorked: float},
+             *                }
+             *      }
+             */
+            $craneEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0]]];
+            /**
+             * @var array{
+             *        entries: Map<StevedoringEquipment, array<string, ShipReportEquipmentEntry>>,
+             *        totals: array{
+             *                  byDay: array<string, array{hoursWorked: float}>,
+             *                  total: array{hoursWorked: float},
+             *                }
+             *      }
+             */
+            $equipmentEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0]]];
+            foreach ($subreport->equipmentEntries as $entry) {
+                if (!$entry->equipment || !$entry->date) continue;
+                $entry->equipment->isCrane
+                    ? $map = &$craneEntries
+                    : $map = &$equipmentEntries;
+                $map['entries'][$entry->equipment] ??= [];
+                $date = $entry->date->format('Y-m-d');
+                $map['entries'][$entry->equipment][$date] = $entry;
+                $map['totals']['byDay'][$date] ??= ['hoursWorked' => 0];
+                $map['totals']['byDay'][$date]['hoursWorked'] += $entry->hoursWorked;
+                $map['totals']['total']['hoursWorked'] += $entry->hoursWorked;
+                unset($map);
+            }
+
+            /**
+             * @var array{
+             *        entries: Map<StevedoringStaff, array<string, ShipReportStaffEntry>>,
+             *        totals: array{
+             *                  byDay: array<string, array{hoursWorked: float}>,
+             *                  total: array{hoursWorked: float},
+             *                }
+             *      }
+             */
+            $permanentStaffEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0]]];
+            /**
+             * @var array{
+             *        entries: Map<StevedoringStaff, array<string, ShipReportStaffEntry>>,
+             *        totals: array{
+             *                  byDay: array<string, array{hoursWorked: float}>,
+             *                  total: array{hoursWorked: float},
+             *                }
+             *      }
+             */
+            $tempStaffEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0]]];
+            foreach ($subreport->staffEntries as $entry) {
+                if (!$entry->staff || !$entry->date) continue;
+                $entry->staff->type === 'mensuel'
+                    ? $map = &$permanentStaffEntries
+                    : $map =  &$tempStaffEntries;
+                $map['entries'][$entry->staff] ??= [];
+                $date = $entry->date->format('Y-m-d');
+                $map['entries'][$entry->staff][$date] = $entry;
+                $map['totals']['byDay'][$date] ??= ['hoursWorked' => 0];
+                $map['totals']['byDay'][$date]['hoursWorked'] += $entry->hoursWorked;
+                $map['totals']['total']['hoursWorked'] += $entry->hoursWorked;
+                unset($map);
+            }
+
+            /**
+             * @var array{
+             *        entries: Map<string, array<string, ShipReportSubcontractEntry>>,
+             *        totals: array{
+             *                  byDay: array<string, array{hoursWorked: float, cost: float}>,
+             *                  total: array{hoursWorked: float, cost: float},
+             *                }
+             *      }
+             */
+            $truckingEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0, 'cost' => 0.0]]];
+            /**
+             * @var array{
+             *        entries: Map<string, array<string, ShipReportSubcontractEntry>>,
+             *        totals: array{
+             *                  byDay: array<string, array{hoursWorked: float, cost: float}>,
+             *                  total: array{hoursWorked: float, cost: float},
+             *                }
+             *      }
+             */
+            $otherSubcontractsEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0, 'cost' => 0.0]]];
+            foreach ($subreport->subcontractEntries as $entry) {
+                if (!$entry->date) continue;
+                $entry->type === 'trucking'
+                    ? $map = &$truckingEntries
+                    : $map = &$otherSubcontractsEntries;
+                $map['entries'][$entry->subcontractorName] ??= [];
+                $date = $entry->date->format('Y-m-d');
+                $map['entries'][$entry->subcontractorName][$date] = $entry;
+                $map['totals']['byDay'][$date] ??= ['hoursWorked' => 0, 'cost' => 0];
+                $map['totals']['byDay'][$date]['hoursWorked'] += $entry->hoursWorked;
+                $map['totals']['byDay'][$date]['cost'] += $entry->cost;
+                $map['totals']['total']['hoursWorked'] += $entry->hoursWorked;
+                $map['totals']['total']['cost'] += $entry->cost;
+                unset($map);
+            }
+
+            $html = new Twig()->render('ship-report/ship-report.html.twig', [
+                'shipName' => $report->ship,
+                'customers' => \join(', ', $subreport->getCustomers()),
+                'cargoNames' => \join(', ', $subreport->getCargoNames()),
+                'comments' => $report->comments,
+                'invoiceInstructions' => $report->invoiceInstructions,
+                'port' => $report->port,
+                'berth' => $report->berth,
+                'cargoEntries' => $subreport->cargoEntries,
+                'cargoTotals' => $subreport->calculateCargoTotals(),
+                'storageEntries' => $subreport->storageEntries,
+                'storageTotals' => $subreport->calculateStorageTotals(),
+                'days' => $days,
+                'craneEntries' => $craneEntries,
+                'equipmentEntries' => $equipmentEntries,
+                'permanentStaffEntries' => $permanentStaffEntries,
+                'tempStaffEntries' => $tempStaffEntries,
+                'truckingEntries' => $truckingEntries,
+                'otherSubcontractsEntries' => $otherSubcontractsEntries,
+            ]);
+
+            $pdfReport->WriteHTML($html);
+        }
+
         $pdfAsString = $pdfReport->Output('', 'S');
 
-        // return $html;
+        if (!\is_string($pdfAsString)) {
+            throw new ServerException("Impossible de générer le PDF.");
+        }
+
         return $pdfAsString;
     }
 }
