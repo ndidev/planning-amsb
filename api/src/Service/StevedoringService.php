@@ -764,7 +764,7 @@ final class StevedoringService
     // PDF
     // ===
 
-    public function getShipReportPdf(int $id): string
+    public function makeShipReportPdf(int $id): string
     {
         $report = $this->getShipReport($id);
 
