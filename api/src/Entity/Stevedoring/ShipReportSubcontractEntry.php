@@ -18,6 +18,7 @@ use App\Entity\AbstractEntity;
  * @phpstan-type ShipReportSubcontractEntryArray array{
  *                                                 id: int,
  *                                                 ship_report_id: int,
+ *                                                 subreport_id: int,
  *                                                 subcontractor_name: string,
  *                                                 date: string,
  *                                                 hours_worked: float|null,
@@ -29,7 +30,7 @@ final class ShipReportSubcontractEntry extends AbstractEntity
 {
     use IdentifierTrait;
 
-    public ?ShipReport $report = null;
+    public ?ShipSubreport $subreport = null;
 
     #[Required("Le nom du sous-traitant est obligatoire.")]
     public string $subcontractorName = '';

@@ -42,6 +42,15 @@ final class ShippingRepository extends Repository
     /** @var ReflectionClass<ShippingCall> */
     private ReflectionClass $callReflector;
 
+    /**
+     * @var array{
+     *        cargoes: array<int, ShippingCallCargo>,
+     *      }
+     */
+    private static array $cache = [
+        'cargoes' => [],
+    ];
+
     public function __construct(private ShippingService $shippingService)
     {
         $this->callReflector = new ReflectionClass(ShippingCall::class);
@@ -609,26 +618,23 @@ final class ShippingRepository extends Repository
         return $this->mysql->exists("consignation_escales_marchandises", $id);
     }
 
-    public function fetchCargoEntry(int $id): ?ShippingCallCargo
+    public function fetchCargoEntry(int $cargoId): ?ShippingCallCargo
     {
-        $statement = "SELECT * FROM consignation_escales_marchandises WHERE id = :id";
+        if (isset(static::$cache['cargoes'][$cargoId])) {
+            return static::$cache['cargoes'][$cargoId];
+        }
 
         try {
-            $request = $this->mysql->prepare($statement);
+            $statement = "SELECT * FROM consignation_escales_marchandises WHERE id = :cargoId";
 
-            if (!$request) {
-                throw new DBException("Impossible de récupérer la marchandise.");
-            }
-
-            $request->execute(["id" => $id]);
-
-            $cargoRaw = $request->fetch();
+            /** @var ?ShippingCallCargoArray */
+            $cargoRaw = $this->mysql->prepareAndExecute($statement, ["cargoId" => $cargoId])->fetch();
 
             if (!\is_array($cargoRaw)) return null;
 
-            /** @phpstan-var ShippingCallCargoArray $cargoRaw */
-
             $cargo = $this->shippingService->makeShippingCallCargoFromDatabase($cargoRaw);
+
+            static::$cache['cargoes'][$cargoId] = $cargo;
 
             return $cargo;
         } catch (\PDOException $e) {

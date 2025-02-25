@@ -18,6 +18,7 @@ use App\Entity\Stevedoring\StevedoringEquipment;
  * @phpstan-type ShipReportEquipmentEntryArray array{
  *                                               id: int,
  *                                               ship_report_id: int,
+ *                                               subreport_id: int,
  *                                               equipment_id: int,
  *                                               date: string,
  *                                               hours_worked: float,
@@ -28,7 +29,7 @@ final class ShipReportEquipmentEntry extends AbstractEntity
 {
     use IdentifierTrait;
 
-    public ?ShipReport $report = null;
+    public ?ShipSubreport $subreport = null;
 
     #[Required("L'équipement de manutention est obligatoire.")]
     public ?StevedoringEquipment $equipment = null;

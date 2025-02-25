@@ -1,114 +1,131 @@
 <?php
 
-// Path: api/src/Entity/Stevedoring/ShipReport.php
+// Path: api/src/Entity/Stevedoring/ShipSubreport.php
 
 declare(strict_types=1);
 
 namespace App\Entity\Stevedoring;
 
-use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
-use App\Core\Component\DateUtils;
 use App\Core\Traits\IdentifierTrait;
-use App\Core\Validation\Constraints\Required;
 use App\Entity\AbstractEntity;
-use App\Entity\Shipping\ShippingCall;
 use App\Entity\Shipping\ShippingCallCargo;
 
 /**
- * @phpstan-type ShipReportArray array{
- *                                 id: int,
- *                                 isArchive: bool,
- *                                 linkedShippingCallId: int|null,
- *                                 ship: string,
- *                                 port: string,
- *                                 berth: string,
- *                                 comments: string,
- *                                 invoiceInstructions: string,
- *                                 startDate?: string,
- *                                 endDate?: string,
- *                               }
+ * @phpstan-type ShipSubreportArray array{
+ *                                    id: int,
+ *                                    ship_report_id: int,
+ *                                  }
  */
-final class ShipReport extends AbstractEntity
+final class ShipSubreport extends AbstractEntity
 {
     use IdentifierTrait;
 
-    public ?ShippingCall $linkedShippingCall = null;
+    public ShipReport $shipReport;
 
-    public bool $isArchive = false;
+    /** @var Collection<ShippingCallCargo> */
+    public Collection $cargoEntries;
 
-    #[Required("Le nom du navire est obligatoire.")]
-    public string $ship = '';
-
-    public string $port = '';
-
-    public string $berth = '';
-
-    public string $comments = '';
-
-    public string $invoiceInstructions = '';
-
-    public ?\DateTimeImmutable $startDate = null {
-        set(\DateTimeImmutable|string|null $value) {
-            $this->startDate = DateUtils::makeDateTimeImmutable($value);
-        }
-    }
-
-    public ?\DateTimeImmutable $endDate = null {
-        set(\DateTimeImmutable|string|null $value) {
-            $this->endDate = DateUtils::makeDateTimeImmutable($value);
-        }
-    }
-
-    /** @var Collection<ShipSubreport> */
-    public Collection $subreports {
-        set => $value->each(function ($subreport) {
+    /** @var Collection<ShipReportEquipmentEntry> */
+    public Collection $equipmentEntries {
+        set => $value->each(function ($entry) {
             /** @disregard P1006 */
-            $subreport->shipReport = $this;
+            $entry->subreport = $this;
         });
     }
 
-    /** @var Collection<ShippingCallCargo> */
-    public Collection $cargoEntries {
+    /** @var Collection<ShipReportStaffEntry> */
+    public Collection $staffEntries {
         set => $value->each(function ($entry) {
             /** @disregard P1006 */
-            $entry->shipReport = $this;
-            $entry->shippingCall = $this->linkedShippingCall;
+            $entry->subreport = $this;
+        });
+    }
+
+    /** @var Collection<ShipReportSubcontractEntry> */
+    public Collection $subcontractEntries {
+        set => $value->each(function ($entry) {
+            /** @disregard P1006 */
+            $entry->subreport = $this;
         });
     }
 
     /** @var Collection<ShipReportStorageEntry> */
     public Collection $storageEntries {
-        set => $value->each(function ($entry) {
-            /** @disregard P1006 */
-            $entry->report = $this;
-        });
+        get => $this->shipReport->storageEntries->filter(fn($entry) => $this->cargoEntries->includes($entry->cargo));
     }
 
-    /** 
-     * @param ArrayHandler|ShipReportArray|null $data 
-     */
-    public function __construct(ArrayHandler|array|null $data = null)
+    public function __construct()
     {
-        $this->subreports = new Collection();
         $this->cargoEntries = new Collection();
-        $this->storageEntries = new Collection();
+        $this->equipmentEntries = new Collection();
+        $this->staffEntries = new Collection();
+        $this->subcontractEntries = new Collection();
+    }
 
-        if (null === $data) {
-            return;
+    /**
+     * @return array<string, array{
+     *                         cranes: ShipReportEquipmentEntry[],
+     *                         equipments: ShipReportEquipmentEntry[],
+     *                         permanentStaff: ShipReportStaffEntry[],
+     *                         tempStaff: ShipReportStaffEntry[],
+     *                         trucking: ShipReportSubcontractEntry[],
+     *                         otherSubcontracts: ShipReportSubcontractEntry[],
+     *                       }
+     *         >
+     */
+    public function getEntriesByDate(): array
+    {
+        /** @var array<ShipReportStaffEntry|ShipReportEquipmentEntry|ShipReportSubcontractEntry> */
+        $allEntries = \array_merge(
+            $this->equipmentEntries->asArray(),
+            $this->staffEntries->asArray(),
+            $this->subcontractEntries->asArray(),
+        );
+
+        $entriesByDate = [];
+
+        foreach ($allEntries as $entry) {
+            if (!$entry->date) continue;
+
+            $dateString = $entry->date->format('Y-m-d');
+
+            if (!isset($entriesByDate[$dateString])) {
+                $entriesByDate[$dateString] = [
+                    'cranes' => [],
+                    'equipments' => [],
+                    'permanentStaff' => [],
+                    'tempStaff' => [],
+                    'trucking' => [],
+                    'otherSubcontracts' => [],
+                ];
+            }
+
+            if ($entry instanceof ShipReportEquipmentEntry) {
+                if ($entry->equipment?->isCrane) {
+                    $entriesByDate[$dateString]['cranes'][] = $entry;
+                } else {
+                    $entriesByDate[$dateString]['equipments'][] = $entry;
+                }
+            } elseif ($entry instanceof ShipReportStaffEntry) {
+                if ($entry->staff?->type === "mensuel") {
+                    $entriesByDate[$dateString]['permanentStaff'][] = $entry;
+                }
+                if ($entry->staff?->type === "interim") {
+                    $entriesByDate[$dateString]['tempStaff'][] = $entry;
+                }
+            } elseif ($entry instanceof ShipReportSubcontractEntry) {
+                if ($entry->type === "trucking") {
+                    $entriesByDate[$dateString]['trucking'][] = $entry;
+                } else {
+                    $entriesByDate[$dateString]['otherSubcontracts'][] = $entry;
+                }
+            }
         }
 
-        $dataAH = $data instanceof ArrayHandler ? $data : new ArrayHandler($data);
+        ksort($entriesByDate);
 
-        $this->id = $dataAH->getInt('id');
-        $this->isArchive = $dataAH->getBool('isArchive');
-        $this->ship = $dataAH->getString('ship');
-        $this->port = $dataAH->getString('port');
-        $this->berth = $dataAH->getString('berth');
-        $this->comments = $dataAH->getString('comments');
-        $this->invoiceInstructions = $dataAH->getString('invoiceInstructions');
-        $this->startDate = $dataAH->getDatetime('startDate');
-        $this->endDate = $dataAH->getDatetime('endDate');
+        return $entriesByDate;
     }
 
     /**
@@ -234,18 +251,8 @@ final class ShipReport extends AbstractEntity
     {
         return [
             'id' => $this->id,
-            'isArchive' => $this->isArchive,
-            'linkedShippingCallId' => $this->linkedShippingCall?->id,
-            'ship' => $this->ship,
-            'port' => $this->port,
-            'berth' => $this->berth,
-            'comments' => $this->comments,
-            'invoiceInstructions' => $this->invoiceInstructions,
-            'customers' => $this->getCustomers(),
-            'startDate' => $this->startDate?->format('Y-m-d'),
-            'endDate' => $this->endDate?->format('Y-m-d'),
-            'subreports' => $this->subreports->toArray(),
-            'cargoEntries' => $this->cargoEntries->toArray(),
+            'entriesByDate' => $this->getEntriesByDate(),
+            'cargoIds' => $this->cargoEntries->map(fn($entry) => $entry->id),
             'cargoTotals' => $this->calculateCargoTotals(),
             'storageEntries' => $this->storageEntries->toArray(),
             'storageTotals' => $this->calculateStorageTotals(),

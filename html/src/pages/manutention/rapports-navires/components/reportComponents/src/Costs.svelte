@@ -7,33 +7,33 @@
 
   import type { StevedoringShipReport } from "@app/types";
 
-  export let report: StevedoringShipReport;
+  export let subreport: StevedoringShipReport["subreports"][number];
 
-  let totalCraneHours = Object.values(report.entriesByDate)
+  let totalCraneHours = Object.values(subreport.entriesByDate)
     .flatMap(({ cranes }) => cranes)
     .reduce((acc, curr) => acc + curr.hoursWorked, 0);
 
   let costs = {
     // Standard costs
-    permanentStaffHours: Object.values(report.entriesByDate)
+    permanentStaffHours: Object.values(subreport.entriesByDate)
       .flatMap(({ permanentStaff }) => permanentStaff)
       .reduce((acc, curr) => acc + curr.hoursWorked, 0),
     craneHours: totalCraneHours,
-    equipmentHours: Object.values(report.entriesByDate)
+    equipmentHours: Object.values(subreport.entriesByDate)
       .flatMap(({ equipments }) => equipments)
       .reduce((acc, curr) => acc + curr.hoursWorked, 0),
 
     // Subcontracts
-    tempStaffHours: Object.values(report.entriesByDate)
+    tempStaffHours: Object.values(subreport.entriesByDate)
       .flatMap(({ tempStaff }) => tempStaff)
       .reduce((acc, curr) => acc + curr.hoursWorked, 0),
-    truckingHours: Object.values(report.entriesByDate)
+    truckingHours: Object.values(subreport.entriesByDate)
       .flatMap(({ trucking }) => trucking)
       .reduce((acc, curr) => acc + curr.hoursWorked, 0),
-    truckingCost: Object.values(report.entriesByDate)
+    truckingCost: Object.values(subreport.entriesByDate)
       .flatMap(({ trucking }) => trucking)
       .reduce((acc, curr) => acc + curr.cost, 0),
-    truckingDetails: Object.values(report.entriesByDate)
+    truckingDetails: Object.values(subreport.entriesByDate)
       .flatMap(({ trucking }) => trucking)
       .reduce(
         (acc: { [name: string]: { hours: number; cost: number } }, curr) => {
@@ -51,13 +51,13 @@
         },
         {}
       ),
-    otherSubcontractsHours: Object.values(report.entriesByDate)
+    otherSubcontractsHours: Object.values(subreport.entriesByDate)
       .flatMap(({ otherSubcontracts }) => otherSubcontracts)
       .reduce((acc, curr) => acc + curr.hoursWorked, 0),
-    otherSubcontractsCost: Object.values(report.entriesByDate)
+    otherSubcontractsCost: Object.values(subreport.entriesByDate)
       .flatMap(({ otherSubcontracts }) => otherSubcontracts)
       .reduce((acc, curr) => acc + curr.cost, 0),
-    otherSubcontractsDetails: Object.values(report.entriesByDate)
+    otherSubcontractsDetails: Object.values(subreport.entriesByDate)
       .flatMap(({ otherSubcontracts }) => otherSubcontracts)
       .reduce(
         (acc: { [name: string]: { hours: number; cost: number } }, curr) => {
