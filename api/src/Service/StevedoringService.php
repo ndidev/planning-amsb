@@ -776,7 +776,9 @@ final class StevedoringService
             'format' => 'A4',
             'orientation' => 'P',
             'tempDir' => sys_get_temp_dir(),
+            'mirrorMargins' => true, // recto-verso printing
         ]);
+        $pdfReport->SetDocTemplate('', true,);
         $pdfReport->SetTitle("Rapport navire - " . $report->ship);
         // @phpstan-ignore-next-line
         $pdfReport->imageVars['logo'] = \file_get_contents(API . '/images/logo_agence_combi_moyen.png');
