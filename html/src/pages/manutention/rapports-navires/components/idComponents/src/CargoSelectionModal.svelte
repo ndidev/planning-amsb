@@ -63,6 +63,7 @@
 <Modal
   title={`Marchandises sous-rapport ${index + 1}`}
   bind:open
+  size="xs"
   on:open={() => {
     otherSubreports = report.subreports.filter(
       (_subreport) => _subreport !== subreport
