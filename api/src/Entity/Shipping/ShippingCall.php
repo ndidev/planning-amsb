@@ -129,7 +129,6 @@ final class ShippingCall extends AbstractEntity
                 : new Collection(
                     \array_map(
                         function (ShippingCallCargo $cargo) {
-                            /** @disregard P1006 */
                             $cargo->shippingCall = $this;
                             $cargo->shipReport = $this->shipReport;
                             return $cargo;

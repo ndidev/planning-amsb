@@ -105,7 +105,6 @@ final class Charter extends AbstractEntity
                 : new Collection(
                     \array_map(
                         function (CharterLeg $leg) {
-                            /** @disregard P1006 */
                             $leg->charter = $this;
                             return $leg;
                         },
@@ -123,7 +122,6 @@ final class Charter extends AbstractEntity
     public function addLeg(CharterLeg $leg): static
     {
         $this->legs->add($leg);
-        /** @disregard P1006 */
         $leg->charter = $this;
 
         return $this;

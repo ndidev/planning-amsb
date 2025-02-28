@@ -91,7 +91,6 @@ final class BulkAppointment extends AbstractEntity
     public array $dispatch = [] {
         set {
             foreach ($value as $item) {
-                /** @disregard P1006 */
                 $item->appointment = $this;
             }
 
