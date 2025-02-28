@@ -43,7 +43,6 @@ final class BulkProduct extends AbstractEntity
         set {
             $this->qualities = \array_map(
                 function ($quality) {
-                    /** @disregard P1006 */
                     $quality->product = $this;
                     return $quality;
                 },

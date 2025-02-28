@@ -41,30 +41,31 @@ final class UserRepository extends Repository
      */
     public function fetchAllUsers(): array
     {
-        $statement = "SELECT * FROM admin_users ORDER BY login";
+        try {
+            /** @var UserAccountArray[] */
+            $usersRaw = $this->mysql
+                ->prepareAndExecute(
+                    "SELECT * FROM admin_users WHERE NOT statut = :deletedStatus ORDER BY login",
+                    ["deletedStatus" => AccountStatus::DELETED]
+                )
+                ->fetchAll();
 
-        $userRequest = $this->mysql->query($statement);
+            // Update Redis
+            $this->redis->pipeline();
+            foreach ($usersRaw as $user) {
+                $this->redis->hMSet("admin:users:{$user["uid"]}", $user);
+            }
+            $this->redis->exec();
 
-        if (!$userRequest) {
-            throw new DBException("Impossible de récupérer les utilisateurs.");
+            $users = \array_map(
+                fn(array $userRaw) => $this->userService->makeUserAccountFromDatabase($userRaw),
+                $usersRaw
+            );
+
+            return $users;
+        } catch (\PDOException $e) {
+            throw new DBException("Impossible de récupérer les utilisateurs.", previous: $e);
         }
-
-        /** @phpstan-var UserAccountArray[] $usersRaw */
-        $usersRaw = $userRequest->fetchAll();
-
-        // Update Redis
-        $this->redis->pipeline();
-        foreach ($usersRaw as $user) {
-            $this->redis->hMSet("admin:users:{$user["uid"]}", $user);
-        }
-        $this->redis->exec();
-
-        $users = \array_map(
-            fn(array $userRaw) => $this->userService->makeUserAccountFromDatabase($userRaw),
-            $usersRaw
-        );
-
-        return $users;
     }
 
     /**

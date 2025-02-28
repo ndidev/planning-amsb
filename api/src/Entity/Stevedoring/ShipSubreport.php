@@ -29,7 +29,6 @@ final class ShipSubreport extends AbstractEntity
     /** @var Collection<ShipReportEquipmentEntry> */
     public Collection $equipmentEntries {
         set => $value->each(function ($entry) {
-            /** @disregard P1006 */
             $entry->subreport = $this;
         });
     }
@@ -37,7 +36,6 @@ final class ShipSubreport extends AbstractEntity
     /** @var Collection<ShipReportStaffEntry> */
     public Collection $staffEntries {
         set => $value->each(function ($entry) {
-            /** @disregard P1006 */
             $entry->subreport = $this;
         });
     }
@@ -45,7 +43,6 @@ final class ShipSubreport extends AbstractEntity
     /** @var Collection<ShipReportSubcontractEntry> */
     public Collection $subcontractEntries {
         set => $value->each(function ($entry) {
-            /** @disregard P1006 */
             $entry->subreport = $this;
         });
     }

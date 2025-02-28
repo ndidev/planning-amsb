@@ -99,7 +99,6 @@ final class TimberAppointment extends AbstractEntity
     public array $dispatch = [] {
         set(array $value) {
             foreach ($value as $dispatchItem) {
-                /** @disregard P1006 */
                 $dispatchItem->appointment = $this;
             }
 
