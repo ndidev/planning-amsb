@@ -101,7 +101,7 @@ final class BulkService
         $appointment->orderNumber = $requestBody->getString('num_commande');
         $appointment->publicComments = $requestBody->getString('commentaire_public');
         $appointment->privateComments = $requestBody->getString('commentaire_prive');
-        $appointment->isOnTv = $requestBody->getBool('show_on_tv');
+        $appointment->isOnTv = $requestBody->getBool('showOnTv');
         $appointment->isArchive = $requestBody->getBool('archive');
         $appointment->dispatch = \array_map(
             // @phpstan-ignore argument.type
