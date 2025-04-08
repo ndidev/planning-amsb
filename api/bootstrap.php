@@ -15,6 +15,7 @@ define('API', ROOTPATH . '/api');
 define('FONTS', API . '/font');
 define('UNIFONTS', FONTS . '/unifont');
 define('LOGOS', ROOTPATH . '/logos');
+define('LOG_DIR', API . '/var/log');
 
 require_once API . "/vendor/autoload.php";
 require_once API . "/src/Core/Component/Constants.php";
@@ -35,3 +36,7 @@ Environment::put('API_URL', $api_url);
 $logos_path = Environment::getString('LOGOS_PATH');
 $logos_url = $scheme . '://' . $host . $logos_path;
 Environment::put('LOGOS_URL', $logos_url);
+
+if (!is_dir(LOG_DIR)) {
+    mkdir(LOG_DIR, 0777, true);
+}
