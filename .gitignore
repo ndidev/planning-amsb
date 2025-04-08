@@ -12,6 +12,8 @@ logos/
 !.env.example
 .routify
 
+/var/**/*
+
 # PHPUnit
 .phpunit.cache
 /api/public/tests

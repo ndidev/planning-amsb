@@ -135,18 +135,10 @@ final class BulkAppointmentRepository extends Repository
             WHERE id = :id";
 
         try {
-            $request = $this->mysql->prepare($statement);
-
-            if (!$request) {
-                throw new DBException("Impossible de récupérer le RDV vrac {$id}");
-            }
-
-            $request->execute(["id" => $id]);
-            $appointmentRaw = $request->fetch();
+            /** @var ?BulkAppointmentArray */
+            $appointmentRaw = $this->mysql->prepareAndExecute($statement, ["id" => $id])->fetch();
 
             if (!\is_array($appointmentRaw)) return null;
-
-            /** @phpstan-var BulkAppointmentArray $appointmentRaw */
 
             $appointment = $this->bulkService->makeBulkAppointmentFromDatabase(new ArrayHandler($appointmentRaw));
 
@@ -190,14 +182,9 @@ final class BulkAppointmentRepository extends Repository
                 ";
 
         try {
-            $request = $this->mysql->prepare($statement);
-
-            if (!$request) {
-                throw new DBException("Impossible de créer le RDV vrac.");
-            }
-
             $this->mysql->beginTransaction();
-            $request->execute([
+
+            $this->mysql->prepareAndExecute($statement, [
                 'date' => $appointment->sqlDate,
                 'time' => $appointment->sqlTime,
                 'productId' => $appointment->product?->id,

@@ -139,7 +139,7 @@ final class BulkAppointmentController extends Controller
 
         $input = $this->request->getBody();
 
-        $appointment = $this->bulkService->createAppointment($input);
+        $appointment = $this->bulkService->createAppointmentFromRequest($input);
 
         /** @var int $id */
         $id = $appointment->id;
