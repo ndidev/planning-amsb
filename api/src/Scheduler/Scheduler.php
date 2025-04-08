@@ -39,7 +39,7 @@ final class Scheduler
 
                 $task->execute();
 
-                $task->logSuccess('Task executed successfully');
+                $task->logOutput();
             } catch (\Throwable $th) {
                 $task->logError($th);
             }

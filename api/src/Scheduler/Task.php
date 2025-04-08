@@ -19,6 +19,8 @@ abstract class Task
 
     protected bool $truthSetting = true;
 
+    public string $logOutput = '';
+
     public function __construct(string $name)
     {
         $this->name = \preg_replace('/\s+/', '_', \trim(\mb_strtolower($name))) ?? $name;
@@ -71,13 +73,13 @@ abstract class Task
 
     abstract public function execute(): void;
 
-    public function logSuccess(string $message): void
+    public function logOutput(): void
     {
         $message = sprintf(
-            "[%s] %s: success\n%s",
+            "[%s] %s\n%s",
             new \DateTime()->format('Y-m-d H:i:s'),
             $this->name,
-            $message
+            $this->logOutput
         );
 
         $this->log($message);

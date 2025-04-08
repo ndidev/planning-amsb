@@ -40,12 +40,13 @@ final class CreateFeedBulkAppointment extends Task
         $product = $this->getProduct();
 
         if ($this->appointmentAlreadyExists()) {
-            throw new \RuntimeException('Le rendez-vous existe déjà');
+            $this->logOutput = 'Le rendez-vous existe déjà';
+            return;
         }
 
         $this->createAppointment($product);
 
-        echo 'Appointment created successfully';
+        $this->logOutput = 'RDV créé avec succès';
     }
 
     private function getProduct(): BulkProduct
