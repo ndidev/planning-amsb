@@ -6,7 +6,7 @@ declare(strict_types=1);
 
 namespace App\DTO\Filter;
 
-use App\Core\HTTP\HTTPRequestQuery;
+use App\Core\Array\ArrayHandler;
 
 final readonly class BulkFilterDTO extends Filter
 {
@@ -23,7 +23,7 @@ final readonly class BulkFilterDTO extends Filter
     public const DEFAULT_START_DATE = 'now';
     public const DEFAULT_END_DATE = '9999-12-31';
 
-    public function __construct(HTTPRequestQuery $query)
+    public function __construct(ArrayHandler $query)
     {
         $this->startDate = $query->getDatetime('date_debut', self::DEFAULT_START_DATE);
 

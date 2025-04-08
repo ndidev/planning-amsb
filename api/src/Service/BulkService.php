@@ -176,10 +176,15 @@ final class BulkService
      * 
      * @return BulkAppointment Created appointment.
      */
-    public function createAppointment(HTTPRequestBody $input): BulkAppointment
+    public function createAppointmentFromRequest(HTTPRequestBody $input): BulkAppointment
     {
         $appointment = $this->makeBulkAppointmentFromFormData($input);
 
+        return $this->createAppointment($appointment);
+    }
+
+    public function createAppointment(BulkAppointment $appointment): BulkAppointment
+    {
         $appointment->validate();
 
         return $this->appointmentRepository->createAppointment($appointment);
