@@ -12,7 +12,7 @@ logos/
 !.env.example
 .routify
 
-/var/log
+/var/**/*
 
 # PHPUnit
 .phpunit.cache
