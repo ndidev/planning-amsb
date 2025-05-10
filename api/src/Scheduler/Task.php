@@ -68,7 +68,7 @@ abstract class Task
             return false;
         }
 
-        return $this->cronExpression->isDue();
+        return $this->cronExpression->isDue() && $this->truthSetting;
     }
 
     abstract public function execute(): void;
