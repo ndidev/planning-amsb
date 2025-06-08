@@ -10,6 +10,8 @@ namespace App\DTO;
  * @phpstan-type IgnoredCall array{
  *                             id: int,
  *                             shipName: string,
+ *                             startDate?: string,
+ *                             endDate?: string,
  *                           }
  */
 final readonly class IgnoredCallDTO
@@ -25,6 +27,16 @@ final readonly class IgnoredCallDTO
     public string $shipName;
 
     /**
+     * Start date of the call.
+     */
+    public ?string $startDate;
+
+    /**
+     * End date of the call.
+     */
+    public ?string $endDate;
+
+    /**
      * Constructor.
      *
      * @phpstan-param IgnoredCall $rawData
@@ -33,5 +45,7 @@ final readonly class IgnoredCallDTO
     {
         $this->id = $rawData['id'];
         $this->shipName = $rawData['shipName'];
+        $this->startDate = $rawData['startDate'] ?? null;
+        $this->endDate = $rawData['endDate'] ?? null;
     }
 }

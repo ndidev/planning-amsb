@@ -10,6 +10,8 @@ namespace App\DTO;
  * @phpstan-type CallWithoutReport array{
  *                                   id: int,
  *                                   shipName: string,
+ *                                   startDate?: string,
+ *                                   endDate?: string,
  *                                 }
  */
 final readonly class CallWithoutReportDTO
@@ -25,6 +27,16 @@ final readonly class CallWithoutReportDTO
     public string $shipName;
 
     /**
+     * Start date of the call.
+     */
+    public ?string $startDate;
+
+    /**
+     * End date of the call.
+     */
+    public ?string $endDate;
+
+    /**
      * Constructor.
      *
      * @phpstan-param CallWithoutReport $rawData
@@ -33,5 +45,7 @@ final readonly class CallWithoutReportDTO
     {
         $this->id = $rawData['id'];
         $this->shipName = $rawData['shipName'];
+        $this->startDate = $rawData['startDate'] ?? null;
+        $this->endDate = $rawData['endDate'] ?? null;
     }
 }

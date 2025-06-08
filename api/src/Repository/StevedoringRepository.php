@@ -1085,7 +1085,11 @@ final class StevedoringRepository extends Repository
             WHERE
                 (`startDate` <= :endDate OR `startDate` IS NULL)
                 AND
-                (`endDate` >= :startDate OR `endDate` IS NULL)";
+                (`endDate` >= :startDate OR `endDate` IS NULL)
+            ORDER BY 
+                `startDate` ASC,
+                `endDate` ASC
+            ";
 
         try {
             /** @var ShipReportArray[] */
@@ -2472,26 +2476,26 @@ final class StevedoringRepository extends Repository
         try {
             $statement =
                 "SELECT
-                    filtered_calls.id, shipName
-                FROM
-                (
-                    SELECT
-                        call.id,
-                        call.navire as shipName
-                    FROM consignation_planning `call`
-                    LEFT JOIN stevedoring_ship_reports `report` ON call.id = report.linked_shipping_call_id
-                    WHERE
-                        report.id IS NULL
-                        AND NOT call.navire = 'TBN'
-                        AND eta_date <= CURDATE()
-                    EXCEPT
-                    SELECT
-                        shipping_call_id as id,
-                        call.navire as shipName
-                    FROM stevedoring_ignored_shipping_calls sigs
-                    LEFT JOIN consignation_planning `call` ON call.id = sigs.shipping_call_id
-                ) filtered_calls
-                LEFT JOIN consignation_planning cp ON cp.id = filtered_calls.id
+                    id,
+                    navire as shipName,
+                    ops_date as startDate,
+                    etc_date as endDate
+                FROM consignation_planning cp
+                WHERE
+                    -- Exclude calls with reports
+                    NOT EXISTS (
+                        SELECT 1
+                        FROM stevedoring_ship_reports report
+                        WHERE report.linked_shipping_call_id = cp.id
+                    )
+                    -- Exclude ignored calls
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM stevedoring_ignored_shipping_calls sigs
+                        WHERE sigs.shipping_call_id = cp.id
+                    )
+                    AND NOT cp.navire = 'TBN'
+                    AND cp.eta_date <= CURDATE()
                 ORDER BY
                     cp.eta_date ASC,
                     cp.eta_heure ASC
@@ -2519,7 +2523,7 @@ final class StevedoringRepository extends Repository
     public function fetchIgnoredShippingCalls(): Collection
     {
         $statement =
-            "SELECT cp.id, cp.navire as shipName
+            "SELECT cp.id, cp.navire as shipName, ops_date as startDate, etc_date as endDate
             FROM consignation_planning cp
             RIGHT JOIN stevedoring_ignored_shipping_calls sigs ON cp.id = sigs.shipping_call_id";
 
