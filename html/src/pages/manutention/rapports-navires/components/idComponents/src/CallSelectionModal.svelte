@@ -7,7 +7,7 @@
 
   import { LucideButton } from "@app/components";
 
-  import { fetcher } from "@app/utils";
+  import { fetcher, DateUtils } from "@app/utils";
 
   import { consignationEscales } from "@app/stores";
 
@@ -20,6 +20,8 @@
   type CallSummary = {
     id: number;
     shipName: string;
+    startDate: string;
+    endDate: string;
   };
 
   let callList: CallSummary[] = null;
@@ -150,9 +152,16 @@
   <!-- Escales disponibles -->
   {#if callList && !callListError}
     {#each callList as call}
-      <div>
-        <Button on:click={() => handleCallSelection(call.id)}>
-          {call.shipName}
+      <div class="flex items-center justify-center gap-2 mb-2">
+        <Button class="flex-col" on:click={() => handleCallSelection(call.id)}>
+          <span>{call.shipName}</span>
+          <span class="text-xs"
+            >{call.startDate
+              ? new DateUtils(call.startDate).format().short
+              : "?"} - {call.endDate
+              ? new DateUtils(call.endDate).format().short
+              : "?"}</span
+          >
         </Button>
         <LucideButton
           icon={EyeOffIcon}
@@ -179,8 +188,17 @@
       <AccordionItem>
         <span slot="header">Escales ignorées</span>
         {#each ignoredCalls as call}
-          <div>
-            {call.shipName}
+          <div class="flex items-center justify-center gap-2 mb-2">
+            <div class="flex flex-col">
+              <span>{call.shipName}</span>
+              <span class="text-xs"
+                >{call.startDate
+                  ? new DateUtils(call.startDate).format().short
+                  : "?"} - {call.endDate
+                  ? new DateUtils(call.endDate).format().short
+                  : "?"}</span
+              >
+            </div>
             <LucideButton
               icon={EyeIcon}
               on:click={() => unignoreCall(call)}
