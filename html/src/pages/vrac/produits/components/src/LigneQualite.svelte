@@ -7,6 +7,7 @@
 
   export let qualite: QualiteVrac;
   export let supprimerQualite: (qualite: QualiteVrac) => void;
+  export let nombreRdv = 0;
 
   $: isNew = qualite.id === null;
 </script>
@@ -39,7 +40,10 @@
   <div class="ms-3 self-center">
     <LucideButton
       preset="delete"
-      title="Supprimer la qualité"
+      title={nombreRdv > 0
+        ? `La qualité est concernée par ${nombreRdv} rdv. Impossible de la supprimer.`
+        : "Supprimer la qualité"}
+      disabled={nombreRdv > 0}
       on:click={() => supprimerQualite(qualite)}
     />
   </div>

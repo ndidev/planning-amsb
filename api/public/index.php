@@ -7,6 +7,7 @@ declare(strict_types=1);
 require_once __DIR__ . "/../bootstrap.php";
 
 use App\Controller\Admin\UserAccountController;
+use App\Controller\Bulk\AppointmentCountController as BulkProductAppointmentCountController;
 use App\Controller\Bulk\BulkAppointmentController;
 use App\Controller\Bulk\BulkDispatchController;
 use App\Controller\Bulk\BulkProductController;
@@ -41,7 +42,7 @@ use App\Controller\Stevedoring\SubcontractorsDataController;
 use App\Controller\Stevedoring\TempWorkDispatchForDateController;
 use App\Controller\Stevedoring\TempWorkHoursController;
 use App\Controller\Stevedoring\TempWorkHoursReportController;
-use App\Controller\ThirdParty\AppointmentCountController;
+use App\Controller\ThirdParty\AppointmentCountController as ThirdPartyAppointmentCountController;
 use App\Controller\ThirdParty\ThirdPartyController;
 use App\Controller\Timber\TimberAppointmentController;
 use App\Controller\Timber\TimberDeliveryNoteController;
@@ -87,6 +88,7 @@ $routes = [
     // Vrac
     ["/vrac/rdvs/[i:id]?", BulkAppointmentController::class],
     ["/vrac/produits/[i:id]?", BulkProductController::class],
+    ["/vrac/produits/[i:id]/nombre_rdv", BulkProductAppointmentCountController::class],
     ["/vrac/dispatch", BulkDispatchController::class],
 
     // Consignation
@@ -133,7 +135,7 @@ $routes = [
 
     // Tiers
     ["/tiers/[i:id]?", ThirdPartyController::class],
-    ["/tiers/[i:id]/nombre_rdv", AppointmentCountController::class],
+    ["/tiers/[i:id]/nombre_rdv", ThirdPartyAppointmentCountController::class],
 
     // Admin
     ["/admin/users/[a:uid]?", UserAccountController::class],
