@@ -9,7 +9,7 @@
   import { LigneQualite } from "./components";
 
   import { vracProduits } from "@app/stores";
-  import { notiflixOptions } from "@app/utils";
+  import { fetcher, notiflixOptions } from "@app/utils";
 
   import type { ProduitVrac, QualiteVrac } from "@app/types";
 
@@ -24,6 +24,13 @@
 
   let produit: ProduitVrac;
 
+  type NombreRdv = {
+    total: number;
+    [id: number]: number;
+  };
+
+  let nombreRdv: NombreRdv = null;
+
   /**
    * Produit sélectionné.
    */
@@ -32,10 +39,18 @@
   /**
    *
    */
-  function getProduit(id: ProduitVrac["id"]) {
+  async function getProduit(id: ProduitVrac["id"]) {
     produit = structuredClone(
       $vracProduits?.get(id) || vracProduits.getTemplate()
     );
+
+    if (id) {
+      nombreRdv = await fetcher<NombreRdv>(
+        `/api/vrac/produits/${id}/nombre_rdv`
+      ).catch(() => null);
+    } else {
+      nombreRdv = null;
+    }
   }
 
   /**
@@ -60,8 +75,7 @@
     if (qualiteASupprimer.id !== null) {
       Notiflix.Confirm.show(
         "Suppression produit",
-        `Voulez-vous vraiment supprimer la qualité <strong>${qualiteASupprimer.nom}</strong> ?<br />` +
-          `Ceci supprimera les RDV associés.`,
+        `Voulez-vous vraiment supprimer la qualité <strong>${qualiteASupprimer.nom}</strong> ?`,
         "Supprimer",
         "Annuler",
         _supprimerQualite,
@@ -161,8 +175,7 @@
 
     Notiflix.Confirm.show(
       "Suppression produit",
-      `Voulez-vous vraiment supprimer le produit <b>${produit.nom}</b> ?<br />` +
-        `Ceci supprimera les RDV associés.`,
+      `Voulez-vous vraiment supprimer le produit <b>${produit.nom}</b> ?`,
       "Supprimer",
       "Annuler",
       async function () {
@@ -263,7 +276,11 @@
           <ul id="qualites" class="m-0 list-none divide-y p-0">
             <!-- Liste des qualités dynamique en fonction du produit choisi -->
             {#each produit.qualites as qualite}
-              <LigneQualite {qualite} {supprimerQualite} />
+              <LigneQualite
+                {qualite}
+                {supprimerQualite}
+                nombreRdv={nombreRdv?.[qualite.id] || 0}
+              />
             {/each}
           </ul>
           <div />
@@ -291,14 +308,66 @@
         bind:this={boutonModifier}
       />
       <!-- Bouton "Supprimer" -->
-      <BoutonAction
-        preset="supprimer"
-        on:click={supprimerProduit}
-        bind:this={boutonSupprimer}
-      />
+      {#if selected}
+        <div class="tooltip">
+          <BoutonAction
+            preset="supprimer"
+            bind:this={boutonSupprimer}
+            on:click={supprimerProduit}
+            disabled={nombreRdv?.total > 0 || nombreRdv === null}
+          />
+          <!-- Affichage info-bulle si impossibilité de supprimer -->
+          {#if nombreRdv?.total > 0}
+            <div class="tooltip-supprimer">
+              Le produit est concerné par {nombreRdv.total} rdv.<br />Impossible
+              de le supprimer.
+            </div>
+          {/if}
+          {#if nombreRdv === null}
+            <div class="tooltip-supprimer">
+              Récupération du nombre de RDV en cours...
+            </div>
+          {/if}
+        </div>
+      {/if}
     {/if}
 
     <!-- Bouton "Annuler" -->
     <BoutonAction preset="annuler" on:click={() => $goto("../")} />
   </div>
 </main>
+
+<style>
+  /* Info-bulle en cas de suppression impossible */
+  .tooltip {
+    display: inline;
+    position: relative;
+  }
+
+  .tooltip-supprimer {
+    position: absolute;
+    display: inline-block;
+    left: 50%;
+    top: 200%;
+    transform: translate(-50%);
+    width: max-content;
+    padding: 5px;
+    border-radius: 6px;
+    z-index: 1;
+    color: white;
+    background-color: black;
+  }
+
+  .tooltip-supprimer::after /* Flêche du tooltip */ {
+    content: " ";
+    white-space: nowrap;
+    position: absolute;
+    bottom: 100%; /* At the top of the tooltip */
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent black transparent;
+  }
+  /* --------------- */
+</style>
