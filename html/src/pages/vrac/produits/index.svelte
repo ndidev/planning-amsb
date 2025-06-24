@@ -44,9 +44,13 @@
       $vracProduits?.get(id) || vracProduits.getTemplate()
     );
 
-    nombreRdv = await fetcher<NombreRdv>(
-      `/api/vrac/produits/${id}/nombre_rdv`
-    ).catch(() => null);
+    if (id) {
+      nombreRdv = await fetcher<NombreRdv>(
+        `/api/vrac/produits/${id}/nombre_rdv`
+      ).catch(() => null);
+    } else {
+      nombreRdv = null;
+    }
   }
 
   /**
@@ -71,8 +75,7 @@
     if (qualiteASupprimer.id !== null) {
       Notiflix.Confirm.show(
         "Suppression produit",
-        `Voulez-vous vraiment supprimer la qualité <strong>${qualiteASupprimer.nom}</strong> ?<br />` +
-          `Ceci supprimera les RDV associés.`,
+        `Voulez-vous vraiment supprimer la qualité <strong>${qualiteASupprimer.nom}</strong> ?`,
         "Supprimer",
         "Annuler",
         _supprimerQualite,
@@ -172,8 +175,7 @@
 
     Notiflix.Confirm.show(
       "Suppression produit",
-      `Voulez-vous vraiment supprimer le produit <b>${produit.nom}</b> ?<br />` +
-        `Ceci supprimera les RDV associés.`,
+      `Voulez-vous vraiment supprimer le produit <b>${produit.nom}</b> ?`,
       "Supprimer",
       "Annuler",
       async function () {
@@ -277,7 +279,7 @@
               <LigneQualite
                 {qualite}
                 {supprimerQualite}
-                nombreRdv={nombreRdv[qualite.id] || 0}
+                nombreRdv={nombreRdv?.[qualite.id] || 0}
               />
             {/each}
           </ul>
