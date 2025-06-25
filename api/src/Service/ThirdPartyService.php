@@ -69,6 +69,12 @@ final class ThirdPartyService
 
         $thirdParty->country = $this->countryService->getCountry($requestBody->getString('pays'));
 
+        $thirdParty->contacts = \array_map(
+            // @phpstan-ignore argument.type
+            fn($contact) => $this->makeThirdPartyContactFromForm($contact),
+            $requestBody->getArray('contacts')
+        );
+
         // Logo
         $logoData = $requestBody->get('logo');
         if (\is_array($logoData) || \is_string($logoData) || null === $logoData) {
@@ -86,6 +92,26 @@ final class ThirdPartyService
      * @param ThirdPartyContactArray $rawData Raw data from the database.
      */
     public function makeThirdPartyContactFromDatabase(array $rawData): ThirdPartyContact
+    {
+        $rawDataAH = new ArrayHandler($rawData);
+
+        $contact = new ThirdPartyContact();
+        $contact->id = $rawDataAH->getInt('id');
+        $contact->name = $rawDataAH->getString('nom');
+        $contact->email = $rawDataAH->getString('email');
+        $contact->phone = $rawDataAH->getString('telephone');
+        $contact->position = $rawDataAH->getString('role');
+        $contact->comments = $rawDataAH->getString('commentaire');
+
+        return $contact;
+    }
+
+    /**
+     * Creates a ThirdPartyContact object from raw data.
+     * 
+     * @param ThirdPartyContactArray $rawData Raw data from the form.
+     */
+    public function makeThirdPartyContactFromForm(array $rawData): ThirdPartyContact
     {
         $rawDataAH = new ArrayHandler($rawData);
 
