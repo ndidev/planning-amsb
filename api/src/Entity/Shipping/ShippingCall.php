@@ -13,7 +13,7 @@ use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
 use App\Entity\Port;
 use App\Entity\Stevedoring\ShipReport;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 
 /**
  * @phpstan-import-type ShippingCallCargoArray from ShippingCallCargo

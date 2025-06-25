@@ -11,7 +11,7 @@ use App\Core\Component\Collection;
 use App\Entity\Chartering\Charter;
 use App\Entity\Chartering\CharterLeg;
 use App\Entity\Port;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;

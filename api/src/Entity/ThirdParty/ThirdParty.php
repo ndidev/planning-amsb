@@ -1,15 +1,17 @@
 <?php
 
-// Path: api/src/Entity/ThirdParty.php
+// Path: api/src/Entity/ThirdParty/ThirdParty.php
 
 declare(strict_types=1);
 
-namespace App\Entity;
+namespace App\Entity\ThirdParty;
 
 use App\Core\Array\ArrayHandler;
 use App\Core\Array\Environment;
 use App\Core\Traits\IdentifierTrait;
 use App\Core\Validation\Constraints\Required;
+use App\Entity\AbstractEntity;
+use App\Entity\Country;
 
 /**
  * @phpstan-type ThirdPartyArray array{
@@ -146,22 +148,22 @@ final class ThirdParty extends AbstractEntity
     public function toArray(): array
     {
         return [
-            "id" => $this->id,
-            "nom_court" => $this->shortName,
-            "nom_complet" => $this->fullName,
-            "adresse_ligne_1" => $this->addressLine1,
-            "adresse_ligne_2" => $this->addressLine2,
-            "cp" => $this->postCode,
-            "ville" => $this->city,
-            "pays" => $this->country?->iso,
-            "telephone" => $this->phone,
-            "commentaire" => $this->comments,
-            "roles" => $this->roles,
-            "non_modifiable" => $this->isNonEditable,
-            "lie_agence" => $this->isAgency,
-            "logo" => $this->logoUrl,
-            "actif" => $this->isActive,
-            "nombre_rdv" => $this->appointmentCount,
+            'id' => $this->id,
+            'nom_court' => $this->shortName,
+            'nom_complet' => $this->fullName,
+            'adresse_ligne_1' => $this->addressLine1,
+            'adresse_ligne_2' => $this->addressLine2,
+            'cp' => $this->postCode,
+            'ville' => $this->city,
+            'pays' => $this->country?->iso,
+            'telephone' => $this->phone,
+            'commentaire' => $this->comments,
+            'roles' => $this->roles,
+            'non_modifiable' => $this->isNonEditable,
+            'lie_agence' => $this->isAgency,
+            'logo' => $this->logoUrl,
+            'actif' => $this->isActive,
+            'nombre_rdv' => $this->appointmentCount,
         ];
     }
 }

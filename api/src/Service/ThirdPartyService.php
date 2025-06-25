@@ -11,11 +11,11 @@ use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\ServerException;
 use App\Core\HTTP\HTTPRequestBody;
 use App\Core\Logger\ErrorLogger;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 use App\Repository\ThirdPartyRepository;
 
 /**
- * @phpstan-import-type ThirdPartyArray from \App\Entity\ThirdParty
+ * @phpstan-import-type ThirdPartyArray from \App\Entity\ThirdParty\ThirdParty
  */
 final class ThirdPartyService
 {
@@ -31,9 +31,7 @@ final class ThirdPartyService
     /**
      * Creates a ThirdParty object from raw data.
      * 
-     * @param ThirdPartyArray $rawData 
-     * 
-     * @return ThirdParty 
+     * @param ThirdPartyArray $rawData Raw data from the database.
      */
     public function makeThirdPartyFromDatabase(array $rawData): ThirdParty
     {
@@ -55,9 +53,7 @@ final class ThirdPartyService
     /**
      * Creates a ThirdParty object from form data.
      * 
-     * @param HTTPRequestBody $requestBody 
-     * 
-     * @return ThirdParty 
+     * @param HTTPRequestBody $requestBody
      */
     public function makeThirdPartyFromForm(HTTPRequestBody $requestBody): ThirdParty
     {

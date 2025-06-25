@@ -13,7 +13,7 @@ use App\DTO\SupplierWithUniqueDeliveryNoteNumber;
 use App\DTO\TimberRegistryEntryDTO;
 use App\DTO\TimberStatsDTO;
 use App\DTO\TimberTransportSuggestionsDTO;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 use App\Entity\Timber\TimberAppointment;
 use App\Entity\Timber\TimberDispatchItem;
 use App\Service\TimberService;

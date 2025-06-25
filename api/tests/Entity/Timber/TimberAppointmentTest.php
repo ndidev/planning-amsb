@@ -7,7 +7,7 @@ declare(strict_types=1);
 namespace App\Tests\Entity\Timber;
 
 use App\Entity\Stevedoring\StevedoringStaff;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 use App\Entity\Timber\TimberAppointment;
 use App\Entity\Timber\TimberDispatchItem;
 use PHPUnit\Framework\Attributes\CoversClass;

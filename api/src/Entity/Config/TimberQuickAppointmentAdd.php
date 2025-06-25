@@ -8,7 +8,7 @@ namespace App\Entity\Config;
 
 use App\Core\Validation\Constraints\Required;
 use App\Core\Component\Module;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 
 /**
  * @phpstan-type TimberQuickAppointmentAddArray array{

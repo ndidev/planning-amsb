@@ -1,6 +1,6 @@
 <?php
 
-// Path: api/tests/Entity/ThirdPartyTest.php
+// Path: api/tests/Entity/ThirdParty/ThirdPartyTest.php
 
 declare(strict_types=1);
 
@@ -8,7 +8,7 @@ namespace App\Tests\Entity;
 
 use App\Core\Array\Environment;
 use App\Entity\Country;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 

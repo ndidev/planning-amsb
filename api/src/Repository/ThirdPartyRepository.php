@@ -9,11 +9,11 @@ namespace App\Repository;
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\DB\DBException;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 use App\Service\ThirdPartyService;
 
 /**
- * @phpstan-import-type ThirdPartyArray from \App\Entity\ThirdParty
+ * @phpstan-import-type ThirdPartyArray from \App\Entity\ThirdParty\ThirdParty
  */
 final class ThirdPartyRepository extends Repository
 {

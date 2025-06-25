@@ -19,7 +19,7 @@ use App\Entity\Bulk\BulkAppointment;
 use App\Entity\Bulk\BulkDispatchItem;
 use App\Entity\Bulk\BulkProduct;
 use App\Entity\Bulk\BulkQuality;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 use App\Repository\BulkAppointmentRepository;
 use App\Repository\BulkProductRepository;
 
