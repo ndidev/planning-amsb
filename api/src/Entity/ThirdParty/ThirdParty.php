@@ -89,6 +89,19 @@ final class ThirdParty extends AbstractEntity
 
     public int $appointmentCount = 0;
 
+    /** @var ThirdPartyContact[] $contacts */
+    public array $contacts = [] {
+        set {
+            $this->contacts = \array_map(
+                function ($contact) {
+                    $contact->thirdParty = $this;
+                    return $contact;
+                },
+                $value
+            );
+        }
+    }
+
     /**
      * @param ArrayHandler|ThirdPartyArray|null $data 
      */
@@ -164,6 +177,7 @@ final class ThirdParty extends AbstractEntity
             'logo' => $this->logoUrl,
             'actif' => $this->isActive,
             'nombre_rdv' => $this->appointmentCount,
+            'contacts' => \array_map(fn($contact) => $contact->toArray(), $this->contacts),
         ];
     }
 }

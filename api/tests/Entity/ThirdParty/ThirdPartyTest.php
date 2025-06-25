@@ -132,6 +132,7 @@ final class ThirdPartyTest extends TestCase
             'logo' => Environment::getString('LOGOS_URL') . '/filename.webp',
             'actif' => true,
             'nombre_rdv' => 5,
+            'contacts' => [],
         ];
 
         // When
