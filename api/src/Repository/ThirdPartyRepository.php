@@ -10,10 +10,12 @@ use App\Core\Component\Collection;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\Entity\ThirdParty\ThirdParty;
+use App\Entity\ThirdParty\ThirdPartyContact;
 use App\Service\ThirdPartyService;
 
 /**
  * @phpstan-import-type ThirdPartyArray from \App\Entity\ThirdParty\ThirdParty
+ * @phpstan-import-type ThirdPartyContactArray from \App\Entity\ThirdParty\ThirdPartyContact
  */
 final class ThirdPartyRepository extends Repository
 {
@@ -85,14 +87,18 @@ final class ThirdPartyRepository extends Repository
         $thirdParty = $this->reflector->newLazyProxy(
             function () use ($id) {
                 try {
-                    $statement = "SELECT * FROM tiers WHERE id = :id";
+                    $thirdPartyStatement = "SELECT * FROM tiers WHERE id = :id";
 
                     /** @var ThirdPartyArray */
                     $thirdPartyRaw = $this->mysql
-                        ->prepareAndExecute($statement, ["id" => $id])
+                        ->prepareAndExecute($thirdPartyStatement, ["id" => $id])
                         ->fetch();
 
-                    return $this->thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw);
+                    $thirdParty = $this->thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw);
+
+                    $thirdParty->contacts = $this->fetchContactsForThirdParty($id);
+
+                    return $thirdParty;
                 } catch (\PDOException $e) {
                     throw new DBException("Erreur lors de la récupération du tiers.", previous: $e);
                 }
@@ -104,6 +110,34 @@ final class ThirdPartyRepository extends Repository
         $cache[$id] = $thirdParty;
 
         return $thirdParty;
+    }
+
+    /**
+     * Récupère les contacts d'un tiers.
+     * 
+     * @param int $id ID du tiers dont on veut les contacts.
+     * 
+     * @return ThirdPartyContact[] Liste des contacts du tiers
+     */
+    public function fetchContactsForThirdParty(int $id): array
+    {
+        $statement = "SELECT * FROM tiers_contacts WHERE tiers = :id ORDER BY nom";
+
+        try {
+            /** @var ThirdPartyContactArray[] */
+            $contactsRaw = $this->mysql
+                ->prepareAndExecute($statement, ["id" => $id])
+                ->fetchAll();
+        } catch (\PDOException $e) {
+            throw new DBException("Erreur lors de la récupération des contacts du tiers.", previous: $e);
+        }
+
+        $contacts = \array_map(
+            fn($contactRaw) => $this->thirdPartyService->makeThirdPartyContactFromDatabase($contactRaw),
+            $contactsRaw
+        );
+
+        return $contacts;
     }
 
     /**
