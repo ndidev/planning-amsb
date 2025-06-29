@@ -32,4 +32,5 @@ export const tiers = createFlatStore<Tiers>("tiers", {
   logo: null,
   actif: true,
   nombre_rdv: 0,
+  contacts: [],
 });
