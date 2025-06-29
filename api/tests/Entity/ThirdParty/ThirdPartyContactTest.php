@@ -29,7 +29,7 @@ final class ThirdPartyContactTest extends TestCase
             'nom' => 'John Doe',
             'telephone' => '1234567890',
             'email' => 'test@example.com',
-            'role' => 'Manager',
+            'fonction' => 'Manager',
             'commentaire' => 'Test comment',
         ];
 

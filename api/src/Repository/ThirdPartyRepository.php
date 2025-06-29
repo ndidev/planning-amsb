@@ -44,21 +44,34 @@ final class ThirdPartyRepository extends Repository
      */
     public function fetchAllThirdParties(): Collection
     {
-        $statement = "SELECT * FROM tiers ORDER BY nom_court, ville";
+        $thirdPartiesStatement = "SELECT * FROM tiers ORDER BY nom_court, ville";
 
-        $thirdPartiesRequest = $this->mysql->query($statement);
-
-        if (!$thirdPartiesRequest) {
-            throw new DBException("Impossible de récupérer les tiers.");
+        try {
+            /** @var ThirdPartyArray[] */
+            $thirdPartiesRaw = $this->mysql->prepareAndExecute($thirdPartiesStatement)->fetchAll();
+        } catch (\PDOException $e) {
+            throw new DBException("Erreur lors de la récupération des tiers.", previous: $e);
         }
-
-        /** @var ThirdPartyArray[] */
-        $thirdPartiesRaw = $thirdPartiesRequest->fetchAll();
 
         $thirdParties = \array_map(
             fn($thirdPartyRaw) => $this->thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw),
             $thirdPartiesRaw
         );
+
+        $idsOfThirdPartiesWithContacts = $this->mysql
+            ->prepareAndExecute("SELECT DISTINCT tiers FROM tiers_contacts")
+            ->fetchAll(\PDO::FETCH_COLUMN, 0);
+
+        foreach ($thirdParties as $thirdParty) {
+            /** @var int */
+            $id = $thirdParty->id;
+
+            if (\in_array($id, $idsOfThirdPartiesWithContacts, true)) {
+                $thirdParty->contacts = $this->fetchContactsForThirdParty($id);
+            } else {
+                $thirdParty->contacts = [];
+            }
+        }
 
         return new Collection($thirdParties);
     }
@@ -171,7 +184,7 @@ final class ThirdPartyRepository extends Repository
                 nom = :name,
                 email = :email,
                 telephone = :phone,
-                role = :position,
+                fonction = :position,
                 commentaire = :comments";
 
         try {
@@ -280,13 +293,13 @@ final class ThirdPartyRepository extends Repository
                 nom = :name,
                 email = :email,
                 telephone = :phone,
-                role = :position,
+                fonction = :position,
                 commentaire = :comments
             ON DUPLICATE KEY UPDATE
                 nom = :name,
                 email = :email,
                 telephone = :phone,
-                role = :position,
+                fonction = :position,
                 commentaire = :comments";
 
         try {

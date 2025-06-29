@@ -43,12 +43,6 @@ final class ThirdPartyService
 
         $thirdParty->country = $this->countryService->getCountry($rawDataAH->getString('pays'));
 
-        $thirdParty->contacts = \array_map(
-            // @phpstan-ignore argument.type
-            fn($contact) => $this->makeThirdPartyContactFromDatabase($contact),
-            $rawDataAH->getArray('contacts')
-        );
-
         // Logo
         $logoData = $rawDataAH->get('logo');
         if (\is_string($logoData) || null === $logoData) {
@@ -120,7 +114,7 @@ final class ThirdPartyService
         $contact->name = $rawDataAH->getString('nom');
         $contact->email = $rawDataAH->getString('email');
         $contact->phone = $rawDataAH->getString('telephone');
-        $contact->position = $rawDataAH->getString('role');
+        $contact->position = $rawDataAH->getString('fonction');
         $contact->comments = $rawDataAH->getString('commentaire');
 
         return $contact;

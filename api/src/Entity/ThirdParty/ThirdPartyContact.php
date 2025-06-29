@@ -13,10 +13,11 @@ use App\Core\Validation\Constraints\Required;
 /**
  * @phpstan-type ThirdPartyContactArray array{
  *                                        id: int,
+ *                                        tiers: int,
  *                                        nom: string,
  *                                        telephone: string,
  *                                        email: string,
- *                                        role: string,
+ *                                        fonction: string,
  *                                        commentaire: string,
  *                                      }
  */
@@ -45,7 +46,7 @@ class ThirdPartyContact extends AbstractEntity
             'nom' => $this->name,
             'telephone' => $this->phone,
             'email' => $this->email,
-            'role' => $this->position,
+            'fonction' => $this->position,
             'commentaire' => $this->comments,
         ];
     }
