@@ -10,7 +10,7 @@ use App\Core\Validation\Constraints\Required;
 use App\Core\Traits\IdentifierTrait;
 use App\Core\Traits\ModuleTrait;
 use App\Entity\AbstractEntity;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 
 /**
  * /**

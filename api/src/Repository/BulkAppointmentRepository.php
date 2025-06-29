@@ -14,7 +14,7 @@ use App\DTO\Filter\BulkDispatchStatsFilterDTO;
 use App\DTO\Filter\BulkFilterDTO;
 use App\Entity\Bulk\BulkAppointment;
 use App\Entity\Bulk\BulkDispatchItem;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 use App\Service\BulkService;
 
 /**

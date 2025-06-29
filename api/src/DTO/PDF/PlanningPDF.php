@@ -8,7 +8,7 @@ namespace App\DTO\PDF;
 
 use App\Core\Exceptions\Server\ServerException;
 use App\Entity\Config\AgencyDepartment;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 
 define("_SYSTEM_TTFONTS", UNIFONTS . "/");
 

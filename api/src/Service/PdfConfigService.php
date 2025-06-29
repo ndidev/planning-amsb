@@ -19,7 +19,7 @@ use App\DTO\PDF\PlanningPDF;
 use App\DTO\PDF\TimberPDF;
 use App\Entity\Config\AgencyDepartment;
 use App\Entity\Config\PdfConfig;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 use App\Repository\PdfConfigRepository;
 use PHPMailer\PHPMailer\Exception as PHPMailerException;
 

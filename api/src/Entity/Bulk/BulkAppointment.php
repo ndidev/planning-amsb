@@ -14,7 +14,7 @@ use App\Core\Validation\Constraints\PositiveOrNullNumber;
 use App\Core\Validation\Constraints\Required;
 use App\Core\Validation\ValidationResult;
 use App\Entity\AbstractEntity;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 
 /**
  * @phpstan-type BulkAppointmentArray array{

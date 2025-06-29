@@ -11,7 +11,7 @@ use App\Core\Component\Collection;
 use App\Core\Component\DateUtils;
 use App\Entity\Bulk\BulkAppointment;
 use App\Entity\Config\AgencyDepartment;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 
 final class BulkPDF extends PlanningPDF
 {

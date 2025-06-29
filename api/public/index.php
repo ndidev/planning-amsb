@@ -44,6 +44,7 @@ use App\Controller\Stevedoring\TempWorkHoursController;
 use App\Controller\Stevedoring\TempWorkHoursReportController;
 use App\Controller\ThirdParty\AppointmentCountController as ThirdPartyAppointmentCountController;
 use App\Controller\ThirdParty\ThirdPartyController;
+use App\Controller\ThirdParty\ThirdPartyContactController;
 use App\Controller\Timber\TimberAppointmentController;
 use App\Controller\Timber\TimberDeliveryNoteController;
 use App\Controller\Timber\TimberRegistryController;
@@ -136,6 +137,7 @@ $routes = [
     // Tiers
     ["/tiers/[i:id]?", ThirdPartyController::class],
     ["/tiers/[i:id]/nombre_rdv", ThirdPartyAppointmentCountController::class],
+    ["/tiers/[i:id]/contacts", ThirdPartyContactController::class],
 
     // Admin
     ["/admin/users/[a:uid]?", UserAccountController::class],

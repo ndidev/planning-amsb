@@ -12,7 +12,7 @@ use App\Core\Exceptions\Client\ValidationException;
 use App\Core\Traits\IdentifierTrait;
 use App\Core\Validation\ValidationResult;
 use App\Entity\AbstractEntity;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 
 /**
  * @phpstan-type TimberAppointmentArray array{

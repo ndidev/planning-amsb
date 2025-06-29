@@ -12,7 +12,7 @@ use App\Core\Component\Collection;
 use App\Core\Component\DateUtils;
 use App\Core\Traits\IdentifierTrait;
 use App\Entity\AbstractEntity;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 
 /**
  * @phpstan-type CharterArray array{

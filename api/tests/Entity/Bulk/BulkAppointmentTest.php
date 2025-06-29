@@ -11,7 +11,7 @@ use App\Entity\Bulk\BulkDispatchItem;
 use App\Entity\Bulk\BulkProduct;
 use App\Entity\Bulk\BulkQuality;
 use App\Entity\Stevedoring\StevedoringStaff;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;

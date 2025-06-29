@@ -11,11 +11,13 @@ use App\Core\Component\Collection;
 use App\Core\Exceptions\Server\ServerException;
 use App\Core\HTTP\HTTPRequestBody;
 use App\Core\Logger\ErrorLogger;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
+use App\Entity\ThirdParty\ThirdPartyContact;
 use App\Repository\ThirdPartyRepository;
 
 /**
- * @phpstan-import-type ThirdPartyArray from \App\Entity\ThirdParty
+ * @phpstan-import-type ThirdPartyArray from \App\Entity\ThirdParty\ThirdParty
+ * @phpstan-import-type ThirdPartyContactArray from \App\Entity\ThirdParty\ThirdPartyContact
  */
 final class ThirdPartyService
 {
@@ -31,9 +33,7 @@ final class ThirdPartyService
     /**
      * Creates a ThirdParty object from raw data.
      * 
-     * @param ThirdPartyArray $rawData 
-     * 
-     * @return ThirdParty 
+     * @param ThirdPartyArray $rawData Raw data from the database.
      */
     public function makeThirdPartyFromDatabase(array $rawData): ThirdParty
     {
@@ -55,15 +55,19 @@ final class ThirdPartyService
     /**
      * Creates a ThirdParty object from form data.
      * 
-     * @param HTTPRequestBody $requestBody 
-     * 
-     * @return ThirdParty 
+     * @param HTTPRequestBody $requestBody
      */
     public function makeThirdPartyFromForm(HTTPRequestBody $requestBody): ThirdParty
     {
         $thirdParty = new ThirdParty($requestBody);
 
         $thirdParty->country = $this->countryService->getCountry($requestBody->getString('pays'));
+
+        $thirdParty->contacts = \array_map(
+            // @phpstan-ignore argument.type
+            fn($contact) => $this->makeThirdPartyContactFromForm($contact),
+            $requestBody->getArray('contacts')
+        );
 
         // Logo
         $logoData = $requestBody->get('logo');
@@ -74,6 +78,46 @@ final class ThirdPartyService
         }
 
         return $thirdParty;
+    }
+
+    /**
+     * Creates a ThirdPartyContact object from raw data.
+     * 
+     * @param ThirdPartyContactArray $rawData Raw data from the database.
+     */
+    public function makeThirdPartyContactFromDatabase(array $rawData): ThirdPartyContact
+    {
+        $rawDataAH = new ArrayHandler($rawData);
+
+        $contact = new ThirdPartyContact();
+        $contact->id = $rawDataAH->getInt('id');
+        $contact->name = $rawDataAH->getString('nom');
+        $contact->email = $rawDataAH->getString('email');
+        $contact->phone = $rawDataAH->getString('telephone');
+        $contact->position = $rawDataAH->getString('fonction');
+        $contact->comments = $rawDataAH->getString('commentaire');
+
+        return $contact;
+    }
+
+    /**
+     * Creates a ThirdPartyContact object from raw data.
+     * 
+     * @param ThirdPartyContactArray $rawData Raw data from the form.
+     */
+    public function makeThirdPartyContactFromForm(array $rawData): ThirdPartyContact
+    {
+        $rawDataAH = new ArrayHandler($rawData);
+
+        $contact = new ThirdPartyContact();
+        $contact->id = $rawDataAH->getInt('id');
+        $contact->name = $rawDataAH->getString('nom');
+        $contact->email = $rawDataAH->getString('email');
+        $contact->phone = $rawDataAH->getString('telephone');
+        $contact->position = $rawDataAH->getString('fonction');
+        $contact->comments = $rawDataAH->getString('commentaire');
+
+        return $contact;
     }
 
     /**
@@ -149,6 +193,18 @@ final class ThirdPartyService
     public function deleteThirdParty(int $id): void
     {
         $this->thirdPartyRepository->deleteThirdParty($id);
+    }
+
+    /**
+     * Retrieves all contacts for a third party.
+     * 
+     * @param int $id ID of the third party to retrieve.
+     * 
+     * @return Collection<ThirdPartyContact> Contacts of the third party.
+     */
+    public function getThirdPartyContacts(int $id): Collection
+    {
+        return new Collection($this->thirdPartyRepository->fetchContactsForThirdParty($id));
     }
 
     /**

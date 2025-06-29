@@ -38,6 +38,8 @@
     SseConnection,
   } from "@app/components";
 
+  import { Contacts } from "./components";
+
   import { tiers } from "@app/stores";
 
   import NO_LOGO_IMAGE from "/src/images/nologo.min.svg";
@@ -192,7 +194,7 @@
   /**
    * Nouveau tiers
    */
-  async function addThirdParty() {
+  async function createThirdParty() {
     if (!validerFormulaire(form)) return;
 
     addButton.$set({ block: true });
@@ -210,13 +212,13 @@
   /**
    * Modifier tiers
    */
-  async function editThirdParty() {
+  async function updateThirdParty() {
     if (!validerFormulaire(form)) return;
 
     editButton.$set({ block: true });
 
     try {
-      await tiers.update(selectedTiers);
+      selectedTiers = await tiers.update(selectedTiers);
 
       Notiflix.Notify.success("Le tiers a été modifié");
     } catch (erreur) {
@@ -411,6 +413,12 @@
       />
     </div>
 
+    <!-- Contacts -->
+    <div class="mb-4">
+      <Label>Contacts</Label>
+      <Contacts bind:contacts={selectedTiers.contacts} />
+    </div>
+
     <!-- Logo -->
     <div class="mb-4">
       <Label for="logo">Logo</Label>
@@ -545,7 +553,7 @@
       <BoutonAction
         preset="ajouter"
         bind:this={addButton}
-        on:click={addThirdParty}
+        on:click={createThirdParty}
       />
     {/if}
 
@@ -554,7 +562,7 @@
       <BoutonAction
         preset="modifier"
         bind:this={editButton}
-        on:click={editThirdParty}
+        on:click={updateThirdParty}
       />
     {/if}
 
