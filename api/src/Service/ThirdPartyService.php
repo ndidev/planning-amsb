@@ -94,7 +94,7 @@ final class ThirdPartyService
         $contact->name = $rawDataAH->getString('nom');
         $contact->email = $rawDataAH->getString('email');
         $contact->phone = $rawDataAH->getString('telephone');
-        $contact->position = $rawDataAH->getString('role');
+        $contact->position = $rawDataAH->getString('fonction');
         $contact->comments = $rawDataAH->getString('commentaire');
 
         return $contact;
