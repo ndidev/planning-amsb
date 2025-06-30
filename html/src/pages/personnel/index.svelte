@@ -40,7 +40,8 @@
 
   function groupStaffByLastnameInitial(staffList: StevedoringStaff[]) {
     return staffList.reduce((map, staff) => {
-      const initial = staff.lastname[0].toUpperCase();
+      if (!staff.lastname && !staff.firstname) return map; // Passer si le nom est vide
+      const initial = (staff.lastname || staff.firstname)[0].toUpperCase();
       if (!map.has(initial)) map.set(initial, []);
       map.get(initial).push(staff);
       return map;
@@ -86,7 +87,7 @@
       <AccordionItem open>
         <span slot="header">Mensuel ({permanentStaff.length})</span>
         <div class="flex flex-col gap-4">
-          {#each [...groupStaffByLastnameInitial(permanentStaff).entries()] as [initial, staffList]}
+          {#each [...new Map([...groupStaffByLastnameInitial(permanentStaff)].sort()).entries()] as [initial, staffList]}
             <div class="mb-2">
               <h2 class="text-2xl font-bold">{initial}</h2>
               <div class="flex flex-row flex-wrap gap-4">
@@ -103,7 +104,7 @@
       <AccordionItem open={search !== ""}>
         <span slot="header">Intérimaires ({temporaryStaff.length})</span>
         <div class="flex flex-col gap-4">
-          {#each [...groupStaffByLastnameInitial(temporaryStaff).entries()] as [initial, staffList]}
+          {#each [...new Map([...groupStaffByLastnameInitial(temporaryStaff)].sort()).entries()] as [initial, staffList]}
             <div class="mb-2">
               <h2 class="text-2xl font-bold">{initial}</h2>
               <div class="flex flex-row flex-wrap gap-4">
