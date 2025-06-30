@@ -7,7 +7,7 @@ declare(strict_types=1);
 namespace App\Tests\Entity\Config;
 
 use App\Entity\Config\PdfConfig;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;

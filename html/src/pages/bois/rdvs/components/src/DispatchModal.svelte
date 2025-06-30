@@ -18,12 +18,11 @@
 
   import { LucideButton, BoutonAction, Svelecte } from "@app/components";
 
-  import { validerFormulaire, DateUtils } from "@app/utils";
+  import { validerFormulaire, DateUtils, removeDiacritics } from "@app/utils";
 
   import { boisRdvs } from "@app/stores";
 
   import type { RdvBois } from "@app/types";
-  import { get } from "svelte/store";
 
   let form: HTMLFormElement;
   let updateButton: BoutonAction;
@@ -69,10 +68,11 @@
   }
 
   function addLoadingDispatchLineIfLoadingStarted() {
-    if (
-      appointment.heure_arrivee &&
-      !dispatch.some((item) => item.remarks === "Chargement")
-    ) {
+    const normalizedRemarks = removeDiacritics(
+      appointment.dispatch.map(({ remarks }) => remarks).join()
+    );
+
+    if (appointment.heure_arrivee && !/charge/i.test(normalizedRemarks)) {
       dispatch = [
         ...dispatch,
         {
@@ -83,6 +83,18 @@
         },
       ];
     }
+  }
+
+  function addOrderReadyDispatchLine() {
+    dispatch = [
+      ...dispatch,
+      {
+        staffId: getDedicatedStaffForSupplier(appointment.fournisseur),
+        date: new DateUtils().toLocaleISODateString(),
+        remarks: "Préparation",
+        new: true,
+      },
+    ];
   }
 
   async function updateDispatch() {
@@ -133,6 +145,9 @@
   size="lg"
   on:open={() => {
     dispatch = structuredClone(appointment.dispatch);
+    if (awaitingDispatchBeforeOrderReady) {
+      addOrderReadyDispatchLine();
+    }
     addLoadingDispatchLineIfLoadingStarted();
   }}
 >

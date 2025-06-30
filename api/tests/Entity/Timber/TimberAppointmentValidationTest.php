@@ -7,7 +7,7 @@ declare(strict_types=1);
 namespace App\Tests\Entity\Timber;
 
 use App\Core\Exceptions\Client\ValidationException;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 use App\Entity\Timber\TimberAppointment;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;

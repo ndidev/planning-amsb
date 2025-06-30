@@ -41,5 +41,5 @@ export type {
   StevedoringShipReportFilterData,
 } from "./src/Stevedoring";
 export type { RdvBois, CamionsParDate, TimberFilter } from "./src/Timber";
-export type { Tiers } from "./src/ThirdParty";
+export type { Tiers, Contact } from "./src/ThirdParty";
 export type { CompteUtilisateur } from "./src/UserAccount";

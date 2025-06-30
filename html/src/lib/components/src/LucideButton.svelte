@@ -232,9 +232,10 @@
   button.disabled {
     cursor: not-allowed;
     color: var(--default-color);
+    filter: brightness(1.2);
 
-    &:is(:hover, :focus) {
-      color: var(--default-color);
+    &:is(:hover)::before {
+      opacity: 0;
     }
   }
 </style>

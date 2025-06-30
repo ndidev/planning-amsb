@@ -9,11 +9,13 @@ namespace App\Repository;
 use App\Core\Component\Collection;
 use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\DB\DBException;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
+use App\Entity\ThirdParty\ThirdPartyContact;
 use App\Service\ThirdPartyService;
 
 /**
- * @phpstan-import-type ThirdPartyArray from \App\Entity\ThirdParty
+ * @phpstan-import-type ThirdPartyArray from \App\Entity\ThirdParty\ThirdParty
+ * @phpstan-import-type ThirdPartyContactArray from \App\Entity\ThirdParty\ThirdPartyContact
  */
 final class ThirdPartyRepository extends Repository
 {
@@ -42,21 +44,34 @@ final class ThirdPartyRepository extends Repository
      */
     public function fetchAllThirdParties(): Collection
     {
-        $statement = "SELECT * FROM tiers ORDER BY nom_court, ville";
+        $thirdPartiesStatement = "SELECT * FROM tiers ORDER BY nom_court, ville";
 
-        $thirdPartiesRequest = $this->mysql->query($statement);
-
-        if (!$thirdPartiesRequest) {
-            throw new DBException("Impossible de récupérer les tiers.");
+        try {
+            /** @var ThirdPartyArray[] */
+            $thirdPartiesRaw = $this->mysql->prepareAndExecute($thirdPartiesStatement)->fetchAll();
+        } catch (\PDOException $e) {
+            throw new DBException("Erreur lors de la récupération des tiers.", previous: $e);
         }
-
-        /** @var ThirdPartyArray[] */
-        $thirdPartiesRaw = $thirdPartiesRequest->fetchAll();
 
         $thirdParties = \array_map(
             fn($thirdPartyRaw) => $this->thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw),
             $thirdPartiesRaw
         );
+
+        $idsOfThirdPartiesWithContacts = $this->mysql
+            ->prepareAndExecute("SELECT DISTINCT tiers FROM tiers_contacts")
+            ->fetchAll(\PDO::FETCH_COLUMN, 0);
+
+        foreach ($thirdParties as $thirdParty) {
+            /** @var int */
+            $id = $thirdParty->id;
+
+            if (\in_array($id, $idsOfThirdPartiesWithContacts, true)) {
+                $thirdParty->contacts = $this->fetchContactsForThirdParty($id);
+            } else {
+                $thirdParty->contacts = [];
+            }
+        }
 
         return new Collection($thirdParties);
     }
@@ -85,14 +100,18 @@ final class ThirdPartyRepository extends Repository
         $thirdParty = $this->reflector->newLazyProxy(
             function () use ($id) {
                 try {
-                    $statement = "SELECT * FROM tiers WHERE id = :id";
+                    $thirdPartyStatement = "SELECT * FROM tiers WHERE id = :id";
 
                     /** @var ThirdPartyArray */
                     $thirdPartyRaw = $this->mysql
-                        ->prepareAndExecute($statement, ["id" => $id])
+                        ->prepareAndExecute($thirdPartyStatement, ["id" => $id])
                         ->fetch();
 
-                    return $this->thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw);
+                    $thirdParty = $this->thirdPartyService->makeThirdPartyFromDatabase($thirdPartyRaw);
+
+                    $thirdParty->contacts = $this->fetchContactsForThirdParty($id);
+
+                    return $thirdParty;
                 } catch (\PDOException $e) {
                     throw new DBException("Erreur lors de la récupération du tiers.", previous: $e);
                 }
@@ -107,6 +126,34 @@ final class ThirdPartyRepository extends Repository
     }
 
     /**
+     * Récupère les contacts d'un tiers.
+     * 
+     * @param int $id ID du tiers dont on veut les contacts.
+     * 
+     * @return ThirdPartyContact[] Liste des contacts du tiers
+     */
+    public function fetchContactsForThirdParty(int $id): array
+    {
+        $statement = "SELECT * FROM tiers_contacts WHERE tiers = :id ORDER BY nom";
+
+        try {
+            /** @var ThirdPartyContactArray[] */
+            $contactsRaw = $this->mysql
+                ->prepareAndExecute($statement, ["id" => $id])
+                ->fetchAll();
+        } catch (\PDOException $e) {
+            throw new DBException("Erreur lors de la récupération des contacts du tiers.", previous: $e);
+        }
+
+        $contacts = \array_map(
+            fn($contactRaw) => $this->thirdPartyService->makeThirdPartyContactFromDatabase($contactRaw),
+            $contactsRaw
+        );
+
+        return $contacts;
+    }
+
+    /**
      * Crée un tiers.
      * 
      * @param ThirdParty $thirdParty Eléments du tiers à créer
@@ -115,7 +162,7 @@ final class ThirdPartyRepository extends Repository
      */
     public function createThirdParty(ThirdParty $thirdParty): ThirdParty
     {
-        $statement =
+        $thirdPartyStatement =
             "INSERT INTO tiers
             SET
                 nom_court = :shortName,
@@ -131,25 +178,53 @@ final class ThirdPartyRepository extends Repository
                 logo = :logo,
                 actif = :active";
 
-        $this->mysql->beginTransaction();
+        $contactsStatement = "INSERT INTO tiers_contacts
+            SET
+                tiers = :thirdPartyId,
+                nom = :name,
+                email = :email,
+                telephone = :phone,
+                fonction = :position,
+                commentaire = :comments";
 
-        $this->mysql->prepareAndExecute($statement, [
-            'shortName' => $thirdParty->shortName ?: $thirdParty->fullName,
-            'fullName' => $thirdParty->fullName,
-            'addressLine1' => $thirdParty->addressLine1,
-            'addressLine2' => $thirdParty->addressLine2,
-            'postCode' => $thirdParty->postCode,
-            'city' => $thirdParty->city,
-            'country' => $thirdParty->country?->iso,
-            'phone' => $thirdParty->phone,
-            'comments' => $thirdParty->comments,
-            'roles' => \json_encode($thirdParty->roles),
-            'logo' => $thirdParty->logoFilename,
-            'active' => (int) $thirdParty->isActive,
-        ]);
+        try {
+            $this->mysql->beginTransaction();
 
-        $lastInsertId = (int) $this->mysql->lastInsertId();
-        $this->mysql->commit();
+            $this->mysql->prepareAndExecute($thirdPartyStatement, [
+                'shortName' => $thirdParty->shortName ?: $thirdParty->fullName,
+                'fullName' => $thirdParty->fullName,
+                'addressLine1' => $thirdParty->addressLine1,
+                'addressLine2' => $thirdParty->addressLine2,
+                'postCode' => $thirdParty->postCode,
+                'city' => $thirdParty->city,
+                'country' => $thirdParty->country?->iso,
+                'phone' => $thirdParty->phone,
+                'comments' => $thirdParty->comments,
+                'roles' => \json_encode($thirdParty->roles),
+                'logo' => $thirdParty->logoFilename,
+                'active' => (int) $thirdParty->isActive,
+            ]);
+
+            $lastInsertId = (int) $this->mysql->lastInsertId();
+
+            $this->mysql->prepareAndExecute($contactsStatement, \array_map(
+                fn($contact) => [
+                    'thirdPartyId' => $lastInsertId,
+                    'name' => $contact->name,
+                    'email' => $contact->email,
+                    'phone' => $contact->phone,
+                    'position' => $contact->position,
+                    'comments' => $contact->comments,
+                ],
+                $thirdParty->contacts
+            ));
+
+            $this->mysql->commit();
+        } catch (\PDOException $e) {
+            $this->mysql->rollbackIfNeeded();
+
+            throw new DBException("Erreur lors de la création du tiers.", previous: $e);
+        }
 
         /** @var ThirdParty */
         $newThirdParty = $this->fetchThirdParty($lastInsertId);
@@ -192,7 +267,7 @@ final class ThirdPartyRepository extends Repository
                 actif = :active
             WHERE id = :id";
 
-        $fields = [
+        $thirdPartyFields = [
             'shortName' => $thirdParty->shortName ?: $thirdParty->fullName,
             'fullName' => $thirdParty->fullName,
             'addressLine1' => $thirdParty->addressLine1,
@@ -208,10 +283,69 @@ final class ThirdPartyRepository extends Repository
         ];
 
         if ($thirdParty->logoFilename !== false) {
-            $fields["logo"] = $thirdParty->logoFilename;
+            $thirdPartyFields["logo"] = $thirdParty->logoFilename;
         }
 
-        $this->mysql->prepareAndExecute($thirdPartyStatement, $fields);
+        $contactStatement = "INSERT INTO tiers_contacts
+            SET
+                id = :id,
+                tiers = :thirdPartyId,
+                nom = :name,
+                email = :email,
+                telephone = :phone,
+                fonction = :position,
+                commentaire = :comments
+            ON DUPLICATE KEY UPDATE
+                nom = :name,
+                email = :email,
+                telephone = :phone,
+                fonction = :position,
+                commentaire = :comments";
+
+        try {
+            $this->mysql->beginTransaction();
+
+            $this->mysql->prepareAndExecute($thirdPartyStatement, $thirdPartyFields);
+
+            // CONTACTS
+            // Delete contacts that are not in the submitted list
+            // !! DELETION TO BE PLACED *BEFORE* ADDING NEW CONTACTS TO AVOID IMMEDIATE DELETION AFTER INSERTION !!
+            // Compare the array passed by POST with the existing list of contacts for the relevant third party.
+            /** @var array<int> */
+            $existingContactIds = $this->mysql
+                ->prepareAndExecute(
+                    "SELECT id FROM tiers_contacts WHERE tiers = :thirdPartyId",
+                    ['thirdPartyId' => $thirdParty->id]
+                )->fetchAll(\PDO::FETCH_COLUMN, 0);
+
+            $submittedContactIds = \array_map(fn($contact) => $contact->id, $thirdParty->contacts);
+            $contactIdsToBeDeleted = \array_diff($existingContactIds, $submittedContactIds);
+
+            if (!empty($contactIdsToBeDeleted)) {
+                $deleteContactsStatement = "DELETE FROM tiers_contacts WHERE id IN (" . \implode(",", $contactIdsToBeDeleted) . ")";
+                $this->mysql->exec($deleteContactsStatement);
+            }
+
+            // Insert and update qualities
+            $this->mysql->prepareAndExecute($contactStatement, \array_map(
+                fn($contact) => [
+                    'id' => $contact->id,
+                    'thirdPartyId' => $thirdParty->id,
+                    'name' => $contact->name,
+                    'email' => $contact->email,
+                    'phone' => $contact->phone,
+                    'position' => $contact->position,
+                    'comments' => $contact->comments,
+                ],
+                $thirdParty->contacts
+            ));
+
+            $this->mysql->commit();
+        } catch (\PDOException $e) {
+            $this->mysql->rollbackIfNeeded();
+
+            throw new DBException("Erreur lors de la mise à jour du tiers.", previous: $e);
+        }
 
         /** @var ThirdParty */
         $updatedThirdParty = $this->fetchThirdParty($id);

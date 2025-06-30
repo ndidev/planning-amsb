@@ -12,13 +12,14 @@ use App\Core\Exceptions\Client\NotFoundException;
 use App\Core\Exceptions\Server\DB\DBException;
 use App\Core\HTTP\HTTPRequestBody;
 use App\DTO\BulkDispatchStatsDTO;
+use App\DTO\BulkProductAppointmentCountDTO;
 use App\DTO\Filter\BulkDispatchStatsFilterDTO;
 use App\DTO\Filter\BulkFilterDTO;
 use App\Entity\Bulk\BulkAppointment;
 use App\Entity\Bulk\BulkDispatchItem;
 use App\Entity\Bulk\BulkProduct;
 use App\Entity\Bulk\BulkQuality;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 use App\Repository\BulkAppointmentRepository;
 use App\Repository\BulkProductRepository;
 
@@ -390,6 +391,16 @@ final class BulkService
         return $this->productRepository->deleteProduct($id);
     }
 
+    /**
+     * Retrieves the number of appointments for a third party or all third parties.
+     * 
+     * @param int $id ID of the third party to retrieve.
+     */
+    public function getAppointmentCountForProductId(int $id): BulkProductAppointmentCountDTO
+    {
+        return $this->productRepository->fetchAppointmentCountForId($id);
+    }
+
 
     // =========
     // Qualities
@@ -456,6 +467,8 @@ final class BulkService
 
         return $this->productRepository->fetchQuality($id);
     }
+
+
 
     // ========
     // Dispatch

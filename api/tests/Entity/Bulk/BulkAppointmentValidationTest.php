@@ -10,7 +10,7 @@ use App\Core\Exceptions\Client\ValidationException;
 use App\Entity\Bulk\BulkAppointment;
 use App\Entity\Bulk\BulkProduct;
 use App\Entity\Bulk\BulkQuality;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;

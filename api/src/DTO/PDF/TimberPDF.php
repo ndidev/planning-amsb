@@ -10,7 +10,7 @@ use App\Core\Component\Collection;
 use App\Core\Component\DateUtils;
 use App\Entity\Timber\TimberAppointment;
 use App\Entity\Config\AgencyDepartment;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 
 /**
  * @phpstan-type TimberPdfAppointments array{

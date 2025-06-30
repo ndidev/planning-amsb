@@ -132,4 +132,49 @@ export type Tiers = {
    * Nombre de RDV du tiers.
    */
   nombre_rdv?: number;
+
+  /**
+   * Contacts associés au tiers.
+   */
+  contacts: Contact[];
+};
+
+/**
+ * Contact associé à un tiers.
+ */
+export type Contact = {
+  /**
+   * Identifiant du contact.
+   */
+  id: number;
+
+  /**
+   * Nom du contact.
+   */
+  nom: string;
+
+  /**
+   * Email du contact.
+   */
+  email: string;
+
+  /**
+   * Téléphone du contact.
+   */
+  telephone: string;
+
+  /**
+   * Fonction du contact.
+   */
+  fonction: string;
+
+  /**
+   * Commentaires.
+   */
+  commentaire: string;
+
+  /**
+   * Indique si le contact est nouveau (ajouté dans le modal)
+   */
+  new?: boolean;
 };

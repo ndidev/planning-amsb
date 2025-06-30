@@ -8,7 +8,9 @@ namespace App\Repository;
 
 use App\Core\Array\ArrayHandler;
 use App\Core\Component\Collection;
+use App\Core\Exceptions\Client\ClientException;
 use App\Core\Exceptions\Server\DB\DBException;
+use App\DTO\BulkProductAppointmentCountDTO;
 use App\Entity\Bulk\BulkProduct;
 use App\Entity\Bulk\BulkQuality;
 use App\Service\BulkService;
@@ -17,6 +19,7 @@ use ReflectionClass;
 /**
  * @phpstan-import-type BulkProductArray from \App\Entity\Bulk\BulkProduct
  * @phpstan-import-type BulkQualityArray from \App\Entity\Bulk\BulkQuality
+ * @phpstan-import-type BulkProductAppointmentCountArray from \App\DTO\BulkProductAppointmentCountDTO
  */
 final class BulkProductRepository extends Repository
 {
@@ -333,39 +336,70 @@ final class BulkProductRepository extends Repository
                 couleur = :color
             ";
 
-        $this->mysql->prepareAndExecute($productStatement, [
-            'name' => $product->name,
-            'color' => $product->color,
-            'unit' => $product->unit,
-            'id' => $product->id,
-        ]);
+        try {
+            $this->mysql->beginTransaction();
 
-        // QUALITIES
-        // Delete qualities
-        // !! DELETION TO BE PLACED *BEFORE* ADDING QUALITIES TO AVOID IMMEDIATE DELETION AFTER ADDITION !!
-        // Compare the array passed by POST with the existing list of qualities for the relevant product
-        $qualitiesRequest = $this->mysql->prepare("SELECT id FROM vrac_qualites WHERE produit = :productId");
-        $qualitiesRequest->execute(['productId' => $product->id]);
-        $existingQualitiesIds = $qualitiesRequest->fetchAll(\PDO::FETCH_COLUMN, 0);
+            $this->mysql->prepareAndExecute($productStatement, [
+                'name' => $product->name,
+                'color' => $product->color,
+                'unit' => $product->unit,
+                'id' => $product->id,
+            ]);
 
-        $submittedQualitiesIds = \array_map(fn($quality) => $quality->id, $product->qualities);
-        $qualitiesIdsToBeDeleted = \array_diff($existingQualitiesIds, $submittedQualitiesIds);
+            // QUALITIES
+            // Delete qualities
+            // !! DELETION TO BE PLACED *BEFORE* ADDING QUALITIES TO AVOID IMMEDIATE DELETION AFTER ADDITION !!
+            // Compare the array passed by POST with the existing list of qualities for the relevant product
+            /** @var array<int> */
+            $existingQualitiesIds = $this->mysql
+                ->prepareAndExecute(
+                    "SELECT id FROM vrac_qualites WHERE produit = :productId",
+                    ['productId' => $product->id]
+                )->fetchAll(\PDO::FETCH_COLUMN, 0);
 
-        if (!empty($qualitiesIdsToBeDeleted)) {
-            $deleteQualitiesStatement = "DELETE FROM vrac_qualites WHERE id IN (" . \implode(",", $qualitiesIdsToBeDeleted) . ")";
-            $this->mysql->exec($deleteQualitiesStatement);
+            $submittedQualitiesIds = \array_map(fn($quality) => $quality->id, $product->qualities);
+            $qualitiesIdsToBeDeleted = \array_diff($existingQualitiesIds, $submittedQualitiesIds);
+
+            // Check that the qualities to be deleted are not used in appointments
+            if (!empty($qualitiesIdsToBeDeleted)) {
+                $appointmentCount = $this->fetchAppointmentCountForId((int) $product->id);
+                foreach ($qualitiesIdsToBeDeleted as $qualityId) {
+                    if ($appointmentCount->forQuality((int) $qualityId) > 0) {
+                        /** @var BulkQuality */
+                        $quality = $this->fetchQuality((int) $qualityId);
+                        throw new ClientException("La qualité '{$quality->name}' est utilisée dans des rendez-vous. Impossible de la supprimer.");
+                    }
+                }
+            }
+
+            if (!empty($qualitiesIdsToBeDeleted)) {
+                $deleteQualitiesStatement = "DELETE FROM vrac_qualites WHERE id IN (" . \implode(",", $qualitiesIdsToBeDeleted) . ")";
+                $this->mysql->exec($deleteQualitiesStatement);
+            }
+
+            // Insert and update qualities
+            $this->mysql->prepareAndExecute($qualityStatement, \array_map(
+                fn($quality) => [
+                    'id' => $quality->id,
+                    'productId' => $product->id,
+                    'name' => $quality->name,
+                    'color' => $quality->color,
+                ],
+                $product->qualities
+            ));
+
+            $this->mysql->commit();
+        } catch (\Throwable $e) {
+            $this->mysql->rollbackIfNeeded();
+
+            if ($e instanceof ClientException) {
+                throw $e; // Re-throw client exceptions
+            }
+
+            throw new DBException("Erreur lors de la mise à jour du produit vrac.", previous: $e);
         }
 
-        // Insert and update qualities
-        $this->mysql->prepareAndExecute($qualityStatement, \array_map(
-            fn($quality) => [
-                'id' => $quality->id,
-                'productId' => $product->id,
-                'name' => $quality->name,
-                'color' => $quality->color,
-            ],
-            $product->qualities
-        ));
+
 
         /** @var int */
         $id = $product->id;
@@ -385,6 +419,11 @@ final class BulkProductRepository extends Repository
      */
     public function deleteProduct(int $id): bool
     {
+        $appointmentCount = $this->fetchAppointmentCountForId($id)->total;
+        if ($appointmentCount > 0) {
+            throw new ClientException("Le produit est concerné par {$appointmentCount} rdv. Impossible de le supprimer.");
+        }
+
         $request = $this->mysql->prepare("DELETE FROM vrac_produits WHERE id = :id");
         $success = $request->execute(["id" => $id]);
 
@@ -393,5 +432,24 @@ final class BulkProductRepository extends Repository
         }
 
         return $success;
+    }
+
+    /**
+     * Récupère le nombre de RDV pour un produit.
+     * 
+     * @param int $id ID du produit à vérifier.
+     */
+    public function fetchAppointmentCountForId(int $id): BulkProductAppointmentCountDTO
+    {
+        $statement = "SELECT 'total' as 'id', COUNT(*) AS 'count' FROM vrac_planning WHERE produit = :productId
+                      UNION
+                      SELECT qualite, COUNT(*) FROM vrac_planning WHERE produit = :productId GROUP BY qualite;";
+
+        /** @var BulkProductAppointmentCountArray[] */
+        $appointmentCountRaw = $this->mysql->prepareAndExecute($statement, ["productId" => $id])->fetchAll();
+
+        $appointmentCount = new BulkProductAppointmentCountDTO($appointmentCountRaw);
+
+        return $appointmentCount;
     }
 }

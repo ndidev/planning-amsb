@@ -11,7 +11,7 @@ use App\Entity\Port;
 use App\Entity\Shipping\ShippingCall;
 use App\Entity\Shipping\ShippingCallCargo;
 use App\Entity\Stevedoring\ShipReport;
-use App\Entity\ThirdParty;
+use App\Entity\ThirdParty\ThirdParty;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\TestDox;
 use PHPUnit\Framework\Attributes\UsesClass;

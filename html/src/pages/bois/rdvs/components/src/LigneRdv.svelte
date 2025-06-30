@@ -125,45 +125,17 @@
 
     switch (type) {
       case "beforeOrderReady":
-        if (
-          !appointment.commande_prete &&
-          !normalizedRemarks.includes("prepa")
-        ) {
-          appointment.dispatch = [
-            ...appointment.dispatch,
-            {
-              staffId: getDedicatedStaffForSupplier(appointment.fournisseur),
-              date: new DateUtils().toLocaleISODateString(),
-              remarks: "Préparation",
-              new: true,
-            },
-          ];
-
+        if (!appointment.commande_prete && !/prepa/i.test(normalizedRemarks)) {
           awaitingDispatchBeforeOrderReady = true;
           showDispatchModal = true;
         }
         break;
 
       case "beforeSettingDepartureTime":
-        if (
-          !appointment.heure_depart &&
-          !normalizedRemarks.includes("charge")
-        ) {
-          appointment.dispatch = [
-            ...appointment.dispatch,
-            {
-              staffId: getDedicatedStaffForSupplier(appointment.fournisseur),
-              date: new DateUtils().toLocaleISODateString(),
-              remarks:
-                appointment.chargement === 1 ? "Chargement" : "Déchargement",
-              new: true,
-            },
-          ];
-
+        if (!appointment.heure_depart && !/charge/i.test(normalizedRemarks)) {
           awaitingDispatchBeforeSettingDepartureTime = true;
           showDispatchModal = true;
         }
-
         break;
 
       default:
