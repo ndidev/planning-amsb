@@ -78,6 +78,7 @@ final class StevedoringStaff extends AbstractEntity implements \Stringable
         $this->tempWorkAgency = $dataAH->getString('tempWorkAgency', null);
         $this->isActive = $dataAH->getBool('isActive');
         $this->comments = $dataAH->getString('comments');
+        $this->deletedAt = $dataAH->getDateTime('deletedAt', null);
 
         if ($this->type === "cdi") {
             $this->tempWorkAgency = null;
