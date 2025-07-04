@@ -25,7 +25,7 @@
   $: qualite = produit?.qualites.find((qualite) => qualite.id === rdv.qualite);
 </script>
 
-<div class="grid grid-cols-[16%_4%_4%_8%_29%_8%_16%] gap-2 px-1 py-2 text-xl">
+<div class="grid grid-cols-[16%_4%_4%_8%_9%_14%_auto] gap-2 px-1 py-2 text-xl">
   <!-- Produit + Qualité -->
   <div class="font-bold">
     <span style:color={produit?.couleur || "#000000"}>{produit?.nom || ""}</span
@@ -56,12 +56,6 @@
     <span class="max">{rdv.max ? "max" : ""}</span>
   </div>
 
-  <!-- Client -->
-  <div>
-    {client?.nom_court || ""}
-    {client?.ville || ""}
-  </div>
-
   <!-- Transporteur -->
   <div class="font-bold">
     {transporteur?.nom_court || ""}
@@ -70,11 +64,8 @@
   <!-- Numéro de commande -->
   <div>{rdv.num_commande}</div>
 
-  <!-- Espacement avant commentaire -->
-  <div class="col-span-3"></div>
-
   <!-- Commentaire -->
-  <div class="col-span-4">
+  <div>
     {@html rdv.commentaire_public.replace(/\r\n|\r|\n/g, "<br/>")}
   </div>
 </div>
