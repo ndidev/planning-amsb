@@ -31,11 +31,11 @@ final class ShippingStatsDetailsDTO implements \JsonSerializable
      *                   ops_date: ?string,
      *                   etc_date: ?string,
      *                   marchandises: array{
-     *                                   marchandise: string,
-     *                                   client: string,
-     *                                   tonnage_outturn: ?float,
-     *                                   cubage_outturn: ?float,
-     *                                   nombre_outturn: ?float
+     *                                   cargoName: string,
+     *                                   customer: string,
+     *                                   outturnTonnage: ?float,
+     *                                   outturnVolume: ?float,
+     *                                   outturnUnits: ?float
      *                                 }[]
      *                   }>
      */
@@ -67,11 +67,11 @@ final class ShippingStatsDetailsDTO implements \JsonSerializable
             }
 
             $this->groupedCalls[$call["id"]]["marchandises"][] = [
-                "marchandise" => $call["marchandise"],
-                "client" => $call["client"],
-                "tonnage_outturn" => $call["tonnage_outturn"] ?? $call["tonnage_bl"],
-                "cubage_outturn" => $call["cubage_outturn"] ?? $call["cubage_bl"],
-                "nombre_outturn" => $call["nombre_outturn"] ?? $call["nombre_bl"],
+                "cargoName" => $call["marchandise"],
+                "customer" => $call["client"],
+                "outturnTonnage" => $call["tonnage_outturn"] ?? $call["tonnage_bl"],
+                "outturnVolume" => $call["cubage_outturn"] ?? $call["cubage_bl"],
+                "outturnUnits" => $call["nombre_outturn"] ?? $call["nombre_bl"],
             ];
         }
     }
