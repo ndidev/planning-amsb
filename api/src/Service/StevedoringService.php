@@ -788,6 +788,9 @@ final class StevedoringService
 
             $days = \array_keys($subreport->getEntriesByDate());
 
+            /** @var Map<StevedoringEquipment, array<string, ShipReportEquipmentEntry>> */
+            $craneMap = new Map();
+
             /**
              * @var array{
              *        entries: Map<StevedoringEquipment, array<string, ShipReportEquipmentEntry>>,
@@ -797,7 +800,11 @@ final class StevedoringService
              *                }
              *      }
              */
-            $craneEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0]]];
+            $craneEntries = ['entries' => $craneMap, 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0]]];
+
+            /** @var Map<StevedoringEquipment, array<string, ShipReportEquipmentEntry>> */
+            $equipmentMap = new Map();
+
             /**
              * @var array{
              *        entries: Map<StevedoringEquipment, array<string, ShipReportEquipmentEntry>>,
@@ -807,7 +814,8 @@ final class StevedoringService
              *                }
              *      }
              */
-            $equipmentEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0]]];
+            $equipmentEntries = ['entries' => $equipmentMap, 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0]]];
+
             foreach ($subreport->equipmentEntries as $entry) {
                 if (!$entry->equipment || !$entry->date) continue;
                 $entry->equipment->isCrane
@@ -822,6 +830,9 @@ final class StevedoringService
                 unset($map);
             }
 
+            /** @var Map<StevedoringStaff, array<string, ShipReportStaffEntry>> */
+            $permanentStaffMap = new Map();
+
             /**
              * @var array{
              *        entries: Map<StevedoringStaff, array<string, ShipReportStaffEntry>>,
@@ -831,7 +842,11 @@ final class StevedoringService
              *                }
              *      }
              */
-            $permanentStaffEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0]]];
+            $permanentStaffEntries = ['entries' => $permanentStaffMap, 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0]]];
+
+            /** @var Map<StevedoringStaff, array<string, ShipReportStaffEntry>> */
+            $tempStaffMap = new Map();
+
             /**
              * @var array{
              *        entries: Map<StevedoringStaff, array<string, ShipReportStaffEntry>>,
@@ -841,7 +856,7 @@ final class StevedoringService
              *                }
              *      }
              */
-            $tempStaffEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0]]];
+            $tempStaffEntries = ['entries' => $tempStaffMap, 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0]]];
             foreach ($subreport->staffEntries as $entry) {
                 if (!$entry->staff || !$entry->date) continue;
                 $entry->staff->type === 'mensuel'
@@ -856,6 +871,9 @@ final class StevedoringService
                 unset($map);
             }
 
+            /** @var Map<string, array<string, ShipReportSubcontractEntry>> */
+            $truckingMap = new Map();
+
             /**
              * @var array{
              *        entries: Map<string, array<string, ShipReportSubcontractEntry>>,
@@ -865,7 +883,11 @@ final class StevedoringService
              *                }
              *      }
              */
-            $truckingEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0, 'cost' => 0.0]]];
+            $truckingEntries = ['entries' => $truckingMap, 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0, 'cost' => 0.0]]];
+
+            /** @var Map<string, array<string, ShipReportSubcontractEntry>> */
+            $otherSubcontractsMap = new Map();
+
             /**
              * @var array{
              *        entries: Map<string, array<string, ShipReportSubcontractEntry>>,
@@ -875,7 +897,8 @@ final class StevedoringService
              *                }
              *      }
              */
-            $otherSubcontractsEntries = ['entries' => new Map(), 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0, 'cost' => 0.0]]];
+            $otherSubcontractsEntries = ['entries' => $otherSubcontractsMap, 'totals' => ['byDay' => [], 'total' => ['hoursWorked' => 0.0, 'cost' => 0.0]]];
+
             foreach ($subreport->subcontractEntries as $entry) {
                 if (!$entry->date) continue;
                 $entry->type === 'trucking'

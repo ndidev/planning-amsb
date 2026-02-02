@@ -32,7 +32,6 @@ final class TidesDTO implements \JsonSerializable
     public function __construct(array $tides)
     {
         for ($i = 0; $i < count($tides); $i++) {
-            // @phpstan-ignore assign.propertyType
             $this->tides[$i] = [
                 "date" => $tides[$i]["date"],
                 "heure" => \substr($tides[$i]["heure"], 0, -3),
