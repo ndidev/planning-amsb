@@ -8,9 +8,9 @@ The project uses the following technologies:
 
 ### Back-end
 
-- **Language**: PHP 8.4
+- **Language**: PHP 8.5
 - **Database**: MariaDB 10.11, Redis 7.2
-- **Testing**: PHPUnit 11.4
+- **Testing**: PHPUnit 12.0
 - **Code Quality**: PHPStan 2.1
 
 ### Front-end
