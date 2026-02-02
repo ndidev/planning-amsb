@@ -18,12 +18,16 @@ abstract class AbstractEntity implements Arrayable, \JsonSerializable, Validatio
     {
         $array = [];
 
-        // @phpstan-ignore foreach.nonIterable
-        foreach ($this as $key => $value) {
+        $reflection = new \ReflectionClass($this);
+        $properties = $reflection->getProperties();
+
+        foreach ($properties as $property) {
+            $value = $property->getValue($this);
+
             if ($value instanceof Arrayable) {
-                $array[$key] = $value->toArray();
+                $array[$property->getName()] = $value->toArray();
             } else {
-                $array[$key] = $value;
+                $array[$property->getName()] = $value;
             }
         }
 

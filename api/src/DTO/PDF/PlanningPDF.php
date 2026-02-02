@@ -121,7 +121,6 @@ abstract class PlanningPDF extends \tFPDF
         ob_start();
         imagepng($pngImage);
         $pngData = ob_get_clean();
-        imagedestroy($pngImage);
 
         if (!$pngData) {
             $this->Error('Unable to create PNG data');
@@ -167,11 +166,11 @@ abstract class PlanningPDF extends \tFPDF
         }
         [$width_px, $height_px] = $imageSizeInfo;
 
-        /** @var array{0: int, 1: int}|false */
         $imageResolutionInfo = imageresolution($tmp);
-        if (!$imageResolutionInfo) {
+        if (!\is_array($imageResolutionInfo)) {
             return;
         }
+        /** @var array{0: int, 1: int} $imageResolutionInfo */
         [$res_w, $res_h] = $imageResolutionInfo;
 
         $ratio = $width_px / $height_px;
