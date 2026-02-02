@@ -15,8 +15,10 @@
 
   import type { BulkPlanningFilter } from "@app/types";
 
+  const TODAY_ISO = new Date().toISOString().split("T")[0];
+
   const emptyFilter: BulkPlanningFilter = {
-    date_debut: new Date().toISOString().split("T")[0],
+    date_debut: TODAY_ISO,
     date_fin: "",
     produit: [],
     qualite: [],
@@ -30,8 +32,8 @@
   export const filter = writable(
     new Filter<BulkPlanningFilter>(
       parseJSON(sessionStorage.getItem(filterName)) ||
-        structuredClone(emptyFilter)
-    )
+        structuredClone(emptyFilter),
+    ),
   );
 </script>
 
@@ -58,7 +60,7 @@
     (acc, [key, value]) =>
       (Array.isArray(value) ? value.length > 0 : value !== emptyFilter[key]) ||
       acc,
-    false
+    false,
   );
 
   let qualityOptions: { id: number; name: string }[] = [];
@@ -78,7 +80,7 @@
                   name: product.nom + " " + quality.nom,
                 }));
               })
-              .sort((a, b) => a.name.localeCompare(b.name))
+              .sort((a, b) => a.name.localeCompare(b.name)),
           ),
         ]
       : [];
@@ -87,10 +89,10 @@
     const availableQualityIds = filterData.produit.flatMap(
       (productId) =>
         $vracProduits?.get(productId)?.qualites.map((quality) => quality.id) ||
-        []
+        [],
     );
     filterData.qualite = filterData.qualite.filter((qualityId) =>
-      availableQualityIds.includes(qualityId)
+      availableQualityIds.includes(qualityId),
     );
   }
 
@@ -128,9 +130,9 @@
         `Qualité : ${filterData.qualite
           .map(
             (qualityId) =>
-              qualityOptions.find((quality) => quality.id === qualityId)?.name
+              qualityOptions.find((quality) => quality.id === qualityId)?.name,
           )
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -138,7 +140,7 @@
       filterTooltip.push(
         `Fournisseur : ${filterData.fournisseur
           .map((fournisseurId) => $tiers.get(fournisseurId)?.nom_court)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -146,7 +148,7 @@
       filterTooltip.push(
         `Client : ${filterData.client
           .map((clientId) => $tiers.get(clientId)?.nom_court)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -154,7 +156,7 @@
       filterTooltip.push(
         `Transporteur : ${filterData.transporteur
           .map((transporteurId) => $tiers.get(transporteurId)?.nom_court)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -170,6 +172,7 @@
 
     filterData = filterData; // Enable reactive tooltip
     filter.set(new Filter(filterData));
+    console.debug({ filterData });
   }
 
   function removeFilter() {
@@ -198,7 +201,15 @@
   bind:open
   autoclose
   outsideclose
-  on:open={() => (filterData = { ...$filter.data })}
+  on:open={() =>
+    (filterData = {
+      ...$filter.data,
+      date_debut: filterIsActive
+        ? filterData.date_debut
+        : new DateUtils(TODAY_ISO).offset(-7).toLocaleISODateString(),
+      date_fin: filterIsActive ? filterData.date_fin : TODAY_ISO,
+      archives: filterIsActive ? filterData.archives : true,
+    })}
 >
   <div class="flex flex-col gap-2">
     <div class="flex flex-col lg:flex-row gap-2">
