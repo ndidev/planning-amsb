@@ -7,7 +7,7 @@
     "ext-pdo_mysql": "*",
     "ext-redis": "*",
     "ext-zip": "*",
-    "phpmailer/phpmailer": "^6.2",
+    "phpmailer/phpmailer": "^7.0",
     "setasign/tfpdf": "^1.32",
     "vlucas/phpdotenv": "^5.3",
     "psr/log": "^3.0",
