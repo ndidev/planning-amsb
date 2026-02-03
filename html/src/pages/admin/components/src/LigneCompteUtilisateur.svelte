@@ -21,7 +21,9 @@
     Radio,
     Button,
   } from "flowbite-svelte";
-  import { CircleHelpIcon, HistoryIcon } from "lucide-svelte";
+  // import { CircleHelpIcon, HistoryIcon } from "lucide-svelte";
+  import CircleHelpIcon from "lucide-svelte/icons/circle-help";
+  import HistoryIcon from "lucide-svelte/icons/history";
 
   import { LucideButton, Badge } from "@app/components";
 
@@ -200,7 +202,7 @@
       explications[compte.statut].titre,
       explications[compte.statut].texte,
       "Fermer",
-      explications[compte.statut].notiflix.options
+      explications[compte.statut].notiflix.options,
     );
   }
 
@@ -219,7 +221,7 @@
         className: "notiflix-historique",
         width: "380px",
         messageMaxLength: Infinity,
-      }
+      },
     );
   }
 
@@ -334,7 +336,7 @@
         }
       },
       null,
-      notiflixOptions.themes.red
+      notiflixOptions.themes.red,
     );
   }
 
@@ -367,7 +369,7 @@
         }
       },
       null,
-      notiflixOptions.themes.red
+      notiflixOptions.themes.red,
     );
   }
 
@@ -400,7 +402,7 @@
         }
       },
       null,
-      notiflixOptions.themes.red
+      notiflixOptions.themes.red,
     );
   }
 

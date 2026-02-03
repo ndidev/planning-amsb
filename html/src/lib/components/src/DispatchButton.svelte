@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { UserRoundIcon, UserRoundCheckIcon } from "lucide-svelte";
+  // import { UserRoundIcon, UserRoundCheckIcon } from "lucide-svelte";
+  import UserRoundIcon from "lucide-svelte/icons/user-round";
+  import UserRoundCheckIcon from "lucide-svelte/icons/user-round-check";
   import { Tooltip } from "flowbite-svelte";
 
   import { LucideButton } from "@app/components";

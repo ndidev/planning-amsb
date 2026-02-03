@@ -17,15 +17,22 @@
  -->
 <script lang="ts">
   import type { ComponentType } from "svelte";
-  import {
-    PlusIcon,
-    PencilIcon,
-    CopyIcon,
-    Trash2Icon,
-    CheckIcon,
-    XIcon,
-    type Icon,
-  } from "lucide-svelte";
+  // import {
+  //   PlusIcon,
+  //   PencilIcon,
+  //   CopyIcon,
+  //   Trash2Icon,
+  //   CheckIcon,
+  //   XIcon,
+  //   type Icon,
+  // } from "lucide-svelte";
+  import PlusIcon from "lucide-svelte/icons/plus";
+  import PencilIcon from "lucide-svelte/icons/pencil";
+  import CopyIcon from "lucide-svelte/icons/copy";
+  import Trash2Icon from "lucide-svelte/icons/trash-2";
+  import CheckIcon from "lucide-svelte/icons/check";
+  import XIcon from "lucide-svelte/icons/x";
+  import type { Icon } from "lucide-svelte";
 
   type Preset = {
     name: "edit" | "copy" | "delete" | "confirm" | "cancel" | "add" | "default";

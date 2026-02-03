@@ -3,7 +3,9 @@
   import { goto } from "@roxi/routify";
 
   import { Drawer, CloseButton, Tabs, TabItem } from "flowbite-svelte";
-  import { PencilIcon, PrinterIcon } from "lucide-svelte";
+  // import { PencilIcon, PrinterIcon } from "lucide-svelte";
+  import PencilIcon from "lucide-svelte/icons/pencil";
+  import PrinterIcon from "lucide-svelte/icons/printer";
   import Notiflix from "notiflix";
 
   import {
@@ -44,7 +46,7 @@
 
       const blob: Blob = await fetcher(
         `manutention/rapports-navires/${report.id}/pdf`,
-        { accept: "blob" }
+        { accept: "blob" },
       );
 
       const file = URL.createObjectURL(blob);

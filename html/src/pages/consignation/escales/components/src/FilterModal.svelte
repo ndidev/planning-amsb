@@ -32,8 +32,8 @@
   export const filter = writable(
     new Filter<ShippingFilter>(
       parseJSON(sessionStorage.getItem(filterName)) ||
-        structuredClone(emptyFilter)
-    )
+        structuredClone(emptyFilter),
+    ),
   );
 </script>
 
@@ -48,7 +48,9 @@
     Tooltip,
     Checkbox,
   } from "flowbite-svelte";
-  import { FilterIcon, FilterXIcon } from "lucide-svelte";
+  // import { FilterIcon, FilterXIcon } from "lucide-svelte";
+  import FilterIcon from "lucide-svelte/icons/filter";
+  import FilterXIcon from "lucide-svelte/icons/filter-x";
 
   import { Svelecte, LucideButton } from "@app/components";
 
@@ -68,7 +70,7 @@
     (acc, [key, value]) =>
       (Array.isArray(value) ? value.length > 0 : value !== emptyFilter[key]) ||
       acc,
-    false
+    false,
   );
 
   let filterTooltip = "Chargement...";
@@ -104,13 +106,13 @@
       filterTooltip.push(
         `Armateurs : ${filterData.shipOwners
           .map((armateurId) => $tiers.get(armateurId)?.nom_court)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
     if (filterData.cargoes?.length) {
       filterTooltip.push(
-        `Marchandises ${filterData.strictCargoes ? "(strict)" : ""}: ${filterData.cargoes.join(", ")}`
+        `Marchandises ${filterData.strictCargoes ? "(strict)" : ""}: ${filterData.cargoes.join(", ")}`,
       );
     }
 
@@ -123,9 +125,9 @@
         `Provenances : ${filterData.lastPorts
           .map(
             (locode) =>
-              $ports.find((port) => locode === port.locode)?.nom_affichage
+              $ports.find((port) => locode === port.locode)?.nom_affichage,
           )
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -134,9 +136,9 @@
         `Destinations : ${filterData.nextPorts
           .map(
             (locode) =>
-              $ports.find((port) => locode === port.locode)?.nom_affichage
+              $ports.find((port) => locode === port.locode)?.nom_affichage,
           )
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -149,7 +151,7 @@
   }
 
   function addCreatedCargoOption(
-    event: CustomEvent<{ text: string; value: string }>
+    event: CustomEvent<{ text: string; value: string }>,
   ) {
     const newOption = event.detail.value;
 

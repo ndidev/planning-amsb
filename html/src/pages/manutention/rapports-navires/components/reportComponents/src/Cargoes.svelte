@@ -7,7 +7,9 @@
     TableBodyRow,
     TableBodyCell,
   } from "flowbite-svelte";
-  import { ArrowUpIcon, ArrowDownIcon } from "lucide-svelte";
+  // import { ArrowUpIcon, ArrowDownIcon } from "lucide-svelte";
+  import ArrowUpIcon from "lucide-svelte/icons/arrow-up";
+  import ArrowDownIcon from "lucide-svelte/icons/arrow-down";
 
   import { SectionTitle } from "../";
 
@@ -39,7 +41,7 @@
           <TableBody>
             {#each subreport.cargoIds as cargoId}
               {@const cargo = report.cargoEntries.find(
-                (entry) => entry.id === cargoId
+                (entry) => entry.id === cargoId,
               )}
               <TableBodyRow>
                 <!-- Marchandise + Client -->
@@ -100,7 +102,7 @@
                   {#if cargo.outturnTonnage && cargo.blTonnage}
                     <div
                       class={NumberUtils.getQuantityColor(
-                        cargo.tonnageDifference
+                        cargo.tonnageDifference,
                       )}
                     >
                       {NumberUtils.formatTonnage(cargo.tonnageDifference, true)}
@@ -110,7 +112,7 @@
                   {#if cargo.outturnVolume && cargo.blVolume}
                     <div
                       class={NumberUtils.getQuantityColor(
-                        cargo.volumeDifference
+                        cargo.volumeDifference,
                       )}
                     >
                       {NumberUtils.formatVolume(cargo.volumeDifference, true)}
@@ -120,7 +122,7 @@
                   {#if cargo.outturnUnits && cargo.blUnits}
                     <div
                       class={NumberUtils.getQuantityColor(
-                        cargo.unitsDifference
+                        cargo.unitsDifference,
                       )}
                     >
                       {NumberUtils.formatUnits(cargo.unitsDifference, true)}
@@ -141,7 +143,7 @@
                   {#if subreport.cargoTotals.bl.tonnage}
                     <div>
                       {NumberUtils.formatTonnage(
-                        subreport.cargoTotals.bl.tonnage
+                        subreport.cargoTotals.bl.tonnage,
                       )}
                     </div>
                   {/if}
@@ -149,7 +151,7 @@
                   {#if subreport.cargoTotals.bl.volume}
                     <div>
                       {NumberUtils.formatVolume(
-                        subreport.cargoTotals.bl.volume
+                        subreport.cargoTotals.bl.volume,
                       )}
                     </div>
                   {/if}
@@ -166,7 +168,7 @@
                   {#if subreport.cargoTotals.bl.tonnage}
                     <div>
                       {NumberUtils.formatTonnage(
-                        subreport.cargoTotals.outturn.tonnage
+                        subreport.cargoTotals.outturn.tonnage,
                       )}
                     </div>
                   {/if}
@@ -174,7 +176,7 @@
                   {#if subreport.cargoTotals.bl.volume}
                     <div>
                       {NumberUtils.formatVolume(
-                        subreport.cargoTotals.outturn.volume
+                        subreport.cargoTotals.outturn.volume,
                       )}
                     </div>
                   {/if}
@@ -182,7 +184,7 @@
                   {#if subreport.cargoTotals.bl.units}
                     <div>
                       {NumberUtils.formatUnits(
-                        subreport.cargoTotals.outturn.units
+                        subreport.cargoTotals.outturn.units,
                       )}
                     </div>
                   {/if}
@@ -193,12 +195,12 @@
                   {#if subreport.cargoTotals.bl.tonnage}
                     <div
                       class={NumberUtils.getQuantityColor(
-                        subreport.cargoTotals.difference.tonnage
+                        subreport.cargoTotals.difference.tonnage,
                       )}
                     >
                       {NumberUtils.formatTonnage(
                         subreport.cargoTotals.difference.tonnage,
-                        true
+                        true,
                       )}
                     </div>
                   {/if}
@@ -206,12 +208,12 @@
                   {#if subreport.cargoTotals.bl.volume}
                     <div
                       class={NumberUtils.getQuantityColor(
-                        subreport.cargoTotals.difference.volume
+                        subreport.cargoTotals.difference.volume,
                       )}
                     >
                       {NumberUtils.formatVolume(
                         subreport.cargoTotals.difference.volume,
-                        true
+                        true,
                       )}
                     </div>
                   {/if}
@@ -219,12 +221,12 @@
                   {#if subreport.cargoTotals.bl.units}
                     <div
                       class={NumberUtils.getQuantityColor(
-                        subreport.cargoTotals.difference.units
+                        subreport.cargoTotals.difference.units,
                       )}
                     >
                       {NumberUtils.formatUnits(
                         subreport.cargoTotals.difference.units,
-                        true
+                        true,
                       )}
                     </div>
                   {/if}

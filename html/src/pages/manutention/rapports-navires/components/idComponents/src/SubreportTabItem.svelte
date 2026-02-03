@@ -6,14 +6,20 @@
     TabItem,
     Tooltip,
   } from "flowbite-svelte";
-  import {
-    CopyIcon,
-    EllipsisVerticalIcon,
-    PencilIcon,
-    PlusCircleIcon,
-    Trash2Icon,
-    TriangleAlertIcon,
-  } from "lucide-svelte";
+  // import {
+  //   CopyIcon,
+  //   EllipsisVerticalIcon,
+  //   PencilIcon,
+  //   PlusCircleIcon,
+  //   Trash2Icon,
+  //   TriangleAlertIcon,
+  // } from "lucide-svelte";
+  import CopyIcon from "lucide-svelte/icons/copy";
+  import EllipsisVerticalIcon from "lucide-svelte/icons/ellipsis-vertical";
+  import PencilIcon from "lucide-svelte/icons/pencil";
+  import PlusCircleIcon from "lucide-svelte/icons/plus-circle";
+  import Trash2Icon from "lucide-svelte/icons/trash-2";
+  import TriangleAlertIcon from "lucide-svelte/icons/triangle-alert";
 
   import { LucideButton } from "@app/components";
 
@@ -36,16 +42,16 @@
   export let dailyEntriesDate: string;
   export let openCargoSelectionModal: (
     subreport: StevedoringShipReport["subreports"][number],
-    index: number
+    index: number,
   ) => void;
   export let deleteSubreport: (
-    subreport: StevedoringShipReport["subreports"][number]
+    subreport: StevedoringShipReport["subreports"][number],
   ) => void;
 
   let addDayButton: Button;
 
   async function addDay(
-    subreport: StevedoringShipReport["subreports"][number]
+    subreport: StevedoringShipReport["subreports"][number],
   ) {
     // Convert property from empty array to empty object
     if (Array.isArray(subreport.entriesByDate)) {
@@ -93,7 +99,7 @@
           addDayButton.$set({ disabled: true });
 
           const call = await consignationEscales.get(
-            report.linkedShippingCallId
+            report.linkedShippingCallId,
           );
 
           if (!call?.ops_date) {
@@ -112,7 +118,7 @@
 
   function editDay(
     subreport: StevedoringShipReport["subreports"][number],
-    date: string
+    date: string,
   ) {
     dailyEntriesSubreport = subreport;
     dailyEntriesDate = date;
@@ -121,7 +127,7 @@
 
   function copyDay(
     subreport: StevedoringShipReport["subreports"][number],
-    date: string
+    date: string,
   ) {
     const maxEntriesDate = Object.keys(subreport.entriesByDate).sort().pop();
     const nextDate = new DateUtils(maxEntriesDate)
@@ -129,7 +135,7 @@
       .toLocaleISODateString();
 
     subreport.entriesByDate[nextDate] = structuredClone(
-      subreport.entriesByDate[date]
+      subreport.entriesByDate[date],
     );
 
     for (const type in subreport.entriesByDate[nextDate]) {
@@ -143,7 +149,7 @@
 
   function deleteDay(
     subreport: StevedoringShipReport["subreports"][number],
-    date: string
+    date: string,
   ) {
     delete subreport.entriesByDate[date];
 
@@ -174,7 +180,7 @@
     <Tooltip type="auto" triggeredBy="#subreport-title-{index}">
       {#each subreport.cargoIds as cargoId}
         {@const cargo = report.cargoEntries.find(
-          (cargo) => cargo.id === cargoId
+          (cargo) => cargo.id === cargoId,
         )}
         <div>{cargo.cargoName} ({cargo.customer})</div>
       {:else}
