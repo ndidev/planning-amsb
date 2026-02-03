@@ -36,8 +36,8 @@
   export const filter = writable(
     new Filter<StevedoringShipReportFilter>(
       parseJSON(sessionStorage.getItem(filterName)) ||
-        structuredClone(emptyFilter)
-    )
+        structuredClone(emptyFilter),
+    ),
   );
 </script>
 
@@ -51,7 +51,9 @@
     Tooltip,
     Toggle,
   } from "flowbite-svelte";
-  import { FilterIcon, FilterXIcon } from "lucide-svelte";
+  // import { FilterIcon, FilterXIcon } from "lucide-svelte";
+  import FilterIcon from "lucide-svelte/icons/filter";
+  import FilterXIcon from "lucide-svelte/icons/filter-x";
 
   import { Svelecte, LucideButton } from "@app/components";
 
@@ -75,7 +77,7 @@
     (acc, [key, value]) =>
       (Array.isArray(value) ? value.length > 0 : value !== emptyFilter[key]) ||
       acc,
-    false
+    false,
   );
 
   let filterTooltip = "";
@@ -118,7 +120,7 @@
 
     if (filterData.cargoes?.length) {
       filterTooltip.push(
-        `Marchandises ${filterData.strictCargoes ? "(strict)" : ""}: ${filterData.cargoes.join(", ")}`
+        `Marchandises ${filterData.strictCargoes ? "(strict)" : ""}: ${filterData.cargoes.join(", ")}`,
       );
     }
 
@@ -130,7 +132,7 @@
   }
 
   function addCreatedCargoOption(
-    event: CustomEvent<{ text: string; value: string }>
+    event: CustomEvent<{ text: string; value: string }>,
   ) {
     const newOption = event.detail.value;
 
@@ -165,7 +167,7 @@
       customers: customersList,
       storageNames: storageNamesList,
     } = await fetcher<StevedoringShipReportFilterData>(
-      "manutention/rapports-navires/filter-data"
+      "manutention/rapports-navires/filter-data",
     ));
   });
 </script>

@@ -16,12 +16,16 @@
   import Notiflix from "notiflix";
   import Hammer from "hammerjs";
   import { Modal } from "flowbite-svelte";
-  import {
-    ArchiveIcon,
-    ArchiveRestoreIcon,
-    MessageSquareOffIcon,
-    MessageSquareTextIcon,
-  } from "lucide-svelte";
+  // import {
+  //   ArchiveIcon,
+  //   ArchiveRestoreIcon,
+  //   MessageSquareOffIcon,
+  //   MessageSquareTextIcon,
+  // } from "lucide-svelte";
+  import ArchiveIcon from "lucide-svelte/icons/archive";
+  import ArchiveRestoreIcon from "lucide-svelte/icons/archive-restore";
+  import MessageSquareOffIcon from "lucide-svelte/icons/message-square-off";
+  import MessageSquareTextIcon from "lucide-svelte/icons/message-square-text";
 
   import { DispatchModal } from "../";
   import {
@@ -55,12 +59,12 @@
   };
 
   $: qualite = produit.qualites.find(
-    (qualite) => qualite.id === appointment.qualite
+    (qualite) => qualite.id === appointment.qualite,
   );
 
   function showDispatchIfNecessary(type: "beforeOrderReady" | "beforeArchive") {
     const normalizedRemarks = removeDiacritics(
-      appointment.dispatch.map(({ remarks }) => remarks).join()
+      appointment.dispatch.map(({ remarks }) => remarks).join(),
     );
 
     switch (type) {
@@ -203,7 +207,7 @@
       Notiflix.Notify.success(
         newState
           ? "Commande marquée comme prête"
-          : "Commande marquée comme non prête"
+          : "Commande marquée comme non prête",
       );
     } catch (err) {
       Notiflix.Notify.failure(err.message);
@@ -223,7 +227,7 @@
       appointment.produit === 1 &&
       appointment.dispatch.length === 1 &&
       !new RegExp(`x${appointment.quantite}`).test(
-        appointment.dispatch[0].remarks
+        appointment.dispatch[0].remarks,
       )
     ) {
       appointment.dispatch[0].remarks += " x" + appointment.quantite;
@@ -241,7 +245,7 @@
         try {
           Notiflix.Block.dots(
             [ligne],
-            `${appointment.archive ? "Restauration" : "Archivage"} en cours...`
+            `${appointment.archive ? "Restauration" : "Archivage"} en cours...`,
           );
           ligne.style.minHeight = "initial";
 
@@ -250,7 +254,7 @@
           });
 
           Notiflix.Notify.success(
-            `Le RDV a été ${appointment.archive ? "restauré" : "archivé"}`
+            `Le RDV a été ${appointment.archive ? "restauré" : "archivé"}`,
           );
         } catch (erreur) {
           Notiflix.Notify.failure(erreur.message);
@@ -258,7 +262,7 @@
         }
       },
       null,
-      notiflixOptions.themes.orange
+      notiflixOptions.themes.orange,
     );
 
     showMenuModal = false;
@@ -406,7 +410,7 @@
           <span slot="text"
             >{@html appointment.commentaire_public.replace(
               /\r\n|\r|\n/g,
-              "<br/>"
+              "<br/>",
             )}</span
           >
         </IconText>
@@ -429,7 +433,7 @@
           <span slot="text"
             >{@html appointment.commentaire_prive.replace(
               /\r\n|\r|\n/g,
-              "<br/>"
+              "<br/>",
             )}</span
           >
         </IconText>

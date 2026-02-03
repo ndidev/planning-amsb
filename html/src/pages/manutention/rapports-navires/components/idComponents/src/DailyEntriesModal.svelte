@@ -2,7 +2,9 @@
   import { onMount, tick } from "svelte";
 
   import { Modal, Input, Label, Button, Checkbox } from "flowbite-svelte";
-  import { PlusCircleIcon, Trash2Icon } from "lucide-svelte";
+  // import { PlusCircleIcon, Trash2Icon } from "lucide-svelte";
+  import PlusCircleIcon from "lucide-svelte/icons/plus-circle";
+  import Trash2Icon from "lucide-svelte/icons/trash-2";
   import Notiflix from "notiflix";
 
   import { Svelecte, NumericInput, BoutonAction } from "@app/components";
@@ -86,7 +88,7 @@
 
     try {
       const subcontractorsData: SubcontractorsData = await fetcher(
-        "manutention/rapports-navires/sous-traitants"
+        "manutention/rapports-navires/sous-traitants",
       );
 
       subcontractorTruckingList = subcontractorsData.trucking;
@@ -121,7 +123,7 @@
 
     form
       .querySelector<HTMLInputElement>(
-        `#cranes-${dateEntries.cranes.length - 1}-equipmentId`
+        `#cranes-${dateEntries.cranes.length - 1}-equipmentId`,
       )
       .focus();
   }
@@ -140,7 +142,7 @@
           ?.hoursWorked ||
         Math.max(
           ...dateEntries.cranes.map(({ hoursWorked }) => hoursWorked),
-          0
+          0,
         ) ||
         0,
       comments: "",
@@ -161,7 +163,7 @@
 
     form
       .querySelector<HTMLInputElement>(
-        `#equipments-${dateEntries.equipments.length - 1}-equipmentId`
+        `#equipments-${dateEntries.equipments.length - 1}-equipmentId`,
       )
       .focus();
   }
@@ -181,7 +183,7 @@
           ?.hoursWorked ||
         Math.max(
           ...dateEntries.cranes.map(({ hoursWorked }) => hoursWorked),
-          0
+          0,
         ) ||
         0,
       comments: "",
@@ -203,7 +205,7 @@
 
     form
       .querySelector<HTMLInputElement>(
-        `#permanentStaff-${dateEntries.permanentStaff.length - 1}-staffId`
+        `#permanentStaff-${dateEntries.permanentStaff.length - 1}-staffId`,
       )
       .focus();
   }
@@ -221,7 +223,7 @@
         dateEntries.tempStaff[dateEntries.tempStaff.length - 1]?.hoursWorked ||
         Math.max(
           ...dateEntries.cranes.map(({ hoursWorked }) => hoursWorked),
-          0
+          0,
         ) ||
         0,
       comments: "",
@@ -242,7 +244,7 @@
 
     form
       .querySelector<HTMLInputElement>(
-        `#tempStaff-${dateEntries.tempStaff.length - 1}-staffId`
+        `#tempStaff-${dateEntries.tempStaff.length - 1}-staffId`,
       )
       .focus();
   }
@@ -272,7 +274,7 @@
 
     form
       .querySelector<HTMLInputElement>(
-        `#trucking-${dateEntries.trucking.length - 1}-subcontractorName`
+        `#trucking-${dateEntries.trucking.length - 1}-subcontractorName`,
       )
       .focus();
   }
@@ -306,19 +308,21 @@
 
     form
       .querySelector<HTMLInputElement>(
-        `#otherSubcontracts-${dateEntries.otherSubcontracts.length - 1}-subcontractorName`
+        `#otherSubcontracts-${dateEntries.otherSubcontracts.length - 1}-subcontractorName`,
       )
       .focus();
   }
 
   function inferHoursWorked(
-    entry: StevedoringShipReportStaffEntry | StevedoringShipReportEquipmentEntry
+    entry:
+      | StevedoringShipReportStaffEntry
+      | StevedoringShipReportEquipmentEntry,
   ) {
     if (entry.hoursHint === "") return;
 
     const regexp = new RegExp(
       /(?<start>\d{1,2}[h:]?\d{0,2})\s*-?\s*(?<end>\d{1,2}[h:]?\d{0,2})/,
-      "gi"
+      "gi",
     );
 
     const match = regexp.exec(entry.hoursHint);
@@ -377,18 +381,18 @@
 
   function deleteEntry<T extends EntriesKey>(key: T, entry: EntryType<T>) {
     dateEntries[key] = dateEntries[key].filter(
-      (item: EntryType<T>) => item !== entry
+      (item: EntryType<T>) => item !== entry,
     ) as (typeof dateEntries)[T];
 
     selectedItems.categories[key] = selectedItems.categories[key].filter(
-      (item: EntryType<T>) => item !== entry
+      (item: EntryType<T>) => item !== entry,
     ) as (typeof dateEntries)[T];
   }
 
   function updateMultipleValues(
     property: string,
     source: Entry,
-    force: boolean = true
+    force: boolean = true,
   ) {
     // If the source isn't selected, return
     if (
@@ -411,10 +415,10 @@
           // do not update it
           if (
             ![...dateEntries.trucking, ...dateEntries.otherSubcontracts].find(
-              (item) => item === source
+              (item) => item === source,
             ) &&
             [...dateEntries.trucking, ...dateEntries.otherSubcontracts].find(
-              (item) => item === target
+              (item) => item === target,
             )
           ) {
             return;
@@ -434,12 +438,12 @@
     // If the date has changed, check that is does not interfere with existing entries
     if (dateFromInput !== date) {
       const dateAlreadyExists = Object.keys(subreport.entriesByDate).includes(
-        dateFromInput
+        dateFromInput,
       );
 
       if (dateAlreadyExists) {
         Notiflix.Notify.failure(
-          `Il existe déjà des entrées pour le ${new DateUtils(dateFromInput).format().long}`
+          `Il existe déjà des entrées pour le ${new DateUtils(dateFromInput).format().long}`,
         );
 
         return;
@@ -457,7 +461,7 @@
     // If the date entries are empty, delete the date from the report
     if (
       Object.values(subreport.entriesByDate[dateFromInput]).flatMap(
-        (items) => items as Entry[]
+        (items) => items as Entry[],
       ).length === 0
     ) {
       delete subreport.entriesByDate[dateFromInput];
@@ -472,7 +476,7 @@
     // If the date entries are empty, delete the date from the report
     if (
       Object.values(subreport.entriesByDate[date]).flatMap(
-        (items) => items as Entry[]
+        (items) => items as Entry[],
       ).length === 0
     ) {
       delete subreport.entriesByDate[date];
@@ -566,7 +570,7 @@
           <div
             class="flex flex-col lg:flex-row gap-2 items-center p-2 rounded-lg"
             class:bg-violet-100={selectedItems.categories.cranes.includes(
-              entry
+              entry,
             )}
           >
             <div>
@@ -677,7 +681,7 @@
           <div
             class="flex flex-col lg:flex-row gap-2 items-center p-2 rounded-lg"
             class:bg-violet-100={selectedItems.categories.equipments.includes(
-              entry
+              entry,
             )}
           >
             <div>
@@ -788,7 +792,7 @@
           <div
             class="flex flex-col lg:flex-row gap-2 items-center p-2 rounded-lg"
             class:bg-violet-100={selectedItems.categories.permanentStaff.includes(
-              entry
+              entry,
             )}
           >
             <div>
@@ -899,7 +903,7 @@
           <div
             class="flex flex-col lg:flex-row gap-2 items-center p-2 rounded-lg"
             class:bg-violet-100={selectedItems.categories.tempStaff.includes(
-              entry
+              entry,
             )}
           >
             <div>
@@ -1010,7 +1014,7 @@
           <div
             class="flex flex-col lg:flex-row gap-2 items-center p-2 rounded-lg"
             class:bg-violet-100={selectedItems.categories.trucking.includes(
-              entry
+              entry,
             )}
           >
             <div>
@@ -1122,7 +1126,7 @@
           <div
             class="flex flex-col lg:flex-row gap-2 items-center p-2 rounded-lg"
             class:bg-violet-100={selectedItems.categories.otherSubcontracts.includes(
-              entry
+              entry,
             )}
           >
             <div>

@@ -3,11 +3,15 @@
   import { onDestroy } from "svelte";
 
   import { Button, Input, ButtonGroup } from "flowbite-svelte";
-  import {
-    PlusCircleIcon,
-    RectangleEllipsisIcon,
-    DownloadIcon,
-  } from "lucide-svelte";
+  // import {
+  //   PlusCircleIcon,
+  //   RectangleEllipsisIcon,
+  //   DownloadIcon,
+  // } from "lucide-svelte";
+  import PlusCircleIcon from "lucide-svelte/icons/plus-circle";
+  import RectangleEllipsisIcon from "lucide-svelte/icons/rectangle-ellipsis";
+  import DownloadIcon from "lucide-svelte/icons/download";
+
   import Notiflix from "notiflix";
 
   import {
@@ -68,18 +72,18 @@
   async function preFillForDate(date: string) {
     try {
       const dispatch = await fetcher<{ [id: string]: number }[]>(
-        `manutention/dispatch-interimaire/${date}`
+        `manutention/dispatch-interimaire/${date}`,
       );
 
       // Ensure we don't add duplicates
       const existingIds = new Set(
         Object.values(tempWorkHoursByDate[date] || {}).map(
-          (entry) => entry.staffId
-        )
+          (entry) => entry.staffId,
+        ),
       );
 
       const newIds = Object.keys(dispatch).filter(
-        (id) => !existingIds.has(Number(id))
+        (id) => !existingIds.has(Number(id)),
       );
 
       if (newIds.length === 0) {

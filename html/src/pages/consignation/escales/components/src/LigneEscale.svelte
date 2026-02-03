@@ -13,7 +13,9 @@
   import { goto } from "@roxi/routify";
 
   import { Modal } from "flowbite-svelte";
-  import { ArrowDownIcon, ArrowUpIcon } from "lucide-svelte";
+  // import { ArrowDownIcon, ArrowUpIcon } from "lucide-svelte";
+  import ArrowDownIcon from "lucide-svelte/icons/arrow-down";
+  import ArrowUpIcon from "lucide-svelte/icons/arrow-up";
   import Hammer from "hammerjs";
 
   import { Badge, LucideButton, BoutonAction } from "@app/components";
@@ -34,15 +36,15 @@
 
   $: totalTonnage = escale.marchandises.reduce(
     (sum, { blTonnage }) => sum + blTonnage,
-    0
+    0,
   );
   $: totalVolume = escale.marchandises.reduce(
     (sum, { blVolume }) => sum + blVolume,
-    0
+    0,
   );
   $: totalUnits = escale.marchandises.reduce(
     (sum, { blUnits }) => sum + blUnits,
-    0
+    0,
   );
 
   type Status = {

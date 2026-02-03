@@ -9,7 +9,8 @@
   ```
  -->
 <script lang="ts">
-  import { PackageIcon } from "lucide-svelte";
+  // import { PackageIcon } from "lucide-svelte";
+  import PackageIcon from "lucide-svelte/icons/package";
 
   import { tiers, vracProduits } from "@app/stores";
   import type { RdvVrac } from "@app/types";

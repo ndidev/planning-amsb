@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { PackageIcon, PackageCheckIcon, PackageXIcon } from "lucide-svelte";
+  // import { PackageIcon, PackageCheckIcon, PackageXIcon } from "lucide-svelte";
+  import PackageIcon from "lucide-svelte/icons/package";
+  import PackageCheckIcon from "lucide-svelte/icons/package-check";
+  import PackageXIcon from "lucide-svelte/icons/package-x";
 
   import { LucideButton } from "@app/components";
 
