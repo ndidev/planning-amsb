@@ -1,5 +1,6 @@
-import { fetcher } from "@app/utils";
-import { UserRoles, AccountStatus } from "@app/auth";
+import { fetcher } from "@app/utils/src/fetcher";
+import { UserRoles } from "./UserRoles";
+import { AccountStatus } from "./AccountStatus";
 import type { Roles, ModuleId, CompteUtilisateur } from "@app/types";
 
 /**
@@ -38,7 +39,7 @@ export class User {
       nom: "",
       roles: {},
       statut: AccountStatus.INACTIVE,
-    }
+    },
   ) {
     this.uid = user.uid;
     this.login = user.login;
