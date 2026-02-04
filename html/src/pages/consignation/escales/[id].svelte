@@ -11,8 +11,7 @@
     Select,
     Button,
   } from "flowbite-svelte";
-  // import { PlusCircleIcon } from "lucide-svelte";
-  import PlusCircleIcon from "lucide-svelte/icons/plus-circle";
+  import PlusCircleIcon from "lucide-svelte/icons/circle-plus";
   import Notiflix from "notiflix";
 
   import {

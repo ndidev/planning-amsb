@@ -6,18 +6,10 @@
     TabItem,
     Tooltip,
   } from "flowbite-svelte";
-  // import {
-  //   CopyIcon,
-  //   EllipsisVerticalIcon,
-  //   PencilIcon,
-  //   PlusCircleIcon,
-  //   Trash2Icon,
-  //   TriangleAlertIcon,
-  // } from "lucide-svelte";
   import CopyIcon from "lucide-svelte/icons/copy";
   import EllipsisVerticalIcon from "lucide-svelte/icons/ellipsis-vertical";
   import PencilIcon from "lucide-svelte/icons/pencil";
-  import PlusCircleIcon from "lucide-svelte/icons/plus-circle";
+  import PlusCircleIcon from "lucide-svelte/icons/circle-plus";
   import Trash2Icon from "lucide-svelte/icons/trash-2";
   import TriangleAlertIcon from "lucide-svelte/icons/triangle-alert";
 

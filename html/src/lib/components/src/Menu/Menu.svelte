@@ -21,7 +21,6 @@
     SidebarWrapper,
   } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
-  // import { MenuIcon } from "lucide-svelte";
   import MenuIcon from "lucide-svelte/icons/menu";
   import Notiflix from "notiflix";
 

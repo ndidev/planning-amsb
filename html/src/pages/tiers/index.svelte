@@ -27,7 +27,6 @@
     Textarea,
     Fileupload,
   } from "flowbite-svelte";
-  // import { UndoIcon } from "lucide-svelte";
   import UndoIcon from "lucide-svelte/icons/undo";
   import Notiflix from "notiflix";
 

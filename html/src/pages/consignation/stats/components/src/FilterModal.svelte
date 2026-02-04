@@ -48,7 +48,6 @@
     Tooltip,
     Checkbox,
   } from "flowbite-svelte";
-  // import { FilterIcon, FilterXIcon } from "lucide-svelte";
   import FilterIcon from "lucide-svelte/icons/filter";
   import FilterXIcon from "lucide-svelte/icons/filter-x";
 

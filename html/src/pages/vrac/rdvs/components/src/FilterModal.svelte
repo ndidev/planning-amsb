@@ -30,8 +30,8 @@
   export const filter = writable(
     new Filter<BulkPlanningFilter>(
       parseJSON(sessionStorage.getItem(filterName)) ||
-        structuredClone(emptyFilter)
-    )
+        structuredClone(emptyFilter),
+    ),
   );
 </script>
 
@@ -44,7 +44,6 @@
     Toggle,
     Tooltip,
   } from "flowbite-svelte";
-  // import { FilterIcon, FilterXIcon } from "lucide-svelte";
   import FilterIcon from "lucide-svelte/icons/filter";
   import FilterXIcon from "lucide-svelte/icons/filter-x";
 
@@ -60,7 +59,7 @@
     (acc, [key, value]) =>
       (Array.isArray(value) ? value.length > 0 : value !== emptyFilter[key]) ||
       acc,
-    false
+    false,
   );
 
   let qualityOptions: { id: number; name: string }[] = [];
@@ -80,7 +79,7 @@
                   name: product.nom + " " + quality.nom,
                 }));
               })
-              .sort((a, b) => a.name.localeCompare(b.name))
+              .sort((a, b) => a.name.localeCompare(b.name)),
           ),
         ]
       : [];
@@ -89,10 +88,10 @@
     const availableQualityIds = filterData.produit.flatMap(
       (productId) =>
         $vracProduits?.get(productId)?.qualites.map((quality) => quality.id) ||
-        []
+        [],
     );
     filterData.qualite = filterData.qualite.filter((qualityId) =>
-      availableQualityIds.includes(qualityId)
+      availableQualityIds.includes(qualityId),
     );
   }
 
@@ -130,9 +129,9 @@
         `Qualité : ${filterData.qualite
           .map(
             (qualityId) =>
-              qualityOptions.find((quality) => quality.id === qualityId)?.name
+              qualityOptions.find((quality) => quality.id === qualityId)?.name,
           )
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -140,7 +139,7 @@
       filterTooltip.push(
         `Fournisseur : ${filterData.fournisseur
           .map((fournisseurId) => $tiers.get(fournisseurId)?.nom_court)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -148,7 +147,7 @@
       filterTooltip.push(
         `Client : ${filterData.client
           .map((clientId) => $tiers.get(clientId)?.nom_court)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -156,7 +155,7 @@
       filterTooltip.push(
         `Transporteur : ${filterData.transporteur
           .map((transporteurId) => $tiers.get(transporteurId)?.nom_court)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 

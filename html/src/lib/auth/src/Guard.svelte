@@ -13,10 +13,10 @@
 <script lang="ts">
   import { goto, page } from "@roxi/routify";
 
-  import { UserRoles } from "@app/auth";
+  import { UserRoles } from "./UserRoles";
   import type { ModuleId } from "@app/types";
 
-  import { currentUser } from "@app/stores";
+  import { currentUser } from "@app/stores/src/currentUser";
 
   let canDisplay = $currentUser.canUseApp;
 

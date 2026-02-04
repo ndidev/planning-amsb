@@ -1,5 +1,4 @@
 <script lang="ts">
-  // import { ArrowDownIcon, ArrowUpIcon } from "lucide-svelte";
   import ArrowDownIcon from "lucide-svelte/icons/arrow-down";
   import ArrowUpIcon from "lucide-svelte/icons/arrow-up";
 

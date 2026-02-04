@@ -21,7 +21,6 @@
     Radio,
     Button,
   } from "flowbite-svelte";
-  // import { CircleHelpIcon, HistoryIcon } from "lucide-svelte";
   import CircleHelpIcon from "lucide-svelte/icons/circle-help";
   import HistoryIcon from "lucide-svelte/icons/history";
 

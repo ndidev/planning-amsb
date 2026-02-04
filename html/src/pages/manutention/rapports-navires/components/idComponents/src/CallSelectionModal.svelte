@@ -2,7 +2,6 @@
   import { createEventDispatcher } from "svelte";
 
   import { Modal, Button, Accordion, AccordionItem } from "flowbite-svelte";
-  // import { EyeIcon, EyeOffIcon } from "lucide-svelte";
   import EyeIcon from "lucide-svelte/icons/eye";
   import EyeOffIcon from "lucide-svelte/icons/eye-off";
   import Notiflix from "notiflix";

@@ -3,12 +3,7 @@
   import { onDestroy } from "svelte";
 
   import { Button, Input, ButtonGroup } from "flowbite-svelte";
-  // import {
-  //   PlusCircleIcon,
-  //   RectangleEllipsisIcon,
-  //   DownloadIcon,
-  // } from "lucide-svelte";
-  import PlusCircleIcon from "lucide-svelte/icons/plus-circle";
+  import PlusCircleIcon from "lucide-svelte/icons/circle-plus";
   import RectangleEllipsisIcon from "lucide-svelte/icons/rectangle-ellipsis";
   import DownloadIcon from "lucide-svelte/icons/download";
 

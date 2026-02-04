@@ -13,7 +13,6 @@
   import { goto } from "@roxi/routify";
 
   import { Modal } from "flowbite-svelte";
-  // import { ArrowDownIcon, ArrowUpIcon } from "lucide-svelte";
   import ArrowDownIcon from "lucide-svelte/icons/arrow-down";
   import ArrowUpIcon from "lucide-svelte/icons/arrow-up";
   import Hammer from "hammerjs";

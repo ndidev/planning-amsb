@@ -7,7 +7,6 @@
     TableBodyRow,
     TableBodyCell,
   } from "flowbite-svelte";
-  // import { ArrowUpIcon, ArrowDownIcon } from "lucide-svelte";
   import ArrowUpIcon from "lucide-svelte/icons/arrow-up";
   import ArrowDownIcon from "lucide-svelte/icons/arrow-down";
 

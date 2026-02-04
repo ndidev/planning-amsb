@@ -16,12 +16,6 @@
   import Notiflix from "notiflix";
   import Hammer from "hammerjs";
   import { Modal } from "flowbite-svelte";
-  // import {
-  //   ArchiveIcon,
-  //   ArchiveRestoreIcon,
-  //   MessageSquareOffIcon,
-  //   MessageSquareTextIcon,
-  // } from "lucide-svelte";
   import ArchiveIcon from "lucide-svelte/icons/archive";
   import ArchiveRestoreIcon from "lucide-svelte/icons/archive-restore";
   import MessageSquareOffIcon from "lucide-svelte/icons/message-square-off";
