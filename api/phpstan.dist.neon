@@ -6,6 +6,7 @@ parameters:
 		- tests
 		- ./bootstrap.php
 		- ./envoi_pdf_auto.php
+		- ./execute_schedule.php
 	treatPhpDocTypesAsCertain: false
 	universalObjectCratesClasses:
 		- App\Core\Auth\UserRoles

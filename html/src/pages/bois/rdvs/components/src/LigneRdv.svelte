@@ -15,16 +15,14 @@
   import Notiflix from "notiflix";
   import Hammer from "hammerjs";
   import { Modal } from "flowbite-svelte";
-  import {
-    ArrowRightFromLineIcon,
-    ArrowRightToLineIcon,
-    ClockIcon,
-    MessageSquareOffIcon,
-    MessageSquareTextIcon,
-    ReceiptTextIcon,
-    TruckIcon,
-    UserIcon,
-  } from "lucide-svelte";
+  import ArrowRightFromLineIcon from "lucide-svelte/icons/arrow-right-from-line";
+  import ArrowRightToLineIcon from "lucide-svelte/icons/arrow-right-to-line";
+  import ClockIcon from "lucide-svelte/icons/clock";
+  import MessageSquareOffIcon from "lucide-svelte/icons/message-square-off";
+  import MessageSquareTextIcon from "lucide-svelte/icons/message-square-text";
+  import ReceiptTextIcon from "lucide-svelte/icons/receipt-text";
+  import TruckIcon from "lucide-svelte/icons/truck";
+  import UserIcon from "lucide-svelte/icons/user";
 
   import {
     ThirdPartyAddress,
@@ -92,7 +90,7 @@
 
   function makeThirdPartyTooltip(
     thirdParty: Tiers,
-    role: "chargement" | "client" | "livraison"
+    role: "chargement" | "client" | "livraison",
   ) {
     return thirdParty
       ? [
@@ -117,10 +115,10 @@
   }
 
   function showDispatchIfNecessary(
-    type: "beforeOrderReady" | "beforeSettingDepartureTime"
+    type: "beforeOrderReady" | "beforeSettingDepartureTime",
   ) {
     const normalizedRemarks = removeDiacritics(
-      appointment.dispatch.map(({ remarks }) => remarks).join()
+      appointment.dispatch.map(({ remarks }) => remarks).join(),
     );
 
     switch (type) {
@@ -210,7 +208,7 @@
       Notiflix.Notify.success(
         newState
           ? "Commande marquée comme prête"
-          : "Commande marquée comme non prête"
+          : "Commande marquée comme non prête",
       );
     } catch (err) {
       Notiflix.Notify.failure(err.message);
@@ -263,7 +261,7 @@
         }
       },
       null,
-      notiflixOptions.themes.red
+      notiflixOptions.themes.red,
     );
 
     showMenuModal = false;
@@ -522,7 +520,7 @@
           <span slot="text"
             >{@html appointment.commentaire_public.replace(
               /\r\n|\r|\n/g,
-              "<br/>"
+              "<br/>",
             )}</span
           >
         </IconText>
@@ -545,7 +543,7 @@
           <span slot="text"
             >{@html appointment.commentaire_cache.replace(
               /\r\n|\r|\n/g,
-              "<br/>"
+              "<br/>",
             )}</span
           >
         </IconText>

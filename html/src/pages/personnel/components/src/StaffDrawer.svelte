@@ -3,7 +3,8 @@
 
   import { Drawer, CloseButton } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
-  import { PencilIcon, PhoneCallIcon } from "lucide-svelte";
+  import PencilIcon from "lucide-svelte/icons/pencil";
+  import PhoneCallIcon from "lucide-svelte/icons/phone-call";
 
   import { LucideButton, Badge } from "@app/components";
 

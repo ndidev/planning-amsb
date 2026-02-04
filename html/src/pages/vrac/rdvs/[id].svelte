@@ -4,7 +4,7 @@
   import { params, goto, redirect } from "@roxi/routify";
 
   import { Label, Input, Textarea, Toggle, Select } from "flowbite-svelte";
-  import { CircleHelpIcon } from "lucide-svelte";
+  import CircleHelpIcon from "lucide-svelte/icons/circle-help";
   import Notiflix from "notiflix";
 
   import {
@@ -142,7 +142,7 @@
         }
       },
       () => deleteButton.$set({ disabled: false }),
-      notiflixOptions.themes.red
+      notiflixOptions.themes.red,
     );
   }
 
@@ -153,7 +153,7 @@
     Notiflix.Report.info(
       "Commentaire privé",
       "Ce commentaire ne sera pas visible sur l'écran TV.",
-      "Fermer"
+      "Fermer",
     );
   }
 

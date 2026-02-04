@@ -1,5 +1,5 @@
 import { createFlatStore } from "../generics/flatStore";
-import { consignationEscales } from "@app/stores";
+// import { consignationEscales } from "./consignation";
 import type {
   StevedoringStaff,
   StevedoringEquipment,
@@ -23,7 +23,7 @@ export const stevedoringStaff = createFlatStore<StevedoringStaff>(
     isActive: true,
     comments: "",
     deletedAt: null,
-  }
+  },
 );
 
 /**
@@ -43,7 +43,7 @@ export const stevedoringEquipments = createFlatStore<StevedoringEquipment>(
     isActive: true,
     comments: "",
     isCrane: false,
-  }
+  },
 );
 
 /**
@@ -57,7 +57,7 @@ export const stevedoringTempWorkHours = createFlatStore<TempWorkHours>(
     date: null,
     hoursWorked: 0,
     comments: "",
-  }
+  },
 );
 
 export const stevedoringShipReports = createFlatStore<StevedoringShipReport>(
@@ -78,6 +78,7 @@ export const stevedoringShipReports = createFlatStore<StevedoringShipReport>(
     storageEntries: [],
   },
   {
-    additionalEvents: [consignationEscales.endpoint],
-  }
+    // additionalEvents: [consignationEscales.endpoint],
+    additionalEvents: ["consignation/escales"],
+  },
 );

@@ -30,8 +30,8 @@
   export const filter = writable(
     new Filter<CharteringFilter>(
       parseJSON(sessionStorage.getItem(filterName)) ||
-        structuredClone(emptyFilter)
-    )
+        structuredClone(emptyFilter),
+    ),
   );
 </script>
 
@@ -46,7 +46,8 @@
     MultiSelect,
     Toggle,
   } from "flowbite-svelte";
-  import { FilterIcon, FilterXIcon } from "lucide-svelte";
+  import FilterIcon from "lucide-svelte/icons/filter";
+  import FilterXIcon from "lucide-svelte/icons/filter-x";
 
   import { Svelecte, LucideButton } from "@app/components";
 
@@ -60,7 +61,7 @@
     (acc, [key, value]) =>
       (Array.isArray(value) ? value.length > 0 : value !== emptyFilter[key]) ||
       acc,
-    false
+    false,
   );
 
   let filterTooltip = "Chargement...";
@@ -97,7 +98,7 @@
       filterTooltip.push(
         `Affréteurs : ${filterData.charterers
           .map((chartererId) => $tiers.get(chartererId)?.nom_court)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -105,7 +106,7 @@
       filterTooltip.push(
         `Armateurs : ${filterData.shipOwners
           .map((shipOwnerId) => $tiers.get(shipOwnerId)?.nom_court)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -113,7 +114,7 @@
       filterTooltip.push(
         `Courtiers : ${filterData.brokers
           .map((brokerId) => $tiers.get(brokerId)?.nom_court)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -122,9 +123,9 @@
         `Statuts : ${filterData.status
           .map(
             (status) =>
-              statusList.find((s) => s.value === status.toString())?.name
+              statusList.find((s) => s.value === status.toString())?.name,
           )
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 

@@ -1,4 +1,5 @@
-import { UserRoles, TypesModules } from "@app/auth";
+import { UserRoles } from "@app/auth/src/UserRoles";
+import { TypesModules } from "@app/auth/src/TypesModules";
 import type { ModuleId, Module } from "@app/types";
 
 /**

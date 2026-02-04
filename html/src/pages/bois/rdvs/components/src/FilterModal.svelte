@@ -31,14 +31,15 @@
   export const filter = writable(
     new Filter<TimberFilter>(
       parseJSON(sessionStorage.getItem(filterName)) ||
-        structuredClone(emptyFilter)
-    )
+        structuredClone(emptyFilter),
+    ),
   );
 </script>
 
 <script lang="ts">
   import { Modal, Label, Input, Button, Tooltip } from "flowbite-svelte";
-  import { FilterIcon, FilterXIcon } from "lucide-svelte";
+  import FilterIcon from "lucide-svelte/icons/filter";
+  import FilterXIcon from "lucide-svelte/icons/filter-x";
 
   import { Svelecte, LucideButton } from "@app/components";
 
@@ -52,7 +53,7 @@
     (acc, [key, value]) =>
       (Array.isArray(value) ? value.length > 0 : value !== emptyFilter[key]) ||
       acc,
-    false
+    false,
   );
 
   let filterTooltip = "";
@@ -81,7 +82,7 @@
       filterTooltip.push(
         `Fournisseur : ${filterData.fournisseur
           .map((fournisseurId) => $tiers.get(fournisseurId)?.nom_court)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -92,9 +93,9 @@
             (clientId) =>
               $tiers.get(clientId)?.nom_court +
               " " +
-              $tiers.get(clientId)?.ville
+              $tiers.get(clientId)?.ville,
           )
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -105,9 +106,9 @@
             (chargementId) =>
               $tiers.get(chargementId)?.nom_court +
               " " +
-              $tiers.get(chargementId)?.ville
+              $tiers.get(chargementId)?.ville,
           )
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -118,9 +119,9 @@
             (livraisonId) =>
               $tiers.get(livraisonId)?.nom_court +
               " " +
-              $tiers.get(livraisonId)?.ville
+              $tiers.get(livraisonId)?.ville,
           )
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -128,7 +129,7 @@
       filterTooltip.push(
         `Transporteur : ${filterData.transporteur
           .map((transporteurId) => $tiers.get(transporteurId)?.nom_court)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -136,7 +137,7 @@
       filterTooltip.push(
         `Affréteur : ${filterData.affreteur
           .map((affreteurId) => $tiers.get(affreteurId)?.nom_court)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 

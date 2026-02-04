@@ -1,4 +1,4 @@
-import { appURLs } from "@app/utils";
+import { appURLs } from "./appURLs";
 import { HTTP } from "@app/errors";
 import type { AppURLs } from "@app/types";
 
@@ -16,7 +16,7 @@ import type { AppURLs } from "@app/types";
  */
 export async function fetcher<T>(
   endpoint: string | URL,
-  options: FetcherOptions = {}
+  options: FetcherOptions = {},
 ): Promise<T> {
   const {
     prefix = "api",

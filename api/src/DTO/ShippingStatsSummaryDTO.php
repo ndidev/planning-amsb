@@ -53,6 +53,7 @@ final class ShippingStatsSummaryDTO implements \JsonSerializable
             $this->stats["ByYear"][$year] ??= $yearTemplate;
 
             $this->stats["ByYear"][$year][(int) $month]["nombre"]++;
+            // @phpstan-ignore assign.propertyType
             $this->stats["ByYear"][$year][(int) $month]["ids"][] = $call["id"];
         }
     }

@@ -11,9 +11,9 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
 
-  import { appURLs } from "@app/utils";
-  import { User } from "@app/auth";
-  import { currentUser } from "@app/stores";
+  import { appURLs } from "@app/utils/src/appURLs";
+  import { User } from "./User";
+  import { currentUser } from "@app/stores/src/currentUser";
 
   /**
    * Vérifie l'état d'une session utilisateur

@@ -3,11 +3,10 @@
   import { params, goto, redirect } from "@roxi/routify";
 
   import { Label, Input, Toggle, Textarea } from "flowbite-svelte";
-  import {
-    CircleHelpIcon,
-    SparklesIcon,
-    TriangleAlertIcon,
-  } from "lucide-svelte";
+
+  import CircleHelpIcon from "lucide-svelte/icons/circle-help";
+  import SparklesIcon from "lucide-svelte/icons/sparkles";
+  import TriangleAlertIcon from "lucide-svelte/icons/triangle-alert";
   import Notiflix from "notiflix";
 
   import {
@@ -175,7 +174,7 @@
             deliveryNoteNumber: numero_bl,
             currentAppointmentId: appointment.id?.toString(),
           },
-        }
+        },
       );
 
       if (isDeliveryNoteNumberAvailable) {
@@ -186,7 +185,7 @@
         Notiflix.Report.failure(
           "Erreur",
           `Le numéro BL ${numero_bl} est déjà utilisé pour ${supplierName}.`,
-          "OK"
+          "OK",
         );
 
         numero_bl = appointment.numero_bl;
@@ -204,7 +203,7 @@
   async function showCarrierSuggestions() {
     if (!appointment.chargement || !appointment.livraison) {
       Notiflix.Notify.failure(
-        "Le chargement et la livraison doivent être renseignés pour obtenir des suggestions"
+        "Le chargement et la livraison doivent être renseignés pour obtenir des suggestions",
       );
       return;
     }
@@ -217,7 +216,7 @@
             chargement: appointment.chargement.toString(),
             livraison: appointment.livraison.toString(),
           },
-        }
+        },
       );
 
       type SuggestionsTransporteurs = {
@@ -275,7 +274,7 @@
       "Ce commentaire ne sera pas visible dans le planning envoyé au client." +
         "<br/>" +
         "Utile pour ajouter des informations sur les tarifs d'affrètement, l'état de préparation de la commande, etc.",
-      "Fermer"
+      "Fermer",
     );
   }
 
@@ -352,7 +351,7 @@
         }
       },
       () => deleteButton.$set({ disabled: false }),
-      notiflixOptions.themes.red
+      notiflixOptions.themes.red,
     );
   }
 

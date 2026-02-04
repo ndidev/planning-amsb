@@ -27,7 +27,7 @@
     Textarea,
     Fileupload,
   } from "flowbite-svelte";
-  import { UndoIcon } from "lucide-svelte";
+  import UndoIcon from "lucide-svelte/icons/undo";
   import Notiflix from "notiflix";
 
   import {
@@ -118,14 +118,14 @@
     logoJustDeleted = false;
 
     selectedTiers = structuredClone(
-      $tiers?.get(parseInt(selectedId)) || thirdPartyTemplate
+      $tiers?.get(parseInt(selectedId)) || thirdPartyTemplate,
     );
 
     // Récupère le nombre de RDV pour le tiers sélectionné.
     try {
       if (!isNaN(parseInt(selectedId))) {
         selectedTiers.nombre_rdv = await fetcher<NombreRdv>(
-          `tiers/${selectedId}/nombre_rdv`
+          `tiers/${selectedId}/nombre_rdv`,
         );
       }
     } catch (error) {
@@ -253,7 +253,7 @@
         }
       },
       null,
-      notiflixOptions.themes.red
+      notiflixOptions.themes.red,
     );
   }
 

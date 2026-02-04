@@ -1,4 +1,4 @@
-import { NumberUtils } from "../";
+import { NumberUtils } from "./NumberUtils";
 
 /**
  * Bibliothèque de fonctions permettant de :
@@ -60,24 +60,24 @@ export class DateUtils {
     const lundiPaques = new Date(
       paques.getFullYear(),
       paques.getMonth(),
-      paques.getDate() + 1
+      paques.getDate() + 1,
     );
     const feteTravail = new Date(annee, 4, 1);
     const victoire1945 = new Date(annee, 4, 8);
     const ascension = new Date(
       paques.getFullYear(),
       paques.getMonth(),
-      paques.getDate() + 39
+      paques.getDate() + 39,
     );
     const pentecote = new Date(
       paques.getFullYear(),
       paques.getMonth(),
-      paques.getDate() + 49
+      paques.getDate() + 49,
     );
     const lundiPentecote = new Date(
       paques.getFullYear(),
       paques.getMonth(),
-      paques.getDate() + 50
+      paques.getDate() + 50,
     );
     const feteNationale = new Date(annee, 6, 14);
     const assomption = new Date(annee, 7, 15);
@@ -159,8 +159,8 @@ export class DateUtils {
       new Date(
         this.date.getFullYear(),
         this.date.getMonth(),
-        this.date.getDate() + offset
-      )
+        this.date.getDate() + offset,
+      ),
     );
   }
 

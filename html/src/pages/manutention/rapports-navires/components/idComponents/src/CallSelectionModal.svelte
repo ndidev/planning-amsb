@@ -2,7 +2,8 @@
   import { createEventDispatcher } from "svelte";
 
   import { Modal, Button, Accordion, AccordionItem } from "flowbite-svelte";
-  import { EyeIcon, EyeOffIcon } from "lucide-svelte";
+  import EyeIcon from "lucide-svelte/icons/eye";
+  import EyeOffIcon from "lucide-svelte/icons/eye-off";
   import Notiflix from "notiflix";
 
   import { LucideButton } from "@app/components";
@@ -45,7 +46,7 @@
           "Oui",
           "Non",
           _linkToCall,
-          null
+          null,
         );
       } else {
         _linkToCall();
@@ -102,7 +103,7 @@
           requestInit: {
             method: "DELETE",
           },
-        }
+        },
       );
       Notiflix.Notify.success("L'escale est rétablie.");
 
@@ -116,7 +117,7 @@
     } catch (error) {
       console.error(error);
       Notiflix.Notify.failure(
-        "Erreur lors du rétablissement l'escale comme non ignorée."
+        "Erreur lors du rétablissement l'escale comme non ignorée.",
       );
     }
   }
@@ -129,10 +130,10 @@
   bind:open
   on:open={() => {
     callListPromise = fetcher(
-      "manutention/rapports-navires/calls-without-report"
+      "manutention/rapports-navires/calls-without-report",
     );
     ignoredCallsPromise = fetcher(
-      "manutention/rapports-navires/ignored-shipping-calls"
+      "manutention/rapports-navires/ignored-shipping-calls",
     );
 
     callList = null;

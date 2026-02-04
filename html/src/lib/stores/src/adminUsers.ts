@@ -47,6 +47,12 @@ export const adminUsers = (function () {
     };
   });
 
+  // Conserver une référence aux utilisateurs courants
+  let currentUsers: MapUtilisateurs;
+  subscribe((value) => {
+    currentUsers = value;
+  });
+
   return {
     subscribe,
     new: _new,
@@ -160,7 +166,7 @@ export const adminUsers = (function () {
    * @param id Identifiant du compte
    */
   async function _dbDeactivate(id: CompteUtilisateur["uid"]) {
-    const compte: CompteUtilisateur = structuredClone(get(adminUsers).get(id));
+    const compte: CompteUtilisateur = structuredClone(currentUsers.get(id));
 
     compte.statut = AccountStatus.INACTIVE;
 
@@ -173,7 +179,7 @@ export const adminUsers = (function () {
    * @param id Identifiant du compte
    */
   async function _dbReset(id: CompteUtilisateur["uid"]) {
-    const compte: CompteUtilisateur = structuredClone(get(adminUsers).get(id));
+    const compte: CompteUtilisateur = structuredClone(currentUsers.get(id));
 
     compte.statut = AccountStatus.PENDING;
 

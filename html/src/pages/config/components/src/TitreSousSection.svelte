@@ -13,7 +13,7 @@
  -->
 <script lang="ts">
   import { Heading } from "flowbite-svelte";
-  import { PlusIcon } from "lucide-svelte";
+  import PlusIcon from "lucide-svelte/icons/plus";
 
   /**
    * Titre de la sous-section.

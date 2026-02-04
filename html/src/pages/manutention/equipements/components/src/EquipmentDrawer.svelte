@@ -3,7 +3,7 @@
 
   import { Drawer, CloseButton } from "flowbite-svelte";
   import { sineIn } from "svelte/easing";
-  import { PencilIcon } from "lucide-svelte";
+  import PencilIcon from "lucide-svelte/icons/pencil";
 
   import { LucideButton, Badge } from "@app/components";
 

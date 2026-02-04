@@ -11,7 +11,7 @@
     Select,
     Button,
   } from "flowbite-svelte";
-  import { PlusCircleIcon } from "lucide-svelte";
+  import PlusCircleIcon from "lucide-svelte/icons/circle-plus";
   import Notiflix from "notiflix";
 
   import {
@@ -131,10 +131,10 @@
    * Supprimer une marchandise.
    */
   function deleteCargo(
-    marchandiseASupprimer: EscaleConsignation["marchandises"][0]
+    marchandiseASupprimer: EscaleConsignation["marchandises"][0],
   ) {
     escale.marchandises = escale.marchandises.filter(
-      (marchandise) => marchandise !== marchandiseASupprimer
+      (marchandise) => marchandise !== marchandiseASupprimer,
     );
   }
 
@@ -179,7 +179,7 @@
             navire: escale.navire,
             id: id ? id.toString() : "",
           },
-        }
+        },
       );
 
       // Nouveau voyage par défaut (navire jamais venu)
@@ -275,7 +275,7 @@
       () => {
         deleteCallButton.$set({ block: false });
       },
-      notiflixOptions.themes.red
+      notiflixOptions.themes.red,
     );
   }
 

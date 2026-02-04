@@ -19,7 +19,9 @@
     Button,
     Modal,
   } from "flowbite-svelte";
-  import { CircleHelpIcon, EyeIcon, SendIcon } from "lucide-svelte";
+  import CircleHelpIcon from "lucide-svelte/icons/circle-help";
+  import EyeIcon from "lucide-svelte/icons/eye";
+  import SendIcon from "lucide-svelte/icons/send";
 
   import { ConfigLine } from "../../";
 
@@ -66,7 +68,7 @@
       "Une adresse par ligne.<br />" +
         "La liste d'adresses ne peut pas être vide.<br />" +
         "Pour ne pas envoyer à une adresse sans la supprimer, la faire précéder d'un point d'exclamation \"!\".",
-      "Fermer"
+      "Fermer",
     );
   }
 
@@ -216,7 +218,7 @@
         }
       },
       null,
-      notiflixOptions.themes.red
+      notiflixOptions.themes.red,
     );
   }
 

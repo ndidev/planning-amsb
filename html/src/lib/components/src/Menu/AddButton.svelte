@@ -11,7 +11,7 @@
 <script lang="ts">
   import { goto } from "@roxi/routify";
 
-  import { PlusIcon } from "lucide-svelte";
+  import PlusIcon from "lucide-svelte/icons/plus";
 
   import { LucideButton } from "@app/components";
   import AjoutsRapidesBois from "./AjoutsRapidesBois.svelte";
