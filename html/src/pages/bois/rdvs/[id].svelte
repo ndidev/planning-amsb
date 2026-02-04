@@ -3,11 +3,7 @@
   import { params, goto, redirect } from "@roxi/routify";
 
   import { Label, Input, Toggle, Textarea } from "flowbite-svelte";
-  // import {
-  //   CircleHelpIcon,
-  //   SparklesIcon,
-  //   TriangleAlertIcon,
-  // } from "lucide-svelte";
+
   import CircleHelpIcon from "lucide-svelte/icons/circle-help";
   import SparklesIcon from "lucide-svelte/icons/sparkles";
   import TriangleAlertIcon from "lucide-svelte/icons/triangle-alert";

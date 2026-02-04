@@ -11,7 +11,6 @@
   ```
  -->
 <script lang="ts">
-  // import { WavesIcon, ShipIcon } from "lucide-svelte";
   import WavesIcon from "lucide-svelte/icons/waves";
   import ShipIcon from "lucide-svelte/icons/ship";
 

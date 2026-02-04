@@ -1,6 +1,5 @@
 <script lang="ts">
   import { Tooltip } from "flowbite-svelte";
-  // import { TriangleAlertIcon } from "lucide-svelte";
   import TriangleAlertIcon from "lucide-svelte/icons/triangle-alert";
 
   import { ShipReportDrawer } from "..";

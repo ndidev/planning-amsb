@@ -15,16 +15,6 @@
   import Notiflix from "notiflix";
   import Hammer from "hammerjs";
   import { Modal } from "flowbite-svelte";
-  // import {
-  //   ArrowRightFromLineIcon,
-  //   ArrowRightToLineIcon,
-  //   ClockIcon,
-  //   MessageSquareOffIcon,
-  //   MessageSquareTextIcon,
-  //   ReceiptTextIcon,
-  //   TruckIcon,
-  //   UserIcon,
-  // } from "lucide-svelte";
   import ArrowRightFromLineIcon from "lucide-svelte/icons/arrow-right-from-line";
   import ArrowRightToLineIcon from "lucide-svelte/icons/arrow-right-to-line";
   import ClockIcon from "lucide-svelte/icons/clock";

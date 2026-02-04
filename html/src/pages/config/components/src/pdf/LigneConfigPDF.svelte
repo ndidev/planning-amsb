@@ -19,7 +19,6 @@
     Button,
     Modal,
   } from "flowbite-svelte";
-  // import { CircleHelpIcon, EyeIcon, SendIcon } from "lucide-svelte";
   import CircleHelpIcon from "lucide-svelte/icons/circle-help";
   import EyeIcon from "lucide-svelte/icons/eye";
   import SendIcon from "lucide-svelte/icons/send";

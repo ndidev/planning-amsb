@@ -11,7 +11,6 @@
 <script lang="ts">
   import Notiflix from "notiflix";
   import { Modal, Label, Input, Button } from "flowbite-svelte";
-  // import { ScrollTextIcon } from "lucide-svelte";
   import ScrollTextIcon from "lucide-svelte/icons/scroll-text";
 
   import { filter } from "../";

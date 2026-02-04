@@ -4,7 +4,6 @@
   import { params, goto, redirect } from "@roxi/routify";
 
   import { Label, Input, Textarea, Toggle, Select } from "flowbite-svelte";
-  // import { CircleHelpIcon } from "lucide-svelte";
   import CircleHelpIcon from "lucide-svelte/icons/circle-help";
   import Notiflix from "notiflix";
 

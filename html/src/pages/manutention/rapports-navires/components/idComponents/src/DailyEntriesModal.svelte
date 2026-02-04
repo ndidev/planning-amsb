@@ -2,8 +2,7 @@
   import { onMount, tick } from "svelte";
 
   import { Modal, Input, Label, Button, Checkbox } from "flowbite-svelte";
-  // import { PlusCircleIcon, Trash2Icon } from "lucide-svelte";
-  import PlusCircleIcon from "lucide-svelte/icons/plus-circle";
+  import PlusCircleIcon from "lucide-svelte/icons/circle-plus";
   import Trash2Icon from "lucide-svelte/icons/trash-2";
   import Notiflix from "notiflix";
 

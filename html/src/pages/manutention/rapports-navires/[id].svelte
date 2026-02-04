@@ -16,17 +16,12 @@
     Toggle,
     Tooltip,
   } from "flowbite-svelte";
-  import {
-    CopyIcon,
-    EllipsisVerticalIcon,
-    LinkIcon,
-    PencilIcon,
-    PlusCircleIcon,
-    Trash2Icon,
-    TriangleAlertIcon,
-    UnlinkIcon,
-    WandSparklesIcon,
-  } from "lucide-svelte";
+  import LinkIcon from "lucide-svelte/icons/link";
+  import PlusCircleIcon from "lucide-svelte/icons/circle-plus";
+  import TriangleAlertIcon from "lucide-svelte/icons/triangle-alert";
+  import UnlinkIcon from "lucide-svelte/icons/unlink";
+  import WandSparklesIcon from "lucide-svelte/icons/wand-sparkles";
+
   import Notiflix from "notiflix";
 
   import {
@@ -117,7 +112,7 @@
         report.linkedShippingCallId = null;
       },
       null,
-      notiflixOptions.themes.red
+      notiflixOptions.themes.red,
     );
   }
 
@@ -143,10 +138,10 @@
   }
 
   function deleteCargo(
-    marchandiseASupprimer: StevedoringShipReport["cargoEntries"][number]
+    marchandiseASupprimer: StevedoringShipReport["cargoEntries"][number],
   ) {
     report.cargoEntries = report.cargoEntries.filter(
-      (marchandise) => marchandise !== marchandiseASupprimer
+      (marchandise) => marchandise !== marchandiseASupprimer,
     );
   }
 
@@ -171,20 +166,20 @@
       openCargoSelectionModal(
         report.subreports[displaySubreportIndex],
         displaySubreportIndex,
-        true
+        true,
       );
     }
   }
 
   function deleteSubreport(
-    subreport: StevedoringShipReport["subreports"][number]
+    subreport: StevedoringShipReport["subreports"][number],
   ) {
     // Get current subreport index
     const currentIndex = report.subreports.indexOf(subreport);
 
     // Delete subreport
     report.subreports = report.subreports.filter(
-      (_subreport) => _subreport !== subreport
+      (_subreport) => _subreport !== subreport,
     );
 
     if (report.subreports.length === 0) {
@@ -199,7 +194,7 @@
   function openCargoSelectionModal(
     subreport: StevedoringShipReport["subreports"][number],
     index: number,
-    creationMode = false
+    creationMode = false,
   ) {
     cargoSelectionSubreport = subreport;
     cargoSelectionSubreportIndex = index;
@@ -208,7 +203,7 @@
   }
 
   async function addDay(
-    subreport: StevedoringShipReport["subreports"][number]
+    subreport: StevedoringShipReport["subreports"][number],
   ) {
     // Convert property from empty array to empty object
     if (Array.isArray(subreport.entriesByDate)) {
@@ -256,7 +251,7 @@
           addDayButton.$set({ disabled: true });
 
           const call = await consignationEscales.get(
-            report.linkedShippingCallId
+            report.linkedShippingCallId,
           );
 
           if (!call?.ops_date) {
@@ -275,7 +270,7 @@
 
   function editDay(
     subreport: StevedoringShipReport["subreports"][number],
-    date: string
+    date: string,
   ) {
     dailyEntriesSubreport = subreport;
     dailyEntriesDate = date;
@@ -284,7 +279,7 @@
 
   function copyDay(
     subreport: StevedoringShipReport["subreports"][number],
-    date: string
+    date: string,
   ) {
     const maxEntriesDate = Object.keys(subreport.entriesByDate).sort().pop();
     const nextDate = new DateUtils(maxEntriesDate)
@@ -292,7 +287,7 @@
       .toLocaleISODateString();
 
     subreport.entriesByDate[nextDate] = structuredClone(
-      subreport.entriesByDate[date]
+      subreport.entriesByDate[date],
     );
 
     for (const type in subreport.entriesByDate[nextDate]) {
@@ -306,7 +301,7 @@
 
   function deleteDay(
     subreport: StevedoringShipReport["subreports"][number],
-    date: string
+    date: string,
   ) {
     delete subreport.entriesByDate[date];
 
@@ -329,10 +324,10 @@
   }
 
   function deleteStorage(
-    storage: StevedoringShipReport["storageEntries"][number]
+    storage: StevedoringShipReport["storageEntries"][number],
   ) {
     report.storageEntries = report.storageEntries.filter(
-      (_storage) => _storage !== storage
+      (_storage) => _storage !== storage,
     );
   }
 
@@ -344,7 +339,7 @@
         .filter((storage) => storage.cargoId === cargo.id)
         .reduce(
           (acc, storage) => acc + (parseFloat(String(storage.tonnage)) || 0),
-          0
+          0,
         );
 
       if (
@@ -352,7 +347,7 @@
         parseFloat(String(cargo.outturnTonnage || cargo.blTonnage))
       ) {
         Notiflix.Notify.warning(
-          `Le tonnage stocké de la marchandise ${cargo.cargoName} (${cargo.customer}) dépasse le tonnage du navire`
+          `Le tonnage stocké de la marchandise ${cargo.cargoName} (${cargo.customer}) dépasse le tonnage du navire`,
         );
         return false;
       }
@@ -364,7 +359,7 @@
 
       if (storedVolume > (cargo.outturnVolume || cargo.blVolume)) {
         Notiflix.Notify.warning(
-          `Le cubage stocké de la marchandise ${cargo.cargoName} (${cargo.customer}) dépasse le cubage du navire`
+          `Le cubage stocké de la marchandise ${cargo.cargoName} (${cargo.customer}) dépasse le cubage du navire`,
         );
         return false;
       }
@@ -376,7 +371,7 @@
 
       if (storedUnits > (cargo.outturnUnits || cargo.blUnits)) {
         Notiflix.Notify.warning(
-          `Le nombre de colis stocké de la marchandise ${cargo.cargoName} (${cargo.customer}) dépasse le nombre de colis du navire`
+          `Le nombre de colis stocké de la marchandise ${cargo.cargoName} (${cargo.customer}) dépasse le nombre de colis du navire`,
         );
         return false;
       }
@@ -442,7 +437,7 @@
       () => {
         deleteReportButton.$set({ block: false });
       },
-      notiflixOptions.themes.red
+      notiflixOptions.themes.red,
     );
   }
 
@@ -758,7 +753,7 @@
                         size="1em"
                         on:click={() => {
                           const cargo = report.cargoEntries.find(
-                            (cargo) => cargo.id === storage.cargoId
+                            (cargo) => cargo.id === storage.cargoId,
                           );
                           storage.tonnage =
                             cargo.outturnTonnage -
@@ -766,7 +761,7 @@
                               .filter(
                                 ({ id, cargoId }) =>
                                   cargoId === storage.cargoId &&
-                                  id !== storage.id
+                                  id !== storage.id,
                               )
                               .flatMap(({ tonnage }) => tonnage)
                               .reduce((a, b) => a + b, 0);
@@ -776,7 +771,7 @@
                               .filter(
                                 ({ id, cargoId }) =>
                                   cargoId === storage.cargoId &&
-                                  id !== storage.id
+                                  id !== storage.id,
                               )
                               .flatMap(({ volume }) => volume)
                               .reduce((a, b) => a + b, 0);
@@ -786,7 +781,7 @@
                               .filter(
                                 ({ id, cargoId }) =>
                                   cargoId === storage.cargoId &&
-                                  id !== storage.id
+                                  id !== storage.id,
                               )
                               .flatMap(({ units }) => units)
                               .reduce((a, b) => a + b, 0);
