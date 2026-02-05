@@ -32,11 +32,13 @@
   let dates: Set<DateString>;
   let datesMareesSup4m = new Set<DateString>();
 
-  const unsubscribeFilter = filter.subscribe((value) => {
-    appointments = null;
+  let appointmentsReady = vracRdvs.getReadyState();
 
+  const unsubscribeFilter = filter.subscribe((value) => {
     const params = value.toSearchParams();
     vracRdvs.setSearchParams(params);
+
+    appointmentsReady = vracRdvs.getReadyState();
   });
 
   const unsubscribeAppointments = vracRdvs.subscribe((value) => {
@@ -53,12 +55,12 @@
   $: datesMareesSup4m = new Set(
     ($marees || [])
       .filter((maree) => maree.te_cesson > 4)
-      .map((maree) => maree.date)
+      .map((maree) => maree.date),
   );
 
   function makeDatesSet(appointments: RdvVrac[]) {
     return new Set(
-      [...appointments.values()].map(({ date_rdv }) => date_rdv).sort()
+      [...appointments.values()].map(({ date_rdv }) => date_rdv).sort(),
     );
   }
 
@@ -73,7 +75,7 @@
         date,
         [...appointments.values()]
           .filter(({ date_rdv }) => date_rdv === date)
-          .sort(sortAppointments)
+          .sort(sortAppointments),
       );
     });
 
@@ -104,7 +106,7 @@
 
     function compareProduct(a: RdvVrac, b: RdvVrac): number {
       return ($vracProduits?.get(a.produit)?.nom || "").localeCompare(
-        $vracProduits?.get(b.produit)?.nom || ""
+        $vracProduits?.get(b.produit)?.nom || "",
       );
     }
 
@@ -116,7 +118,7 @@
       ).localeCompare(
         $vracProduits
           ?.get(b.produit)
-          ?.qualites.find((qualite) => qualite.id === b.qualite)?.nom || ""
+          ?.qualites.find((qualite) => qualite.id === b.qualite)?.nom || "",
       );
     }
   }
@@ -139,7 +141,7 @@
           date_debut: debut,
           date_fin: fin,
         },
-      }
+      },
     );
 
     const map = new Map<string, string[]>();
@@ -149,10 +151,10 @@
         date,
         listeNavires
           .map((navire) =>
-            date >= navire.debut && date <= navire.fin ? navire.navire : null
+            date >= navire.debut && date <= navire.fin ? navire.navire : null,
           )
-          .filter((navire) => navire !== null)
-      )
+          .filter((navire) => navire !== null),
+      ),
     );
 
     return map;
@@ -169,7 +171,7 @@
   async function updateNaviresParDate() {
     naviresParDate = await getNaviresParDate(
       [...dates][0],
-      [...dates][dates.size - 1]
+      [...dates][dates.size - 1],
     );
   }
 
@@ -185,14 +187,14 @@
   onMount(() => {
     document.addEventListener(
       `planning:${consignationEscales.endpoint}`,
-      updateNaviresParDate
+      updateNaviresParDate,
     );
   });
 
   onDestroy(() => {
     document.removeEventListener(
       `planning:${consignationEscales.endpoint}`,
-      updateNaviresParDate
+      updateNaviresParDate,
     );
 
     unsubscribeAppointments();
@@ -217,12 +219,13 @@
 <div class="sticky top-0 z-[1] ml-16 lg:ml-24">
   <BandeauInfo module="vrac" pc />
 
-  <!-- <FilterBanner /> -->
   <FilterModal />
 </div>
 
 <main class="w-11/12 mx-auto mb-8">
-  {#if appointments && $vracProduits}
+  {#await Promise.all([appointmentsReady, vracProduits.getReadyState()])}
+    <Placeholder />
+  {:then}
     {#each groupedAppointments as [date, appointments] (date)}
       <LigneDate
         {date}
@@ -238,8 +241,5 @@
     {:else}
       <p class="mt-5 text-2xl text-center">Aucun rendez-vous.</p>
     {/each}
-  {:else}
-    <!-- Chargement des données -->
-    <Placeholder />
-  {/if}
+  {/await}
 </main>
