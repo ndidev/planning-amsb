@@ -26,7 +26,8 @@
 
   import { LucideButton, Badge } from "@app/components";
 
-  import { adminUsers, currentUser, authInfo } from "@app/stores";
+  import { currentUser, authInfo } from "@app/stores";
+  import { adminUsers } from "@app/stores/src/adminUsers";
 
   import { sitemap, notiflixOptions, validerFormulaire } from "@app/utils";
 

@@ -47,7 +47,7 @@ export { configAgence } from "./src/configAgence";
 export { configCotes } from "./src/configCotes";
 
 // Admin - Utilisateurs
-export { adminUsers } from "./src/adminUsers";
+// export { adminUsers } from "./src/adminUsers";
 
 // Ports
 export { ports } from "./src/ports";

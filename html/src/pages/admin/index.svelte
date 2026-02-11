@@ -4,10 +4,10 @@
 
   import { LigneCompteUtilisateur } from "./components";
   import { Chargement, PageHeading, SseConnection } from "@app/components";
-  import { adminUsers } from "@app/stores";
+  import { adminUsers } from "@app/stores/src/adminUsers";
 
   $: comptes = [...$adminUsers.values()].sort((a, b) =>
-    a.login < b.login ? -1 : 1
+    a.login < b.login ? -1 : 1,
   );
 </script>
 
