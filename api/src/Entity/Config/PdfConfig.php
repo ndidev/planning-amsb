@@ -6,9 +6,10 @@ declare(strict_types=1);
 
 namespace App\Entity\Config;
 
-use App\Core\Validation\Constraints\Required;
 use App\Core\Traits\IdentifierTrait;
 use App\Core\Traits\ModuleTrait;
+use App\Core\Validation\Constraints\PositiveOrNullNumber;
+use App\Core\Validation\Constraints\Required;
 use App\Entity\AbstractEntity;
 use App\Entity\ThirdParty\ThirdParty;
 
@@ -48,8 +49,10 @@ final class PdfConfig extends AbstractEntity
         }
     }
 
+    #[PositiveOrNullNumber("Le nombre de jours avant doit être positif ou nul.")]
     public int $daysBefore = 0;
 
+    #[PositiveOrNullNumber("Le nombre de jours après doit être positif ou nul.")]
     public int $daysAfter = 0;
 
     public function getEmailsAsString(): string

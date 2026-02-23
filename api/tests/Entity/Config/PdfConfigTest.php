@@ -42,6 +42,58 @@ final class PdfConfigTest extends TestCase
         $this->assertTrue($actualAutoSend);
     }
 
+    public function testSetAndGetDaysBefore(): void
+    {
+        // Given
+        $pdfConfig = new PdfConfig();
+        $daysBefore = 10;
+
+        // When
+        $pdfConfig->daysBefore = $daysBefore;
+        $actualDaysBefore = $pdfConfig->daysBefore;
+
+        // Then
+        $this->assertSame($daysBefore, $actualDaysBefore);
+    }
+
+    public function testSetAndGetDaysAfter(): void
+    {
+        // Given
+        $pdfConfig = new PdfConfig();
+        $daysAfter = 7;
+
+        // When
+        $pdfConfig->daysAfter = $daysAfter;
+        $actualDaysAfter = $pdfConfig->daysAfter;
+
+        // Then
+        $this->assertSame($daysAfter, $actualDaysAfter);
+    }
+
+    public function testDaysBeforeDefaultValue(): void
+    {
+        // Given
+        $pdfConfig = new PdfConfig();
+
+        // When
+        $actualDaysBefore = $pdfConfig->daysBefore;
+
+        // Then
+        $this->assertSame(0, $actualDaysBefore);
+    }
+
+    public function testDaysAfterDefaultValue(): void
+    {
+        // Given
+        $pdfConfig = new PdfConfig();
+
+        // When
+        $actualDaysAfter = $pdfConfig->daysAfter;
+
+        // Then
+        $this->assertSame(0, $actualDaysAfter);
+    }
+
     public function testSetAndGetEmailsFromArray(): void
     {
         // Given
