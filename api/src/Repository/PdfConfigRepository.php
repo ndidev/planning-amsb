@@ -117,6 +117,14 @@ final class PdfConfigRepository extends Repository
             $lastInsertId = (int) $this->mysql->lastInsertId();
             $this->mysql->commit();
         } catch (\PDOException $e) {
+            if ($this->mysql->inTransaction()) {
+                $this->mysql->rollBack();
+            }
+
+            if ($e->getCode() == 23000) {
+                throw new DBException("Une configuration existe déjà pour {$config->module}/{$config->supplier?->shortName}.", previous: $e);
+            }
+
             throw new DBException("Erreur lors de la création", previous: $e);
         }
 

@@ -122,6 +122,8 @@ final class PdfConfigService
     {
         $config = $this->makeConfigFromForm($rawData)->setId($id);
 
+        $config->validate();
+
         return $this->pdfConfigRepository->updateConfig($config);
     }
 
@@ -135,6 +137,8 @@ final class PdfConfigService
     public function createConfig(HTTPRequestBody $rawData): PdfConfig
     {
         $config = $this->makeConfigFromForm($rawData);
+
+        $config->validate();
 
         return $this->pdfConfigRepository->createConfig($config);
     }

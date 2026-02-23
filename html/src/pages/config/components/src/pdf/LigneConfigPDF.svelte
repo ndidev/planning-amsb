@@ -254,6 +254,7 @@
           type="number"
           min={0}
           id="days-before"
+          data-nom="Jours avant"
           class="jours_avant"
           bind:value={config.jours_avant}
           required
@@ -267,6 +268,7 @@
           type="number"
           min={0}
           id="days-after"
+          data-nom="Jours après"
           class="jours_apres"
           bind:value={config.jours_apres}
           required
