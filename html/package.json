@@ -33,7 +33,7 @@
     "autosize": "^6.0.1",
     "chart.js": "^4.2.1",
     "hammerjs": "^2.0.8",
-    "lucide-svelte": "^0.563.0",
+    "lucide-svelte": "^0.575.0",
     "notiflix": "^3.2.5",
     "svelecte": "4.5.0",
     "svelte-tiny-virtual-list": "^2.1.2",
