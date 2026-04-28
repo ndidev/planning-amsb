@@ -299,13 +299,6 @@ final class PdfConfigService
 
             return $result;
         } catch (PHPMailerException $e) {
-            \file_put_contents(LOG_DIR . '/pdf_email_errors.log', sprintf(
-                "[%s] Error sending PDF email for config ID %d: %s\nError: %s\n",
-                (new \DateTime())->format('Y-m-d H:i:s'),
-                $configId,
-                $e->getMessage(),
-                $mail->ErrorInfo
-            ), FILE_APPEND);
             throw new ServerException("Erreur d'envoi", previous: $e);
         }
     }

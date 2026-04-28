@@ -53,7 +53,7 @@ class Email extends PHPMailer
 
                 $message = $timestamp . PHP_EOL . "debug level $level; message: $str\n";
 
-                $outputFile = '/var/log/phpmailog.log';
+                $outputFile = LOG_DIR . '/phpmailog.log';
                 $fileHandle = fopen($outputFile, 'a');
 
                 if (!$fileHandle) {
