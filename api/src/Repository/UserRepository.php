@@ -156,6 +156,7 @@ final class UserRepository extends Repository
                 :uid,
                 :login,
                 NULL, -- password
+                :email,
                 1,    -- can_login
                 :nom,
                 NULL, -- created_at
@@ -170,6 +171,7 @@ final class UserRepository extends Repository
         $this->mysql->prepareAndExecute($statement, [
             "uid" => $uid,
             "login" => \mb_substr((string) $user->login, 0, 255),
+            "email" => \mb_substr((string) $user->email, 0, 254),
             "nom" => \mb_substr($user->name, 0, 255),
             "statut" => AccountStatus::PENDING,
             "roles" => \json_encode($user->roles),
@@ -228,6 +230,7 @@ final class UserRepository extends Repository
                 SET
                     nom = :nom,
                     login = :login,
+                    email = :email,
                     roles = :roles,
                     commentaire = :commentaire
                 WHERE uid = :uid";
@@ -235,6 +238,7 @@ final class UserRepository extends Repository
             $request = $this->mysql->prepare($statement);
             $request->execute([
                 "login" => \mb_substr($user->login, 0, 255),
+                "email" => \mb_substr($user->email, 0, 254),
                 "nom" => \mb_substr($user->name, 0, 255),
                 "commentaire" => $user->comments,
                 "roles" => \json_encode($user->roles),
@@ -305,6 +309,7 @@ final class UserRepository extends Repository
             SET
                 login = CONCAT(login, '_del-', DATE(NOW()), 'T', TIME(NOW())),
                 password = NULL,
+                email = NULL,
                 statut = :statut,
                 login_attempts = 0,
                 historique = CONCAT(historique, '\n', '(', NOW(), ') Compte supprimé par ', :admin)
@@ -350,12 +355,13 @@ final class UserRepository extends Repository
     {
         $uid = $user->uid;
 
-        $usernameStatement = "UPDATE `admin_users` SET nom = :nom WHERE `uid` = :uid";
+        $usernameStatement = "UPDATE `admin_users` SET nom = :nom, email = :email WHERE `uid` = :uid";
 
         $passwordStatement = "UPDATE `admin_users` SET `password` = :password WHERE `uid` = :uid";
 
         $this->mysql->prepareAndExecute($usernameStatement, [
             "nom" => \mb_substr($user->name, 0, 255),
+            "email" => \mb_substr($user->email, 0, 254),
             "uid" => $uid,
         ]);
 

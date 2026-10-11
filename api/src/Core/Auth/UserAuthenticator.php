@@ -454,6 +454,7 @@ final class UserAuthenticator
         $userAH = new ArrayHandler($user);
 
         $this->user->login = $userAH->getString('login');
+        $this->user->email = $userAH->getString('email');
         $this->user->passwordHash = $userAH->getString('password');
         $this->user->canLogin = (bool) $userAH->getBool('can_login');
         $this->user->name = $userAH->getString('nom');

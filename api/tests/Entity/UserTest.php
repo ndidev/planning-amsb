@@ -39,6 +39,20 @@ final class UserTest extends TestCase
         $this->assertSame($uid, $actualUid);
     }
 
+    public function testSetAndGetEmail(): void
+    {
+        // Given
+        $userAccount = new User();
+        $email = 'john.doe@example.com';
+
+        // When
+        $userAccount->email = $email;
+        $actualEmail = $userAccount->email;
+
+        // Then
+        $this->assertSame($email, $actualEmail);
+    }
+
     public function testSetAndGetLastLogin(): void
     {
         // Given
@@ -165,6 +179,7 @@ final class UserTest extends TestCase
         $userAccount->uid = 'uid1';
         $userAccount->login = 'login string';
         $userAccount->passwordHash = '1234567890';
+        $userAccount->email = 'john.doe@example.com';
         $userAccount->canLogin = true;
         $userAccount->name = 'User name';
         $userAccount->loginAttempts = 4;
@@ -177,6 +192,7 @@ final class UserTest extends TestCase
         $expectedArray = [
             'uid' => 'uid1',
             'login' => 'login string',
+            'email' => 'john.doe@example.com',
             'nom' => 'User name',
             'roles' => [
                 'role1' => 0,

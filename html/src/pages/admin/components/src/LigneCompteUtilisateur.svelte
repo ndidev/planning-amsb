@@ -499,6 +499,20 @@
               />
             </Input>
           </div>
+
+          <!-- E-mail -->
+          <div class="mb-4">
+            <Label for={"email_" + compte.uid}>E-mail</Label>
+            <Input
+              type="email"
+              id={"email_" + compte.uid}
+              name="email"
+              data-nom="E-mail"
+              bind:value={compte.email}
+              maxlength={254}
+              required
+            />
+          </div>
         </div>
 
         <!-- Commentaire -->

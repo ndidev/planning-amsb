@@ -18,6 +18,7 @@ final readonly class CurrentUserInfoDTO implements \JsonSerializable
             "uid" => $this->user->uid,
             "login" => $this->user->login,
             "nom" => $this->user->name,
+            "email" => $this->user->email,
             "roles" => $this->user->roles->toArray(),
             "statut" => $this->user->status,
         ];
