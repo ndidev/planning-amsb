@@ -1,3 +1,9 @@
 <!-- routify:options bundle=true -->
 
-<slot />
+<script lang="ts">
+  import { Guard } from "@app/auth";
+</script>
+
+<Guard>
+  <slot />
+</Guard>
