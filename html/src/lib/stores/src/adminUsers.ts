@@ -12,6 +12,7 @@ const endpoint = "admin/users";
 const modeleCompte: CompteUtilisateur = {
   uid: null,
   login: "",
+  email: "",
   nom: "",
   statut: AccountStatus.PENDING,
   roles: {

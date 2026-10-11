@@ -130,6 +130,20 @@ final class ArrayHandlerTest extends TestCase
                 "expected" => "value",
             ],
             [
+                "title" => "default value null is returned when empty string is not allowed",
+                "store" => ["key" => ""],
+                "default" => null,
+                "allowEmpty" => false,
+                "expected" => null,
+            ],
+            [
+                "title" => "empty string is returned when null is not allowed",
+                "store" => ["key" => null],
+                "default" => "",
+                "allowEmpty" => true,
+                "expected" => "",
+            ],
+            [
                 "title" => "default value is returned when key is not set",
                 "store" => [],
                 "default" => "value",
@@ -149,7 +163,7 @@ final class ArrayHandlerTest extends TestCase
                 "default" => "value",
                 "allowEmpty" => true,
                 "expected" => "value",
-            ]
+            ],
         ];
 
         foreach ($cases as $case) {

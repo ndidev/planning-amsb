@@ -17,7 +17,7 @@ use App\Core\Validation\Constraints\ValidEmailAddress;
  * @phpstan-type UserAccountArray array{
  *                                  uid: string,
  *                                  login: string,
- *                                  email: ?string,
+ *                                  email: string,
  *                                  nom: string,
  *                                  can_login: int,
  *                                  roles: string,

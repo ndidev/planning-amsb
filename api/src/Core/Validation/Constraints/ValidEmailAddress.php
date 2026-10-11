@@ -2,6 +2,8 @@
 
 // Path: api/src/Core/Validation/Constraints/ValidEmailAddress.php
 
+declare(strict_types=1);
+
 namespace App\Core\Validation\Constraints;
 
 use Egulias\EmailValidator\EmailValidator;
@@ -36,7 +38,7 @@ final class ValidEmailAddress implements Constraint
         $validator = new EmailValidator();
         $validation = new MultipleValidationWithAnd([
             new RFCValidation(),
-            new DNSCheckValidation()
+            // new DNSCheckValidation() // nécessite une résolution DNS, peut ralentir la validation
         ]);
         return $validator->isValid($value, $validation);
     }
