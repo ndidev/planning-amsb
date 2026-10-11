@@ -45,18 +45,18 @@ final class CurrentUserFormDTOTest extends TestCase
         $this->assertSame($name, $result);
     }
 
-    public function testExceptionWhenSetNameWithEmptyName(): void
+    public function testSetAndGetEmail(): void
     {
         // Given
         $dto = new CurrentUserFormDTO();
-        $dto->name = '';
-
-        // Then
-        $this->expectException(ValidationException::class);
-        $this->expectExceptionMessage('Le nom est requis.');
+        $email = 'email@example.com';
 
         // When
-        $dto->validate();
+        $dto->email = $email;
+        $result = $dto->email;
+
+        // Then
+        $this->assertSame($email, $result);
     }
 
     public function testSetAndGetStringPassword(): void

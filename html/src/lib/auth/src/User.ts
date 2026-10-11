@@ -18,6 +18,11 @@ export class User {
   login: CompteUtilisateur["login"];
 
   /**
+   * Email de l'utilisateur.
+   */
+  email: CompteUtilisateur["email"];
+
+  /**
    * Nom de l'utilisateur.
    */
   nom: CompteUtilisateur["nom"];
@@ -36,6 +41,7 @@ export class User {
     user: UserInfo = {
       uid: "",
       login: "",
+      email: "",
       nom: "",
       roles: {},
       statut: AccountStatus.INACTIVE,
@@ -43,6 +49,7 @@ export class User {
   ) {
     this.uid = user.uid;
     this.login = user.login;
+    this.email = user.email;
     this.nom = user.nom;
     this.#roles = user.roles;
     this.statut = user.statut;
@@ -112,6 +119,11 @@ export type UserInfo = {
    * Login de l'utilisateur.
    */
   login: CompteUtilisateur["login"];
+
+  /**
+   * Email de l'utilisateur.
+   */
+  email: CompteUtilisateur["email"];
 
   /**
    * Nom de l'utilisateur.

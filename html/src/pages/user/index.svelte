@@ -15,7 +15,7 @@
 
   import { currentUser, authInfo } from "@app/stores";
 
-  import { fetcher } from "@app/utils";
+  import { fetcher, validerFormulaire } from "@app/utils";
   import { User, type UserInfo } from "@app/auth";
 
   let submitButton: BoutonAction;
@@ -27,10 +27,13 @@
   let passwordMessage: string = "";
   let passwordConfirmMessage: string = "";
 
+  let formulaire: HTMLFormElement;
   let nom: string;
+  let email: string;
 
   const unsubscribeCurrentUser = currentUser.subscribe((user) => {
     nom = user.nom;
+    email = user.email;
   });
 
   $: verifierPasswords(password, passwordConfirm);
@@ -92,7 +95,7 @@
       longueur: false,
       differentIdentifiant: true,
       identiques: true,
-    }
+    },
   ) {
     // Longueur
     passwordMessage = longueur
@@ -114,6 +117,10 @@
    * Modifier les informations utilisateur.
    */
   async function submitForm() {
+    if (!validerFormulaire(formulaire)) {
+      return;
+    }
+
     submitButton.$set({ block: true });
 
     try {
@@ -122,6 +129,7 @@
           method: "PUT",
           body: JSON.stringify({
             nom,
+            email,
             password,
           }),
         },
@@ -145,6 +153,7 @@
    */
   function annulerModification(e: Event) {
     nom = $currentUser.nom;
+    email = $currentUser.email;
     password = passwordConfirm = "";
   }
 
@@ -154,7 +163,7 @@
 <main class="mx-auto w-11/12 lg:w-7/12">
   <PageHeading>Utilisateur</PageHeading>
 
-  <form>
+  <form bind:this={formulaire}>
     <!-- Nom -->
     <div class="mb-4">
       <Label for="nom">Nom</Label>
@@ -181,6 +190,20 @@
         autocomplete="off"
         value={$currentUser.login}
         disabled
+      />
+    </div>
+
+    <!-- Email -->
+    <div class="mb-4">
+      <Label for="email">Email</Label>
+      <Input
+        type="email"
+        id="email"
+        name="email"
+        placeholder="Email"
+        bind:value={email}
+        maxlength={254}
+        required
       />
     </div>
 

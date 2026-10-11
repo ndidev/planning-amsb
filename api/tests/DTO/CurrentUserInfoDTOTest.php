@@ -25,6 +25,7 @@ final class CurrentUserInfoDTOTest extends TestCase
             "uid" => "user-id",
             "login" => "test",
             "nom" => "Test User",
+            "email" => "test@gmail.com",
             "roles" => [
                 "module1" => UserRoles::ACCESS,
                 "module2" => UserRoles::EDIT
@@ -35,6 +36,7 @@ final class CurrentUserInfoDTOTest extends TestCase
         $user = new User();
         $user->uid = $userInfo['uid'];
         $user->login = $userInfo['login'];
+        $user->email = $userInfo['email'];
         $user->name = $userInfo['nom'];
         $user->roles = $userInfo['roles'];
         $user->status = $userInfo['statut'];

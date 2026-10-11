@@ -10,11 +10,14 @@ use App\Core\Auth\AccountStatus;
 use App\Core\Auth\UserRoles;
 use App\Core\Component\DateUtils;
 use App\Core\Component\Module;
+use App\Core\Validation\Constraints\Required;
+use App\Core\Validation\Constraints\ValidEmailAddress;
 
 /**
  * @phpstan-type UserAccountArray array{
  *                                  uid: string,
  *                                  login: string,
+ *                                  email: ?string,
  *                                  nom: string,
  *                                  can_login: int,
  *                                  roles: string,
@@ -34,12 +37,20 @@ final class User extends AbstractEntity
     /**
      * Identifiant de l'utilisateur.
      */
+    #[Required(message: "Le login est obligatoire")]
     public string $login = '';
 
     /**
      * Hash du mot de passe.
      */
     public ?string $passwordHash = null;
+
+    /**
+     * Adresse e-mail
+     */
+    #[Required(message: "L'adresse e-mail est obligatoire")]
+    #[ValidEmailAddress(message: "L'adresse e-mail est invalide")]
+    public string $email = '';
 
     /**
      * `true` si le compte peut être utilisé pour se connecter (utilisateur normal).  
@@ -50,6 +61,7 @@ final class User extends AbstractEntity
     /**
      * Nom de l'utilisateur.
      */
+    #[Required(message: "Le nom est obligatoire")]
     public string $name = '';
 
     /**
@@ -153,6 +165,7 @@ final class User extends AbstractEntity
         return [
             "uid" => $this->uid,
             "login" => $this->login,
+            "email" => $this->email,
             "nom" => $this->name,
             "roles" => $this->roles->toArray(),
             "statut" => $this->status,

@@ -47,6 +47,7 @@ final class UserService
         $user = new User();
         $user->uid = $rawDataAH->getString('uid');
         $user->login = $rawDataAH->getString('login');
+        $user->email = $rawDataAH->getString('email');
         $user->name = $rawDataAH->getString('nom');
         $user->canLogin = $rawDataAH->getBool('can_login');
         $user->roles = $rawDataAH->getString('roles', '{}');
@@ -70,6 +71,7 @@ final class UserService
         $user = new User();
         $user->uid = $requestBody->getString('uid');
         $user->login = $requestBody->getString('login');
+        $user->email = $requestBody->getString('email');
         $user->name = $requestBody->getString('nom');
         $user->roles = $requestBody->getArray('roles', []);
         $user->status = $requestBody->getString('statut'); // @phpstan-ignore assign.propertyType
@@ -98,6 +100,7 @@ final class UserService
         $currentUserFormDTO = new CurrentUserFormDTO();
         $currentUserFormDTO->uid = $this->currentUser->uid;
         $currentUserFormDTO->name = $requestBody->getString('nom', $this->currentUser->name);
+        $currentUserFormDTO->email = $requestBody->getString('email', $this->currentUser->email);
         $currentUserFormDTO->password = $requestBody->getString('password', null);
 
         return $currentUserFormDTO;
@@ -147,13 +150,7 @@ final class UserService
     {
         $user = $this->makeUserAccountFromForm($input);
 
-        if (!$user->login) {
-            throw new BadRequestException("Le login est obligatoire.");
-        }
-
-        if (!$user->name) {
-            throw new BadRequestException("Le nom est obligatoire.");
-        }
+        $user->validate();
 
         return $this->userRepository->createUser($user, $this->currentUser->name ?? '');
     }
@@ -169,6 +166,9 @@ final class UserService
     public function updateUserAccount(string $uid, HTTPRequestBody $input): User
     {
         $user = $this->makeUserAccountFromForm($input);
+
+        $user->validate();
+
         $user->uid = $uid;
 
         // Conservation du rôle admin : un utilisateur ne peut pas changer lui-même son statut admin
@@ -189,27 +189,15 @@ final class UserService
     /**
      * Récupère les informations de l'utilisateur courant.
      * 
-     * @return null|array{
-     *                uid: string|null,
-     *                login: string|null,
-     *                nom: string,
-     *                roles: UserRoles,
-     *                statut: string,
-     *              }
+     * @return CurrentUserInfoDTO|null
      */
-    public function getCurrentUserInfo(): ?array
+    public function getCurrentUserInfo(): ?CurrentUserInfoDTO
     {
         if (!$this->currentUser) {
             return null;
         }
 
-        return [
-            "uid" => $this->currentUser->uid,
-            "login" => $this->currentUser->login,
-            "nom" => $this->currentUser->name,
-            "roles" => $this->currentUser->roles,
-            "statut" => $this->currentUser->status,
-        ];
+        return new CurrentUserInfoDTO($this->currentUser);
     }
 
     /**
@@ -222,6 +210,8 @@ final class UserService
     public function updateCurrentUser(HTTPRequestBody $input): CurrentUserInfoDTO
     {
         $currentUserDTO = $this->makeCurrentUserFormDTO($input);
+
+        $currentUserDTO->validate();
 
         $minPasswordLength = Environment::getInt('AUTH_LONGUEUR_MINI_PASSWORD');
 

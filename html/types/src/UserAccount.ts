@@ -21,6 +21,11 @@ export interface CompteUtilisateur {
   login: string;
 
   /**
+   * Email de l'utilisateur.
+   */
+  email: string;
+
+  /**
    * Statut du compte de l'utilisateur.
    */
   statut: AccountStatus;
