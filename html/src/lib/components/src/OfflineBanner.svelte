@@ -19,6 +19,9 @@
 <style>
   .offline-banner {
     --height: 50px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
     width: 100%;
     height: var(--height);
     line-height: var(--height);

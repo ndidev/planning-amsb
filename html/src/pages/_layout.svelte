@@ -10,6 +10,8 @@
 
   import { Guard, SessionChecker } from "@app/auth";
 
+  import { online } from "@app/utils";
+
   import type { ModuleId } from "@app/types";
 
   $: metatags.title = $page.title;
@@ -27,7 +29,10 @@
 
   <Menu module={rubrique} />
 
-  <div class="page mx-auto w-full">
+  <div
+    class="page mx-auto w-full"
+    style={`--offline-banner-height: ${$online ? "0px" : "50px"}`}
+  >
     <slot />
   </div>
 
