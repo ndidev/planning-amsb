@@ -102,7 +102,7 @@
     ]}
   />
 
-  <div class="sticky top-0">
+  <div class="sticky top-0" style:top="var(--offline-banner-height, 0px)">
     <BandeauInfo module="vrac" tv />
   </div>
 

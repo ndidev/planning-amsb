@@ -177,7 +177,10 @@
   ]}
 />
 
-<div class="sticky top-0 z-[1] ml-16 lg:ml-24">
+<div
+  class="sticky top-0 z-[1] ml-16 lg:ml-24"
+  style:top="var(--offline-banner-height, 0px)"
+>
   <BandeauInfo module="bois" pc />
 </div>
 
